@@ -57,26 +57,54 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function open selected directory
+ * @brief DIR *opendir(const char *name)
+ * Function opens a directory stream corresponding to the directory <i>name</i>, and
+ * returns a pointer to the directory stream. The stream is positioned at the first
+ * entry in the directory.
  *
- * @param *name         directory path
+ * @param name         directory path
  *
- * @retval NULL if file can't be created
+ * @errors EINVAL, ENOENT, ...
+ *
+ * @return A pointer to the directory stream. On error, <b>NULL</b> is returned,
+ * and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ * DIR *dir = opendir("/foo");
+ * if (dir) {
+ *         // directory handling
+ *         dirclose(dir);
+ * }
  */
 //==============================================================================
-static inline DIR *opendir(const char *path)
+static inline DIR *opendir(const char *name)
 {
-        return sysm_opendir(path);
+        return sysm_opendir(name);
 }
 
 //==============================================================================
 /**
- * @brief Function close opened directory
+ * @brief int closedir(DIR *dir)
+ * Function closes the directory stream associated with <i>dir</i>. The directory
+ * stream descriptor <i>dir</i> is not available after this call.
  *
- * @param *DIR                pinter to directory
+ * @param dir           pinter to directory object
  *
- * @retval 0                  file closed successfully
- * @retval -1                 file not closed
+ * @errors EINVAL, ENOENT, ...
+ *
+ * @return Return 0 on success. On error, -1 is returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * DIR *dir = opendir("/foo");
+ * if (dir) {
+ *         // ...
+ *         closedir(dir);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int closedir(DIR *dir)
@@ -86,11 +114,44 @@ static inline int closedir(DIR *dir)
 
 //==============================================================================
 /**
- * @brief Function read next item of opened directory
+ * @brief dirent_t readdir(DIR *dir)
+ * Function returns a object <b>dirent_t</b> type representing the next directory
+ * entry in the directory stream pointed to by <i>dir</i>.<p>
  *
- * @param[in] *dir                  directory object
+ * <b>dirent_t</b> structure:
+ * <pre>
+ * typedef struct dirent {
+ *         char   *name;
+ *         u64_t   size;
+ *         tfile_t filetype;
+ *         dev_t   dev;
+ * } dirent_t;
+ * </pre>
  *
- * @return element attributes
+ * @param[in] dir       directory object
+ *
+ * @errors EINVAL, ENOENT, ...
+ *
+ * @return On success, readdir() returns a pointer to a <b>dirent_t</b> type. If
+ * the end of the directory stream is reached, field <b>name</b> of <b>dirent_t</b>
+ * type is <b>NULL</b>. If an error occurs, NULL-object and <b>errno</b> is set
+ * appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * DIR *dir = opendir(path);
+ * if (dir) {
+ *         errno = 0;
+ *         dirent_t dirent = readdir(dir);
+ *         while (dirent.name != NULL) {
+ *                 // ...
+ *         }
+ *
+ *         closedir(dir);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline dirent_t readdir(DIR *dir)

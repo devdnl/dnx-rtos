@@ -131,6 +131,7 @@ static int run_level_boot(void)
 static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
+        driver_init("afio", NULL);
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
@@ -238,15 +239,21 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        /* stdio program control */
-        FILE   *tty[_TTY_NUMBER]           = {NULL};
-        FILE   *tty0                       =  NULL;
-        prog_t *program[_TTY_NUMBER - 1]   = {NULL};
-        int     current_tty                = -1;
-
+        FILE  *tty0 = NULL;
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
+
+        int number_of_ttys = 0;
+        ioctl(tty0, TTY_IORQ_GET_NUMBER_OF_TTYS, &number_of_ttys);
+
+        /* stdio program control */
+        FILE   *tty[number_of_ttys];
+        prog_t *program[number_of_ttys - 1];
+        int     current_tty = -1;
+
+        memset(tty, 0, sizeof(tty));
+        memset(program, 0, sizeof(program));
 
         /* terminal size info */
         int col = 0;
@@ -264,7 +271,7 @@ static int run_level_2(void)
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
-                if (current_tty >= 0 && current_tty < _TTY_NUMBER - 1) {
+                if (current_tty >= 0 && current_tty < number_of_ttys - 1) {
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
                                         char path[16];
@@ -288,7 +295,7 @@ static int run_level_2(void)
                         }
                 }
 
-                for (int i = 0; i < _TTY_NUMBER - 1; i++) {
+                for (int i = 0; i < number_of_ttys - 1; i++) {
                         if (program[i]) {
                                 if (program_is_closed(program[i])) {
                                         printk("initd: shell closed\n");

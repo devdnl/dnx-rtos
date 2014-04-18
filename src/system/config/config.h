@@ -27,122 +27,124 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include "../../../config/project/flags.h"
+
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
  * CPU start frequency [Hz] (frequency after power up, before clock configuration)
  */
-#define CONFIG_CPU_START_FREQ                           (8000000UL)
+#define CONFIG_CPU_START_FREQ                           (__CPU_START_FREQ__)
 
 /**
  * CPU base frequency [Hz] (internal RC, oscillator or crystal frequency connected to PLL)
  */
-#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
+#define CONFIG_CPU_OSC_FREQ                             (__CPU_OSC_FREQ__)
 
 /**=== MEMORY CONFIGURATION ==================================================*/
 /**
  * Size of RAM memory [bytes]
  */
-#define CONFIG_RAM_SIZE                                 (65536)
+#define CONFIG_RAM_SIZE                                 (__CPU_RAM_SIZE__)
 
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64332)
+#define CONFIG_HEAP_SIZE                                (__HEAP_SIZE__)
 
 /**
  * Heap memory alignment
  */
-#define CONFIG_HEAP_ALIGN                               (4)
+#define CONFIG_HEAP_ALIGN                               (__HEAP_ALIGN__)
 
 /**
  * Heap block size [bytes]
  */
-#define CONFIG_HEAP_BLOCK_SIZE                          (4)
+#define CONFIG_HEAP_BLOCK_SIZE                          (__HEAP_BLOCK_SIZE__)
 
 
 /**=== RTOS CONFIGURATION ====================================================*/
 /**
  * Task minimal stack depth [levels]
  */
-#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (48)
+#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (__OS_TASK_MIN_STACK_DEPTH__)
 
 /**
  * File system stack depth [levels]
  */
-#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (__OS_FILE_SYSTEM_STACK_DEPTH__)
 
 /**
  * Interrupt stack depth [levels]
  */
-#define CONFIG_RTOS_IRQ_STACK_DEPTH                     (16)
+#define CONFIG_RTOS_IRQ_STACK_DEPTH                     (__OS_IRQ_STACK_DEPTH__)
 
 /**
  * Task priorities
  */
-#define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (7)
+#define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (__OS_TASK_MAX_PRIORITIES__)
 
 /**
  * Task name length [bytes]
  */
-#define CONFIG_RTOS_TASK_NAME_LEN                       (16)
+#define CONFIG_RTOS_TASK_NAME_LEN                       (__OS_TASK_NAME_LEN__)
 
 /**
  * Task schedule frequency [Hz]
  */
-#define CONFIG_RTOS_TASK_SCHED_FREQ                     (1000)
+#define CONFIG_RTOS_TASK_SCHED_FREQ                     (__OS_TASK_SCHED_FREQ__)
 
 /**
  * Kernel interrupt priority (CPU depend)
  */
-#define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (0xFF) /* priority 15 (lowest) */
+#define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (__IRQ_RTOS_KERNEL_PRIORITY__)
 
 /**
  * System call interrupt priority (CPU depend)
  */
-#define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (0xEF) /* priority 14 */
+#define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (__IRQ_RTOS_SYSCALL_PRIORITY__)
 
 /**
  * User programs interrupt priority (CPU depend)
  */
-#define CONFIG_USER_IRQ_PRIORITY                        (0xDF) /* priority 13 */
+#define CONFIG_USER_IRQ_PRIORITY                        (__IRQ_USER_PRIORITY__)
 
 /**
  * Enable (1) or disable (0) CPU low power mode in Idle task
  * Note: if enabled, in some systems debugging and programming could be hindered
  */
-#define CONFIG_RTOS_SLEEP_ON_IDLE                       (0)
+#define CONFIG_RTOS_SLEEP_ON_IDLE                       (__OS_SLEEP_ON_IDLE__)
 
 
 /**=== PRINT CONFIGURATION ===================================================*/
 /**
  * Enable (1) or disable (0) printf() family functions
  */
-#define CONFIG_PRINTF_ENABLE                            (1)
+#define CONFIG_PRINTF_ENABLE                            (__OS_PRINTF_ENABLE__)
 
 /**
  * Enable (1) or disable (0) scanf() family functions
  */
-#define CONFIG_SCANF_ENABLE                             (1)
+#define CONFIG_SCANF_ENABLE                             (__OS_SCANF_ENABLE__)
 
 /**
  * Enable (1) or disable (0) system messages (printk())
  */
-#define CONFIG_SYSTEM_MSG_ENABLE                        (1)
+#define CONFIG_SYSTEM_MSG_ENABLE                        (__OS_SYSTEM_MSG_ENABLE__)
 
 /**
  * Enable (1) or disable (0) color definitions
  */
-#define CONFIG_COLOR_TERMINAL_ENABLE                    (1)
+#define CONFIG_COLOR_TERMINAL_ENABLE                    (__OS_COLOR_TERMINAL_ENABLE__)
 
 /**
  * Maximum stream buffer size [bytes]
  */
-#define CONFIG_STREAM_BUFFER_LENGTH                     (100)
+#define CONFIG_STREAM_BUFFER_LENGTH                     (__OS_STREAM_BUFFER_LENGTH__)
 
 /**
  * Maximum pipe length [bytes]
  */
-#define CONFIG_PIPE_LENGTH                              (128)
+#define CONFIG_PIPE_LENGTH                              (__OS_PIPE_LENGTH__)
 
 /**
  * ERRNO string support (strerror(), perror(), etc)
@@ -151,69 +153,69 @@
  * 2: short names
  * 3: full names
  */
-#define CONFIG_ERRNO_STRING_LEN                         (3)
+#define CONFIG_ERRNO_STRING_LEN                         (__OS_ERRNO_STRING_LEN__)
 
 /**=== NETWORK CONFIGURATION =================================================*/
 /**
  * Enable (1) or disable (0) network interface
  */
-#define CONFIG_NETWORK_ENABLE                           (1)
+#define CONFIG_NETWORK_ENABLE                           (__NETWORK_ENABLE__)
 
 
 /**=== SYSTEM MONITOR CONFIGURATION ==========================================*/
 /**
  * Enable (1) or disable (0) task memory usage monitoring
  */
-#define CONFIG_MONITOR_TASK_MEMORY_USAGE                (1)
+#define CONFIG_MONITOR_TASK_MEMORY_USAGE                (__OS_MONITOR_TASK_MEMORY_USAGE__)
 
 /**
  * Enable (1) or disable (0) file usage monitoring
  */
-#define CONFIG_MONITOR_TASK_FILE_USAGE                  (1)
+#define CONFIG_MONITOR_TASK_FILE_USAGE                  (__OS_MONITOR_TASK_FILE_USAGE__)
 
 /**
  * Enable (1) or disable (0) kernel memory usage monitoring
  */
-#define CONFIG_MONITOR_KERNEL_MEMORY_USAGE              (1)
+#define CONFIG_MONITOR_KERNEL_MEMORY_USAGE              (__OS_MONITOR_KERNEL_MEMORY_USAGE__)
 
 /**
  * Enable (1) or disable (0) modules (drivers) memory usage monitoring
  */
-#define CONFIG_MONITOR_MODULE_MEMORY_USAGE              (1)
+#define CONFIG_MONITOR_MODULE_MEMORY_USAGE              (__OS_MONITOR_MODULE_MEMORY_USAGE__)
 
 /**
  * Enable (1) or disable (0) system memory usage monitoring
  */
-#define CONFIG_MONITOR_SYSTEM_MEMORY_USAGE              (1)
+#define CONFIG_MONITOR_SYSTEM_MEMORY_USAGE              (__OS_MONITOR_SYSTEM_MEMORY_USAGE__)
 
 /**
  * Enable (1) or disable (0) CPU load monitoring
  */
-#define CONFIG_MONITOR_CPU_LOAD                         (1)
+#define CONFIG_MONITOR_CPU_LOAD                         (__OS_MONITOR_CPU_LOAD__)
 
 /**
  * Enable (1) or disable (0) network memory monitoring
  */
-#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE             (1)
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE             (__OS_MONITOR_NETWORK_MEMORY_USAGE__)
 
 /**
  * Maximum amount of memory that can be used by network [bytes]. Set to 0 to disable limit.
  */
-#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT       (0)
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT       (__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__)
 
 
 /**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
 /**
  * Define the host name
  */
-#define CONFIG_HOSTNAME                                 "localhost"
+#define CONFIG_HOSTNAME                                 __OS_HOSTNAME__
 
 
 /**=== DEVELOPMENT OPTIONS ===================================================*/
 /**
  * Enable (1) or disable (0) system assert macro (stops system if condition met)
  */
-#define CONFIG_SYSTEM_STOP_MACRO                        (1)
+#define CONFIG_SYSTEM_STOP_MACRO                        (__OS_SYSTEM_STOP_MACRO__)
 
 #endif /* _CONFIG_H_ */
 /*==============================================================================

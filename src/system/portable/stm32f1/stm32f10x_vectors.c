@@ -4,6 +4,7 @@
  * Vector file for STM32F10x microcontroller series
  * compiler: arm-none-eabi-gcc
 *******************************************************************************/
+#include "config.h"
 
 /** define weak assign to the default function */
 #define WEAK_DEFAULT __attribute__ ((interrupt, weak, alias("__Default_Handler")))

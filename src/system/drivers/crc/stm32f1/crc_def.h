@@ -30,8 +30,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
 #include "stm32f1/crc_cfg.h"
+#include "stm32f1/crc_ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,18 +43,9 @@ extern "C" {
 #define _CRC_MAJOR_NUMBER               0
 #define _CRC_MINOR_NUMBER               0
 
-#define CRC_IORQ_SET_INPUT_MODE         _IOW('C', 0x00, enum CRC_input_mode)
-#define CRC_IORQ_GET_INPUT_MODE         _IOR('C', 0x01, enum CRC_input_mode)
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
-enum CRC_input_mode {
-        CRC_INPUT_MODE_BYTE,            /* base word is u8_t  */
-        CRC_INPUT_MODE_HALF_WORD,       /* base word is u16_t */
-        CRC_INPUT_MODE_WORD             /* base word is u32_t */
-};
 
 /*==============================================================================
   Exported objects

@@ -63,8 +63,8 @@ static void **driver_memory_region;
 ==============================================================================*/
 extern const char           *const _regdrv_module_name[];
 extern const struct _driver_entry  _regdrv_driver_table[];
-extern const int                   _regdrv_size_of_driver_table;
-extern const int                   _regdrv_number_of_modules;
+extern const uint                  _regdrv_size_of_driver_table;
+extern const uint                  _regdrv_number_of_modules;
 
 /*==============================================================================
   Function definitions
@@ -80,7 +80,7 @@ extern const int                   _regdrv_number_of_modules;
 //==============================================================================
 static bool is_device_valid(dev_t id)
 {
-        if (id >= 0 && id < _regdrv_size_of_driver_table) {
+        if (id < _regdrv_size_of_driver_table) {
                 if (driver_memory_region[id]) {
                         return true;
                 }
@@ -104,17 +104,17 @@ int _driver_init(const char *drv_name, const char *node_path)
 {
         if (drv_name == NULL) {
                 errno = EINVAL;
-                return -EINVAL;
+                return 1;
         }
 
         if (!driver_memory_region) {
                 driver_memory_region = sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
-                        return -ENOMEM;
+                        return 1;
                 }
         }
 
-        for (int drvid = 0; drvid < _regdrv_size_of_driver_table; drvid++) {
+        for (uint drvid = 0; drvid < _regdrv_size_of_driver_table; drvid++) {
 
                 if (strcmp(_regdrv_driver_table[drvid].drv_name, drv_name) != 0) {
                         continue;
@@ -125,7 +125,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                                RESET_ATTRIBUTES"\n", drv_name);
 
                         errno = EADDRINUSE;
-                        return -EADDRINUSE;
+                        return 1;
                 }
 
                 printk("Initializing %s... ", drv_name);
@@ -146,7 +146,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                 if (node_path) {
                         if (vfs_mknod(node_path, drvid) == STD_RET_OK) {
                                 printk("%s node created\n", node_path);
-                                return STD_RET_OK;
+                                return 0;
                         } else {
                                 _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
 
@@ -162,12 +162,10 @@ int _driver_init(const char *drv_name, const char *node_path)
                 }
         }
 
-        printk(FONT_COLOR_RED"Driver %s does not exist!"
-               RESET_ATTRIBUTES"\n", drv_name);
+        printk(FONT_COLOR_RED"Driver %s does not exist!" RESET_ATTRIBUTES"\n", drv_name);
 
         errno = EINVAL;
-
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
@@ -183,10 +181,10 @@ int _driver_release(const char *drv_name)
 {
         if (!drv_name) {
                 errno = EINVAL;
-                return -EINVAL;
+                return 1;
         }
 
-        for (int i = 0; i < _regdrv_size_of_driver_table; i++) {
+        for (uint i = 0; i < _regdrv_size_of_driver_table; i++) {
                 if (strcmp(_regdrv_driver_table[i].drv_name, drv_name) == 0) {
 
                         stdret_t status = STD_RET_ERROR;
@@ -202,7 +200,7 @@ int _driver_release(const char *drv_name)
         }
 
         errno = EINVAL;
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
@@ -360,9 +358,9 @@ stdret_t _driver_stat(dev_t id, struct vfs_dev_stat *stat)
  * @return pointer to module's name or NULL if error
  */
 //==============================================================================
-const char *_get_module_name(int module_number)
+const char *_get_module_name(uint module_number)
 {
-        if (module_number < 0 || module_number >= _regdrv_number_of_modules)
+        if (module_number >= _regdrv_number_of_modules)
                 return NULL;
         else
                 return _regdrv_module_name[module_number];
@@ -382,7 +380,7 @@ int _get_module_number(const char *module_name)
         if (!module_name)
                 return -1;
 
-        for (int module = 0; module < _regdrv_number_of_modules; module++) {
+        for (uint module = 0; module < _regdrv_number_of_modules; module++) {
                 if (strcmp(_regdrv_module_name[module], module_name) == 0) {
                         return module;
                 }
@@ -397,7 +395,7 @@ int _get_module_number(const char *module_name)
  * @brief Function returns number of modules
  */
 //==============================================================================
-int _get_number_of_modules(void)
+uint _get_number_of_modules(void)
 {
         return _regdrv_number_of_modules;
 };
@@ -409,7 +407,7 @@ int _get_number_of_modules(void)
  * @return number of drivers
  */
 //==============================================================================
-int _get_number_of_drivers(void)
+uint _get_number_of_drivers(void)
 {
         return _regdrv_size_of_driver_table;
 }
@@ -423,9 +421,9 @@ int _get_number_of_drivers(void)
  * @return driver name, NULL on error
  */
 //==============================================================================
-const char *_get_driver_name(int n)
+const char *_get_driver_name(uint n)
 {
-        if (n >= 0 && n < _regdrv_size_of_driver_table) {
+        if (n < _regdrv_size_of_driver_table) {
                 return _regdrv_driver_table[n].drv_name;
         } else {
                 return NULL;
@@ -441,9 +439,9 @@ const char *_get_driver_name(int n)
  * @return driver module name, NULL on error
  */
 //==============================================================================
-const char *_get_driver_module_name(int n)
+const char *_get_driver_module_name(uint n)
 {
-        if (n >= 0 && n < _regdrv_size_of_driver_table) {
+        if (n < _regdrv_size_of_driver_table) {
                 return _regdrv_driver_table[n].mod_name;
         } else {
                 return NULL;
@@ -459,9 +457,9 @@ const char *_get_driver_module_name(int n)
  * @return true if driver is active (initialized), otherwise false
  */
 //==============================================================================
-bool _is_driver_active(int n)
+bool _is_driver_active(uint n)
 {
-        if (n >= 0 && n < _regdrv_size_of_driver_table) {
+        if (n < _regdrv_size_of_driver_table) {
                 if (driver_memory_region[n] != NULL) {
                         return true;
                 }

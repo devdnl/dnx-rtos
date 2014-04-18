@@ -35,21 +35,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/pll_cfg.h"
-#include "core/ioctl_macros.h"
+#include "stm32f1/pll_ioctl.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 #define _PLL_MAJOR_NUMBER               0
 #define _PLL_MINOR_NUMBER               0
-
-#define PLL_IORQ_GET_SYSCLK_FREQ        _IOR('p', 0x00, u32_t*)
-#define PLL_IORQ_GET_HCLK_FREQ          _IOR('p', 0x01, u32_t*)
-#define PLL_IORQ_GET_PCLK1_FREQ         _IOR('p', 0x02, u32_t*)
-#define PLL_IORQ_GET_PCLK2_FREQ         _IOR('p', 0x03, u32_t*)
-#define PLL_IORQ_GET_ADCCLK_FREQ        _IOR('p', 0x04, u32_t*)
-#define PLL_IORQ_GET_PCLK1_TIM_FREQ     _IOR('p', 0x05, u32_t*)
-#define PLL_IORQ_GET_PCLK2_TIM_FREQ     _IOR('p', 0x06, u32_t*)
 
 /*==============================================================================
   Exported types, enums definitions

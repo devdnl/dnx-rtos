@@ -58,9 +58,23 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Suspend task for defined time in seconds
+ * @brief void sleep(const uint seconds)
+ * The <b>sleep</b>() makes the calling thread sleep until seconds <i>seconds</i>
+ * have elapsed.
  *
- * @param[in] seconds
+ * @param seconds   number of seconds to sleep
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * sleep(2);
+ * // code here will be executed after 2s sleep
+ * // ...
  */
 //==============================================================================
 static inline void sleep(const uint seconds)
@@ -70,9 +84,23 @@ static inline void sleep(const uint seconds)
 
 //==============================================================================
 /**
- * @brief Suspend task for defined time in milliseconds
+ * @brief void sleep_ms(const uint milliseconds)
+ * The <b>sleep_ms</b>() makes the calling thread sleep until milliseconds
+ * <i>milliseconds</i> have elapsed.
  *
- * @param[in] milliseconds
+ * @param milliseconds      number of milliseconds to sleep
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * sleep_ms(10);
+ * // code here will be executed after 10ms sleep
+ * // ...
  */
 //==============================================================================
 static inline void sleep_ms(const uint milliseconds)
@@ -82,9 +110,25 @@ static inline void sleep_ms(const uint milliseconds)
 
 //==============================================================================
 /**
- * @brief Suspend task for defined time in microseconds (not supported)
+ * @brief void usleep(const uint microseconds)
+ * The <b>usleep</b>() makes the calling thread sleep until microseconds
+ * <i>microseconds</i> have elapsed.<p>
  *
- * @param[in] microseconds
+ * Function is not supported by dnx RTOS. Function sleep task at least 1ms.
+ *
+ * @param microseconds      number of microseconds to sleep
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * usleep(10);
+ * // code here will be executed at least after 1ms sleep (shall be 10us)
+ * // ...
  */
 //==============================================================================
 static inline void usleep(const uint microseconds)
@@ -96,10 +140,61 @@ static inline void usleep(const uint microseconds)
 
 //==============================================================================
 /**
- * @brief Function sleep task in regular periods (reference argument)
+ * @brief int prepare_sleep_until(void)
+ * The <b>prepare_sleep_until</b>() function prepare tick counter to call
+ * <b>sleep_until_ms</b>() and <b>sleep_until</b>() functions.
  *
- * @param milliseconds          milliseconds
- * @param ref_time_ticks        reference time in OS ticks
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Current tick counter.
+ *
+ * @example
+ * #include <dnx/os.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ * int ref_time = prepare_sleep_until();
+ *
+ * for (;;) {
+ *         // ...
+ *
+ *         sleep_until_ms(10, &ref_time);
+ * }
+ * // ...
+ */
+//==============================================================================
+static inline int prepare_sleep_until(void)
+{
+        return _kernel_get_tick_counter();
+}
+
+//==============================================================================
+/**
+ * @brief void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+ * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
+ * <i>milliseconds</i> have elapsed. Function produces more precise delay.
+ *
+ * @param microseconds      number of microseconds to sleep
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ * int ref_time = get_tick_counter();
+ *
+ * for (;;) {
+ *         // ...
+ *
+ *         sleep_until_ms(10, &ref_time);
+ * }
+ * // ...
  */
 //==============================================================================
 static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
@@ -109,10 +204,29 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 
 //==============================================================================
 /**
- * @brief Function sleep task in regular periods (reference argument)
+ * @brief void sleep_until(const uint seconds, int *ref_time_ticks)
+ * The <b>sleep_until</b>() makes the calling thread sleep until seconds
+ * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
- * @param seconds       seconds
- * @param ref_time_ticks        reference time in OS ticks
+ * @param seconds       number of seconds to sleep
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ * int ref_time = get_tick_counter();
+ *
+ * for (;;) {
+ *         // ...
+ *
+ *         sleep_until(1, &ref_time);
+ * }
+ * // ...
  */
 //==============================================================================
 static inline void sleep_until(const uint seconds, int *ref_time_ticks)
@@ -122,12 +236,27 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief char *getcwd(char *buf, size_t size)
+ * The <b>getcwd</b>() function copies an absolute pathname of the current
+ * working directory to the array pointed to by <i>buf</i>, which is of length
+ * <i>size</i>.
  *
- * @param[out] *buf     output buffer
- * @param[in]   size    buffer size
+ * @param buf       buffer to store path
+ * @param size      buffer length
  *
- * @return buf pointer on success, otherwise NULL pointer
+ * @errors None
+ *
+ * @return On success, these functions return a pointer to a string containing
+ * the pathname of the current working directory. In the case <b>getcwd</b>() is the
+ * same value as <i>buf</i>.
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * char *buf[100];
+ * getcwd(buf, 100);
+ * // ...
  */
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
@@ -137,18 +266,32 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
- * @brief Changes file owner and group
+ * @brief int chown(const char *pathname, int owner, int group)
+ * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
- * @param[in]   path    file path
- * @param[in]   owner   owner
- * @param[in]   group   group
+ * This function is not supported by dnx RTOS, because users and groups are
+ * not implemented yet.
  *
- * @return 0 on success. On error, -1 is returned
+ * @param pathname      path to file
+ * @param owner         owner ID
+ * @param group         group ID
+ *
+ * @errors EINVAL, ENOENT, ...
+ *
+ * @return On success, zero is returned. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * chown("/foo/bar", 1000, 1000);
+ * // ...
  */
 //==============================================================================
-static inline int chown(const char *path, int owner, int group)
+static inline int chown(const char *pathname, int owner, int group)
 {
-        return vfs_chown(path, owner, group);
+        return vfs_chown(pathname, owner, group);
 }
 
 #ifdef __cplusplus

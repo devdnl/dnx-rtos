@@ -44,12 +44,12 @@
 /*
  * MAC address
  */
-#define ETHIF_MAC_ADDR_0                        0x50
-#define ETHIF_MAC_ADDR_1                        0xE5
-#define ETHIF_MAC_ADDR_2                        0x49
-#define ETHIF_MAC_ADDR_3                        0x37
-#define ETHIF_MAC_ADDR_4                        0xB5
-#define ETHIF_MAC_ADDR_5                        0xBD
+#define ETHIF_MAC_ADDR_0                        (__NETWORK_MAC_ADDR_0__)
+#define ETHIF_MAC_ADDR_1                        (__NETWORK_MAC_ADDR_1__)
+#define ETHIF_MAC_ADDR_2                        (__NETWORK_MAC_ADDR_2__)
+#define ETHIF_MAC_ADDR_3                        (__NETWORK_MAC_ADDR_3__)
+#define ETHIF_MAC_ADDR_4                        (__NETWORK_MAC_ADDR_4__)
+#define ETHIF_MAC_ADDR_5                        (__NETWORK_MAC_ADDR_5__)
 
 /*
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
@@ -286,9 +286,9 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  - To disable it and process by CPU set to 0.
  - Make sure that ETH driver support hardware checksum calculation.
 */
-#define LWIP_CHECKSUM_BY_HARDWARE               1
+#define LWIP_CHECKSUM_BY_HARDWARE               __ETHMAC_CHECKSUM_BY_HARDWARE__
 
-#if (LWIP_CHECKSUM_BY_HARDWARE != 0)
+#if (LWIP_CHECKSUM_BY_HARDWARE != 0 && defined(ARCH_stm32f1))
   /* CHECKSUM_GEN_IP==0: Generate checksums by hardware for outgoing IP packets.*/
   #define CHECKSUM_GEN_IP                       0
   /* CHECKSUM_GEN_UDP==0: Generate checksums by hardware for outgoing UDP packets.*/

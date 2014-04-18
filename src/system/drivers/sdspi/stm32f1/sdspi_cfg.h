@@ -41,39 +41,22 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** card waiting timeout [ms] */
-#define SDSPI_TIMEOUT                           500
+#define SDSPI_TIMEOUT                           __SDSPI_TIMEOUT__
 
-/** supported SPI peripheral */
-#define SDSPI_PORT                              SPI3
+/** supported SPI peripheral (1-3) */
+#define SDSPI_PORT                              __SDSPI_SPI_PORT__
 
-/** SPI peripheral divider */
-#define SDSPI_SPI_CLOCK_DIVIDER                 4
+/** SPI peripheral divider (2-256) */
+#define SDSPI_SPI_CLOCK_DIVIDER                 __SDSPI_SPI_CLK_DIV__
 
 /** card select pin operation */
-#define SDSPI_SD_SELECT                         GPIO_CLEAR_PIN(SD_CS)
-#define SDSPI_SD_DESELECT                       GPIO_SET_PIN(SD_CS)
+#define SDSPI_SD_CS_PIN                         __SDSPI_SD_CS_PIN__
 
 /** enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA                        1
+#define SDSPI_ENABLE_DMA                        __SDSPI_ENABLE_DMA__
 
-#if (SDSPI_ENABLE_DMA != 0)
-        /** DMA device */
-        #define SDSPI_DMA                       DMA2
-
-        /** Tx DMA channel */
-        #define SDSPI_DMA_TX_CHANNEL            DMA2_Channel2
-        #define SDSPI_DMA_TX_CHANNEL_NO         2
-
-        /** Rx DMA channel */
-        #define SDSPI_DMA_RX_CHANNEL            DMA2_Channel1
-        #define SDSPI_DMA_RX_CHANNEL_NO         1
-
-        /** Rx DMA finish interrupt routine */
-        #define SDSPI_DMA_IRQ_ROUTINE           DMA2_Channel1_IRQHandler
-        #define SDSPI_DMA_IRQ_NUMBER            DMA2_Channel1_IRQn
-
-        #define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
-#endif
+/** DMA IRQ priority */
+#define SDSPI_DMA_IRQ_PRIORITY                  __SDSPI_DMA_IRQ_PRIORITY__
 
 /*==============================================================================
   Exported types, enums definitions

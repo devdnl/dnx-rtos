@@ -69,36 +69,7 @@ static void show_help(const char *name)
 {
         printf("Usage: %s [OPTIONS] <module name> [module node]\n", name);
         puts("  -r            release module");
-        puts("  -l            list of modules");
         puts("  -h, --help    this help");
-}
-
-//==============================================================================
-/**
- * @brief Print list of modules
- */
-//==============================================================================
-static void show_list_of_modules()
-{
-        puts(FONT_BOLD"Driver"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"Module"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"MID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"DID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"Active"
-             RESET_ATTRIBUTES);
-
-        int drv_number = get_number_of_drivers();
-        for (int i = 0; i < drv_number; i++) {
-                const char *mod_name  = get_driver_module_name(i);
-                const char *drv_name  = get_driver_name(i);
-                int         mod_id    = get_module_number(mod_name);
-                bool        is_active = is_driver_active(i);
-
-                printf("%s"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"%s"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"%i"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"%u"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"%c\n",
-                       drv_name, mod_name, mod_id, i, is_active ? '*': ' ');
-        }
 }
 
 //==============================================================================
@@ -121,11 +92,6 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
 
                 if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
                         show_help(argv[0]);
-                        return 0;
-                }
-
-                if (strcmp(argv[i], "-l") == 0) {
-                        show_list_of_modules();
                         return 0;
                 }
         }

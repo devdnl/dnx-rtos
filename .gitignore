@@ -1,7 +1,4 @@
 build/
-.settings/
-.cproject
-.project
 *.o
 *.lst
 *.d

@@ -23,20 +23,24 @@ System features:
 - supports many CPU architectures (FreeRTOS feature),
 - modular design.
 
-To compile project, type in terminal:
+To configure project, type in the terminal:
 
-    make <target>
+    make config
 
-where <target> is supported architecture (if ported),
-e.g. stm32f1.
+or
 
-To make sure about supported architectures, type:
+    make xconfig
 
-    make help
+First one is text wizard, second is GUI wizard.
+
+To compile project, type in the terminal:
+
+    make
 
 Folder structure:
 - build  - project's binaries
+- config - project configuration
 - doc    - documents
 - extra  - extra sources (programs, drivers, etc)
 - src    - project's sources
-- tools  - project's tool (scripts, etc)
+- tools  - project's tool (scripts, wizard, etc)

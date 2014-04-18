@@ -39,18 +39,133 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** array element count */
-#define ARRAY_SIZE(array)                       (sizeof(array)/sizeof(array[0]))
-#define ARRAY_ITEM_SIZE(array)                  (sizeof(array[0]))
-#define FIELD_SIZEOF(t, f)                      (sizeof(((t*)0)->f))
-#define CONTAINER_OF(ptr, type, member)         ((type *)((char *)ptr - offsetof(type, member)))
+//==============================================================================
+/**
+ * @brief ARRAY_SIZE(array)
+ * The macro <b>ARRAY_SIZE</b>() calculate size of an array <i>array</i>.
+ *
+ * @param array     array name
+ *
+ * @errors None
+ *
+ * @return Array size (number of elements).
+ *
+ * @example
+ * // ...
+ *
+ * int buf[100];
+ * for (int i = 0; i < ARRAY_SIZE(buf); i++) {
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define ARRAY_SIZE(array) (sizeof(array)/sizeof(array[0]))
 
-/** usable macros */
-#define UNUSED_ARG(argument)                    (void)argument
+//==============================================================================
+/**
+ * @brief ARRAY_ITEM_SIZE(array)
+ * The macro <b>ARRAY_ITEM_SIZE</b>() calculate size of an array <i>array</i>
+ * element.
+ *
+ * @param array     array name
+ *
+ * @errors None
+ *
+ * @return Item size of array <i>array</i>.
+ *
+ * @example
+ * // ...
+ *
+ * int buf[100];
+ * printf("Item size: %d", ARRAY_ITEM_SIZE(buf));
+ *
+ * // ...
+ */
+//==============================================================================
+#define ARRAY_ITEM_SIZE(array) (sizeof(array[0]))
 
-/** string usable macros */
-#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
-#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
+//==============================================================================
+/**
+ * @brief UNUSED_ARG(argument)
+ * The macro <b>UNUSED_ARG</b>() disable compiler warning if argument
+ * <i>argument</i> is not used.
+ *
+ * @param argument  argument
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * void some_function(int a, int b)
+ * {
+ *         UNUSED_ARG(b);
+ *
+ *         printf("%d", a);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define UNUSED_ARG(argument) (void)argument
+
+//==============================================================================
+/**
+ * @brief FIRST_CHARACTER(char__pstr)
+ * The macro <b>FIRST_CHARACTER</b>() return the first character of string.
+ *
+ * @param char__pstr    string
+ *
+ * @errors None
+ *
+ * @return Returns the first character of string.
+ *
+ * @example
+ * // ...
+ *
+ * const char *str = "foo bar";
+ *
+ * if (FIRST_CHARACTER(str) == 'f') {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define FIRST_CHARACTER(char__pstr) char__pstr[0]
+
+//==============================================================================
+/**
+ * @brief LAST_CHARACTER(char__pstr)
+ * The macro <b>LAST_CHARACTER</b>() return the last character of string.
+ *
+ * @param char__pstr    string
+ *
+ * @errors None
+ *
+ * @return Returns the last character of string.
+ *
+ * @example
+ * // ...
+ *
+ * const char *str = "foo bar";
+ *
+ * if (LAST_CHARACTER(str) == 'r') {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define LAST_CHARACTER(char__pstr) char__pstr[strlen(char__pstr) - 1]
 
 /*==============================================================================
   Exported object types

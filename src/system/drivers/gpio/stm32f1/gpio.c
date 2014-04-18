@@ -41,50 +41,74 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/** define pin configure size (CNF[1:0] + MODE[1:0]) */
-#define GPIO_PIN_CFG_SIZE                       4U
-
 /** define CRL configuration macro */
-#define GPIO_SET_CRL(CFG, PIN)                  ( (CFG) << ((GPIO_PIN_CFG_SIZE) * (PIN)) )
+#define GPIO_SET_CRL(CFG, PIN)                  ( (CFG) << (4 * (PIN)) )
 
 /** define CRH configuration macro */
-#define GPIO_SET_CRH(CFG, PIN)                  ( (CFG) << ((GPIO_PIN_CFG_SIZE) * ((PIN) - 8)) )
+#define GPIO_SET_CRH(CFG, PIN)                  ( (CFG) << (4 * ((PIN) - 8)) )
 
 /** CRL register value for GPIO */
-#define GPIOx_CRL(port) ( GPIO_SET_CRL(port##_PIN_0_MODE, 0 ) | GPIO_SET_CRL(port##_PIN_1_MODE, 1 ) \
-                        | GPIO_SET_CRL(port##_PIN_2_MODE, 2 ) | GPIO_SET_CRL(port##_PIN_3_MODE, 3 ) \
-                        | GPIO_SET_CRL(port##_PIN_4_MODE, 4 ) | GPIO_SET_CRL(port##_PIN_5_MODE, 5 ) \
-                        | GPIO_SET_CRL(port##_PIN_6_MODE, 6 ) | GPIO_SET_CRL(port##_PIN_7_MODE, 7 ) )
+#define GPIOx_CRL(port) ( GPIO_SET_CRL(_##port##_PIN_0_MODE, 0 ) | GPIO_SET_CRL(_##port##_PIN_1_MODE, 1 ) \
+                        | GPIO_SET_CRL(_##port##_PIN_2_MODE, 2 ) | GPIO_SET_CRL(_##port##_PIN_3_MODE, 3 ) \
+                        | GPIO_SET_CRL(_##port##_PIN_4_MODE, 4 ) | GPIO_SET_CRL(_##port##_PIN_5_MODE, 5 ) \
+                        | GPIO_SET_CRL(_##port##_PIN_6_MODE, 6 ) | GPIO_SET_CRL(_##port##_PIN_7_MODE, 7 ) )
 
 /** CRH register value for GPIO */
-#define GPIOx_CRH(port) ( GPIO_SET_CRH(port##_PIN_8_MODE ,  8) | GPIO_SET_CRH(port##_PIN_9_MODE ,  9) \
-                        | GPIO_SET_CRH(port##_PIN_10_MODE, 10) | GPIO_SET_CRH(port##_PIN_11_MODE, 11) \
-                        | GPIO_SET_CRH(port##_PIN_12_MODE, 12) | GPIO_SET_CRH(port##_PIN_13_MODE, 13) \
-                        | GPIO_SET_CRH(port##_PIN_14_MODE, 14) | GPIO_SET_CRH(port##_PIN_15_MODE, 15) )
+#define GPIOx_CRH(port) ( GPIO_SET_CRH(_##port##_PIN_8_MODE ,  8) | GPIO_SET_CRH(_##port##_PIN_9_MODE ,  9) \
+                        | GPIO_SET_CRH(_##port##_PIN_10_MODE, 10) | GPIO_SET_CRH(_##port##_PIN_11_MODE, 11) \
+                        | GPIO_SET_CRH(_##port##_PIN_12_MODE, 12) | GPIO_SET_CRH(_##port##_PIN_13_MODE, 13) \
+                        | GPIO_SET_CRH(_##port##_PIN_14_MODE, 14) | GPIO_SET_CRH(_##port##_PIN_15_MODE, 15) )
 
 /** ODR register value for GPIO */
-#define GPIOx_ODR(port) ( (port##_PIN_0_STATE  <<  0) | (port##_PIN_1_STATE  <<  1) \
-                        | (port##_PIN_2_STATE  <<  2) | (port##_PIN_3_STATE  <<  3) \
-                        | (port##_PIN_4_STATE  <<  4) | (port##_PIN_5_STATE  <<  5) \
-                        | (port##_PIN_6_STATE  <<  6) | (port##_PIN_7_STATE  <<  7) \
-                        | (port##_PIN_8_STATE  <<  8) | (port##_PIN_9_STATE  <<  9) \
-                        | (port##_PIN_10_STATE << 10) | (port##_PIN_11_STATE << 11) \
-                        | (port##_PIN_12_STATE << 12) | (port##_PIN_13_STATE << 13) \
-                        | (port##_PIN_14_STATE << 14) | (port##_PIN_15_STATE << 15) )
+#define GPIOx_ODR(port) ( (_##port##_PIN_0_STATE  <<  0) | (_##port##_PIN_1_STATE  <<  1) \
+                        | (_##port##_PIN_2_STATE  <<  2) | (_##port##_PIN_3_STATE  <<  3) \
+                        | (_##port##_PIN_4_STATE  <<  4) | (_##port##_PIN_5_STATE  <<  5) \
+                        | (_##port##_PIN_6_STATE  <<  6) | (_##port##_PIN_7_STATE  <<  7) \
+                        | (_##port##_PIN_8_STATE  <<  8) | (_##port##_PIN_9_STATE  <<  9) \
+                        | (_##port##_PIN_10_STATE << 10) | (_##port##_PIN_11_STATE << 11) \
+                        | (_##port##_PIN_12_STATE << 12) | (_##port##_PIN_13_STATE << 13) \
+                        | (_##port##_PIN_14_STATE << 14) | (_##port##_PIN_15_STATE << 15) )
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct gpio_reg_val {
+        GPIO_t  *const GPIO;
+        const uint32_t CRL;
+        const uint32_t CRH;
+        const uint16_t ODR;
+};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void init_GPIOx  (GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr);
-static void init_AFIO   (void);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const struct gpio_reg_val GPIOx[] = {
+#if _GPIOA_EN
+        {.GPIO = GPIOA, .CRL = GPIOx_CRL(GPIOA), .CRH = GPIOx_CRH(GPIOA), .ODR = GPIOx_ODR(GPIOA)},
+#endif
+#if _GPIOB_EN
+        {.GPIO = GPIOB, .CRL = GPIOx_CRL(GPIOB), .CRH = GPIOx_CRH(GPIOB), .ODR = GPIOx_ODR(GPIOB)},
+#endif
+#if _GPIOC_EN
+        {.GPIO = GPIOC, .CRL = GPIOx_CRL(GPIOC), .CRH = GPIOx_CRH(GPIOC), .ODR = GPIOx_ODR(GPIOC)},
+#endif
+#if _GPIOD_EN
+        {.GPIO = GPIOD, .CRL = GPIOx_CRL(GPIOD), .CRH = GPIOx_CRH(GPIOD), .ODR = GPIOx_ODR(GPIOD)},
+#endif
+#if _GPIOE_EN
+        {.GPIO = GPIOE, .CRL = GPIOx_CRL(GPIOE), .CRH = GPIOx_CRH(GPIOE), .ODR = GPIOx_ODR(GPIOE)},
+#endif
+#if _GPIOF_EN
+        {.GPIO = GPIOF, .CRL = GPIOx_CRL(GPIOF), .CRH = GPIOx_CRH(GPIOF), .ODR = GPIOx_ODR(GPIOF)},
+#endif
+#if _GPIOG_EN
+        {.GPIO = GPIOG, .CRL = GPIOx_CRL(GPIOG), .CRH = GPIOx_CRH(GPIOG), .ODR = GPIOx_ODR(GPIOG)},
+#endif
+};
 
 /*==============================================================================
   Exported object definitions
@@ -114,37 +138,33 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 
         (void) _module_name_;
 
-#if (_AFIO_EN > 0)
-        init_AFIO();
-#endif
-
 #if (_GPIOA_EN > 0)
-        init_GPIOx(GPIOA, GPIOx_CRL(GPIOA), GPIOx_CRH(GPIOA), GPIOx_ODR(GPIOA));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
 #endif
-
 #if (_GPIOB_EN > 0)
-        init_GPIOx(GPIOB, GPIOx_CRL(GPIOB), GPIOx_CRH(GPIOB), GPIOx_ODR(GPIOB));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
 #endif
-
 #if (_GPIOC_EN > 0)
-        init_GPIOx(GPIOC, GPIOx_CRL(GPIOC), GPIOx_CRH(GPIOC), GPIOx_ODR(GPIOC));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
 #endif
-
 #if (_GPIOD_EN > 0)
-        init_GPIOx(GPIOD, GPIOx_CRL(GPIOD), GPIOx_CRH(GPIOD), GPIOx_ODR(GPIOD));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
 #endif
-
 #if (_GPIOE_EN > 0)
-        init_GPIOx(GPIOE, GPIOx_CRL(GPIOE), GPIOx_CRH(GPIOE), GPIOx_ODR(GPIOE));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
 #endif
-
 #if (_GPIOF_EN > 0)
-        init_GPIOx(GPIOF, GPIOx_CRL(GPIOF), GPIOx_CRH(GPIOF), GPIOx_ODR(GPIOF));
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
+#endif
+#if (_GPIOG_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
 #endif
 
-#if (_GPIOG_EN > 0)
-        init_GPIOx(GPIOG, GPIOx_CRL(GPIOG), GPIOx_CRH(GPIOG), GPIOx_ODR(GPIOG));
-#endif
+        for (int i = 0; i < ARRAY_SIZE(GPIOx); i++) {
+                GPIOx[i].GPIO->ODR = GPIOx[i].ODR;
+                GPIOx[i].GPIO->CRL = GPIOx[i].CRL;
+                GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
+        }
 
         return STD_RET_OK;
 }
@@ -162,6 +182,42 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 API_MOD_RELEASE(GPIO, void *device_handle)
 {
         UNUSED_ARG(device_handle);
+
+#if (_GPIOA_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPARST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPARST);
+#endif
+#if (_GPIOB_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPBRST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPBRST);
+#endif
+#if (_GPIOC_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPCRST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPCRST);
+#endif
+#if (_GPIOD_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPDRST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPDRST);
+#endif
+#if (_GPIOE_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPERST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPERST);
+#endif
+#if (_GPIOF_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPFRST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPFRST);
+#endif
+#if (_GPIOG_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
+        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPGRST);
+        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPGRST);
+#endif
 
         return STD_RET_OK;
 }
@@ -319,90 +375,6 @@ API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = 0;
 
         return STD_RET_OK;
-}
-
-//==============================================================================
-/**
- * @brief Initialize GPIOx
- *
- * @param[in] *gpio             GPIO address
- * @param[in]  crl              CRL register value
- * @param[in]  crh              CRH register value
- * @param[in]  odr              ODR register value
- */
-//==============================================================================
-static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr)
-{
-        /* enable peripherals */
-        switch ((u32_t)gpio) {
-#if (_GPIOA_EN > 0)
-        case GPIOA_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-                break;
-#endif
-
-#if (_GPIOB_EN > 0)
-        case GPIOB_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-                break;
-#endif
-
-#if (_GPIOC_EN > 0)
-        case GPIOC_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
-                break;
-#endif
-
-#if (_GPIOD_EN > 0)
-        case GPIOD_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPDEN;
-                break;
-#endif
-
-#if (_GPIOE_EN > 0)
-        case GPIOE_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPEEN;
-                break;
-#endif
-
-#if (_GPIOF_EN > 0)
-        case GPIOF_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPFEN;
-                break;
-#endif
-
-#if (_GPIOG_EN > 0)
-        case GPIOG_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_IOPGEN;
-                break;
-#endif
-
-        default:
-                return;
-        }
-
-        /* configure outputs and inputs initial state */
-        gpio->ODR = odr;
-
-        /* pin 0-7 configuration */
-        gpio->CRL = crl;
-
-        /* pin 8-15 configuration */
-        gpio->CRH = crh;
-}
-
-//==============================================================================
-/**
- * @brief Initialize AFIO peripheral
- */
-//==============================================================================
-static void init_AFIO(void)
-{
-        RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
-
-#if (SPI3_REMAP > 0)
-        AFIO->MAPR |= AFIO_MAPR_SPI3_REMAP;
-#endif
 }
 
 /*==============================================================================

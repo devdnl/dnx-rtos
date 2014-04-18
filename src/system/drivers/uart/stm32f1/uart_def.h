@@ -34,14 +34,14 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
+#include "stm32f1/uart_ioctl.h"
 #include "stm32f1/uart_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 /* UART minor number */
-#define _UART_MINOR_NUMBER                              0
+#define _UART_MINOR_NUMBER      0
 
 /* port names */
 enum
@@ -64,41 +64,9 @@ enum
         _UART_NUMBER
 };
 
-/* IO request for UART driver */
-#define UART_IORQ_SET_CONFIGURATION                     _IOW('U', 0x00, struct UART_config*)
-#define UART_IORQ_GET_CONFIGURATION                     _IOR('U', 0x01, struct UART_config*)
-#define UART_IORQ_GET_CHAR_UNBLOCKING                   _IOR('U', 0x02, char*)
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-enum UART_parity {
-        UART_PARITY_OFF,
-        UART_PARITY_ODD,
-        UART_PARITY_EVEN
-};
-
-enum UART_stop_bits {
-        UART_STOP_BIT_1,
-        UART_STOP_BIT_2
-};
-
-enum UART_LIN_break_length {
-        UART_LIN_BREAK_10_BITS,
-        UART_LIN_BREAK_11_BITS
-};
-
-struct UART_config {
-        enum UART_parity                parity                  : 2;
-        enum UART_stop_bits             stop_bits               : 1;
-        enum UART_LIN_break_length      LIN_break_length        : 1;
-        bool                            tx_enable               : 1;
-        bool                            rx_enable               : 1;
-        bool                            LIN_mode_enable         : 1;
-        bool                            hardware_flow_ctrl      : 1;
-        bool                            single_wire_mode        : 1;
-        u32_t                           baud                    : 23;
-};
 
 /*==============================================================================
   Exported object declarations
