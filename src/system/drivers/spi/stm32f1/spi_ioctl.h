@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    wdg_def.h
+@file    spi_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   WDG driver
+@brief   SPI module ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,14 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _WDG_DEF_H_
-#define _WDG_DEF_H_
+#ifndef _SPI_IOCTL_H_
+#define _SPI_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/wdg_ioctl.h"
-#include "stm32f1/wdg_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,12 +39,44 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _WDG_MAJOR_NUMBER               0
-#define _WDG_MINOR_NUMBER               0
+#define SPI_IORQ_SET_CONFIGURATION                      _IOW ('S', 0x00, struct SPI_config*)
+#define SPI_IORQ_GET_CONFIGURATION                      _IOR ('S', 0x01, struct SPI_config*)
+#define SPI_IORQ_LOCK                                   _IO  ('S', 0x02)
+#define SPI_IORQ_UNLOCK                                 _IO  ('S', 0x03)
+#define SPI_IORQ_SELECT                                 _IO  ('S', 0x04)
+#define SPI_IORQ_DESELECT                               _IO  ('S', 0x05)
+#define SPI_IORQ_TRANSMIT                               _IOWR('S', 0x06, u8_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/* SPI clock divider */
+enum SPI_clk_divider {
+        SPI_CLK_DIV_2,
+        SPI_CLK_DIV_4,
+        SPI_CLK_DIV_8,
+        SPI_CLK_DIV_16,
+        SPI_CLK_DIV_32,
+        SPI_CLK_DIV_64,
+        SPI_CLK_DIV_128,
+        SPI_CLK_DIV_256
+};
+
+/* SPI modes */
+enum SPI_mode {
+        SPI_MODE_0,     /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
+        SPI_MODE_1,     /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
+        SPI_MODE_2,     /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
+        SPI_MODE_3      /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
+};
+
+/* SPI configuration type */
+struct SPI_config {
+        u8_t                    dummy_byte  : 8;
+        enum SPI_clk_divider    clk_divider : 3;
+        enum SPI_mode           mode        : 2;
+        bool                    msb_first   : 1;
+};
 
 /*==============================================================================
   Exported objects
@@ -63,7 +94,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _WDG_DEF_H_ */
+#endif /* _SPI_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

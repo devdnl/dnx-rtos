@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    wdg_def.h
+@file    tty_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   WDG driver
+@brief   This file support TTY ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,14 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _WDG_DEF_H_
-#define _WDG_DEF_H_
+#ifndef _TTY_IOCTL_H_
+#define _TTY_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/wdg_ioctl.h"
-#include "stm32f1/wdg_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,8 +39,15 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _WDG_MAJOR_NUMBER               0
-#define _WDG_MINOR_NUMBER               0
+#define TTY_IORQ_GET_CURRENT_TTY                _IOR('T', 0x00, int*)
+#define TTY_IORQ_SWITCH_TTY_TO                  _IOW('T', 0x01, int )
+#define TTY_IORQ_GET_COL                        _IOR('T', 0x02, int*)
+#define TTY_IORQ_GET_ROW                        _IOR('T', 0x03, int*)
+#define TTY_IORQ_CLEAR_SCR                      _IO( 'T', 0x04)
+#define TTY_IORQ_ECHO_ON                        _IO( 'T', 0x05)
+#define TTY_IORQ_ECHO_OFF                       _IO( 'T', 0x06)
+#define TTY_IORQ_SET_EDITLINE                   _IOW('T', 0x07, const char*)
+#define TTY_IORQ_GET_NUMBER_OF_TTYS             _IOR('T', 0x08, int*)
 
 /*==============================================================================
   Exported object types
@@ -63,7 +69,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _WDG_DEF_H_ */
+#endif /* _TTY_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

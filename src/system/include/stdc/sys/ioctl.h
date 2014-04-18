@@ -36,42 +36,18 @@ extern "C" {
 ==============================================================================*/
 #include "core/ioctl_macros.h"
 #include "core/vfs.h"
-
-/* include here drivers definitions */
+#include "tty_ioctl.h"
 #ifdef ARCH_stm32f1
-#       if (__ENABLE_GPIO__)
-#               include "stm32f1/gpio_def.h"
-#       endif
-#       if (__ENABLE_AFIO__)
-#               include "stm32f1/afio_def.h"
-#       endif
-#       if (__ENABLE_UART__)
-#               include "stm32f1/uart_def.h"
-#       endif
-#       if (__ENABLE_PLL__)
-#               include "stm32f1/pll_def.h"
-#       endif
-#       if (__ENABLE_SDSPI__)
-#               include "stm32f1/sdspi_def.h"
-#       endif
-#       if (__ENABLE_ETH__)
-#               include "stm32f1/ethmac_def.h"
-#       endif
-#       if (__ENABLE_SPI__)
-#               include "stm32f1/spi_def.h"
-#       endif
-#       if (__ENABLE_CRC__)
-#               include "stm32f1/crc_def.h"
-#       endif
-#       if (__ENABLE_WDG__)
-#               include "stm32f1/wdg_def.h"
-#       endif
+#include "stm32f1/afio_ioctl.h"
+#include "stm32f1/crc_ioctl.h"
+#include "stm32f1/ethmac_ioctl.h"
+#include "stm32f1/gpio_ioctl.h"
+#include "stm32f1/pll_ioctl.h"
+#include "stm32f1/sdspi_ioctl.h"
+#include "stm32f1/spi_ioctl.h"
+#include "stm32f1/uart_ioctl.h"
 #else
-#       error Unknown CPU architecture!
-#endif
-
-#if (__ENABLE_TTY__)
-#       include "tty_def.h"
+#error Unknown architecture!
 #endif
 
 /*==============================================================================

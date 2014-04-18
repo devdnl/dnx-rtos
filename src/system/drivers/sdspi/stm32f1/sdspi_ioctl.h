@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    wdg_def.h
+@file    sdspi_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   WDG driver
+@brief   This file support ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,14 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _WDG_DEF_H_
-#define _WDG_DEF_H_
+#ifndef _SDSPI_IOCTL_H_
+#define _SDSPI_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/wdg_ioctl.h"
-#include "stm32f1/wdg_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,8 +39,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _WDG_MAJOR_NUMBER               0
-#define _WDG_MINOR_NUMBER               0
+#define SDSPI_IORQ_INITIALIZE_CARD      _IOR('S', 0x00, bool)
 
 /*==============================================================================
   Exported object types
@@ -63,7 +61,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _WDG_DEF_H_ */
+#endif /* _SDSPI_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    wdg_def.h
+@file    pll_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   WDG driver
+@brief   PLL ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,14 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _WDG_DEF_H_
-#define _WDG_DEF_H_
+#ifndef _PLL_IOCTL_H_
+#define _PLL_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/wdg_ioctl.h"
-#include "stm32f1/wdg_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,8 +39,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _WDG_MAJOR_NUMBER               0
-#define _WDG_MINOR_NUMBER               0
+#define PLL_IORQ_GET_SYSCLK_FREQ        _IOR('p', 0x00, u32_t*)
+#define PLL_IORQ_GET_HCLK_FREQ          _IOR('p', 0x01, u32_t*)
+#define PLL_IORQ_GET_PCLK1_FREQ         _IOR('p', 0x02, u32_t*)
+#define PLL_IORQ_GET_PCLK2_FREQ         _IOR('p', 0x03, u32_t*)
+#define PLL_IORQ_GET_ADCCLK_FREQ        _IOR('p', 0x04, u32_t*)
+#define PLL_IORQ_GET_PCLK1_TIM_FREQ     _IOR('p', 0x05, u32_t*)
+#define PLL_IORQ_GET_PCLK2_TIM_FREQ     _IOR('p', 0x06, u32_t*)
 
 /*==============================================================================
   Exported object types
@@ -63,7 +67,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _WDG_DEF_H_ */
+#endif /* _PLL_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

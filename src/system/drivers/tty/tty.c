@@ -461,6 +461,15 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 ttyedit_echo_disable(tty->editline);
                 break;
 
+        case TTY_IORQ_GET_NUMBER_OF_TTYS:
+                if (arg) {
+                        *(int *)arg = _TTY_NUMBER;
+                } else {
+                        errno = EINVAL;
+                        return STD_RET_ERROR;
+                }
+                break;
+
         default:
                 errno = EBADRQC;
                 return STD_RET_ERROR;

@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "tty_cfg.h"
-#include "core/ioctl_macros.h"
+#include "tty_ioctl.h"
 
 /*==============================================================================
   Exported object types
@@ -62,16 +62,6 @@ enum {
         #endif
         _TTY_NUMBER
 };
-
-/* IO requests */
-#define TTY_IORQ_GET_CURRENT_TTY                _IOR('T', 0x00, int*)
-#define TTY_IORQ_SWITCH_TTY_TO                  _IOW('T', 0x01, int )
-#define TTY_IORQ_GET_COL                        _IOR('T', 0x02, int*)
-#define TTY_IORQ_GET_ROW                        _IOR('T', 0x03, int*)
-#define TTY_IORQ_CLEAR_SCR                      _IO( 'T', 0x04)
-#define TTY_IORQ_ECHO_ON                        _IO( 'T', 0x05)
-#define TTY_IORQ_ECHO_OFF                       _IO( 'T', 0x06)
-#define TTY_IORQ_SET_EDITLINE                   _IOW('T', 0x07, const char*)
 
 #ifdef __cplusplus
 }

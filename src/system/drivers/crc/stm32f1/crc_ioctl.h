@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    wdg_def.h
+@file    crc_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   WDG driver
+@brief   CRC driver ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,14 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _WDG_DEF_H_
-#define _WDG_DEF_H_
+#ifndef _CRC_IOCTL_H_
+#define _CRC_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/wdg_ioctl.h"
-#include "stm32f1/wdg_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,12 +39,18 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _WDG_MAJOR_NUMBER               0
-#define _WDG_MINOR_NUMBER               0
+#define CRC_IORQ_SET_INPUT_MODE         _IOW('C', 0x00, enum CRC_input_mode)
+#define CRC_IORQ_GET_INPUT_MODE         _IOR('C', 0x01, enum CRC_input_mode)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
+enum CRC_input_mode {
+        CRC_INPUT_MODE_BYTE,            /* base word is u8_t  */
+        CRC_INPUT_MODE_HALF_WORD,       /* base word is u16_t */
+        CRC_INPUT_MODE_WORD             /* base word is u32_t */
+};
 
 /*==============================================================================
   Exported objects
@@ -63,7 +68,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _WDG_DEF_H_ */
+#endif /* _CRC_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
