@@ -72,15 +72,17 @@ typedef struct {
   Exported macros
 ==============================================================================*/
 /* IOCTL requests for GPIO */
-#define GPIO_IOCTL_SET_PIN              _IOW('g', 0, GPIO_pin_t*)
-#define GPIO_IOCTL_CLEAR_PIN            _IOW('g', 1, GPIO_pin_t*)
-#define GPIO_IOCTL_TOGGLE_PIN           _IOW('g', 2, GPIO_pin_t*)
-#define GPIO_IOCTL_GET_PIN              _IOR('g', 3, GPIO_pin_t*)
+#define GPIO_IOCTL_SET_PIN              _IOW(_IO_GROUP_GPIO, 0, GPIO_pin_t*)
+#define GPIO_IOCTL_CLEAR_PIN            _IOW(_IO_GROUP_GPIO, 1, GPIO_pin_t*)
+#define GPIO_IOCTL_TOGGLE_PIN           _IOW(_IO_GROUP_GPIO, 2, GPIO_pin_t*)
+#define GPIO_IOCTL_GET_PIN              _IOR(_IO_GROUP_GPIO, 3, GPIO_pin_t*)
+
+/* macro load GPIO_pin_t structure using 1 argument only */
+#define GPIO_PIN(_pin_name)             {.port = _PORT_##_pin_name, .pin = _pin_name}
 
 /* helper macros */
 #define _CAT(x, y) x ## y
-#define _PIN_NAME(_port, _pin, _name) enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}
-#define GPIO_PIN(_pin_name) {.port = _PORT_##_pin_name, .pin = _pin_name}
+#define _PIN_NAME(_port, _pin, _name)   enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}
 
 /** GPIOA pins configuration */
 #if __GPIO_PA_ENABLE__

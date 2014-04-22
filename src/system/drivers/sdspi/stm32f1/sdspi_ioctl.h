@@ -39,7 +39,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define SDSPI_IORQ_INITIALIZE_CARD      _IOR('S', 0x00, bool)
+#define SDSPI_IORQ_INITIALIZE_CARD      _IOR(_IO_GROUP_SDSPI, 0x00, bool)
 
 /*==============================================================================
   Exported object types

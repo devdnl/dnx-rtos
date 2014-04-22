@@ -39,8 +39,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define CRC_IORQ_SET_INPUT_MODE         _IOW('C', 0x00, enum CRC_input_mode)
-#define CRC_IORQ_GET_INPUT_MODE         _IOR('C', 0x01, enum CRC_input_mode)
+#define CRC_IORQ_SET_INPUT_MODE         _IOW(_IO_GROUP_CRC, 0x00, enum CRC_input_mode)
+#define CRC_IORQ_GET_INPUT_MODE         _IOR(_IO_GROUP_CRC, 0x01, enum CRC_input_mode)
 
 /*==============================================================================
   Exported object types
