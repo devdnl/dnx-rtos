@@ -160,7 +160,7 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
 #endif
 
-        for (int i = 0; i < ARRAY_SIZE(GPIOx); i++) {
+        for (uint i = 0; i < ARRAY_SIZE(GPIOx); i++) {
                 GPIOx[i].GPIO->ODR = GPIOx[i].ODR;
                 GPIOx[i].GPIO->CRL = GPIOx[i].CRL;
                 GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
@@ -320,22 +320,50 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return On success return 0 or 1. On error, -1 is returned, and errno set
+ *         appropriately.
  */
 //==============================================================================
 API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(arg);
 
-        switch (request) {
-        default:
-                errno = EBADRQC;
-                return STD_RET_ERROR;
+        if (arg) {
+                switch (request) {
+                case GPIO_IOCTL_SET_PIN: {
+                        GPIO_pin_t *io = arg;
+                        GPIOx[io->port_index].GPIO->BSRR = (1 << io->pin_number);
+                        break;
+                }
+
+                case GPIO_IOCTL_CLEAR_PIN: {
+                        GPIO_pin_t *io = arg;
+                        GPIOx[io->port_index].GPIO->BRR = (1 << io->pin_number);
+                        break;
+                }
+
+                case GPIO_IOCTL_TOGGLE_PIN: {
+                        GPIO_pin_t *io = arg;
+                        GPIOx[io->port_index].GPIO->ODR ^= (1 << io->pin_number);
+                        break;
+                }
+
+                case GPIO_IOCTL_GET_PIN: {
+                        GPIO_pin_t *io = arg;
+                        return (GPIOx[io->port_index].GPIO->IDR & (1 << io->pin_number)) >> io->pin_number;
+                        break;
+                }
+
+                default:
+                        errno = EBADRQC;
+                        return -1;
+                }
+
+                return 0;
+        } else {
+                errno = EINVAL;
+                return -1;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
