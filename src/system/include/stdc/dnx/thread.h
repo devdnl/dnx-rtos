@@ -1121,7 +1121,7 @@ static inline int thread_join(thread_t *thread)
 //==============================================================================
 /**
  * @brief int thread_cancel(thread_t *thread)
- * The function <b>thread_cancel</b>() kills running thread.
+ * The function <b>thread_cancel</b>() kills running thread pointet by <i>thread</i>.
  *
  * @param thread        thread object
  *

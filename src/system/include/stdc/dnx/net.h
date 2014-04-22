@@ -105,9 +105,34 @@ typedef enum netapi_flags {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function start DHCP client to gets IP addresses
+ * @brief int netapi_start_DHCP_client(void)
+ * The function <b>netapi_start_DHCP_client</b>() starts DHCP client. DHCP
+ * client gets IP address received from DHCP server. If DHCP
+ * client was successfully started, then 0 is returned. On error -1.
  *
- * @return 0 if success, otherwise -1
+ * @param None
+ *
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig dhcp_cfg;
+ *
+ *         netapi_get_ifconfig(&dhcp_cfg);
+ *
+ *         // configuration print ...
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_start_DHCP_client(void)
@@ -121,9 +146,25 @@ static inline int netapi_start_DHCP_client(void)
 
 //==============================================================================
 /**
- * @brief Function stop DHCP client
+ * @brief int netapi_stop_DHCP_client(void)
+ * The function <b>netapi_stop_DHCP_client</b>() stops DHCP client. DHCP
+ * client gets IP address received from DHCP server. If DHCP
+ * client was successfully stopped, then 0 is returned. On error -1.
  *
- * @return 0 if success, otherwise -1
+ * @param None
+ *
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_stop_DHCP_client();
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_stop_DHCP_client(void)
@@ -137,9 +178,29 @@ static inline int netapi_stop_DHCP_client(void)
 
 //==============================================================================
 /**
- * @brief Function renew DHCP connection
+ * @brief int netapi_renew_DHCP_connection(void)
+ * The function <b>netapi_renew_DHCP_connection</b>() renegotiates connection
+ * with DHCP server to get new IP or refresh connection.
+ * If connection was successfully renegotiates, then 0 is returned. On error -1.
  *
- * @return 0 if success, otherwise -1
+ * @param None
+ *
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_renew_DHCP_connection() == 0) {
+ *         // actions on success ...
+ * } else {
+ *         // actions on error ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_renew_DHCP_connection(void)
@@ -153,9 +214,40 @@ static inline int netapi_renew_DHCP_connection(void)
 
 //==============================================================================
 /**
- * @brief Function inform DHCP server about static IP configuration
+ * @brief int netapi_inform_DHCP_server(void)
+ * The function <b>netapi_inform_DHCP_server</b>() inform DHCP server about
+ * static IP configuration. On success, 0 is returned. On error, -1 is returned.
  *
- * @return 0 if success, otherwise -1
+ * @param None
+ *
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip, netmask, gateway;
+ *
+ * netapi_set_ip(&ip, 192,168,0,1);
+ * netapi_set_ip(&netmask, 255,255,255,0);
+ * netapi_set_ip(&gateway, 192,168,0,0);
+ *
+ * if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+ *
+ *         // if in the nerwork exist DHCP server then inform it about this configuration
+ *         if (netapi_inform_DHCP_server() == 0) {
+ *                 // actions on success ...
+ *         } else {
+ *                 // actions on error ...
+ *         }
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_inform_DHCP_server(void)
@@ -169,13 +261,42 @@ static inline int netapi_inform_DHCP_server(void)
 
 //==============================================================================
 /**
- * @brief Function configure network on static IP addresses
+ * @brief int netapi_ifup(const netapi_ip_t *ip, const netapi_ip_t *netmask, const netapi_ip_t *gateway)
+ * The function <b>netapi_ifup</b>() establish static IP connection.
+ * On success, 0 is returned. On error, -1 is returned.
  *
  * @param ip            a IP address
  * @param netmask       a net mask
  * @param gateway       a gateway IP address
  *
- * @return 0 if success, otherwise -1
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip, netmask, gateway;
+ *
+ * netapi_set_ip(&ip, 192,168,0,1);
+ * netapi_set_ip(&netmask, 255,255,255,0);
+ * netapi_set_ip(&gateway, 192,168,0,0);
+ *
+ * if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+ *
+ *         // if in the nerwork exist DHCP server then inform it about this configuration
+ *         if (netapi_inform_DHCP_server() == 0) {
+ *                 // actions on success ...
+ *         } else {
+ *                 // actions on error ...
+ *         }
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_ifup(const netapi_ip_t *ip, const netapi_ip_t *netmask, const netapi_ip_t *gateway)
@@ -192,9 +313,39 @@ static inline int netapi_ifup(const netapi_ip_t *ip, const netapi_ip_t *netmask,
 
 //==============================================================================
 /**
- * @brief Function close static configured network
+ * @brief int netapi_ifdown(void)
+ * The function <b>netapi_ifdown</b>() close static configured network.
+ * On success, 0 is returned. On error or if DHCP is used, -1 is returned.
  *
- * @return 0 if success, otherwise -1
+ * @param None
+ *
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip, netmask, gateway;
+ *
+ * netapi_set_ip(&ip, 192,168,0,1);
+ * netapi_set_ip(&netmask, 255,255,255,0);
+ * netapi_set_ip(&gateway, 192,168,0,0);
+ *
+ * if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+ *
+ *         // ...
+ *
+ *         netapi_ifdown();
+ *
+ *         // ...
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_ifdown(void)
@@ -208,11 +359,36 @@ static inline int netapi_ifdown(void)
 
 //==============================================================================
 /**
- * @brief Function gets network connection informations
+ * @brief int netapi_get_ifconfig(ifconfig *ifcfg)
+ * The function <b>netapi_get_ifconfig</b>() return network configuration pointed
+ * by <i>ifcfg</i>.
+ * On success, 0 is returned. On error, -1 is returned.
  *
  * @param ifcfg         a pointer to information object
  *
- * @return 0 if success, otherwise -1
+ * @errors None
+ *
+ * @return On success, 0 is returned. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig ifcfg;
+ *
+ *         netapi_get_ifconfig(&ifcfg);
+ *
+ *         printk("IP Address: %d.%d.%d.%d\n",
+ *                netapi_get_ip_part_a(&ifcfg.IP_address), netapi_get_ip_part_b(&ifcfg.IP_address),
+ *                netapi_get_ip_part_c(&ifcfg.IP_address), netapi_get_ip_part_d(&ifcfg.IP_address));
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int netapi_get_ifconfig(ifconfig *ifcfg)
@@ -227,13 +403,40 @@ static inline int netapi_get_ifconfig(ifconfig *ifcfg)
 
 //==============================================================================
 /**
- * @brief Function set ip address
+ * @brief void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, const u8_t c, const u8_t d)
+ * The function <b>netapi_set_ip</b>() set specified fields of IP object. IP object
+ * is pointed by <i>ip</i>. Specific parts of IP address are passed by <i>a</i>,
+ * <i>b</i>, <i>c</i>, and <i>d</i> values.
  *
- * @param ip            a IP address object
+ * @param ip            IP object
  * @param a             IP part a
  * @param b             IP part b
  * @param c             IP part c
  * @param d             IP part d
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip, netmask, gateway;
+ *
+ * netapi_set_ip(&ip, 192,168,0,1);
+ * netapi_set_ip(&netmask, 255,255,255,0);
+ * netapi_set_ip(&gateway, 192,168,0,0);
+ *
+ * if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+ *
+ *         // ...
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, const u8_t c, const u8_t d)
@@ -251,11 +454,37 @@ static inline void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, co
 
 //==============================================================================
 /**
- * @brief Function returns 1st part of IP address
+ * @brief u8_t netapi_get_ip_part_a(netapi_ip_t *ip)
+ * The function <b>netapi_get_ip_part_a</b>() return part <i>a</i> of IP address
+ * pointed by <i>ip</i>.
  *
- * @param ip            a IP address
+ * @param ip            IP address
  *
- * @return IP value
+ * @errors None
+ *
+ * @return Part <i>a</i> of selected IP address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig ifcfg;
+ *
+ *         netapi_get_ifconfig(&ifcfg);
+ *
+ *         printk("IP Address: %d.%d.%d.%d\n",
+ *                netapi_get_ip_part_a(&ifcfg.IP_address),
+ *                netapi_get_ip_part_b(&ifcfg.IP_address),
+ *                netapi_get_ip_part_c(&ifcfg.IP_address),
+ *                netapi_get_ip_part_d(&ifcfg.IP_address));
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u8_t netapi_get_ip_part_a(netapi_ip_t *ip)
@@ -270,11 +499,37 @@ static inline u8_t netapi_get_ip_part_a(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function returns 2nd part of IP address
+ * @brief u8_t netapi_get_ip_part_b(netapi_ip_t *ip)
+ * The function <b>netapi_get_ip_part_b</b>() return part <i>b</i> of IP address
+ * pointed by <i>ip</i>.
  *
- * @param ip            a IP address
+ * @param ip            IP address
  *
- * @return IP value
+ * @errors None
+ *
+ * @return Part <i>b</i> of selected IP address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig ifcfg;
+ *
+ *         netapi_get_ifconfig(&ifcfg);
+ *
+ *         printk("IP Address: %d.%d.%d.%d\n",
+ *                netapi_get_ip_part_a(&ifcfg.IP_address),
+ *                netapi_get_ip_part_b(&ifcfg.IP_address),
+ *                netapi_get_ip_part_c(&ifcfg.IP_address),
+ *                netapi_get_ip_part_d(&ifcfg.IP_address));
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u8_t netapi_get_ip_part_b(netapi_ip_t *ip)
@@ -289,11 +544,37 @@ static inline u8_t netapi_get_ip_part_b(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function returns 3rd part of IP address
+ * @brief u8_t netapi_get_ip_part_c(netapi_ip_t *ip)
+ * The function <b>netapi_get_ip_part_c</b>() return part <i>c</i> of IP address
+ * pointed by <i>ip</i>.
  *
- * @param ip            a IP address
+ * @param ip            IP address
  *
- * @return IP value
+ * @errors None
+ *
+ * @return Part <i>c</i> of selected IP address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig ifcfg;
+ *
+ *         netapi_get_ifconfig(&ifcfg);
+ *
+ *         printk("IP Address: %d.%d.%d.%d\n",
+ *                netapi_get_ip_part_a(&ifcfg.IP_address),
+ *                netapi_get_ip_part_b(&ifcfg.IP_address),
+ *                netapi_get_ip_part_c(&ifcfg.IP_address),
+ *                netapi_get_ip_part_d(&ifcfg.IP_address));
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u8_t netapi_get_ip_part_c(netapi_ip_t *ip)
@@ -308,11 +589,37 @@ static inline u8_t netapi_get_ip_part_c(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function returns 4th part of IP address
+ * @brief u8_t netapi_get_ip_part_d(netapi_ip_t *ip)
+ * The function <b>netapi_get_ip_part_d</b>() return part <i>d</i> of IP address
+ * pointed by <i>ip</i>.
  *
- * @param ip            a IP address
+ * @param ip            IP address
  *
- * @return IP value
+ * @errors None
+ *
+ * @return Part <i>d</i> of selected IP address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * if (netapi_start_DHCP_client() == 0) {
+ *         ifconfig ifcfg;
+ *
+ *         netapi_get_ifconfig(&ifcfg);
+ *
+ *         printk("IP Address: %d.%d.%d.%d\n",
+ *                netapi_get_ip_part_a(&ifcfg.IP_address),
+ *                netapi_get_ip_part_b(&ifcfg.IP_address),
+ *                netapi_get_ip_part_c(&ifcfg.IP_address),
+ *                netapi_get_ip_part_d(&ifcfg.IP_address));
+ *
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u8_t netapi_get_ip_part_d(netapi_ip_t *ip)
@@ -327,9 +634,25 @@ static inline u8_t netapi_get_ip_part_d(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function set IP to 0.0.0.0
+ * @brief void netapi_set_ip_to_any(netapi_ip_t *ip)
+ * The function <b>netapi_set_ip_to_any</b>() set IP address pointed by <i>ip</i>
+ * to any address value (0.0.0.0).
  *
- * @param ip            a IP address
+ * @param ip            IP address
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip;
+ * netapi_set_ip_to_any(&ip);
+ *
+ * // ...
  */
 //==============================================================================
 static inline void netapi_set_ip_to_any(netapi_ip_t *ip)
@@ -343,9 +666,25 @@ static inline void netapi_set_ip_to_any(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function set IP to 127.0.0.1
+ * @brief void netapi_set_ip_to_loopback(netapi_ip_t *ip)
+ * The function <b>netapi_set_ip_to_loopback</b>() set IP address pointed by <i>ip</i>
+ * to loopback address value (127.0.0.1).
  *
- * @param ip            a IP address
+ * @param ip            IP address
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip;
+ * netapi_set_ip_to_loopback(&ip);
+ *
+ * // ...
  */
 //==============================================================================
 static inline void netapi_set_ip_to_loopback(netapi_ip_t *ip)
@@ -359,9 +698,25 @@ static inline void netapi_set_ip_to_loopback(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Function set IP to 127.0.0.1
+ * @brief void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
+ * The function <b>netapi_set_ip_to_broadcast</b>() set IP address pointed by <i>ip</i>
+ * to broadcast address value (255.255.255.255).
  *
- * @param ip            a IP address
+ * @param ip            IP address
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip;
+ * netapi_set_ip_to_broadcast(&ip);
+ *
+ * // ...
  */
 //==============================================================================
 static inline void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
@@ -375,12 +730,51 @@ static inline void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
 
 //==============================================================================
 /**
- * @brief Create a new netconn (of a specific type) that has a callback function.
- * The corresponding pcb is also created.
+ * @brief netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
+ * The function <b>netapi_new_conn</b>() creates a new connection of specific
+ * type pointed by <i>type</i>. Return connection object address or <b>NULL</i>.
  *
- * @param type          the type of 'connection' to create (@see enum netapi_conn_type)
+ * @param type          connection type
  *
- * @return a newly allocated object or NULL on memory error
+ * @errors ENOMEM
+ *
+ * @return On success, object address is returned. On error, <b>NULL</b> is
+ * returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         netapi_ip_t ip;
+ *         netapi_set_ip_to_any(&ip);
+ *
+ *         if (netapi_bind(conn, &ip, 80) == NETAPI_ERR_OK) {
+ *                 if (netapi_listen(conn) == NETAPI_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         netapi_err_t err;
+ *                         do {
+ *                                 netapi_conn_t *new_conn;
+ *                                 err = netapi_accept(conn, &new_conn);
+ *                                 if (err == NETAPI_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         // connection handle ...
+ *
+ *                                         netapi_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NETAPI_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
@@ -395,13 +789,52 @@ static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
 
 //==============================================================================
 /**
- * @brief Close a netconn 'connection' and free its resources.
- * UDP and RAW connection are completely closed, TCP pcbs might still be in a waitstate
- * after this returns.
+ * @brief netapi_err_t netapi_delete_conn(netapi_conn_t *conn)
+ * The function <b>netapi_delete_conn</b>() close connection pointed by <i>conn</i>
+ * and free its resources. UDP and RAW connection are completely closed, TCP pcbs
+ * might still be in a waitstate after this returns. Function returns operation
+ * status described by <b>netapi_err_t</b>.
  *
- * @param conn          the connection to delete
+ * @param conn          connection
  *
- * @return NETAPI_ERR_OK if the connection was deleted
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>netapi_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         netapi_ip_t ip;
+ *         netapi_set_ip_to_any(&ip);
+ *
+ *         if (netapi_bind(conn, &ip, 80) == NETAPI_ERR_OK) {
+ *                 if (netapi_listen(conn) == NETAPI_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         netapi_err_t err;
+ *                         do {
+ *                                 netapi_conn_t *new_conn;
+ *                                 err = netapi_accept(conn, &new_conn);
+ *                                 if (err == NETAPI_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         // connection handle ...
+ *
+ *                                         netapi_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NETAPI_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_err_t netapi_delete_conn(netapi_conn_t *conn)
@@ -416,11 +849,33 @@ static inline netapi_err_t netapi_delete_conn(netapi_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Function returns connection type
+ * @brief netapi_conn_type_t netapi_get_conn_type(netapi_conn_t *conn)
+ * The function <b>netapi_get_conn_type</b>() returns connection type pointed
+ * by <i>conn</i>.
  *
- * @param conn          the connection
+ * @param conn          connection
  *
- * @return connection type
+ * @errors None
+ *
+ * @return Connection type defined in the <b>netapi_conn_type_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         netapi_conn_type_t type = netapi_get_conn_type(conn);
+ *
+ *         // ...
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_conn_type_t netapi_get_conn_type(netapi_conn_t *conn)
@@ -435,11 +890,39 @@ static inline netapi_conn_type_t netapi_get_conn_type(netapi_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Function check if in connection fatal error occurred
+ * @brief bool netapi_is_fatal_error(netapi_err_t error)
+ * The function <b>netapi_is_fatal_error</b>() check if <i>error</i> is a
+ * fatal error.
  *
- * @param error         the error to examine
+ * @param error         error number
  *
- * @return true if error is fatal, otherwise false
+ * @errors None
+ *
+ * @return Return <b>true</b> if <i>error</i> is a fatal error, otherwise <b>false</b>.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         netapi_ip_t ip;
+ *         netapi_set_ip_to_any(&ip);
+ *
+ *         netapi_err_t error = netapi_bind(conn, &ip, 80);
+ *         if (error == NETAPI_ERR_OK) {
+ *                 // ...
+ *         } else {
+ *                 if (netapi_is_fatal_error(error)) {
+ *                         // ...
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool netapi_is_fatal_error(netapi_err_t error)
@@ -454,16 +937,65 @@ static inline bool netapi_is_fatal_error(netapi_err_t error)
 
 //==============================================================================
 /**
- * @brief Get the local or remote IP address and port of a netconn.
- * For RAW netconns, this returns the protocol instead of a port!
+ * @brief netapi_err_t netapi_get_conn_address(netapi_conn_t *conn, netapi_ip_t *addr, u16_t *port, bool local)
+ * The function <b>netapi_get_conn_address</b>() return local or remote IP address
+ * and port of connection pointed by <i>conn</i>. For RAW connections, this
+ * returns the protocol instead of a port!
  *
- * @param conn          the netconn to query
+ * @param conn          the connection to query
  * @param addr          a pointer to which to save the IP address
  * @param port          a pointer to which to save the port (or protocol for RAW)
  * @param local         true to get the local IP address, false to get the remote one
  *
- * @retval NETAPI_ERR_NOT_CONNECTED     for invalid connections
- * @retval NETAPI_ERR_OK                if the information was retrieved
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>netapi_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         netapi_ip_t ip;
+ *         netapi_set_ip_to_any(&ip);
+ *
+ *         if (netapi_bind(conn, &ip, 80) == NETAPI_ERR_OK) {
+ *                 if (netapi_listen(conn) == NETAPI_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         netapi_err_t err;
+ *                         do {
+ *                                 netapi_conn_t *new_conn;
+ *                                 err = netapi_accept(conn, &new_conn);
+ *                                 if (err == NETAPI_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         netapi_ip_t ip;
+ *                                         u16_t       port;
+ *                                         netapi_get_conn_address(new_conn, &ip, &port, false);
+ *
+ *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
+ *                                                netapi_get_ip_part_a(&ip),
+ *                                                netapi_get_ip_part_b(&ip),
+ *                                                netapi_get_ip_part_c(&ip),
+ *                                                netapi_get_ip_part_d(&ip),
+ *                                                port);
+ *
+ *                                         // connection handle ...
+ *
+ *                                         netapi_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NETAPI_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_err_t netapi_get_conn_address(netapi_conn_t *conn, netapi_ip_t *addr, u16_t *port, bool local)
@@ -481,15 +1013,64 @@ static inline netapi_err_t netapi_get_conn_address(netapi_conn_t *conn, netapi_i
 
 //==============================================================================
 /**
- * @brief Bind a netconn to a specific local IP address and port.
+ * @brief netapi_err_t netapi_bind(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)
+ * The function <b>netapi_bind</b>() bind a connection pointed by <i>conn</i>
+ * to a specific local IP <i>addr</i> and port </i>port</i>.
  * Binding one netconn twice might not always be checked correctly!
  *
  * @param conn          the netconn to bind
- * @param addr          the local IP address to bind the netconn to (use IP_ADDR_ANY
- *                      to bind to all addresses)
+ * @param addr          the local IP address to bind the netconn to (use IP_ADDR_ANY to bind to all addresses)
  * @param port          the local port to bind the netconn to (not used for RAW)
  *
- * @return NETAPI_ERR_OK if bound, any other on failure
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>netapi_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         netapi_ip_t ip;
+ *         netapi_set_ip_to_any(&ip);
+ *
+ *         if (netapi_bind(conn, &ip, 80) == NETAPI_ERR_OK) {
+ *                 if (netapi_listen(conn) == NETAPI_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         netapi_err_t err;
+ *                         do {
+ *                                 netapi_conn_t *new_conn;
+ *                                 err = netapi_accept(conn, &new_conn);
+ *                                 if (err == NETAPI_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         netapi_ip_t ip;
+ *                                         u16_t       port;
+ *                                         netapi_get_conn_address(new_conn, &ip, &port, false);
+ *
+ *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
+ *                                                netapi_get_ip_part_a(&ip),
+ *                                                netapi_get_ip_part_b(&ip),
+ *                                                netapi_get_ip_part_c(&ip),
+ *                                                netapi_get_ip_part_d(&ip),
+ *                                                port);
+ *
+ *                                         // connection handle ...
+ *
+ *                                         netapi_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NETAPI_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_err_t netapi_bind(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)

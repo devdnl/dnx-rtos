@@ -1,5 +1,5 @@
 /*******************************************************************************
-* author: Daniel Zorychta, danz@jabster.p*
+* author: Daniel Zorychta, danz@jabster.pl
 *
 * File is based on Freddie Chopin's startup file
 *
