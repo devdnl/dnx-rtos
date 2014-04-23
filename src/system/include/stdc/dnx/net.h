@@ -1481,7 +1481,9 @@ static inline net_err_t net_recv(net_conn_t *conn, net_buf_t **new_buf)
  *
  * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
  * if (conn) {
- *         if (net_bind(conn, IP_ADDR_ANY, 4444) == NET_ERR_OK) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
  *
  *                 net_ip_t ip   = net_load_ip(192,168,0,10);
  *                 net_buf_t buf = net_new_buf();
@@ -1535,9 +1537,15 @@ static inline net_err_t net_sendto(net_conn_t *conn, net_buf_t *buf, net_ip_t *a
  *
  * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
  * if (conn) {
- *         if (net_bind(conn, IP_ADDR_ANY, 4444) == NET_ERR_OK) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
  *
- *                 if (net_connect(IP_ADDR_BROADCAST, 4445) == NET_ERR_OK) {
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip_broadcast;
+ *                 net_set_ip_to_broadcast(&ip_broadcast);
+ *
+ *                 if (net_connect(&ip_broadcast, 4445) == NET_ERR_OK) {
  *                         net_buf_t buf = net_new_buf();
  *                         u8_t data     = net_alloc_buf(buf, 100);
  *                         memset(data, 0xAA, 100);
