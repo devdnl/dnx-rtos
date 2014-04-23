@@ -442,13 +442,66 @@ static inline int netapi_get_ifconfig(ifconfig *ifcfg)
 static inline void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, const u8_t c, const u8_t d)
 {
 #if (CONFIG_NETWORK_ENABLE > 0)
-        IP4_ADDR(ip, a, b ,c ,d);
+        IP4_ADDR(ip, a, b, c, d);
 #else
         (void) ip;
         (void) a;
         (void) b;
         (void) c;
         (void) d;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief netapi_ip_t netapi_load_ip(const u8_t a, const u8_t b, const u8_t c, const u8_t d)
+ * The function <b>netapi_load_ip</b>() set specified fields of IP. Specific parts
+ * of IP address are passed by <i>a</i>, <i>b</i>, <i>c</i>, and <i>d</i> values.
+ * Function return assembled IP address.
+ *
+ * @param a             IP part a
+ * @param b             IP part b
+ * @param c             IP part c
+ * @param d             IP part d
+ *
+ * @errors None
+ *
+ * @return Return assembled IP address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_ip_t ip      = netapi_load_ip(192,168,0,1);
+ * netapi_ip_t netmask = netapi_load_ip(255,255,255,0);
+ * netapi_ip_t gateway = netapi_load_ip(192,168,0,0);
+ *
+ * if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+ *
+ *         // ...
+ * } else {
+ *         puts(strerror(ENONET));
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline netapi_ip_t netapi_load_ip(const u8_t a, const u8_t b, const u8_t c, const u8_t d)
+{
+#if (CONFIG_NETWORK_ENABLE > 0)
+        netapi_ip_t ip;
+        IP4_ADDR(&ip, a, b, c, d);
+        return ip;
+#else
+        (void) a;
+        (void) b;
+        (void) c;
+        (void) d;
+
+        netapi_ip_t ip;
+        ip.addr = 0;
+        return ip;
 #endif
 }
 
@@ -1087,13 +1140,42 @@ static inline netapi_err_t netapi_bind(netapi_conn_t *conn, netapi_ip_t *addr, u
 
 //==============================================================================
 /**
- * @brief Connect a netconn to a specific remote IP address and port.
+ * @brief netapi_err_t netapi_connect(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)
+ * The function <b>netapi_connect</b>() connect a connection pointed by <i>conn</i>
+ * to a specific remote IP address <i>addr</i> and port <i>port</i>.
  *
- * @param conn          the netconn to connect
+ * @param conn          the connection
  * @param addr          the remote IP address to connect to
  * @param port          the remote port to connect to (no used for RAW)
  *
- * @return NETAPI_ERR_OK if connected, return value of tcp_/udp_/raw_connect otherwise
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>netapi_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+ * if (conn) {
+ *         ifconfig ifcfg;
+ *         netapi_get_ifconfig(&ifcfg);
+ *         netapi_ip_t local_ip = ifcfg.IP_address;
+ *
+ *         if (netapi_bind(conn, &local_ip, 0) == NETAPI_ERR_OK) {
+ *                         netapi_ip_t remote_ip = netapi_load_ip(123,165,14,56);
+ *
+ *                         if (netapi_connect(conn, &remote_ip, 80) == NETAPI_ERR_OK) {
+ *                                 // ...
+ *                         }
+ *                 }
+ *         }
+ *
+ *         netapi_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline netapi_err_t netapi_connect(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)
