@@ -1170,6 +1170,8 @@ static inline net_err_t net_bind(net_conn_t *conn, net_ip_t *addr, u16_t port)
  *
  *                         if (net_connect(conn, &remote_ip, 80) == NET_ERR_OK) {
  *                                 // ...
+ *
+ *                                 net_close(conn);
  *                         }
  *                 }
  *         }
@@ -1194,11 +1196,42 @@ static inline net_err_t net_connect(net_conn_t *conn, net_ip_t *addr, u16_t port
 
 //==============================================================================
 /**
- * @brief Disconnect a netconn from its current peer (only valid for UDP netconns).
+ * @brief net_err_t net_disconnect(net_conn_t *conn)
+ * The function <b>net_disconnect</b>() disconnect UDP connection pointed by
+ * <i>conn</i> from its current peer.
  *
- * @param conn          the netconn to disconnect
+ * @param conn          the connection to disconnect
  *
- * @return NET_ERR_OK if disconnected
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         ifconfig ifcfg;
+ *         net_get_ifconfig(&ifcfg);
+ *         net_ip_t local_ip = ifcfg.IP_address;
+ *
+ *         if (net_bind(conn, &local_ip, 0) == NET_ERR_OK) {
+ *                         net_ip_t remote_ip = net_load_ip(123,165,14,56);
+ *
+ *                         if (net_connect(conn, &remote_ip, 80) == NET_ERR_OK) {
+ *                                 // ...
+ *
+ *                                 net_disconnect(conn);
+ *                         }
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_disconnect(net_conn_t *conn)
@@ -1213,11 +1246,61 @@ static inline net_err_t net_disconnect(net_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Set a TCP netconn into listen mode
+ * @brief net_err_t net_listen(net_conn_t *conn)
+ * The function <b>net_listen</b>() set a TCP connection pointed by <i>conn</i>
+ * into listen mode.
  *
- * @param conn          the tcp netconn to set to listen mode
+ * @param conn          the TCP connection to set to listen mode
  *
- * @return NET_ERR_OK if the netconn was set to listen (UDP and RAW netconns)
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_ip_t ip;
+ *                                         u16_t       port;
+ *                                         net_get_conn_address(new_conn, &ip, &port, false);
+ *
+ *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
+ *                                                net_get_ip_part_a(&ip),
+ *                                                net_get_ip_part_b(&ip),
+ *                                                net_get_ip_part_c(&ip),
+ *                                                net_get_ip_part_d(&ip),
+ *                                                port);
+ *
+ *                                         // connection handle ...
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_listen(net_conn_t *conn)
@@ -1232,12 +1315,62 @@ static inline net_err_t net_listen(net_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Accept a new connection on a TCP listening netconn.
+ * @brief net_err_t net_accept(net_conn_t *conn, net_conn_t ** new_conn)
+ * The function <b>net_accept</b>() accept a new connection pointed by <i>conn</i>
+ * on TCP listening connection.
  *
- * @param conn          the TCP listen netconn
+ * @param conn          the TCP listen connection
  * @param new_conn      pointer where the new connection is stored
  *
- * @return NET_ERR_OK if a new connection has been received or an error code otherwise
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_ip_t ip;
+ *                                         u16_t       port;
+ *                                         net_get_conn_address(new_conn, &ip, &port, false);
+ *
+ *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
+ *                                                net_get_ip_part_a(&ip),
+ *                                                net_get_ip_part_b(&ip),
+ *                                                net_get_ip_part_c(&ip),
+ *                                                net_get_ip_part_d(&ip),
+ *                                                port);
+ *
+ *                                         // connection handle ...
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_accept(net_conn_t *conn, net_conn_t ** new_conn)
@@ -1253,12 +1386,65 @@ static inline net_err_t net_accept(net_conn_t *conn, net_conn_t ** new_conn)
 
 //==============================================================================
 /**
- * @brief Receive data (in form of a netbuf containing a packet buffer) from a netconn
+ * @brief net_err_t net_recv(net_conn_t *conn, net_buf_t **new_buf)
+ * The function <b>net_recv</b>() receive data (in form of a net_buf_t containing
+ * a packet buffer) from a connection pointed by <i>conn</i> to buffer pointed
+ * by <i>new_buf</i>.
  *
- * @param conn          the netconn from which to receive data
- * @param new_buf       pointer where a new netbuf is stored when received data
+ * @param conn          the TCP listen connection
+ * @param new_conn      pointer where the new connection is stored
  *
- * @return NET_ERR_OK if data has been received, an error code otherwise
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_buf_t *inbuf;
+ *                                         if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+ *
+ *                                                 char *buf;
+ *                                                 u16_t buf_len;
+ *                                                 net_buf_data(inbuf, (void**)&buf, &buf_len);
+ *
+ *                                                 // ...
+ *
+ *                                                 puts("Connection closed");
+ *
+ *                                                 net_close(conn);
+ *                                                 net_delete_buf(inbuf);
+ *                                         }
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_recv(net_conn_t *conn, net_buf_t **new_buf)
@@ -1274,15 +1460,45 @@ static inline net_err_t net_recv(net_conn_t *conn, net_buf_t **new_buf)
 
 //==============================================================================
 /**
- * @brief Send data (in form of a netbuf) to a specific remote IP address and port.
- * Only to be used for UDP and RAW netconns (not TCP).
+ * @brief net_err_t net_sendto(net_conn_t *conn, net_buf_t *buf, net_ip_t *addr, u16_t port)
+ * The function <b>net_sendto</b>() send data using connection pointed by <i>conn</i>
+ * (in form of net_buf_t) to a specific remote IP pointed by <i>addr</i> and
+ * port <i>port</i>. Only to be used for UDP and RAW connections (no TCP).
  *
- * @param conn          the netconn over which to send data
- * @param buf           a netbuf containing the data to send
+ * @param conn          the connection over which to send data
+ * @param buf           a buffer containing the data to send
  * @param addr          the remote IP address to which to send the data
  * @param port          the remote port to which to send the data
  *
- * @return NET_ERR_OK if data was sent, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         if (net_bind(conn, IP_ADDR_ANY, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 u8_t data     = net_alloc_buf(buf, 100);
+ *                 memset(data, 0xAA, 100);
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_sendto(net_conn_t *conn, net_buf_t *buf, net_ip_t *addr, u16_t port)
@@ -1300,12 +1516,46 @@ static inline net_err_t net_sendto(net_conn_t *conn, net_buf_t *buf, net_ip_t *a
 
 //==============================================================================
 /**
- * @brief Send data over a UDP or RAW netconn (that is already connected).
+ * @brief net_err_t net_send(net_conn_t *conn, net_buf_t *buf)
+ * The function <b>net_send</b>() send data pointed by <i>buf</i> using connection
+ * pointed by <i>conn</i> (in form of net_buf_t) to a UDP or RAW connection that
+ * is already connected.
  *
- * @param conn          the UDP or RAW netconn over which to send data
- * @param buf           a netbuf containing the data to send
+ * @param conn          the UDP or RAW connection over which to send data
+ * @param buf           a net_buf_t containing the data to send
  *
- * @return NET_ERR_OK if data was sent, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         if (net_bind(conn, IP_ADDR_ANY, 4444) == NET_ERR_OK) {
+ *
+ *                 if (net_connect(IP_ADDR_BROADCAST, 4445) == NET_ERR_OK) {
+ *                         net_buf_t buf = net_new_buf();
+ *                         u8_t data     = net_alloc_buf(buf, 100);
+ *                         memset(data, 0xAA, 100);
+ *
+ *                         if (net_send(conn, buf) == NET_ERR_OK) {
+ *                                 // ...
+ *                         }
+ *
+ *                         net_delete_buf(buf);
+ *
+ *                         net_disconnect(conn);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_send(net_conn_t *conn, net_buf_t *buf)
@@ -1337,8 +1587,8 @@ static inline net_err_t net_send(net_conn_t *conn, net_buf_t *buf)
  */
 //==============================================================================
 static inline net_err_t net_write_partly(net_conn_t *conn, const void *data,
-                                               size_t size, net_flags_t flags,
-                                               size_t *bytes_written)
+                                         size_t size, net_flags_t flags,
+                                         size_t *bytes_written)
 {
 #if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_write_partly(conn, data, size, flags, bytes_written);
@@ -1369,7 +1619,7 @@ static inline net_err_t net_write_partly(net_conn_t *conn, const void *data,
  */
 //==============================================================================
 static inline net_err_t net_write(net_conn_t *conn, const void *data,
-                                        size_t size, net_flags_t flags)
+                                  size_t size, net_flags_t flags)
 {
 #if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_write(conn, data, size, flags);
