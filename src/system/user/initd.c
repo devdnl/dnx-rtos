@@ -207,7 +207,7 @@ static int run_level_1(void)
                 }
         }
 
-        ifconfig ifcfg;
+        ifconfig_t ifcfg;
         net_get_ifconfig(&ifcfg);
         if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"

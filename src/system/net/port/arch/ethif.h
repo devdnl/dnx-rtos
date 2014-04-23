@@ -62,7 +62,7 @@ typedef struct ifconfig {
         uint            rx_bytes;
         uint            tx_packets;
         uint            tx_bytes;
-} ifconfig;
+} ifconfig_t;
 
 /*==============================================================================
   Exported objects
@@ -78,7 +78,7 @@ extern int  _ethif_inform_DHCP_server();
 extern int  _ethif_renew_DHCP_connection();
 extern int  _ethif_if_up(const ip_addr_t*, const ip_addr_t*, const ip_addr_t*);
 extern int  _ethif_if_down();
-extern int  _ethif_get_ifconfig(ifconfig*);
+extern int  _ethif_get_ifconfig(ifconfig_t*);
 
 /*==============================================================================
   Exported inline functions

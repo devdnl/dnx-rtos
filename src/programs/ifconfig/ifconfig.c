@@ -89,8 +89,8 @@ static void show_details()
                 "DHCP CONFIGURED"
         };
 
-        ifconfig ifcfg;
-        memset(&ifcfg, 0, sizeof(ifconfig));
+        ifconfig_t ifcfg;
+        memset(&ifcfg, 0, sizeof(ifconfig_t));
         net_get_ifconfig(&ifcfg);
 
         printf("Network status: %s  HWaddr %2x:%2x:%2x:%2x:%2x:%2x\n"
@@ -180,8 +180,8 @@ PROGRAM_MAIN(ifconfig, int argc, char *argv[])
                         return 0;
                 }
 
-                ifconfig ifcfg;
-                memset(&ifcfg, 0, sizeof(ifconfig));
+                ifconfig_t ifcfg;
+                memset(&ifcfg, 0, sizeof(ifconfig_t));
                 net_get_ifconfig(&ifcfg);
 
                 if (down) {

@@ -122,7 +122,7 @@ typedef enum net_flags {
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig dhcp_cfg;
+ *         ifconfig_t dhcp_cfg;
  *
  *         net_get_ifconfig(&dhcp_cfg);
  *
@@ -359,7 +359,7 @@ static inline int net_ifdown(void)
 
 //==============================================================================
 /**
- * @brief int net_get_ifconfig(ifconfig *ifcfg)
+ * @brief int net_get_ifconfig(ifconfig_t *ifcfg)
  * The function <b>net_get_ifconfig</b>() return network configuration pointed
  * by <i>ifcfg</i>.
  * On success, 0 is returned. On error, -1 is returned.
@@ -376,7 +376,7 @@ static inline int net_ifdown(void)
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *
  *         net_get_ifconfig(&ifcfg);
  *
@@ -393,7 +393,7 @@ static inline int net_ifdown(void)
  * // ...
  */
 //==============================================================================
-static inline int net_get_ifconfig(ifconfig *ifcfg)
+static inline int net_get_ifconfig(ifconfig_t *ifcfg)
 {
 #if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_get_ifconfig(ifcfg);
@@ -525,7 +525,7 @@ static inline net_ip_t net_load_ip(const u8_t a, const u8_t b, const u8_t c, con
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *
  *         net_get_ifconfig(&ifcfg);
  *
@@ -570,7 +570,7 @@ static inline u8_t net_get_ip_part_a(net_ip_t *ip)
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *
  *         net_get_ifconfig(&ifcfg);
  *
@@ -615,7 +615,7 @@ static inline u8_t net_get_ip_part_b(net_ip_t *ip)
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *
  *         net_get_ifconfig(&ifcfg);
  *
@@ -660,7 +660,7 @@ static inline u8_t net_get_ip_part_c(net_ip_t *ip)
  * // ...
  *
  * if (net_start_DHCP_client() == 0) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *
  *         net_get_ifconfig(&ifcfg);
  *
@@ -787,7 +787,7 @@ static inline void net_set_ip_to_broadcast(net_ip_t *ip)
 /**
  * @brief net_conn_t *net_new_conn(net_conn_type_t type)
  * The function <b>net_new_conn</b>() creates a new connection of specific
- * type pointed by <i>type</i>. Return connection object address or <b>NULL</i>.
+ * type pointed by <i>type</i>. Return connection object address or <b>NULL</b>.
  *
  * @param type          connection type
  *
@@ -1161,7 +1161,7 @@ static inline net_err_t net_bind(net_conn_t *conn, net_ip_t *addr, u16_t port)
  *
  * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
  * if (conn) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *         net_get_ifconfig(&ifcfg);
  *         net_ip_t local_ip = ifcfg.IP_address;
  *
@@ -1213,7 +1213,7 @@ static inline net_err_t net_connect(net_conn_t *conn, net_ip_t *addr, u16_t port
  *
  * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
  * if (conn) {
- *         ifconfig ifcfg;
+ *         ifconfig_t ifcfg;
  *         net_get_ifconfig(&ifcfg);
  *         net_ip_t local_ip = ifcfg.IP_address;
  *
@@ -1315,7 +1315,7 @@ static inline net_err_t net_listen(net_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief net_err_t net_accept(net_conn_t *conn, net_conn_t ** new_conn)
+ * @brief net_err_t net_accept(net_conn_t *conn, net_conn_t **new_conn)
  * The function <b>net_accept</b>() accept a new connection pointed by <i>conn</i>
  * on TCP listening connection.
  *
@@ -1579,19 +1579,87 @@ static inline net_err_t net_send(net_conn_t *conn, net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Send data over a TCP netconn.
+ * @brief net_err_t net_write_partly(net_conn_t *conn, const void *data, size_t size, net_flags_t flags, size_t *bytes_written)
+ * The function <b>net_write_partly</b>() send data over TCP connection pointed
+ * by <i>conn</i>. Function send data pointed by <i>data</i> with size <i>size</i>.
+ * The flags <i>flags</i> determine how data shall be used. Number of written bytes
+ * is passed by pointer <i>bytes_written</i>. In function following flags can be
+ * used:<p>
  *
- * @param conn          the TCP netconn over which to send data
+ * <b>NET_CONN_FLAG_NOCOPY</b> - data will not be copied into stack memory (ROM source).<p>
+ * <b>NET_CONN_FLAG_COPY</b> - data will be copied into memory belonging to the stack.<p>
+ * <b>NET_CONN_FLAG_MORE</b> - for TCP connection, PSH flag will be set on last segment sent.<p>
+ * <b>NET_CONN_FLAG_DONTBLOCK</b> - only write the data if all data can be written at once.<p>
+ *
+ * @param conn          the TCP connection over which to send data
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
- * @param flags         combination of following flags :
- * - NET_CONN_FLAG_NOCOPY: data will not be copied into stack memory (ROM source)
- * - NET_CONN_FALG_COPY: data will be copied into memory belonging to the stack
- * - NET_CONN_FALG_MORE: for TCP connection, PSH flag will be set on last segment sent
- * - NET_CONN_FALG_DONTBLOCK: only write the data if all dat can be written at once
+ * @param flags         combination of described flags
  * @param bytes_written pointer to a location that receives the number of written bytes
  *
- * @return NET_ERR_OK if data was sent, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_buf_t *inbuf;
+ *                                         if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+ *
+ *                                                 char *buf;
+ *                                                 u16_t buf_len;
+ *                                                 net_buf_data(inbuf, (void**)&buf, &buf_len);
+ *
+ *                                                 // ...
+ *
+ *                                                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
+ *                                                         size_t written = 0;
+ *                                                         net_write_partialy(conn, http_html_hdr,
+ *                                                                            sizeof(http_html_hdr) - 1,
+ *                                                                            NET_CONN_FLAG_NOCOPY,
+ *                                                                            &written);
+ *                                                 }
+ *
+ *                                                 // ...
+ *
+ *                                                 puts("Connection closed");
+ *
+ *                                                 net_close(new_conn);
+ *                                                 net_delete_buf(inbuf);
+ *                                         }
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_write_partly(net_conn_t *conn, const void *data,
@@ -1612,18 +1680,84 @@ static inline net_err_t net_write_partly(net_conn_t *conn, const void *data,
 
 //==============================================================================
 /**
- * @brief Send data over a TCP netconn.
+ * @brief net_err_t net_write(net_conn_t *conn, const void *data, size_t size, net_flags_t flags)
+ * The function <b>net_write</b>() send data over TCP connection pointed
+ * by <i>conn</i>. Function send data pointed by <i>data</i> with size <i>size</i>.
+ * The flags <i>flags</i> determine how data shall be used. In function following
+ * flags can be used:<p>
  *
- * @param conn          the TCP netconn over which to send data
+ * <b>NET_CONN_FLAG_NOCOPY</b> - data will not be copied into stack memory (ROM source).<p>
+ * <b>NET_CONN_FLAG_COPY</b> - data will be copied into memory belonging to the stack.<p>
+ * <b>NET_CONN_FLAG_MORE</b> - for TCP connection, PSH flag will be set on last segment sent.<p>
+ * <b>NET_CONN_FLAG_DONTBLOCK</b> - only write the data if all data can be written at once.<p>
+ *
+ * @param conn          the TCP connection over which to send data
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
- * @param flags         combination of following flags :
- * - NET_CONN_FLAG_NOCOPY: data will not be copied into stack memory (ROM source)
- * - NET_CONN_FLAG_COPY: data will be copied into memory belonging to the stack
- * - NET_CONN_FLAG_MORE: for TCP connection, PSH flag will be set on last segment sent
- * - NET_CONN_FLAG_DONTBLOCK: only write the data if all data can be written at once
+ * @param flags         combination of described flags
  *
- * @return NET_ERR_OK if data was sent, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_buf_t *inbuf;
+ *                                         if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+ *
+ *                                                 char *buf;
+ *                                                 u16_t buf_len;
+ *                                                 net_buf_data(inbuf, (void**)&buf, &buf_len);
+ *
+ *                                                 // ...
+ *
+ *                                                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
+ *                                                         net_write(conn, http_html_hdr,
+ *                                                                   sizeof(http_html_hdr) - 1,
+ *                                                                   NET_CONN_FLAG_NOCOPY,
+ *                                                                   &written);
+ *                                                 }
+ *
+ *                                                 // ...
+ *
+ *                                                 puts("Connection closed");
+ *
+ *                                                 net_close(new_conn);
+ *                                                 net_delete_buf(inbuf);
+ *                                         }
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_write(net_conn_t *conn, const void *data,
@@ -1642,11 +1776,73 @@ static inline net_err_t net_write(net_conn_t *conn, const void *data,
 
 //==============================================================================
 /**
- * @brief Close a TCP netconn (doesn't delete it).
+ * @brief net_err_t net_close(net_conn_t *conn)
+ * The function <b>net_close</b>() close a TCP connection pointed by <i>conn</i>.
  *
- * @param conn          the TCP netconn to close
+ * @param conn          the TCP connection to close
  *
- * @return NET_ERR_OK if the netconn was closed, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_buf_t *inbuf;
+ *                                         if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+ *
+ *                                                 char *buf;
+ *                                                 u16_t buf_len;
+ *                                                 net_buf_data(inbuf, (void**)&buf, &buf_len);
+ *
+ *                                                 // ...
+ *
+ *                                                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
+ *                                                         net_write(conn, http_html_hdr,
+ *                                                                   sizeof(http_html_hdr) - 1,
+ *                                                                   NET_CONN_FLAG_NOCOPY,
+ *                                                                   &written);
+ *                                                 }
+ *
+ *                                                 // ...
+ *
+ *                                                 puts("Connection closed");
+ *
+ *                                                 net_close(new_conn);
+ *                                                 net_delete_buf(inbuf);
+ *                                         }
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_close(net_conn_t *conn)
@@ -1661,13 +1857,37 @@ static inline net_err_t net_close(net_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Shutdown one or both sides of a TCP netconn (doesn't delete it).
+ * @brief net_err_t net_shutdown(net_conn_t *conn, bool shut_rx, bool shut_tx)
+ * The function <b>net_shutdown</b>() shutdown one or both sides of a TCP
+ * connection pointed by <i>conn</i>. <i>shut_rx</i> and <i>shut_tx</i> boolean
+ * arguments determine shutdown side (true for shutdown).
  *
- * @param conn          the TCP netconn to shut down
+ * @param conn          the TCP connection to shutdown
  * @param shut_rx       shutdown rx connection
  * @param shut_tx       shutdown tx connection
  *
- * @return NET_ERR_OK if the netconn was closed, any other on error
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         // shutdown RX connection
+ *         net_shutdown(conn, true, false);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_shutdown(net_conn_t *conn, bool shut_rx, bool shut_tx)
@@ -1684,11 +1904,33 @@ static inline net_err_t net_shutdown(net_conn_t *conn, bool shut_rx, bool shut_t
 
 //==============================================================================
 /**
- * @brief Return last connection error
+ * @brief net_err_t net_get_last_conn_error(net_conn_t *conn)
+ * The function <b>net_get_last_conn_error</b>() return last connection error
+ * pointed by <i>conn</i>.
  *
- * @param conn          the netconn
+ * @param conn          the connection
  *
- * @return error value
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_err_t last_err = net_get_last_conn_error(conn);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_get_last_conn_error(net_conn_t *conn)
@@ -1703,10 +1945,45 @@ static inline net_err_t net_get_last_conn_error(net_conn_t *conn)
 
 //==============================================================================
 /**
- * @brief Create (allocate) and initialize a new netbuf.
- * The netbuf doesn't yet contain a packet buffer!
+ * @brief net_buf_t *net_new_buf(void)
+ * The function <b>net_new_buf</b>() create and initialize a new network buffer.
+ * The buffer does not yet contain a packet buffer!
  *
- * @return a pointer to a new buffer, NULL on lack of memory
+ * @param None
+ *
+ * @errors ENOMEM
+ *
+ * @return On success, object address is returned. On error, <b>NULL</b> is
+ * returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 u8_t data     = net_alloc_buf(buf, 100);
+ *                 memset(data, 0xAA, 100);
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_free_buf(buf);
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_buf_t *net_new_buf(void)
@@ -1720,9 +1997,44 @@ static inline net_buf_t *net_new_buf(void)
 
 //==============================================================================
 /**
- * @brief Deallocate a buffer allocated by net_new_buf().
+ * @brief void net_delete_buf(net_buf_t *buf)
+ * The function <b>net_delete_buf</b>() delete a network buffer created by
+ * <b>net_new_buf</b>() function pointed by <i>buf</i>.
  *
- * @param buf   pointer to a buffer allocated by net_new_buf()
+ * @param buf           a network buffer to delete
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 u8_t data     = net_alloc_buf(buf, 100);
+ *                 memset(data, 0xAA, 100);
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_free_buf(buf);
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void net_delete_buf(net_buf_t *buf)
@@ -1736,12 +2048,46 @@ static inline void net_delete_buf(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Allocate memory for a packet buffer for a given buffer.
+ * @brief void *net_alloc_buf(net_buf_t *buf, u16_t size)
+ * The function <b>net_alloc_buf</b>() allocate memory of size <i>size</i> for
+ * a packet buffer for a given network buffer pointed by <i>buf</i>.
  *
- * @param buf           the netbuf for which to allocate a packet buffer
+ * @param buf           the network buffer for which to allocate a packet buffer
  * @param size          the size of the packet buffer to allocate
  *
- * @return pointer to the allocated memory, NULL if no memory could be allocated
+ * @errors ENOMEM
+ *
+ * @return On success, buffer address is returned. On error, <b>NULL</b> is
+ * returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 u8_t data     = net_alloc_buf(buf, 100);
+ *                 memset(data, 0xAA, 100);
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_free_buf(buf);
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void *net_alloc_buf(net_buf_t *buf, u16_t size)
@@ -1757,9 +2103,44 @@ static inline void *net_alloc_buf(net_buf_t *buf, u16_t size)
 
 //==============================================================================
 /**
- * @brief Free the packet buffer included in a netbuf
+ * @brief void net_free_buf(net_buf_t *buf)
+ * The function <b>net_free_buf</b>() free the packet buffer included in a
+ * network buffer pointed by <i>buf</i>.
  *
- * @param buf   pointer to the netbuf which contains the packet buffer to free
+ * @param buf           pointer to the network buffer which contains the packet buffer to free
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 u8_t data     = net_alloc_buf(buf, 100);
+ *                 memset(data, 0xAA, 100);
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_free_buf(buf);
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void net_free_buf(net_buf_t *buf)
@@ -1773,14 +2154,44 @@ static inline void net_free_buf(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Let a netbuf reference existing (non-volatile) data.
+ * @brief net_err_t net_ref_buf(net_buf_t *buf, const void *data, u16_t size)
+ * The function <b>net_ref_buf</b>() lets a reference of network buffer pointed by <i>buf</i>
+ * to existing non-volatile data pointed by <i>data</i> of size <i>size</i>.
  *
- * @param buf           netbuf which should reference the data
- * @param data          pointer to the data to reference
- * @param size          size of the data
+ * @param buf           pointer to the network buffer which contains the packet buffer to free
  *
- * @return NET_ERR_OK        if data is referenced
- *         NET_ERR_MEM       if data couldn't be referenced due to lack of memory
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char *data = "My string";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         net_ip_t ip_any;
+ *         net_set_ip_to_any(&ip_any);
+ *         if (net_bind(conn, &ip_any, 4444) == NET_ERR_OK) {
+ *
+ *                 net_ip_t ip   = net_load_ip(192,168,0,10);
+ *                 net_buf_t buf = net_new_buf();
+ *                 net_ref_buf(buf, data, strlen(data));
+ *
+ *                 if (net_sendto(conn, buf, &ip, 4445) == NET_ERR_OK) {
+ *                         // ...
+ *                 }
+ *
+ *                 net_delete_buf(buf);
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_ref_buf(net_buf_t *buf, const void *data, u16_t size)
@@ -1797,11 +2208,42 @@ static inline net_err_t net_ref_buf(net_buf_t *buf, const void *data, u16_t size
 
 //==============================================================================
 /**
- * @brief Chain one netbuf to another (@see pbuf_chain)
+ * @brief void net_buf_chain(net_buf_t *head, net_buf_t *tail)
+ * The function <b>net_buf_chain</b>() chain one network buffer to another.
  *
- * @param head          the first netbuf
- * @param tail          netbuf to chain after head, freed by this function,
- *                      may not be reference after returning
+ * @param head          the first network buffer
+ * @param tail          network buffer to chain after head, freed by this function, may not be reference after returning
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char *data = "My string";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_UDP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t buf1;
+ *         net_buf_t buf2;
+ *
+ *         // ...
+ *
+ *         net_buf_chain(buf1, buf2);
+ *
+ *         // buf2 no longer can be used (deleted)
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void net_buf_chain(net_buf_t *head, net_buf_t *tail)
@@ -1816,14 +2258,68 @@ static inline void net_buf_chain(net_buf_t *head, net_buf_t *tail)
 
 //==============================================================================
 /**
- * @brief Get the data pointer and length of the data inside a netbuf.
+ * @brief net_err_t net_buf_data(net_buf_t *buf, void **data, u16_t *len)
+ * The function <b>net_buf_data</b>() get the data pointed by <i>data</i> and
+ * length pointed by <i>len</i> of the data inside a network buffer pointed by
+ * <i>buf</i>.
  *
- * @param buf           netbuf to get the data from
+ * @param buf           network buffer to get the data from
  * @param data          pointer to a void pointer where to store the data pointer
  * @param len           pointer to an u16_t where the length of the data is stored
  *
- * @return NET_ERR_OK        if the information was retreived,
- *         NET_ERR_BUFFER    on error.
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         net_ip_t ip;
+ *         net_set_ip_to_any(&ip);
+ *
+ *         if (net_bind(conn, &ip, 80) == NET_ERR_OK) {
+ *                 if (net_listen(conn) == NET_ERR_OK) {
+ *                         puts("Listen connection");
+ *
+ *                         net_err_t err;
+ *                         do {
+ *                                 net_conn_t *new_conn;
+ *                                 err = net_accept(conn, &new_conn);
+ *                                 if (err == NET_ERR_OK) {
+ *                                         puts("Accept connection");
+ *
+ *                                         net_buf_t *inbuf;
+ *                                         if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+ *
+ *                                                 char *buf;
+ *                                                 u16_t buf_len;
+ *                                                 net_buf_data(inbuf, (void**)&buf, &buf_len);
+ *
+ *                                                 // ...
+ *
+ *                                                 puts("Connection closed");
+ *
+ *                                                 net_close(new_conn);
+ *                                                 net_delete_buf(inbuf);
+ *                                         }
+ *
+ *                                         net_delete_conn(new_conn);
+ *                                 }
+ *
+ *                         } while (err == NET_ERR_OK);
+ *                 }
+ *         }
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_buf_data(net_buf_t *buf, void **data, u16_t *len)
@@ -1840,15 +2336,43 @@ static inline net_err_t net_buf_data(net_buf_t *buf, void **data, u16_t *len)
 
 //==============================================================================
 /**
- * @brief Move the current data pointer of a packet buffer contained in a netbuf
- * to the next part.
- * The packet buffer itself is not modified.
+ * @brief int net_next_buf(net_buf_t *buf)
+ * The function <b>net_next_buf</b>() move the current data pointer of a packet
+ * buffer contained in a network buffer pointed by <i>buf</i> to the next part.
  *
- * @param buf   the netbuf to modify
+ * @param buf           network buffer to modify
  *
- * @return -1  if there is no next part
- *          1  if moved to the next part but now there is no next part
- *          0  if moved to the next part and there are still more parts
+ * @errors None
+ *
+ * @return Return -1 if there is no next part. Return 0 if moved to the next
+ * part and there are still more parts. Return 1 if moved to the next part but
+ * now there is no next part.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         do {
+ *
+ *                 // ...
+ *
+ *         } while (net_next_buf(buf) == 0)
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int net_next_buf(net_buf_t *buf)
@@ -1863,11 +2387,38 @@ static inline int net_next_buf(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Move the current data pointer of a packet buffer contained in a netbuf
- * to the beginning of the packet.
- * The packet buffer itself is not modified.
+ * @brief void net_first_buf(net_buf_t *buf)
+ * The function <b>net_first_buf</b>() move the current data pointer of a
+ * packet buffer contained in a network buffer pointed by <i>buf</i> to the
+ * beginning of the packet. The packet buffer itself is not modified.
  *
- * @param buf   the netbuf to modify
+ * @param buf           network buffer to modify
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         net_first_buf(buf);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline void net_first_buf(net_buf_t *buf)
@@ -1881,15 +2432,50 @@ static inline void net_first_buf(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Copy (part of) the contents of a packet buffer to an application supplied buffer.
+ * @brief int net_copy_buf_partial(net_buf_t *buf, void *data, u16_t len, u16_t offset)
+ * The function <b>net_copy_buf_partial</b>() copy (part of) the contents of
+ * a packet buffer contained in a network buffer pointed by <i>buf</i> to an
+ * application supplied buffer pointed by <i>data</i> of length <i>len</i>.
+ * Data to be copied to an application buffer from packet buffer of offset <i>offset</i>.
  *
- * @param buf           the pbuf from which to copy data
+ * @param buf           the network buffer from which to copy data
  * @param data          the application supplied buffer
- * @param len           length of data to copy (dataptr must be big enough). No more
+ * @param len           length of data to copy (data must be big enough). No more
  *                      than buf->tot_len will be copied, irrespective of len
  * @param offset        offset into the packet buffer from where to begin copying len bytes
  *
- * @return the number of bytes copied, or 0 on failure
+ * @errors None
+ *
+ * @return The number of bytes copied, or 0 on failure.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         int copied = 0;
+ *         do {
+ *                u8_t data[100];
+ *                copied = net_copy_buf_partial(buf, &data, sizeof(data), copied);
+ *
+ *                // ...
+ *
+ *         } while (copied == sizeof(data));
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int net_copy_buf_partial(net_buf_t *buf, void *data, u16_t len, u16_t offset)
@@ -1907,14 +2493,42 @@ static inline int net_copy_buf_partial(net_buf_t *buf, void *data, u16_t len, u1
 
 //==============================================================================
 /**
- * @brief Copy the contents of a packet buffer to an application supplied buffer.
+ * @brief int net_copy_buf(net_buf_t *buf, void *data, u16_t len)
+ * The function <b>net_copy_buf</b>() copy the contents of a packet buffer
+ * contained in a network buffer pointed by <i>buf</i> to an application supplied
+ * buffer pointed by <i>data</i> of length <i>len</i>.
  *
- * @param buf           the pbuf from which to copy data
+ * @param buf           the network buffer from which to copy data
  * @param data          the application supplied buffer
- * @param len           length of data to copy (dataptr must be big enough). No more
+ * @param len           length of data to copy (data must be big enough). No more
  *                      than buf->tot_len will be copied, irrespective of len
  *
- * @return the number of bytes copied, or 0 on failure
+ * @errors None
+ *
+ * @return The number of bytes copied, or 0 on failure.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         u8_t data[100];
+ *         int copied = net_copy_buf(buf, &data, sizeof(data));
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int net_copy_buf(net_buf_t *buf, void *data, u16_t len)
@@ -1931,15 +2545,42 @@ static inline int net_copy_buf(net_buf_t *buf, void *data, u16_t len)
 
 //==============================================================================
 /**
- * @brief Copy application supplied data into a buf.
- * This function can only be used to copy the equivalent of buf->tot_len data.
+ * @brief net_err_t net_take_buf(net_buf_t *buf, void *data, u16_t len)
+ * The function <b>net_take_buf</b>() copy application supplied data pointed
+ * by <i>data</i> of length <i>len</i> into a network buffer pointed by <i>buf</i>.
  *
- * @param buf           pbuf to fill with data
+ * @param buf           network buffer to fill with data
  * @param data          application supplied data buffer
  * @param len           length of the application supplied data buffer
  *
- * @return NET_ERR_OK                if successful,
- *         NET_ERR_OUT_OF_MEMORY     if the pbuf is not big enough
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         u8_t data[100];
+ *         memset(data, 0xAA, sizeof(data));
+ *
+ *         net_take_buf(buf, &data, sizeof(data));
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_err_t net_take_buf(net_buf_t *buf, void *data, u16_t len)
@@ -1956,11 +2597,37 @@ static inline net_err_t net_take_buf(net_buf_t *buf, void *data, u16_t len)
 
 //==============================================================================
 /**
- * @brief Gets size of buffer
+ * @brief u16_t net_get_buf_length(net_buf_t *buf)
+ * The function <b>net_get_buf_length</b>() gets size of network buffer pointed
+ * by <i>buf</i>.
  *
- * @param buf           the netbuf for which length is getting
+ * @param buf           the network buffer for which length is getting
  *
- * @return netbuf length
+ * @errors None
+ *
+ * @return Network buffer length.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         u16_t len = net_get_buf_length(buf);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u16_t net_get_buf_length(net_buf_t *buf)
@@ -1975,11 +2642,37 @@ static inline u16_t net_get_buf_length(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Return address which buffer is from
+ * @brief net_ip_t net_get_buf_origin_address(net_buf_t *buf)
+ * The function <b>net_get_buf_origin_address</b>() return address which network
+ * buffer pointed by <i>buf</i> is from.
  *
- * @param buf           the netbuf
+ * @param buf           the network buffer
  *
- * @return buffer address source
+ * @errors None
+ *
+ * @return Network buffer origin address.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         net_ip_t ip = net_get_buf_origin_address(buf);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline net_ip_t net_get_buf_origin_address(net_buf_t *buf)
@@ -1996,11 +2689,37 @@ static inline net_ip_t net_get_buf_origin_address(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief Return port of buffer
+ * @brief u16_t net_get_buf_port(net_buf_t *buf)
+ * The function <b>net_get_buf_port</b>() return port of network buffer
+ * pointed by <i>buf</i>.
  *
- * @param buf           the netbuf
+ * @param buf           the network buffer
  *
- * @return port number
+ * @errors None
+ *
+ * @return Port number.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_buf_t *buf;
+ *
+ *         // ...
+ *
+ *         u16_t port = net_get_buf_port(buf);
+ *
+ *         // ...
+ *
+ *         net_delete_conn(conn);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u16_t net_get_buf_port(net_buf_t *buf)
