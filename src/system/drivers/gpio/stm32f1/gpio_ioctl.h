@@ -37,12 +37,192 @@ extern "C" {
 #endif
 
 /*==============================================================================
-  Exported macros
-==============================================================================*/
-
-/*==============================================================================
   Exported object types
 ==============================================================================*/
+enum {
+#if __GPIO_PA_ENABLE__
+        _GPIO_PA,
+#endif
+#if __GPIO_PB_ENABLE__
+        _GPIO_PB,
+#endif
+#if __GPIO_PC_ENABLE__
+        _GPIO_PC,
+#endif
+#if __GPIO_PD_ENABLE__
+        _GPIO_PD,
+#endif
+#if __GPIO_PE_ENABLE__
+        _GPIO_PE,
+#endif
+#if __GPIO_PF_ENABLE__
+        _GPIO_PF,
+#endif
+#if __GPIO_PG_ENABLE__
+        _GPIO_PG
+#endif
+};
+
+typedef struct {
+        u8_t port_index : 4;
+        u8_t pin_number : 4;
+} GPIO_pin_t;
+
+/*==============================================================================
+  Exported macros
+==============================================================================*/
+/* IOCTL requests for GPIO */
+#define GPIO_IOCTL_SET_PIN              _IOW(_IO_GROUP_GPIO, 0, GPIO_pin_t*)
+#define GPIO_IOCTL_CLEAR_PIN            _IOW(_IO_GROUP_GPIO, 1, GPIO_pin_t*)
+#define GPIO_IOCTL_TOGGLE_PIN           _IOW(_IO_GROUP_GPIO, 2, GPIO_pin_t*)
+#define GPIO_IOCTL_GET_PIN              _IOR(_IO_GROUP_GPIO, 3, GPIO_pin_t*)
+
+/* macro load GPIO_pin_t structure using 1 argument only */
+#define GPIO_PIN(_pin_name)             {.port = _PORT_##_pin_name, .pin = _pin_name}
+
+/* helper macros */
+#define _CAT(x, y) x ## y
+#define _PIN_NAME(_port, _pin, _name)   enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}
+
+/** GPIOA pins configuration */
+#if __GPIO_PA_ENABLE__
+_PIN_NAME(_GPIO_PA,  0, __GPIO_PA_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PA,  1, __GPIO_PA_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PA,  2, __GPIO_PA_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PA,  3, __GPIO_PA_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PA,  4, __GPIO_PA_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PA,  5, __GPIO_PA_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PA,  6, __GPIO_PA_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PA,  7, __GPIO_PA_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PA,  8, __GPIO_PA_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PA,  9, __GPIO_PA_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PA, 10, __GPIO_PA_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PA, 11, __GPIO_PA_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PA, 12, __GPIO_PA_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PA, 13, __GPIO_PA_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PA, 14, __GPIO_PA_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PA, 15, __GPIO_PA_PIN_15_NAME__);
+#endif
+
+/** GPIOB pins configuration */
+#if __GPIO_PB_ENABLE__
+_PIN_NAME(_GPIO_PB,  0, __GPIO_PB_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PB,  1, __GPIO_PB_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PB,  2, __GPIO_PB_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PB,  3, __GPIO_PB_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PB,  4, __GPIO_PB_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PB,  5, __GPIO_PB_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PB,  6, __GPIO_PB_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PB,  7, __GPIO_PB_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PB,  8, __GPIO_PB_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PB,  9, __GPIO_PB_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PB, 10, __GPIO_PB_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PB, 11, __GPIO_PB_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PB, 12, __GPIO_PB_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PB, 13, __GPIO_PB_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PB, 14, __GPIO_PB_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PB, 15, __GPIO_PB_PIN_15_NAME__);
+#endif
+
+/** GPIOC pins configuration */
+#if __GPIO_PC_ENABLE__
+_PIN_NAME(_GPIO_PC,  0, __GPIO_PC_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PC,  1, __GPIO_PC_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PC,  2, __GPIO_PC_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PC,  3, __GPIO_PC_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PC,  4, __GPIO_PC_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PC,  5, __GPIO_PC_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PC,  6, __GPIO_PC_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PC,  7, __GPIO_PC_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PC,  8, __GPIO_PC_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PC,  9, __GPIO_PC_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PC, 10, __GPIO_PC_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PC, 11, __GPIO_PC_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PC, 12, __GPIO_PC_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PC, 13, __GPIO_PC_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PC, 14, __GPIO_PC_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PC, 15, __GPIO_PC_PIN_15_NAME__);
+#endif
+
+/** GPIOD pins configuration */
+#if __GPIO_PD_ENABLE__
+_PIN_NAME(_GPIO_PD,  0, __GPIO_PD_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PD,  1, __GPIO_PD_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PD,  2, __GPIO_PD_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PD,  3, __GPIO_PD_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PD,  4, __GPIO_PD_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PD,  5, __GPIO_PD_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PD,  6, __GPIO_PD_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PD,  7, __GPIO_PD_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PD,  8, __GPIO_PD_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PD,  9, __GPIO_PD_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PD, 10, __GPIO_PD_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PD, 11, __GPIO_PD_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PD, 12, __GPIO_PD_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PD, 13, __GPIO_PD_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PD, 14, __GPIO_PD_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PD, 15, __GPIO_PD_PIN_15_NAME__);
+#endif
+
+/** GPIOE pins configuration */
+#if __GPIO_PE_ENABLE__
+_PIN_NAME(_GPIO_PE,  0, __GPIO_PE_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PE,  1, __GPIO_PE_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PE,  2, __GPIO_PE_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PE,  3, __GPIO_PE_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PE,  4, __GPIO_PE_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PE,  5, __GPIO_PE_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PE,  6, __GPIO_PE_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PE,  7, __GPIO_PE_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PE,  8, __GPIO_PE_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PE,  9, __GPIO_PE_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PE, 10, __GPIO_PE_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PE, 11, __GPIO_PE_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PE, 12, __GPIO_PE_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PE, 13, __GPIO_PE_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PE, 14, __GPIO_PE_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PE, 15, __GPIO_PE_PIN_15_NAME__);
+#endif
+
+/** GPIOF pins configuration */
+#if __GPIO_PF_ENABLE__
+_PIN_NAME(_GPIO_PF,  0, __GPIO_PF_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PF,  1, __GPIO_PF_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PF,  2, __GPIO_PF_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PF,  3, __GPIO_PF_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PF,  4, __GPIO_PF_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PF,  5, __GPIO_PF_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PF,  6, __GPIO_PF_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PF,  7, __GPIO_PF_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PF,  8, __GPIO_PF_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PF,  9, __GPIO_PF_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PF, 10, __GPIO_PF_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PF, 11, __GPIO_PF_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PF, 12, __GPIO_PF_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PF, 13, __GPIO_PF_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PF, 14, __GPIO_PF_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PF, 15, __GPIO_PF_PIN_15_NAME__);
+#endif
+
+/** GPIOG pins configuration */
+#if __GPIO_PG_ENABLE__
+_PIN_NAME(_GPIO_PG,  0, __GPIO_PG_PIN_0_NAME__ );
+_PIN_NAME(_GPIO_PG,  1, __GPIO_PG_PIN_1_NAME__ );
+_PIN_NAME(_GPIO_PG,  2, __GPIO_PG_PIN_2_NAME__ );
+_PIN_NAME(_GPIO_PG,  3, __GPIO_PG_PIN_3_NAME__ );
+_PIN_NAME(_GPIO_PG,  4, __GPIO_PG_PIN_4_NAME__ );
+_PIN_NAME(_GPIO_PG,  5, __GPIO_PG_PIN_5_NAME__ );
+_PIN_NAME(_GPIO_PG,  6, __GPIO_PG_PIN_6_NAME__ );
+_PIN_NAME(_GPIO_PG,  7, __GPIO_PG_PIN_7_NAME__ );
+_PIN_NAME(_GPIO_PG,  8, __GPIO_PG_PIN_8_NAME__ );
+_PIN_NAME(_GPIO_PG,  9, __GPIO_PG_PIN_9_NAME__ );
+_PIN_NAME(_GPIO_PG, 10, __GPIO_PG_PIN_10_NAME__);
+_PIN_NAME(_GPIO_PG, 11, __GPIO_PG_PIN_11_NAME__);
+_PIN_NAME(_GPIO_PG, 12, __GPIO_PG_PIN_12_NAME__);
+_PIN_NAME(_GPIO_PG, 13, __GPIO_PG_PIN_13_NAME__);
+_PIN_NAME(_GPIO_PG, 14, __GPIO_PG_PIN_14_NAME__);
+_PIN_NAME(_GPIO_PG, 15, __GPIO_PG_PIN_15_NAME__);
+#endif
 
 /*==============================================================================
   Exported objects

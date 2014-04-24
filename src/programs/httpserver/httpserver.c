@@ -71,16 +71,16 @@ static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\
  * @brief HTTP server
  */
 //==============================================================================
-static void serve(netapi_conn_t *conn)
+static void serve(net_conn_t *conn)
 {
         errno = 0;
 
-        netapi_buf_t *inbuf;
-        if (netapi_recv(conn, &inbuf) == NETAPI_ERR_OK) {
+        net_buf_t *inbuf;
+        if (net_recv(conn, &inbuf) == NET_ERR_OK) {
 
                 char *buf;
                 u16_t buf_len;
-                netapi_buf_data(inbuf, (void**)&buf, &buf_len);
+                net_buf_data(inbuf, (void**)&buf, &buf_len);
 
                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
 
@@ -103,13 +103,13 @@ static void serve(netapi_conn_t *conn)
 
                                         FILE *file = fopen(path, "r");
                                         if (file) {
-                                                netapi_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NETAPI_CONN_FLAG_NOCOPY);
+                                                net_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
 
                                                 char *cache = malloc(CACHE_LEN);
                                                 if (cache) {
                                                         size_t n;
                                                         while ((n = fread(cache, 1, CACHE_LEN, file))) {
-                                                                netapi_write(conn, cache, n, NETAPI_CONN_FLAG_COPY);
+                                                                net_write(conn, cache, n, NET_CONN_FLAG_COPY);
                                                         }
 
                                                         if (ferror(file)) {
@@ -135,8 +135,8 @@ static void serve(netapi_conn_t *conn)
 
                 puts("Connection closed");
 
-                netapi_close(conn);
-                netapi_delete_buf(inbuf);
+                net_close(conn);
+                net_delete_buf(inbuf);
         }
 }
 
@@ -155,27 +155,27 @@ PROGRAM_MAIN(httpserver, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+        net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
         if (conn) {
-                if (netapi_bind(conn, NULL, 80) == NETAPI_ERR_OK) {
-                        if (netapi_listen(conn) == NETAPI_ERR_OK) {
+                if (net_bind(conn, NULL, 80) == NET_ERR_OK) {
+                        if (net_listen(conn) == NET_ERR_OK) {
                                 puts("Listen connection");
 
-                                netapi_err_t err;
+                                net_err_t err;
                                 do {
-                                        netapi_conn_t *new_conn;
-                                        err = netapi_accept(conn, &new_conn);
-                                        if (err == NETAPI_ERR_OK) {
+                                        net_conn_t *new_conn;
+                                        err = net_accept(conn, &new_conn);
+                                        if (err == NET_ERR_OK) {
                                                 puts("Accept connection");
                                                 serve(new_conn);
-                                                netapi_delete_conn(new_conn);
+                                                net_delete_conn(new_conn);
                                         }
 
-                                } while (err == NETAPI_ERR_OK);
+                                } while (err == NET_ERR_OK);
                         }
                 }
 
-                netapi_delete_conn(conn);
+                net_delete_conn(conn);
         }
 
         puts("Exit");

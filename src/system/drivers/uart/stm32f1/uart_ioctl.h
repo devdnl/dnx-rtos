@@ -39,9 +39,9 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define UART_IORQ_SET_CONFIGURATION                     _IOW('U', 0x00, struct UART_config*)
-#define UART_IORQ_GET_CONFIGURATION                     _IOR('U', 0x01, struct UART_config*)
-#define UART_IORQ_GET_CHAR_UNBLOCKING                   _IOR('U', 0x02, char*)
+#define UART_IORQ_SET_CONFIGURATION                     _IOW(_IO_GROUP_UART, 0x00, struct UART_config*)
+#define UART_IORQ_GET_CONFIGURATION                     _IOR(_IO_GROUP_UART, 0x01, struct UART_config*)
+#define UART_IORQ_GET_CHAR_UNBLOCKING                   _IOR(_IO_GROUP_UART, 0x02, char*)
 
 /*==============================================================================
   Exported object types

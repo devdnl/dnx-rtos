@@ -188,27 +188,27 @@ static int run_level_1(void)
         /* network up */
         printk("Configuring DHCP client... ");
 
-        if (netapi_start_DHCP_client() == 0) {
+        if (net_start_DHCP_client() == 0) {
                 printk("OK\n");
         } else {
                 printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
                 printk("Configuring static IP... ");
 
-                netapi_ip_t ip, mask, gateway;
-                netapi_set_ip(&ip, 192,168,0,120);
-                netapi_set_ip(&mask, 255,255,255,0);
-                netapi_set_ip(&gateway, 192,168,0,1);
+                net_ip_t ip, mask, gateway;
+                net_set_ip(&ip, 192,168,0,120);
+                net_set_ip(&mask, 255,255,255,0);
+                net_set_ip(&gateway, 192,168,0,1);
 
-                if (netapi_ifup(&ip, &mask, &gateway) == 0) {
+                if (net_ifup(&ip, &mask, &gateway) == 0) {
                         printk("OK\n");
                 } else {
                         printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
-        ifconfig ifcfg;
-        netapi_get_ifconfig(&ifcfg);
+        ifconfig_t ifcfg;
+        net_get_ifconfig(&ifcfg);
         if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
@@ -218,12 +218,12 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-                       netapi_get_ip_part_a(&ifcfg.IP_address), netapi_get_ip_part_b(&ifcfg.IP_address),
-                       netapi_get_ip_part_c(&ifcfg.IP_address), netapi_get_ip_part_d(&ifcfg.IP_address),
-                       netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
-                       netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
-                       netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
-                       netapi_get_ip_part_c(&ifcfg.gateway), netapi_get_ip_part_d(&ifcfg.gateway));
+                       net_get_ip_part_a(&ifcfg.IP_address), net_get_ip_part_b(&ifcfg.IP_address),
+                       net_get_ip_part_c(&ifcfg.IP_address), net_get_ip_part_d(&ifcfg.IP_address),
+                       net_get_ip_part_a(&ifcfg.net_mask), net_get_ip_part_b(&ifcfg.net_mask),
+                       net_get_ip_part_c(&ifcfg.net_mask), net_get_ip_part_d(&ifcfg.net_mask),
+                       net_get_ip_part_a(&ifcfg.gateway), net_get_ip_part_b(&ifcfg.gateway),
+                       net_get_ip_part_c(&ifcfg.gateway), net_get_ip_part_d(&ifcfg.gateway));
         }
 
         return STD_RET_OK;
