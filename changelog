@@ -1,3 +1,13 @@
+dnx/FreeRTOS 1.3.1
+==================
+New Features, Improvements:
+- Created centralized project configuration
+- Implemented text and GUI configuration wizard
+- Added documentation to application layer libraries
+
+Fixed Bugs:
+- none
+
 dnx/FreeRTOS 1.3.0
 ==================
 New Features, Improvements:

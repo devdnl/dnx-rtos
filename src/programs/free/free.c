@@ -73,7 +73,7 @@ PROGRAM_MAIN(free, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        struct sysmoni_used_memory sysmem;
+        memstat_t sysmem;
         get_detailed_memory_usage(&sysmem);
 
         for (uint module = 0; module < drv_count; module++) {

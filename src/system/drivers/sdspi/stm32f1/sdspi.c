@@ -44,6 +44,41 @@
 #define MTX_BLOCK_TIME_LONG                             200
 #define RELEASE_TIMEOUT_MS                              1000
 
+/* DMA and SPI automatic configuration */
+#if (SDSPI_PORT == 1)
+#define SPI_PORT                                        SPI1
+#define SDSPI_DMA                                       DMA1
+#define SDSPI_DMA_TX_CHANNEL                            DMA1_Channel3
+#define SDSPI_DMA_TX_CHANNEL_NO                         3
+#define SDSPI_DMA_RX_CHANNEL                            DMA1_Channel2
+#define SDSPI_DMA_RX_CHANNEL_NO                         2
+#define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel2_IRQHandler
+#define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel2_IRQn
+#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#elif (SDSPI_PORT == 2)
+#define SPI_PORT                                        SPI2
+#define SDSPI_DMA                                       DMA1
+#define SDSPI_DMA_TX_CHANNEL                            DMA1_Channel5
+#define SDSPI_DMA_TX_CHANNEL_NO                         5
+#define SDSPI_DMA_RX_CHANNEL                            DMA1_Channel4
+#define SDSPI_DMA_RX_CHANNEL_NO                         4
+#define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel4_IRQHandler
+#define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel4_IRQn
+#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#elif (SDSPI_PORT == 3)
+#define SPI_PORT                                        SPI3
+#define SDSPI_DMA                                       DMA2
+#define SDSPI_DMA_TX_CHANNEL                            DMA2_Channel2
+#define SDSPI_DMA_TX_CHANNEL_NO                         2
+#define SDSPI_DMA_RX_CHANNEL                            DMA2_Channel1
+#define SDSPI_DMA_RX_CHANNEL_NO                         1
+#define SDSPI_DMA_IRQ_ROUTINE                           DMA2_Channel1_IRQHandler
+#define SDSPI_DMA_IRQ_NUMBER                            DMA2_Channel1_IRQn
+#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA2EN
+#else
+#error Wrong SPI port!
+#endif
+
 /* MBR definitions */
 #define MBR_BOOTSTRAP_CODE_OFFSET                       0x000
 #define MBR_PARTITION_1_ENTRY_OFFSET                    0x1BE
@@ -503,7 +538,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static stdret_t spi_turn_on_clock(void)
 {
-        switch ((u32_t)SDSPI_PORT) {
+        switch ((u32_t)SPI_PORT) {
         #if defined(RCC_APB2ENR_SPI1EN)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
@@ -541,7 +576,7 @@ static stdret_t spi_turn_on_clock(void)
 //==============================================================================
 static stdret_t spi_turn_off_clock(void)
 {
-        switch ((u32_t)SDSPI_PORT) {
+        switch ((u32_t)SPI_PORT) {
         #if defined(RCC_APB2ENR_SPI1EN)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
@@ -583,32 +618,32 @@ static stdret_t spi_turn_off_clock(void)
 static void spi_configure(void)
 {
         /* enable_SS_output_in_master_mode */
-        SET_BIT(SDSPI_PORT->CR2, SPI_CR2_SSOE);
+        SET_BIT(SPI_PORT->CR2, SPI_CR2_SSOE);
 
         /* enable_software_slave_management */
         /* enable_master_mode */
-        SET_BIT(SDSPI_PORT->CR1, SPI_CR1_SSM | SPI_CR1_MSTR);
+        SET_BIT(SPI_PORT->CR1, SPI_CR1_SSM | SPI_CR1_MSTR);
 
         /* set clock divider */
-        CLEAR_BIT(SDSPI_PORT->CR1, SPI_CR1_BR);
+        CLEAR_BIT(SPI_PORT->CR1, SPI_CR1_BR);
         if (SDSPI_SPI_CLOCK_DIVIDER <= 2)
-                SET_BIT(SDSPI_PORT->CR1, 0);
+                SET_BIT(SPI_PORT->CR1, 0);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 4)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_0);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_0);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 8)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_1);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_1);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 16)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_1 | SPI_CR1_BR_0);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_1 | SPI_CR1_BR_0);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 32)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_2);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 64)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_0);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_0);
         else if (SDSPI_SPI_CLOCK_DIVIDER <= 128)
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1);
         else
-                SET_BIT(SDSPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0);
+                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0);
 
-        SET_BIT(SDSPI_PORT->CR1, SPI_CR1_SPE);
+        SET_BIT(SPI_PORT->CR1, SPI_CR1_SPE);
 }
 
 //==============================================================================
@@ -618,7 +653,7 @@ static void spi_configure(void)
 //==============================================================================
 static void spi_select_card(void)
 {
-        SDSPI_SD_SELECT;
+        GPIO_CLEAR_PIN(SDSPI_SD_CS_PIN);
 }
 
 //==============================================================================
@@ -628,7 +663,7 @@ static void spi_select_card(void)
 //==============================================================================
 static void spi_deselect_card(void)
 {
-        SDSPI_SD_DESELECT;
+        GPIO_SET_PIN(SDSPI_SD_CS_PIN);
 }
 
 //==============================================================================
@@ -640,24 +675,10 @@ static void spi_configure_DMA(bool enable)
 {
 #if (SDSPI_ENABLE_DMA != 0)
         if (enable) {
-                if ((u32_t)SDSPI_DMA == DMA1_BASE) {
-                        SET_BIT(RCC->AHBENR, RCC_AHBENR_DMA1EN);
-                } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
-                        SET_BIT(RCC->AHBENR, RCC_AHBENR_DMA2EN);
-                } else {
-                        return;
-                }
-
+                SET_BIT(RCC->AHBENR, SDSPI_DMA_ENABLE);
                 NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
-
         } else {
-                if ((u32_t)SDSPI_DMA == DMA1_BASE) {
-                        CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_DMA1EN);
-                } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
-                        CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_DMA2EN);
-                } else {
-                        return;
-                }
+                CLEAR_BIT(RCC->AHBENR, SDSPI_DMA_ENABLE);
         }
 #endif
 }
@@ -669,7 +690,7 @@ static void spi_configure_DMA(bool enable)
 //==============================================================================
 static void spi_enable_Tx_Rx_DMA(void)
 {
-        SET_BIT(SDSPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+        SET_BIT(SPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
 }
 
 //==============================================================================
@@ -679,7 +700,7 @@ static void spi_enable_Tx_Rx_DMA(void)
 //==============================================================================
 static void spi_disable_Tx_Rx_DMA(void)
 {
-        CLEAR_BIT(SDSPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+        CLEAR_BIT(SPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
 }
 
 //==============================================================================
@@ -689,7 +710,7 @@ static void spi_disable_Tx_Rx_DMA(void)
 //==============================================================================
 static bool spi_is_rx_buffer_not_empty(void)
 {
-        return (SDSPI_PORT->SR & SPI_SR_RXNE);
+        return (SPI_PORT->SR & SPI_SR_RXNE);
 }
 
 //==============================================================================
@@ -701,7 +722,7 @@ static bool spi_is_rx_buffer_not_empty(void)
 //==============================================================================
 static void spi_send_data(u8_t data)
 {
-        SDSPI_PORT->DR = data;
+        SPI_PORT->DR = data;
 }
 
 //==============================================================================
@@ -713,7 +734,7 @@ static void spi_send_data(u8_t data)
 //==============================================================================
 static u8_t spi_get_data(void)
 {
-        return SDSPI_PORT->DR & 0xFF;
+        return SPI_PORT->DR & 0xFF;
 }
 
 //==============================================================================
@@ -829,14 +850,14 @@ static bool card_receive_data_block(u8_t *buff)
         }
 
 #if (SDSPI_ENABLE_DMA != 0)
-        SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
+        SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
         SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)buff;
         SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
         SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
         NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
         u16_t dummy = 0xFFFF;
-        SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
+        SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
         SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&dummy;
         SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
         SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
@@ -889,13 +910,13 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
 #if (SDSPI_ENABLE_DMA != 0)
                 u16_t dummy;
                 SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&dummy;
-                SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
+                SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
                 SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
                 SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
                 NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
                 SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
-                SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
+                SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
                 SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
                 SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
 

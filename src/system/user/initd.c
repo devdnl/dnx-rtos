@@ -131,6 +131,7 @@ static int run_level_boot(void)
 static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
+        driver_init("afio", NULL);
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
@@ -187,27 +188,27 @@ static int run_level_1(void)
         /* network up */
         printk("Configuring DHCP client... ");
 
-        if (netapi_start_DHCP_client() == 0) {
+        if (net_start_DHCP_client() == 0) {
                 printk("OK\n");
         } else {
                 printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
                 printk("Configuring static IP... ");
 
-                netapi_ip_t ip, mask, gateway;
-                netapi_set_ip(&ip, 192,168,0,120);
-                netapi_set_ip(&mask, 255,255,255,0);
-                netapi_set_ip(&gateway, 192,168,0,1);
+                net_ip_t ip, mask, gateway;
+                net_set_ip(&ip, 192,168,0,120);
+                net_set_ip(&mask, 255,255,255,0);
+                net_set_ip(&gateway, 192,168,0,1);
 
-                if (netapi_ifup(&ip, &mask, &gateway) == 0) {
+                if (net_ifup(&ip, &mask, &gateway) == 0) {
                         printk("OK\n");
                 } else {
                         printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
-        ifconfig ifcfg;
-        netapi_get_ifconfig(&ifcfg);
+        ifconfig_t ifcfg;
+        net_get_ifconfig(&ifcfg);
         if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
@@ -217,12 +218,12 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-                       netapi_get_ip_part_a(&ifcfg.IP_address), netapi_get_ip_part_b(&ifcfg.IP_address),
-                       netapi_get_ip_part_c(&ifcfg.IP_address), netapi_get_ip_part_d(&ifcfg.IP_address),
-                       netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
-                       netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
-                       netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
-                       netapi_get_ip_part_c(&ifcfg.gateway), netapi_get_ip_part_d(&ifcfg.gateway));
+                       net_get_ip_part_a(&ifcfg.IP_address), net_get_ip_part_b(&ifcfg.IP_address),
+                       net_get_ip_part_c(&ifcfg.IP_address), net_get_ip_part_d(&ifcfg.IP_address),
+                       net_get_ip_part_a(&ifcfg.net_mask), net_get_ip_part_b(&ifcfg.net_mask),
+                       net_get_ip_part_c(&ifcfg.net_mask), net_get_ip_part_d(&ifcfg.net_mask),
+                       net_get_ip_part_a(&ifcfg.gateway), net_get_ip_part_b(&ifcfg.gateway),
+                       net_get_ip_part_c(&ifcfg.gateway), net_get_ip_part_d(&ifcfg.gateway));
         }
 
         return STD_RET_OK;
@@ -238,15 +239,21 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        /* stdio program control */
-        FILE   *tty[_TTY_NUMBER]           = {NULL};
-        FILE   *tty0                       =  NULL;
-        prog_t *program[_TTY_NUMBER - 1]   = {NULL};
-        int     current_tty                = -1;
-
+        FILE  *tty0 = NULL;
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
+
+        int number_of_ttys = 0;
+        ioctl(tty0, TTY_IORQ_GET_NUMBER_OF_TTYS, &number_of_ttys);
+
+        /* stdio program control */
+        FILE   *tty[number_of_ttys];
+        prog_t *program[number_of_ttys - 1];
+        int     current_tty = -1;
+
+        memset(tty, 0, sizeof(tty));
+        memset(program, 0, sizeof(program));
 
         /* terminal size info */
         int col = 0;
@@ -264,7 +271,7 @@ static int run_level_2(void)
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
-                if (current_tty >= 0 && current_tty < _TTY_NUMBER - 1) {
+                if (current_tty >= 0 && current_tty < number_of_ttys - 1) {
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
                                         char path[16];
@@ -288,7 +295,7 @@ static int run_level_2(void)
                         }
                 }
 
-                for (int i = 0; i < _TTY_NUMBER - 1; i++) {
+                for (int i = 0; i < number_of_ttys - 1; i++) {
                         if (program[i]) {
                                 if (program_is_closed(program[i])) {
                                         printk("initd: shell closed\n");

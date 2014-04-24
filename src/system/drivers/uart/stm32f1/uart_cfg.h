@@ -40,48 +40,48 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* UART1 enable (1) or disable (0) */
-#define _UART1_ENABLE                           1
+#define _UART1_ENABLE                           __UART_UART1_ENABLE__
 
 /* UART2 enable (1) or disable (0) */
-#define _UART2_ENABLE                           0
+#define _UART2_ENABLE                           __UART_UART2_ENABLE__
 
 /* UART3 enable (1) or disable (0) */
-#define _UART3_ENABLE                           0
+#define _UART3_ENABLE                           __UART_UART3_ENABLE__
 
 /* UART4 enable (1) or disable (0) */
-#define _UART4_ENABLE                           0
+#define _UART4_ENABLE                           __UART_UART4_ENABLE__
 
 /* UART5 enable (1) or disable (0) */
-#define _UART5_ENABLE                           0
+#define _UART5_ENABLE                           __UART_UART5_ENABLE__
 
 /* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
+#define _UART1_IRQ_PRIORITY                     __UART_UART1_PRIORITY__
 
 /* UART1 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
+#define _UART2_IRQ_PRIORITY                     __UART_UART2_PRIORITY__
 
 /* UART1 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
+#define _UART3_IRQ_PRIORITY                     __UART_UART3_PRIORITY__
 
 /* UART1 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
+#define _UART4_IRQ_PRIORITY                     __UART_UART4_PRIORITY__
 
 /* UART1 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
+#define _UART5_IRQ_PRIORITY                     __UART_UART5_PRIORITY__
 
 /* RX buffer size [B] */
-#define _UART_RX_BUFFER_SIZE                    128
+#define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
 
 /* UART default configuration */
-#define _UART_DEFAULT_PARITY                    UART_PARITY_OFF
-#define _UART_DEFAULT_STOP_BITS                 UART_STOP_BIT_1
-#define _UART_DEFAULT_LIN_BREAK_LEN             UART_LIN_BREAK_10_BITS
-#define _UART_DEFAULT_TX_ENABLE                 true
-#define _UART_DEFAULT_RX_ENABLE                 true
-#define _UART_DEFAULT_LIN_MODE_ENABLE           false
-#define _UART_DEFAULT_HW_FLOW_CTRL              false
-#define _UART_DEFAULT_SINGLE_WIRE_MODE          false
-#define _UART_DEFAULT_BAUD                      115200
+#define _UART_DEFAULT_PARITY                    __UART_DEFAULT_PARITY__
+#define _UART_DEFAULT_STOP_BITS                 __UART_DEFAULT_STOP_BITS__
+#define _UART_DEFAULT_LIN_BREAK_LEN             __UART_DEFAULT_LIN_BREAK_LEN__
+#define _UART_DEFAULT_TX_ENABLE                 __UART_DEFAULT_TX_ENABLE__
+#define _UART_DEFAULT_RX_ENABLE                 __UART_DEFAULT_RX_ENABLE__
+#define _UART_DEFAULT_LIN_MODE_ENABLE           __UART_DEFAULT_LIN_MODE_ENABLE__
+#define _UART_DEFAULT_HW_FLOW_CTRL              __UART_DEFAULT_HW_FLOW_CTRL__
+#define _UART_DEFAULT_SINGLE_WIRE_MODE          __UART_DEFAULT_SINGLE_WIRE_MODE__
+#define _UART_DEFAULT_BAUD                      __UART_DEFAULT_BAUD__
 
 /*==============================================================================
   Exported types, enums definitions

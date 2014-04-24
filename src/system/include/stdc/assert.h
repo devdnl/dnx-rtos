@@ -39,6 +39,23 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief assert(ignore)
+ * Aborts the program if user-defined condition is not <b>true</b>. Macro can be
+ * disabled if <b>NDEBUG</b> is defined.
+ *
+ * @param ignore        user-defined condition
+ *
+ * @example
+ * void some_function(int *number)
+ * {
+ *         assert(number != NULL);
+ *
+ *         // ...
+ * }
+ */
+//==============================================================================
 #if !defined(NDEBUG)
 #       define assert(ignore) do{if ((ignore)) break; printf("Assertion failed: %s, file %s, line %d\n", #ignore, __FILE__, __LINE__); abort();}while(0)
 #endif

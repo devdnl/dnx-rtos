@@ -91,13 +91,13 @@ extern ssize_t     _driver_read                 (dev_t, u8_t*, size_t, u64_t*, s
 extern stdret_t    _driver_ioctl                (dev_t, int, void*);
 extern stdret_t    _driver_flush                (dev_t);
 extern stdret_t    _driver_stat                 (dev_t, struct vfs_dev_stat*);
-extern const char *_get_module_name             (int);
-extern int         _get_number_of_modules       (void);
+extern const char *_get_module_name             (uint);
+extern uint        _get_number_of_modules       (void);
 extern int         _get_module_number           (const char*);
-extern int         _get_number_of_drivers       (void);
-extern const char *_get_driver_name             (int);
-extern const char *_get_driver_module_name      (int);
-extern bool        _is_driver_active            (int);
+extern uint        _get_number_of_drivers       (void);
+extern const char *_get_driver_name             (uint);
+extern const char *_get_driver_module_name      (uint);
+extern bool        _is_driver_active            (uint);
 
 #ifdef __cplusplus
 }

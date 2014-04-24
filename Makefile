@@ -25,29 +25,63 @@
 #
 ####################################################################################################
 
+include ./config/project/Makefile
+include ./config/$(PROJECT_CPU_ARCH)/Makefile
+
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-PROJECT = dnx
+PROJECT = $(PROJECT_NAME)
 
 #---------------------------------------------------------------------------------------------------
-# ARCHITECTURE CONFIG: stm32f1
+# DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
-TOOLCHAIN_stm32f1 = arm-none-eabi-
-LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/STM32F107xCxx.ld
-CPU_stm32f1       = cortex-m3
-MCU_stm32f1       = STM32F10X_CL
-DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
-CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration
-CXXFLAGS_stm32f1  = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wextra -std=c++0x -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration \
-                    -fno-rtti -fno-exceptions -fno-unwind-tables
-LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
-                    -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                    $(DEFINE_stm32f1) -lm
-AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINE_stm32f1)
+TOOLCHAIN = $(PROJECT_TOOLCHAIN)
+
+AFLAGS   = -c \
+           -g \
+           -ggdb3 \
+           -include ./config/project/flags.h \
+           $(CPUCONFIG_AFLAGS)
+
+CFLAGS   = -c \
+           -g \
+           -ggdb3  \
+           -Os \
+           -std=c99 \
+           -ffunction-sections \
+           -Wall \
+           -Wextra \
+           -Wparentheses \
+           -Werror=implicit-function-declaration \
+           -include ./config/project/flags.h \
+           $(CPUCONFIG_CFLAGS)
+
+CXXFLAGS = -c \
+           -g \
+           -ggdb3 \
+           -Os \
+           -std=c++0x \
+           -ffunction-sections \
+           -fno-rtti \
+           -fno-exceptions \
+           -fno-unwind-tables \
+           -Wall \
+           -Wextra \
+           -Wparentheses \
+           -Werror=implicit-function-declaration \
+           -include ./config/project/flags.h \
+           $(CPUCONFIG__CXXFLAGS)
+
+LFLAGS   = -g \
+           $(CPUCONFIG_LDFLAGS) \
+           -nostartfiles \
+           -T$(CPUCONFIG_LD) \
+           -Wl,--gc-sections \
+           -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+           -Wall \
+           -lm
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -69,11 +103,15 @@ OBJ_DIR_NAME    = obj
 # dependencies file name
 DEP_FILE_NAME   = $(PROJECT).d
 
-# program localization
-PROGLOC = src/programs
-
-# system localization
-SYSLOC = src/system
+# folder localizations
+PROG_LOC   = src/programs
+SYS_LOC    = src/system
+CORE_LOC   = $(SYS_LOC)/core
+FS_LOC     = $(SYS_LOC)/fs
+KERNEL_LOC = $(SYS_LOC)/kernel
+NET_LOC    = $(SYS_LOC)/net
+DRV_LOC    = $(SYS_LOC)/drivers
+PORT_LOC   = $(SYS_LOC)/portable
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -88,28 +126,34 @@ MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
-CC       = $(TOOLCHAIN_$(TARGET))gcc
-CXX      = $(TOOLCHAIN_$(TARGET))g++
-LD       = $(TOOLCHAIN_$(TARGET))g++
-AS       = $(TOOLCHAIN_$(TARGET))gcc -x assembler-with-cpp
-OBJCOPY  = $(TOOLCHAIN_$(TARGET))objcopy
-OBJDUMP  = $(TOOLCHAIN_$(TARGET))objdump
-SIZE     = $(TOOLCHAIN_$(TARGET))size
+UNAME    = uname -o
+CC       = $(TOOLCHAIN)gcc
+CXX      = $(TOOLCHAIN)g++
+LD       = $(TOOLCHAIN)g++
+AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY  = $(TOOLCHAIN)objcopy
+OBJDUMP  = $(TOOLCHAIN)objdump
+SIZE     = $(TOOLCHAIN)size
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
+# defines VALUES
+__YES__ = 1
+__NO__  = 0
+EMPTY   =
+
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
-# number of threads used in compilation (cpu count + 1)
-THREAD = $(shell echo $$[ $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l) + 1 ])
+# number of threads used in compilation (cpu count)
+THREAD = $(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(lastword $(subst _, ,$(MAKECMDGOALS)))
+TARGET = $(PROJECT_CPU_ARCH)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
@@ -117,42 +161,51 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
-include $(PROGLOC)/Makefile.include
-include $(SYSLOC)/Makefile.include
+# list of sources to compile
+include $(PROG_LOC)/Makefile
+include $(SYS_LOC)/Makefile
 
 # defines objects localizations
-HDRLOC  = $(foreach file, $(HDRLOC_noarch),$(SYSLOC)/$(file)) \
-          $(foreach file, $(HDRLOC_$(TARGET)),$(SYSLOC)/$(file)) \
-          $(foreach file, $(HDRLOC_PROGRAMS),$(PROGLOC)/$(file)) \
-          $(foreach file, $(HDRLOC_CORE),$(SYSLOC)/$(file)) \
+HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file)) \
           src/
 
 # defines all C sources
-CSRC    = $(foreach file, $(CSRC_CORE),$(SYSLOC)/$(file)) \
-          $(foreach file, $(CSRC_$(TARGET)),$(SYSLOC)/$(file)) \
-          $(foreach file, $(CSRC_PROGRAMS),$(PROGLOC)/$(file)) \
-          $(foreach file, $(CSRC_noarch),$(SYSLOC)/$(file))
+CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CSRC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all C++ sources
-CXXSRC  = $(foreach file, $(CXXSRC_$(TARGET)),$(SYSLOC)/$(file)) \
-          $(foreach file, $(CXXSRC_PROGRAMS),$(PROGLOC)/$(file)) \
-          $(foreach file, $(CXXSRC_noarch),$(SYSLOC)/$(file))
+CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all assembler sources
-ASRC    = $(foreach file, $(ASRC_$(TARGET)),$(SYSLOC)/$(file))
-         
+ASRC    = $(foreach file, $(ASRC_ARCH),$(SYS_LOC)/$(file))
+
 # defines objects names
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
 
 ####################################################################################################
-# default target
+# targets
 ####################################################################################################
 .PHONY : all
-all :
+all : dependencies buildobjects linkobjects hex status
+
+####################################################################################################
+# help
+####################################################################################################
+.PHONY : help
+help :
 	@echo "This is help for this $(THIS_MAKEFILE)"
 	@echo "Possible targets:"
 	@echo "   help                this help"
-	@echo "   stm32f1             compilation for ARM-Cortex-M3 STM32F1XX microcontroller family"
+	@echo "   config              project configuration (text mode)"
+	@echo "   xconfig             project configuration (GUI)"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
@@ -160,17 +213,38 @@ all :
 	@echo "   check               static code analyze for stm32f1 target"
 
 ####################################################################################################
+# project configuration
+####################################################################################################
+.PHONY : config
+config : clean
+ifeq ($(shell $(UNAME)), GNU/Linux)
+	@./tools/wizard/bin/config_tool.linux --no-gui ./tools/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Cygwin)
+	@./tools/wizard/bin/config_tool.win.exe --no-gui ./tools/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Darwin)
+	@echo "Lack of program for the Darwin kernel"
+endif
+
+.PHONY : xconfig
+xconfig : clean
+ifeq ($(shell $(UNAME)), GNU/Linux)
+	@./tools/wizard/bin/config_tool.linux ./tools/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Cygwin)
+	@./tools/wizard/bin/config_tool.win.exe ./tools/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Darwin)
+	@echo "Lack of program for the Darwin kernel"
+endif
+
+####################################################################################################
 # analisis
 ####################################################################################################
 .PHONY : check
 check :
 	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINE_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
-
-####################################################################################################
-# targets
-####################################################################################################
-.PHONY : stm32f1
-stm32f1 : dependencies buildobjects linkobjects hex status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
@@ -223,14 +297,15 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
-	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
+	@#echo $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects
 ####################################################################################################
 .PHONY : buildobjects buildobjects_$(TARGET)
 buildobjects :
-	@echo "Starting building objects on $(THREAD) threads..."
+	@echo "Starting building objects up to $(THREAD) threads..."
 	@$(MAKE) -s -j$(THREAD) -f$(THIS_MAKEFILE) buildobjects_$(TARGET)
 
 buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
@@ -241,7 +316,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
@@ -249,7 +324,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CXX) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
@@ -257,7 +332,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(AS) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################
 # clean target

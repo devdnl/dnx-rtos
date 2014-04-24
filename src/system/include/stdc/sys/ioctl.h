@@ -36,19 +36,18 @@ extern "C" {
 ==============================================================================*/
 #include "core/ioctl_macros.h"
 #include "core/vfs.h"
-
-/* include here drivers definitions */
-#include "tty_def.h"
+#include "tty_ioctl.h"
 #ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#       include "stm32f1/wdg_def.h"
+#include "stm32f1/afio_ioctl.h"
+#include "stm32f1/crc_ioctl.h"
+#include "stm32f1/ethmac_ioctl.h"
+#include "stm32f1/gpio_ioctl.h"
+#include "stm32f1/pll_ioctl.h"
+#include "stm32f1/sdspi_ioctl.h"
+#include "stm32f1/spi_ioctl.h"
+#include "stm32f1/uart_ioctl.h"
 #else
-#       error "Unknown architecture!"
+#error Unknown architecture!
 #endif
 
 /*==============================================================================
@@ -68,13 +67,32 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function support not standard operations on devices and files
+ * @brief int ioctl(FILE *stream, int request, ...)
+ * The <b>ioctl</b>() function manipulates the file parameters.  In particular, many
+ * operating characteristics of character special files (e.g., drivers) may
+ * be controlled with <b>ioctl</b>() requests.
  *
- * @param[in]     *file         file
- * @param[in]      rq           request
- * @param[in,out]  ...          argument or nothing
+ * The second argument is a device-dependent request code. The third
+ * argument is an untyped pointer to memory.
  *
- * @return 0 on success. On error, different from 0 is returned
+ * @param seconds   number of seconds to sleep
+ *
+ * @errors EINVAL, ENOENT, EBADRQC, ...
+ *
+ * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
+ * return value as an output parameter and return a nonnegative value on
+ * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/dev/tty0", "r");
+ * if (file) {
+ *         ioctl(file, TTY_IORQ_CLEAR_SCR);
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int ioctl(FILE *stream, int request, ...)

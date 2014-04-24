@@ -59,14 +59,48 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function create new task
+ * @brief task_t *task_new(void (*func)(void*), const char *name, const uint stack_depth, void *arg)
+ * The function <b>task_new</b>() creates new task in system with function
+ * pointed by <i>func</i>, and name pointed by <i>name</i>. Task is created with
+ * user-defined stack size determined by <i>stack_depth</i>. An additional
+ * arguments can be passed by value pointed by <i>arg</i>. If task is created
+ * then valid object is returned, on error <b>NULL</b>.
  *
- * @param[in ] func            task code
- * @param[in ] name            task name
- * @param[in ] stack_depth     stack deep
- * @param[in ] arg             argument pointer
+ * @param func            task code
+ * @param name            task name
+ * @param stack_depth     stack deep
+ * @param arg             argument pointer
  *
- * @return task object pointer or NULL if error
+ * @errors None
+ *
+ * @return On success, valid object is returned. On error, <b>NULL</b> is
+ * returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         // task code
+ *
+ *         task_exit();
+ * }
+ *
+ * void some_function()
+ * {
+ *        task_t *task = task_new(my_task,
+ *                                "My task",
+ *                                STACK_DEPTH_LOW,
+ *                                NULL);
+ *
+ *        if (task) {
+ *                 // task created ...
+ *        } else {
+ *                 // task not created ...
+ *        }
+ *
+ *        // ...
+ * }
  */
 //==============================================================================
 static inline task_t *task_new(void (*func)(void*), const char *name, const uint stack_depth, void *arg)
@@ -76,9 +110,43 @@ static inline task_t *task_new(void (*func)(void*), const char *name, const uint
 
 //==============================================================================
 /**
- * @brief Function delete task
+ * @brief void task_delete(task_t *taskhdl)
+ * The function <b>task_delete</b>() kills task, and delete object of created task.
  *
- * @param taskHdl        task handle
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something (e.g. LED blinking)
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *        task_t *task = task_new(my_task,
+ *                                "My task",
+ *                                STACK_DEPTH_LOW,
+ *                                NULL);
+ *
+ *        if (task) {
+ *                 // task "My task" is created and working
+ *
+ *                 // code here do something for few seconds ...
+ *
+ *                 task_delete(task);
+ *        } else {
+ *                 // task not created ...
+ *        }
+ * }
  */
 //==============================================================================
 static inline void task_delete(task_t *taskhdl)
@@ -88,7 +156,25 @@ static inline void task_delete(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Exit from task code and remote task
+ * @brief void task_exit(void)
+ * The function <b>task_exit</b>() terminate task which call this function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return This function does not return.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         // task code
+ *
+ *         // task finished specified work and can be terminated
+ *         task_exit();
+ * }
  */
 //==============================================================================
 static inline void task_exit(void)
@@ -98,9 +184,52 @@ static inline void task_exit(void)
 
 //==============================================================================
 /**
- * @brief Function suspend selected task
+ * @brief void task_suspend(task_t *taskhdl)
+ * The function <b>task_suspend</b>() switch selected task <i>taskhdl</i> to
+ * suspend state. From this state task can be switched using <b>task_resume</b>()
+ * function. Suspended task does not use CPU time.
  *
- * @param[in]  taskhdl          task handle
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something (e.g. LED blinking)
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *        task_t *task = task_new(my_task,
+ *                                "My task",
+ *                                STACK_DEPTH_LOW,
+ *                                NULL);
+ *
+ *        if (task) {
+ *                 // task is suspended and will be used later
+ *                 task_suspend(task);
+ *        } else {
+ *                 // task not created ...
+ *                 return;
+ *        }
+ *
+ *        // some code ...
+ *
+ *        // task is necessary, so will be resumed
+ *        task_resume(task);
+ *
+ *        // some work ...
+ *
+ *        task_delete(task);
+ * }
  */
 //==============================================================================
 static inline void task_suspend(task_t *taskhdl)
@@ -110,7 +239,30 @@ static inline void task_suspend(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function suspend current task
+ * @brief void task_suspend_now(void)
+ * The function <b>task_suspend_now</b>() switch current task (calling) to
+ * suspend state.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something
+ *
+ *                 // task will be suspended and will wait for resume from
+ *                 // other task or event (IRQ)
+ *                 task_suspend_now();
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_suspend_now(void)
@@ -120,9 +272,51 @@ static inline void task_suspend_now(void)
 
 //==============================================================================
 /**
- * @brief Function resume selected task
+ * @brief void task_resume(task_t *taskhdl)
+ * The function <b>task_resume</b>() switch selected task <i>taskhdl</i> to
+ * run state.
  *
- * @param[in]  taskhdl          task to resume
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something (e.g. LED blinking)
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *        task_t *task = task_new(my_task,
+ *                                "My task",
+ *                                STACK_DEPTH_LOW,
+ *                                NULL);
+ *
+ *        if (task) {
+ *                 // task is suspended and will be used later
+ *                 task_suspend(task);
+ *        } else {
+ *                 // task not created ...
+ *                 return;
+ *        }
+ *
+ *        // some code ...
+ *
+ *        // task is necessary, so will be resumed
+ *        task_resume(task);
+ *
+ *        // some work ...
+ *
+ *        task_delete(task);
+ * }
  */
 //==============================================================================
 static inline void task_resume(task_t *taskhdl)
@@ -132,209 +326,74 @@ static inline void task_resume(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function resume selected task from ISR
+ * @brief bool task_resume_from_ISR(task_t *taskhdl)
+ * The function <b>task_resume_from_ISR</b>() is similar to <b>task_resume</b>()
+ * except that can be called from interrupt routine.
  *
- * @param[in]  taskhdl          task to resume
+ * @param taskhdl       task handler
  *
- * @retval true                 if yield required
- * @retval false                if yield not required
+ * @errors None
+ *
+ * @return If task shall be yielded then <b>true</b> is returned. Otherwise,
+ * <b>false</b> is returned. Task yield behavior depends on used port.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something
+ *
+ *                 // task will be suspended and will wait for resume from IRQ
+ *                 task_suspend_now();
+ *         }
+ * }
+ *
+ * void IRQ(void)
+ * {
+ *         // ...
+ *
+ *         if (task_resume_form_ISR(task)) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
  */
 //==============================================================================
-static inline int task_resume_from_ISR(task_t *taskhdl)
+static inline bool task_resume_from_ISR(task_t *taskhdl)
 {
         return _task_resume_from_ISR(taskhdl);
 }
 
 //==============================================================================
 /**
- * @brief Function return name of current task
+ * @brief void task_yield(void)
+ * The function <b>task_yield</b>() force context switch. To release CPU for
+ * other task use better <b>sleep</b>() family functions, because you can
+ * control release time.
  *
- * @return name of current task
- */
-//==============================================================================
-static inline char *task_get_name(void)
-{
-        return _task_get_name();
-}
-
-//==============================================================================
-/**
- * @brief Function return name of selected task
+ * @param None
  *
- * @param[in]  taskhdl          task handle
+ * @errors None
  *
- * @return name of selected task or NULL if error
- */
-//==============================================================================
-static inline char *task_get_name_of(task_t *taskhdl)
-{
-        return _task_get_name_of(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function return priority of current task
+ * @return None
  *
- * @return current task priority
- */
-//==============================================================================
-static inline int task_get_priority(void)
-{
-        return _task_get_priority();
-}
-
-//==============================================================================
-/**
- * @brief Function return task priority
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
  *
- * @param[in]  taskhdl          task handle
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something
  *
- * @return priority of selected task
- */
-//==============================================================================
-static inline int task_get_priority_of(task_t *taskhdl)
-{
-        return _task_get_priority_of(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function set priority of current task
- *
- * @param[in]  priority         priority
- */
-//==============================================================================
-static inline void task_set_priority(const int priority)
-{
-        _task_set_priority(priority);
-}
-
-//==============================================================================
-/**
- * @brief Function set selected task priority
- *
- * @param[in]  taskhdl          task handle
- * @param[in]  priority         priority
- */
-//==============================================================================
-static inline void task_set_priority_of(task_t *taskhdl, const int priority)
-{
-        _task_set_priority_of(taskhdl, priority);
-}
-
-//==============================================================================
-/**
- * @brief Function return a free stack level of current task
- *
- * @return free stack level
- */
-//==============================================================================
-static inline int task_get_free_stack(void)
-{
-        return _task_get_free_stack();
-}
-
-//==============================================================================
-/**
- * @brief Function return a free stack level of selected task
- *
- * @param[in]  taskhdl          task handle
- *
- * @return free stack level or -1 if error
- */
-//==============================================================================
-static inline int task_get_free_stack_of(task_t *taskhdl)
-{
-        return _task_get_free_stack_of(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function return current task handle object address
- *
- * @return current task handle
- */
-//==============================================================================
-static inline task_t *task_get_handle(void)
-{
-        return _task_get_handle();
-}
-
-//==============================================================================
-/**
- * @brief Function return parent task handle
- *
- * @return parent task handle
- */
-//==============================================================================
-static inline task_t *task_get_parent_handle(void)
-{
-        return _task_get_parent_handle();
-}
-
-//==============================================================================
-/**
- * @brief Function return a number of tasks
- *
- * @return a number of tasks
- */
-//==============================================================================
-static inline int task_get_number_of_tasks(void)
-{
-        return _kernel_get_number_of_tasks();
-}
-
-//==============================================================================
-/**
- * @brief Function set stdin file
- *
- * @param[in] stream
- */
-//==============================================================================
-static inline void task_set_stdin(FILE *stream)
-{
-        _task_set_stdin(stream);
-}
-
-//==============================================================================
-/**
- * @brief Function set stdout file
- *
- * @param[in] stream
- */
-//==============================================================================
-static inline void task_set_stdout(FILE *stream)
-{
-        _task_set_stdout(stream);
-}
-
-//==============================================================================
-/**
- * @brief Function set stderr file
- *
- * @param[in] stream
- */
-//==============================================================================
-static inline void task_set_stderr(FILE *stream)
-{
-        _task_set_stderr(stream);
-}
-
-//==============================================================================
-/**
- * @brief Function set cwd path
- *
- * @param str           cwd string
- */
-//==============================================================================
-static inline void task_set_cwd(const char *str)
-{
-        _task_set_cwd(str);
-}
-
-//==============================================================================
-/**
- * @brief Function yield task
+ *                 // task will be suspended and will wait for resume from IRQ
+ *                 task_yield();
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_yield(void)
@@ -344,11 +403,582 @@ static inline void task_yield(void)
 
 //==============================================================================
 /**
- * @brief Check if task exist and is registered in system
+ * @brief void task_yield_from_ISR(void)
+ * The function <b>task_yield_from_ISR</b>() force context switch from interrupt
+ * routine. Some ports need force context switch after ISR API functions calls.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         while (true) {
+ *                 // task do something
+ *
+ *                 // task will be suspended and will wait for resume from IRQ
+ *                 task_suspend_now();
+ *         }
+ * }
+ *
+ * void IRQ(void)
+ * {
+ *         // ...
+ *
+ *         bool yield = task_resume_form_ISR(task);
+ *
+ *         // ...
+ *
+ *         if (yield) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_yield_from_ISR(void)
+{
+        _task_yield_from_ISR();
+}
+
+//==============================================================================
+/**
+ * @brief char *task_get_name(void)
+ * The function <b>task_get_name</b>() returns name of task which calls function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Task name string.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         char *name = task_get_name();
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline char *task_get_name(void)
+{
+        return _task_get_name();
+}
+
+//==============================================================================
+/**
+ * @brief char *task_get_name_of(task_t *taskhdl)
+ * The function <b>task_get_name_of</b>() returns name of selected task pointed
+ * by <i>taskhdl</i>.
+ *
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return Task name string.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         char *name = task_get_name();
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *         char *name = task_get_name_of(task);
+ *
+ *         printf("The name of task is %s\n", name);
+ * }
+ */
+//==============================================================================
+static inline char *task_get_name_of(task_t *taskhdl)
+{
+        return _task_get_name_of(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief int task_get_priority(void)
+ * The function <b>task_get_priority</b>() returns priority value of task which
+ * calls function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Priority value.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         if (task_get_priority() < 0) {
+ *                 task_set_priority(0);
+ *         }
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline int task_get_priority(void)
+{
+        return _task_get_priority();
+}
+
+//==============================================================================
+/**
+ * @brief int task_get_priority_of(task_t *taskhdl)
+ * The function <b>task_get_priority_of</b>() returns priority value of selected
+ * task pointed by <i>taskhdl</i>.
+ *
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return Priority value;
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         char *name = task_get_name();
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *         if (task_get_priority_of(task) < 0) {
+ *                 task_set_priority_of(task, 0);
+ *         }
+ * }
+ */
+//==============================================================================
+static inline int task_get_priority_of(task_t *taskhdl)
+{
+        return _task_get_priority_of(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_priority(const int priority)
+ * The function <b>task_set_priority</b>() set priority of task which calls the
+ * function to <i>priority</i>.
+ *
+ * @param priority      new priority value
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         if (task_get_priority() < 0) {
+ *                 task_set_priority(0);
+ *         }
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_priority(const int priority)
+{
+        _task_set_priority(priority);
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_priority_of(task_t *taskhdl, const int priority)
+ * The function <b>task_set_priority_of</b>() set priority value of selected
+ * task pointed by <i>taskhdl</i> to <i>priority</i>.
+ *
+ * @param taskhdl       task handler
+ * @param priority      new priority value
+ *
+ * @errors None
+ *
+ * @return Priority value;
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         char *name = task_get_name();
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *         if (task_get_priority_of(task) < 0) {
+ *                 task_set_priority_of(task, 0);
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_priority_of(task_t *taskhdl, const int priority)
+{
+        _task_set_priority_of(taskhdl, priority);
+}
+
+//==============================================================================
+/**
+ * @brief int task_get_free_stack(void)
+ * The function <b>task_get_free_stack</b>() returns free stack value of
+ * task which calls the function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Free stack levels.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         free_stack = task_get_free_stack();
+ *
+ *         if (free_stack < 50) {
+ *                 // ...
+ *         }
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline int task_get_free_stack(void)
+{
+        return _task_get_free_stack();
+}
+
+//==============================================================================
+/**
+ * @brief int task_get_free_stack_of(task_t *taskhdl)
+ * The function <b>task_get_free_stack_of</b>() returns the free stack value
+ * of task pointed by <i>taskhdl</i>. If task object is not valid then -1 is
+ * returned.
+ *
+ * @param taskhdl       task handler
+ *
+ * @errors None
+ *
+ * @return Free stack level or -1 on error.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         char *name = task_get_name();
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ *
+ * void some_function()
+ * {
+ *         printf("Task free stack is %d levels\n", task_get_free_stack_of(task));
+ * }
+ */
+//==============================================================================
+static inline int task_get_free_stack_of(task_t *taskhdl)
+{
+        return _task_get_free_stack_of(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief task_t *task_get_handle(void)
+ * The function <b>task_get_handle</b>() returns pointer to the object of task
+ * which calls the function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Object of task which calls the function.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         task_t *hdl = task_get_handle();
+ *         // ...
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline task_t *task_get_handle(void)
+{
+        return _task_get_handle();
+}
+
+//==============================================================================
+/**
+ * @brief task_t *task_get_parent_handle(void)
+ * The function <b>task_get_parent_handle</b>() returns pointer to the object of
+ * parent of current task.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Task handle of parent of the current task, or <b>NULL</b> if parent
+ * does not exist.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         task_t *parhdl = task_get_parent_handle();
+ *         // ...
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline task_t *task_get_parent_handle(void)
+{
+        return _task_get_parent_handle();
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_stdin(FILE *stream)
+ * The function <b>task_set_stdin</b>() set <b>stdin</b> stream for task which
+ * calls the function.
+ *
+ * @param stream        stream to set as <b>stdin</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_in = arg;
+ *
+ *         char c = getc(stdin);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_stdin(FILE *stream)
+{
+        _task_set_stdin(stream);
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_stdout(FILE *stream)
+ * The function <b>task_set_stdout</b>() set <b>stdout</b> stream for task which
+ * calls the function.
+ *
+ * @param stream        stream to set as <b>stdout</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_out = arg;
+ *
+ *         task_set_stdout(std_out);
+ *         puts("stdout is configured");
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_stdout(FILE *stream)
+{
+        _task_set_stdout(stream);
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_stderr(FILE *stream)
+ * The function <b>task_set_stderr</b>() set <b>stderr</b> stream for task which
+ * calls the function.
+ *
+ * @param stream        stream to set as <b>stderr</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_err = arg;
+ *
+ *         task_set_stderr(std_err);
+ *         fputs("stderr configured\n", stderr);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_stderr(FILE *stream)
+{
+        _task_set_stderr(stream);
+}
+
+//==============================================================================
+/**
+ * @brief void task_set_cwd(const char *str)
+ * The function <b>task_set_cwd</b>() set current working directory for task
+ * which calls the function.
+ *
+ * @param str       path to set as current working directory
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         const char *cwd = arg;
+ *
+ *         task_set_cwd(cwd);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline void task_set_cwd(const char *str)
+{
+        _task_set_cwd(str);
+}
+
+//==============================================================================
+/**
+ * @brief bool task_is_exist(task_t *taskhdl)
+ * The function <b>task_is_exist</b>() check if task pointed by <i>taskhdl</i>
+ * exist in system. If task exist then <b>true</b> is returned, otherwise
+ * <b>false</b>.
  *
  * @param taskhdl       task handle
  *
- * @return true if task exist, otherwise false
+ * @errors ESRCH
+ *
+ * @return If task exist then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * task_t *task;
+ *
+ * // ...
+ *
+ * if (task_is_exist(task)) {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool task_is_exist(task_t *taskhdl)
@@ -358,13 +988,56 @@ static inline bool task_is_exist(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Create new thread of configured task (program or RAW task)
+ * @brief thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
+ * The function <b>thread_new</b>() creates new thread using function pointed
+ * by <i>func</i> with stack depth <i>stack_depth</i>. To thread can be passed
+ * additional argument pointed by <i>arg</i>. If thread was created then
+ * pointer to object is returned, otherwise <b>NULL</b> is returned, and
+ * <b>errno</b> set appropriately. Threads are functions which are called as
+ * new task and have own stack, but global variables are shared with parent
+ * thread.
  *
  * @param func          thread function
  * @param stack_depth   stack depth
  * @param arg           thread argument
  *
- * @return thread object if success, otherwise NULL
+ * @errors EINVAL, ENOMEM,
+ *
+ * @return If thread was created then pointer to object is returned, otherwise
+ * <b>NULL</b> is returned, and <b>errno</b> set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (!thread_is_finished(thread)) {
+ *                         sleep_ms(1);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
@@ -374,11 +1047,70 @@ static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, v
 
 //==============================================================================
 /**
- * @brief Function wait for thread exit
+ * @brief int thread_join(thread_t *thread)
+ * The function <b>thread_join</b>() joins selected thread pointed by
+ * <i>thread</i> to parent program. Function wait until thread was closed.
+ *
  *
  * @param thread        thread object
  *
- * @return 0 on success, otherwise -EINVAL
+ * @errors ETIME, EINVAL
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread1 = thread_new(thread1, STACK_DEPTH_LOW, NULL);
+ *         thread_t *thread2 = thread_new(thread2, STACK_DEPTH_LOW, NULL);
+ *
+ *         if (thread1 && thread2) {
+ *                 // some code ...
+ *
+ *                 thread_join(thread1);
+ *                 thread_join(thread2);
+ *
+ *                 thread_delete(thread1);
+ *                 thread_delete(thread2);
+ *         } else {
+ *                 perror("Thread error");
+ *
+ *                 if (thread1) {
+ *                         thread_cancel(thread1);
+ *                         thread_delete(thread1);
+ *                 }
+ *
+ *                 if (thread2) {
+ *                         thread_cancel(thread2);
+ *                         thread_delete(thread2);
+ *                 }
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_join(thread_t *thread)
@@ -388,9 +1120,49 @@ static inline int thread_join(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Cancel current working thread
+ * @brief int thread_cancel(thread_t *thread)
+ * The function <b>thread_cancel</b>() kills running thread pointet by <i>thread</i>.
  *
- * @return 0 on success, otherwise other
+ * @param thread        thread object
+ *
+ * @errors EINVAL
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (thread_cancel(thread) != true) {
+ *                         sleep_ms(10);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_cancel(thread_t *thread)
@@ -400,11 +1172,52 @@ static inline int thread_cancel(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Check if thread is finished
+ * @brief bool thread_is_finished(thread_t *thread)
+ * The function <b>thread_is_finished</b>() examine that selected thread pointed
+ * by <i>thread</i> is finished. If thread is finished then <b>true</b> is
+ * returned, otherwise <b>false</b>. Function can be used to poll that selected
+ * thread is finished. If would you like to wait for thread close, then use
+ * <b>thread_join</b>() instead.
  *
  * @param thread        thread object
  *
- * @return true if finished, otherwise false
+ * @errors EINVAL
+ *
+ * @return If thread is finished then <b>true</b> is returned, otherwise
+ * <b>false</b>, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (!thread_is_finished(thread)) {
+ *                         sleep_ms(1);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool thread_is_finished(thread_t *thread)
@@ -414,13 +1227,49 @@ static inline bool thread_is_finished(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Delete thread object
+ * @brief int thread_delete(thread_t *thread)
+ * The function <b>thread_delete</b>() removes unused thread object pointed by
+ * <i>thread</i>. This function can delete object only if thread is finished.
+ * To kill running thread use <b>thread_cancel</b>() function. If thread object
+ * was deleted then function returns 0, otherwise 1.
  *
  * @param thread        thread object
  *
- * @return 0 on success
- * @return -EAGAIN if thread is running, try later
- * @return -EINVAL if argument is invalid
+ * @errors EINVAL, EAGAIN
+ *
+ * @return If thread object was deleted then function returns 0, otherwise 1, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 thread_join(thread);
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_delete(thread_t *thread)
@@ -430,12 +1279,51 @@ static inline int thread_delete(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function create semaphore
+ * @brief sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
+ * The function <b>semaphore_new</b>() creates new semaphore object. The
+ * semaphore can be counting or binary. If counting then <i>cnt_max</i>
+ * is bigger that 2. <i>cnt_init</i> is an initial value of semaphore.
+ * Semaphore can be used for task synchronization.
  *
  * @param cnt_max       max count value (1 for binary)
  * @param cnt_init      initial value (0 or 1 for binary)
  *
- * @return semaphore object pointer, otherwise NULL
+ * @errors None
+ *
+ * @return On success, semaphore object is returned. On error, <b>NULL</b> is
+ * returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                // this task signal to thread2 that can execute part of code
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
@@ -445,9 +1333,29 @@ static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
 
 //==============================================================================
 /**
- * @brief Function delete semaphore
+ * @brief void semaphore_delete(sem_t *sem)
+ * The function <b>semaphore_delete</b>() removes created semaphore pointed by
+ * <i>sem</i>. Be aware that if semaphore was removed when tasks use it, then
+ * process starvation can occur on tasks which wait for semaphore signal.
  *
- * @param[in] sem       semaphore object
+ * @param sem       semaphore object pointer
+ *
+ * @errors None
+ *
+ * @return
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // operation on semaphore
+ *
+ * semaphore_delete(sem);
+ *
+ * // ...
  */
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
@@ -457,13 +1365,50 @@ static inline void semaphore_delete(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore
+ * @brief bool semaphore_wait(sem_t *sem, const uint timeout)
+ * The function <b>semaphore_wait</b>() waits for semaphore signal pointed by
+ * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
+ * <b>true</b> is returned, otherwise (timeout) <b>false</b>. When <i>timeout</i>
+ * value is set to 0 then semaphore is polling without timeout.
  *
- * @param[in] sem               semaphore object
- * @param[in] timeout           semaphore polling time
+ * @param sem       semaphore object pointer
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On timeout or if semaphore is
+ * not signaled <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                // this task signal to thread2 that can execute part of code
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const uint timeout)
@@ -473,12 +1418,47 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function signal semaphore
+ * @brief bool semaphore_signal(sem_t *sem)
+ * The function <b>semaphore_signal</b>() signals semaphore pointed by <i>sem</i>.
  *
- * @param[in] sem       semaphore object
+ * @param sem       semaphore object pointer
  *
- * @retval true         semaphore given
- * @retval false        semaphore not given
+ * @errors None
+ *
+ * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
+ * be signaled or object is invalid then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                // this task signal to thread2 that can execute part of code
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
@@ -488,13 +1468,54 @@ static inline bool semaphore_signal(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore from ISR
+ * @brief bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+ * The function <b>semaphore_wait_from_ISR</b>() is similar to <b>semaphore_wait</b>()
+ * except that can be called from interrupt. Function have limited application.
  *
- * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param sem           semaphore object pointer
+ * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On timeout or if semaphore is
+ * not signaled <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                 if (...) {
+ *                         semaphore_signal(sem);
+ *                 }
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void ISR(void)
+ * {
+ *         // ...
+ *
+ *         bool woken = false;
+ *         if (semaphore_wait_from_ISR(sem, &woken)) {
+ *                 // ...
+ *         }
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
@@ -504,13 +1525,51 @@ static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function signal semaphore from ISR
+ * @brief bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+ * The function <b>semaphore_signal_from_ISR</b>() is similar to
+ * <b>semaphore_signal</b>() except that can be called from interrupt.
  *
- * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param sem           semaphore object pointer
+ * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
+ * be signaled or object is invalid then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void ISR(void)
+ * {
+ *         // ...
+ *
+ *         bool woken = false;
+ *         semaphore_signal_from_ISR(sem, &woken);
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
@@ -520,11 +1579,68 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function create new mutex
+ * @brief mutex_t *mutex_new(enum mutex_type type)
+ * The function <b>mutex_new</b>() creates new mutex of type <i>type</i>.
+ * Two types of mutex can be created: <b>MUTEX_RECURSIVE</b> and <b>MUTEX_NORMAL</b>.
  *
- * @param type          mutex type
+ * @param type          mutex type (MUTEX_RECURSIVE or MUTEX_NORMAL)
  *
- * @return pointer to mutex object, otherwise NULL if error
+ * @errors None
+ *
+ * @return On success, pointer to the mutex object is returned. On error,
+ * <b>NULL</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)
@@ -534,9 +1650,66 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 
 //==============================================================================
 /**
- * @brief Function delete mutex
+ * @brief void mutex_delete(mutex_t *mutex)
+ * The function <b>mutex_delete</b>() delete created mutex pointed by <i>mutex</i>.
  *
- * @param[in] mutex     mutex object
+ * @param mutex     mutex
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
@@ -546,13 +1719,72 @@ static inline void mutex_delete(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function lock mutex
+ * @brief bool mutex_lock(mutex_t *mutex, const uint timeout)
+ * The function <b>mutex_lock</b>() lock mutex pointed by <i>mutex</i>. If
+ * mutex is locked by other thread then system try to lock mutex by <i>timeout</i>
+ * milliseconds. If mutex is recursive then task can lock mutex recursively, and
+ * the same times shall be unlocked. If normal mutex is used then task can lock
+ * mutex only one time (not recursively).
  *
- * @param[in] mutex            mutex object
- * @param[in] timeout          polling time
+ * @param mutex     mutex
+ * @param timeout   timeout
  *
- * @retval true                 mutex locked
- * @retval false                mutex not locked
+ * @errors None
+ *
+ * @return If mutex is locked then <b>true</b> is returned. If mutex is used or
+ * timeout occur or object is incorrect, then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
@@ -562,12 +1794,67 @@ static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function unlock mutex
+ * @brief bool mutex_unlock(mutex_t *mutex)
+ * The function <b>mutex_unlock</b>() unlock mutex pointed by <i>mutex</i>.
  *
- * @param[in] mutex             mutex object
+ * @param mutex     mutex
  *
- * @retval true                 mutex unlocked
- * @retval false                mutex still locked
+ * @errors None
+ *
+ * @return If mutex is unlocked then <b>true</b> is returned. If mutex is not
+ * unlocked or object is incorrect then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
@@ -577,12 +1864,65 @@ static inline bool mutex_unlock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function create new queue
+ * @brief queue_t *queue_new(const uint length, const uint item_size)
+ * The function <b>queue_new</b>() create new queue with length <i>length</i>
+ * of item size <i>item_size</i>. Returns pointer to the created object or
+ * <b>NULL</b> on error. Both, <i>length</i> and <i>item_size</i> cannot be zero.
  *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
+ * @param length        queue length
+ * @param item_size     size of item
  *
- * @return pointer to queue object, otherwise NULL if error
+ * @errors None
+ *
+ * @return On success returns pointer to the created object or <b>NULL</b> on
+ * error.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline queue_t *queue_new(const uint length, const uint item_size)
@@ -592,9 +1932,62 @@ static inline queue_t *queue_new(const uint length, const uint item_size)
 
 //==============================================================================
 /**
- * @brief Function delete queue
+ * @brief void queue_delete(queue_t *queue)
+ * The function <b>queue_delete</b>() deletes the created queue pointed by
+ * <i>queue</i>. Make sure that neither task use queue before delete.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
@@ -604,9 +1997,64 @@ static inline void queue_delete(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function reset queue
+ * @brief void queue_reset(queue_t *queue)
+ * The function <b>queue_delete</b>() reset the selected queue pointed by
+ * <i>queue</i>.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         queue_reset(queue);
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void queue_reset(queue_t *queue)
@@ -616,14 +2064,67 @@ static inline void queue_reset(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_send(queue_t *queue, const void *item, const uint timeout)
+ * The function <b>queue_send</b>() send specified item pointed by <i>item</i>
+ * to queue pointed by <i>queue</i>. If queue is full then system try to send
+ * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
+ * sending is aborted immediately if queue is full, and <b>false</b> value is
+ * returned.
  *
- * @param[in] queue             queue object
- * @param[in] item              item
- * @param[in] timeout           timeout
+ * @param queue     queue object
+ * @param item      item to send
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item posted
- * @retval false                item not posted
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const uint timeout)
@@ -633,14 +2134,47 @@ static inline bool queue_send(queue_t *queue, const void *item, const uint timeo
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+ * The function <b>queue_send_from_ISR</b>() is similar to  <b>queue_send</b>(),
+ * expect that can be called from interrupt. The <i>task_woken</i> is set to
+ * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
  *
- * @param[in]  queue            queue object
- * @param[in]  item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param queue         queue object
+ * @param item          item to send
+ * @param task_woken    context switch request
  *
- * @retval true                 item posted
- * @retval false                item not posted
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue = queue_new(10, sizeof(char));
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         char c;
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void uart_rx_isr(void)
+ * {
+ *         char c = UART1->DR;
+ *
+ *         bool woken = false;
+ *         queue_send_from_ISR(queue, &c, &woken);
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
  */
 //==============================================================================
 static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
@@ -650,14 +2184,66 @@ static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *t
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_receive(queue_t *queue, void *item, const uint timeout)
+ * The function <b>queue_receive</b>() receive top item from queue pointed by
+ * <i>queue</i> and copy it to the item pointed by <i>item</i>. The item is
+ * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
+ * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[in]  timeout          timeout
+ * @param queue     queue object
+ * @param item      item destination
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
@@ -667,14 +2253,49 @@ static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function receive queue from ISR
+ * @brief bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
+ * The function <b>queue_recieve_from_ISR</b>() is similar to  <b>queue_recieve</b>(),
+ * expect that can be called from interrupt. The <i>task_woken</i> is set to
+ * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param queue         queue object
+ * @param item          item destination
+ * @param task_woken    context switch request
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue = queue_new(10, sizeof(char));
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void some_isr(void)
+ * {
+ *         char c;
+ *
+ *         bool woken = false;
+ *         if (queue_receive_from_ISR(queue, &c, &woken)) {
+ *                 // some operations
+ *         }
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
  */
 //==============================================================================
 static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
@@ -684,14 +2305,68 @@ static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task
 
 //==============================================================================
 /**
- * @brief Function peek queue
+ * @brief bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
+ * The function <b>queue_receive_peek</b>() is similar to <b>queue_receive</b>(),
+ * expect that top item is not removed from the queue.
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[in]  waittime_ms      wait time
+ * @param queue     queue object
+ * @param item      item destination
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive_peek(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // ...
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
@@ -701,11 +2376,59 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const uint tim
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue
+ * @brief int queue_get_number_of_items(queue_t *queue)
+ * The function <b>queue_get_number_of_items</b>() returns a number of items
+ * stored in the queue pointed by <i>queue</i>.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
  *
- * @return a number of items in queue, -1 if error
+ * @errors None
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         for (i = 0; i < queue_get_number_of_items(queue); i++) {
+ *                 char c;
+ *                 queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *                 // some operations
+ *         }
+ *
+ *         // ...
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
@@ -715,11 +2438,39 @@ static inline int queue_get_number_of_items(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue from ISR
+ * @brief int queue_get_number_of_items_from_ISR(queue_t *queue)
+ * The function <b>queue_get_number_of_items_from_ISR</b>() is similar to
+ * <b>queue_get_number_of_items</b>(), except that can be called from interrupt.
  *
- * @param[in] *queue            queue object
+ * @param queue     queue object
  *
- * @return a number of items in queue, -1 if error
+ * @errors None
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue;
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void some_isr(void *arg)
+ * {
+ *         int len = queue_get_number_of_items_from_ISR(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
@@ -729,7 +2480,32 @@ static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function enter to critical section
+ * @brief void critical_section_begin(void)
+ * The function <b>critical_section_begin</b>() enters the code to the
+ * critical section. From critical section masked interrupts and context switch
+ * does not work. The critical section routine shall be short as possible.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         critical_section_begin();
+ *
+ *         // some short operations ...
+ *
+ *         critical_section_end();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void critical_section_begin(void)
@@ -739,7 +2515,30 @@ static inline void critical_section_begin(void)
 
 //==============================================================================
 /**
- * @brief Function exit from critical section
+ * @brief void critical_section_end(void)
+ * The function <b>critical_section_end</b>() exit from critical section.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         critical_section_begin();
+ *
+ *         // some short operations ...
+ *
+ *         critical_section_end();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void critical_section_end(void)
@@ -749,7 +2548,30 @@ static inline void critical_section_end(void)
 
 //==============================================================================
 /**
- * @brief Function disable interrupts
+ * @brief void ISR_disable(void)
+ * The function <b>ISR_disable</b>() disable interrupts.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         ISR_disable();
+ *
+ *         // some short operations ...
+ *
+ *         ISR_enable();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void ISR_disable(void)
@@ -759,7 +2581,30 @@ static inline void ISR_disable(void)
 
 //==============================================================================
 /**
- * @brief Function enable interrupts
+ * @brief void ISR_enable(void)
+ * The function <b>ISR_enable</b>() enable interrupts.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         ISR_disable();
+ *
+ *         // some short operations ...
+ *
+ *         ISR_enable();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void ISR_enable(void)

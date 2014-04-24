@@ -47,7 +47,7 @@ extern "C" {
  * ENABLE : enable oscillator
  * DISABLE: disable oscillator
  */
-#define _PLL_CFG__LSI_ON                ENABLE
+#define _PLL_CFG__LSI_ON                __PLL_LSI_ON__
 
 /*
  * LSE
@@ -55,7 +55,7 @@ extern "C" {
  * RCC_LSE_ON    : LSE oscillator ON
  * RCC_LSE_Bypass: LSE oscillator bypassed with external clock
  */
-#define _PLL_CFG__LSE_ON                RCC_LSE_OFF
+#define _PLL_CFG__LSE_ON                __PLL_LSE_ON__
 
 /*
  * HSE
@@ -63,7 +63,7 @@ extern "C" {
  * RCC_HSE_ON    : HSE oscillator ON
  * RCC_HSE_Bypass: HSE oscillator bypassed with external clock
  */
-#define _PLL_CFG__HSE_ON                RCC_HSE_ON
+#define _PLL_CFG__HSE_ON                __PLL_HSE_ON__
 
 /*------------------------------------------------------------------------------
  * CLOCK SOURCES
@@ -74,7 +74,7 @@ extern "C" {
  * RCC_RTCCLKSource_LSI       : LSI selected as RTC clock
  * RCC_RTCCLKSource_HSE_Div128: HSE clock divided by 128 selected as RTC clock
  */
-#define _PLL_CFG__RTCCLK_SRC            RCC_RTCCLKSource_LSI
+#define _PLL_CFG__RTCCLK_SRC            __PLL_RTC_CLK_SRC__
 
 /*
  * System clock source
@@ -82,7 +82,7 @@ extern "C" {
  * RCC_SYSCLKSource_HSE   : HSE selected as system clock
  * RCC_SYSCLKSource_PLLCLK: PLL selected as system clock
  */
-#define _PLL_CFG__SYSCLK_SRC            RCC_SYSCLKSource_PLLCLK
+#define _PLL_CFG__SYSCLK_SRC            __PLL_SYS_CLK_SRC__
 
 #ifdef STM32F10X_CL
 /*
@@ -97,7 +97,7 @@ extern "C" {
  * RCC_MCO_XT1         : External 3-25 MHz oscillator clock selected
  * RCC_MCO_PLL3CLK     : PLL3 clock selected
  */
-#define _PLL_CFG__MCO_SRC               RCC_MCO_NoClock
+#define _PLL_CFG__MCO_SRC               __PLL_MCO_SRC_CL__
 #else
 /*
  * MCO source
@@ -107,7 +107,7 @@ extern "C" {
  * RCC_MCO_HSE         : HSE oscillator clock selected
  * RCC_MCO_PLLCLK_Div2 : PLL clock divided by 2 selected
  */
-#define _PLL_CFG__MCO_SRC               RCC_MCO_NoClock
+#define _PLL_CFG__MCO_SRC               __PLL_MCO_SRC__
 #endif
 
 #ifdef STM32F10X_CL
@@ -116,14 +116,14 @@ extern "C" {
  * RCC_I2S2CLKSource_SYSCLK  : system clock selected as I2S2 clock entry
  * RCC_I2S2CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S2 clock entry
  */
-#define _PLL_CFG__I2S2_SRC              RCC_I2S2CLKSource_SYSCLK
+#define _PLL_CFG__I2S2_SRC              __PLL_I2S2_SRC__
 
 /*
  * I2S3 clock source
  * RCC_I2S3CLKSource_SYSCLK  : system clock selected as I2S3 clock entry
  * RCC_I2S3CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S3 clock entry
  */
-#define _PLL_CFG__I2S3_SRC              RCC_I2S3CLKSource_SYSCLK
+#define _PLL_CFG__I2S3_SRC              __PLL_I2S3_SRC__
 #endif
 
 
@@ -135,7 +135,7 @@ extern "C" {
  * ENABLE : enable main PLL
  * DISABLE: disable main PLL
  */
-#define _PLL_CFG__PLL_ON                ENABLE
+#define _PLL_CFG__PLL_ON                __PLL_PLL_ON__
 
 #ifdef STM32F10X_CL
 /*
@@ -143,7 +143,7 @@ extern "C" {
  * RCC_PLLSource_HSI_Div2: HSI oscillator clock divided by 2 selected as PLL clock entry
  * RCC_PLLSource_PREDIV1 : PREDIV1 clock selected as PLL clock entry
  */
-#define _PLL_CFG__PLL_SRC               RCC_PLLSource_PREDIV1
+#define _PLL_CFG__PLL_SRC               __PLL_PLL_SRC_CL__
 #else
 /*
  * PLL clock source (PLLSRC)
@@ -151,7 +151,7 @@ extern "C" {
  * RCC_PLLSource_HSE_Div1: HSE oscillator clock selected as PLL clock entry
  * RCC_PLLSource_HSE_Div2: HSE oscillator clock divided by 2 selected as PLL clock entry
  */
-#define _PLL_CFG__PLL_SRC               RCC_PLLSource_HSE_Div1
+#define _PLL_CFG__PLL_SRC               __PLL_PLL_SRC__
 #endif
 
 #ifdef STM32F10X_CL
@@ -159,29 +159,29 @@ extern "C" {
  * PLL multiplication factor (PLLMUL)
  * RCC_PLLMul_x where x:{[4,9], 6_5}
  */
-#define _PLL_CFG__PLL_MUL               RCC_PLLMul_9
+#define _PLL_CFG__PLL_MUL               __PLL_PLL_MULL_CL__
 #else
 /*
  * PLL multiplication (PLLMUL)
  * RCC_PLLMul_x where x:[2,16]          [Low-, medium-, high- and XL-density]
  */
-#define _PLL_CFG__PLL_MUL               RCC_PLLMul_9
+#define _PLL_CFG__PLL_MUL               __PLL_PLL_MULL__
 #endif
 
 #ifdef STM32F10X_CL
 /*
  * USB prescaler
- * RCC_OTGFSCLKSource_PLLVCO_Div3: PLL VCO clock divided by 2 selected as USB OTG FS clock source
+ * RCC_OTGFSCLKSource_PLLVCO_Div3: PLL VCO clock divided by 3 selected as USB OTG FS clock source
  * RCC_OTGFSCLKSource_PLLVCO_Div2: PLL VCO clock divided by 2 selected as USB OTG FS clock source
  */
-#define _PLL_CFG__USB_DIV               RCC_OTGFSCLKSource_PLLVCO_Div3
+#define _PLL_CFG__USB_DIV               __PLL_USB_DIV_CL__
 #else
 /*
  * USB prescaler
  * RCC_USBCLKSource_PLLCLK_1Div5 : PLL clock divided by 1,5 selected as USB clock source
  * RCC_USBCLKSource_PLLCLK_Div1  : PLL clock selected as USB clock source
  */
-#define _PLL_CFG__USB_DIV               RCC_USBCLKSource_PLLCLK_1Div5
+#define _PLL_CFG__USB_DIV               __PLL_USB_DIV__
 #endif
 
 
@@ -194,19 +194,19 @@ extern "C" {
  * RCC_PREDIV1_Source_HSE : HSE selected as PREDIV1 clock
  * RCC_PREDIV1_Source_PLL2: PLL2 selected as PREDIV1 clock
  */
-#define _PLL_CFG__PREDIV1_SRC           RCC_PREDIV1_Source_HSE
+#define _PLL_CFG__PREDIV1_SRC           __PLL_PREDIV1_SRC__
 
 /*
  * PLL pre-divider 1 value
  * RCC_PREDIV1_Div1-16: divider value
  */
-#define _PLL_CFG__PREDIV1_VAL           RCC_PREDIV1_Div1
+#define _PLL_CFG__PREDIV1_VAL           __PLL_PREDIV1_VAL__
 
 /*
  * PLL pre-divider 2 value
  * RCC_PREDIV2_Divx where x:[1,16]
  */
-#define _PLL_CFG__PLL_PREDIV2_VAL       RCC_PREDIV2_Div1
+#define _PLL_CFG__PLL_PREDIV2_VAL       __PLL_PREDIV2_VAL__
 
 
 /*------------------------------------------------------------------------------
@@ -217,13 +217,13 @@ extern "C" {
  * ENABLE : enable PLL2
  * DISABLE: disable PLL2
  */
-#define _PLL_CFG__PLL2_ON               DISABLE
+#define _PLL_CFG__PLL2_ON               __PLL_PLL2_ON__
 
 /*
  * PLL2 multiplication factor
  * RCC_PLL2Mul_x where x:{[8,14], 16, 20}
  */
-#define _PLL_CFG__PLL2_MUL              RCC_PLL2Mul_8
+#define _PLL_CFG__PLL2_MUL              __PLL_PLL2_MULL__
 
 
 /*------------------------------------------------------------------------------
@@ -234,13 +234,13 @@ extern "C" {
  * ENABLE : enable PLL3
  * DISABLE: disable PLL3
  */
-#define _PLL_CFG__PLL3_ON               DISABLE
+#define _PLL_CFG__PLL3_ON               __PLL_PLL3_ON__
 
 /*
  * PLL3 multiplication factor
  * RCC_PLL3Mul_x where x:{[8,14], 16, 20}
  */
-#define _PLL_CFG__PLL3_MUL              RCC_PLL3Mul_8
+#define _PLL_CFG__PLL3_MUL              __PLL_PLL3_MULL__
 #endif
 
 
@@ -259,7 +259,7 @@ extern "C" {
  * RCC_SYSCLK_Div256: AHB clock = SYSCLK/256
  * RCC_SYSCLK_Div512: AHB clock = SYSCLK/512
  */
-#define _PLL_CFG__AHB_PRE               RCC_SYSCLK_Div1
+#define _PLL_CFG__AHB_PRE               __PLL_AHB_PRE__
 
 /*
  * APB1 prescaler (in: HCLK; out: PCLK1) (low speed)
@@ -269,17 +269,17 @@ extern "C" {
  * RCC_HCLK_Div8 : APB1 clock = HCLK/8
  * RCC_HCLK_Div16: APB1 clock = HCLK/16
  */
-#define _PLL_CFG__APB1_PRE              RCC_HCLK_Div2
+#define _PLL_CFG__APB1_PRE              __PLL_APB1_PRE__
 
 /*
  * APB2 prescaler (in: HCLK; out: PCLK2) (high speed)
- * RCC_HCLK_Div1 : APB1 clock = HCLK
- * RCC_HCLK_Div2 : APB1 clock = HCLK/2
- * RCC_HCLK_Div4 : APB1 clock = HCLK/4
- * RCC_HCLK_Div8 : APB1 clock = HCLK/8
- * RCC_HCLK_Div16: APB1 clock = HCLK/16
+ * RCC_HCLK_Div1 : APB2 clock = HCLK
+ * RCC_HCLK_Div2 : APB2 clock = HCLK/2
+ * RCC_HCLK_Div4 : APB2 clock = HCLK/4
+ * RCC_HCLK_Div8 : APB2 clock = HCLK/8
+ * RCC_HCLK_Div16: APB2 clock = HCLK/16
  */
-#define _PLL_CFG__APB2_PRE              RCC_HCLK_Div1
+#define _PLL_CFG__APB2_PRE              __PLL_APB2_PRE__
 
 /*
  * ADC prescaler (in: PCLK2; out: ADCCLK)
@@ -288,7 +288,7 @@ extern "C" {
  * RCC_PCLK2_Div6: ADC clock = PCLK2/6
  * RCC_PCLK2_Div8: ADC clock = PCLK2/8
  */
-#define _PLL_CFG__ADC_PRE               RCC_PCLK2_Div8
+#define _PLL_CFG__ADC_PRE               __PLL_ADC_PRE__
 
 /*
  * Flash Latency (Flash wait-state)
@@ -296,7 +296,7 @@ extern "C" {
  * 1: SYSCLK <= 48MHz
  * 2: SYSCLK <= 72MHz
  */
-#define _PLL_CFG__FLASH_LATENCY         2
+#define _PLL_CFG__FLASH_LATENCY         __PLL_FLASH_LATENCY__
 
 /*==============================================================================
   Exported types, enums definitions

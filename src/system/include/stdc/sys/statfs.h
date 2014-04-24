@@ -57,12 +57,42 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function returns file system status
+ * @brief int statfs(const char *path, struct statfs *statfs)
+ * The function <b>statfs</b>() returns information about a mounted file system.
+ * <i>path</i> is directory of the mount point of file system.
+ * <i>buf</i> is a pointer to a <b>statfs</b> structure defined as follows:
+ * <pre>
+ * struct statfs {
+ *         u32_t f_type;            // file system type
+ *         u32_t f_bsize;           // block size
+ *         u32_t f_blocks;          // total blocks
+ *         u32_t f_bfree;           // free blocks
+ *         u32_t f_files;           // total file nodes in FS
+ *         u32_t f_ffree;           // free file nodes in FS
+ *         const char *f_fsname;    // FS name
+ * };
+ * </pre>
  *
- * @param[in]  *path            fs path
- * @param[out] *statfs          pointer to FS status structure
+ * @param pathname      node name
+ * @param dev           device number
  *
- * @return 0 on success. On error, -1 is returned
+ * @errors EINVAL, ENOMEM, EIO, EACCES, ENOENT, ENOTDIR, ...
+ *
+ * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * struct statfs info;
+ * if (statfs("/proc", &info) == 0) {
+ *         // ...
+ * } else {
+ *         perror("/proc");
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)

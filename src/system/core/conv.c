@@ -60,7 +60,10 @@
  * @brief Function convert ASCII to the number
  * When function find any other character than number (depended of actual base)
  * immediately finished operation and return pointer when bad character was
- * found
+ * found. If base is 0 then function recognize type of number used in string.
+ * For hex values "0x" is recognized, for octal values "0" at the beginning of
+ * string is recognized, for binary "0b" is recognized, and for decimals values
+ * none above.
  *
  * @param[in]  *string       string to decode
  * @param[in]   base         decode base
@@ -71,16 +74,36 @@
 //==============================================================================
 char *sys_strtoi(const char *string, int base, i32_t *value)
 {
-        char  character;
-        i32_t sign = 1;
-        bool  char_found = false;
-
         *value = 0;
 
-        if (base < 2 || base > 16) {
+        i32_t sign = 1;
+        if (string[0] == '-') {
+                string++;
+                sign = -1;
+        } else if (string[0] == '+') {
+                string++;
+                sign = 1;
+        }
+
+        if (base == 0) {
+                if (strncmp("0x", string, 2) == 0) {
+                        base    = 16;
+                        string += 2;
+                } else if (strncmp("0b", string, 2) == 0) {
+                        base    = 2;
+                        string += 2;
+                } else if (strncmp("0", string, 1) == 0) {
+                        base    = 8;
+                        string += 1;
+                } else {
+                        base = 10;
+                }
+        } else if (base < 2 || base > 16) {
                 goto end;
         }
 
+        char  character;
+        bool  char_found = false;
         while ((character = *string) != '\0') {
                 /* if space exist, atoi continue finding correct character */
                 if ((character == ' ') && (char_found == false)) {
@@ -88,20 +111,6 @@ char *sys_strtoi(const char *string, int base, i32_t *value)
                         continue;
                 } else {
                         char_found = true;
-                }
-
-                /* check signum */
-                if (character == '-') {
-                        if (base == 10) {
-                                if (sign == 1) {
-                                        sign = -1;
-                                }
-
-                                string++;
-                                continue;
-                        } else {
-                                goto apply_sign;
-                        }
                 }
 
                 /* check character range */

@@ -30,7 +30,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
+#include "stm32f1/wdg_ioctl.h"
 #include "stm32f1/wdg_cfg.h"
 
 #ifdef __cplusplus
@@ -42,8 +42,6 @@ extern "C" {
 ==============================================================================*/
 #define _WDG_MAJOR_NUMBER               0
 #define _WDG_MINOR_NUMBER               0
-
-#define WDG_IORQ_RESET                  _IO('C', 0x00)
 
 /*==============================================================================
   Exported object types

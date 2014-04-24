@@ -57,13 +57,36 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function return file system describe object
- * After operation object must be freed using free() function.
+ * @brief int getmntentry(int item, struct mntent *mntent)
+ * Function return file system describe object. After operation object must be
+ * freed using free() function.<p>
+ *
+ * <b>mntent</b> structure:
+ * <pre>
+ * struct mntent {
+ *         const char *mnt_fsname;    // device or server for file system
+ *         const char *mnt_dir;       // directory mounted on
+ *         u64_t       total;         // device total size
+ *         u64_t       free;          // device free
+ * };
+ * </pre>
  *
  * @param item          n-item to read
  * @param mntent        pointer to mntent object
  *
- * @return 0 if success, 1 if all items read, -1 on error
+ * @errors EINVAL
+ *
+ * @return Returns 0 on success. Returns 1 if all items was read. On error -1 is
+ * returned and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * struct mntent entry;
+ * int n = 0;
+ * while (getmntentry(i++, &entry) == 0) {
+ *        // ...
+ * }
  */
 //==============================================================================
 static inline int getmntentry(int item, struct mntent *mntent)

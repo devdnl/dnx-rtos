@@ -46,6 +46,7 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define ETHMAC_CHECKSUM_BY_HARDWARE     __ETH_CHECKSUM_BY_HARDWARE__
 
 /*==============================================================================
   Local object types
@@ -804,7 +805,7 @@ int _ethif_if_down()
  * @return 0 if success, otherwise -1
  */
 //==============================================================================
-int _ethif_get_ifconfig(ifconfig *ifcfg)
+int _ethif_get_ifconfig(ifconfig_t *ifcfg)
 {
         if (!ifcfg || ethif_mem->valid != ethif_data_validation_number)
                 return -1;

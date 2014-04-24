@@ -63,14 +63,14 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Convert string to IP
  */
 //==============================================================================
-static netapi_ip_t strtoip(const char *str)
+static net_ip_t strtoip(const char *str)
 {
-        netapi_ip_t ip;
+        net_ip_t ip;
         int a = 0, b = 0, c = 0, d = 0;
 
         sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
 
-        netapi_set_ip(&ip, a, b, c, d);
+        net_set_ip(&ip, a, b, c, d);
 
         return ip;
 }
@@ -89,9 +89,9 @@ static void show_details()
                 "DHCP CONFIGURED"
         };
 
-        ifconfig ifcfg;
-        memset(&ifcfg, 0, sizeof(ifconfig));
-        netapi_get_ifconfig(&ifcfg);
+        ifconfig_t ifcfg;
+        memset(&ifcfg, 0, sizeof(ifconfig_t));
+        net_get_ifconfig(&ifcfg);
 
         printf("Network status: %s  HWaddr %2x:%2x:%2x:%2x:%2x:%2x\n"
                "inet addr:%d.%d.%d.%d  gateway:%d.%d.%d.%d  Mask:%d.%d.%d.%d\n"
@@ -100,18 +100,18 @@ static void show_details()
                if_status[ifcfg.status],
                ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-               netapi_get_ip_part_a(&ifcfg.IP_address),
-               netapi_get_ip_part_b(&ifcfg.IP_address),
-               netapi_get_ip_part_c(&ifcfg.IP_address),
-               netapi_get_ip_part_d(&ifcfg.IP_address),
-               netapi_get_ip_part_a(&ifcfg.gateway),
-               netapi_get_ip_part_b(&ifcfg.gateway),
-               netapi_get_ip_part_c(&ifcfg.gateway),
-               netapi_get_ip_part_d(&ifcfg.gateway),
-               netapi_get_ip_part_a(&ifcfg.net_mask),
-               netapi_get_ip_part_b(&ifcfg.net_mask),
-               netapi_get_ip_part_c(&ifcfg.net_mask),
-               netapi_get_ip_part_d(&ifcfg.net_mask),
+               net_get_ip_part_a(&ifcfg.IP_address),
+               net_get_ip_part_b(&ifcfg.IP_address),
+               net_get_ip_part_c(&ifcfg.IP_address),
+               net_get_ip_part_d(&ifcfg.IP_address),
+               net_get_ip_part_a(&ifcfg.gateway),
+               net_get_ip_part_b(&ifcfg.gateway),
+               net_get_ip_part_c(&ifcfg.gateway),
+               net_get_ip_part_d(&ifcfg.gateway),
+               net_get_ip_part_a(&ifcfg.net_mask),
+               net_get_ip_part_b(&ifcfg.net_mask),
+               net_get_ip_part_c(&ifcfg.net_mask),
+               net_get_ip_part_d(&ifcfg.net_mask),
                ifcfg.rx_packets, ifcfg.rx_bytes,
                ifcfg.tx_packets, ifcfg.tx_bytes);
 }
@@ -134,13 +134,13 @@ PROGRAM_MAIN(ifconfig, int argc, char *argv[])
                 bool up   = false;
                 bool down = false;
                 bool dhcp = false;
-                netapi_ip_t ip;
-                netapi_ip_t netmask;
-                netapi_ip_t gateway;
+                net_ip_t ip;
+                net_ip_t netmask;
+                net_ip_t gateway;
 
-                netapi_set_ip(&ip     , 0,0,0,0);
-                netapi_set_ip(&netmask, 0,0,0,0);
-                netapi_set_ip(&gateway, 0,0,0,0);
+                net_set_ip(&ip     , 0,0,0,0);
+                net_set_ip(&netmask, 0,0,0,0);
+                net_set_ip(&gateway, 0,0,0,0);
 
                 for (int i = 1; i < argc; i++) {
                         if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
@@ -180,19 +180,19 @@ PROGRAM_MAIN(ifconfig, int argc, char *argv[])
                         return 0;
                 }
 
-                ifconfig ifcfg;
-                memset(&ifcfg, 0, sizeof(ifconfig));
-                netapi_get_ifconfig(&ifcfg);
+                ifconfig_t ifcfg;
+                memset(&ifcfg, 0, sizeof(ifconfig_t));
+                net_get_ifconfig(&ifcfg);
 
                 if (down) {
                         if (  ifcfg.status == IFSTATUS_DHCP_CONFIGURED
                            || ifcfg.status == IFSTATUS_DHCP_CONFIGURING) {
 
-                                if (netapi_stop_DHCP_client() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                                if (net_stop_DHCP_client() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                                         puts("DHCP stop error!");
                                 }
                         } else {
-                                if (netapi_ifdown() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                                if (net_ifdown() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                                         puts("Interface down fail!");
                                 }
                         }
@@ -200,7 +200,7 @@ PROGRAM_MAIN(ifconfig, int argc, char *argv[])
 
                 if (up) {
                         if (dhcp) {
-                                if (netapi_start_DHCP_client() == 0) {
+                                if (net_start_DHCP_client() == 0) {
                                         show_details();
                                 } else {
                                         puts("DHCP start error!");
@@ -221,7 +221,7 @@ PROGRAM_MAIN(ifconfig, int argc, char *argv[])
                                         return 0;
                                 }
 
-                                if (netapi_ifup(&ip, &netmask, &gateway) == 0) {
+                                if (net_ifup(&ip, &netmask, &gateway) == 0) {
                                         show_details();
                                 } else {
                                         puts("Configuration fail!");
