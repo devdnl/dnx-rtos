@@ -191,13 +191,13 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -214,7 +214,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                 if (node) {
                         stdret_t open = STD_RET_ERROR;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = driver_open(node->IF.drv, O_DEV_FLAGS(flags));
+                                open = driver_open(node->IF.drv, vfs_filter_open_flags_for_device(flags));
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = STD_RET_OK;
                         }

@@ -875,13 +875,13 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
 
@@ -951,7 +951,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
                         *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                if (driver_open((dev_t)node->data, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                if (driver_open((dev_t)node->data, vfs_filter_open_flags_for_device(flags)) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);

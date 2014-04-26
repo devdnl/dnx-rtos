@@ -157,7 +157,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
+API_MOD_OPEN(ETHMAC, void *device_handle, vfs_open_flags_t flags)
 {
         UNUSED_ARG(flags);
 

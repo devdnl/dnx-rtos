@@ -410,7 +410,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(SPI, void *device_handle, int flags)
+API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
 {
         STOP_IF(!device_handle);
         UNUSED_ARG(flags);

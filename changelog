@@ -3,6 +3,7 @@ dnx/FreeRTOS 1.3.2
 New Features, Improvements:
 - Decreased size of register of modules
 - Removed STOP_IF() macro from modules
+- Implemented type for file open flags in file systems and devices
 
 Fixed Bugs:
 - none
