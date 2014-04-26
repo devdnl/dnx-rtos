@@ -67,17 +67,6 @@ extern "C" {
 #define API_MOD_FLUSH(modname, ...)             stdret_t _##modname##_flush(__VA_ARGS__)
 #define API_MOD_STAT(modname, ...)              stdret_t _##modname##_stat(__VA_ARGS__)
 
-#define _IMPORT_MODULE(modname)                                                         \
-extern _API_MOD_INIT(modname, void**, u8_t, u8_t);                                      \
-extern API_MOD_RELEASE(modname, void*);                                                 \
-extern API_MOD_OPEN(modname, void*, int);                                               \
-extern API_MOD_CLOSE(modname, void*, bool);                                             \
-extern API_MOD_WRITE(modname, void*, const u8_t*, size_t, u64_t*, struct vfs_fattr);    \
-extern API_MOD_READ(modname, void*, u8_t*, size_t, u64_t*, struct vfs_fattr);           \
-extern API_MOD_IOCTL(modname, void*, int, void*);                                       \
-extern API_MOD_FLUSH(modname, void*);                                                   \
-extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
