@@ -120,8 +120,6 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        STOP_IF(!fs_handle);
-
         struct LFS_data *lfs;
         if (!(lfs = calloc(1, sizeof(struct LFS_data)))) {
                 return STD_RET_ERROR;
@@ -194,9 +192,6 @@ API_FS_RELEASE(lfs, void *fs_handle)
 //==============================================================================
 API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         if (path[0] != '/') {
@@ -265,9 +260,6 @@ error:
 //==============================================================================
 API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
         char *new_dir_name   = NULL;
 
@@ -345,9 +337,6 @@ error:
 //==============================================================================
 API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         if (FIRST_CHARACTER(path) != '/') {
@@ -430,10 +419,6 @@ error:
 //==============================================================================
 API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!dir);
-
         struct LFS_data *lfs = fs_handle;
         mutex_force_lock(lfs->resource_mtx);
 
@@ -489,9 +474,6 @@ static stdret_t lfs_closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!dir);
-
         struct LFS_data *lfs = fs_handle;
 
         dirent_t dirent;
@@ -535,9 +517,6 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(lfs, void *fs_handle, const char *path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -604,10 +583,6 @@ error:
 //==============================================================================
 API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!old_name);
-        STOP_IF(!new_name);
-
         struct LFS_data *lfs = fs_handle;
         char *new_node_name  = NULL;
 
@@ -674,9 +649,6 @@ error:
 //==============================================================================
 API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -708,9 +680,6 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
 //==============================================================================
 API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -743,10 +712,6 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
 //==============================================================================
 API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!stat);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -800,9 +765,6 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!stat);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -854,8 +816,6 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
-        STOP_IF(!statfs);
-
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
@@ -884,11 +844,6 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!fd);
-        STOP_IF(!fpos);
-        STOP_IF(!path);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -990,8 +945,6 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-
         struct LFS_data *lfs = fs_handle;
         stdret_t status      = STD_RET_ERROR;
 
@@ -1067,11 +1020,6 @@ exit:
 API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!fpos);
-        STOP_IF(!src);
-        STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
         ssize_t          n   = -1;
@@ -1161,11 +1109,6 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!fpos);
-        STOP_IF(!dst);
-        STOP_IF(!count);
-
         struct LFS_data *lfs = fs_handle;
         ssize_t          n   = -1;
 
@@ -1247,8 +1190,6 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -1299,8 +1240,6 @@ exit:
 API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
 
         struct LFS_data *lfs = fs_handle;
 

@@ -325,7 +325,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
 
         if (mbox) {
                 if (mbox->queue && mbox->valid == validation_value) {
-                        _stop_if(queue_get_number_of_items(mbox->queue));
+                        queue_get_number_of_items(mbox->queue);
                         queue_delete(mbox->queue);
                 }
         }

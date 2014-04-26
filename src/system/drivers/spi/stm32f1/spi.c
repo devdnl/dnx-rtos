@@ -356,8 +356,6 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(SPI, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         struct spi_virtual *hdl = device_handle;
 
         stdret_t status = STD_RET_ERROR;
@@ -412,7 +410,6 @@ API_MOD_RELEASE(SPI, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         struct spi_virtual *hdl = device_handle;
@@ -433,8 +430,6 @@ API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
 //==============================================================================
 API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         struct spi_virtual *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock) || force) {
@@ -463,10 +458,6 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         struct spi_virtual *hdl = device_handle;
 
@@ -518,10 +509,6 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
 
         struct spi_virtual *hdl = device_handle;
 
@@ -578,8 +565,6 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         struct spi_virtual *hdl    = device_handle;
         stdret_t            status = STD_RET_ERROR;
 
@@ -686,8 +671,6 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(SPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         return STD_RET_OK;
 }
 
@@ -704,9 +687,6 @@ API_MOD_FLUSH(SPI, void *device_handle)
 //==============================================================================
 API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
-
         struct spi_virtual *hdl = device_handle;
 
         device_stat->st_major = hdl->major;
