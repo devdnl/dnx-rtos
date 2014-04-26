@@ -2,6 +2,7 @@ dnx/FreeRTOS 1.3.2
 ==================
 New Features, Improvements:
 - Decreased size of register of modules
+- Removed STOP_IF() macro from modules
 
 Fixed Bugs:
 - none

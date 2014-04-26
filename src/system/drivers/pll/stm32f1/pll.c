@@ -83,7 +83,6 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
-        UNUSED_ARG(_module_name_);
 
         RCC_DeInit();
 
@@ -278,7 +277,7 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
-        STOP_IF(!device_handle);
+        UNUSED_ARG(device_handle);
 
         stdret_t status = STD_RET_OK;
 

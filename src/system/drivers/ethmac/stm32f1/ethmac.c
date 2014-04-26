@@ -59,6 +59,8 @@ struct eth_mem {
 /*==============================================================================
   Local objects
 ==============================================================================*/
+MODULE_NAME("ETHMAC");
+
 static struct eth_mem *eth_mem;         /* required by IRQ */
 
 /*==============================================================================
@@ -89,7 +91,6 @@ extern ETH_DMADESCTypeDef *DMATxDescToSet;
 //==============================================================================
 API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
@@ -121,8 +122,6 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         struct eth_mem *hdl    = device_handle;
         stdret_t        status = STD_RET_ERROR;
 
@@ -160,7 +159,6 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         struct eth_mem *hdl = device_handle;
@@ -187,8 +185,6 @@ API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         struct eth_mem *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->dev_lock) || force) {
@@ -215,9 +211,9 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 //==============================================================================
 API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!src);
-        STOP_IF(!fpos);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(src);
+        UNUSED_ARG(fpos);
         UNUSED_ARG(count);
         UNUSED_ARG(fattr);
 
@@ -241,9 +237,9 @@ API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, u64_t 
 //==============================================================================
 API_MOD_READ(ETHMAC, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!dst);
-        STOP_IF(!fpos);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(fpos);
         UNUSED_ARG(count);
         UNUSED_ARG(fattr);
 
@@ -266,8 +262,6 @@ API_MOD_READ(ETHMAC, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, 
 //==============================================================================
 API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 {
-        STOP_IF(!device_handle);
-
         struct eth_mem *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->dev_lock)) {
@@ -561,8 +555,6 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(ETHMAC, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         struct eth_mem *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->dev_lock)) {
@@ -587,8 +579,7 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
 //==============================================================================
 API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!device_stat);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = _ETHMAC_MAJOR_NUMBER;

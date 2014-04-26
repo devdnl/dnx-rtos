@@ -49,7 +49,7 @@ extern "C" {
  .interface   = &_regdrv_##_drvmodule##_interface}
 
 #define _IMPORT_MODULE_INTERFACE(_modname)                                              \
-extern _API_MOD_INIT(_modname, void**, u8_t, u8_t);                                     \
+extern API_MOD_INIT(_modname, void**, u8_t, u8_t);                                     \
 extern API_MOD_RELEASE(_modname, void*);                                                \
 extern API_MOD_OPEN(_modname, void*, int);                                              \
 extern API_MOD_CLOSE(_modname, void*, bool);                                            \

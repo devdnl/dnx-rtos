@@ -184,8 +184,6 @@ API_MOD_INIT(afio, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        (void) _module_name_;
-
         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
 
         AFIO->EVCR      = EVCR;

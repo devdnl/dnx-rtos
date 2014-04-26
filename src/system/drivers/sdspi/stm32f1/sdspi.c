@@ -183,6 +183,8 @@ static stdret_t         mbr_detect_partitions                   (sdpart_t *hdl);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME("SDSPI");
+
 static sdctrl_t   *sdspi_ctrl;
 static const u16_t sector_size = 512;
 
@@ -204,8 +206,6 @@ static const u16_t sector_size = 512;
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(device_handle == NULL);
-
         if (major != _SDSPI_CARD_0 || minor > _SDSPI_PARTITION_4) {
                 errno = EINVAL;
                 return STD_RET_ERROR;
@@ -265,8 +265,6 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(SDSPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         sdpart_t *part = device_handle;
 
         timer_t timer = timer_reset();
@@ -323,7 +321,6 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
-        STOP_IF(device_handle == NULL);
 
         sdpart_t *part = device_handle;
 
@@ -349,7 +346,6 @@ API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 {
         UNUSED_ARG(force);
-        STOP_IF(device_handle == NULL);
 
         sdpart_t *part = device_handle;
 
@@ -373,10 +369,6 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 //==============================================================================
 API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
-        STOP_IF(fpos == NULL);
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
@@ -411,10 +403,6 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
 //==============================================================================
 API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
-        STOP_IF(fpos == NULL);
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
@@ -448,8 +436,6 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         sdpart_t *part = device_handle;
 
         stdret_t status = STD_RET_OK;
@@ -494,7 +480,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(SDSPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -512,9 +498,6 @@ API_MOD_FLUSH(SDSPI, void *device_handle)
 //==============================================================================
 API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
-
         sdpart_t *part = device_handle;
 
         if (sdspi_ctrl->card_initialized) {

@@ -58,6 +58,7 @@ static inline void reset_wdg();
 /*==============================================================================
   Local objects
 ==============================================================================*/
+MODULE_NAME("WDG");
 
 /*==============================================================================
   Exported objects
@@ -81,8 +82,6 @@ static inline void reset_wdg();
 //==============================================================================
 API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(!device_handle);
-
         if (major == _WDG_MAJOR_NUMBER || minor == _WDG_MINOR_NUMBER) {
 
                 WDG_t *hdl = calloc(1, sizeof(WDG_t));
@@ -115,7 +114,7 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(WDG, void *device_handle)
 {
-        STOP_IF(device_handle);
+        UNUSED_ARG(device_handle);
 
         errno = EPERM;
         return STD_RET_ERROR;
@@ -134,7 +133,6 @@ API_MOD_RELEASE(WDG, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(WDG, void *device_handle, int flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         WDG_t *hdl = device_handle;
@@ -159,8 +157,6 @@ API_MOD_OPEN(WDG, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(WDG, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
@@ -191,12 +187,11 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
 //==============================================================================
 API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(src);
+        UNUSED_ARG(count);
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         errno = EPERM;
         return -1;
@@ -217,12 +212,11 @@ API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 //==============================================================================
 API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(count);
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
 
         errno = EPERM;
         return -1;
@@ -242,7 +236,6 @@ API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
         UNUSED_ARG(arg);
 
         WDG_t *hdl = device_handle;
@@ -276,7 +269,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(WDG, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -294,8 +287,7 @@ API_MOD_FLUSH(WDG, void *device_handle)
 //==============================================================================
 API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_major = _WDG_MAJOR_NUMBER;
         device_stat->st_minor = _WDG_MINOR_NUMBER;

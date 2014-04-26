@@ -55,6 +55,7 @@ static inline void reset_CRC();
 /*==============================================================================
   Local objects
 ==============================================================================*/
+MODULE_NAME("CRCCU");
 
 /*==============================================================================
   Exported objects
@@ -78,8 +79,6 @@ static inline void reset_CRC();
 //==============================================================================
 API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(!device_handle);
-
         if (major != _CRC_MAJOR_NUMBER || minor != _CRC_MINOR_NUMBER)
                 return STD_RET_ERROR;
 
@@ -108,8 +107,6 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         CRCCU *hdl = device_handle;
 
         critical_section_begin();
@@ -142,7 +139,6 @@ API_MOD_RELEASE(CRCCU, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(CRCCU, void *device_handle, int flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         CRCCU *hdl = device_handle;
@@ -163,8 +159,6 @@ API_MOD_OPEN(CRCCU, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         CRCCU *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock) || force) {
@@ -193,10 +187,6 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         CRCCU *hdl = device_handle;
 
@@ -258,10 +248,6 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
-
         CRCCU *hdl = device_handle;
 
         ssize_t n = -1;
@@ -301,9 +287,7 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
 //==============================================================================
 API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
-        CRCCU   *hdl    = device_handle;
+        CRCCU *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
@@ -350,7 +334,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -368,8 +352,7 @@ API_MOD_FLUSH(CRCCU, void *device_handle)
 //==============================================================================
 API_MOD_STAT(CRCCU, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_major = _CRC_MAJOR_NUMBER;
         device_stat->st_minor = _CRC_MINOR_NUMBER;

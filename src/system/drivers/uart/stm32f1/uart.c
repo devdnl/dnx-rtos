@@ -88,6 +88,8 @@ static void     handle_irq              (u8_t major);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME("UART");
+
 /* addresses of UART devices */
 static USART_t *const uart[_UART_NUMBER] = {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -162,8 +164,6 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
-        STOP_IF(device_handle == NULL);
-
         if (major >= _UART_NUMBER || minor != _UART_MINOR_NUMBER) {
                 errno = EINVAL;
                 return STD_RET_ERROR;
@@ -230,8 +230,6 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(UART, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         struct UART_data *hdl = device_handle;
 
         if (mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT)) {
@@ -276,8 +274,8 @@ API_MOD_RELEASE(UART, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(UART, void *device_handle, int flags)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -295,9 +293,8 @@ API_MOD_OPEN(UART, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(UART, void *device_handle, bool force)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
-
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -319,10 +316,6 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         struct UART_data *hdl = device_handle;
 
@@ -363,10 +356,6 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, st
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
-
         struct UART_data *hdl = device_handle;
 
         ssize_t n = 0;
@@ -405,8 +394,6 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, st
 //==============================================================================
 API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         struct UART_data *hdl    = device_handle;
         stdret_t          status = STD_RET_OK;
 
@@ -453,7 +440,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -471,8 +458,7 @@ API_MOD_FLUSH(UART, void *device_handle)
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;

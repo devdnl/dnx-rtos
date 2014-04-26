@@ -136,8 +136,6 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        (void) _module_name_;
-
 #if (_GPIOA_EN > 0)
         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
 #endif
