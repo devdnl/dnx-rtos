@@ -39,15 +39,14 @@ tty = {}
 -- @brief Ask user to select enable/disable module
 --------------------------------------------------------------------------------
 local function ask_for_enable()
-        local choice = key_read(db.path.project.flags, "__ENABLE_TTY__")
+        local choice = module_get_enable("TTY")
         msg(progress(1, 8).."Do you want to enable TTY module?")
         msg("Current selection is: "..filter_yes_no(choice)..".")
         add_item(yes, "Yes")
         add_item(no, "No")
         choice = get_selection()
         if can_be_saved(choice) then
-                key_save(db.path.project.flags, "__ENABLE_TTY__", choice)
-                key_save(db.path.project.mk, "ENABLE_TTY", choice)
+                module_enable("TTY", choice)
         end
 
         progress(2)
