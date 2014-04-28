@@ -242,7 +242,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case WDG_IORQ_RESET:
+                case IOCTL_WDG__RESET:
                         reset_wdg();
                         return STD_RET_OK;
 

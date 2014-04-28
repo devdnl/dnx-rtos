@@ -171,7 +171,7 @@ static int run_level_1(void)
         FILE *sd = fopen("/dev/sda", "r+");
         if (sd) {
                 bool status;
-                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+                ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD, &status);
 
                 if (status == true) {
                         printk("initialized\n");
@@ -245,7 +245,7 @@ static int run_level_2(void)
         }
 
         int number_of_ttys = 0;
-        ioctl(tty0, TTY_IORQ_GET_NUMBER_OF_TTYS, &number_of_ttys);
+        ioctl(tty0, IOCTL_TTY__GET_NUMBER_OF_TTYS, &number_of_ttys);
 
         /* stdio program control */
         FILE   *tty[number_of_ttys];
@@ -258,8 +258,8 @@ static int run_level_2(void)
         /* terminal size info */
         int col = 0;
         int row = 0;
-        ioctl(tty0, TTY_IORQ_GET_COL, &col);
-        ioctl(tty0, TTY_IORQ_GET_ROW, &row);
+        ioctl(tty0, IOCTL_TTY__GET_COL, &col);
+        ioctl(tty0, IOCTL_TTY__GET_ROW, &row);
         printk("Terminal size: %d columns x %d rows\n", col, row);
 
         /* initd info about stack usage */
@@ -269,7 +269,7 @@ static int run_level_2(void)
         printk_enable("/dev/tty3");
 
         for (;;) {
-                ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
+                ioctl(tty0, IOCTL_TTY__GET_CURRENT_TTY, &current_tty);
 
                 if (current_tty >= 0 && current_tty < number_of_ttys - 1) {
                         if (!program[current_tty]) {
@@ -302,12 +302,12 @@ static int run_level_2(void)
                                         program_delete(program[i]);
                                         program[i] = NULL;
 
-                                        ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
+                                        ioctl(tty[i], IOCTL_TTY__CLEAR_SCR);
                                         fclose(tty[i]);
                                         tty[i] = NULL;
 
                                         if (current_tty == i) {
-                                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, 0);
+                                                ioctl(tty0, IOCTL_TTY__SWITCH_TTY_TO, 0);
                                         }
                                 }
                         }

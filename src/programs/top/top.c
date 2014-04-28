@@ -89,8 +89,8 @@ PROGRAM_MAIN(top, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        ioctl(stdin, TTY_IORQ_ECHO_OFF);
-        ioctl(stdout, TTY_IORQ_CLEAR_SCR);
+        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
+        ioctl(stdout, IOCTL_TTY__CLEAR_SCR);
 
         int     key   = ' ';
         int     shift = 0;
@@ -111,7 +111,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 }
 
                 global->term_row = 24;
-                ioctl(stdout, TTY_IORQ_GET_ROW, &global->term_row);
+                ioctl(stdout, IOCTL_TTY__GET_ROW, &global->term_row);
                 global->term_row--;
 
                 int task_number = get_number_of_monitored_tasks();
@@ -176,7 +176,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 }
 
                 if (key == 'k') {
-                        ioctl(stdin, TTY_IORQ_ECHO_ON);
+                        ioctl(stdin, IOCTL_TTY__ECHO_ON);
 
                         int task_handle = 0;
 
@@ -196,11 +196,11 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                                 puts(strerror(EPERM));
                         }
 
-                        ioctl(stdin, TTY_IORQ_ECHO_OFF);
+                        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
                 }
         }
 
-        ioctl(stdin, TTY_IORQ_ECHO_ON);
+        ioctl(stdin, IOCTL_TTY__ECHO_ON);
 
         return 0;
 }

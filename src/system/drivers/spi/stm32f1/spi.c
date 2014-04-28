@@ -570,7 +570,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case SPI_IORQ_SET_CONFIGURATION:
+                case IOCTL_SPI__SET_CONFIGURATION:
                         if (arg) {
                                 hdl->config = *(struct SPI_config *)arg;
                                 status      = STD_RET_OK;
@@ -579,7 +579,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_GET_CONFIGURATION:
+                case IOCTL_SPI__GET_CONFIGURATION:
                         if (arg) {
                                 *(struct SPI_config *)arg = hdl->config;
                                 status                    = STD_RET_OK;
@@ -588,7 +588,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_LOCK:
+                case IOCTL_SPI__LOCK:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 status = STD_RET_OK;
                         } else {
@@ -596,7 +596,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_UNLOCK:
+                case IOCTL_SPI__UNLOCK:
                         if (mutex_unlock(spi_module->device_protect_mtx[hdl->major])) {
                                 status = STD_RET_OK;
                         } else {
@@ -604,7 +604,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_SELECT:
+                case IOCTL_SPI__SELECT:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 slave_select(hdl->major, hdl->minor);
                                 mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
@@ -614,7 +614,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_DESELECT:
+                case IOCTL_SPI__DESELECT:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 slave_deselect(hdl->major);
                                 mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
@@ -624,7 +624,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_TRANSMIT:
+                case IOCTL_SPI__TRANSMIT:
                         if (arg) {
                                 if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                         SPI_t *SPI = spi[hdl->major];

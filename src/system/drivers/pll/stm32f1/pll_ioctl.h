@@ -39,13 +39,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define PLL_IORQ_GET_SYSCLK_FREQ        _IOR(_IO_GROUP_PLL, 0x00, u32_t*)
-#define PLL_IORQ_GET_HCLK_FREQ          _IOR(_IO_GROUP_PLL, 0x01, u32_t*)
-#define PLL_IORQ_GET_PCLK1_FREQ         _IOR(_IO_GROUP_PLL, 0x02, u32_t*)
-#define PLL_IORQ_GET_PCLK2_FREQ         _IOR(_IO_GROUP_PLL, 0x03, u32_t*)
-#define PLL_IORQ_GET_ADCCLK_FREQ        _IOR(_IO_GROUP_PLL, 0x04, u32_t*)
-#define PLL_IORQ_GET_PCLK1_TIM_FREQ     _IOR(_IO_GROUP_PLL, 0x05, u32_t*)
-#define PLL_IORQ_GET_PCLK2_TIM_FREQ     _IOR(_IO_GROUP_PLL, 0x06, u32_t*)
+#define IOCTL_PLL__GET_SYSCLK_FREQ      _IOR(_IO_GROUP_PLL, 0x00, u32_t*)
+#define IOCTL_PLL__GET_HCLK_FREQ        _IOR(_IO_GROUP_PLL, 0x01, u32_t*)
+#define IOCTL_PLL__GET_PCLK1_FREQ       _IOR(_IO_GROUP_PLL, 0x02, u32_t*)
+#define IOCTL_PLL__GET_PCLK2_FREQ       _IOR(_IO_GROUP_PLL, 0x03, u32_t*)
+#define IOCTL_PLL__GET_ADCCLK_FREQ      _IOR(_IO_GROUP_PLL, 0x04, u32_t*)
+#define IOCTL_PLL__GET_PCLK1_TIM_FREQ   _IOR(_IO_GROUP_PLL, 0x05, u32_t*)
+#define IOCTL_PLL__GET_PCLK2_TIM_FREQ   _IOR(_IO_GROUP_PLL, 0x06, u32_t*)
 
 /*==============================================================================
   Exported object types

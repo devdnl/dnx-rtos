@@ -328,25 +328,25 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 
         if (arg) {
                 switch (request) {
-                case GPIO_IOCTL_SET_PIN: {
+                case IOCTL_GPIO__SET_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->BSRR = (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_CLEAR_PIN: {
+                case IOCTL_GPIO__CLEAR_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->BRR = (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_TOGGLE_PIN: {
+                case IOCTL_GPIO__TOGGLE_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->ODR ^= (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_GET_PIN: {
+                case IOCTL_GPIO__GET_PIN: {
                         GPIO_pin_t *io = arg;
                         return (GPIOx[io->port_index].GPIO->IDR & (1 << io->pin_number)) >> io->pin_number;
                         break;

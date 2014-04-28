@@ -390,7 +390,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
         tty_t *tty = device_handle;
 
         switch (request) {
-        case TTY_IORQ_GET_CURRENT_TTY:
+        case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
                         *(int *)arg = tty_module->current_tty;
                 } else {
@@ -399,7 +399,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_GET_COL:
+        case IOCTL_TTY__GET_COL:
                 if (arg) {
                         *(int *)arg = tty_module->vt100_col;
                 } else {
@@ -408,7 +408,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_GET_ROW:
+        case IOCTL_TTY__GET_ROW:
                 if (arg) {
                         *(int *)arg = tty_module->vt100_row;
                 } else {
@@ -417,7 +417,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_SET_EDITLINE:
+        case IOCTL_TTY__SET_EDITLINE:
                 if (arg) {
                         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                 ttyedit_set(tty->editline, arg, tty_module->current_tty == tty->major);
@@ -432,23 +432,23 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_SWITCH_TTY_TO:
+        case IOCTL_TTY__SWITCH_TTY_TO:
                 send_cmd(CMD_SWITCH_TTY, (int)arg);
                 break;
 
-        case TTY_IORQ_CLEAR_SCR:
+        case IOCTL_TTY__CLEAR_SCR:
                 send_cmd(CMD_CLEAR_TTY, tty->major);
                 break;
 
-        case TTY_IORQ_ECHO_ON:
+        case IOCTL_TTY__ECHO_ON:
                 ttyedit_echo_enable(tty->editline);
                 break;
 
-        case TTY_IORQ_ECHO_OFF:
+        case IOCTL_TTY__ECHO_OFF:
                 ttyedit_echo_disable(tty->editline);
                 break;
 
-        case TTY_IORQ_GET_NUMBER_OF_TTYS:
+        case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
                         *(int *)arg = _TTY_NUMBER;
                 } else {

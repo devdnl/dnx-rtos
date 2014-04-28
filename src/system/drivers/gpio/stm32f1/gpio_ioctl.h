@@ -40,29 +40,32 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 enum {
-#if __GPIO_PA_ENABLE__
+        #if __GPIO_PA_ENABLE__
         _GPIO_PA,
-#endif
-#if __GPIO_PB_ENABLE__
+        #endif
+        #if __GPIO_PB_ENABLE__
         _GPIO_PB,
-#endif
-#if __GPIO_PC_ENABLE__
+        #endif
+        #if __GPIO_PC_ENABLE__
         _GPIO_PC,
-#endif
-#if __GPIO_PD_ENABLE__
+        #endif
+        #if __GPIO_PD_ENABLE__
         _GPIO_PD,
-#endif
-#if __GPIO_PE_ENABLE__
+        #endif
+        #if __GPIO_PE_ENABLE__
         _GPIO_PE,
-#endif
-#if __GPIO_PF_ENABLE__
+        #endif
+        #if __GPIO_PF_ENABLE__
         _GPIO_PF,
-#endif
-#if __GPIO_PG_ENABLE__
+        #endif
+        #if __GPIO_PG_ENABLE__
         _GPIO_PG
-#endif
+        #endif
 };
 
+/**
+ * Type represent pin number. Use GPIO_PIN() macro to easly set this type
+ */
 typedef struct {
         u8_t port_index : 4;
         u8_t pin_number : 4;
@@ -72,14 +75,16 @@ typedef struct {
   Exported macros
 ==============================================================================*/
 /* IOCTL requests for GPIO */
-#define GPIO_IOCTL_SET_PIN              _IOW(_IO_GROUP_GPIO, 0, GPIO_pin_t*)
-#define GPIO_IOCTL_CLEAR_PIN            _IOW(_IO_GROUP_GPIO, 1, GPIO_pin_t*)
-#define GPIO_IOCTL_TOGGLE_PIN           _IOW(_IO_GROUP_GPIO, 2, GPIO_pin_t*)
-#define GPIO_IOCTL_GET_PIN              _IOR(_IO_GROUP_GPIO, 3, GPIO_pin_t*)
+#define IOCTL_GPIO__SET_PIN             _IOW(_IO_GROUP_GPIO, 0, GPIO_pin_t*)
+#define IOCTL_GPIO__CLEAR_PIN           _IOW(_IO_GROUP_GPIO, 1, GPIO_pin_t*)
+#define IOCTL_GPIO__TOGGLE_PIN          _IOW(_IO_GROUP_GPIO, 2, GPIO_pin_t*)
+#define IOCTL_GPIO__GET_PIN             _IOR(_IO_GROUP_GPIO, 3, GPIO_pin_t*)
 
-/* macro load GPIO_pin_t structure using 1 argument only */
+/** macro load GPIO_pin_t structure using 1 argument only */
 #define GPIO_PIN(_pin_name)             {.port = _PORT_##_pin_name, .pin = _pin_name}
 
+
+/* PRIVATE MACROS ------------------------------------------------------------*/
 /* helper macros */
 #define _CAT(x, y) x ## y
 #define _PIN_NAME(_port, _pin, _name)   enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}

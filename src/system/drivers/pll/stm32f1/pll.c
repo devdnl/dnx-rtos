@@ -286,27 +286,27 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
                 RCC_GetClocksFreq(&freq);
 
                 switch (request) {
-                case PLL_IORQ_GET_SYSCLK_FREQ:
+                case IOCTL_PLL__GET_SYSCLK_FREQ:
                         *(u32_t *)arg = freq.SYSCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_HCLK_FREQ:
+                case IOCTL_PLL__GET_HCLK_FREQ:
                         *(u32_t *)arg = freq.HCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK1_FREQ:
+                case IOCTL_PLL__GET_PCLK1_FREQ:
                         *(u32_t *)arg = freq.PCLK1_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK2_FREQ:
+                case IOCTL_PLL__GET_PCLK2_FREQ:
                         *(u32_t *)arg = freq.PCLK2_Frequency;
                         break;
 
-                case PLL_IORQ_GET_ADCCLK_FREQ:
+                case IOCTL_PLL__GET_ADCCLK_FREQ:
                         *(u32_t *)arg = freq.ADCCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK1_TIM_FREQ:
+                case IOCTL_PLL__GET_PCLK1_TIM_FREQ:
                         if (is_APB1_divided()) {
                                 *(u32_t *)arg = freq.PCLK1_Frequency * 2;
                         } else {
@@ -314,7 +314,7 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case PLL_IORQ_GET_PCLK2_TIM_FREQ:
+                case IOCTL_PLL__GET_PCLK2_TIM_FREQ:
                         if (is_APB2_divided()) {
                                 *(u32_t *)arg = freq.PCLK2_Frequency * 2;
                         } else {

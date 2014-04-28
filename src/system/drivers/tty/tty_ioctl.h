@@ -39,15 +39,15 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define TTY_IORQ_GET_CURRENT_TTY                _IOR(_IO_GROUP_TTY, 0x00, int*)
-#define TTY_IORQ_SWITCH_TTY_TO                  _IOW(_IO_GROUP_TTY, 0x01, int )
-#define TTY_IORQ_GET_COL                        _IOR(_IO_GROUP_TTY, 0x02, int*)
-#define TTY_IORQ_GET_ROW                        _IOR(_IO_GROUP_TTY, 0x03, int*)
-#define TTY_IORQ_CLEAR_SCR                      _IO( _IO_GROUP_TTY, 0x04)
-#define TTY_IORQ_ECHO_ON                        _IO( _IO_GROUP_TTY, 0x05)
-#define TTY_IORQ_ECHO_OFF                       _IO( _IO_GROUP_TTY, 0x06)
-#define TTY_IORQ_SET_EDITLINE                   _IOW(_IO_GROUP_TTY, 0x07, const char*)
-#define TTY_IORQ_GET_NUMBER_OF_TTYS             _IOR(_IO_GROUP_TTY, 0x08, int*)
+#define IOCTL_TTY__GET_CURRENT_TTY              _IOR(_IO_GROUP_TTY, 0x00, int*)
+#define IOCTL_TTY__SWITCH_TTY_TO                _IOW(_IO_GROUP_TTY, 0x01, int )
+#define IOCTL_TTY__GET_COL                      _IOR(_IO_GROUP_TTY, 0x02, int*)
+#define IOCTL_TTY__GET_ROW                      _IOR(_IO_GROUP_TTY, 0x03, int*)
+#define IOCTL_TTY__CLEAR_SCR                    _IO( _IO_GROUP_TTY, 0x04)
+#define IOCTL_TTY__ECHO_ON                      _IO( _IO_GROUP_TTY, 0x05)
+#define IOCTL_TTY__ECHO_OFF                     _IO( _IO_GROUP_TTY, 0x06)
+#define IOCTL_TTY__SET_EDITLINE                 _IOW(_IO_GROUP_TTY, 0x07, const char*)
+#define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(_IO_GROUP_TTY, 0x08, int*)
 
 /*==============================================================================
   Exported object types

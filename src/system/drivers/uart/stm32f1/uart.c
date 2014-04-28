@@ -399,16 +399,16 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 
         if (arg) {
                 switch (request) {
-                case UART_IORQ_SET_CONFIGURATION:
+                case IOCTL_UART__SET_CONFIGURATION:
                         configure_uart(hdl->major, arg);
                         hdl->config = *(struct UART_config *)arg;
                         break;
 
-                case UART_IORQ_GET_CONFIGURATION:
+                case IOCTL_UART__GET_CONFIGURATION:
                         *(struct UART_config *)arg = hdl->config;
                         break;
 
-                case UART_IORQ_GET_CHAR_UNBLOCKING:
+                case IOCTL_UART__GET_CHAR_UNBLOCKING:
                         if (!fifo_read(&hdl->Rx_FIFO, arg)) {
                              errno  = EAGAIN;
                              status = STD_RET_ERROR;

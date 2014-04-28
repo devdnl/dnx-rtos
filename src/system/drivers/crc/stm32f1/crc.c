@@ -291,7 +291,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case CRC_IORQ_SET_INPUT_MODE:
+                case IOCTL_CRC__SET_INPUT_MODE:
                         if (arg) {
                                 enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
                                 if (mode <= CRC_INPUT_MODE_WORD) {
@@ -302,7 +302,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case CRC_IORQ_GET_INPUT_MODE:
+                case IOCTL_CRC__GET_INPUT_MODE:
                         if (arg) {
                                 *(enum CRC_input_mode *)arg = hdl->input_mode;
                                 return STD_RET_OK;

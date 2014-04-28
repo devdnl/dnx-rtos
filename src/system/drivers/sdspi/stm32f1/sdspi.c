@@ -441,7 +441,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
         stdret_t status = STD_RET_OK;
 
         switch (request) {
-        case SDSPI_IORQ_INITIALIZE_CARD:
+        case IOCTL_SDSPI__INITIALIZE_CARD:
                 if (mutex_lock(sdspi_ctrl->card_protect_mtx, MTX_BLOCK_TIME)) {
                         bool *result = arg;
                         *result      = false;
