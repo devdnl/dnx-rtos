@@ -74,11 +74,30 @@ typedef struct {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* IOCTL requests for GPIO */
+/** @brief  Set selected pin (pin state 1)
+ *  @param  GPIO_pin_t *
+ *  @return On success 0, on error -1
+ */
 #define IOCTL_GPIO__SET_PIN             _IOW(_IO_GROUP_GPIO, 0, GPIO_pin_t*)
+
+/** @brief  Clear selected pin (pin state 0)
+ *  @param  GPIO_pin_t *
+ *  @return On success 0, on error -1
+ */
 #define IOCTL_GPIO__CLEAR_PIN           _IOW(_IO_GROUP_GPIO, 1, GPIO_pin_t*)
+
+/** @brief  Toggle pin state
+ *  @param  GPIO_pin_t *
+ *  @return On success 0, on error -1
+ */
 #define IOCTL_GPIO__TOGGLE_PIN          _IOW(_IO_GROUP_GPIO, 2, GPIO_pin_t*)
+
+/** @brief  Gets pin state
+ *  @param  GPIO_pin_t *
+ *  @return On success 0 or 1 (pin state), on error -1
+ */
 #define IOCTL_GPIO__GET_PIN             _IOR(_IO_GROUP_GPIO, 3, GPIO_pin_t*)
+
 
 /** macro load GPIO_pin_t structure using 1 argument only */
 #define GPIO_PIN(_pin_name)             {.port = _PORT_##_pin_name, .pin = _pin_name}

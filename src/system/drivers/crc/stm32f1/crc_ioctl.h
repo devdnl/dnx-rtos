@@ -39,17 +39,26 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define IOCTL_CRC__SET_INPUT_MODE       _IOW(_IO_GROUP_CRC, 0x00, enum CRC_input_mode)
-#define IOCTL_CRC__GET_INPUT_MODE       _IOR(_IO_GROUP_CRC, 0x01, enum CRC_input_mode)
+/** @brief  Set CRC input mode
+ *  @param  enum CRC_input_mode *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_CRC__SET_INPUT_MODE       _IOW(_IO_GROUP_CRC, 0x00, enum CRC_input_mode*)
+
+/** @brief  Get CRC input mode
+ *  @param  enum CRC_input_mode *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_CRC__GET_INPUT_MODE       _IOR(_IO_GROUP_CRC, 0x01, enum CRC_input_mode*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 /* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
 enum CRC_input_mode {
-        CRC_INPUT_MODE_BYTE,            /* base word is u8_t  */
-        CRC_INPUT_MODE_HALF_WORD,       /* base word is u16_t */
-        CRC_INPUT_MODE_WORD             /* base word is u32_t */
+        CRC_INPUT_MODE_BYTE,            /* base word is u8_t  *///!< CRC_INPUT_MODE_BYTE
+        CRC_INPUT_MODE_HALF_WORD,       /* base word is u16_t *///!< CRC_INPUT_MODE_HALF_WORD
+        CRC_INPUT_MODE_WORD             /* base word is u32_t *///!< CRC_INPUT_MODE_WORD
 };
 
 /*==============================================================================

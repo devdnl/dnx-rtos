@@ -39,7 +39,11 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define IOCTL_SDSPI__INITIALIZE_CARD    _IOR(_IO_GROUP_SDSPI, 0x00, bool)
+/** @brief  Initialize SD card
+ *  @param  bool *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SDSPI__INITIALIZE_CARD    _IOR(_IO_GROUP_SDSPI, 0x00, bool *)
 
 /*==============================================================================
   Exported object types

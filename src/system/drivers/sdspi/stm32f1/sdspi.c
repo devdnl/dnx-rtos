@@ -444,11 +444,16 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
         case IOCTL_SDSPI__INITIALIZE_CARD:
                 if (mutex_lock(sdspi_ctrl->card_protect_mtx, MTX_BLOCK_TIME)) {
                         bool *result = arg;
-                        *result      = false;
+
+                        if (result) {
+                                *result = false;
+                        }
 
                         if (card_initialize(part) == STD_RET_OK) {
                                 if (mbr_detect_partitions(part) == STD_RET_OK) {
-                                        *result = true;
+                                        if (result) {
+                                                *result = true;
+                                        }
                                 }
                         }
 
