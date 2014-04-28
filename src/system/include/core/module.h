@@ -81,30 +81,76 @@ typedef task_t *dev_lock_t;
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function lock device for this task
+ *
+ * ERRNO: EBUSY
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if device is successfully locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_lock(dev_lock_t *dev_lock)
 {
         extern bool _lock_device(dev_lock_t*);
         return _lock_device(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function unlock before locked device
+ *
+ * @param *dev_lock     pointer to device lock object
+ * @param  force        true: force unlock
+ */
+//==============================================================================
 static inline void device_unlock(dev_lock_t *dev_lock, bool force)
 {
         extern void _unlock_device(dev_lock_t*, bool);
         _unlock_device(dev_lock, force);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that current task has access to device
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if access granted, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_access_granted(dev_lock_t *dev_lock)
 {
         extern bool _is_device_access_granted(dev_lock_t*);
         return _is_device_access_granted(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_locked(dev_lock_t *dev_lock)
 {
         extern bool _is_device_locked(dev_lock_t*);
         return _is_device_locked(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_unlocked(dev_lock_t *dev_lock)
 {
         extern bool _is_device_locked(dev_lock_t*);
