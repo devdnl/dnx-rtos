@@ -59,7 +59,7 @@ end
 --------------------------------------------------------------------------------
 local function configure_task_stack_depth()
         local value = key_read(db.path.project.flags, "__OS_TASK_MIN_STACK_DEPTH__")
-        msg(progress() .. "Task stack depth configuration.")
+        msg(progress() .. "Task's minimal stack depth configuration.")
         msg("Current stack depth is: " .. value .. " levels.")
         value = get_number("dec", 16, 4096)
         if (can_be_saved(value)) then
