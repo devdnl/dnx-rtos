@@ -43,15 +43,14 @@ arch.stm32f1.configure  = nil
 -- @brief Ask user to select enable/disable module
 --------------------------------------------------------------------------------
 local function ask_for_enable()
-        local choice = key_read(db.path.project.flags, "__ENABLE_CRC__")
+        local choice = module_get_enable("CRC")
         msg(progress(1, 1).."Do you want to enable CRC module?")
         msg("Current selection is: "..filter_yes_no(choice)..".")
         add_item(yes, "Yes")
         add_item(no, "No")
         choice = get_selection()
         if can_be_saved(choice) then
-                key_save(db.path.project.flags, "__ENABLE_CRC__", choice)
-                key_save(db.path.project.mk, "ENABLE_CRC", choice)
+                module_enable("CRC", choice)
         end
 
         return choice

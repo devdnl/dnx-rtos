@@ -91,6 +91,8 @@ static void     switch_terminal         (int term_no);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME("TTY");
+
 static struct module *tty_module;
 static const char    *service_in_name           = "tty-in";
 static const char    *service_out_name          = "tty-out";
@@ -119,7 +121,6 @@ static const uint     queue_cmd_len             = _TTY_DEFAULT_TERMINAL_ROWS;
 API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
-        STOP_IF(device_handle == NULL);
 
         if (major >= _TTY_NUMBER || minor != 0) {
                 errno = EINVAL;
@@ -217,8 +218,6 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(TTY, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         tty_t *tty = device_handle;
 
         if (mutex_lock(tty->secure_mtx, 0)) {
@@ -266,11 +265,10 @@ API_MOD_RELEASE(TTY, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(TTY, void *device_handle, int flags)
+API_MOD_OPEN(TTY, void *device_handle, vfs_open_flags_t flags)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
-
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -288,9 +286,8 @@ API_MOD_OPEN(TTY, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(TTY, void *device_handle, bool force)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
-
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -312,10 +309,6 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         tty_t *tty = device_handle;
 
@@ -349,10 +342,6 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 //==============================================================================
 API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!dst);
-        STOP_IF(count == 0);
-        STOP_IF(!fpos);
         UNUSED_ARG(fattr);
 
         tty_t *tty = device_handle;
@@ -398,12 +387,10 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         tty_t *tty = device_handle;
 
         switch (request) {
-        case TTY_IORQ_GET_CURRENT_TTY:
+        case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
                         *(int *)arg = tty_module->current_tty;
                 } else {
@@ -412,7 +399,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_GET_COL:
+        case IOCTL_TTY__GET_COL:
                 if (arg) {
                         *(int *)arg = tty_module->vt100_col;
                 } else {
@@ -421,7 +408,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_GET_ROW:
+        case IOCTL_TTY__GET_ROW:
                 if (arg) {
                         *(int *)arg = tty_module->vt100_row;
                 } else {
@@ -430,7 +417,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_SET_EDITLINE:
+        case IOCTL_TTY__SET_EDITLINE:
                 if (arg) {
                         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                 ttyedit_set(tty->editline, arg, tty_module->current_tty == tty->major);
@@ -445,23 +432,23 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_SWITCH_TTY_TO:
+        case IOCTL_TTY__SWITCH_TTY_TO:
                 send_cmd(CMD_SWITCH_TTY, (int)arg);
                 break;
 
-        case TTY_IORQ_CLEAR_SCR:
+        case IOCTL_TTY__CLEAR_SCR:
                 send_cmd(CMD_CLEAR_TTY, tty->major);
                 break;
 
-        case TTY_IORQ_ECHO_ON:
+        case IOCTL_TTY__ECHO_ON:
                 ttyedit_echo_enable(tty->editline);
                 break;
 
-        case TTY_IORQ_ECHO_OFF:
+        case IOCTL_TTY__ECHO_OFF:
                 ttyedit_echo_disable(tty->editline);
                 break;
 
-        case TTY_IORQ_GET_NUMBER_OF_TTYS:
+        case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
                         *(int *)arg = _TTY_NUMBER;
                 } else {
@@ -490,7 +477,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(TTY, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -508,9 +495,6 @@ API_MOD_FLUSH(TTY, void *device_handle)
 //==============================================================================
 API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
-
         tty_t *tty = device_handle;
 
         device_stat->st_size  = 0;

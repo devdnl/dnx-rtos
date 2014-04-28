@@ -53,11 +53,9 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
-#define STOP_IF(condition)                      _stop_if(condition)
 #define MODULE_NAME(modname)                    static const char *_module_name_ = modname
 
-#define _API_MOD_INIT(modname, ...)             stdret_t _##modname##_init(__VA_ARGS__)
-#define API_MOD_INIT(modname, ...)              static const char *_module_name_ = #modname; _API_MOD_INIT(modname, __VA_ARGS__)
+#define API_MOD_INIT(modname, ...)              stdret_t _##modname##_init(__VA_ARGS__)
 #define API_MOD_RELEASE(modname, ...)           stdret_t _##modname##_release(__VA_ARGS__)
 #define API_MOD_OPEN(modname, ...)              stdret_t _##modname##_open(__VA_ARGS__)
 #define API_MOD_CLOSE(modname, ...)             stdret_t _##modname##_close(__VA_ARGS__)
@@ -66,17 +64,6 @@ extern "C" {
 #define API_MOD_IOCTL(modname, ...)             stdret_t _##modname##_ioctl(__VA_ARGS__)
 #define API_MOD_FLUSH(modname, ...)             stdret_t _##modname##_flush(__VA_ARGS__)
 #define API_MOD_STAT(modname, ...)              stdret_t _##modname##_stat(__VA_ARGS__)
-
-#define _IMPORT_MODULE(modname)                                                         \
-extern _API_MOD_INIT(modname, void**, u8_t, u8_t);                                      \
-extern API_MOD_RELEASE(modname, void*);                                                 \
-extern API_MOD_OPEN(modname, void*, int);                                               \
-extern API_MOD_CLOSE(modname, void*, bool);                                             \
-extern API_MOD_WRITE(modname, void*, const u8_t*, size_t, u64_t*, struct vfs_fattr);    \
-extern API_MOD_READ(modname, void*, u8_t*, size_t, u64_t*, struct vfs_fattr);           \
-extern API_MOD_IOCTL(modname, void*, int, void*);                                       \
-extern API_MOD_FLUSH(modname, void*);                                                   \
-extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -94,30 +81,76 @@ typedef task_t *dev_lock_t;
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function lock device for this task
+ *
+ * ERRNO: EBUSY
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if device is successfully locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_lock(dev_lock_t *dev_lock)
 {
         extern bool _lock_device(dev_lock_t*);
         return _lock_device(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function unlock before locked device
+ *
+ * @param *dev_lock     pointer to device lock object
+ * @param  force        true: force unlock
+ */
+//==============================================================================
 static inline void device_unlock(dev_lock_t *dev_lock, bool force)
 {
         extern void _unlock_device(dev_lock_t*, bool);
         _unlock_device(dev_lock, force);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that current task has access to device
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if access granted, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_access_granted(dev_lock_t *dev_lock)
 {
         extern bool _is_device_access_granted(dev_lock_t*);
         return _is_device_access_granted(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_locked(dev_lock_t *dev_lock)
 {
         extern bool _is_device_locked(dev_lock_t*);
         return _is_device_locked(dev_lock);
 }
 
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
 static inline bool device_is_unlocked(dev_lock_t *dev_lock)
 {
         extern bool _is_device_locked(dev_lock_t*);

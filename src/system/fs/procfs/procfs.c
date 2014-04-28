@@ -127,8 +127,6 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        STOP_IF(!fs_handle);
-
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
         list_t        *file_list = list_new();
         mutex_t       *mtx       = mutex_new(MUTEX_NORMAL);
@@ -169,8 +167,6 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(procfs, void *fs_handle)
 {
-        STOP_IF(!fs_handle);
-
         struct procfs *procfs = fs_handle;
 
         if (mutex_lock(procfs->resource_mtx, 100)) {
@@ -202,22 +198,17 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!fd);
-        STOP_IF(!fpos);
-        STOP_IF(!path);
-
-        struct procfs          *procmem = fs_handle;
+        struct procfs *procmem = fs_handle;
 
         if (flags != O_RDONLY) {
                 errno = EROFS;
@@ -322,8 +313,6 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
         UNUSED_ARG(extra);
         UNUSED_ARG(force);
 
-        STOP_IF(!fs_handle);
-
         struct procfs *procmem = fs_handle;
         if (procmem) {
                 mutex_force_lock(procmem->resource_mtx);
@@ -384,11 +373,6 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
 API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!dst);
-        STOP_IF(!count);
-        STOP_IF(!fpos);
 
         struct procfs *procmem = fs_handle;
 
@@ -496,9 +480,6 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!stat);
-
         struct procfs *procmem = fs_handle;
 
         mutex_force_lock(procmem->resource_mtx);
@@ -570,8 +551,8 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
         /* not supported by this file system */
@@ -619,9 +600,6 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!path);
-        STOP_IF(!dir);
 
         dir->f_seek = 0;
 
@@ -687,8 +665,6 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!dir);
 
         if (dir->f_dd) {
                 free(dir->f_dd);
@@ -828,8 +804,6 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
-        STOP_IF(!stat);
-
         stat->st_dev   = 0;
         stat->st_gid   = 0;
         stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
@@ -856,8 +830,6 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
-        STOP_IF(!statfs);
-
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
@@ -881,8 +853,6 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name     = NULL;
@@ -937,8 +907,6 @@ static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        STOP_IF(!dir);
-
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
@@ -969,8 +937,6 @@ static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        STOP_IF(!dir);
-
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
@@ -999,8 +965,6 @@ static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
 static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
@@ -1035,8 +999,6 @@ static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
 static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;

@@ -39,13 +39,47 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define SPI_IORQ_SET_CONFIGURATION                      _IOW (_IO_GROUP_SPI, 0x00, struct SPI_config*)
-#define SPI_IORQ_GET_CONFIGURATION                      _IOR (_IO_GROUP_SPI, 0x01, struct SPI_config*)
-#define SPI_IORQ_LOCK                                   _IO  (_IO_GROUP_SPI, 0x02)
-#define SPI_IORQ_UNLOCK                                 _IO  (_IO_GROUP_SPI, 0x03)
-#define SPI_IORQ_SELECT                                 _IO  (_IO_GROUP_SPI, 0x04)
-#define SPI_IORQ_DESELECT                               _IO  (_IO_GROUP_SPI, 0x05)
-#define SPI_IORQ_TRANSMIT                               _IOWR(_IO_GROUP_SPI, 0x06, u8_t*)
+/** @brief  Set SPI configuration
+ *  @param  struct SPI_config *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__SET_CONFIGURATION    _IOW (_IO_GROUP_SPI, 0x00, struct SPI_config*)
+
+/** @brief  Gets SPI configuration
+ *  @param  struct SPI_config *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__GET_CONFIGURATION    _IOR (_IO_GROUP_SPI, 0x01, struct SPI_config*)
+
+/** @brief  Lock SPI (prevent SPI usage by concurrent tasks)
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__LOCK                 _IO  (_IO_GROUP_SPI, 0x02)
+
+/** @brief  Unlock SPI
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__UNLOCK               _IO  (_IO_GROUP_SPI, 0x03)
+
+/** @brief  Select specified slave (CS = 0) (RAW mode)
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__SELECT               _IO  (_IO_GROUP_SPI, 0x04)
+
+/** @brief  Deselect specified slave (CS = 1) (RAW mode)
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__DESELECT             _IO  (_IO_GROUP_SPI, 0x05)
+
+/** @brief  Transmit one byte (RAW mode)
+ *  @param  u8_t *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__TRANSMIT             _IOWR(_IO_GROUP_SPI, 0x06, u8_t*)
 
 /*==============================================================================
   Exported object types

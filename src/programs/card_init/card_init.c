@@ -34,7 +34,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define INIT_REQUEST                    SDSPI_IORQ_INITIALIZE_CARD
+#define INIT_REQUEST                    IOCTL_SDSPI__INITIALIZE_CARD
 
 /*==============================================================================
   Local types, enums definitions

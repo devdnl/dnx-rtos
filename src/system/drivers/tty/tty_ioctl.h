@@ -39,15 +39,59 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define TTY_IORQ_GET_CURRENT_TTY                _IOR(_IO_GROUP_TTY, 0x00, int*)
-#define TTY_IORQ_SWITCH_TTY_TO                  _IOW(_IO_GROUP_TTY, 0x01, int )
-#define TTY_IORQ_GET_COL                        _IOR(_IO_GROUP_TTY, 0x02, int*)
-#define TTY_IORQ_GET_ROW                        _IOR(_IO_GROUP_TTY, 0x03, int*)
-#define TTY_IORQ_CLEAR_SCR                      _IO( _IO_GROUP_TTY, 0x04)
-#define TTY_IORQ_ECHO_ON                        _IO( _IO_GROUP_TTY, 0x05)
-#define TTY_IORQ_ECHO_OFF                       _IO( _IO_GROUP_TTY, 0x06)
-#define TTY_IORQ_SET_EDITLINE                   _IOW(_IO_GROUP_TTY, 0x07, const char*)
-#define TTY_IORQ_GET_NUMBER_OF_TTYS             _IOR(_IO_GROUP_TTY, 0x08, int*)
+/** @brief  Gets current TTY number
+ *  @param  int *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__GET_CURRENT_TTY              _IOR(_IO_GROUP_TTY, 0x00, int*)
+
+/** @brief  Swtich terminal to selected one
+ *  @param  int
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__SWITCH_TTY_TO                _IOW(_IO_GROUP_TTY, 0x01, int )
+
+/** @brief  Gets number of columns
+ *  @param  int *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__GET_COL                      _IOR(_IO_GROUP_TTY, 0x02, int*)
+
+/** @brief  Gets number of rows
+ *  @param  int *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__GET_ROW                      _IOR(_IO_GROUP_TTY, 0x03, int*)
+
+/** @brief  Clear screen
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__CLEAR_SCR                    _IO( _IO_GROUP_TTY, 0x04)
+
+/** @brief  Enable terminal echo
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__ECHO_ON                      _IO( _IO_GROUP_TTY, 0x05)
+
+/** @brief  Disable terminal echo
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__ECHO_OFF                     _IO( _IO_GROUP_TTY, 0x06)
+
+/** @brief  Set edit line to specified user's text (string)
+ *  @param  const char *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__SET_EDITLINE                 _IOW(_IO_GROUP_TTY, 0x07, const char*)
+
+/** @brief  Gets number of virtual terminals
+ *  @param  int *
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(_IO_GROUP_TTY, 0x08, int*)
 
 /*==============================================================================
   Exported object types

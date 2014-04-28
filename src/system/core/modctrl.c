@@ -73,7 +73,7 @@ extern const uint                  _regdrv_number_of_modules;
 /**
  * @brief Check if device have allocated memory and is in range
  *
- * @param id
+ * @param id            driver ID
  *
  * @return true if device is correct, otherwise false
  */
@@ -130,10 +130,10 @@ int _driver_init(const char *drv_name, const char *node_path)
 
                 printk("Initializing %s... ", drv_name);
 
-                if (_regdrv_driver_table[drvid].drv_init(&driver_memory_region[drvid],
-                                                         _regdrv_driver_table[drvid].major,
-                                                         _regdrv_driver_table[drvid].minor)
-                                                         != STD_RET_OK) {
+                if (_regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
+                                                                    _regdrv_driver_table[drvid].major,
+                                                                    _regdrv_driver_table[drvid].minor)
+                                                                    != STD_RET_OK) {
 
                         printk(FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n", drv_name);
 
@@ -148,7 +148,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                                 printk("%s node created\n", node_path);
                                 return 0;
                         } else {
-                                _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
+                                _regdrv_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
 
                                 printk(FONT_COLOR_RED"%s node create fail"
                                        RESET_ATTRIBUTES"\n", node_path);
@@ -189,7 +189,7 @@ int _driver_release(const char *drv_name)
 
                         stdret_t status = STD_RET_ERROR;
                         if (driver_memory_region[i]) {
-                                status = _regdrv_driver_table[i].drv_release(driver_memory_region[i]);
+                                status = _regdrv_driver_table[i].interface->drv_release(driver_memory_region[i]);
                                 if (status == STD_RET_OK) {
                                         driver_memory_region[i] = NULL;
                                 }
@@ -217,7 +217,7 @@ int _driver_release(const char *drv_name)
 stdret_t _driver_open(dev_t id, int flags)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_open(driver_memory_region[id], flags);
+                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id], flags);
         } else {
                 return STD_RET_ERROR;
         }
@@ -237,7 +237,7 @@ stdret_t _driver_open(dev_t id, int flags)
 stdret_t _driver_close(dev_t id, bool force)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_close(driver_memory_region[id], force);
+                return _regdrv_driver_table[id].interface->drv_close(driver_memory_region[id], force);
         } else {
                 return STD_RET_ERROR;
         }
@@ -259,7 +259,7 @@ stdret_t _driver_close(dev_t id, bool force)
 ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_write(driver_memory_region[id], src, count, fpos, fattr);
+                return _regdrv_driver_table[id].interface->drv_write(driver_memory_region[id], src, count, fpos, fattr);
         } else {
                 return -1;
         }
@@ -281,7 +281,7 @@ ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, stru
 ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_read(driver_memory_region[id], dst, count, fpos, fattr);
+                return _regdrv_driver_table[id].interface->drv_read(driver_memory_region[id], dst, count, fpos, fattr);
         } else {
                 return -1;
         }
@@ -302,7 +302,7 @@ ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_
 stdret_t _driver_ioctl(dev_t id, int request, void *arg)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_ioctl(driver_memory_region[id], request, arg);
+                return _regdrv_driver_table[id].interface->drv_ioctl(driver_memory_region[id], request, arg);
         } else {
                 return STD_RET_ERROR;
         }
@@ -323,7 +323,7 @@ stdret_t _driver_ioctl(dev_t id, int request, void *arg)
 stdret_t _driver_flush(dev_t id)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_flush(driver_memory_region[id]);
+                return _regdrv_driver_table[id].interface->drv_flush(driver_memory_region[id]);
         } else {
                 return STD_RET_ERROR;
         }
@@ -343,7 +343,7 @@ stdret_t _driver_flush(dev_t id)
 stdret_t _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].drv_stat(driver_memory_region[id], stat);
+                return _regdrv_driver_table[id].interface->drv_stat(driver_memory_region[id], stat);
         } else {
                 return STD_RET_ERROR;
         }

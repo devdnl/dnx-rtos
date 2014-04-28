@@ -77,14 +77,6 @@ extern "C" {
 #define S_IWOTH                 (2 << 6)
 #define S_IXOTH                 (1 << 6)
 
-/* open file modes flags */
-#define O_RDONLY                (1 << 0)                /* read only    */
-#define O_WRONLY                (1 << 1)                /* write only   */
-#define O_RDWR                  (1 << 2)                /* read write   */
-#define O_CREAT                 (1 << 3)                /* create file  */
-#define O_APPEND                (1 << 4)                /* append data  */
-#define O_DEV_FLAGS(flags)      ((flags) & (O_RDONLY | O_WRONLY | O_RDWR))
-
 /* stream definitions */
 #define EOF                     (-1)
 #define ETX                     0x03
@@ -129,60 +121,69 @@ struct vfs_dir {
         void      *f_handle;
         size_t     f_items;
         size_t     f_seek;
-        u32_t      validation;          /* only for system purposes */
+        u32_t      validation;          /**< only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
 
 /** file statistics */
 struct stat {
-        u64_t   st_size;                /* total size, in bytes         */
-        u32_t   st_dev;                 /* ID of device containing file */
-        u32_t   st_mode;                /* protection                   */
-        u32_t   st_uid;                 /* user ID of owner             */
-        u32_t   st_gid;                 /* group ID of owner            */
-        u32_t   st_atime;               /* time of last access          */
-        u32_t   st_mtime;               /* time of last modification    */
-        tfile_t st_type;                /* type of file                 */
+        u64_t   st_size;                /**< total size, in bytes         */
+        u32_t   st_dev;                 /**< ID of device containing file */
+        u32_t   st_mode;                /**< protection                   */
+        u32_t   st_uid;                 /**< user ID of owner             */
+        u32_t   st_gid;                 /**< group ID of owner            */
+        u32_t   st_atime;               /**< time of last access          */
+        u32_t   st_mtime;               /**< time of last modification    */
+        tfile_t st_type;                /**< type of file                 */
 };
 
 /** device info */
 struct vfs_dev_stat {
-        u64_t st_size;                  /* total size, in bytes */
-        u8_t  st_major;                 /* device major number  */
-        u8_t  st_minor;                 /* device minor number  */
+        u64_t st_size;                  /**< total size, in bytes */
+        u8_t  st_major;                 /**< device major number  */
+        u8_t  st_minor;                 /**< device minor number  */
 };
 
 /** file system statistic */
 struct statfs {
-        u32_t f_type;                   /* file system type       */
-        u32_t f_bsize;                  /* block size             */
-        u32_t f_blocks;                 /* total blocks           */
-        u32_t f_bfree;                  /* free blocks            */
-        u32_t f_files;                  /* total file nodes in FS */
-        u32_t f_ffree;                  /* free file nodes in FS  */
-        const char *f_fsname;           /* FS name                */
+        u32_t f_type;                   /**< file system type       */
+        u32_t f_bsize;                  /**< block size             */
+        u32_t f_blocks;                 /**< total blocks           */
+        u32_t f_bfree;                  /**< free blocks            */
+        u32_t f_files;                  /**< total file nodes in FS */
+        u32_t f_ffree;                  /**< free file nodes in FS  */
+        const char *f_fsname;           /**< FS name                */
 };
 
 /** structure describing a mount table entry */
 struct mntent {
-        const char *mnt_fsname;         /* device or server for filesystem */
-        const char *mnt_dir;            /* directory mounted on            */
-        u64_t       total;              /* device total size               */
-        u64_t       free;               /* device free                     */
+        const char *mnt_fsname;         /**< device or server for filesystem */
+        const char *mnt_dir;            /**< directory mounted on            */
+        u64_t       total;              /**< device total size               */
+        u64_t       free;               /**< device free                     */
 };
 
 /** file write/read attributtes */
 struct vfs_fattr {
-        bool non_blocking_rd:1;         /* non-blocking file read access */
-        bool non_blocking_wr:1;         /* non-blocking file write access */
+        bool non_blocking_rd:1;         /**< non-blocking file read access */
+        bool non_blocking_wr:1;         /**< non-blocking file write access */
 };
+
+/** file open flags */
+typedef enum {
+        O_RDONLY = (1 << 0),            /**< read only    */
+        O_WRONLY = (1 << 1),            /**< write only   */
+        O_RDWR   = (1 << 2),            /**< read write   */
+        O_CREAT  = (1 << 3),            /**< create file  */
+        O_APPEND = (1 << 4)             /**< append data  */
+} vfs_open_flags_t;
 
 /** file system configuration */
 struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
-        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, int flags);
+        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, vfs_open_flags_t flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
         ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
         ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
@@ -236,6 +237,26 @@ extern int              vfs_feof                (FILE*);
 extern void             vfs_clearerr            (FILE*);
 extern int              vfs_ferror              (FILE*);
 extern int              vfs_rewind              (FILE*);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief vfs_filter_open_flags_for_device
+ * Function filter open flags for device.
+ *
+ * @param flags	flags to filter
+ *
+ * @errors None
+ *
+ * @return Filtered flags
+ */
+//==============================================================================
+static inline vfs_open_flags_t vfs_filter_open_flags_for_device(vfs_open_flags_t flags)
+{
+        return flags & (O_RDONLY | O_WRONLY | O_RDWR);
+}
 
 #ifdef __cplusplus
 }

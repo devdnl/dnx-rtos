@@ -70,15 +70,14 @@ end
 -- @brief Function configure CPU architecture
 --------------------------------------------------------------------------------
 local function configure_enable()
-        local choice = key_read(db.path.project.mk, "ENABLE_GPIO")
+        local choice = module_get_enable("GPIO")
         msg(progress(1, 2) .. "Do you want to enable GPIO module?")
         msg("Current choice is: " .. filter_yes_no(choice) .. ".")
         add_item(yes, "YES")
         add_item(no, "NO")
         choice = get_selection()
         if (can_be_saved(choice)) then
-                key_save(db.path.project.mk,    "ENABLE_GPIO",     choice)
-                key_save(db.path.project.flags, "__ENABLE_GPIO__", choice)
+                module_enable("GPIO", choice)
         end
 
         return choice

@@ -136,8 +136,6 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        (void) _module_name_;
-
 #if (_GPIOA_EN > 0)
         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
 #endif
@@ -233,7 +231,7 @@ API_MOD_RELEASE(GPIO, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(GPIO, void *device_handle, int flags)
+API_MOD_OPEN(GPIO, void *device_handle, vfs_open_flags_t flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
@@ -330,25 +328,25 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 
         if (arg) {
                 switch (request) {
-                case GPIO_IOCTL_SET_PIN: {
+                case IOCTL_GPIO__SET_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->BSRR = (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_CLEAR_PIN: {
+                case IOCTL_GPIO__CLEAR_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->BRR = (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_TOGGLE_PIN: {
+                case IOCTL_GPIO__TOGGLE_PIN: {
                         GPIO_pin_t *io = arg;
                         GPIOx[io->port_index].GPIO->ODR ^= (1 << io->pin_number);
                         break;
                 }
 
-                case GPIO_IOCTL_GET_PIN: {
+                case IOCTL_GPIO__GET_PIN: {
                         GPIO_pin_t *io = arg;
                         return (GPIOx[io->port_index].GPIO->IDR & (1 << io->pin_number)) >> io->pin_number;
                         break;

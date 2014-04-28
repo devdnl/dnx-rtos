@@ -87,9 +87,6 @@ static int      handle_error    (FRESULT fresult);
 //==============================================================================
 API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!src_path);
-
         struct fatfs *hdl = calloc(1, sizeof(struct fatfs));
 
         if (hdl) {
@@ -124,8 +121,6 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(fatfs, void *fs_handle)
 {
-        STOP_IF(!fs_handle);
-
         struct fatfs *hdl = fs_handle;
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
@@ -150,20 +145,15 @@ API_FS_RELEASE(fatfs, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(fd);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-        STOP_IF(!fpos);
-        STOP_IF(!path);
 
         struct fatfs *hdl = fs_handle;
 
@@ -235,9 +225,6 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force)
         UNUSED_ARG(fd);
         UNUSED_ARG(force);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-
         struct fatfs *hdl = fs_handle;
 
         FATFILE *fat_file = extra;
@@ -268,11 +255,6 @@ API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
-
-        STOP_IF(!extra);
-        STOP_IF(!src);
-        STOP_IF(!count);
-        STOP_IF(!fpos);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
@@ -308,11 +290,6 @@ API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t coun
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
-
-        STOP_IF(!extra);
-        STOP_IF(!dst);
-        STOP_IF(!count);
-        STOP_IF(!fpos);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
@@ -375,8 +352,6 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
-        STOP_IF(!extra);
-
         FATFILE *fat_file = extra;
         if (handle_error(libfat_sync(fat_file)) == 0)
                 return STD_RET_OK;
@@ -401,9 +376,6 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
-
-        STOP_IF(!extra);
-        STOP_IF(!stat);
 
         FATFILE *fat_file  = extra;
         stat->st_dev   = 0;
@@ -433,8 +405,6 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct fatfs *hdl = fs_handle;
 
-        STOP_IF(!path);
-
         if (handle_error(libfat_mkdir(&hdl->fatfs, path)) == 0) {
                 uint8_t dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
                 if (handle_error(libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO)) == 0) {
@@ -459,8 +429,8 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
         /* not supported by this file system */
@@ -507,10 +477,6 @@ API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!dir);
-
         struct fatfs *hdl = fs_handle;
 
         char *dospath = calloc(strlen(path) + 1, 1);
@@ -562,9 +528,6 @@ API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static stdret_t fatfs_closedir(void *fs_handle, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!dir);
-
         struct fatfs *hdl = fs_handle;
 
         if (dir->f_dd) {
@@ -589,8 +552,6 @@ static stdret_t fatfs_closedir(void *fs_handle, DIR *dir)
 static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
-
-        STOP_IF(!dir);
 
         struct fatdir *fatdir = dir->f_dd;
 
@@ -634,9 +595,6 @@ static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct fatfs *hdl = fs_handle;
 
         if (handle_error(libfat_unlink(&hdl->fatfs, path)) == 0)
@@ -659,10 +617,6 @@ API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!old_name);
-        STOP_IF(!new_name);
-
         struct fatfs *hdl = fs_handle;
 
         if (handle_error(libfat_rename(&hdl->fatfs, old_name, new_name)) == 0)
@@ -685,9 +639,6 @@ API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name
 //==============================================================================
 API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct fatfs *hdl = fs_handle;
 
         uint8_t dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
@@ -738,10 +689,6 @@ API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
 //==============================================================================
 API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!stat);
-
         struct fatfs *hdl = fs_handle;
 
         FILEINFO file_info;
@@ -773,9 +720,6 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!statfs);
-
         struct fatfs *hdl    = fs_handle;
         u32_t  free_clusters = 0;
 

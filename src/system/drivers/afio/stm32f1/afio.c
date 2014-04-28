@@ -184,19 +184,21 @@ API_MOD_INIT(afio, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        (void) _module_name_;
+        if (!(RCC->APB2ENR & RCC_APB2ENR_AFIOEN)) {
+                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
 
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
+                AFIO->EVCR      = EVCR;
+                AFIO->MAPR      = MAPR;
+                AFIO->MAPR2     = MAPR2;
+                AFIO->EXTICR[0] = EXTICR1;
+                AFIO->EXTICR[1] = EXTICR2;
+                AFIO->EXTICR[2] = EXTICR3;
+                AFIO->EXTICR[3] = EXTICR4;
 
-        AFIO->EVCR      = EVCR;
-        AFIO->MAPR      = MAPR;
-        AFIO->MAPR2     = MAPR2;
-        AFIO->EXTICR[0] = EXTICR1;
-        AFIO->EXTICR[1] = EXTICR2;
-        AFIO->EXTICR[2] = EXTICR3;
-        AFIO->EXTICR[3] = EXTICR4;
-
-        return STD_RET_OK;
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -231,7 +233,7 @@ API_MOD_RELEASE(afio, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(afio, void *device_handle, int flags)
+API_MOD_OPEN(afio, void *device_handle, vfs_open_flags_t flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);

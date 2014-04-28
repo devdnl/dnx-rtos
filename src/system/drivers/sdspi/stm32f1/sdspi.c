@@ -55,6 +55,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel2_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel2_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#define RCC_APBxRSTR                                    RCC->APB2RSTR
+#define RCC_APBxENR                                     RCC->APB2ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB2RSTR_SPI1RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB2ENR_SPI1EN
 #elif (SDSPI_PORT == 2)
 #define SPI_PORT                                        SPI2
 #define SDSPI_DMA                                       DMA1
@@ -65,6 +69,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel4_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel4_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#define RCC_APBxRSTR                                    RCC->APB1RSTR
+#define RCC_APBxENR                                     RCC->APB1ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI2RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI2EN
 #elif (SDSPI_PORT == 3)
 #define SPI_PORT                                        SPI3
 #define SDSPI_DMA                                       DMA2
@@ -75,6 +83,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA2_Channel1_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA2_Channel1_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA2EN
+#define RCC_APBxRSTR                                    RCC->APB1RSTR
+#define RCC_APBxENR                                     RCC->APB1ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI3RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI3EN
 #else
 #error Wrong SPI port!
 #endif
@@ -152,8 +164,8 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t         spi_turn_on_clock                       (void);
-static stdret_t         spi_turn_off_clock                      (void);
+static void             spi_turn_on_clock                       (void);
+static void             spi_turn_off_clock                      (void);
 static void             spi_configure                           (void);
 static void             spi_select_card                         (void);
 static void             spi_deselect_card                       (void);
@@ -183,6 +195,8 @@ static stdret_t         mbr_detect_partitions                   (sdpart_t *hdl);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME("SDSPI");
+
 static sdctrl_t   *sdspi_ctrl;
 static const u16_t sector_size = 512;
 
@@ -204,14 +218,17 @@ static const u16_t sector_size = 512;
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(device_handle == NULL);
-
         if (major != _SDSPI_CARD_0 || minor > _SDSPI_PARTITION_4) {
                 errno = EINVAL;
                 return STD_RET_ERROR;
         }
 
         if (sdspi_ctrl == NULL) {
+                if (RCC_APBxENR & RCC_APBxENR_SPIxEN) {
+                        errno = EADDRINUSE;
+                        return STD_RET_ERROR;
+                }
+
                 sdctrl_t *sdspi = calloc(1, sizeof(sdctrl_t));
                 mutex_t  *mtx   = mutex_new(MUTEX_NORMAL);
 
@@ -265,8 +282,6 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(SDSPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         sdpart_t *part = device_handle;
 
         timer_t timer = timer_reset();
@@ -320,10 +335,9 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(SDSPI, void *device_handle, int flags)
+API_MOD_OPEN(SDSPI, void *device_handle, vfs_open_flags_t flags)
 {
         UNUSED_ARG(flags);
-        STOP_IF(device_handle == NULL);
 
         sdpart_t *part = device_handle;
 
@@ -349,7 +363,6 @@ API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 {
         UNUSED_ARG(force);
-        STOP_IF(device_handle == NULL);
 
         sdpart_t *part = device_handle;
 
@@ -373,10 +386,6 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 //==============================================================================
 API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
-        STOP_IF(fpos == NULL);
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
@@ -411,10 +420,6 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
 //==============================================================================
 API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
-        STOP_IF(fpos == NULL);
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
@@ -448,21 +453,24 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         sdpart_t *part = device_handle;
 
         stdret_t status = STD_RET_OK;
 
         switch (request) {
-        case SDSPI_IORQ_INITIALIZE_CARD:
+        case IOCTL_SDSPI__INITIALIZE_CARD:
                 if (mutex_lock(sdspi_ctrl->card_protect_mtx, MTX_BLOCK_TIME)) {
                         bool *result = arg;
-                        *result      = false;
+
+                        if (result) {
+                                *result = false;
+                        }
 
                         if (card_initialize(part) == STD_RET_OK) {
                                 if (mbr_detect_partitions(part) == STD_RET_OK) {
-                                        *result = true;
+                                        if (result) {
+                                                *result = true;
+                                        }
                                 }
                         }
 
@@ -494,7 +502,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(SDSPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -512,9 +520,6 @@ API_MOD_FLUSH(SDSPI, void *device_handle)
 //==============================================================================
 API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
-
         sdpart_t *part = device_handle;
 
         if (sdspi_ctrl->card_initialized) {
@@ -531,39 +536,13 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 /**
  * @brief Function turn on SPI clock
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_on_clock(void)
+static void spi_turn_on_clock(void)
 {
-        switch ((u32_t)SPI_PORT) {
-        #if defined(RCC_APB2ENR_SPI1EN)
-        case SPI1_BASE:
-                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
-                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
-                RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI2EN)
-        case SPI2_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI3EN)
-        case SPI3_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
-                return STD_RET_OK;
-        #endif
-        default:
-                errno = EIO;
-                return STD_RET_ERROR;
-        }
+        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        SET_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
 }
 
 //==============================================================================
@@ -574,34 +553,11 @@ static stdret_t spi_turn_on_clock(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_off_clock(void)
+static void spi_turn_off_clock(void)
 {
-        switch ((u32_t)SPI_PORT) {
-        #if defined(RCC_APB2ENR_SPI1EN)
-        case SPI1_BASE:
-                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
-                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
-                RCC->APB2ENR  &= ~RCC_APB2ENR_SPI1EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI2EN)
-        case SPI2_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-                RCC->APB1ENR  &= ~RCC_APB1ENR_SPI2EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI3EN)
-        case SPI3_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
-                RCC->APB1ENR  &= ~RCC_APB1ENR_SPI3EN;
-                return STD_RET_OK;
-        #endif
-        default:
-                errno = EIO;
-                return STD_RET_ERROR;
-        }
+        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
 }
 
 //==============================================================================
