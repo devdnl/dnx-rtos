@@ -1,12 +1,14 @@
 dnx/FreeRTOS 1.3.2
 ==================
 New Features, Improvements:
-- Decreased size of register of modules
+- Reduced the size of the modules registry
 - Removed STOP_IF() macro from modules and file systems
 - Implemented type for file open flags in file systems and devices
+- Protected some devices against initialization from two modules (e.g. SDSPI vs SPI)
+- Simplified 
 
 Fixed Bugs:
-- none
+- SDSPI: System crashes when ioctl IOCTL_SDSPI__INITIALIZE_CARD request have NULL argument
 
 dnx/FreeRTOS 1.3.1
 ==================

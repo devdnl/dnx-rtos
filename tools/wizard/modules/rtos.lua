@@ -439,7 +439,7 @@ end
 --------------------------------------------------------------------------------
 local function configure_stop_macro()
         local choice = key_read(db.path.project.flags, "__OS_SYSTEM_STOP_MACRO__")
-        msg(progress() .. "System stop macro configuration. Use only in debug purposes. The macro locks a task due to negative test condition. Do you want to enable stop macro?")
+        msg(progress() .. "System stop macro configuration. Use only in debug purposes. The macro locks a task due to negative test condition. Macro _stop_if() works inversely than assert(). Do you want to enable stop macro?")
         msg("Current choice is: " .. filter_yes_no(choice) .. ".")
         add_item(yes, "YES")
         add_item(no, "NO")
