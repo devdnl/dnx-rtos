@@ -55,6 +55,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel2_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel2_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#define RCC_APBxRSTR                                    RCC->APB2RSTR
+#define RCC_APBxENR                                     RCC->APB2ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB2RSTR_SPI1RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB2ENR_SPI1EN
 #elif (SDSPI_PORT == 2)
 #define SPI_PORT                                        SPI2
 #define SDSPI_DMA                                       DMA1
@@ -65,6 +69,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel4_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel4_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
+#define RCC_APBxRSTR                                    RCC->APB1RSTR
+#define RCC_APBxENR                                     RCC->APB1ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI2RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI2EN
 #elif (SDSPI_PORT == 3)
 #define SPI_PORT                                        SPI3
 #define SDSPI_DMA                                       DMA2
@@ -75,6 +83,10 @@
 #define SDSPI_DMA_IRQ_ROUTINE                           DMA2_Channel1_IRQHandler
 #define SDSPI_DMA_IRQ_NUMBER                            DMA2_Channel1_IRQn
 #define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA2EN
+#define RCC_APBxRSTR                                    RCC->APB1RSTR
+#define RCC_APBxENR                                     RCC->APB1ENR
+#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI3RST
+#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI3EN
 #else
 #error Wrong SPI port!
 #endif
@@ -152,8 +164,8 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t         spi_turn_on_clock                       (void);
-static stdret_t         spi_turn_off_clock                      (void);
+static void             spi_turn_on_clock                       (void);
+static void             spi_turn_off_clock                      (void);
 static void             spi_configure                           (void);
 static void             spi_select_card                         (void);
 static void             spi_deselect_card                       (void);
@@ -212,6 +224,11 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (sdspi_ctrl == NULL) {
+                if (RCC_APBxENR & RCC_APBxENR_SPIxEN) {
+                        errno = EADDRINUSE;
+                        return STD_RET_ERROR;
+                }
+
                 sdctrl_t *sdspi = calloc(1, sizeof(sdctrl_t));
                 mutex_t  *mtx   = mutex_new(MUTEX_NORMAL);
 
@@ -519,39 +536,13 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 /**
  * @brief Function turn on SPI clock
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_on_clock(void)
+static void spi_turn_on_clock(void)
 {
-        switch ((u32_t)SPI_PORT) {
-        #if defined(RCC_APB2ENR_SPI1EN)
-        case SPI1_BASE:
-                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
-                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
-                RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI2EN)
-        case SPI2_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI3EN)
-        case SPI3_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
-                return STD_RET_OK;
-        #endif
-        default:
-                errno = EIO;
-                return STD_RET_ERROR;
-        }
+        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        SET_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
 }
 
 //==============================================================================
@@ -562,34 +553,11 @@ static stdret_t spi_turn_on_clock(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_off_clock(void)
+static void spi_turn_off_clock(void)
 {
-        switch ((u32_t)SPI_PORT) {
-        #if defined(RCC_APB2ENR_SPI1EN)
-        case SPI1_BASE:
-                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
-                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
-                RCC->APB2ENR  &= ~RCC_APB2ENR_SPI1EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI2EN)
-        case SPI2_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-                RCC->APB1ENR  &= ~RCC_APB1ENR_SPI2EN;
-                return STD_RET_OK;
-        #endif
-        #if defined(RCC_APB1ENR_SPI3EN)
-        case SPI3_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
-                RCC->APB1ENR  &= ~RCC_APB1ENR_SPI3EN;
-                return STD_RET_OK;
-        #endif
-        default:
-                errno = EIO;
-                return STD_RET_ERROR;
-        }
+        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
+        CLEAR_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
 }
 
 //==============================================================================

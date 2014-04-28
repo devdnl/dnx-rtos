@@ -79,8 +79,12 @@ MODULE_NAME("CRCCU");
 //==============================================================================
 API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major != _CRC_MAJOR_NUMBER || minor != _CRC_MINOR_NUMBER)
+        if (  major != _CRC_MAJOR_NUMBER
+           || minor != _CRC_MINOR_NUMBER
+           || (RCC->AHBENR & RCC_AHBENR_CRCEN) ) {
+
                 return STD_RET_ERROR;
+        }
 
         CRCCU *hdl = calloc(1, sizeof(CRCCU));
         if (hdl) {

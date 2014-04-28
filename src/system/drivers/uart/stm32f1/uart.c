@@ -176,24 +176,29 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 uart_data[major]->data_read_sem    = semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = mutex_new(MUTEX_NORMAL);
                 uart_data[major]->port_lock_tx_mtx = mutex_new(MUTEX_NORMAL);
+                stdret_t uart_clock_configured     = uart_turn_on(uart[major]);
 
                 if (  uart_data[major]->data_write_sem
                    && uart_data[major]->data_read_sem
                    && uart_data[major]->port_lock_rx_mtx
-                   && uart_data[major]->port_lock_tx_mtx) {
+                   && uart_data[major]->port_lock_tx_mtx
+                   && uart_clock_configured == STD_RET_OK ) {
 
                         uart_data[major]->major  = major;
                         uart_data[major]->config = uart_default_config;
 
                         NVIC_EnableIRQ(uart_irq[major].irqn);
                         NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
-                        uart_turn_on(uart[major]);
                         configure_uart(major, (struct UART_config *)&uart_default_config);
 
                         *device_handle = uart_data[major];
 
                         return STD_RET_OK;
                 } else {
+                        if (uart_clock_configured) {
+                                uart_turn_off(uart[major]);
+                        }
+
                         if (uart_data[major]->data_write_sem) {
                                 semaphore_delete(uart_data[major]->data_write_sem);
                         }
@@ -482,37 +487,57 @@ static stdret_t uart_turn_on(USART_t *USART)
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
         case USART1_BASE:
-                SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
+                if (!(RCC->APB2ENR & RCC_APB2ENR_USART1EN)) {
+                        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
+                        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
+                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
         case USART2_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_USART2EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
         case USART3_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_USART3EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
         case UART4_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_UART4EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
         case UART5_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_UART5EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         default:

@@ -82,7 +82,7 @@ MODULE_NAME("WDG");
 //==============================================================================
 API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major == _WDG_MAJOR_NUMBER || minor == _WDG_MINOR_NUMBER) {
+        if (major == _WDG_MAJOR_NUMBER && minor == _WDG_MINOR_NUMBER) {
 
                 WDG_t *hdl = calloc(1, sizeof(WDG_t));
                 if (hdl) {
