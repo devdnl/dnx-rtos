@@ -757,6 +757,20 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 
 //==============================================================================
 /**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(fatfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
+}
+
+//==============================================================================
+/**
  * @brief Function handle libfat errors and translate to errno
  *
  * @param fresult       libfat result

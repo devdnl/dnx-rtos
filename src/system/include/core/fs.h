@@ -72,6 +72,7 @@ extern "C" {
 #define API_FS_CHOWN(fsname, ...)               stdret_t _##fsname##_chown(__VA_ARGS__)
 #define API_FS_STAT(fsname, ...)                stdret_t _##fsname##_stat(__VA_ARGS__)
 #define API_FS_STATFS(fsname, ...)              stdret_t _##fsname##_statfs(__VA_ARGS__)
+#define API_FS_SYNC(fsname, ...)                void     _##fsname##_sync(__VA_ARGS__)
 
 /*==============================================================================
   Exported types, enums definitions

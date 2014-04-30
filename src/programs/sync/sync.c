@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    fs_registration.c
+@file    sync.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration file systems
+@brief   Synchronize buffer of all file systems
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -27,45 +27,49 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fsctrl.h"
-#include "core/fs.h"
-#include <dnx/misc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /*==============================================================================
-  External objects
+  Local symbolic constants/macros
 ==============================================================================*/
-#if (__ENABLE_LFS__)
-_IMPORT_FILE_SYSTEM(lfs);
-#endif
-#if (__ENABLE_PROCFS__)
-_IMPORT_FILE_SYSTEM(procfs);
-#endif
-#if (__ENABLE_FATFS__)
-_IMPORT_FILE_SYSTEM(fatfs);
-#endif
-#if (__ENABLE_DEVFS__)
-_IMPORT_FILE_SYSTEM(devfs);
-#endif
 
 /*==============================================================================
-  Exported objects
+  Local types, enums definitions
 ==============================================================================*/
-const struct _FS_entry _FS_table[] = {
-        #if (__ENABLE_LFS__)
-        _FILE_SYSTEM_INTERFACE(lfs),
-        #endif
-        #if (__ENABLE_PROCFS__)
-        _FILE_SYSTEM_INTERFACE(procfs),
-        #endif
-        #if (__ENABLE_FATFS__)
-        _FILE_SYSTEM_INTERFACE(fatfs),
-        #endif
-        #if (__ENABLE_DEVFS__)
-        _FILE_SYSTEM_INTERFACE(devfs),
-        #endif
-};
 
-const uint _FS_table_size = ARRAY_SIZE(_FS_table);
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION_BEGIN
+GLOBAL_VARIABLES_SECTION_END
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief Program main function
+ */
+//==============================================================================
+PROGRAM_MAIN(sync, int argc, char *argv[])
+{
+        (void)argc;
+        (void)argv;
+
+        sync();
+
+        return EXIT_SUCCESS;
+}
 
 /*==============================================================================
   End of file

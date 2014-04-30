@@ -1305,6 +1305,29 @@ int vfs_rewind(FILE *file)
 
 //==============================================================================
 /**
+ * @brief Synchronize internal buffers of mounted file systems
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ */
+//==============================================================================
+void vfs_sync(void)
+{
+        mutex_force_lock(vfs_resource_mtx);
+
+        for (int i = 0; i < list_get_item_count(vfs_mnt_list); i++) {
+                struct FS_data *fs = list_get_nitem_data(vfs_mnt_list, i);
+                fs->interface.fs_sync(fs->handle);
+        }
+
+        mutex_unlock(vfs_resource_mtx);
+}
+
+//==============================================================================
+/**
  * @brief Generic file close
  *
  * @param[in] file              pinter to file

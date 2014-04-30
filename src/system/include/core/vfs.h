@@ -200,6 +200,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_chown  )(void *fshdl, const char *path, int owner, int group);
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
         stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
+        void     (*fs_sync   )(void *fshdl);
 };
 
 /*==============================================================================
@@ -237,6 +238,7 @@ extern int              vfs_feof                (FILE*);
 extern void             vfs_clearerr            (FILE*);
 extern int              vfs_ferror              (FILE*);
 extern int              vfs_rewind              (FILE*);
+extern void             vfs_sync                (void);
 
 /*==============================================================================
   Exported inline functions

@@ -1267,6 +1267,20 @@ error:
 
 //==============================================================================
 /**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(lfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
+}
+
+//==============================================================================
+/**
  * @brief Return last character of selected string
  */
 //==============================================================================

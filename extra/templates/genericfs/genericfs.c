@@ -270,6 +270,10 @@ API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
 {
+        dir->f_closedir = closedir;
+        dir->f_readdir  = readdir;
+        // ...
+
         return STD_RET_ERROR;
 }
 
@@ -419,6 +423,20 @@ API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
         statfs->f_fsname = "genericfs";
 
         return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(genericfs, void *fs_handle)
+{
+
 }
 
 /*==============================================================================

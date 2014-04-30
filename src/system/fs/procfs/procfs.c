@@ -842,6 +842,20 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 
 //==============================================================================
 /**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(procfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
+}
+
+//==============================================================================
+/**
  * @brief Read item from opened directory
  *
  * @param[in]  *fs_handle    file system data

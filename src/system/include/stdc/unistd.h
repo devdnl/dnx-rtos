@@ -294,6 +294,30 @@ static inline int chown(const char *pathname, int owner, int group)
         return vfs_chown(pathname, owner, group);
 }
 
+//==============================================================================
+/**
+ * @brief void sync(void)
+ * The <b>sync</b>() synchronize system files with buffers.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ * sync();
+ * // ...
+ */
+//==============================================================================
+static inline void sync(void)
+{
+        vfs_sync();
+}
+
 #ifdef __cplusplus
 }
 #endif

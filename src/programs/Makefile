@@ -21,6 +21,7 @@
 -include $(PROG_LOC)/mount/Makefile
 -include $(PROG_LOC)/reboot/Makefile
 -include $(PROG_LOC)/rm/Makefile
+-include $(PROG_LOC)/sync/Makefile
 -include $(PROG_LOC)/telnet/Makefile
 -include $(PROG_LOC)/time/Makefile
 -include $(PROG_LOC)/top/Makefile

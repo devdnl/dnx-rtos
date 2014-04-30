@@ -39,7 +39,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _USE_FILE_SYSTEM_INTERFACE(fs_name)\
+#define _FILE_SYSTEM_INTERFACE(fs_name)\
 {.FS_name = #fs_name,\
  .FS_if   = {.fs_init    = _##fs_name##_init,\
              .fs_chmod   = _##fs_name##_chmod,\
@@ -59,7 +59,8 @@ extern "C" {
              .fs_fstat   = _##fs_name##_fstat,\
              .fs_statfs  = _##fs_name##_statfs,\
              .fs_flush   = _##fs_name##_flush,\
-             .fs_write   = _##fs_name##_write}}
+             .fs_write   = _##fs_name##_write,\
+             .fs_sync    = _##fs_name##_sync}}
 
 #define _IMPORT_FILE_SYSTEM(fsname)                                                             \
 extern API_FS_INIT(fsname, void**, const char*);                                                \
@@ -80,7 +81,8 @@ extern API_FS_RENAME(fsname, void*, const char*, const char*);                  
 extern API_FS_CHMOD(fsname, void*, const char*, int);                                           \
 extern API_FS_CHOWN(fsname, void*, const char*, int, int);                                      \
 extern API_FS_STAT(fsname, void*, const char*, struct stat*);                                   \
-extern API_FS_STATFS(fsname, void*, struct statfs*)
+extern API_FS_STATFS(fsname, void*, struct statfs*);                                            \
+extern API_FS_SYNC(fsname, void*)
 
 /*==============================================================================
   Exported object types
