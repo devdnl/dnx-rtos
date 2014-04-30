@@ -72,6 +72,9 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define _MEMMAN_RAM_SIZE        ((size_t)&__ram_size)
+#define _MEMMAN_HEAP_SIZE       ((size_t)&__heap_size)
+#define _MEMMAN_HEAP_START      ((void *)&__heap_start)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -80,15 +83,18 @@ extern "C" {
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
+extern void *__ram_size;
+extern void *__heap_size;
+extern void *__heap_start;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void   memman_init(void);
-extern void  *memman_malloc(size_t size, size_t *real_size);
-extern void  *memman_calloc(size_t count, size_t size, size_t *real_size);
-extern size_t memman_free(void *mem);
-extern u32_t  memman_get_free_heap(void);
+extern void   _memman_init(void);
+extern void  *_memman_malloc(size_t size, size_t *real_size);
+extern void  *_memman_calloc(size_t count, size_t size, size_t *real_size);
+extern size_t _memman_free(void *mem);
+extern u32_t  _memman_get_free_heap(void);
 
 #ifdef __cplusplus
 }

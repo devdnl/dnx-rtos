@@ -68,14 +68,12 @@
 /* CPU configuration */
 #define __CPU_START_FREQ__ __CPU_START_FREQUENCY__
 #define __CPU_OSC_FREQ__ 8000000
-#define __CPU_RAM_SIZE__ __CPU_RAM_MEM_SIZE__
 #define __IRQ_RTOS_KERNEL_PRIORITY__ 0xFF
 #define __IRQ_RTOS_SYSCALL_PRIORITY__ 0xEF
 #define __IRQ_USER_PRIORITY__ 0xDF
 
 /* dynamic memory configuration */
 #define __HEAP_ALIGN__ __CPU_HEAP_ALIGN__
-#define __HEAP_SIZE__ 64332
 #define __HEAP_BLOCK_SIZE__ 4
 
 /* os configuration */

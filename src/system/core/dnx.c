@@ -70,7 +70,7 @@ void dnx_init(void)
 
         if (!initialized) {
                 _cpuctl_init();
-                memman_init();
+                _memman_init();
                 _stop_if(vfs_init() != STD_RET_OK);
                 _stop_if(sysm_init() != STD_RET_OK);
                 task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);

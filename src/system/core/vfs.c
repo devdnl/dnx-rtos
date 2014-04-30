@@ -585,10 +585,8 @@ int vfs_remove(const char *path)
         int status = -1;
         if (base_fs && !mount_fs) {
                 if (base_fs->interface.fs_remove) {
-                        int priority = increase_task_priority();
                         status = base_fs->interface.fs_remove(base_fs->handle,
                                                               external_path) == STD_RET_OK ? 0 : -1;
-                        restore_priority(priority);
                 }
         }
 
