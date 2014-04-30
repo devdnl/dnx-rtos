@@ -83,9 +83,9 @@ extern "C" {
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-extern size_t __ram_size;
-extern size_t __heap_size;
-extern size_t __heap_start;
+extern void *__ram_size;
+extern void *__heap_size;
+extern void *__heap_start;
 
 /*==============================================================================
   Exported function prototypes
