@@ -82,39 +82,23 @@
  */
 #define MEM_ALIGN_SIZE(size)            (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
 
-/**
- * Calculate safe memory size for an aligned buffer when using an unaligned
- * type as storage. This includes a safety-margin on (MEM_ALIGNMENT - 1) at the
- * start (e.g. if buffer is u8_t[] and actual data will be u32_t*)
- */
-#define MEM_ALIGN_BUFFER(size)          (((size) + MEM_ALIGNMENT - 1))
-
-/**
- * Align a memory pointer to the alignment defined by MEM_ALIGNMENT
- * so that ADDR % MEM_ALIGNMENT == 0
- */
-#define MEM_ALIGN(addr)                 ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
-
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE((size_t)CONFIG_HEAP_SIZE)
+#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(_MEMMAN_HEAP_SIZE - SIZEOF_STRUCT_MEM)
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-/** type used as pointer */
-typedef u32_t ptr_t;
-
 /**
  * The heap is made up as a list of structs of this type.
  * This does not have to be aligned since for getting its size,
  * we only use the macro SIZEOF_STRUCT_MEM, which automatically alignes.
  */
 struct mem {
-        size_t next;    /** index (-> ram[next]) of the next struct */
-        size_t prev;    /** index (-> ram[prev]) of the previous struct */
-        u8_t   used;    /** 1: this area is used; 0: this area is unused */
+        size_t next;    /**< index (-> ram[next]) of the next struct      */
+        size_t prev;    /**< index (-> ram[prev]) of the previous struct  */
+        u8_t   used;    /**< 1: this area is used; 0: this area is unused */
 };
 
 /*==============================================================================
@@ -125,16 +109,6 @@ static void plug_holes(struct mem *mem);
 /*==============================================================================
                                       Local object definitions
 ==============================================================================*/
-/**
- * If you want to relocate the heap to external memory, simply define
- * ram_heap as a void-pointer to that location.
- * If so, make sure the memory at that location is big enough (see below on
- * how that space is calculated).
- */
-
-/** the heap. we need one struct mem at the end and some room for alignment */
-static u8_t ram_heap[MEM_SIZE_ALIGNED + (2*SIZEOF_STRUCT_MEM) + MEM_ALIGNMENT];
-
 /** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
 static u8_t *ram;
 
@@ -207,27 +181,25 @@ static void plug_holes(struct mem *mem)
 * @brief Zero the heap and initialize start, end and lowest-free
 */
 //==============================================================================
-void memman_init(void)
+void _memman_init(void)
 {
-        struct mem *mem;
-
         /* align the heap */
-        ram = (u8_t *)MEM_ALIGN(ram_heap);
+        ram = (u8_t*)_MEMMAN_HEAP_START;
 
         /* initialize the start of the heap */
-        mem = (struct mem *)(void *)ram;
+        struct mem *mem = (struct mem *)ram;
         mem->next = MEM_SIZE_ALIGNED;
         mem->prev = 0;
         mem->used = 0;
 
         /* initialize the end of the heap */
-        ram_end = (struct mem *)(void *)&ram[MEM_SIZE_ALIGNED];
+        ram_end = (struct mem *)&ram[MEM_SIZE_ALIGNED];
         ram_end->used = 1;
         ram_end->next = MEM_SIZE_ALIGNED;
         ram_end->prev = MEM_SIZE_ALIGNED;
 
         /* initialize the lowest-free pointer to the start of the heap */
-        lfree = (struct mem *)(void *)ram;
+        lfree = (struct mem *)ram;
 }
 
 //==============================================================================
@@ -240,7 +212,7 @@ void memman_init(void)
  * @return number of really freed bytes
  */
 //==============================================================================
-size_t memman_free(void *rmem)
+size_t _memman_free(void *rmem)
 {
         struct mem *mem;
         size_t freed;
@@ -291,7 +263,7 @@ size_t memman_free(void *rmem)
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
 //==============================================================================
-void *memman_malloc(size_t size, size_t *real_size)
+void *_memman_malloc(size_t size, size_t *real_size)
 {
         size_t ptr, ptr2;
         struct mem *mem, *mem2;
@@ -419,9 +391,9 @@ void *memman_malloc(size_t size, size_t *real_size)
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //==============================================================================
-void *memman_calloc(size_t count, size_t size, size_t *real_size)
+void *_memman_calloc(size_t count, size_t size, size_t *real_size)
 {
-        void *p = memman_malloc(count * size, real_size);
+        void *p = _memman_malloc(count * size, real_size);
 
         if (p) {
                 memset(p, 0, count * size);
@@ -437,9 +409,9 @@ void *memman_calloc(size_t count, size_t size, size_t *real_size)
  * @return free memory
  */
 //==============================================================================
-u32_t memman_get_free_heap(void)
+u32_t _memman_get_free_heap(void)
 {
-        return ((u32_t)CONFIG_HEAP_SIZE - used_mem);
+        return (_MEMMAN_HEAP_SIZE - used_mem);
 }
 
 /*==============================================================================

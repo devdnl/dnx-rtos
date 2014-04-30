@@ -95,7 +95,7 @@ static i32_t sysm_kernel_memory_usage;
 #endif
 
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_HEAP_SIZE;
+static i32_t sysm_system_memory_usage;
 #endif
 
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
@@ -146,6 +146,8 @@ static inline void mutex_force_lock(mutex_t *mtx)
 //==============================================================================
 stdret_t sysm_init(void)
 {
+        sysm_system_memory_usage = (i32_t)_MEMMAN_RAM_SIZE - (i32_t)_MEMMAN_HEAP_SIZE;
+
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         sysm_task_list    = list_new();
         sysm_resource_mtx = mutex_new(MUTEX_RECURSIVE);
@@ -301,13 +303,13 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
         int to_free = 0;
         do {
                 if (chain->next) {
-                        memman_free(chain->next);
+                        _memman_free(chain->next);
                 }
 
                 if (chain->used_slots > 0) {
                         for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
                                 if (chain->mem_slot[i]) {
-                                        to_free += memman_free(chain->mem_slot[i]);
+                                        to_free += _memman_free(chain->mem_slot[i]);
                                 }
                         }
                 }
@@ -541,11 +543,11 @@ void *sysm_kmalloc(size_t size)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         size_t allocated = 0;
-        void *p = memman_malloc(size, &allocated);
+        void *p = _memman_malloc(size, &allocated);
         sysm_kernel_memory_usage += allocated;
         return p;
 #else
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -563,11 +565,11 @@ void *sysm_kcalloc(size_t count, size_t size)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         size_t allocated = 0;
-        void *p = memman_calloc(count, size, &allocated);
+        void *p = _memman_calloc(count, size, &allocated);
         sysm_kernel_memory_usage += allocated;
         return p;
 #else
-        return memman_calloc(count, size, NULL);
+        return _memman_calloc(count, size, NULL);
 #endif
 }
 
@@ -581,9 +583,9 @@ void *sysm_kcalloc(size_t count, size_t size)
 void sysm_kfree(void *mem)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
-        sysm_kernel_memory_usage -= memman_free(mem);
+        sysm_kernel_memory_usage -= _memman_free(mem);
 #else
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 
@@ -600,11 +602,11 @@ void *sysm_sysmalloc(size_t size)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         size_t allocated = 0;
-        void *p = memman_malloc(size, &allocated);
+        void *p = _memman_malloc(size, &allocated);
         sysm_system_memory_usage += allocated;
         return p;
 #else
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -622,11 +624,11 @@ void *sysm_syscalloc(size_t count, size_t size)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         size_t allocated = 0;
-        void *p = memman_calloc(count, size, &allocated);
+        void *p = _memman_calloc(count, size, &allocated);
         sysm_system_memory_usage += allocated;
         return p;
 #else
-        return memman_calloc(count, size, NULL);
+        return _memman_calloc(count, size, NULL);
 #endif
 }
 
@@ -640,9 +642,9 @@ void *sysm_syscalloc(size_t count, size_t size)
 void sysm_sysfree(void *mem)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-        sysm_system_memory_usage -= memman_free(mem);
+        sysm_system_memory_usage -= _memman_free(mem);
 #else
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 
@@ -663,14 +665,14 @@ void *sysm_netmalloc(size_t size)
            || sysm_network_memory_usage + size <= CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT ) {
 
                 size_t allocated = 0;
-                void *p = memman_malloc(size, &allocated);
+                void *p = _memman_malloc(size, &allocated);
                 sysm_network_memory_usage += allocated;
                 return p;
         } else {
                 return NULL;
         }
 #else
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -692,14 +694,14 @@ void *sysm_netcalloc(size_t count, size_t size)
            || sysm_network_memory_usage + size <= CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT ) {
 
                 size_t allocated = 0;
-                void *p = memman_calloc(count, size, &allocated);
+                void *p = _memman_calloc(count, size, &allocated);
                 sysm_network_memory_usage += allocated;
                 return p;
         } else {
                 return NULL;
         }
 #else
-        return memman_calloc(count, size, NULL);
+        return _memman_calloc(count, size, NULL);
 #endif
 }
 
@@ -713,9 +715,9 @@ void *sysm_netcalloc(size_t count, size_t size)
 void sysm_netfree(void *mem)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
-        sysm_network_memory_usage -= memman_free(mem);
+        sysm_network_memory_usage -= _memman_free(mem);
 #else
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 
@@ -736,7 +738,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
 
         if (module_number < _regdrv_number_of_modules) {
                 size_t allocated = 0;
-                p = memman_malloc(size, &allocated);
+                p = _memman_malloc(size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
         }
@@ -744,7 +746,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
         return p;
 #else
         UNUSED_ARG(module_number);
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -766,7 +768,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
 
         if (module_number < _regdrv_number_of_modules) {
                 size_t allocated = 0;
-                p = memman_calloc(count, size, &allocated);
+                p = _memman_calloc(count, size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
         }
@@ -774,7 +776,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
         return p;
 #else
         UNUSED_ARG(module_number);
-        return memman_calloc(count, size, NULL);
+        return _memman_calloc(count, size, NULL);
 #endif
 }
 
@@ -791,13 +793,13 @@ void sysm_modfree(void *mem, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
-                size_t freed = memman_free(mem);
+                size_t freed = _memman_free(mem);
                 sysm_modules_memory_usage -= freed;
                 sysm_module_memory_usage[module_number] -= freed;
         }
 #else
         UNUSED_ARG(module_number);
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 
@@ -861,7 +863,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
                                         continue;
 
                                 size_t allocated = 0;
-                                if ((mem = memman_malloc(size, &allocated))) {
+                                if ((mem = _memman_malloc(size, &allocated))) {
                                         chain->mem_slot[i] = mem;
                                         chain->used_slots++;
                                         task_monitor_data->used_memory += allocated;
@@ -871,7 +873,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
                                 goto exit;
                         }
                 } else if (chain->next == NULL) {
-                        chain->next = memman_calloc(1, sizeof(mem_slot_chain_t), NULL);
+                        chain->next = _memman_calloc(1, sizeof(mem_slot_chain_t), NULL);
                         if (chain->next) {
                                 chain->next->prev = chain;
                         }
@@ -884,7 +886,7 @@ exit:
         mutex_unlock(sysm_resource_mtx);
         return mem;
 #else
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -902,7 +904,7 @@ void *sysm_tskmalloc(size_t size)
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         return sysm_tskmalloc_as(task_get_handle(), size);
 #else
-        return memman_malloc(size, NULL);
+        return _memman_malloc(size, NULL);
 #endif
 }
 
@@ -929,7 +931,7 @@ void *sysm_tskcalloc_as(task_t *taskhdl, size_t nmemb, size_t msize)
         return ptr;
 #else
         UNUSED_ARG(taskhdl);
-        return memman_calloc(nmemb, msize, NULL);
+        return _memman_calloc(nmemb, msize, NULL);
 #endif
 }
 
@@ -954,7 +956,7 @@ void *sysm_tskcalloc(size_t nmemb, size_t msize)
 
         return ptr;
 #else
-        return memman_calloc(nmemb, msize, NULL);
+        return _memman_calloc(nmemb, msize, NULL);
 #endif
 }
 
@@ -988,7 +990,7 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
         do {
                 for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
                         if (chain->mem_slot[i] == mem) {
-                                size_t freed = memman_free(mem);
+                                size_t freed = _memman_free(mem);
                                 chain->mem_slot[i] = NULL;
                                 task_monitor_data->used_memory -= freed;
                                 sysm_programs_memory_usage     -= freed;
@@ -1000,7 +1002,7 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                                         if (chain->next)
                                                 chain->next->prev = chain->prev;
 
-                                        memman_free(chain);
+                                        _memman_free(chain);
                                 }
 
                                 goto exit;
@@ -1014,7 +1016,7 @@ exit:
         mutex_unlock(sysm_resource_mtx);
 #else
         UNUSED_ARG(taskhdl);
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 
@@ -1030,7 +1032,7 @@ void sysm_tskfree(void *mem)
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         sysm_tskfree_as(task_get_handle(), mem);
 #else
-        memman_free(mem);
+        _memman_free(mem);
 #endif
 }
 

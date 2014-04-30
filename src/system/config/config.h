@@ -44,12 +44,12 @@
 /**
  * Size of RAM memory [bytes]
  */
-#define CONFIG_RAM_SIZE                                 (__CPU_RAM_SIZE__)
+//#define CONFIG_RAM_SIZE                                 (__CPU_RAM_SIZE__)
 
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (__HEAP_SIZE__)
+//#define CONFIG_HEAP_SIZE                                (__HEAP_SIZE__)
 
 /**
  * Heap memory alignment
