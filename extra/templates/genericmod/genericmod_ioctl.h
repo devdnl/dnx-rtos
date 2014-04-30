@@ -39,10 +39,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define GENERICMOD_IORQ_EX1         _IO(_IO_GROUP_GENERIC, 0x00)
-#define GENERICMOD_IORQ_EX2         _IOR(_IO_GROUP_GENERIC, 0x01, int*)
-#define GENERICMOD_IORQ_EX3         _IOW(_IO_GROUP_GENERIC, 0x02, int)
-#define GENERICMOD_IORQ_EX4         _IOWR(_IO_GROUP_GENERIC, 0x03, int*)
+#define IOCTL_GENERICMOD__EX1           _IO(_IO_GROUP_GENERIC, 0x00)
+#define IOCTL_GENERICMOD__EX2           _IOR(_IO_GROUP_GENERIC, 0x01, int*)
+#define IOCTL_GENERICMOD__EX3           _IOW(_IO_GROUP_GENERIC, 0x02, int)
+#define IOCTL_GENERICMOD__EX4           _IOWR(_IO_GROUP_GENERIC, 0x03, int*)
 
 /*==============================================================================
   Exported object types

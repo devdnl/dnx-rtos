@@ -100,7 +100,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_open(dev_t id, int flags)
+static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -134,7 +134,7 @@ static inline stdret_t driver_close(dev_t id, bool force)
  * @return number of written bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_write(id, src, count, fpos, fattr);
 }
@@ -152,7 +152,7 @@ static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, u64_
  * @return number of read bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_read(id, dst, count, fpos, fattr);
 }
