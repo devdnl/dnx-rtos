@@ -175,7 +175,7 @@ typedef enum {
         O_RDONLY = (1 << 0),            /**< read only    */
         O_WRONLY = (1 << 1),            /**< write only   */
         O_RDWR   = (1 << 2),            /**< read write   */
-        O_CREAT  = (1 << 3),            /**< create file  */
+        O_CREATE = (1 << 3),            /**< create file  */
         O_APPEND = (1 << 4)             /**< append data  */
 } vfs_open_flags_t;
 
@@ -183,10 +183,10 @@ typedef enum {
 struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
-        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, vfs_open_flags_t flags);
+        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
-        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
-        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
+        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
+        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
@@ -196,8 +196,8 @@ struct vfs_FS_interface {
         stdret_t (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
         stdret_t (*fs_remove )(void *fshdl, const char *path);
         stdret_t (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
-        stdret_t (*fs_chmod  )(void *fshdl, const char *path, int mode);
-        stdret_t (*fs_chown  )(void *fshdl, const char *path, int owner, int group);
+        stdret_t (*fs_chmod  )(void *fshdl, const char *path, mode_t mode);
+        stdret_t (*fs_chown  )(void *fshdl, const char *path, uid_t owner, gid_t group);
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
         stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
         void     (*fs_sync   )(void *fshdl);

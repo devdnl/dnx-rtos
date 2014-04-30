@@ -204,7 +204,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
 
@@ -342,7 +342,7 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -370,7 +370,7 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos)
 {
         UNUSED_ARG(extra);
 
@@ -751,7 +751,7 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(procfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -775,7 +775,7 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(procfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);

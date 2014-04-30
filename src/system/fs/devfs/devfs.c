@@ -52,9 +52,9 @@ struct devfs_chain {
                 } IF;
                 char                     *path;
                 tfile_t                   type;
-                int                       gid;
-                int                       uid;
-                int                       mode;
+                gid_t                     gid;
+                uid_t                     uid;
+                mode_t                    mode;
                 int                       opended;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
@@ -194,7 +194,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(fd);
 
@@ -285,7 +285,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -317,7 +317,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -776,7 +776,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
@@ -808,7 +808,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;

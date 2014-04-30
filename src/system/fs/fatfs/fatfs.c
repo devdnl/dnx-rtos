@@ -151,7 +151,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(fd);
 
@@ -168,13 +168,13 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
         } else if (flags == O_RDWR) {
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == (O_WRONLY | O_CREAT)) {
+        } else if (flags == (O_WRONLY | O_CREATE)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_RDWR | O_CREAT)) {
+        } else if (flags == (O_RDWR | O_CREATE)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
+        } else if (flags == (O_WRONLY | O_APPEND | O_CREATE)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
-        } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
+        } else if (flags == (O_RDWR | O_APPEND | O_CREATE)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
         } else {
                 free(fat_file);
@@ -251,7 +251,7 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -286,7 +286,7 @@ API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t count, u64_t *fpos)
+API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t count, fpos_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -637,7 +637,7 @@ API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct fatfs *hdl = fs_handle;
 
@@ -662,7 +662,7 @@ API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(fatfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
