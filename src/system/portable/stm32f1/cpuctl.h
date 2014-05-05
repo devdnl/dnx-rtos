@@ -57,13 +57,15 @@ extern "C" {
 ==============================================================================*/
 extern void  _cpuctl_init(void);
 extern void  _cpuctl_restart_system(void);
-extern void  _cpuctl_init_CPU_load_timer(void);
-extern u32_t _cpuctl_get_CPU_load_timer(void);
-extern void  _cpuctl_clear_CPU_load_timer(void);
-extern u32_t _cpuctl_get_CPU_total_time(void);
-extern void  _cpuctl_clear_CPU_total_time(void);
 extern void  _cpuctl_sleep(void);
 extern void  _cpuctl_update_system_clocks(void);
+
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+extern void  _cpuctl_init_CPU_load_timer(void);
+extern u32_t _cpuctl_get_CPU_load_timer_value(void);
+extern void  _cpuctl_clear_CPU_load_timer_value(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
