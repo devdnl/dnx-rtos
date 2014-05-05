@@ -61,9 +61,9 @@ typedef struct node {
         enum node_type   type;                  /* file type                 */
         fd_t             fd;                    /* file descriptor           */
         mode_t           mode;                  /* protection                */
-        u32_t            uid;                   /* user ID of owner          */
-        u32_t            gid;                   /* group ID of owner         */
-        u64_t            size;                  /* file size                 */
+        uid_t            uid;                   /* user ID of owner          */
+        gid_t            gid;                   /* group ID of owner         */
+        fpos_t           size;                  /* file size                 */
         u32_t            mtime;                 /* time of last modification */
         void            *data;                  /* file type specified data  */
 } node_t;
@@ -647,7 +647,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(lfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct LFS_data *lfs = fs_handle;
 
@@ -678,7 +678,7 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(lfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct LFS_data *lfs = fs_handle;
 
@@ -841,7 +841,7 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
 
@@ -855,7 +855,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* create new file when necessary */
         if (base_node && node == NULL) {
-                if (!(flags & O_CREAT)) {
+                if (!(flags & O_CREATE)) {
                         goto error;
                 }
 
@@ -891,7 +891,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
-                if ((flags & O_CREAT) && !(flags & O_APPEND)) {
+                if ((flags & O_CREATE) && !(flags & O_APPEND)) {
                         if (node->data) {
                                 free(node->data);
                                 node->data = NULL;
@@ -906,7 +906,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
                         *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                if (driver_open((dev_t)node->data, vfs_filter_open_flags_for_device(flags)) == STD_RET_OK) {
+                if (driver_open((dev_t)node->data, flags) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
@@ -1017,7 +1017,7 @@ exit:
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1105,7 +1105,7 @@ exit:
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1263,6 +1263,20 @@ error:
         errno = ENOENT;
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(lfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
 }
 
 //==============================================================================

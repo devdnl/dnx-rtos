@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    genericmod_ioctl.h
+@file    sync.c
 
-@author  Author
+@author  Daniel Zorychta
 
-@brief   This driver support generic device definitions (e.g. used in ioctl()).
+@brief   Synchronize buffer of all file systems
 
-@note    Copyright (C) year  Author <email>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,47 +24,53 @@
 
 *//*==========================================================================*/
 
-#ifndef _GENERICMOD_DEF_H_
-#define _GENERICMOD_DEF_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /*==============================================================================
-  Exported macros
-==============================================================================*/
-#define IOCTL_GENERICMOD__EX1           _IO(_IO_GROUP_GENERIC, 0x00)
-#define IOCTL_GENERICMOD__EX2           _IOR(_IO_GROUP_GENERIC, 0x01, int*)
-#define IOCTL_GENERICMOD__EX3           _IOW(_IO_GROUP_GENERIC, 0x02, int)
-#define IOCTL_GENERICMOD__EX4           _IOWR(_IO_GROUP_GENERIC, 0x03, int*)
-
-/*==============================================================================
-  Exported object types
+  Local symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported objects
+  Local types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  Local function prototypes
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Local object definitions
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION_BEGIN
+GLOBAL_VARIABLES_SECTION_END
+
+/*==============================================================================
+  Exported object definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief Program main function
+ */
+//==============================================================================
+PROGRAM_MAIN(sync, int argc, char *argv[])
+{
+        (void)argc;
+        (void)argv;
+
+        sync();
+
+        return EXIT_SUCCESS;
 }
-#endif
 
-#endif /* _GENERICMOD_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

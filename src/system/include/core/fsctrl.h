@@ -39,7 +39,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _USE_FILE_SYSTEM_INTERFACE(fs_name)\
+#define _FILE_SYSTEM_INTERFACE(fs_name)\
 {.FS_name = #fs_name,\
  .FS_if   = {.fs_init    = _##fs_name##_init,\
              .fs_chmod   = _##fs_name##_chmod,\
@@ -59,15 +59,16 @@ extern "C" {
              .fs_fstat   = _##fs_name##_fstat,\
              .fs_statfs  = _##fs_name##_statfs,\
              .fs_flush   = _##fs_name##_flush,\
-             .fs_write   = _##fs_name##_write}}
+             .fs_write   = _##fs_name##_write,\
+             .fs_sync    = _##fs_name##_sync}}
 
 #define _IMPORT_FILE_SYSTEM(fsname)                                                             \
 extern API_FS_INIT(fsname, void**, const char*);                                                \
 extern API_FS_RELEASE(fsname, void*);                                                           \
-extern API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, vfs_open_flags_t);        \
+extern API_FS_OPEN(fsname, void*, void**, fd_t*, fpos_t*, const char*, vfs_open_flags_t);       \
 extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool);                                          \
-extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*, struct vfs_fattr); \
-extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*, struct vfs_fattr);        \
+extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, fpos_t*, struct vfs_fattr);\
+extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, fpos_t*, struct vfs_fattr);       \
 extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                                    \
 extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct stat*);                                  \
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                                \
@@ -77,10 +78,11 @@ extern API_FS_MKNOD(fsname, void*, const char*, const dev_t);                   
 extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                             \
 extern API_FS_REMOVE(fsname, void*, const char*);                                               \
 extern API_FS_RENAME(fsname, void*, const char*, const char*);                                  \
-extern API_FS_CHMOD(fsname, void*, const char*, int);                                           \
-extern API_FS_CHOWN(fsname, void*, const char*, int, int);                                      \
+extern API_FS_CHMOD(fsname, void*, const char*, mode_t);                                        \
+extern API_FS_CHOWN(fsname, void*, const char*, uid_t, gid_t);                                  \
 extern API_FS_STAT(fsname, void*, const char*, struct stat*);                                   \
-extern API_FS_STATFS(fsname, void*, struct statfs*)
+extern API_FS_STATFS(fsname, void*, struct statfs*);                                            \
+extern API_FS_SYNC(fsname, void*)
 
 /*==============================================================================
   Exported object types

@@ -185,7 +185,7 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
@@ -210,7 +210,7 @@ API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);

@@ -105,7 +105,7 @@ API_FS_RELEASE(genericfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         return STD_RET_ERROR;
 }
@@ -143,7 +143,7 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -163,7 +163,7 @@ API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, s
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -270,6 +270,10 @@ API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
 {
+        dir->f_closedir = closedir;
+        dir->f_readdir  = readdir;
+        // ...
+
         return STD_RET_ERROR;
 }
 
@@ -351,7 +355,7 @@ API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(genericfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
         return STD_RET_ERROR;
 }
@@ -369,7 +373,7 @@ API_FS_CHMOD(genericfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(genericfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(genericfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         return STD_RET_ERROR;
 }
@@ -419,6 +423,20 @@ API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
         statfs->f_fsname = "genericfs";
 
         return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(genericfs, void *fs_handle)
+{
+
 }
 
 /*==============================================================================

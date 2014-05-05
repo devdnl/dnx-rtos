@@ -317,7 +317,7 @@ API_MOD_CLOSE(UART, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
@@ -356,7 +356,7 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);

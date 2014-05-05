@@ -39,8 +39,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define GENERICMOD_MAJOR        0
-#define GENERICMOD_MINOR        0
+#define _GENERICMOD_MAJOR               0
+#define _GENERICMOD_MINOR               0
 
 /*==============================================================================
   Exported object types

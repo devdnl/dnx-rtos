@@ -34,6 +34,7 @@
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Local macros
@@ -214,10 +215,11 @@ int _driver_release(const char *drv_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t _driver_open(dev_t id, int flags)
+stdret_t _driver_open(dev_t id, vfs_open_flags_t flags)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id], flags);
+                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id],
+                                                                    vfs_filter_open_flags_for_device(flags));
         } else {
                 return STD_RET_ERROR;
         }
@@ -256,7 +258,7 @@ stdret_t _driver_close(dev_t id, bool force)
  * @return number of written bytes, -1 on error
  */
 //==============================================================================
-ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_write(driver_memory_region[id], src, count, fpos, fattr);
@@ -278,7 +280,7 @@ ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, stru
  * @return number of read bytes, -1 on error
  */
 //==============================================================================
-ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_read(driver_memory_region[id], dst, count, fpos, fattr);
