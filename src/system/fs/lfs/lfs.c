@@ -906,7 +906,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                         *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                if (driver_open((dev_t)node->data, vfs_filter_open_flags_for_device(flags)) == STD_RET_OK) {
+                if (driver_open((dev_t)node->data, flags) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);

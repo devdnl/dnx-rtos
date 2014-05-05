@@ -207,7 +207,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 if (node) {
                         stdret_t open = STD_RET_ERROR;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = driver_open(node->IF.drv, vfs_filter_open_flags_for_device(flags));
+                                open = driver_open(node->IF.drv, flags);
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = STD_RET_OK;
                         }

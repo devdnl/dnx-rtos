@@ -34,6 +34,7 @@
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Local macros
@@ -217,7 +218,8 @@ int _driver_release(const char *drv_name)
 stdret_t _driver_open(dev_t id, vfs_open_flags_t flags)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id], flags);
+                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id],
+                                                                    vfs_filter_open_flags_for_device(flags));
         } else {
                 return STD_RET_ERROR;
         }
