@@ -129,7 +129,7 @@ MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
-UNAME    = uname -o
+UNAME    = uname -s
 CC       = $(TOOLCHAIN)gcc
 CXX      = $(TOOLCHAIN)g++
 LD       = $(TOOLCHAIN)g++
@@ -138,13 +138,14 @@ OBJCOPY  = $(TOOLCHAIN)objcopy
 OBJDUMP  = $(TOOLCHAIN)objdump
 SIZE     = $(TOOLCHAIN)size
 
-ifneq ($(findstring $(shell $(UNAME)), GNU/Linux GNU Linux), "")
+ifeq ($(shell $(UNAME)), Linux)
     CONFIG_TOOL = ./tools/wizard/bin/config_tool.linux
-endif
-ifneq ($(findstring $(shell $(UNAME)), Cygwin Msys), "")
-    CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
 else
-    CONFIG_TOOL = echo "Not supported OS: $(shell $(UNAME))"; exit;
+    ifeq ($(findstring _NT, $(shell $(UNAME))), _NT)
+        CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
+    else
+        CONFIG_TOOL = echo "Not supported OS: $(shell $(UNAME))"; exit;
+    endif
 endif
 
 #---------------------------------------------------------------------------------------------------
@@ -225,7 +226,7 @@ help :
 	@echo "   check               static code analyze for stm32f1 target"
 
 ####################################################################################################
-# project configuration
+# project configuration wizard
 ####################################################################################################
 .PHONY : config
 config : clean
@@ -259,7 +260,7 @@ hex :
 	@echo 'Creating extended listing....'
 	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
-	@echo 'Creating size of modules file...'
+	@echo 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) > $(TARGET_PATH)/$(PROJECT).size
 
 	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
