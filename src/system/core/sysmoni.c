@@ -1080,7 +1080,6 @@ FILE *sysm_fopen(const char *path, const char *mode)
         }
 
         errno = EMFILE;
-        printk("%s: Not enough free slots to open file!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1168,7 +1167,6 @@ int sysm_fclose(FILE *file)
         }
 
         errno = ENOENT;
-        printk("%s: File does not exist or closed!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1220,7 +1218,6 @@ DIR *sysm_opendir(const char *path)
         }
 
         errno = EMFILE;
-        printk("%s: Not enough free slots to open directory!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1273,7 +1270,6 @@ int sysm_closedir(DIR *dir)
         }
 
         errno = ENOENT;
-        printk("%s: Directory does not exist or closed!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
