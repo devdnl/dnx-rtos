@@ -103,6 +103,9 @@ OBJ_DIR_NAME    = obj
 # dependencies file name
 DEP_FILE_NAME   = $(PROJECT).d
 
+# configuration script
+CONFIG_SCRIPT   = ./tools/wizard/wizard.lua
+
 # folder localizations
 PROG_LOC   = src/programs
 SYS_LOC    = src/system
@@ -134,6 +137,15 @@ AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY  = $(TOOLCHAIN)objcopy
 OBJDUMP  = $(TOOLCHAIN)objdump
 SIZE     = $(TOOLCHAIN)size
+
+ifneq ($(findstring $(shell $(UNAME)), GNU/Linux GNU Linux), "")
+    CONFIG_TOOL = ./tools/wizard/bin/config_tool.linux
+endif
+ifneq ($(findstring $(shell $(UNAME)), Cygwin Msys), "")
+    CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
+else
+    CONFIG_TOOL = echo "Not supported OS: $(shell $(UNAME))"; exit;
+endif
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -217,27 +229,11 @@ help :
 ####################################################################################################
 .PHONY : config
 config : clean
-ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/wizard/bin/config_tool.linux --no-gui ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/wizard/bin/config_tool.win.exe --no-gui ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Darwin)
-	@echo "Lack of program for the Darwin kernel"
-endif
+	@$(CONFIG_TOOL) --no-gui $(CONFIG_SCRIPT)
 
 .PHONY : xconfig
 xconfig : clean
-ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/wizard/bin/config_tool.linux ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/wizard/bin/config_tool.win.exe ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Darwin)
-	@echo "Lack of program for the Darwin kernel"
-endif
+	@$(CONFIG_TOOL) $(CONFIG_SCRIPT)
 
 ####################################################################################################
 # analisis
