@@ -83,7 +83,7 @@ void _cpuctl_restart_system(void)
  */
 //==============================================================================
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-void _cpuctl_init_CPU_load_timer(void)
+void _cpuctl_init_CPU_load_counter(void)
 {
         /* enable clock */
         RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
@@ -110,7 +110,7 @@ void _cpuctl_init_CPU_load_timer(void)
  */
 //==============================================================================
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-void _cpuctl_clear_CPU_load_timer_value(void)
+void _cpuctl_reset_CPU_load_counter(void)
 {
         TIM2->CNT = 0;
 }
@@ -122,7 +122,7 @@ void _cpuctl_clear_CPU_load_timer_value(void)
  */
 //==============================================================================
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-u32_t _cpuctl_get_CPU_load_timer_value(void)
+u32_t _cpuctl_get_CPU_load_counter_value(void)
 {
         return TIM2->CNT;
 }
@@ -149,7 +149,7 @@ void _cpuctl_sleep(void)
 void _cpuctl_update_system_clocks(void)
 {
         /* update CPU load timer frequency */
-        _cpuctl_init_CPU_load_timer();
+        _cpuctl_init_CPU_load_counter();
 
         /* update context switch counter frequency */
         _critical_section_begin();

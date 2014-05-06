@@ -155,7 +155,7 @@ stdret_t sysm_init(void)
 #endif
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_init_CPU_load_timer();
+        _cpuctl_init_CPU_load_counter();
 #endif
 
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
@@ -1329,7 +1329,7 @@ void sysm_enable_CPU_load_measurement(void)
 void sysm_task_switched_in(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_clear_CPU_load_timer_value();
+        _cpuctl_reset_CPU_load_counter();
 #endif
 }
 
@@ -1343,7 +1343,7 @@ void sysm_task_switched_out(void)
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         if (CPU_load_enabled) {
                 struct _task_data *tdata = _task_get_data();
-                u32_t              cnt   = _cpuctl_get_CPU_load_timer_value();
+                u32_t              cnt   = _cpuctl_get_CPU_load_counter_value();
                 CPU_total_time          += cnt;
 
                 if (tdata) {
