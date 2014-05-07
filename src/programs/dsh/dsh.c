@@ -156,7 +156,7 @@ static bool history_request()
 {
         if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
                 if (strlen(global->history)) {
-                        ioctl(global->input, TTY_IORQ_SET_EDITLINE, global->history);
+                        ioctl(global->input, IOCTL_TTY__SET_EDITLINE, global->history);
                 }
 
                 global->prompt_enable = false;

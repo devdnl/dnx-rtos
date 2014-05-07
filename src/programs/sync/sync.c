@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    sync.c
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   Synchronize buffer of all file systems
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,91 +24,53 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
-#include "core/vfs.h"
-#include "tty_ioctl.h"
-#ifdef ARCH_stm32f1
-#include "stm32f1/afio_ioctl.h"
-#include "stm32f1/crc_ioctl.h"
-#include "stm32f1/ethmac_ioctl.h"
-#include "stm32f1/gpio_ioctl.h"
-#include "stm32f1/pll_ioctl.h"
-#include "stm32f1/sdspi_ioctl.h"
-#include "stm32f1/spi_ioctl.h"
-#include "stm32f1/uart_ioctl.h"
-#else
-#error Unknown architecture!
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /*==============================================================================
-  Exported macros
+  Local symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported objects
+  Local function prototypes
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Local object definitions
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION_BEGIN
+GLOBAL_VARIABLES_SECTION_END
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int ioctl(FILE *stream, int request, ...)
- * The <b>ioctl</b>() function manipulates the file parameters.  In particular, many
- * operating characteristics of character special files (e.g., drivers) may
- * be controlled with <b>ioctl</b>() requests.
- *
- * The second argument is a device-dependent request code. The third
- * argument is an untyped pointer to memory.
- *
- * @param seconds   number of seconds to sleep
- *
- * @errors EINVAL, ENOENT, EBADRQC, ...
- *
- * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
- * return value as an output parameter and return a nonnegative value on
- * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
- *
- * @example
- * // ...
- * FILE *file = fopen("/dev/tty0", "r");
- * if (file) {
- *         ioctl(file, TTY_IORQ_CLEAR_SCR);
- *
- *         // ...
- * }
- *
- * // ...
+ * @brief Program main function
  */
 //==============================================================================
-static inline int ioctl(FILE *stream, int request, ...)
+PROGRAM_MAIN(sync, int argc, char *argv[])
 {
-        va_list arg;
-        va_start(arg, request);
-        int status = vfs_vioctl(stream, request, arg);
-        va_end(arg);
-        return status;
+        (void)argc;
+        (void)argv;
+
+        sync();
+
+        return EXIT_SUCCESS;
 }
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

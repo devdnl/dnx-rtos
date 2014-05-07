@@ -144,7 +144,7 @@ static inline void kernel_start(void)
 //==============================================================================
 static inline u32_t get_used_static_memory(void)
 {
-        return (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE);
+        return (_MEMMAN_RAM_SIZE - _MEMMAN_HEAP_SIZE);
 }
 
 //==============================================================================
@@ -171,7 +171,7 @@ static inline u32_t get_used_static_memory(void)
 //==============================================================================
 static inline u32_t get_free_memory(void)
 {
-        return memman_get_free_heap();
+        return _memman_get_free_heap();
 }
 
 //==============================================================================
@@ -198,7 +198,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-        return (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()));
+        return (get_used_static_memory() + (_MEMMAN_HEAP_SIZE - _memman_get_free_heap()));
 }
 
 //==============================================================================
@@ -224,7 +224,7 @@ static inline u32_t get_used_memory(void)
 //==============================================================================
 static inline u32_t get_memory_size(void)
 {
-        return CONFIG_RAM_SIZE;
+        return _MEMMAN_RAM_SIZE;
 }
 
 //==============================================================================
@@ -609,7 +609,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.3.1";
+        return "1.3.2";
 }
 
 //==============================================================================

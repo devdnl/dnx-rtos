@@ -40,17 +40,7 @@
  */
 #define CONFIG_CPU_OSC_FREQ                             (__CPU_OSC_FREQ__)
 
-/**=== MEMORY CONFIGURATION ==================================================*/
-/**
- * Size of RAM memory [bytes]
- */
-#define CONFIG_RAM_SIZE                                 (__CPU_RAM_SIZE__)
-
-/**
- * Size of dynamic allocated memory (HEAP) [bytes]
- */
-#define CONFIG_HEAP_SIZE                                (__HEAP_SIZE__)
-
+/**=== DYNAMIC MEMORY CONFIGURATION ==========================================*/
 /**
  * Heap memory alignment
  */

@@ -67,7 +67,7 @@ PROGRAM_MAIN(clear, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        ioctl(stdout, TTY_IORQ_CLEAR_SCR);
+        ioctl(stdout, IOCTL_TTY__CLEAR_SCR);
 
         return EXIT_SUCCESS;
 }

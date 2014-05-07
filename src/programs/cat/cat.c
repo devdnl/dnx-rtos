@@ -146,7 +146,7 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
         errno = 0;
 
         u32_t col = 80;
-        ioctl(stdout, TTY_IORQ_GET_COL, &col);
+        ioctl(stdout, IOCTL_TTY__GET_COL, &col);
 
         char *str = calloc(col + 1, sizeof(char));
         if (str) {

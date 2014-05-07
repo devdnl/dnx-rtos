@@ -24,6 +24,8 @@
 
 *//*========================================================================--]]
 
+require "db"
+
 --------------------------------------------------------------------------------
 -- GLOBAL VARIABLES
 --------------------------------------------------------------------------------
@@ -245,6 +247,34 @@ function show_pages(tab, begin, step, total)
         else
                 return next
         end
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function enable/disbale selected module
+-- @param module  module name
+-- @param enable  enable value
+-- @return None
+--------------------------------------------------------------------------------
+function module_enable(module, enable)
+        local choice
+
+        if enable == true or enable == yes then
+              choice = yes
+        else
+              choice = no
+        end
+
+        key_save(db.path.project.mk, "ENABLE_"..module, choice)
+        key_save(db.path.project.flags, "__ENABLE_"..module.."__", choice)
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function return module enable status
+-- @param module  module name
+-- @return Return yes or no
+--------------------------------------------------------------------------------
+function module_get_enable(module)
+        return key_read(db.path.project.mk, "ENABLE_"..module, choice)
 end
 
 --------------------------------------------------------------------------------

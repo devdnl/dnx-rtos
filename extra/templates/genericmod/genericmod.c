@@ -74,10 +74,6 @@
 //==============================================================================
 API_MOD_INIT(GENERICMOD, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(!device_handle);
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
-
         return STD_RET_OK;
 }
 
@@ -93,8 +89,6 @@ API_MOD_INIT(GENERICMOD, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(GENERICMOD, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         return STD_RET_OK;
 }
 
@@ -109,10 +103,8 @@ API_MOD_RELEASE(GENERICMOD, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(GENERICMOD, void *device_handle, int flags)
+API_MOD_OPEN(GENERICMOD, void *device_handle, vfs_open_flags_t flags)
 {
-        STOP_IF(!device_handle);
-
         return STD_RET_OK;
 }
 
@@ -129,8 +121,6 @@ API_MOD_OPEN(GENERICMOD, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         return STD_RET_OK;
 }
 
@@ -147,12 +137,8 @@ API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!src);
-        STOP_IF(!fpos);
-
         return 0;
 }
 
@@ -169,12 +155,8 @@ API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u6
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!dst);
-        STOP_IF(!fpos);
-
         return 0;
 }
 
@@ -192,8 +174,6 @@ API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, u64_t *fp
 //==============================================================================
 API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
 {
-        STOP_IF(!device_handle);
-
         switch (request) {
         default:
                 errno = EBADRQC;
@@ -215,8 +195,6 @@ API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(GENERICMOD, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         return STD_RET_OK;
 }
 
@@ -233,9 +211,6 @@ API_MOD_FLUSH(GENERICMOD, void *device_handle)
 //==============================================================================
 API_MOD_STAT(GENERICMOD, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(!device_handle);
-        STOP_IF(!device_stat);
-
         device_stat->st_size  = 0;
         device_stat->st_major = 0;
         device_stat->st_minor = 0;

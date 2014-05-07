@@ -52,9 +52,9 @@ struct devfs_chain {
                 } IF;
                 char                     *path;
                 tfile_t                   type;
-                int                       gid;
-                int                       uid;
-                int                       mode;
+                gid_t                     gid;
+                uid_t                     uid;
+                mode_t                    mode;
                 int                       opended;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
@@ -110,8 +110,7 @@ static int                 create_new_chain_if_necessary(struct devfs *devfs);
 //==============================================================================
 API_FS_INIT(devfs, void **fs_handle, const char *src_path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!src_path);
+        UNUSED_ARG(src_path);
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
         mutex_t            *mtx   = mutex_new(MUTEX_NORMAL);
@@ -155,8 +154,6 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(devfs, void *fs_handle)
 {
-        STOP_IF(!fs_handle);
-
         struct devfs *devfs = fs_handle;
 
         if (mutex_lock(devfs->mutex, 100)) {
@@ -191,19 +188,15 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-        STOP_IF(!fd);
-        STOP_IF(!fpos);
-        STOP_IF(!path);
+        UNUSED_ARG(fd);
 
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
@@ -214,7 +207,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                 if (node) {
                         stdret_t open = STD_RET_ERROR;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = driver_open(node->IF.drv, O_DEV_FLAGS(flags));
+                                open = driver_open(node->IF.drv, flags);
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = STD_RET_OK;
                         }
@@ -251,9 +244,6 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
 //==============================================================================
 API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-
         UNUSED_ARG(fd);
 
         struct devfs   *devfs  = fs_handle;
@@ -295,13 +285,9 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-        STOP_IF(!src);
-        STOP_IF(!fpos);
-
+        UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         struct devnode *node = extra;
@@ -331,13 +317,9 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-        STOP_IF(!dst);
-        STOP_IF(!fpos);
-
+        UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         struct devnode *node = extra;
@@ -368,9 +350,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
 //==============================================================================
 API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-
+        UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         struct devnode *node = extra;
@@ -399,9 +379,7 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 //==============================================================================
 API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-
+        UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         struct devnode *node = extra;
@@ -428,10 +406,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!extra);
-        STOP_IF(!stat);
-
+        UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         struct devnode *node = extra;
@@ -485,8 +460,8 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
         errno = EPERM;
@@ -508,9 +483,6 @@ API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -569,9 +541,6 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -619,10 +588,6 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!dir);
-
         struct devfs *devfs = fs_handle;
 
         if (strcmp(path, "/") == 0) {
@@ -653,8 +618,8 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static stdret_t closedir(void *fs_handle, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!dir);
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
 
         return STD_RET_OK;
 }
@@ -671,9 +636,6 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static dirent_t readdir(void *fs_handle, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!dir);
-
         struct devfs *devfs = fs_handle;
 
         dirent_t dirent;
@@ -731,9 +693,6 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -780,10 +739,6 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!old_name);
-        STOP_IF(!new_name);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -821,11 +776,8 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -856,11 +808,8 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -894,10 +843,6 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
 //==============================================================================
 API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!stat);
-
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
@@ -927,9 +872,6 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!statfs);
-
         struct devfs *devfs = fs_handle;
 
         statfs->f_bsize  = sizeof(struct devnode);
@@ -941,6 +883,20 @@ API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
         statfs->f_fsname = "devfs";
 
         return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(devfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
 }
 
 //==============================================================================

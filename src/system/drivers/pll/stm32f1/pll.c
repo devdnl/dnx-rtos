@@ -83,7 +83,6 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
-        UNUSED_ARG(_module_name_);
 
         RCC_DeInit();
 
@@ -185,7 +184,7 @@ API_MOD_RELEASE(PLL, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(PLL, void *device_handle, int flags)
+API_MOD_OPEN(PLL, void *device_handle, vfs_open_flags_t flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
@@ -225,7 +224,7 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
@@ -251,7 +250,7 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
@@ -278,7 +277,7 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
-        STOP_IF(!device_handle);
+        UNUSED_ARG(device_handle);
 
         stdret_t status = STD_RET_OK;
 
@@ -287,27 +286,27 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
                 RCC_GetClocksFreq(&freq);
 
                 switch (request) {
-                case PLL_IORQ_GET_SYSCLK_FREQ:
+                case IOCTL_PLL__GET_SYSCLK_FREQ:
                         *(u32_t *)arg = freq.SYSCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_HCLK_FREQ:
+                case IOCTL_PLL__GET_HCLK_FREQ:
                         *(u32_t *)arg = freq.HCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK1_FREQ:
+                case IOCTL_PLL__GET_PCLK1_FREQ:
                         *(u32_t *)arg = freq.PCLK1_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK2_FREQ:
+                case IOCTL_PLL__GET_PCLK2_FREQ:
                         *(u32_t *)arg = freq.PCLK2_Frequency;
                         break;
 
-                case PLL_IORQ_GET_ADCCLK_FREQ:
+                case IOCTL_PLL__GET_ADCCLK_FREQ:
                         *(u32_t *)arg = freq.ADCCLK_Frequency;
                         break;
 
-                case PLL_IORQ_GET_PCLK1_TIM_FREQ:
+                case IOCTL_PLL__GET_PCLK1_TIM_FREQ:
                         if (is_APB1_divided()) {
                                 *(u32_t *)arg = freq.PCLK1_Frequency * 2;
                         } else {
@@ -315,7 +314,7 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case PLL_IORQ_GET_PCLK2_TIM_FREQ:
+                case IOCTL_PLL__GET_PCLK2_TIM_FREQ:
                         if (is_APB2_divided()) {
                                 *(u32_t *)arg = freq.PCLK2_Frequency * 2;
                         } else {

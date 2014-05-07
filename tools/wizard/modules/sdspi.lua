@@ -72,15 +72,14 @@ end
 -- @brief Ask user to select enable/disable module
 --------------------------------------------------------------------------------
 local function ask_for_enable()
-        local choice = key_read(db.path.project.flags, "__ENABLE_SDSPI__")
+        local choice = module_get_enable("SDSPI")
         msg(progress().."Do you want to enable SDSPI module?")
         msg("Current selection is: "..filter_yes_no(choice)..".")
         add_item(yes, "Yes")
         add_item(no, "No")
         choice = get_selection()
         if can_be_saved(choice) then
-                key_save(db.path.project.flags, "__ENABLE_SDSPI__", choice)
-                key_save(db.path.project.mk, "ENABLE_SDSPI", choice)
+                module_enable("SDSPI", choice)
         end
 
         calculate_total_steps()

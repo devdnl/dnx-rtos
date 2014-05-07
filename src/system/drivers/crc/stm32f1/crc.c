@@ -55,6 +55,7 @@ static inline void reset_CRC();
 /*==============================================================================
   Local objects
 ==============================================================================*/
+MODULE_NAME("CRCCU");
 
 /*==============================================================================
   Exported objects
@@ -78,10 +79,12 @@ static inline void reset_CRC();
 //==============================================================================
 API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 {
-        STOP_IF(!device_handle);
+        if (  major != _CRC_MAJOR_NUMBER
+           || minor != _CRC_MINOR_NUMBER
+           || (RCC->AHBENR & RCC_AHBENR_CRCEN) ) {
 
-        if (major != _CRC_MAJOR_NUMBER || minor != _CRC_MINOR_NUMBER)
                 return STD_RET_ERROR;
+        }
 
         CRCCU *hdl = calloc(1, sizeof(CRCCU));
         if (hdl) {
@@ -108,8 +111,6 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         CRCCU *hdl = device_handle;
 
         critical_section_begin();
@@ -140,9 +141,8 @@ API_MOD_RELEASE(CRCCU, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(CRCCU, void *device_handle, int flags)
+API_MOD_OPEN(CRCCU, void *device_handle, vfs_open_flags_t flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         CRCCU *hdl = device_handle;
@@ -163,8 +163,6 @@ API_MOD_OPEN(CRCCU, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         CRCCU *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock) || force) {
@@ -189,14 +187,10 @@ API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         CRCCU *hdl = device_handle;
 
@@ -253,14 +247,10 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
 
         CRCCU *hdl = device_handle;
 
@@ -301,13 +291,11 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
 //==============================================================================
 API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
-        CRCCU   *hdl    = device_handle;
+        CRCCU *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case CRC_IORQ_SET_INPUT_MODE:
+                case IOCTL_CRC__SET_INPUT_MODE:
                         if (arg) {
                                 enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
                                 if (mode <= CRC_INPUT_MODE_WORD) {
@@ -318,7 +306,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case CRC_IORQ_GET_INPUT_MODE:
+                case IOCTL_CRC__GET_INPUT_MODE:
                         if (arg) {
                                 *(enum CRC_input_mode *)arg = hdl->input_mode;
                                 return STD_RET_OK;
@@ -350,7 +338,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -368,8 +356,7 @@ API_MOD_FLUSH(CRCCU, void *device_handle)
 //==============================================================================
 API_MOD_STAT(CRCCU, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_major = _CRC_MAJOR_NUMBER;
         device_stat->st_minor = _CRC_MINOR_NUMBER;

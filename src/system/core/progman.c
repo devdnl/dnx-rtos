@@ -175,6 +175,7 @@ static void program_startup(void *arg)
                         vfs_ioctl(stderr, DEFAULT_WR_MODE);
 
                         if (prog->mem) {
+                                memset(prog->mem, 0, prog->mem_size);
                                 sysm_tskfree(prog->mem);
                         }
 

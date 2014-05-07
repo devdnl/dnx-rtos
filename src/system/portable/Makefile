@@ -2,7 +2,7 @@
 HDRLOC_CORE += portable
 
 ifeq ($(TARGET), stm32f1)
-ASRC_ARCH   += portable/$(TARGET)/cmx_startup.s
+ASRC_ARCH   += portable/stm32f1/cmx_startup.s
 CSRC_ARCH   += portable/stm32f1/cpuctl.c
 CSRC_ARCH   += portable/stm32f1/cpuhooks.c
 CSRC_ARCH   += portable/stm32f1/stm32f10x_vectors.c

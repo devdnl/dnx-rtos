@@ -3,7 +3,7 @@
 
 @author  Author
 
-@brief   This driver support generic device definitions (e.g. used in ioctl()).
+@brief   This driver support generic device definitions.
 
 @note    Copyright (C) year  Author <email>
 
@@ -31,7 +31,6 @@
   Include files
 ==============================================================================*/
 #include "genericmod_cfg.h"
-#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,10 +39,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define GENERICMOD_IORQ_EX1         _IO(_IO_GROUP_GENERIC, 0x00)
-#define GENERICMOD_IORQ_EX2         _IOR(_IO_GROUP_GENERIC, 0x01, int*)
-#define GENERICMOD_IORQ_EX3         _IOW(_IO_GROUP_GENERIC, 0x02, int)
-#define GENERICMOD_IORQ_EX4         _IOWR(_IO_GROUP_GENERIC, 0x03, int*)
+#define _GENERICMOD_MAJOR               0
+#define _GENERICMOD_MINOR               0
 
 /*==============================================================================
   Exported object types

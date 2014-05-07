@@ -53,8 +53,6 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_sysfree(void__pmem)
 
-#define STOP_IF(condition)                      _stop_if(condition)
-
 #define API_FS_INIT(fsname, ...)                stdret_t _##fsname##_init(__VA_ARGS__)
 #define API_FS_RELEASE(fsname, ...)             stdret_t _##fsname##_release(__VA_ARGS__)
 #define API_FS_OPEN(fsname, ...)                stdret_t _##fsname##_open(__VA_ARGS__)
@@ -74,27 +72,7 @@ extern "C" {
 #define API_FS_CHOWN(fsname, ...)               stdret_t _##fsname##_chown(__VA_ARGS__)
 #define API_FS_STAT(fsname, ...)                stdret_t _##fsname##_stat(__VA_ARGS__)
 #define API_FS_STATFS(fsname, ...)              stdret_t _##fsname##_statfs(__VA_ARGS__)
-
-#define _IMPORT_FILE_SYSTEM(fsname)                                                             \
-extern API_FS_INIT(fsname, void**, const char*);                                                \
-extern API_FS_RELEASE(fsname, void*);                                                           \
-extern API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, int);                     \
-extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool);                                          \
-extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*, struct vfs_fattr); \
-extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*, struct vfs_fattr);        \
-extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                                    \
-extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct stat*);                                  \
-extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                                \
-extern API_FS_MKDIR(fsname, void*, const char*, mode_t);                                        \
-extern API_FS_MKFIFO(fsname, void*, const char*, mode_t);                                       \
-extern API_FS_MKNOD(fsname, void*, const char*, const dev_t);                                   \
-extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                             \
-extern API_FS_REMOVE(fsname, void*, const char*);                                               \
-extern API_FS_RENAME(fsname, void*, const char*, const char*);                                  \
-extern API_FS_CHMOD(fsname, void*, const char*, int);                                           \
-extern API_FS_CHOWN(fsname, void*, const char*, int, int);                                      \
-extern API_FS_STAT(fsname, void*, const char*, struct stat*);                                   \
-extern API_FS_STATFS(fsname, void*, struct statfs*)
+#define API_FS_SYNC(fsname, ...)                void     _##fsname##_sync(__VA_ARGS__)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -122,7 +100,7 @@ extern API_FS_STATFS(fsname, void*, struct statfs*)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_open(dev_t id, int flags)
+static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -156,7 +134,7 @@ static inline stdret_t driver_close(dev_t id, bool force)
  * @return number of written bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_write(id, src, count, fpos, fattr);
 }
@@ -174,7 +152,7 @@ static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, u64_
  * @return number of read bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_read(id, dst, count, fpos, fattr);
 }

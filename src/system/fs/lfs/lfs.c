@@ -61,9 +61,9 @@ typedef struct node {
         enum node_type   type;                  /* file type                 */
         fd_t             fd;                    /* file descriptor           */
         mode_t           mode;                  /* protection                */
-        u32_t            uid;                   /* user ID of owner          */
-        u32_t            gid;                   /* group ID of owner         */
-        u64_t            size;                  /* file size                 */
+        uid_t            uid;                   /* user ID of owner          */
+        gid_t            gid;                   /* group ID of owner         */
+        fpos_t           size;                  /* file size                 */
         u32_t            mtime;                 /* time of last modification */
         void            *data;                  /* file type specified data  */
 } node_t;
@@ -119,8 +119,6 @@ static stdret_t         add_node_to_list_of_open_files  (struct LFS_data *lfs, n
 API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
-
-        STOP_IF(!fs_handle);
 
         struct LFS_data *lfs;
         if (!(lfs = calloc(1, sizeof(struct LFS_data)))) {
@@ -194,9 +192,6 @@ API_FS_RELEASE(lfs, void *fs_handle)
 //==============================================================================
 API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         if (path[0] != '/') {
@@ -265,9 +260,6 @@ error:
 //==============================================================================
 API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
         char *new_dir_name   = NULL;
 
@@ -345,9 +337,6 @@ error:
 //==============================================================================
 API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         if (FIRST_CHARACTER(path) != '/') {
@@ -430,10 +419,6 @@ error:
 //==============================================================================
 API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!dir);
-
         struct LFS_data *lfs = fs_handle;
         mutex_force_lock(lfs->resource_mtx);
 
@@ -489,9 +474,6 @@ static stdret_t lfs_closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!dir);
-
         struct LFS_data *lfs = fs_handle;
 
         dirent_t dirent;
@@ -535,9 +517,6 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(lfs, void *fs_handle, const char *path)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -604,10 +583,6 @@ error:
 //==============================================================================
 API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!old_name);
-        STOP_IF(!new_name);
-
         struct LFS_data *lfs = fs_handle;
         char *new_node_name  = NULL;
 
@@ -672,11 +647,8 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(lfs, void *fs_handle, const char *path, mode_t mode)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -706,11 +678,8 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(lfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -743,10 +712,6 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
 //==============================================================================
 API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        STOP_IF(!fs_handle);
-        STOP_IF(!path);
-        STOP_IF(!stat);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -800,9 +765,6 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-        STOP_IF(!stat);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -854,8 +816,6 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
-        STOP_IF(!statfs);
-
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
@@ -875,20 +835,15 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags (see vfs.h)
+ * @param[in]            flags                  file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!fd);
-        STOP_IF(!fpos);
-        STOP_IF(!path);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -900,7 +855,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* create new file when necessary */
         if (base_node && node == NULL) {
-                if (!(flags & O_CREAT)) {
+                if (!(flags & O_CREATE)) {
                         goto error;
                 }
 
@@ -936,7 +891,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
-                if ((flags & O_CREAT) && !(flags & O_APPEND)) {
+                if ((flags & O_CREATE) && !(flags & O_APPEND)) {
                         if (node->data) {
                                 free(node->data);
                                 node->data = NULL;
@@ -951,7 +906,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
                         *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                if (driver_open((dev_t)node->data, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                if (driver_open((dev_t)node->data, flags) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
@@ -989,8 +944,6 @@ exit:
 API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
 
         struct LFS_data *lfs = fs_handle;
         stdret_t status      = STD_RET_ERROR;
@@ -1064,14 +1017,9 @@ exit:
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!fpos);
-        STOP_IF(!src);
-        STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
         ssize_t          n   = -1;
@@ -1157,14 +1105,9 @@ exit:
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
-
-        STOP_IF(!fs_handle);
-        STOP_IF(!fpos);
-        STOP_IF(!dst);
-        STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
         ssize_t          n   = -1;
@@ -1247,8 +1190,6 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -1300,8 +1241,6 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(extra);
 
-        STOP_IF(!fs_handle);
-
         struct LFS_data *lfs = fs_handle;
 
         mutex_force_lock(lfs->resource_mtx);
@@ -1324,6 +1263,20 @@ error:
         errno = ENOENT;
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Synchronize all buffers to a medium
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ *
+ * @return None
+ */
+//==============================================================================
+API_FS_SYNC(lfs, void *fs_handle)
+{
+        UNUSED_ARG(fs_handle);
 }
 
 //==============================================================================

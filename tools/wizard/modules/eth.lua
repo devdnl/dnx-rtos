@@ -71,15 +71,14 @@ end
 -- @brief Ask user to select enable/disable module
 --------------------------------------------------------------------------------
 local function ask_for_enable()
-        local choice = key_read(db.path.project.flags, "__ENABLE_ETH__")
+        local choice = module_get_enable("ETH")
         msg(progress().."Do you want to enable ETH module?")
         msg("Current selection is: "..filter_yes_no(choice)..".")
         add_item(yes, "Yes")
         add_item(no, "No")
         choice = get_selection()
         if can_be_saved(choice) then
-                key_save(db.path.project.flags, "__ENABLE_ETH__", choice)
-                key_save(db.path.project.mk, "ENABLE_ETH", choice)
+                module_enable("ETH", choice)
         end
 
         calculate_total_steps()

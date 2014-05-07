@@ -54,14 +54,14 @@ struct vfs_file
 {
         void           *FS_hdl;
         stdret_t      (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
-        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr);
-        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr);
+        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
+        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
         stdret_t      (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t      (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
         stdret_t      (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void           *f_extra_data;
         fd_t            fd;
-        u64_t           f_lseek;
+        fpos_t          f_lseek;
         file_flags_t    f_flag;
         u32_t           validation;
 };
@@ -585,10 +585,8 @@ int vfs_remove(const char *path)
         int status = -1;
         if (base_fs && !mount_fs) {
                 if (base_fs->interface.fs_remove) {
-                        int priority = increase_task_priority();
                         status = base_fs->interface.fs_remove(base_fs->handle,
                                                               external_path) == STD_RET_OK ? 0 : -1;
-                        restore_priority(priority);
                 }
         }
 
@@ -1305,6 +1303,29 @@ int vfs_rewind(FILE *file)
 
 //==============================================================================
 /**
+ * @brief Synchronize internal buffers of mounted file systems
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ */
+//==============================================================================
+void vfs_sync(void)
+{
+        mutex_force_lock(vfs_resource_mtx);
+
+        for (int i = 0; i < list_get_item_count(vfs_mnt_list); i++) {
+                struct FS_data *fs = list_get_nitem_data(vfs_mnt_list, i);
+                fs->interface.fs_sync(fs->handle);
+        }
+
+        mutex_unlock(vfs_resource_mtx);
+}
+
+//==============================================================================
+/**
  * @brief Generic file close
  *
  * @param[in] file              pinter to file
@@ -1395,19 +1416,19 @@ static int file_mode_str_to_flags(const char *str)
         }
 
         if (strcmp("w", str) == 0) {
-                return (O_WRONLY | O_CREAT);
+                return (O_WRONLY | O_CREATE);
         }
 
         if (strcmp("w+", str) == 0) {
-                return (O_RDWR | O_CREAT);
+                return (O_RDWR | O_CREATE);
         }
 
         if (strcmp("a", str) == 0) {
-                return (O_WRONLY | O_CREAT | O_APPEND);
+                return (O_WRONLY | O_CREATE | O_APPEND);
         }
 
         if (strcmp("a+", str) == 0) {
-                return (O_RDWR | O_CREAT | O_APPEND);
+                return (O_RDWR | O_CREATE | O_APPEND);
         }
 
         errno = EINVAL;

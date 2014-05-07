@@ -68,6 +68,8 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+MODULE_NAME("SPI");
+
 /* configuration of single CS line (port and pin) */
 struct cs_pin_cfg {
         GPIO_t *const           port;
@@ -102,7 +104,7 @@ struct module {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void     spi_turn_on             (SPI_t *spi);
+static stdret_t spi_turn_on             (SPI_t *spi);
 static void     spi_turn_off            (SPI_t *spi);
 static void     config_apply            (struct spi_virtual *vspi);
 static void     config_apply_safe       (u8_t major);
@@ -322,9 +324,17 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                         spi_module->wait_irq_sem[major] = NULL;
                         return STD_RET_ERROR;
                 } else {
-                        NVIC_EnableIRQ(spi_irq[major].IRQn);
-                        NVIC_SetPriority(spi_irq[major].IRQn, spi_irq[major].priority);
-                        spi_turn_on(spi[major]);
+                        if (spi_turn_on(spi[major]) == STD_RET_OK) {
+                                NVIC_EnableIRQ(spi_irq[major].IRQn);
+                                NVIC_SetPriority(spi_irq[major].IRQn, spi_irq[major].priority);
+                        } else {
+                                semaphore_delete(spi_module->wait_irq_sem[major]);
+                                spi_module->wait_irq_sem[major] = NULL;
+                                mutex_delete(spi_module->device_protect_mtx[major]);
+                                spi_module->device_protect_mtx[major] = NULL;
+                                errno = EADDRINUSE;
+                                return STD_RET_ERROR;
+                        }
                 }
         }
 
@@ -356,8 +366,6 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(SPI, void *device_handle)
 {
-        STOP_IF(!device_handle);
-
         struct spi_virtual *hdl = device_handle;
 
         stdret_t status = STD_RET_ERROR;
@@ -410,9 +418,8 @@ API_MOD_RELEASE(SPI, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(SPI, void *device_handle, int flags)
+API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
 {
-        STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
         struct spi_virtual *hdl = device_handle;
@@ -433,8 +440,6 @@ API_MOD_OPEN(SPI, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
-        STOP_IF(!device_handle);
-
         struct spi_virtual *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock) || force) {
@@ -459,14 +464,10 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         struct spi_virtual *hdl = device_handle;
 
@@ -514,14 +515,10 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
 
         struct spi_virtual *hdl = device_handle;
 
@@ -578,14 +575,12 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
 //==============================================================================
 API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         struct spi_virtual *hdl    = device_handle;
         stdret_t            status = STD_RET_ERROR;
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case SPI_IORQ_SET_CONFIGURATION:
+                case IOCTL_SPI__SET_CONFIGURATION:
                         if (arg) {
                                 hdl->config = *(struct SPI_config *)arg;
                                 status      = STD_RET_OK;
@@ -594,7 +589,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_GET_CONFIGURATION:
+                case IOCTL_SPI__GET_CONFIGURATION:
                         if (arg) {
                                 *(struct SPI_config *)arg = hdl->config;
                                 status                    = STD_RET_OK;
@@ -603,7 +598,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_LOCK:
+                case IOCTL_SPI__LOCK:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 status = STD_RET_OK;
                         } else {
@@ -611,7 +606,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_UNLOCK:
+                case IOCTL_SPI__UNLOCK:
                         if (mutex_unlock(spi_module->device_protect_mtx[hdl->major])) {
                                 status = STD_RET_OK;
                         } else {
@@ -619,7 +614,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_SELECT:
+                case IOCTL_SPI__SELECT:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 slave_select(hdl->major, hdl->minor);
                                 mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
@@ -629,7 +624,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_DESELECT:
+                case IOCTL_SPI__DESELECT:
                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                 slave_deselect(hdl->major);
                                 mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
@@ -639,7 +634,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case SPI_IORQ_TRANSMIT:
+                case IOCTL_SPI__TRANSMIT:
                         if (arg) {
                                 if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                         SPI_t *SPI = spi[hdl->major];
@@ -686,7 +681,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(SPI, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -704,9 +699,6 @@ API_MOD_FLUSH(SPI, void *device_handle)
 //==============================================================================
 API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
-
         struct spi_virtual *hdl = device_handle;
 
         device_stat->st_major = hdl->major;
@@ -721,33 +713,52 @@ API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
  * @brief Function enable SPI interface
  *
  * @param[in] *spi      spi peripheral
+ *
+ * @return STD_RET_OK, STD_RET_ERROR
  */
 //==============================================================================
-static void spi_turn_on(SPI_t *spi)
+static stdret_t spi_turn_on(SPI_t *spi)
 {
         switch ((uint32_t)spi) {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         case SPI1_BASE:
-                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
-                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
-                RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
+                if (!(RCC->APB2ENR & RCC_APB2ENR_SPI1EN)) {
+                        RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
+                        RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
+                        RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
+                        return STD_RET_OK;
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         case SPI2_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
+                if (!(RCC->APB1ENR & RCC_APB1ENR_SPI2EN)) {
+                        RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
+                        RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
+                        RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
+                        return STD_RET_OK;
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         case SPI3_BASE:
-                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
-                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
-                RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
+                if (!(RCC->APB1ENR & RCC_APB1ENR_SPI3EN)) {
+                        RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
+                        RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
+                        RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
+                        return STD_RET_OK;
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================

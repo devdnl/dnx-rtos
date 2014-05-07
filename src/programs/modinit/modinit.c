@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 #include <sys/mount.h>
 #include <dnx/os.h>
 
@@ -84,6 +85,8 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
                 return 0;
         }
 
+        errno = 0;
+
         bool release = false;
         for (int i = 1; i < argc; i++) {
                 if (strcmp(argv[i], "-r") == 0) {
@@ -110,7 +113,7 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
         if (status == 0) {
                 puts("Success.");
         } else {
-                puts("Failure.");
+                perror("Error");
         }
 
         return EXIT_SUCCESS;

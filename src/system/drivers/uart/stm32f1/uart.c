@@ -88,6 +88,8 @@ static void     handle_irq              (u8_t major);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME("UART");
+
 /* addresses of UART devices */
 static USART_t *const uart[_UART_NUMBER] = {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -162,8 +164,6 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
-        STOP_IF(device_handle == NULL);
-
         if (major >= _UART_NUMBER || minor != _UART_MINOR_NUMBER) {
                 errno = EINVAL;
                 return STD_RET_ERROR;
@@ -176,24 +176,29 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 uart_data[major]->data_read_sem    = semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = mutex_new(MUTEX_NORMAL);
                 uart_data[major]->port_lock_tx_mtx = mutex_new(MUTEX_NORMAL);
+                stdret_t uart_clock_configured     = uart_turn_on(uart[major]);
 
                 if (  uart_data[major]->data_write_sem
                    && uart_data[major]->data_read_sem
                    && uart_data[major]->port_lock_rx_mtx
-                   && uart_data[major]->port_lock_tx_mtx) {
+                   && uart_data[major]->port_lock_tx_mtx
+                   && uart_clock_configured == STD_RET_OK ) {
 
                         uart_data[major]->major  = major;
                         uart_data[major]->config = uart_default_config;
 
                         NVIC_EnableIRQ(uart_irq[major].irqn);
                         NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
-                        uart_turn_on(uart[major]);
                         configure_uart(major, (struct UART_config *)&uart_default_config);
 
                         *device_handle = uart_data[major];
 
                         return STD_RET_OK;
                 } else {
+                        if (uart_clock_configured) {
+                                uart_turn_off(uart[major]);
+                        }
+
                         if (uart_data[major]->data_write_sem) {
                                 semaphore_delete(uart_data[major]->data_write_sem);
                         }
@@ -230,8 +235,6 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(UART, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
-
         struct UART_data *hdl = device_handle;
 
         if (mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT)) {
@@ -274,10 +277,10 @@ API_MOD_RELEASE(UART, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(UART, void *device_handle, int flags)
+API_MOD_OPEN(UART, void *device_handle, vfs_open_flags_t flags)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -295,9 +298,8 @@ API_MOD_OPEN(UART, void *device_handle, int flags)
 //==============================================================================
 API_MOD_CLOSE(UART, void *device_handle, bool force)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
-
-        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -315,14 +317,10 @@ API_MOD_CLOSE(UART, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(src == NULL);
-        STOP_IF(count == 0);
 
         struct UART_data *hdl = device_handle;
 
@@ -358,14 +356,10 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
-        STOP_IF(count == 0);
 
         struct UART_data *hdl = device_handle;
 
@@ -405,23 +399,21 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, st
 //==============================================================================
 API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 {
-        STOP_IF(device_handle == NULL);
-
         struct UART_data *hdl    = device_handle;
         stdret_t          status = STD_RET_OK;
 
         if (arg) {
                 switch (request) {
-                case UART_IORQ_SET_CONFIGURATION:
+                case IOCTL_UART__SET_CONFIGURATION:
                         configure_uart(hdl->major, arg);
                         hdl->config = *(struct UART_config *)arg;
                         break;
 
-                case UART_IORQ_GET_CONFIGURATION:
+                case IOCTL_UART__GET_CONFIGURATION:
                         *(struct UART_config *)arg = hdl->config;
                         break;
 
-                case UART_IORQ_GET_CHAR_UNBLOCKING:
+                case IOCTL_UART__GET_CHAR_UNBLOCKING:
                         if (!fifo_read(&hdl->Rx_FIFO, arg)) {
                              errno  = EAGAIN;
                              status = STD_RET_ERROR;
@@ -453,7 +445,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
 {
-        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -471,8 +463,7 @@ API_MOD_FLUSH(UART, void *device_handle)
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_stat == NULL);
+        UNUSED_ARG(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;
@@ -496,37 +487,57 @@ static stdret_t uart_turn_on(USART_t *USART)
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
         case USART1_BASE:
-                SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
+                if (!(RCC->APB2ENR & RCC_APB2ENR_USART1EN)) {
+                        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
+                        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
+                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
         case USART2_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_USART2EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
         case USART3_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_USART3EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
         case UART4_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_UART4EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
         case UART5_BASE:
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
+                if (!(RCC->APB1ENR & RCC_APB1ENR_UART5EN)) {
+                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
+                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
+                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
+                } else {
+                        return STD_RET_ERROR;
+                }
                 break;
         #endif
         default:

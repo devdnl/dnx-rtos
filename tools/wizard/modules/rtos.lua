@@ -59,7 +59,7 @@ end
 --------------------------------------------------------------------------------
 local function configure_task_stack_depth()
         local value = key_read(db.path.project.flags, "__OS_TASK_MIN_STACK_DEPTH__")
-        msg(progress() .. "Task stack depth configuration.")
+        msg(progress() .. "Task's minimal stack depth configuration.")
         msg("Current stack depth is: " .. value .. " levels.")
         value = get_number("dec", 16, 4096)
         if (can_be_saved(value)) then
@@ -439,7 +439,7 @@ end
 --------------------------------------------------------------------------------
 local function configure_stop_macro()
         local choice = key_read(db.path.project.flags, "__OS_SYSTEM_STOP_MACRO__")
-        msg(progress() .. "System stop macro configuration. Use only in debug purposes. The macro locks a task due to negative test condition. Do you want to enable stop macro?")
+        msg(progress() .. "System stop macro configuration. Use only in debug purposes. The macro locks a task due to negative test condition. Macro _stop_if() works inversely than assert(). Do you want to enable stop macro?")
         msg("Current choice is: " .. filter_yes_no(choice) .. ".")
         add_item(yes, "YES")
         add_item(no, "NO")
