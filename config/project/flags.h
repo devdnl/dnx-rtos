@@ -31,11 +31,10 @@
 #define __YES__ 1
 
 /* fixed configuration */
-#define stm32f0 0
-#define stm32f1 1
-#define stm32f2 2
-#define stm32f3 3
-#define stm32f4 4
+#define stm32f1 0
+#define stm32f2 1
+#define stm32f3 2
+#define stm32f4 3
 
 /* current CPU architecture */
 #define __CPU_ARCH__ stm32f1
@@ -44,9 +43,7 @@
 #include "../noarch/tty_flags.h"
 
 /* include specific CPU architecture files */
-#if   (__CPU_ARCH__ == stm32f0)
-#include "stm32f0/cpu.h"
-#elif (__CPU_ARCH__ == stm32f1)
+#if (__CPU_ARCH__ == stm32f1)
 #include "../stm32f1/cpu.h"
 #include "../stm32f1/crc_flags.h"
 #include "../stm32f1/gpio_flags.h"

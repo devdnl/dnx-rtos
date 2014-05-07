@@ -49,7 +49,6 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static u32_t       total_CPU_time;
 static const u32_t timer_frequency = 1000000;
 
 /*==============================================================================
@@ -83,7 +82,8 @@ void _cpuctl_restart_system(void)
  * @brief Start counter used in CPU load measurement
  */
 //==============================================================================
-void _cpuctl_init_CPU_load_timer(void)
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+void _cpuctl_init_CPU_load_counter(void)
 {
         /* enable clock */
         RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
@@ -102,50 +102,31 @@ void _cpuctl_init_CPU_load_timer(void)
         TIM2->ARR = 0xFFFF;
         TIM2->CR1 = TIM_CR1_CEN;
 }
+#endif
 
 //==============================================================================
 /**
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-void _cpuctl_clear_CPU_load_timer(void)
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+void _cpuctl_reset_CPU_load_counter(void)
 {
         TIM2->CNT = 0;
 }
+#endif
 
 //==============================================================================
 /**
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-u32_t _cpuctl_get_CPU_load_timer(void)
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+u32_t _cpuctl_get_CPU_load_counter_value(void)
 {
-        u16_t cnt       = TIM2->CNT;
-        total_CPU_time += cnt;
-        return cnt;
+        return TIM2->CNT;
 }
-
-//==============================================================================
-/**
- * @brief Function returns CPU total time
- *
- * @return CPU total time
- */
-//==============================================================================
-u32_t _cpuctl_get_CPU_total_time(void)
-{
-        return total_CPU_time;
-}
-
-//==============================================================================
-/**
- * @brief Function clear CPU total time
- */
-//==============================================================================
-void _cpuctl_clear_CPU_total_time(void)
-{
-        total_CPU_time = 0;
-}
+#endif
 
 //==============================================================================
 /**
@@ -168,7 +149,7 @@ void _cpuctl_sleep(void)
 void _cpuctl_update_system_clocks(void)
 {
         /* update CPU load timer frequency */
-        _cpuctl_init_CPU_load_timer();
+        _cpuctl_init_CPU_load_counter();
 
         /* update context switch counter frequency */
         _critical_section_begin();

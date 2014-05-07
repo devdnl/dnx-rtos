@@ -87,7 +87,8 @@ static mutex_t *sysm_resource_mtx;
 #endif
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-static bool CPU_load_enabled = true;
+static bool  CPU_load_enabled = true;
+static u32_t CPU_total_time;
 #endif
 
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
@@ -154,7 +155,7 @@ stdret_t sysm_init(void)
 #endif
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_init_CPU_load_timer();
+        _cpuctl_init_CPU_load_counter();
 #endif
 
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
@@ -1079,7 +1080,6 @@ FILE *sysm_fopen(const char *path, const char *mode)
         }
 
         errno = EMFILE;
-        printk("%s: Not enough free slots to open file!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1167,7 +1167,6 @@ int sysm_fclose(FILE *file)
         }
 
         errno = ENOENT;
-        printk("%s: File does not exist or closed!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1219,7 +1218,6 @@ DIR *sysm_opendir(const char *path)
         }
 
         errno = EMFILE;
-        printk("%s: Not enough free slots to open directory!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1272,7 +1270,6 @@ int sysm_closedir(DIR *dir)
         }
 
         errno = ENOENT;
-        printk("%s: Directory does not exist or closed!\n", task_get_name());
 
 exit:
         mutex_unlock(sysm_resource_mtx);
@@ -1292,8 +1289,8 @@ exit:
 u32_t sysm_get_total_CPU_usage(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        u32_t time = _cpuctl_get_CPU_total_time();
-        _cpuctl_clear_CPU_total_time();
+        u32_t time     = CPU_total_time;
+        CPU_total_time = 0;
         return time;
 #else
         return 0;
@@ -1332,7 +1329,7 @@ void sysm_enable_CPU_load_measurement(void)
 void sysm_task_switched_in(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_clear_CPU_load_timer();
+        _cpuctl_reset_CPU_load_counter();
 #endif
 }
 
@@ -1346,7 +1343,8 @@ void sysm_task_switched_out(void)
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         if (CPU_load_enabled) {
                 struct _task_data *tdata = _task_get_data();
-                u32_t              cnt   = _cpuctl_get_CPU_load_timer();
+                u32_t              cnt   = _cpuctl_get_CPU_load_counter_value();
+                CPU_total_time          += cnt;
 
                 if (tdata) {
                         tdata->f_cpu_usage += cnt;
