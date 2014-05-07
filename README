@@ -1,46 +1,41 @@
-The dnx/FreeRTOS is a general purpose operating system based on FreeRTOS kernel.
-The dnx layer is modeled on well-known Unix architecture (everything is a file).
-Destination  of  the  system  are  small  microcontrollers supported by FreeRTOS
-kernel,  especially  32-bit.  System  is easy scalable to user's needs, user can
-write own drivers,  virtual devices,  programs and so on.  The programs layer is
-mostly compatible with C standard.
+The dnx/FreeRTOS  is  a  general  purpose operating system based on the FreeRTOS
+kernel. The dnx layer is modeled on  well-known Unix architecture (everything is
+a file). A  destination  of  the  system  are  small  microcontrollers supported
+by the FreeRTOS kernel,  especially  32-bit. The system  is easy scalable to the
+user's needs,  the user can write own drivers,  virtual devices, programs and so
+on. The program layer is mostly compatible with the C standard.
 
-Minimal hardware requirements:
+The minimal hardware requirements:
 - 32 KiB Flash memory,
 - 10 KiB RAM memory.
-Hardware requirements depends on user's configuration, so
-it's possible to run dnx/FreeRTOS on smaller systems.
+The hardware requirements depends on the user's configuration, so it's possible
+to run the dnx on smaller systems.
 
-System features:
+The system features:
 - user's terminal (via UART interface in example configuration),
 - possibility to run many copies of the same program,
-- very  simple  PC  programs porting (thanks to C standard compatibility e.g. lua,
-  codecs, etc),
-- very simple driver's layer,
-- support many file systems (VFS layer),
-- interrupts are not masked by system (RTOS feature),
-- dynamic memory allocation (garbage collector for programs),
-- supports many CPU architectures (FreeRTOS feature),
+- simple porting of PC programs for the dnx (due to the C standard compatibility)
+- simple Drivers Layer,
+- support many file systems (the VFS Layer),
+- interrupts are not masked by the system (the RTOS feature),
+- dynamic memory allocation (simple garbage collector for programs),
+- supports many CPU architectures (the FreeRTOS feature),
 - modular design.
 
-To configure project, type in the terminal:
-
+To configure the project, type in the terminal:
     make config
-
 or
-
     make xconfig
 
-First one is text wizard, second is GUI wizard.
+The first one is the text wizard, and the second is the GUI wizard.
 
-To compile project, type in the terminal:
-
+To compile the project, type in the terminal:
     make
 
 Folder structure:
-- build  - project's binaries
-- config - project configuration
-- doc    - documents
-- extra  - extra sources (programs, drivers, etc)
-- src    - project's sources
-- tools  - project's tool (scripts, wizard, etc)
+- build  - the project's binaries
+- config - the project configuration
+- doc    - a documents
+- extra  - an extra sources (programs, drivers, etc)
+- src    - the project's sources
+- tools  - the project's tools (scripts, wizard, etc)
