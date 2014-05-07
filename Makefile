@@ -103,6 +103,9 @@ OBJ_DIR_NAME    = obj
 # dependencies file name
 DEP_FILE_NAME   = $(PROJECT).d
 
+# configuration script
+CONFIG_SCRIPT   = ./tools/wizard/wizard.lua
+
 # folder localizations
 PROG_LOC   = src/programs
 SYS_LOC    = src/system
@@ -126,7 +129,7 @@ MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
-UNAME    = uname -o
+UNAME    = uname -s
 CC       = $(TOOLCHAIN)gcc
 CXX      = $(TOOLCHAIN)g++
 LD       = $(TOOLCHAIN)g++
@@ -134,6 +137,16 @@ AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY  = $(TOOLCHAIN)objcopy
 OBJDUMP  = $(TOOLCHAIN)objdump
 SIZE     = $(TOOLCHAIN)size
+
+ifeq ($(shell $(UNAME)), Linux)
+    CONFIG_TOOL = ./tools/wizard/bin/config_tool.linux
+else
+    ifeq ($(findstring _NT, $(shell $(UNAME))), _NT)
+        CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
+    else
+        CONFIG_TOOL = echo "Not supported OS: $(shell $(UNAME))"; exit;
+    endif
+endif
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -213,31 +226,15 @@ help :
 	@echo "   check               static code analyze for stm32f1 target"
 
 ####################################################################################################
-# project configuration
+# project configuration wizard
 ####################################################################################################
 .PHONY : config
 config : clean
-ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/wizard/bin/config_tool.linux --no-gui ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/wizard/bin/config_tool.win.exe --no-gui ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Darwin)
-	@echo "Lack of program for the Darwin kernel"
-endif
+	@$(CONFIG_TOOL) --no-gui $(CONFIG_SCRIPT)
 
 .PHONY : xconfig
 xconfig : clean
-ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/wizard/bin/config_tool.linux ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/wizard/bin/config_tool.win.exe ./tools/wizard/wizard.lua
-endif
-ifeq ($(shell $(UNAME)), Darwin)
-	@echo "Lack of program for the Darwin kernel"
-endif
+	@$(CONFIG_TOOL) $(CONFIG_SCRIPT)
 
 ####################################################################################################
 # analisis
@@ -263,7 +260,7 @@ hex :
 	@echo 'Creating extended listing....'
 	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
-	@echo 'Creating size of modules file...'
+	@echo 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) > $(TARGET_PATH)/$(PROJECT).size
 
 	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"

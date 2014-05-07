@@ -7,6 +7,7 @@ New Features, Improvements:
 - Protected some devices against initialization from two modules (e.g. SDSPI vs SPI)
 - The system uses the heap size calculated by the linker script
 - Added sync() program and interface function to all file systems
+- Simplified detecting the operting system by Makefile
 
 Fixed Bugs:
 - SDSPI: System crashes when ioctl IOCTL_SDSPI__INITIALIZE_CARD request have NULL argument
