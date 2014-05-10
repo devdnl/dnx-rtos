@@ -179,6 +179,12 @@ PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
 
                                 while (stat != MBUS_STATUS_SLOT_NOT_EXIST) {
                                         for (int i = 0; i < 3; i++) {
+                                                if (mbus_slot_has_msg(bus, &slot[i]) == MBUS_STATUS_SLOT_HAS_MSG) {
+                                                        puts("Has message");
+                                                } else {
+                                                        puts("Hasn't message");
+                                                }
+
                                                 stat = mbus_msg_receive(bus, &slot[i], &msg);
                                                 mbus_slot_clear(bus, &slot[i]);
 

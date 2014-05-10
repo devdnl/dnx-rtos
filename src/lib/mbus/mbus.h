@@ -50,7 +50,7 @@ typedef enum {
         MBUS_STATUS_SLOT_EXIST          = 1,    //!< A slot with the same name exist
         MBUS_STATUS_SLOT_NOT_EXIST      = 2,    //!< A slot not exist
         MBUS_STATUS_SLOT_EMPTY          = 3,    //!< A slot is empty (created but has no data)
-        MBUS_STATUS_SLOT_FULL           = 4,    //!< A slot contains a object
+        MBUS_STATUS_SLOT_HAS_MSG        = 4,    //!< A slot contains a object
         MBUS_STATUS_INVALID_OBJECT      = 5,    //!< An used object is invalid
         MBUS_STATUS_INVALID_ARGUMENTS   = 6,    //!< Passed arguments are not correct
         MBUS_STATUS_ERROR               = 7,    //!< A general operation error (e.g. not enough free memory)
@@ -88,7 +88,7 @@ extern mbus_status_t mbus_slot_create            (mbus_t *mbus, const char *name
 extern mbus_status_t mbus_slot_destroy           (mbus_t *mbus, const char *name);
 extern mbus_status_t mbus_slot_connect           (mbus_t *mbus, const char *name, mbus_slot_t *slot);
 extern mbus_status_t mbus_slot_disconnect        (mbus_t *mbus, mbus_slot_t *slot);
-extern mbus_status_t mbus_slot_has_data          (mbus_t *mbus, mbus_slot_t *slot);
+extern mbus_status_t mbus_slot_has_msg           (mbus_t *mbus, mbus_slot_t *slot);
 extern mbus_status_t mbus_slot_clear             (mbus_t *mbus, mbus_slot_t *slot);
 extern mbus_status_t mbus_msg_send               (mbus_t *mbus, mbus_slot_t *slot, const void *msg);
 extern mbus_status_t mbus_msg_receive            (mbus_t *mbus, mbus_slot_t *slot, void *msg);
