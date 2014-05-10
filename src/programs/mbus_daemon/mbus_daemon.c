@@ -106,6 +106,8 @@ PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
                                         puts("Slot 3 created");
                                 }
 
+                                mbus_slot_create(bus, "/nowy_slot/in", sizeof(struct payload), NULL);
+
                                 mbus_slot_connect(bus, "/my_first_slot/1", &slot1);
                                 mbus_slot_connect(bus, "/my_first_slot/2", &slot2);
                                 mbus_slot_connect(bus, "/my_first_slot/3", &slot3);
@@ -149,6 +151,23 @@ PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
                         /* client mode */
                         mbus_t *bus = mbus_bus_new();
                         if (bus) {
+
+                                char *name = calloc(1, 64);
+                                if (name) {
+                                      uint slots = 0;
+                                      mbus_bus_get_number_of_slots(bus, &slots);
+
+                                      for (uint slot = 0; slot < slots; slot++) {
+                                            mbus_bus_get_slot_name(bus, slot, name, 64);
+                                            puts(name);
+                                      }
+
+                                      free(name);
+                                }
+
+
+
+
                                 mbus_slot_t slot[3];
 
                                 mbus_slot_connect(bus, "/my_first_slot/1", &slot[0]);
@@ -161,7 +180,7 @@ PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
                                 while (stat != MBUS_STATUS_SLOT_NOT_EXIST) {
                                         for (int i = 0; i < 3; i++) {
                                                 stat = mbus_msg_receive(bus, &slot[i], &msg);
-                                                mbus_msg_clear(bus, &slot[i]);
+                                                mbus_slot_clear(bus, &slot[i]);
 
                                                 if (stat == MBUS_STATUS_SUCCESS) {
                                                         printf("Received slot %d: x = %d; y = %d; z = %d\n",
