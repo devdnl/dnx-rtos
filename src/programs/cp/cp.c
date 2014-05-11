@@ -37,7 +37,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFFER_MAX_SIZE                 32768
+#define BUFFER_MAX_SIZE                 16384
 #define INFO_REFRESH_TIME_MS            1000
 #define PATH_MAX_SIZE                   128
 

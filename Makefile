@@ -109,6 +109,7 @@ CONFIG_SCRIPT   = ./tools/wizard/wizard.lua
 # folder localizations
 PROG_LOC   = src/programs
 SYS_LOC    = src/system
+LIB_LOC    = src/lib
 CORE_LOC   = $(SYS_LOC)/core
 FS_LOC     = $(SYS_LOC)/fs
 KERNEL_LOC = $(SYS_LOC)/kernel
@@ -177,9 +178,11 @@ OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 # list of sources to compile
 include $(PROG_LOC)/Makefile
 include $(SYS_LOC)/Makefile
+include $(LIB_LOC)/Makefile
 
 # defines objects localizations
 HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_LIB),$(LIB_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file)) \
@@ -187,12 +190,14 @@ HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
 
 # defines all C sources
 CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CSRC_LIB),$(LIB_LOC)/$(file)) \
           $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all C++ sources
 CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_LIB),$(LIB_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_ARCH),$(SYS_LOC)/$(file))

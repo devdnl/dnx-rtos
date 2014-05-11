@@ -338,7 +338,11 @@ static void print_fail_message(char *cmd)
         if (strchr(cmd, ' '))
                 *strchr(cmd, ' ') = '\0';
 
-        printf("\'%s\' is unknown command.\n", cmd);
+        if (errno == ENOMEM) {
+                perror(cmd);
+        } else {
+                printf("\'%s\' is unknown command.\n", cmd);
+        }
 }
 
 //==============================================================================
