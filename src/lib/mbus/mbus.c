@@ -155,7 +155,7 @@ static struct mbus_mem *mbus;
 //==============================================================================
 static struct response daemon_request(mbus_t *bus, enum rqid request, ...)
 {
-        const u8_t args[NUMBER_OF_REQUESTS] = {
+        static const u8_t args[NUMBER_OF_REQUESTS] = {
                 [CREATE_SLOT]         = 2,
                 [DESTROY_SLOT]        = 1,
                 [GET_SLOT_ID]         = 1,
@@ -184,8 +184,10 @@ static struct response daemon_request(mbus_t *bus, enum rqid request, ...)
         response.arg1.size = 0;
         response.status    = MBUS_STATUS_ERROR;
 
-        if (queue_send(mbus->request_queue, &cmd, MAX_DELAY_MS)) {
-                queue_receive(bus->response, &response, MAX_DELAY_MS);
+        if (mbus) {
+                if (queue_send(mbus->request_queue, &cmd, MAX_DELAY_MS)) {
+                        queue_receive(bus->response, &response, MAX_DELAY_MS);
+                }
         }
 
         return response;
@@ -648,14 +650,20 @@ mbus_status_t mbus_daemon()
 //==============================================================================
 mbus_t *mbus_bus_new()
 {
-        mbus_t *bus = calloc(1, sizeof(mbus_t));
-        if (bus) {
-                bus->response = queue_new(1, sizeof(struct response));
-                if (bus->response) {
-                        bus->magic = mbus_magic;
-                } else {
-                        free(bus);
-                        bus = NULL;
+        mbus_t *bus = NULL;
+
+        if (mbus) {
+                if (task_is_exist(mbus->task)) {
+                        bus = calloc(1, sizeof(mbus_t));
+                        if (bus) {
+                                bus->response = queue_new(1, sizeof(struct response));
+                                if (bus->response) {
+                                        bus->magic = mbus_magic;
+                                } else {
+                                        free(bus);
+                                        bus = NULL;
+                                }
+                        }
                 }
         }
 

@@ -165,6 +165,14 @@ static int run_level_0(void)
 //==============================================================================
 static int run_level_1(void)
 {
+        /* mbus-daemon start */
+        printk("Starting mbus daemon... ");
+        if (program_new("mbus_daemon", "/", NULL, NULL, NULL)) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+        }
+
         /* initializing SD card and detecting partitions */
         printk("Detecting SD card... ");
 
