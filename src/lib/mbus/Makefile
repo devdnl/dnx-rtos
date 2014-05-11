@@ -2,4 +2,4 @@
 
 CSRC_LIB   += mbus/mbus.c
 CXXSRC_LIB += 
-HDRLOC_LIB += 
+HDRLOC_LIB += mbus

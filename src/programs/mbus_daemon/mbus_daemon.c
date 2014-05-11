@@ -32,7 +32,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dnx/os.h>
-#include "lib/mbus/mbus.h"
+#include "mbus.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -49,6 +49,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const size_t buf_len = 128;
+
 GLOBAL_VARIABLES_SECTION_BEGIN
 GLOBAL_VARIABLES_SECTION_END
 
@@ -67,10 +69,37 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
 {
-        (void)argc;
-        (void)argv;
-
         errno = 0;
+
+        if (argc == 2) {
+                if (strcmp(argv[1], "-l") == 0) {
+                        mbus_t *bus = mbus_bus_new();
+                        if (bus) {
+                                char *name = calloc(1, buf_len);
+                                if (name) {
+                                        uint slots = 0;
+                                        mbus_bus_get_number_of_slots(bus, &slots);
+
+                                        printf("Registered slots (%d):\n", slots);
+
+                                        for (uint i = 0; i < slots; i++) {
+                                                if (mbus_bus_get_slot_name(bus, i, name, buf_len) == MBUS_STATUS_SUCCESS) {
+                                                        printf("  %d: %s\n", i + 1, name);
+                                                }
+                                        }
+
+                                        free(name);
+                                }
+
+                                mbus_bus_delete(bus);
+                        }
+                } else  {
+                        printf("Usage: %s [-l|-h|--help]\n", argv[0]);
+                }
+
+                return EXIT_SUCCESS;
+        }
+
 
         mbus_status_t status = mbus_daemon();
 
