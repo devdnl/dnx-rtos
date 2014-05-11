@@ -99,7 +99,6 @@ local function configure_mcu_name()
                 key_save(db.path.stm32f1.cpu.flags, "__CPU_NAME__", choice)
                 key_save(db.path.stm32f1.cpu.mk, "CPUCONFIG_CPUNAME", choice)
                 key_save(db.path.stm32f1.cpu.flags, "__CPU_FAMILY__", "__" .. db:get_mcu_family(choice) .. "__")
-                key_save(db.path.stm32f1.cpu.flags, "__CPU_RAM_MEM_SIZE__", db:get_mcu_ram_size(choice))
 
                 -- disable not supported modules
                 for i, m in pairs(db:get_modules_list()) do
