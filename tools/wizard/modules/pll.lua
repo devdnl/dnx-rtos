@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    crc.lua
+@file    pll.lua
 
 @author  Daniel Zorychta
 
-@brief   CRC configuration wizard.
+@brief   PLL configuration wizard.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
