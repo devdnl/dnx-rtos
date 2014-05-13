@@ -684,9 +684,6 @@ void RCC_ITConfig(uint8_t RCC_IT, FunctionalState NewState)
   */
 void RCC_USBCLKConfig(uint32_t RCC_USBCLKSource)
 {
-  /* Check the parameters */
-  assert_param(IS_RCC_USBCLK_SOURCE(RCC_USBCLKSource));
-
   *(__IO uint32_t *) CFGR_USBPRE_BB = RCC_USBCLKSource;
 }
 #else

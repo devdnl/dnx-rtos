@@ -52,6 +52,14 @@ typedef task_t *dev_lock_t;
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const char *drv_already_init_str = FONT_COLOR_RED"Driver '%s' is already initialized!"RESET_ATTRIBUTES"\n";
+static const char *drv_initializing_str = "Initializing %s... ";
+static const char *drv_error_str        = FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n";
+static const char *drv_node_created_str = "%s node created\n";
+static const char *drv_node_fail_str    = FONT_COLOR_RED"%s node create fail"RESET_ATTRIBUTES"\n";
+static const char *drv_initialized_str  = "initialized\n";
+static const char *drv_not_exist_str    = FONT_COLOR_RED"Driver '%s' does not exist!" RESET_ATTRIBUTES"\n";
+
 /* pointers to memory handle used by drivers */
 static void **driver_memory_region;
 
@@ -122,22 +130,19 @@ int _driver_init(const char *drv_name, const char *node_path)
                 }
 
                 if (driver_memory_region[drvid]) {
-                        printk(FONT_COLOR_RED"Driver %s is already initialized!"
-                               RESET_ATTRIBUTES"\n", drv_name);
-
+                        printk(drv_already_init_str, drv_name);
                         errno = EADDRINUSE;
                         return 1;
                 }
 
-                printk("Initializing %s... ", drv_name);
+                printk(drv_initializing_str, drv_name);
 
                 if (_regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
                                                                     _regdrv_driver_table[drvid].major,
                                                                     _regdrv_driver_table[drvid].minor)
                                                                     != STD_RET_OK) {
 
-                        printk(FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n", drv_name);
-
+                        printk(drv_error_str, drv_name);
                         return 1;
                 }
 
@@ -146,25 +151,21 @@ int _driver_init(const char *drv_name, const char *node_path)
 
                 if (node_path) {
                         if (vfs_mknod(node_path, drvid) == STD_RET_OK) {
-                                printk("%s node created\n", node_path);
+                                printk(drv_node_created_str, node_path);
                                 return 0;
                         } else {
                                 _regdrv_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
-
-                                printk(FONT_COLOR_RED"%s node create fail"
-                                       RESET_ATTRIBUTES"\n", node_path);
-
+                                printk(drv_node_fail_str, node_path);
                                 return 1;
                         }
 
                 } else {
-                        printk("initialized\n", drv_name);
+                        printk(drv_initialized_str);
                         return 0;
                 }
         }
 
-        printk(FONT_COLOR_RED"Driver %s does not exist!" RESET_ATTRIBUTES"\n", drv_name);
-
+        printk(drv_not_exist_str, drv_name);
         errno = EINVAL;
         return 1;
 }

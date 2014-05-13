@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    sdspi.lua
+@file    spi.lua
 
 @author  Daniel Zorychta
 
-@brief   SDSPI configuration wizard.
+@brief   SPI configuration wizard.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
