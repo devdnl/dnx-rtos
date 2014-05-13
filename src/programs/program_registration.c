@@ -48,6 +48,7 @@ _IMPORT_PROGRAM(httpserver);
 _IMPORT_PROGRAM(ifconfig);
 _IMPORT_PROGRAM(ls);
 _IMPORT_PROGRAM(lsmod);
+_IMPORT_PROGRAM(mbus_daemon);
 _IMPORT_PROGRAM(mkdir);
 _IMPORT_PROGRAM(mkfifo);
 _IMPORT_PROGRAM(mknod);
@@ -68,35 +69,36 @@ _IMPORT_PROGRAM(uptime);
   Exported objects
 ==============================================================================*/
 const struct _prog_data _prog_table[] = {
-        _PROGRAM_CONFIG(card_init , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(clear     , STACK_DEPTH_MINIMAL ),
-        _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(df        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(dsh       , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(echo      , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(free      , STACK_DEPTH_VERY_LOW),
-        _PROGRAM_CONFIG(fsstack   , STACK_DEPTH_LARGE   ),
-        _PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
-        _PROGRAM_CONFIG(httpserver, STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(ls        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(lsmod     , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(mkdir     , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(mkfifo    , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(mknod     , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(modinit   , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(mount     , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(reboot    , STACK_DEPTH_MINIMAL ),
-        _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(sync      , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(time      , STACK_DEPTH_VERY_LOW),
-        _PROGRAM_CONFIG(top       , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(touch     , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(umount    , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(uname     , STACK_DEPTH_MINIMAL ),
-        _PROGRAM_CONFIG(uptime    , STACK_DEPTH_MINIMAL ),
+        _PROGRAM_CONFIG(card_init  , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(cat        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(clear      , STACK_DEPTH_MINIMAL ),
+        _PROGRAM_CONFIG(cp         , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(df         , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(dsh        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(echo       , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(free       , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(fsstack    , STACK_DEPTH_LARGE   ),
+        _PROGRAM_CONFIG(helloworld , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(httpserver , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(ifconfig   , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(ls         , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(lsmod      , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(mbus_daemon, STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(mkdir      , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(mkfifo     , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(mknod      , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(modinit    , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(mount      , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(reboot     , STACK_DEPTH_MINIMAL ),
+        _PROGRAM_CONFIG(rm         , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(sync       , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(telnet     , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(time       , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(top        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(touch      , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(umount     , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(uname      , STACK_DEPTH_MINIMAL ),
+        _PROGRAM_CONFIG(uptime     , STACK_DEPTH_MINIMAL ),
 };
 
 const int _prog_table_size = ARRAY_SIZE(_prog_table);

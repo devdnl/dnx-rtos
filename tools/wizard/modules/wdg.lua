@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    eth.lua
+@file    wdg.lua
 
 @author  Daniel Zorychta
 
-@brief   Ethernet configuration wizard.
+@brief   Watchdog configuration wizard.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -192,14 +192,14 @@ function wdg:configure()
         navigation("Home/Modules/WDG")
         calculate_total_steps()
 
-        ::eth_enable::
+        ::module_enable::
         if ask_for_enable() == back then
                 return back
         end
 
         if key_read(db.path.project.mk, "ENABLE_WDG") == yes then
                 if arch[db:get_arch()].configure() == back then
-                        goto eth_enable
+                        goto module_enable
                 end
         end
 

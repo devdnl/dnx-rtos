@@ -31,6 +31,7 @@
 #include <dnx/misc.h>
 #include "genericmod_cfg.h"
 #include "genericmod_def.h"
+#include "genericmod_ioctl.h"
 
 /*==============================================================================
   Local macros

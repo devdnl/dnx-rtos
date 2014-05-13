@@ -658,9 +658,7 @@ extern char *strcasestr(const char *haystack, const char *needle);
  * // ...
  */
 //==============================================================================
-#ifndef __STRICT_ANSI__
 extern int strcasecmp(const char *s1, const char *s2);
-#endif /* ! __STRICT_ANSI__ */
 
 //==============================================================================
 /**
@@ -690,9 +688,7 @@ extern int strcasecmp(const char *s1, const char *s2);
  * // ...
  */
 //==============================================================================
-#ifndef __STRICT_ANSI__
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
-#endif /* ! __STRICT_ANSI__ */
 
 //==============================================================================
 /**
@@ -718,9 +714,7 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
  * // ...
  */
 //==============================================================================
-#ifndef __STRICT_ANSI__
 extern size_t strnlen(const char *s, size_t maxlen);
-#endif /* ! __STRICT_ANSI__ */
 
 /*==============================================================================
   Exported inline functions

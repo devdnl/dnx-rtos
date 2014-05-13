@@ -14,6 +14,7 @@
 -include $(PROG_LOC)/ifconfig/Makefile
 -include $(PROG_LOC)/ls/Makefile
 -include $(PROG_LOC)/lsmod/Makefile
+-include $(PROG_LOC)/mbus_daemon/Makefile
 -include $(PROG_LOC)/mkdir/Makefile
 -include $(PROG_LOC)/mkfifo/Makefile
 -include $(PROG_LOC)/mknod/Makefile

@@ -548,7 +548,7 @@ static bool thread_is_valid(thread_t *thread)
 //==============================================================================
 prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
 {
-        if (!cmd || !cwd || !stin || !stout || !sterr) {
+        if (!cmd || !cwd) {
                 errno = EINVAL;
                 return NULL;
         }

@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    cpu.lua
+@file    gpio.lua
 
 @author  Daniel Zorychta
 
-@brief   CPU configuration file.
+@brief   GPIO configuration file.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
