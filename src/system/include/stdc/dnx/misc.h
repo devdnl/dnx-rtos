@@ -167,6 +167,84 @@ extern "C" {
 //==============================================================================
 #define LAST_CHARACTER(char__pstr) char__pstr[strlen(char__pstr) - 1]
 
+//==============================================================================
+/**
+ * @brief static_cast(type, var)
+ * The macro <b>static_cast</b>() cast variable <i>var</i> to type <i>type</i>.
+ * Use this macro to remove <b>static</b> attribute.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * static void *data   = calloc(1, 10);
+ * type_t      *buffer = static_cast(type_t*, data);
+ *
+ * // ...
+ */
+//==============================================================================
+#define static_cast(type, var) (type)(var)
+
+//==============================================================================
+/**
+ * @brief const_cast(type, var)
+ * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
+ * Use this macro to remove <b>const</b> attribute.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * void func(char *str)
+ * {
+ *        // ...
+ * }
+ *
+ * const char *str = "test";
+ *
+ * func(const_cast(char*, str));
+ *
+ * // ...
+ */
+//==============================================================================
+#define const_cast(type, var) (type)(var)
+
+//==============================================================================
+/**
+ * @brief const_cast(type, var)
+ * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
+ * Use this macro to reinterpret selected variable type.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * void   *data   = calloc(1, 10);
+ * type_t *buffer = reinterpret_cast(type_t*, data);
+ *
+ * // ...
+ */
+//==============================================================================
+#define reinterpret_cast(type, var) (type)(var)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

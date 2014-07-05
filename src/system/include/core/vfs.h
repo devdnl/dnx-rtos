@@ -45,49 +45,49 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /* set position equal to offset bytes */
-#define VFS_SEEK_SET            0
+#define VFS_SEEK_SET                            0
 
 /* set position to current location plus offset */
-#define VFS_SEEK_CUR            1
+#define VFS_SEEK_CUR                            1
 
 /* set position to EOF plus offset */
-#define VFS_SEEK_END            2
+#define VFS_SEEK_END                            2
 
 /* translate functions to STDC */
 #ifndef SEEK_SET
-#define SEEK_SET                VFS_SEEK_SET
+#define SEEK_SET                                VFS_SEEK_SET
 #endif
 
 #ifndef SEEK_CUR
-#define SEEK_CUR                VFS_SEEK_CUR
+#define SEEK_CUR                                VFS_SEEK_CUR
 #endif
 
 #ifndef SEEK_END
-#define SEEK_END                VFS_SEEK_END
+#define SEEK_END                                VFS_SEEK_END
 #endif
 
 /* modes */
-#define S_IRUSR                 (4 << 0)
-#define S_IWUSR                 (2 << 0)
-#define S_IXUSR                 (1 << 0)
-#define S_IRGRO                 (4 << 3)
-#define S_IWGRO                 (2 << 3)
-#define S_IXGRO                 (1 << 3)
-#define S_IROTH                 (4 << 6)
-#define S_IWOTH                 (2 << 6)
-#define S_IXOTH                 (1 << 6)
+#define S_IRUSR                                 (4 << 0)
+#define S_IWUSR                                 (2 << 0)
+#define S_IXUSR                                 (1 << 0)
+#define S_IRGRO                                 (4 << 3)
+#define S_IWGRO                                 (2 << 3)
+#define S_IXGRO                                 (1 << 3)
+#define S_IROTH                                 (4 << 6)
+#define S_IWOTH                                 (2 << 6)
+#define S_IXOTH                                 (1 << 6)
 
 /* stream definitions */
-#define EOF                     (-1)
-#define ETX                     0x03
-#define EOT                     0x04
+#define EOF                                     (-1)
+#define ETX                                     0x03
+#define EOT                                     0x04
 
 /* IO operations on files */
-#define PIPE_CLOSE              _IO(_IO_GROUP_PIPE, 0x00)
-#define NON_BLOCKING_RD_MODE    _IO(_IO_GROUP_VFS,  0x01)
-#define DEFAULT_RD_MODE         _IO(_IO_GROUP_VFS,  0x02)
-#define NON_BLOCKING_WR_MODE    _IO(_IO_GROUP_VFS,  0x03)
-#define DEFAULT_WR_MODE         _IO(_IO_GROUP_VFS,  0x04)
+#define IOCTL_PIPE__CLOSE                       _IO(_IO_GROUP_PIPE, 0x00)
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(_IO_GROUP_VFS,  0x01)
+#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(_IO_GROUP_VFS,  0x02)
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(_IO_GROUP_VFS,  0x03)
+#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(_IO_GROUP_VFS,  0x04)
 
 /*==============================================================================
   Exported object types
@@ -172,11 +172,11 @@ struct vfs_fattr {
 
 /** file open flags */
 typedef enum {
-        O_RDONLY = (1 << 0),            /**< read only    */
-        O_WRONLY = (1 << 1),            /**< write only   */
-        O_RDWR   = (1 << 2),            /**< read write   */
-        O_CREATE = (1 << 3),            /**< create file  */
-        O_APPEND = (1 << 4)             /**< append data  */
+        O_RDONLY = (1 << 0),            /**< read only                    */
+        O_WRONLY = (1 << 1),            /**< write only                   */
+        O_RDWR   = (1 << 2),            /**< read write                   */
+        O_CREATE = (1 << 3),            /**< create file (not for device) */
+        O_APPEND = (1 << 4)             /**< append data (not for device) */
 } vfs_open_flags_t;
 
 /** file system configuration */

@@ -79,6 +79,11 @@
 #               include "stm32f1/wdg_def.h"
 #       endif
 #endif
+#if (__ENABLE_USB__)
+#       ifdef ARCH_stm32f1
+#               include "stm32f1/usb_def.h"
+#       endif
+#endif
 #if (__ENABLE_TTY__)
 #       include "tty_def.h"
 #endif
@@ -120,6 +125,9 @@
 #if (__ENABLE_SPI__)
         _IMPORT_MODULE_INTERFACE(SPI);
 #endif
+#if (__ENABLE_USB__)
+        _IMPORT_MODULE_INTERFACE(USBD);
+#endif
 
 /*==============================================================================
   Exported object definitions
@@ -158,6 +166,9 @@ const char *const _regdrv_module_name[] = {
         #endif
         #if (__ENABLE_SPI__)
         _MODULE_NAME(SPI),
+        #endif
+        #if (__ENABLE_USB__)
+        _MODULE_NAME(USBD),
         #endif
 };
 
@@ -308,6 +319,18 @@ const struct _driver_entry _regdrv_driver_table[] = {
         /* GPIO ==============================================================*/
         #if (__ENABLE_GPIO__)
         _DRIVER_INTERFACE(GPIO, "gpio", _GPIO_MAJOR_NUMBER, _GPIO_MINOR_NUMBER),
+        #endif
+
+        /* USB ===============================================================*/
+        #if (__ENABLE_USB__)
+        _DRIVER_INTERFACE(USBD, "usb_ep0", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_0),
+        _DRIVER_INTERFACE(USBD, "usb_ep1", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_1),
+        _DRIVER_INTERFACE(USBD, "usb_ep2", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_2),
+        _DRIVER_INTERFACE(USBD, "usb_ep3", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_3),
+        _DRIVER_INTERFACE(USBD, "usb_ep4", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_4),
+        _DRIVER_INTERFACE(USBD, "usb_ep5", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_5),
+        _DRIVER_INTERFACE(USBD, "usb_ep6", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_6),
+        _DRIVER_INTERFACE(USBD, "usb_ep7", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_7),
         #endif
 };
 

@@ -100,7 +100,7 @@ typedef struct {
 
 
 /** macro load GPIO_pin_t structure using 1 argument only */
-#define GPIO_PIN(_pin_name)             {.port = _PORT_##_pin_name, .pin = _pin_name}
+#define GPIO_PIN(_pin_name)             {.port_index = _PORT_##_pin_name, .pin_number = _pin_name}
 
 
 /* PRIVATE MACROS ------------------------------------------------------------*/

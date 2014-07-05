@@ -12,6 +12,7 @@
 -include $(PROG_LOC)/helloworld/Makefile
 -include $(PROG_LOC)/httpserver/Makefile
 -include $(PROG_LOC)/ifconfig/Makefile
+-include $(PROG_LOC)/keyboard/Makefile
 -include $(PROG_LOC)/ls/Makefile
 -include $(PROG_LOC)/lsmod/Makefile
 -include $(PROG_LOC)/mbus_daemon/Makefile
@@ -20,9 +21,12 @@
 -include $(PROG_LOC)/mknod/Makefile
 -include $(PROG_LOC)/modinit/Makefile
 -include $(PROG_LOC)/mount/Makefile
+-include $(PROG_LOC)/mouse/Makefile
 -include $(PROG_LOC)/reboot/Makefile
 -include $(PROG_LOC)/rm/Makefile
 -include $(PROG_LOC)/sync/Makefile
+-include $(PROG_LOC)/serial/Makefile
+-include $(PROG_LOC)/storage/Makefile
 -include $(PROG_LOC)/telnet/Makefile
 -include $(PROG_LOC)/time/Makefile
 -include $(PROG_LOC)/top/Makefile

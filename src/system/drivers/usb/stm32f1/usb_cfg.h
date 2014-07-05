@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    usb_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   USB-Device module.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,36 +24,37 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _USB_CFG_H_
+#define _USB_CFG_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
-#include "core/vfs.h"
-#include "tty_ioctl.h"
-#ifdef ARCH_stm32f1
-#include "stm32f1/afio_ioctl.h"
-#include "stm32f1/crc_ioctl.h"
-#include "stm32f1/ethmac_ioctl.h"
-#include "stm32f1/gpio_ioctl.h"
-#include "stm32f1/pll_ioctl.h"
-#include "stm32f1/sdspi_ioctl.h"
-#include "stm32f1/spi_ioctl.h"
-#include "stm32f1/uart_ioctl.h"
-#include "stm32f1/usb_ioctl.h"
-#else
-#error Unknown architecture!
-#endif
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ * Pin connected to pull-up resistor used by system to indicate USB connection
+ */
+#define _USB_CONFIG_PIN_PULLUP          __USB_PULLUP_PIN__
+
+/**
+ * Interrupt priority
+ */
+#define _USB_IRQ_PRIORITY               __USB_IRQ_PRIORITY__
+
+/**
+ * Endpoint 0 size
+ * Possible values: 8, 16, 32, 64
+ * If value is out of this range then enpoint is disabled.
+ * NOTE: make sure that Device Descriptor's bMaxPacketSize0 field has the same value!
+ */
+#define _USB_ENDPOINT0_SIZE             __USB_ENDPOINT0_SIZE__
 
 /*==============================================================================
   Exported object types
@@ -64,52 +65,18 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief int ioctl(FILE *stream, int request, ...)
- * The <b>ioctl</b>() function manipulates the file parameters.  In particular, many
- * operating characteristics of character special files (e.g., drivers) may
- * be controlled with <b>ioctl</b>() requests.
- *
- * The second argument is a device-dependent request code. The third
- * argument is an untyped pointer to memory.
- *
- * @param seconds   number of seconds to sleep
- *
- * @errors EINVAL, ENOENT, EBADRQC, ...
- *
- * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
- * return value as an output parameter and return a nonnegative value on
- * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
- *
- * @example
- * // ...
- * FILE *file = fopen("/dev/tty0", "r");
- * if (file) {
- *         ioctl(file, TTY_IORQ_CLEAR_SCR);
- *
- *         // ...
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        int status = vfs_vioctl(stream, request, arg);
-        va_end(arg);
-        return status;
-}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _USB_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
