@@ -37,6 +37,7 @@ require "spi"
 require "tty"
 require "wdg"
 require "uart"
+require "usb"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -98,6 +99,7 @@ function mod:configure()
                         wdg:configure()
                 elseif choice == "I2S" then
                 elseif choice == "USB" then
+                        usb:configure()
                 elseif choice == "USBOTG" then
                 elseif choice == "I2C" then
                 elseif choice == "ADC" then

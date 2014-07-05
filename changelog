@@ -1,3 +1,15 @@
+dnx/FreeRTOS 1.3.4
+==================
+New Features, Improvements:
+- Implemented USB device driver for STM32F1xx microcontroller family
+- Added new macros: static_cast(), const_cast(), reinterpret_cast() to indicate type casting in C code
+- Corrected ioctl macros for VFS and PIPE (renamed)
+- Corrected a status reporting of the card initialization in the SDSPI driver (MBR is no needed to get correct status)
+
+Fixed Bugs:
+- Fixed GPIO_PIN() macro
+- Fixed TTY driver: process is starved when the buffer of a stdin is not read
+
 dnx/FreeRTOS 1.3.3
 ==================
 New Features, Improvements:

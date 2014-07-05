@@ -467,11 +467,15 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                         }
 
                         if (card_initialize(part) == STD_RET_OK) {
-                                if (mbr_detect_partitions(part) == STD_RET_OK) {
-                                        if (result) {
-                                                *result = true;
-                                        }
+                                /*
+                                 * This function set Card Initialization Success
+                                 * even if in the card there are not any partitions
+                                 */
+                                if (result) {
+                                        *result = true;
                                 }
+
+                                mbr_detect_partitions(part);
                         }
 
                         mutex_unlock(sdspi_ctrl->card_protect_mtx);

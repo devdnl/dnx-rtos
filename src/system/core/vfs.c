@@ -1152,10 +1152,10 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
         }
 
         switch (rq) {
-        case NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
-        case NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
-        case DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
-        case DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
+        case IOCTL_VFS__NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
+        case IOCTL_VFS__NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
+        case IOCTL_VFS__DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
+        case IOCTL_VFS__DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
         }
 
         return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
