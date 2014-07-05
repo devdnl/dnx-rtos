@@ -184,7 +184,7 @@ extern "C" {
  * // ...
  *
  * static void *data   = calloc(1, 10);
- * type_t      *buffer = static_cast(type_t*, data);
+ * void        *buffer = static_cast(void*, data);
  *
  * // ...
  */
