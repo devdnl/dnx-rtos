@@ -1208,7 +1208,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                 return driver_ioctl((dev_t)opened_file->node->data, request, arg);
         } else if (opened_file->node->type == NODE_TYPE_PIPE) {
 
-                if (request != PIPE_CLOSE) {
+                if (request != IOCTL_PIPE__CLOSE) {
                         errno = EBADRQC;
                         goto exit;
                 }

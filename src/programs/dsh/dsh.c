@@ -420,7 +420,7 @@ static bool start_program(char *master, char *slave, char *file)
                 }
 
                 program_wait_for_close(pm, MAX_DELAY_MS);
-                ioctl(pipe, PIPE_CLOSE);
+                ioctl(pipe, IOCTL_PIPE__CLOSE);
                 program_wait_for_close(ps, MAX_DELAY_MS);
 
         } else if (master && slave) {
@@ -438,7 +438,7 @@ static bool start_program(char *master, char *slave, char *file)
                 }
 
                 program_wait_for_close(pm, MAX_DELAY_MS);
-                ioctl(pipe, PIPE_CLOSE);
+                ioctl(pipe, IOCTL_PIPE__CLOSE);
                 program_wait_for_close(ps, MAX_DELAY_MS);
 
         } else if (master && file) {

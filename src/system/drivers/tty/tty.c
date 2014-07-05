@@ -85,7 +85,7 @@ static void     send_cmd                (enum cmd cmd, u8_t arg);
 static void     vt100_init              ();
 static void     vt100_request_size      ();
 static void     vt100_analyze           (const char c);
-static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend);
+static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend, uint timeout);
 static void     switch_terminal         (int term_no);
 
 /*==============================================================================
@@ -352,7 +352,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
                 if (fattr.non_blocking_rd) {
                         if (mutex_lock(tty->secure_mtx, 100)) {
                                 const char *str = ttyedit_get(tty->editline);
-                                copy_string_to_queue(str, tty->queue_out, false);
+                                copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
                                 ttyedit_clear(tty->editline);
                                 mutex_unlock(tty->secure_mtx);
                         }
@@ -674,7 +674,7 @@ static void vt100_analyze(const char c)
                                 vfs_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
                         }
 
-                        copy_string_to_queue(str, tty->queue_out, true);
+                        copy_string_to_queue(str, tty->queue_out, true, 0);
                         ttyedit_clear(tty->editline);
 
                         mutex_unlock(tty->secure_mtx);
@@ -703,13 +703,13 @@ static void vt100_analyze(const char c)
 
         case TTYCMD_KEY_ARROW_UP: {
                 const char *str = "\033^[A";
-                copy_string_to_queue(str, tty->queue_out, true);
+                copy_string_to_queue(str, tty->queue_out, true, 0);
                 break;
         }
 
         case TTYCMD_KEY_ARROW_DOWN: {
                 const char *str = "\033^[B";
-                copy_string_to_queue(str, tty->queue_out, true);
+                copy_string_to_queue(str, tty->queue_out, true, 0);
                 break;
         }
 
@@ -742,17 +742,18 @@ static void vt100_analyze(const char c)
  * @param str           string
  * @param queue         queue
  * @param lfend         true: adds LF, false: without LF
+ * @param timeout       operation timeout [ms]
  */
 //==============================================================================
-static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend)
+static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend, uint timeout)
 {
         for (uint i = 0; i < strlen(str); i++) {
-                queue_send(queue, &str[i], MAX_DELAY_MS);
+                queue_send(queue, &str[i], timeout);
         }
 
         if (lfend) {
                 const char lf = '\n';
-                queue_send(queue, &lf, MAX_DELAY_MS);
+                queue_send(queue, &lf, timeout);
         }
 }
 

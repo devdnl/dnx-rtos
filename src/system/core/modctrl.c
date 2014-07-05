@@ -195,6 +195,8 @@ int _driver_release(const char *drv_name)
                                 if (status == STD_RET_OK) {
                                         driver_memory_region[i] = NULL;
                                 }
+                        } else {
+                                errno = ENXIO;
                         }
 
                         return status;

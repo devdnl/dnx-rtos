@@ -698,6 +698,21 @@ typedef struct
 } CAN_FilterRegister_t;
 
 /**
+  * @brief Universal Serial Bus
+  */
+
+typedef struct
+{
+  __IO uint32_t EPxR[8];
+  uint32_t RESERVED[8];
+  __IO uint32_t CNTR;
+  __IO uint32_t ISTR;
+  __IO uint32_t FNR;
+  __IO uint32_t DADDR;
+  __IO uint32_t BTABLE;
+} USB_t;
+
+/**
   * @brief Controller Area Network
   */
 
@@ -1306,6 +1321,8 @@ typedef struct
 #define UART5_BASE            (APB1PERIPH_BASE + 0x5000)
 #define I2C1_BASE             (APB1PERIPH_BASE + 0x5400)
 #define I2C2_BASE             (APB1PERIPH_BASE + 0x5800)
+#define USB_BASE              (APB1PERIPH_BASE + 0x5C00)
+#define USB_PMA_BASE          (APB1PERIPH_BASE + 0x6000)
 #define CAN1_BASE             (APB1PERIPH_BASE + 0x6400)
 #define CAN2_BASE             (APB1PERIPH_BASE + 0x6800)
 #define BKP_BASE              (APB1PERIPH_BASE + 0x6C00)
@@ -1400,6 +1417,7 @@ typedef struct
 #define UART5               ((USART_t *) UART5_BASE)
 #define I2C1                ((I2C_t *) I2C1_BASE)
 #define I2C2                ((I2C_t *) I2C2_BASE)
+#define USB                 ((USB_t *) USB_BASE)
 #define CAN1                ((CAN_t *) CAN1_BASE)
 #define CAN2                ((CAN_t *) CAN2_BASE)
 #define BKP                 ((BKP_t *) BKP_BASE)
