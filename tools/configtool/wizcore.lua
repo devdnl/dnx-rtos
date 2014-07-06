@@ -196,7 +196,7 @@ local function modify_line(line, filetype, key, value)
         if filetype == FILETYPE_HEADER then
                 return "#define "..key.." "..value
         elseif filetype == FILETYPE_MAKEFILE then
-                return key.." = "..value
+                return key.."="..value
         end
 
         return line
@@ -246,6 +246,8 @@ end
 function wizcore:key_write(keypath, value)
         local filename = keypath[1]
         local key      = keypath[2]
+
+        print(filename, key, value)
 
         -- type check
         if type(filename) ~= "string" or type(key) ~= "string" or type(value) ~= "string" then

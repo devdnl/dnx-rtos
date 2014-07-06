@@ -60,9 +60,9 @@ end
 local function on_button_save_click()
         print("on_button_save_click()")
 
-        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_NAME, '"'..ui.TextCtrl_project_name:GetValue()..'"')
-        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN, '"'..ui.TextCtrl_project_name:GetValue()..'"')
-        wizcore:key_write(wizcore.PROJECT.KEY.CPU_OSC_FREQ, ui.SpinCtrl_osc_freq:GetValue())
+        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
+        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
+        wizcore:key_write(wizcore.PROJECT.KEY.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
 
         local arch = wizcore.PROJECT.ARCH_LIST[ui.Choice_CPU_arch:GetSelection() + 1]
         wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH, arch)
