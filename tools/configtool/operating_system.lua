@@ -4,7 +4,6 @@ require("wizcore")
 operating_system = {}
 
 local ui = {}
-
 local ID = {}
 ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX1_SYS_MEMMON = wx.wxNewId()
@@ -21,7 +20,7 @@ ID.CHECKBOX_STOP_MACRO = wx.wxNewId()
 ID.CHECKBOX_TASK_FILEMON = wx.wxNewId()
 ID.CHECKBOX_TASK_MEMMON = wx.wxNewId()
 ID.CHOICE_ERRNO_SIZE = wx.wxNewId()
-ID.SPINCTRLIRQ_STACK_SIZE = wx.wxNewId()
+ID.SPINCTRL_IRQ_STACK_SIZE = wx.wxNewId()
 ID.SPINCTRL_FS_STACK_SIZE = wx.wxNewId()
 ID.SPINCTRL_MEM_BLOCK = wx.wxNewId()
 ID.SPINCTRL_NET_MEM_LIMIT = wx.wxNewId()
@@ -30,7 +29,7 @@ ID.SPINCTRL_PIPE_LEN = wx.wxNewId()
 ID.SPINCTRL_STREAM_LEN = wx.wxNewId()
 ID.SPINCTRL_SWITCH_FREQ = wx.wxNewId()
 ID.SPINCTRL_TASK_NAME_LEN = wx.wxNewId()
-ID.SPINCTRL_TASL_STACK_SIZE = wx.wxNewId()
+ID.SPINCTRL_TASK_STACK_SIZE = wx.wxNewId()
 ID.STATICLINE1 = wx.wxNewId()
 ID.STATICLINE2 = wx.wxNewId()
 ID.STATICTEXT2 = wx.wxNewId()
@@ -44,13 +43,113 @@ ID.STATICTEXT11 = wx.wxNewId()
 ID.STATICTEXT12 = wx.wxNewId()
 ID.STATICTEXT13 = wx.wxNewId()
 ID.STATICTEXT14 = wx.wxNewId()
-ID.STATICTEXT_HEADER = wx.wxNewId()
 ID.STATICTEXT_TOTAL_STACK_SIZE = wx.wxNewId()
 ID.TEXTCTRL_HOSTNAME = wx.wxNewId()
 
 
-local function load_controls()
+local function get_total_stack_size_string()
+        return tostring((ui.SpinCtrl_task_stack_size:GetValue() + ui.SpinCtrl_fs_stack_size:GetValue() + ui.SpinCtrl_irq_stack_size:GetValue()).." levels")
+end
 
+
+local function yes_no_to_bool(yes_no)
+        if yes_no:match(wizcore.PROJECT.DEF.YES) then
+                return true
+        else
+                return false
+        end
+end
+
+
+local function bool_to_yes_no(bool)
+        if bool then
+                return wizcore.PROJECT.DEF.YES
+        else
+                return wizcore.PROJECT.DEF.NO
+        end
+end
+
+
+local function load_controls()
+        ui.SpinCtrl_task_stack_size:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MIN_STACK_DEPTH)))
+        ui.SpinCtrl_fs_stack_size:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_FILE_SYSTEM_STACK_DEPTH)))
+        ui.SpinCtrl_irq_stack_size:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_IRQ_STACK_DEPTH)))
+        ui.StaticText_total_stack_size:SetLabel(get_total_stack_size_string())
+        ui.SpinCtrl_number_of_priorities:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MAX_PRIORITIES)))
+        ui.SpinCtrl_task_name_len:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_NAME_LEN)))
+        ui.SpinCtrl_switch_freq:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_SCHED_FREQ)))
+        ui.CheckBox_sleep_on_idle:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE)))
+        ui.CheckBox_printk:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE)))
+        ui.CheckBox_printf:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE)))
+        ui.CheckBox_scanf:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SCANF_ENABLE)))
+        ui.CheckBox_color_term:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE)))
+        ui.CheckBox_stop_macro:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO)))
+        ui.CheckBox_task_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE)))
+        ui.CheckBox_task_filemon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE)))
+        ui.CheckBox_krn_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE)))
+        ui.CheckBox_mod_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE)))
+        ui.CheckBox_sys_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE)))
+        ui.CheckBox_CPU_loadmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD)))
+        ui.CheckBox_net_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE)))
+        ui.SpinCtrl_net_mem_limit:SetValue(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT))
+        ui.SpinCtrl_net_mem_limit:Enable(ui.CheckBox_net_memmon:GetValue())
+        ui.SpinCtrl_stream_len:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_STREAM_BUFFER_LENGTH)))
+        ui.SpinCtrl_pipe_len:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_PIPE_LENGTH)))
+        ui.SpinCtrl_mem_block:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.HEAP_BLOCK_SIZE)))
+        ui.Choice_errno_size:SetSelection(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_ERRNO_STRING_LEN)))
+        ui.TextCtrl_hostname:SetValue(wizcore:key_read(wizcore.PROJECT.KEY.OS_HOSTNAME):gsub('"', ''))
+end
+
+
+local function on_button_save_click()
+        print("on_button_save_click()")
+        
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MIN_STACK_DEPTH, tostring(ui.SpinCtrl_task_stack_size:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_FILE_SYSTEM_STACK_DEPTH, tostring(ui.SpinCtrl_fs_stack_size:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_IRQ_STACK_DEPTH, tostring(ui.SpinCtrl_irq_stack_size:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MAX_PRIORITIES, tostring(ui.SpinCtrl_number_of_priorities:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_NAME_LEN, tostring(ui.SpinCtrl_task_name_len:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_SCHED_FREQ, tostring(ui.SpinCtrl_switch_freq:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE, bool_to_yes_no(ui.CheckBox_sleep_on_idle:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE, bool_to_yes_no(ui.CheckBox_printk:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE, bool_to_yes_no(ui.CheckBox_printf:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_SCANF_ENABLE, bool_to_yes_no(ui.CheckBox_scanf:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE, bool_to_yes_no(ui.CheckBox_color_term:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO, bool_to_yes_no(ui.CheckBox_stop_macro:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_task_memmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE, bool_to_yes_no(ui.CheckBox_task_filemon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_krn_memmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_mod_memmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_sys_memmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD, bool_to_yes_no(ui.CheckBox_CPU_loadmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_net_memmon:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT, tostring(ui.SpinCtrl_net_mem_limit:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_STREAM_BUFFER_LENGTH, tostring(ui.SpinCtrl_stream_len:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_PIPE_LENGTH, tostring(ui.SpinCtrl_pipe_len:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.HEAP_BLOCK_SIZE, tostring(ui.SpinCtrl_mem_block:GetValue()))
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_ERRNO_STRING_LEN, ui.Choice_errno_size:GetSelection())
+        wizcore:key_read(wizcore.PROJECT.KEY.OS_HOSTNAME, '"'..ui.TextCtrl_hostname:GetValue()..'"')
+        
+        ui.Button_save:Enable(false)
+end
+
+
+local function stack_value_changed()
+        print("stack_value_changed()")
+        ui.StaticText_total_stack_size:SetLabel(get_total_stack_size_string())
+        ui.Button_save:Enable(true)
+end
+
+
+local function value_changed()
+        print("value_changed()")
+        ui.Button_save:Enable(true)
+end
+
+
+local function net_memmon_changed(this)
+        ui.SpinCtrl_net_mem_limit:Enable(this:IsChecked())
+        ui.Button_save:Enable(true)
 end
 
 
@@ -67,7 +166,7 @@ function operating_system:create_window(parent)
                 ui.StaticText2 = wx.wxStaticText(this, ID.STATICTEXT2, "Minimal task stack size", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.SpinCtrl_task_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_TASL_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 48, 8192, 0)
+                ui.SpinCtrl_task_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_TASK_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 48, 8192, 0)
                 ui.FlexGridSizer3:Add(ui.SpinCtrl_task_stack_size, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText3 = wx.wxStaticText(this, ID.STATICTEXT3, "File system stack size", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -78,7 +177,7 @@ function operating_system:create_window(parent)
 
                 ui.StaticText4 = wx.wxStaticText(this, ID.STATICTEXT4, "Interrupt stack size", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
                 ui.FlexGridSizer3:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.SpinCtrl_irq_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRLIRQ_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 2048, 0, "ID.SPINCTRLIRQ_STACK_SIZE")
+                ui.SpinCtrl_irq_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_IRQ_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 2048, 0, "ID.SPINCTRL_IRQ_STACK_SIZE")
                 ui.FlexGridSizer3:Add(ui.SpinCtrl_irq_stack_size, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText5 = wx.wxStaticText(this, ID.STATICTEXT5, "Total minimal stack size:", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT5")
@@ -152,6 +251,7 @@ function operating_system:create_window(parent)
                 ui.CheckBox_net_memmon = wx.wxCheckBox(this, ID.CHECKBOX_NET_MEMMON, "Network memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_NET_MEMMON")
                 ui.GridSizer2:Add(ui.CheckBox_net_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_net_mem_limit = wx.wxSpinCtrl(this, ID.SPINCTRL_NET_MEM_LIMIT, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 16777216, 0, "ID.SPINCTRL_NET_MEM_LIMIT")
+                ui.SpinCtrl_net_mem_limit:SetToolTip("This value represents a maximum amount of memory in bytes that can be used by the network layer. Set this value to 0 to disable limit.")
                 ui.GridSizer2:Add(ui.SpinCtrl_net_mem_limit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticBoxSizer5:Add(ui.GridSizer2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -205,6 +305,34 @@ function operating_system:create_window(parent)
                 -- layout configuration
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(25, 25)
+                
+                -- signals
+                this:Connect(ID.SPINCTRL_TASK_STACK_SIZE,      wx.wxEVT_COMMAND_SPINCTRL_UPDATED, stack_value_changed )
+                this:Connect(ID.SPINCTRL_FS_STACK_SIZE,        wx.wxEVT_COMMAND_SPINCTRL_UPDATED, stack_value_changed )
+                this:Connect(ID.SPINCTRL_IRQ_STACK_SIZE,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED, stack_value_changed )
+                this:Connect(ID.SPINCTRL_NUMBER_OF_PRIORITIES, wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.SPINCTRL_TASK_NAME_LEN,        wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.SPINCTRL_SWITCH_FREQ,          wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.CHECKBOX_SLEEP_ON_IDLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_PRINTK,               wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_PRINTF,               wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_SCANF,                wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_COLOR_TERM,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_STOP_MACRO,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_TASK_MEMMON,          wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_TASK_FILEMON,         wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_KRN_MEMMON,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_MOD_MEMMON,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX1_SYS_MEMMON,          wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_CPU_LOADMON,          wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_NET_MEMMON,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, net_memmon_changed  )
+                this:Connect(ID.SPINCTRL_NET_MEM_LIMIT,        wx.wxEVT_COMMAND_SPINCTRL_UPDATED, net_memmon_changed  )
+                this:Connect(ID.SPINCTRL_STREAM_LEN,           wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.SPINCTRL_PIPE_LEN,             wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.SPINCTRL_MEM_BLOCK,            wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.CHOICE_ERRNO_SIZE,             wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
+                this:Connect(ID.TEXTCTRL_HOSTNAME,             wx.wxEVT_COMMAND_TEXT_UPDATED,     value_changed       )
+                this:Connect(ID.BUTTON_SAVE,                   wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
@@ -218,9 +346,10 @@ end
 
 function operating_system:refresh()
         load_controls()
+        ui.Button_save:Enable(false)
 end
 
 
 function operating_system:is_modified()
-        return false
+        return ui.Button_save:IsEnabled()
 end
