@@ -15,6 +15,65 @@ ID.CHECKBOX_PROCFS = wx.wxNewId()
 ID.CHOICE_LFN_CODEPAGE = wx.wxNewId()
 
 
+local codepage = {"437 - U.S.",
+                  "720 - Arabic",
+                  "737 - Greek",
+                  "775 - Baltic",
+                  "850 - Multilingual Latin 1",
+                  "852 - Latin 2",
+                  "855 - Cyrillic",
+                  "857 - Turkish",
+                  "858 - Multilingual Latin 1 + Euro",
+                  "862 - Hebrew",
+                  "866 - Russian",
+                  "874 - Thai",
+                  "932 - Japanese Shift-JIS",
+                  "936 - Simplified Chinese GBK",
+                  "949 - Korean",
+                  "950 - Traditional Chinese Big5",
+                  "1250 - Central Europe",
+                  "1251 - Cyrillic",
+                  "1252 - Latin 1",
+                  "1253 - Greek",
+                  "1254 - Turkish",
+                  "1255 - Hebrew",
+                  "1256 - Arabic",
+                  "1257 - Baltic",
+                  "1258 - Vietnam"}
+
+
+local function load_controls()
+        ui.CheckBox_devfs:SetValue(wizcore:get_module_state("DEVFS"))
+        ui.CheckBox_lfs:SetValue(wizcore:get_module_state("LFS"))
+        ui.CheckBox_fatfs:SetValue(wizcore:get_module_state("FATFS"))
+        ui.CheckBox_lfn:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE)))
+        ui.Choice_lfn_codepage:SetSelection(wizcore:get_string_index(codepage, wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE)) - 1)
+        ui.CheckBox_procfs:SetValue(wizcore:get_module_state("PROCFS"))
+end
+
+
+local function on_button_save_click()
+        wizcore:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
+        wizcore:enable_module("LFS", ui.CheckBox_lfs:GetValue())
+        wizcore:enable_module("FATFS", ui.CheckBox_devfs:GetValue())
+        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_lfn:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE, codepage[ui.Choice_lfn_codepage:GetSelection() + 1]:match("%d*"))
+        wizcore:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
+            
+        ui.Button_save:Enable(false)
+end
+
+
+local function value_changed()
+        ui.Button_save:Enable(true)
+end
+
+
+local function LFN_enable_changed(this)
+        ui.Choice_lfn_codepage:Enable(this:IsChecked())
+end
+
+
 function file_systems:create_window(parent)
         if ui.window == nil then
                 ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -52,7 +111,7 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "fatfs (FAT12, FAT16, FAT32)")
+                ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "fatfs (FAT12, FAT16, FAT32,")
 
                 ui.FlexGridSizer4 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
@@ -65,32 +124,8 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer6 = wx.wxFlexGridSizer(1, 2, 0, 0)
                 ui.CheckBox_lfn = wx.wxCheckBox(this, ID.CHECKBOX_LFN, "Enable long file names", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1")
                 ui.FlexGridSizer6:Add(ui.CheckBox_lfn, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.Choice_lfn_codepage = wx.wxChoice(this, ID.CHOICE_LFN_CODEPAGE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE1")
-                ui.Choice_lfn_codepage:Append("437 - U.S.")
-                ui.Choice_lfn_codepage:Append("720 - Arabic")
-                ui.Choice_lfn_codepage:Append("737 - Greek")
-                ui.Choice_lfn_codepage:Append("775 - Baltic")
-                ui.Choice_lfn_codepage:Append("850 - Multilingual Latin 1")
-                ui.Choice_lfn_codepage:Append("852 - Latin 2")
-                ui.Choice_lfn_codepage:Append("855 - Cyrillic")
-                ui.Choice_lfn_codepage:Append("857 - Turkish")
-                ui.Choice_lfn_codepage:Append("858 - Multilingual Latin 1 + Euro")
-                ui.Choice_lfn_codepage:Append("862 - Hebrew")
-                ui.Choice_lfn_codepage:Append("866 - Russian")
-                ui.Choice_lfn_codepage:Append("874 - Thai")
-                ui.Choice_lfn_codepage:Append("932 - Japanese Shift-JIS")
-                ui.Choice_lfn_codepage:Append("936 - Simplified Chinese GBK")
-                ui.Choice_lfn_codepage:Append("949 - Korean")
-                ui.Choice_lfn_codepage:Append("950 - Traditional Chinese Big5")
-                ui.Choice_lfn_codepage:Append("1250 - Central Europe")
-                ui.Choice_lfn_codepage:Append("1251 - Cyrillic")
-                ui.Choice_lfn_codepage:Append("1252 - Latin 1")
-                ui.Choice_lfn_codepage:Append("1253 - Greek")
-                ui.Choice_lfn_codepage:Append("1254 - Turkish")
-                ui.Choice_lfn_codepage:Append("1255 - Hebrew")
-                ui.Choice_lfn_codepage:Append("1256 - Arabic")
-                ui.Choice_lfn_codepage:Append("1257 - Baltic")
-                ui.Choice_lfn_codepage:Append("1258 - Vietnam")
+                ui.Choice_lfn_codepage = wx.wxChoice(this, ID.CHOICE_LFN_CODEPAGE, wx.wxDefaultPosition, wx.wxDefaultSize, codepage, 0, wx.wxDefaultValidator, "ID.CHOICE1")
+
                 ui.FlexGridSizer6:Add(ui.Choice_lfn_codepage, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer4:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
                 
@@ -121,6 +156,15 @@ function file_systems:create_window(parent)
                 --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
+                
+                --
+                this:Connect(ID.CHECKBOX_DEVFS,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_LFS,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_FATFS,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
+                this:Connect(ID.CHOICE_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
+                this:Connect(ID.CHECKBOX_PROCFS,     wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.BUTTON_SAVE,         wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
@@ -133,8 +177,10 @@ end
 
 
 function file_systems:refresh()
+        load_controls()
+        ui.Button_save:Enable(false)
 end
 
 function file_systems:is_modified()
-        return false
+        return ui.Button_save:IsEnabled()
 end

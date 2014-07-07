@@ -115,6 +115,8 @@
 #define __ENABLE_LFS__ __YES__
 #define __ENABLE_FATFS__ __YES__
 #define __ENABLE_PROCFS__ __YES__
+#define __FATFS_LFN_ENABLE__ __YES__
+#define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
 #define __ENABLE_GPIO__ __YES__

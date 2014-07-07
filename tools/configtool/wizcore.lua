@@ -93,6 +93,8 @@ wizcore.PROJECT.KEY.NETWORK_ETHIF_FILE                          = {wizcore.PROJE
 wizcore.PROJECT.KEY.ENABLE_DEVFS_H                              = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_DEVFS__"}
 wizcore.PROJECT.KEY.ENABLE_LFS_H                                = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_LFS__"}
 wizcore.PROJECT.KEY.ENABLE_FATFS_H                              = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_FATFS__"}
+wizcore.PROJECT.KEY.FATFS_LFN_ENABLE                            = {wizcore.PROJECT.FILE.FLAGS_H, "__FATFS_LFN_ENABLE__"}
+wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE                          = {wizcore.PROJECT.FILE.FLAGS_H, "__FATFS_LFN_CODEPAGE__"}
 wizcore.PROJECT.KEY.ENABLE_PROCFS_H                             = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_PROCFS__"}
 wizcore.PROJECT.KEY.ENABLE_GPIO_H                               = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_GPIO__"}
 wizcore.PROJECT.KEY.ENABLE_AFIO_H                               = {wizcore.PROJECT.FILE.FLAGS_H, "__ENABLE_AFIO__"}
@@ -251,14 +253,14 @@ function wizcore:key_write(keypath, value)
 
         -- type check
         if type(filename) ~= "string" or type(key) ~= "string" or type(value) ~= "string" then
-                wizcore:show_error_msg("Error", "key_write(): Invalid type of 'filename' or 'key' or 'value'\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename' or 'key' or 'value'\n"..debug.traceback())
                 return false
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                wizcore:show_error_msg("Error", "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback())
                 return false
         end
 
@@ -269,7 +271,7 @@ function wizcore:key_write(keypath, value)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                wizcore:show_error_msg("Error", "key_read(): Unknown file type\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
                 return false
         end
 
@@ -291,7 +293,7 @@ function wizcore:key_write(keypath, value)
         -- write the file.
         file = io.open(filename, "w")
         if file == nil then
-                wizcore:show_error_msg("Error", "key_write(): File write protected\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback())
                 return false
         end
 
@@ -310,14 +312,14 @@ function wizcore:key_read(keypath)
 
         -- type check
         if type(filename) ~= "string" or type(key) ~= "string" then
-                wizcore:show_error_msg("Error", "key_read(): Invalid type of 'filename' or 'key'\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename' or 'key'\n"..debug.traceback())
                 return false
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                wizcore:show_error_msg("Error", "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
                 return false
         end
 
@@ -328,7 +330,7 @@ function wizcore:key_read(keypath)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                wizcore:show_error_msg("Error", "key_read(): Unknown file type\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
                 return false
         end
 
@@ -343,7 +345,7 @@ function wizcore:key_read(keypath)
         file:close()
 
         if value == nil then
-                wizcore:show_error_msg("Error", "key_read(): "..key..": key not found\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): "..key..": key not found\n"..debug.traceback())
         end
 
         return value
@@ -362,11 +364,43 @@ end
 
 
 function wizcore:enable_module(name, state)
---TODO
+        local key1 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_H"]
+        local key2 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_MK"]
+        
+        wizcore:key_write(key1, wizcore:bool_to_yes_no(state))
+        wizcore:key_write(key2, wizcore:bool_to_yes_no(state))
 end
 
 
 function wizcore:get_module_state(name)
---TODO
+        local key1 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_H"]
+        local key2 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_MK"]
+        
+        local key1_value = wizcore:key_read(key1)
+        local key2_value = wizcore:key_read(key2)
+        
+        if key1_value ~= key2_value then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "Configuration inconsistency detected!\nValues of keys: ENABLE_"..name:upper().."_H and ENABLE_"..name:upper().."_MK are different!")
+        end
+        
+        return wizcore:yes_no_to_bool(key1_value)
+end
+
+
+function wizcore:yes_no_to_bool(yes_no)
+        if yes_no:match(wizcore.PROJECT.DEF.YES) then
+                return true
+        else
+                return false
+        end
+end
+
+
+function wizcore:bool_to_yes_no(bool)
+        if bool then
+                return wizcore.PROJECT.DEF.YES
+        else
+                return wizcore.PROJECT.DEF.NO
+        end
 end
 

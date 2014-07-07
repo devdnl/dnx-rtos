@@ -52,24 +52,6 @@ local function get_total_stack_size_string()
 end
 
 
-local function yes_no_to_bool(yes_no)
-        if yes_no:match(wizcore.PROJECT.DEF.YES) then
-                return true
-        else
-                return false
-        end
-end
-
-
-local function bool_to_yes_no(bool)
-        if bool then
-                return wizcore.PROJECT.DEF.YES
-        else
-                return wizcore.PROJECT.DEF.NO
-        end
-end
-
-
 local function load_controls()
         ui.SpinCtrl_task_stack_size:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MIN_STACK_DEPTH)))
         ui.SpinCtrl_fs_stack_size:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_FILE_SYSTEM_STACK_DEPTH)))
@@ -78,19 +60,19 @@ local function load_controls()
         ui.SpinCtrl_number_of_priorities:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_MAX_PRIORITIES)))
         ui.SpinCtrl_task_name_len:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_NAME_LEN)))
         ui.SpinCtrl_switch_freq:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_TASK_SCHED_FREQ)))
-        ui.CheckBox_sleep_on_idle:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE)))
-        ui.CheckBox_printk:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE)))
-        ui.CheckBox_printf:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE)))
-        ui.CheckBox_scanf:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SCANF_ENABLE)))
-        ui.CheckBox_color_term:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE)))
-        ui.CheckBox_stop_macro:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO)))
-        ui.CheckBox_task_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE)))
-        ui.CheckBox_task_filemon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE)))
-        ui.CheckBox_krn_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE)))
-        ui.CheckBox_mod_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE)))
-        ui.CheckBox_sys_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE)))
-        ui.CheckBox_CPU_loadmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD)))
-        ui.CheckBox_net_memmon:SetValue(yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE)))
+        ui.CheckBox_sleep_on_idle:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE)))
+        ui.CheckBox_printk:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE)))
+        ui.CheckBox_printf:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE)))
+        ui.CheckBox_scanf:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SCANF_ENABLE)))
+        ui.CheckBox_color_term:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE)))
+        ui.CheckBox_stop_macro:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO)))
+        ui.CheckBox_task_memmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE)))
+        ui.CheckBox_task_filemon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE)))
+        ui.CheckBox_krn_memmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE)))
+        ui.CheckBox_mod_memmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE)))
+        ui.CheckBox_sys_memmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE)))
+        ui.CheckBox_CPU_loadmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD)))
+        ui.CheckBox_net_memmon:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE)))
         ui.SpinCtrl_net_mem_limit:SetValue(wizcore:key_read(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT))
         ui.SpinCtrl_net_mem_limit:Enable(ui.CheckBox_net_memmon:GetValue())
         ui.SpinCtrl_stream_len:SetValue(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.OS_STREAM_BUFFER_LENGTH)))
@@ -108,19 +90,19 @@ local function on_button_save_click()
         wizcore:key_write(wizcore.PROJECT.KEY.OS_TASK_MAX_PRIORITIES, tostring(ui.SpinCtrl_number_of_priorities:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_TASK_NAME_LEN, tostring(ui.SpinCtrl_task_name_len:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_TASK_SCHED_FREQ, tostring(ui.SpinCtrl_switch_freq:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE, bool_to_yes_no(ui.CheckBox_sleep_on_idle:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE, bool_to_yes_no(ui.CheckBox_printk:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE, bool_to_yes_no(ui.CheckBox_printf:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_SCANF_ENABLE, bool_to_yes_no(ui.CheckBox_scanf:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE, bool_to_yes_no(ui.CheckBox_color_term:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO, bool_to_yes_no(ui.CheckBox_stop_macro:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_task_memmon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE, bool_to_yes_no(ui.CheckBox_task_filemon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_krn_memmon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_mod_memmon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_sys_memmon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD, bool_to_yes_no(ui.CheckBox_CPU_loadmon:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE, bool_to_yes_no(ui.CheckBox_net_memmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_SLEEP_ON_IDLE, wizcore:bool_to_yes_no(ui.CheckBox_sleep_on_idle:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_SYSTEM_MSG_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_printk:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_PRINTF_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_printf:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_SCANF_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_scanf:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_COLOR_TERMINAL_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_color_term:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_SYSTEM_STOP_MACRO, wizcore:bool_to_yes_no(ui.CheckBox_stop_macro:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_TASK_MEMORY_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_task_memmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_TASK_FILE_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_task_filemon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_KERNEL_MEMORY_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_krn_memmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_MODULE_MEMORY_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_mod_memmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_SYSTEM_MEMORY_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_sys_memmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_CPU_LOAD, wizcore:bool_to_yes_no(ui.CheckBox_CPU_loadmon:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE, wizcore:bool_to_yes_no(ui.CheckBox_net_memmon:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT, tostring(ui.SpinCtrl_net_mem_limit:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_STREAM_BUFFER_LENGTH, tostring(ui.SpinCtrl_stream_len:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_PIPE_LENGTH, tostring(ui.SpinCtrl_pipe_len:GetValue()))
