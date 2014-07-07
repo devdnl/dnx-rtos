@@ -50,7 +50,7 @@ local function on_button_save_click()
         wizcore:key_write(wizcore.PROJECT.KEY.NETWORK_MAC_ADDR_4, "0x"..ui.TextCtrl_MAC4:GetValue())
         wizcore:key_write(wizcore.PROJECT.KEY.NETWORK_MAC_ADDR_5, "0x"..ui.TextCtrl_MAC5:GetValue())
         wizcore:key_write(wizcore.PROJECT.KEY.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_if_path:GetValue()..'"')
-        
+
         ui.Button_save:Enable(false)
 end
 
@@ -69,21 +69,21 @@ end
 
 local function textctrl_only_hex(this)
         if this:IsModified() then
-                local text  = this:GetLabel():upper()
+                local text  = this:GetValue():upper()
                 local char1 = string.char(text:byte(1))
                 local char2 = string.char(text:byte(2))
                 text        = nil
 
-                if ischarhex(char1) then text = char1       end
-                if ischarhex(char2) then text = text..char2 end
-                
+                if ischarhex(char1) then text = char1 end
+                if ischarhex(char2) then text = char1..char2 end
+
                 if text then
-                        this:SetLabel(text)
+                        this:SetValue(text)
                         this:SetInsertionPointEnd()
                 else
                         this:Clear()
                 end
-                
+
                 ui.Button_save:Enable(true)
         end
 end
@@ -158,7 +158,7 @@ function network:create_window(parent)
                 --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
-                
+
                 --
                 this:Connect(ID.CHECKBOX_ENABLE,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_clicked)
                 this:Connect(ID.TEXTCTRL_MAC0,    wx.wxEVT_COMMAND_TEXT_UPDATED,      mac0_textctrl_changed  )
