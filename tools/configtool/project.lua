@@ -47,8 +47,6 @@ end
 
 
 local function load_controls()
-        print("load_controls()")
-
         local project_name   = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_NAME)
         local toolchain_name = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN)
         local cpu_arch       = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH)
@@ -65,8 +63,6 @@ end
 
 
 local function on_button_save_click()
-        print("on_button_save_click()")
-
         wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
         wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
         wizcore:key_write(wizcore.PROJECT.KEY.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
@@ -86,14 +82,11 @@ end
 
 
 local function textctrl_updated()
-        print("textctrl_updated()")
         ui.Button_save:Enable(true)
 end
 
 
 local function choice_cpu_arch_selected(this)
-        print("choice_cpu_arch_selected()")
-        
         if ui.Choice_CPU_arch.OldSelection ~= this:GetSelection() then
                 ui.Choice_CPU_arch.OldSelection = this:GetSelection()
                 ui.Choice_CPU_name:Clear()
@@ -105,19 +98,16 @@ end
 
 
 local function choice_cpu_name_selected(this)
-        print("choice_cpu_name_selected()")
         ui.Button_save:Enable(true)
 end
 
 
 local function choice_cpu_prio_selected(this)
-        print("choice_cpu_prio_selected()")
         ui.Button_save:Enable(true)
 end
 
 
 local function spinctrl_osc_freq_updated(this)
-        print("spinctrl_osc_freq_updated()")
         ui.Button_save:Enable(true)
 end
 
@@ -195,7 +185,6 @@ end
 
 
 function project:refresh()
-        print("project:refresh()")
         load_controls()
         ui.Button_save:Enable(false)
 end

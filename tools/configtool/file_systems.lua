@@ -9,10 +9,10 @@ local ID = {}
 ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX_DEVFS = wx.wxNewId()
 ID.CHECKBOX_FATFS = wx.wxNewId()
-ID.CHECKBOX_LFN = wx.wxNewId()
+ID.CHECKBOX_FATFS_LFN = wx.wxNewId()
 ID.CHECKBOX_LFS = wx.wxNewId()
 ID.CHECKBOX_PROCFS = wx.wxNewId()
-ID.CHOICE_LFN_CODEPAGE = wx.wxNewId()
+ID.CHOICE_FATFS_LFN_CODEPAGE = wx.wxNewId()
 
 
 local codepage = {"437 - U.S.",
@@ -46,8 +46,8 @@ local function load_controls()
         ui.CheckBox_devfs:SetValue(wizcore:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(wizcore:get_module_state("LFS"))
         ui.CheckBox_fatfs:SetValue(wizcore:get_module_state("FATFS"))
-        ui.CheckBox_lfn:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE)))
-        ui.Choice_lfn_codepage:SetSelection(wizcore:get_string_index(codepage, wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE)) - 1)
+        ui.CheckBox_fatfs_lfn:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE)))
+        ui.Choice_fatfs_lfn_codepage:SetSelection(wizcore:get_string_index(codepage, wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE)) - 1)
         ui.CheckBox_procfs:SetValue(wizcore:get_module_state("PROCFS"))
 end
 
@@ -56,8 +56,8 @@ local function on_button_save_click()
         wizcore:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
         wizcore:enable_module("LFS", ui.CheckBox_lfs:GetValue())
         wizcore:enable_module("FATFS", ui.CheckBox_devfs:GetValue())
-        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_lfn:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE, codepage[ui.Choice_lfn_codepage:GetSelection() + 1]:match("%d*"))
+        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_fatfs_lfn:GetValue()))
+        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         wizcore:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
             
         ui.Button_save:Enable(false)
@@ -69,8 +69,14 @@ local function value_changed()
 end
 
 
+local function FATFS_state_changed(this)
+    ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
+    ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
+end
+
+
 local function LFN_enable_changed(this)
-        ui.Choice_lfn_codepage:Enable(this:IsChecked())
+        ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
 end
 
 
@@ -122,11 +128,11 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer4:Add(ui.CheckBox_fatfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 
                 ui.FlexGridSizer6 = wx.wxFlexGridSizer(1, 2, 0, 0)
-                ui.CheckBox_lfn = wx.wxCheckBox(this, ID.CHECKBOX_LFN, "Enable long file names", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1")
-                ui.FlexGridSizer6:Add(ui.CheckBox_lfn, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.Choice_lfn_codepage = wx.wxChoice(this, ID.CHOICE_LFN_CODEPAGE, wx.wxDefaultPosition, wx.wxDefaultSize, codepage, 0, wx.wxDefaultValidator, "ID.CHOICE1")
+                ui.CheckBox_fatfs_lfn = wx.wxCheckBox(this, ID.CHECKBOX_FATFS_LFN, "Enable long file names", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1")
+                ui.FlexGridSizer6:Add(ui.CheckBox_fatfs_lfn, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_fatfs_lfn_codepage = wx.wxChoice(this, ID.CHOICE_FATFS_LFN_CODEPAGE, wx.wxDefaultPosition, wx.wxDefaultSize, codepage, 0, wx.wxDefaultValidator, "ID.CHOICE1")
 
-                ui.FlexGridSizer6:Add(ui.Choice_lfn_codepage, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer6:Add(ui.Choice_fatfs_lfn_codepage, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer4:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
                 
                 ui.StaticBoxSizer3:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -158,13 +164,13 @@ function file_systems:create_window(parent)
                 this:SetScrollRate(5, 5)
                 
                 --
-                this:Connect(ID.CHECKBOX_DEVFS,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.CHECKBOX_LFS,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.CHECKBOX_FATFS,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.CHECKBOX_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
-                this:Connect(ID.CHOICE_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
-                this:Connect(ID.CHECKBOX_PROCFS,     wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.BUTTON_SAVE,         wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
+                this:Connect(ID.CHECKBOX_DEVFS,            wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_LFS,              wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_FATFS,            wx.wxEVT_COMMAND_CHECKBOX_CLICKED, FATFS_state_changed )
+                this:Connect(ID.CHECKBOX_FATFS_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
+                this:Connect(ID.CHOICE_FATFS_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
+                this:Connect(ID.CHECKBOX_PROCFS,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.BUTTON_SAVE,               wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
