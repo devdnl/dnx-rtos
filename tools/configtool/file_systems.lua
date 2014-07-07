@@ -59,7 +59,7 @@ local function on_button_save_click()
         wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_fatfs_lfn:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         wizcore:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
-            
+
         ui.Button_save:Enable(false)
 end
 
@@ -126,7 +126,7 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer4:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.CheckBox_fatfs = wx.wxCheckBox(this, ID.CHECKBOX_FATFS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_FATFS")
                 ui.FlexGridSizer4:Add(ui.CheckBox_fatfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                
+
                 ui.FlexGridSizer6 = wx.wxFlexGridSizer(1, 2, 0, 0)
                 ui.CheckBox_fatfs_lfn = wx.wxCheckBox(this, ID.CHECKBOX_FATFS_LFN, "Enable long file names", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1")
                 ui.FlexGridSizer6:Add(ui.CheckBox_fatfs_lfn, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -134,7 +134,7 @@ function file_systems:create_window(parent)
 
                 ui.FlexGridSizer6:Add(ui.Choice_fatfs_lfn_codepage, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer4:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-                
+
                 ui.StaticBoxSizer3:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -161,8 +161,8 @@ function file_systems:create_window(parent)
 
                 --
                 this:SetSizer(ui.FlexGridSizer1)
-                this:SetScrollRate(5, 5)
-                
+                this:SetScrollRate(50, 50)
+
                 --
                 this:Connect(ID.CHECKBOX_DEVFS,            wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
                 this:Connect(ID.CHECKBOX_LFS,              wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )

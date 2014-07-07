@@ -109,7 +109,7 @@ local function on_button_save_click()
         wizcore:key_write(wizcore.PROJECT.KEY.HEAP_BLOCK_SIZE, tostring(ui.SpinCtrl_mem_block:GetValue()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_ERRNO_STRING_LEN, tostring(ui.Choice_errno_size:GetSelection()))
         wizcore:key_write(wizcore.PROJECT.KEY.OS_HOSTNAME, '"'..ui.TextCtrl_hostname:GetValue()..'"')
-        
+
         ui.Button_save:Enable(false)
 end
 
@@ -269,7 +269,7 @@ function operating_system:create_window(parent)
 
                 -- Hostname group box
                 ui.StaticBoxSizer7 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Hostname")
-                ui.TextCtrl_hostname = wx.wxTextCtrl(this, ID.TEXTCTRL_HOSTNAME, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.TEXTCTRL_HOSTNAME")
+                ui.TextCtrl_hostname = wx.wxTextCtrl(this, ID.TEXTCTRL_HOSTNAME, "", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.TEXTCTRL_HOSTNAME")
                 ui.StaticBoxSizer7:Add(ui.TextCtrl_hostname, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer7, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -283,8 +283,8 @@ function operating_system:create_window(parent)
 
                 -- layout configuration
                 this:SetSizer(ui.FlexGridSizer1)
-                this:SetScrollRate(25, 25)
-                
+                this:SetScrollRate(50, 50)
+
                 -- signals
                 this:Connect(ID.SPINCTRL_TASK_STACK_SIZE,      wx.wxEVT_COMMAND_SPINCTRL_UPDATED, stack_value_changed )
                 this:Connect(ID.SPINCTRL_FS_STACK_SIZE,        wx.wxEVT_COMMAND_SPINCTRL_UPDATED, stack_value_changed )

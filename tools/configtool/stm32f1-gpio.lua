@@ -118,7 +118,7 @@ function gpio:create_window(parent)
 
         --
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Port selection")
-        ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+        ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0)
         ui.Choice_port:Append("Port A")
         ui.Choice_port:Append("Port B")
         ui.Choice_port:Append("Port C")
@@ -148,18 +148,19 @@ function gpio:create_window(parent)
                 ui.FlexGridSizer2:Add(ui.StaticText_pin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.TextCtrl_pin_name[i] = wx.wxTextCtrl(this, ID.TEXTCTRL_PIN_NAME[i], "")
-                ui.FlexGridSizer2:Add(ui.TextCtrl_pin_name[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
+                ui.FlexGridSizer2:Add(ui.TextCtrl_pin_name[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
-                ui.Choice_mode[i] = wx.wxChoice(this, ID.CHOICE_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, port_mode_string, 0)
+                ui.Choice_mode[i] = wx.wxChoice(this, ID.CHOICE_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, port_mode_string)
                 ui.FlexGridSizer2:Add(ui.Choice_mode[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
-                ui.Choice_state[i] = wx.wxChoice(this, ID.CHOICE_STATE[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-                ui.FlexGridSizer2:Add(ui.Choice_state[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
+                ui.Choice_state[i] = wx.wxChoice(this, ID.CHOICE_STATE[i], wx.wxDefaultPosition, wx.wxSize(100, -1), {})
+                ui.FlexGridSizer2:Add(ui.Choice_state[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
                 this:Connect(ID.CHOICE_MODE[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, port_mode_changed[i])
         end
-        ui.StaticBoxSizer2:Add(ui.FlexGridSizer2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        ui.StaticBoxSizer2:Add(ui.FlexGridSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         ui.StaticLine2 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
@@ -170,7 +171,7 @@ function gpio:create_window(parent)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(20, 20)
+        this:SetScrollRate(50, 50)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed)
