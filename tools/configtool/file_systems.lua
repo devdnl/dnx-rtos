@@ -60,7 +60,8 @@ function file_systems:create_window(parent)
                 ui.StaticText3:Wrap(wizcore.CONTROL_X_SIZE)
                 ui.FlexGridSizer4:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.CheckBox_fatfs = wx.wxCheckBox(this, ID.CHECKBOX_FATFS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_FATFS")
-
+                ui.FlexGridSizer4:Add(ui.CheckBox_fatfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                
                 ui.FlexGridSizer6 = wx.wxFlexGridSizer(1, 2, 0, 0)
                 ui.CheckBox_lfn = wx.wxCheckBox(this, ID.CHECKBOX_LFN, "Enable long file names", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1")
                 ui.FlexGridSizer6:Add(ui.CheckBox_lfn, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -91,9 +92,8 @@ function file_systems:create_window(parent)
                 ui.Choice_lfn_codepage:Append("1257 - Baltic")
                 ui.Choice_lfn_codepage:Append("1258 - Vietnam")
                 ui.FlexGridSizer6:Add(ui.Choice_lfn_codepage, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer3:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.FlexGridSizer4:Add(ui.CheckBox_fatfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer4:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+                
                 ui.StaticBoxSizer3:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 

@@ -20,6 +20,7 @@ ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 local function set_cpu_specific_controls(cpu_arch)
         if cpu_arch:match(wizcore.PROJECT.DEF.STM32F1) then
                 ui.Choice_CPU_arch:SetSelection(wizcore:get_string_index(wizcore.PROJECT.ARCH_LIST, wizcore.PROJECT.DEF.STM32F1) - 1)
+                ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
 
                 local micro = wizcore:key_read(wizcore.ARCH.STM32F1.KEY.CPU_NAME)
                 local midx  = wizcore:get_string_index(wizcore.ARCH.STM32F1.CPU_LIST, micro)
@@ -27,12 +28,16 @@ local function set_cpu_specific_controls(cpu_arch)
                 if midx == -1 then
                         wizcore:show_error_msg("Unknown CPU name", micro..": Unknown CPU name!")
                 else
-                        ui.Choice_CPU_name:Append(wizcore.ARCH.STM32F1.CPU_LIST)
+                        if ui.Choice_CPU_name:IsEmpty() then
+                                ui.Choice_CPU_name:Append(wizcore.ARCH.STM32F1.CPU_LIST)
+                        end
                         ui.Choice_CPU_name:SetSelection(midx - 1)
                 end
 
                 local prio = math.floor(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY))/16)
-                ui.Choice_default_irq_prio:Append(wizcore.ARCH.STM32F1.CPU_PRIORITY_LIST)
+                if ui.Choice_default_irq_prio:IsEmpty() then
+                        ui.Choice_default_irq_prio:Append(wizcore.ARCH.STM32F1.CPU_PRIORITY_LIST)
+                end
                 ui.Choice_default_irq_prio:SetSelection(prio)
 
         else
@@ -42,6 +47,8 @@ end
 
 
 local function load_controls()
+        print("load_controls()")
+
         local project_name   = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_NAME)
         local toolchain_name = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN)
         local cpu_arch       = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH)
@@ -80,6 +87,37 @@ end
 
 local function textctrl_updated()
         print("textctrl_updated()")
+        ui.Button_save:Enable(true)
+end
+
+
+local function choice_cpu_arch_selected(this)
+        print("choice_cpu_arch_selected()")
+        
+        if ui.Choice_CPU_arch.OldSelection ~= this:GetSelection() then
+                ui.Choice_CPU_arch.OldSelection = this:GetSelection()
+                ui.Choice_CPU_name:Clear()
+                ui.Choice_default_irq_prio:Clear()
+                set_cpu_specific_controls(wizcore.PROJECT.ARCH_LIST[this:GetSelection() + 1])
+                ui.Button_save:Enable(true)
+        end
+end
+
+
+local function choice_cpu_name_selected(this)
+        print("choice_cpu_name_selected()")
+        ui.Button_save:Enable(true)
+end
+
+
+local function choice_cpu_prio_selected(this)
+        print("choice_cpu_prio_selected()")
+        ui.Button_save:Enable(true)
+end
+
+
+local function spinctrl_osc_freq_updated(this)
+        print("spinctrl_osc_freq_updated()")
         ui.Button_save:Enable(true)
 end
 
@@ -136,9 +174,15 @@ function project:create_window(parent)
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
-                this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED, on_button_save_click)
-                this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,   textctrl_updated    )
-                this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,   textctrl_updated    )
+                this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click     )
+                this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
+                this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
+                this:Connect(ID.CHOICE_CPU_ARCH,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_arch_selected )
+                this:Connect(ID.CHOICE_CPU_NAME,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_name_selected )
+                this:Connect(ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_prio_selected )
+                this:Connect(ID.SPINCTRL_OSC_FREQ,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED, spinctrl_osc_freq_updated)
+                
+                load_controls()
         end
 
         return ui.window

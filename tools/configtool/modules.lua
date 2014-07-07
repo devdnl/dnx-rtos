@@ -40,7 +40,7 @@ end
 function modules:refresh()
         print("modules:refresh()")
 
-        local arch = wizcore:key_read("test.h", "CPU_ARCH")
+        local arch = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH)
 
         if arch:match("stm32f1") then
                 require("stm32f1-gpio")

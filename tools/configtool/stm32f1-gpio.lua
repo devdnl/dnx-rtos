@@ -74,16 +74,14 @@ local function port_mode_changed_hdl(pin, selection)
         ui.Choice_state[pin]:Clear()
 
         if selection >= 0 and selection <= 11 then
-                ui.Choice_state[pin]:Append("Low", "D")
-                ui.Choice_state[pin]:Append("High")
+                ui.Choice_state[pin]:Append({"Low (0)", "High (1)"})
                 ui.Choice_state[pin]:Enable(true)
 
         elseif selection >= 12 and selection <= 13  then
                 ui.Choice_state[pin]:Enable(false)
 
         elseif selection == 14 then
-                ui.Choice_state[pin]:Append("Down")
-                ui.Choice_state[pin]:Append("Up")
+                ui.Choice_state[pin]:Append({"Down", "Up"})
                 ui.Choice_state[pin]:Enable(true)
         end
 
