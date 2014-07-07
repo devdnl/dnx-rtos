@@ -1,10 +1,12 @@
 require("wx")
 
 wizcore = {}
+wizcore.MAIN_WINDOW_NAME = "dnx RTOS Configuration"
 wizcore.WINDOW_X_SIZE    = 800
 wizcore.WINDOW_Y_SIZE    = 600
 wizcore.CONTROL_X_SIZE   = 550
 wizcore.HEADER_FONT_SIZE = 14
+
 
 wizcore.PROJECT = {}
 wizcore.PROJECT.FILE = {}
@@ -246,8 +248,6 @@ end
 function wizcore:key_write(keypath, value)
         local filename = keypath[1]
         local key      = keypath[2]
-
-        print(filename, key, value)
 
         -- type check
         if type(filename) ~= "string" or type(key) ~= "string" or type(value) ~= "string" then

@@ -30,7 +30,7 @@ local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
 
         if page[card]:is_modified() then
-                local answer = wizcore:show_question_msg("Question", "Do you want to discard changes?")
+                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to discard changes?")
                 if answer == wx.wxID_NO then
                         this:Veto()
                 end
@@ -44,7 +44,7 @@ local function window_close()
         local card = ui.treebook:GetSelection() + 1
 
         if page[card]:is_modified() then
-                local answer = wizcore:show_question_msg("Question", "Do you want to quit and discard changes?")
+                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?")
                 if answer == wx.wxID_YES then
                         ui.frame:Destroy()
                 end
@@ -58,7 +58,7 @@ end
 --------------------------------------------------------------------------------
 local function main()
         -- creating controls
-        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "dnx RTOS Configuration", wx.wxDefaultPosition, wx.wxSize(wizcore:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
+        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, wizcore.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(wizcore:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
         ui.frame:SetMaxSize(wx.wxSize(wizcore:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
         ui.frame:SetMinSize(wx.wxSize(wizcore:get_window_size()))
