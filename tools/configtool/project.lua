@@ -100,6 +100,31 @@ local function on_button_save_click()
         wizcore:key_write(config.arch[cpu_arch].key.CPUCONFIG_CPUNAME, cpu_name)    -- CPU name in the Makefile (one for each architecture)
         wizcore:key_write(config.arch[cpu_arch].key.CPU_FAMILY, cpu_family)
 
+        -- disables all peripherals that are not assigned to selected microcontroller
+        local cpu_idx    = wizcore:get_cpu_index(cpu_arch, cpu_name)
+        local cpu        = config.arch[cpu_arch].cpulist:Children()[cpu_idx]
+        local cpu_periph = {}
+
+        for i = 1, cpu.peripherals:NumChildren() do
+                cpu_periph[i] = cpu.peripherals:Children()[i]:GetName()
+        end
+
+        for i = 1, config.project.modules:NumChildren() do
+                local module = config.project.modules:Children()[i]:GetValue()
+                local exist  = false
+
+                for j, name in ipairs(cpu_periph) do
+                        if name == module then
+                                exist = true
+                                break
+                        end
+                end
+
+                if not exist then
+                        wizcore:enable_module(module, exist)
+                end
+        end
+
         ui.Button_save:Enable(false)
 end
 

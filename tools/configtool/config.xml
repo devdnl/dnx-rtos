@@ -110,6 +110,29 @@
         <NO>__NO__</NO>
         <YES>__YES__</YES>
     </def>
+    <modules>
+        <module>GPIO</module>
+        <module>AFIO</module>
+        <module>CRC</module>
+        <module>ETH</module>
+        <module>PLL</module>
+        <module>SDSPI</module>
+        <module>SPI</module>
+        <module>TTY</module>
+        <module>UART</module>
+        <module>WDG</module>
+        <module>I2S</module>
+        <module>USB</module>
+        <module>USBOTG</module>
+        <module>I2C</module>
+        <module>ADC</module>
+        <module>DAC</module>
+        <module>SDIO</module>
+        <module>FSMC</module>
+        <module>FDMC</module>
+        <module>HDMICEC</module>
+        <module>CAN</module>
+    </modules>
 </project>
 
 <arch>
@@ -139,88 +162,453 @@
 
         <cpulist>
             <cpu><name>STM32F100C8xx</name>
-                <family>STM32F10X_MD_VL</family>
-                <GPIO>
-                    <port>
-                        <name>A</name>
-                        <pin0>true</pin0>
-                        <pin1>true</pin1>
-                    </port>
-                </GPIO>
+                <family>__STM32F10X_MD_VL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pinmask></pinmask>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F100RBxx</name>
+                <family>__STM32F10X_MD_VL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F100RExx</name>
+                <family>__STM32F10X_HD_VL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F100VBxx</name>
+                <family>__STM32F10X_MD_VL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F100ZCxx</name>
+                <family>__STM32F10X_HD_VL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101C8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101CBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101R8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101RBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101V8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F101VBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103C6xx</name>
+                <family>__STM32F10X_LD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103C8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103CBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103R6xx</name>
+                <family>__STM32F10X_LD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103R8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103RBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103RCxx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103RDxx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103RExx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103RGxx</name>
+                <family>__STM32F10X_XL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103T8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103V8xx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103VBxx</name>
+                <family>__STM32F10X_MD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103VCxx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103VDxx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103VExx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103VGxx</name>
+                <family>__STM32F10X_XL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103ZCxx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103ZExx</name>
+                <family>__STM32F10X_HD__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F103ZGxx</name>
+                <family>__STM32F10X_XL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F105RBxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F105RCxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F105VBxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F105VCxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F107RCxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                        </port>
+                    </GPIO>
+                    <USB></USB>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F107VBxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
             <cpu><name>STM32F107VCxx</name>
+                <family>__STM32F10X_CL__</family>
+                <peripherals>
+                    <GPIO>
+                        <port>
+                            <name>A</name>
+                            <pin0>true</pin0>
+                            <pin1>true</pin1>
+                        </port>
+                    </GPIO>
+                </peripherals>
             </cpu>
         </cpulist>
     </stm32f1>

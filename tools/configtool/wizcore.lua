@@ -407,3 +407,13 @@ function wizcore:bool_to_yes_no(bool)
         end
 end
 
+
+function wizcore:get_cpu_index(cpu_arch, cpu_name)
+        for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
+                if config.arch[cpu_arch].cpulist:Children()[i].name:GetValue() == cpu_name then
+                        return i
+                end
+        end
+
+        return 0
+end
