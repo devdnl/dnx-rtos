@@ -25,7 +25,7 @@ function welcome:create_window(parent)
                 FlexGridSizer1 = wx.wxFlexGridSizer(3, 1, 0, 0)
 
                 StaticText1 = wx.wxStaticText(this, wx.wxID_ANY, "Welcome to the dnx RTOS Configuration Tool!", wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxALIGN_LEFT)
-                StaticText1:SetFont(wx.wxFont(wizcore.HEADER_FONT_SIZE, wx.wxDEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxBOLD, false, "", wx.wxFONTENCODING_DEFAULT))
+                StaticText1:SetFont(wx.wxFont(14, wx.wxDEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxBOLD, false, "", wx.wxFONTENCODING_DEFAULT))
                 FlexGridSizer1:Add(StaticText1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "\nThe configuration is divided to few parts, each one configures a specified software module.")

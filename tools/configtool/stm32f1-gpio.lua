@@ -6,6 +6,7 @@ gpio = {}
 
 local ui = {}
 local ID = {}
+local periph
 
 local port_mode_string = {"Output Push-Pull 2MHz",
                           "Output Push-Pull 10MHz",
@@ -22,6 +23,46 @@ local port_mode_string = {"Output Push-Pull 2MHz",
                           "Analog input",
                           "Float input",
                           "Pulled input"}
+
+local port_mode_config = {"_GPIO_OUT_PUSH_PULL_2MHZ",
+                          "_GPIO_OUT_PUSH_PULL_10MHZ",
+                          "_GPIO_OUT_PUSH_PULL_50MHZ",
+                          "_GPIO_OUT_OPEN_DRAIN_2MHZ",
+                          "_GPIO_OUT_OPEN_DRAIN_10MHZ",
+                          "_GPIO_OUT_OPEN_DRAIN_50MHZ",
+                          "_GPIO_ALT_OUT_PUSH_PULL_2MHZ",
+                          "_GPIO_ALT_OUT_PUSH_PULL_10MHZ",
+                          "_GPIO_ALT_OUT_PUSH_PULL_50MHZ",
+                          "_GPIO_ALT_OUT_OPEN_DRAIN_2MHZ",
+                          "_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ",
+                          "_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ",
+                          "_GPIO_IN_ANALOG",
+                          "_GPIO_IN_FLOAT",
+                          "_GPIO_IN_PULLED"}
+
+
+local function load_controls()
+        local port = ui.Choice_port:GetSelection() + 1
+
+        for pin = 0, 15 do
+                local pin_key = config.arch.stm32f1.key.GPIO
+
+                pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_NAME__")
+                local pin_name = wizcore:key_read(pin_key)
+
+                pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_MODE__")
+                local pin_mode = wizcore:key_read(pin_key)
+
+                pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_STATE__")
+                local pin_state = wizcore:key_read(pin_key)
+
+                ui.TextCtrl_pin_name[pin + 1]:SetValue(pin_name)
+        end
+
+
+        local gpio_enabled = wizcore:get_module_state("GPIO")
+
+end
 
 
 local function checkbox_changed(this)
@@ -110,13 +151,17 @@ function gpio:create_window(parent)
         ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable")
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        --
+        -- port selection choice
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Port selection")
         ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0)
-        ui.Choice_port:Append("Port A")
-        ui.Choice_port:Append("Port B")
-        ui.Choice_port:Append("Port C")
-        ui.Choice_port:Append("Port D")
+
+        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        periph         = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
+
+        for i = 1, periph:NumChildren() do ui.Choice_port:Append("Port "..periph:Children()[i].name:GetValue()) end
+        ui.Choice_port:SetSelection(0)
+
         ui.StaticBoxSizer1:Add(ui.Choice_port, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -141,7 +186,7 @@ function gpio:create_window(parent)
                 ui.StaticText_pin[i] = wx.wxStaticText(this, wx.wxID_ANY, i-1 ..":")
                 ui.FlexGridSizer2:Add(ui.StaticText_pin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.TextCtrl_pin_name[i] = wx.wxTextCtrl(this, ID.TEXTCTRL_PIN_NAME[i], "")
+                ui.TextCtrl_pin_name[i] = wx.wxTextCtrl(this, ID.TEXTCTRL_PIN_NAME[i], "", wx.wxDefaultPosition, wx.wxSize(125,-1))
                 ui.FlexGridSizer2:Add(ui.TextCtrl_pin_name[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
                 ui.Choice_mode[i] = wx.wxChoice(this, ID.CHOICE_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, port_mode_string)
@@ -171,6 +216,9 @@ function gpio:create_window(parent)
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed)
         this:Connect(ID.CHOICE_PORT, wx.wxEVT_COMMAND_CHOICE_SELECTED, port_number_changed)
 
+        --
+        load_controls()
+
         return ui.window
 end
 
@@ -185,7 +233,7 @@ end
 
 
 function gpio:is_modified()
-        return false
+        return ui.Button_save:IsEnabled()
 end
 
 

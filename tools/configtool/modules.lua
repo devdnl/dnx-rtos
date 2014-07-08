@@ -5,8 +5,8 @@ modules = {}
 
 
 local ui   = {}
-local ID   = {}
 local page = {}
+
 
 local function notebook_page_changed(this)
         local card = this:GetSelection() + 1
