@@ -46,8 +46,8 @@ local function load_controls()
         ui.CheckBox_devfs:SetValue(wizcore:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(wizcore:get_module_state("LFS"))
         ui.CheckBox_fatfs:SetValue(wizcore:get_module_state("FATFS"))
-        ui.CheckBox_fatfs_lfn:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE)))
-        ui.Choice_fatfs_lfn_codepage:SetSelection(wizcore:get_string_index(codepage, wizcore:key_read(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE)) - 1)
+        ui.CheckBox_fatfs_lfn:SetValue(wizcore:yes_no_to_bool(wizcore:key_read(config.project.key.FATFS_LFN_ENABLE)))
+        ui.Choice_fatfs_lfn_codepage:SetSelection(wizcore:get_string_index(codepage, wizcore:key_read(config.project.key.FATFS_LFN_CODEPAGE)) - 1)
         ui.CheckBox_procfs:SetValue(wizcore:get_module_state("PROCFS"))
 end
 
@@ -55,9 +55,9 @@ end
 local function on_button_save_click()
         wizcore:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
         wizcore:enable_module("LFS", ui.CheckBox_lfs:GetValue())
-        wizcore:enable_module("FATFS", ui.CheckBox_devfs:GetValue())
-        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_fatfs_lfn:GetValue()))
-        wizcore:key_write(wizcore.PROJECT.KEY.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
+        wizcore:enable_module("FATFS", ui.CheckBox_fatfs:GetValue())
+        wizcore:key_write(config.project.key.FATFS_LFN_ENABLE, wizcore:bool_to_yes_no(ui.CheckBox_fatfs_lfn:GetValue()))
+        wizcore:key_write(config.project.key.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         wizcore:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
 
         ui.Button_save:Enable(false)
@@ -70,8 +70,9 @@ end
 
 
 local function FATFS_state_changed(this)
-    ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
-    ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
+        ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
+        ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
+        ui.Button_save:Enable(true)
 end
 
 

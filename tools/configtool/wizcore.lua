@@ -367,8 +367,8 @@ end
 
 
 function wizcore:enable_module(name, state)
-        local key1 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_H"]
-        local key2 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_MK"]
+        local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
+        local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
 
         wizcore:key_write(key1, wizcore:bool_to_yes_no(state))
         wizcore:key_write(key2, wizcore:bool_to_yes_no(state))
@@ -376,8 +376,8 @@ end
 
 
 function wizcore:get_module_state(name)
-        local key1 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_H"]
-        local key2 = wizcore.PROJECT.KEY["ENABLE_"..name:upper().."_MK"]
+        local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
+        local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
 
         local key1_value = wizcore:key_read(key1)
         local key2_value = wizcore:key_read(key2)
@@ -391,7 +391,7 @@ end
 
 
 function wizcore:yes_no_to_bool(yes_no)
-        if yes_no:match(wizcore.PROJECT.DEF.YES) then
+        if yes_no:match(config.project.def.YES:GetValue()) then
                 return true
         else
                 return false
@@ -401,9 +401,9 @@ end
 
 function wizcore:bool_to_yes_no(bool)
         if bool then
-                return wizcore.PROJECT.DEF.YES
+                return config.project.def.YES:GetValue()
         else
-                return wizcore.PROJECT.DEF.NO
+                return config.project.def.NO:GetValue()
         end
 end
 
