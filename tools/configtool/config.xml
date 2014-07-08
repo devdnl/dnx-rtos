@@ -9,10 +9,106 @@
 
 <project>
     <key>
-        <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
         <PROJECT_NAME><path>../../config/project/Makefile</path><key>PROJECT_NAME</key></PROJECT_NAME>
+        <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>PROJECT_CPU_ARCH</key></PROJECT_CPU_ARCH>
+        <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>PROJECT_TOOLCHAIN</key></PROJECT_TOOLCHAIN>
+        <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>ENABLE_LFS</key></ENABLE_LFS_MK>
+        <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>ENABLE_DEVFS</key></ENABLE_DEVFS_MK>
+        <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>ENABLE_PROCFS</key></ENABLE_PROCFS_MK>
+        <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>ENABLE_FATFS</key></ENABLE_FATFS_MK>
+        <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>ENABLE_GPIO</key></ENABLE_GPIO_MK>
+        <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>ENABLE_AFIO</key></ENABLE_AFIO_MK>
+        <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>ENABLE_CRC</key></ENABLE_CRC_MK>
+        <ENABLE_ETH_MK><path>../../config/project/Makefile</path><key>ENABLE_ETH</key></ENABLE_ETH_MK>
+        <ENABLE_PLL_MK><path>../../config/project/Makefile</path><key>ENABLE_PLL</key></ENABLE_PLL_MK>
+        <ENABLE_SDSPI_MK><path>../../config/project/Makefile</path><key>ENABLE_SDSPI</key></ENABLE_SDSPI_MK>
+        <ENABLE_SPI_MK><path>../../config/project/Makefile</path><key>ENABLE_SPI</key></ENABLE_SPI_MK>
+        <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>ENABLE_TTY</key></ENABLE_TTY_MK>
+        <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>ENABLE_UART</key></ENABLE_UART_MK>
+        <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>ENABLE_WDG</key></ENABLE_WDG_MK>
+        <ENABLE_I2S_MK><path>../../config/project/Makefile</path><key>ENABLE_I2S</key></ENABLE_I2S_MK>
+        <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>ENABLE_USB</key></ENABLE_USB_MK>
+        <ENABLE_USBOTG_MK><path>../../config/project/Makefile</path><key>ENABLE_USBOTG</key></ENABLE_USBOTG_MK>
+        <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>ENABLE_I2C</key></ENABLE_I2C_MK>
+        <ENABLE_ADC_MK><path>../../config/project/Makefile</path><key>ENABLE_ADC</key></ENABLE_ADC_MK>
+        <ENABLE_DAC_MK><path>../../config/project/Makefile</path><key>ENABLE_DAC</key></ENABLE_DAC_MK>
+        <ENABLE_SDIO_MK><path>../../config/project/Makefile</path><key>ENABLE_SDIO</key></ENABLE_SDIO_MK>
+        <ENABLE_FSMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FSMC</key></ENABLE_FSMC_MK>
+        <ENABLE_FDMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FDMC</key></ENABLE_FDMC_MK>
+        <ENABLE_HDMICEC_MK><path>../../config/project/Makefile</path><key>ENABLE_HDMICEC</key></ENABLE_HDMICEC_MK>
+        <ENABLE_CAN_MK><path>../../config/project/Makefile</path><key>ENABLE_CAN</key></ENABLE_CAN_MK>
+        <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+
+        <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
+        <CPU_START_FREQ><path>../../config/project/flags.h</path><key>__CPU_START_FREQ__</key></CPU_START_FREQ>
+        <CPU_OSC_FREQ><path>../../config/project/flags.h</path><key>__CPU_OSC_FREQ__</key></CPU_OSC_FREQ>
+        <IRQ_RTOS_KERNEL_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_RTOS_KERNEL_PRIORITY__</key></IRQ_RTOS_KERNEL_PRIORITY>
+        <IRQ_RTOS_SYSCALL_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_RTOS_SYSCALL_PRIORITY__</key></IRQ_RTOS_SYSCALL_PRIORITY>
+        <IRQ_USER_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_USER_PRIORITY__</key></IRQ_USER_PRIORITY>
+        <HEAP_BLOCK_SIZE><path>../../config/project/flags.h</path><key>__HEAP_BLOCK_SIZE__</key></HEAP_BLOCK_SIZE>
+        <OS_TASK_MIN_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_TASK_MIN_STACK_DEPTH__</key></OS_TASK_MIN_STACK_DEPTH>
+        <OS_FILE_SYSTEM_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_FILE_SYSTEM_STACK_DEPTH__</key></OS_FILE_SYSTEM_STACK_DEPTH>
+        <OS_IRQ_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_IRQ_STACK_DEPTH__</key></OS_IRQ_STACK_DEPTH>
+        <OS_TASK_MAX_PRIORITIES><path>../../config/project/flags.h</path><key>__OS_TASK_MAX_PRIORITIES__</key></OS_TASK_MAX_PRIORITIES>
+        <OS_TASK_NAME_LEN><path>../../config/project/flags.h</path><key>__OS_TASK_NAME_LEN__</key></OS_TASK_NAME_LEN>
+        <OS_TASK_SCHED_FREQ><path>../../config/project/flags.h</path><key>__OS_TASK_SCHED_FREQ__</key></OS_TASK_SCHED_FREQ>
+        <OS_SLEEP_ON_IDLE><path>../../config/project/flags.h</path><key>__OS_SLEEP_ON_IDLE__</key></OS_SLEEP_ON_IDLE>
+        <OS_PRINTF_ENABLE><path>../../config/project/flags.h</path><key>__OS_PRINTF_ENABLE__</key></OS_PRINTF_ENABLE>
+        <OS_SCANF_ENABLE><path>../../config/project/flags.h</path><key>__OS_SCANF_ENABLE__</key></OS_SCANF_ENABLE>
+        <OS_SYSTEM_MSG_ENABLE><path>../../config/project/flags.h</path><key>__OS_SYSTEM_MSG_ENABLE__</key></OS_SYSTEM_MSG_ENABLE>
+        <OS_COLOR_TERMINAL_ENABLE><path>../../config/project/flags.h</path><key>__OS_COLOR_TERMINAL_ENABLE__</key></OS_COLOR_TERMINAL_ENABLE>
+        <OS_STREAM_BUFFER_LENGTH><path>../../config/project/flags.h</path><key>__OS_STREAM_BUFFER_LENGTH__</key></OS_STREAM_BUFFER_LENGTH>
+        <OS_PIPE_LENGTH><path>../../config/project/flags.h</path><key>__OS_PIPE_LENGTH__</key></OS_PIPE_LENGTH>
+        <OS_ERRNO_STRING_LEN><path>../../config/project/flags.h</path><key>__OS_ERRNO_STRING_LEN__</key></OS_ERRNO_STRING_LEN>
+        <OS_MONITOR_TASK_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_TASK_MEMORY_USAGE__</key></OS_MONITOR_TASK_MEMORY_USAGE>
+        <OS_MONITOR_TASK_FILE_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_TASK_FILE_USAGE__</key></OS_MONITOR_TASK_FILE_USAGE>
+        <OS_MONITOR_KERNEL_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_KERNEL_MEMORY_USAGE__</key></OS_MONITOR_KERNEL_MEMORY_USAGE>
+        <OS_MONITOR_MODULE_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_MODULE_MEMORY_USAGE__</key></OS_MONITOR_MODULE_MEMORY_USAGE>
+        <OS_MONITOR_SYSTEM_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_SYSTEM_MEMORY_USAGE__</key></OS_MONITOR_SYSTEM_MEMORY_USAGE>
+        <OS_MONITOR_CPU_LOAD><path>../../config/project/flags.h</path><key>__OS_MONITOR_CPU_LOAD__</key></OS_MONITOR_CPU_LOAD>
+        <OS_MONITOR_NETWORK_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE__</key></OS_MONITOR_NETWORK_MEMORY_USAGE>
+        <OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__</key></OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT>
+        <OS_HOSTNAME><path>../../config/project/flags.h</path><key>__OS_HOSTNAME__</key></OS_HOSTNAME>
+        <OS_SYSTEM_STOP_MACRO><path>../../config/project/flags.h</path><key>__OS_SYSTEM_STOP_MACRO__</key></OS_SYSTEM_STOP_MACRO>
+        <ENABLE_NETWORK_H><path>../../config/project/flags.h</path><key>__NETWORK_ENABLE__</key></ENABLE_NETWORK_H>
+        <NETWORK_MAC_ADDR_0><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_0__</key></NETWORK_MAC_ADDR_0>
+        <NETWORK_MAC_ADDR_1><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_1__</key></NETWORK_MAC_ADDR_1>
+        <NETWORK_MAC_ADDR_2><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_2__</key></NETWORK_MAC_ADDR_2>
+        <NETWORK_MAC_ADDR_3><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_3__</key></NETWORK_MAC_ADDR_3>
+        <NETWORK_MAC_ADDR_4><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
+        <NETWORK_MAC_ADDR_5><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
+        <NETWORK_ETHIF_FILE><path>../../config/project/flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+        <ENABLE_DEVFS_H><path>../../config/project/flags.h</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_H>
+        <ENABLE_LFS_H><path>../../config/project/flags.h</path><key>__ENABLE_LFS__</key></ENABLE_LFS_H>
+        <ENABLE_FATFS_H><path>../../config/project/flags.h</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_H>
+        <FATFS_LFN_ENABLE><path>../../config/project/flags.h</path><key>__FATFS_LFN_ENABLE__</key></FATFS_LFN_ENABLE>
+        <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
+        <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
+        <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
+        <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
+        <ENABLE_CRC_H><path>../../config/project/flags.h</path><key>__ENABLE_CRC__</key></ENABLE_CRC_H>
+        <ENABLE_ETH_H><path>../../config/project/flags.h</path><key>__ENABLE_ETH__</key></ENABLE_ETH_H>
+        <ENABLE_PLL_H><path>../../config/project/flags.h</path><key>__ENABLE_PLL__</key></ENABLE_PLL_H>
+        <ENABLE_SDSPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_H>
+        <ENABLE_SPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SPI__</key></ENABLE_SPI_H>
+        <ENABLE_TTY_H><path>../../config/project/flags.h</path><key>__ENABLE_TTY__</key></ENABLE_TTY_H>
+        <ENABLE_UART_H><path>../../config/project/flags.h</path><key>__ENABLE_UART__</key></ENABLE_UART_H>
+        <ENABLE_WDG_H><path>../../config/project/flags.h</path><key>__ENABLE_WDG__</key></ENABLE_WDG_H>
+        <ENABLE_I2S_H><path>../../config/project/flags.h</path><key>__ENABLE_I2S__</key></ENABLE_I2S_H>
+        <ENABLE_USB_H><path>../../config/project/flags.h</path><key>__ENABLE_USB__</key></ENABLE_USB_H>
+        <ENABLE_USBOTG_H><path>../../config/project/flags.h</path><key>__ENABLE_USBOTG__</key></ENABLE_USBOTG_H>
+        <ENABLE_I2C_H><path>../../config/project/flags.h</path><key>__ENABLE_I2C__</key></ENABLE_I2C_H>
+        <ENABLE_ADC_H><path>../../config/project/flags.h</path><key>__ENABLE_ADC__</key></ENABLE_ADC_H>
+        <ENABLE_DAC_H><path>../../config/project/flags.h</path><key>__ENABLE_DAC__</key></ENABLE_DAC_H>
+        <ENABLE_SDIO_H><path>../../config/project/flags.h</path><key>__ENABLE_SDIO__</key></ENABLE_SDIO_H>
+        <ENABLE_FSMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FSMC__</key></ENABLE_FSMC_H>
+        <ENABLE_FDMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FDMC__</key></ENABLE_FDMC_H>
+        <ENABLE_HDMICEC_H><path>../../config/project/flags.h</path><key>__ENABLE_HDMICEC__</key></ENABLE_HDMICEC_H>
+        <ENABLE_CAN_H><path>../../config/project/flags.h</path><key>__ENABLE_CAN__</key></ENABLE_CAN_H>
     </key>
     <def>
+        <NO>__NO__</NO>
+        <YES>__YES__</YES>
     </def>
 </project>
 
@@ -34,42 +130,97 @@
             <priority><name>Priority 12</name><value>0xCF</value></priority>
             <priority><name>Priority 13 (the lowest)</name><value>0xDF</value></priority>
         </priorities>
-            
+
+        <key>
+            <CPU_NAME><path>../../config/stm32f1/cpu.h</path><key>__CPU_NAME__</key></CPU_NAME>
+            <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
+            <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>CPUCONFIG_CPUNAME</key></CPUCONFIG_CPUNAME>
+        </key>
+
         <cpulist>
-            <cpu><name>STM32F107RCxx</name>
+            <cpu><name>STM32F100C8xx</name>
+                <family>STM32F10X_MD_VL</family>
                 <GPIO>
                     <port>
                         <name>A</name>
                         <pin0>true</pin0>
                         <pin1>true</pin1>
                     </port>
-
-                    <port>
-                        <name>B</name>
-                        <pin0>true</pin0>
-                        <pin1>true</pin1>
-                    </port>
                 </GPIO>
-                <SPI>
-                </SPI>
+            </cpu>
+            <cpu><name>STM32F100RBxx</name>
+            </cpu>
+            <cpu><name>STM32F100RExx</name>
+            </cpu>
+            <cpu><name>STM32F100VBxx</name>
+            </cpu>
+            <cpu><name>STM32F100ZCxx</name>
+            </cpu>
+            <cpu><name>STM32F101C8xx</name>
+            </cpu>
+            <cpu><name>STM32F101CBxx</name>
+            </cpu>
+            <cpu><name>STM32F101R8xx</name>
+            </cpu>
+            <cpu><name>STM32F101RBxx</name>
+            </cpu>
+            <cpu><name>STM32F101V8xx</name>
+            </cpu>
+            <cpu><name>STM32F101VBxx</name>
+            </cpu>
+            <cpu><name>STM32F103C6xx</name>
+            </cpu>
+            <cpu><name>STM32F103C8xx</name>
+            </cpu>
+            <cpu><name>STM32F103CBxx</name>
+            </cpu>
+            <cpu><name>STM32F103R6xx</name>
+            </cpu>
+            <cpu><name>STM32F103R8xx</name>
             </cpu>
             <cpu><name>STM32F103RBxx</name>
-                <GPIO>
-                    <port><name>A</name>
-                        <pin0>true</pin0>
-                        <pin1>true</pin1>
-                    </port>
-                    <port><name>B</name>
-                        <pin0>true</pin0>
-                        <pin1>true</pin1>
-                    </port>
-                    
-                    <port>
-                        <name>C</name>
-                        <pin0>true</pin0>
-                        <pin1>true</pin1>
-                    </port>
-                </GPIO>
+            </cpu>
+            <cpu><name>STM32F103RCxx</name>
+            </cpu>
+            <cpu><name>STM32F103RDxx</name>
+            </cpu>
+            <cpu><name>STM32F103RExx</name>
+            </cpu>
+            <cpu><name>STM32F103RGxx</name>
+            </cpu>
+            <cpu><name>STM32F103T8xx</name>
+            </cpu>
+            <cpu><name>STM32F103V8xx</name>
+            </cpu>
+            <cpu><name>STM32F103VBxx</name>
+            </cpu>
+            <cpu><name>STM32F103VCxx</name>
+            </cpu>
+            <cpu><name>STM32F103VDxx</name>
+            </cpu>
+            <cpu><name>STM32F103VExx</name>
+            </cpu>
+            <cpu><name>STM32F103VGxx</name>
+            </cpu>
+            <cpu><name>STM32F103ZCxx</name>
+            </cpu>
+            <cpu><name>STM32F103ZExx</name>
+            </cpu>
+            <cpu><name>STM32F103ZGxx</name>
+            </cpu>
+            <cpu><name>STM32F105RBxx</name>
+            </cpu>
+            <cpu><name>STM32F105RCxx</name>
+            </cpu>
+            <cpu><name>STM32F105VBxx</name>
+            </cpu>
+            <cpu><name>STM32F105VCxx</name>
+            </cpu>
+            <cpu><name>STM32F107RCxx</name>
+            </cpu>
+            <cpu><name>STM32F107VBxx</name>
+            </cpu>
+            <cpu><name>STM32F107VCxx</name>
             </cpu>
         </cpulist>
     </stm32f1>

@@ -28,8 +28,8 @@ local function set_cpu_specific_controls(cpu_arch)
 
         if cpu_found then
                 ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
-                
-                local micro = wizcore:key_read(wizcore.ARCH.STM32F1.KEY.CPU_NAME) --FIXME any CPU key
+
+                local micro = wizcore:key_read(config.arch[cpu_arch].key.CPU_NAME)
                 local micro_found = false
                 if ui.Choice_CPU_name:IsEmpty() then
                         for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
@@ -40,24 +40,24 @@ local function set_cpu_specific_controls(cpu_arch)
                                         micro_found = true
                                 end
                         end
-                        
+
                         if not micro_found then
                                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
                         end
                 end
-                
-                local prio = wizcore:key_read(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY)
+
+                local prio = wizcore:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
                 if ui.Choice_default_irq_prio:IsEmpty() then
                         for i = 1, config.arch[cpu_arch].priorities:NumChildren() do
                                 ui.Choice_default_irq_prio:Append(config.arch[cpu_arch].priorities.priority[i].name:GetValue())
-     
+
                                 if prio:match(config.arch[cpu_arch].priorities.priority[i].value:GetValue()) then
                                         ui.Choice_default_irq_prio:SetSelection(i - 1)
                                         prio_found = true
                                 end
                         end
-                        
+
                         if not prio_found then
                                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, prio..": priority number not found!")
                         end
@@ -69,10 +69,10 @@ end
 
 
 local function load_controls()
-        local project_name   = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_NAME)
-        local toolchain_name = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN)
-        local cpu_arch       = wizcore:key_read(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH)
-        local cpu_osc_freq   = wizcore:key_read(wizcore.PROJECT.KEY.CPU_OSC_FREQ)
+        local project_name   = wizcore:key_read(config.project.key.PROJECT_NAME)
+        local toolchain_name = wizcore:key_read(config.project.key.PROJECT_TOOLCHAIN)
+        local cpu_arch       = wizcore:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local cpu_osc_freq   = wizcore:key_read(config.project.key.CPU_OSC_FREQ)
 
         ui.TextCtrl_project_name:SetValue(project_name)
         ui.TextCtrl_toolchain_name:SetValue(toolchain_name)
@@ -85,19 +85,20 @@ end
 
 
 local function on_button_save_click()
-        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
-        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
-        wizcore:key_write(wizcore.PROJECT.KEY.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
+        local cpu_arch     = config.arch:Children()[ui.Choice_CPU_arch:GetSelection() + 1]:GetName()
+        local cpu_name     = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].name:GetValue()
+        local cpu_family   = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].family:GetValue()
+        local cpu_priority = config.arch[cpu_arch].priorities.priority[ui.Choice_default_irq_prio:GetSelection() + 1].value:GetValue()
 
-        local arch = wizcore.PROJECT.ARCH_LIST[ui.Choice_CPU_arch:GetSelection() + 1]
-        wizcore:key_write(wizcore.PROJECT.KEY.PROJECT_CPU_ARCH, arch)
-        wizcore:key_write(wizcore.PROJECT.KEY.CPU_ARCH, arch)
-
-        if arch:match(wizcore.PROJECT.DEF.STM32F1) then
-                wizcore:key_write(wizcore.ARCH.STM32F1.KEY.CPU_NAME, wizcore.ARCH.STM32F1.CPU_LIST[ui.Choice_CPU_name:GetSelection() + 1])
-                wizcore:key_write(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY, wizcore.ARCH.STM32F1.CPU_LIST[ui.Choice_CPU_name:GetSelection() + 1])
-                wizcore:key_write(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY, string.format('0x%X', bit.bor(ui.Choice_default_irq_prio:GetSelection() * 16, 0xF)))
-        end
+        wizcore:key_write(config.project.key.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
+        wizcore:key_write(config.project.key.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
+        wizcore:key_write(config.project.key.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
+        wizcore:key_write(config.project.key.PROJECT_CPU_ARCH, cpu_arch)
+        wizcore:key_write(config.project.key.CPU_ARCH, cpu_arch)
+        wizcore:key_write(config.project.key.IRQ_USER_PRIORITY, cpu_priority)
+        wizcore:key_write(config.arch[cpu_arch].key.CPU_NAME, cpu_name)             -- CPU name in the cpu.h file (one for each architecture)
+        wizcore:key_write(config.arch[cpu_arch].key.CPUCONFIG_CPUNAME, cpu_name)    -- CPU name in the Makefile (one for each architecture)
+        wizcore:key_write(config.arch[cpu_arch].key.CPU_FAMILY, cpu_family)
 
         ui.Button_save:Enable(false)
 end
@@ -113,7 +114,7 @@ local function choice_cpu_arch_selected(this)
                 ui.Choice_CPU_arch.OldSelection = this:GetSelection()
                 ui.Choice_CPU_name:Clear()
                 ui.Choice_default_irq_prio:Clear()
-                set_cpu_specific_controls(wizcore.PROJECT.ARCH_LIST[this:GetSelection() + 1])
+                set_cpu_specific_controls(config.arch:Children()[this:GetSelection() + 1]:GetName())
                 ui.Button_save:Enable(true)
         end
 end
@@ -148,28 +149,33 @@ function project:create_window(parent)
                 ui.StaticBoxSizer_project_name:Add(ui.TextCtrl_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- Toolchain name groupbox
                 ui.StaticBoxSizer_toochain_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Toolchain name")
                 ui.TextCtrl_toolchain_name = wx.wxTextCtrl(this, ID.TEXTCTRL_TOOLCHAIN_NAME, "", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.TextCtrl_toolchain_name:SetToolTip("Enter a name of first part of your compiler name, example:\n - Linaro, CodeSourcery: arm-none-eabi-")
                 ui.StaticBoxSizer_toochain_name:Add(ui.TextCtrl_toolchain_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_toochain_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- CPU architecture groupbox
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture and family")
                 ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
                 for i = 1, config.arch:NumChildren() do ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName()) end
                 ui.StaticBoxSizer1:Add(ui.Choice_CPU_arch, 1, bit.bor(wx.wxALL, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- Microcontroller selection groupbox
                 ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Microcontroller selection")
                 ui.Choice_CPU_name = wx.wxChoice(this, ID.CHOICE_CPU_NAME, wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.StaticBoxSizer3:Add(ui.Choice_CPU_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- Default priority groupbox
                 ui.StaticBoxSizer_default_irq_prio = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Default priority value for user\'s interrupts")
                 ui.Choice_default_irq_prio = wx.wxChoice(this, ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.StaticBoxSizer_default_irq_prio:Add(ui.Choice_default_irq_prio, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_default_irq_prio, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- oscillator frequency selection
                 ui.StaticBoxSizer2 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Oscillator frequency")
                 ui.SpinCtrl_osc_freq = wx.wxSpinCtrl(this, ID.SPINCTRL_OSC_FREQ, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1000, 100000000)
                 ui.SpinCtrl_osc_freq:SetToolTip("This is a frequency of a connected to the microcontroller external generator or crystal.")
@@ -178,15 +184,19 @@ function project:create_window(parent)
                 ui.StaticBoxSizer2:Add(ui.StaticText2, 1, bit.bor(wx.wxALL, wx.wxALIGN_LEFT, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                --
                 ui.StaticLine2 = wx.wxStaticLine(this, ID.STATICLINE2, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
                 ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
 
+                --
                 ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
+                --
                 this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click     )
                 this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
