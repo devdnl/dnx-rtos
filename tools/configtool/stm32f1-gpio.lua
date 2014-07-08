@@ -1,3 +1,4 @@
+module(..., package.seeall)
 require("wx")
 require("wizcore")
 
@@ -5,13 +6,6 @@ gpio = {}
 
 local ui = {}
 local ID = {}
-
-local cpu = {}
-cpu.STM32F103C6xx = {["A"] = {false, true, true, true, true, true, true, true, true, false, true, true, true, true, true, false},
-                     ["B"] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true},
-                     ["C"] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true},
-                     ["D"] = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true}}
-
 
 local port_mode_string = {"Output Push-Pull 2MHz",
                           "Output Push-Pull 10MHz",
@@ -192,4 +186,9 @@ end
 
 function gpio:is_modified()
         return false
+end
+
+
+function get_handler()
+        return gpio
 end
