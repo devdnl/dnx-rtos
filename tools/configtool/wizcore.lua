@@ -1,10 +1,13 @@
 require("wx")
+xml = require("xmlSimple").newParser()
+
+config = xml:loadFile("config.xml")
 
 wizcore = {}
-wizcore.MAIN_WINDOW_NAME = "dnx RTOS Configuration"
-wizcore.WINDOW_X_SIZE    = 800
-wizcore.WINDOW_Y_SIZE    = 600
-wizcore.CONTROL_X_SIZE   = 550
+wizcore.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
+wizcore.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
+wizcore.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
+wizcore.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
 wizcore.HEADER_FONT_SIZE = 14
 
 

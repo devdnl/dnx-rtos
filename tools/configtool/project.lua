@@ -18,30 +18,52 @@ ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 
 
 local function set_cpu_specific_controls(cpu_arch)
-        if cpu_arch:match(wizcore.PROJECT.DEF.STM32F1) then
-                ui.Choice_CPU_arch:SetSelection(wizcore:get_string_index(wizcore.PROJECT.ARCH_LIST, wizcore.PROJECT.DEF.STM32F1) - 1)
+        local cpu_found = false
+        for i = 1, config.arch:NumChildren() do
+                if config.arch:Children()[i]:GetName() == cpu_arch then
+                        ui.Choice_CPU_arch:SetSelection(i - 1)
+                        cpu_found = true
+                end
+        end
+
+        if cpu_found then
                 ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
-
-                local micro = wizcore:key_read(wizcore.ARCH.STM32F1.KEY.CPU_NAME)
-                local midx  = wizcore:get_string_index(wizcore.ARCH.STM32F1.CPU_LIST, micro)
-
-                if midx == -1 then
-                        wizcore:show_error_msg("Unknown CPU name", micro..": Unknown CPU name!")
-                else
-                        if ui.Choice_CPU_name:IsEmpty() then
-                                ui.Choice_CPU_name:Append(wizcore.ARCH.STM32F1.CPU_LIST)
+                
+                local micro = wizcore:key_read(wizcore.ARCH.STM32F1.KEY.CPU_NAME) --FIXME any CPU key
+                local micro_found = false
+                if ui.Choice_CPU_name:IsEmpty() then
+                        for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
+                                local name = config.arch[cpu_arch].cpulist.cpu[i].name:GetValue()
+                                ui.Choice_CPU_name:Append(name)
+                                if name:match(micro) then
+                                        ui.Choice_CPU_name:SetSelection(i - 1)
+                                        micro_found = true
+                                end
                         end
-                        ui.Choice_CPU_name:SetSelection(midx - 1)
+                        
+                        if not micro_found then
+                                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
+                        end
                 end
-
-                local prio = math.floor(tonumber(wizcore:key_read(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY))/16)
+                
+                local prio = wizcore:key_read(wizcore.PROJECT.KEY.IRQ_USER_PRIORITY)
+                local prio_found = false
                 if ui.Choice_default_irq_prio:IsEmpty() then
-                        ui.Choice_default_irq_prio:Append(wizcore.ARCH.STM32F1.CPU_PRIORITY_LIST)
+                        for i = 1, config.arch[cpu_arch].priorities:NumChildren() do
+                                ui.Choice_default_irq_prio:Append(config.arch[cpu_arch].priorities.priority[i].name:GetValue())
+     
+                                if prio:match(config.arch[cpu_arch].priorities.priority[i].value:GetValue()) then
+                                        ui.Choice_default_irq_prio:SetSelection(i - 1)
+                                        prio_found = true
+                                end
+                        end
+                        
+                        if not prio_found then
+                                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, prio..": priority number not found!")
+                        end
                 end
-                ui.Choice_default_irq_prio:SetSelection(prio)
-
         else
-                wizcore:show_error_msg("Unknown CPU architecture", wizcore.PROJECT.FILE.FLAGS_H..": Unknown CPU architecture")
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, cpu_arch..": Unknown CPU architecture!")
         end
 end
 
@@ -133,7 +155,8 @@ function project:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_toochain_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture and family")
-                ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, wizcore.PROJECT.ARCH_LIST, 0);
+                ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
+                for i = 1, config.arch:NumChildren() do ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName()) end
                 ui.StaticBoxSizer1:Add(ui.Choice_CPU_arch, 1, bit.bor(wx.wxALL, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 

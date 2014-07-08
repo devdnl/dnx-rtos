@@ -1,0 +1,76 @@
+<tool>
+    <window>
+        <name>dnx RTOS Configuration</name>
+        <xsize>800</xsize>
+        <ysize>600</ysize>
+        <csize>550</csize>
+    </window>
+</tool>
+
+<project>
+    <key>
+        <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
+        <PROJECT_NAME><path>../../config/project/Makefile</path><key>PROJECT_NAME</key></PROJECT_NAME>
+    </key>
+    <def>
+    </def>
+</project>
+
+<arch>
+    <stm32f1>
+        <priorities>
+            <priority><name>Priority 0 (the highest)</name><value>0x0F</value></priority>
+            <priority><name>Priority 1</name><value>0x1F</value></priority>
+            <priority><name>Priority 2</name><value>0x2F</value></priority>
+            <priority><name>Priority 3</name><value>0x3F</value></priority>
+            <priority><name>Priority 4</name><value>0x4F</value></priority>
+            <priority><name>Priority 5</name><value>0x5F</value></priority>
+            <priority><name>Priority 6</name><value>0x6F</value></priority>
+            <priority><name>Priority 7</name><value>0x7F</value></priority>
+            <priority><name>Priority 8</name><value>0x8F</value></priority>
+            <priority><name>Priority 9</name><value>0x9F</value></priority>
+            <priority><name>Priority 10</name><value>0xAF</value></priority>
+            <priority><name>Priority 11</name><value>0xBF</value></priority>
+            <priority><name>Priority 12</name><value>0xCF</value></priority>
+            <priority><name>Priority 13 (the lowest)</name><value>0xDF</value></priority>
+        </priorities>
+            
+        <cpulist>
+            <cpu><name>STM32F107RCxx</name>
+                <GPIO>
+                    <port>
+                        <name>A</name>
+                        <pin0>true</pin0>
+                        <pin1>true</pin1>
+                    </port>
+
+                    <port>
+                        <name>B</name>
+                        <pin0>true</pin0>
+                        <pin1>true</pin1>
+                    </port>
+                </GPIO>
+                <SPI>
+                </SPI>
+            </cpu>
+            <cpu><name>STM32F103RBxx</name>
+                <GPIO>
+                    <port><name>A</name>
+                        <pin0>true</pin0>
+                        <pin1>true</pin1>
+                    </port>
+                    <port><name>B</name>
+                        <pin0>true</pin0>
+                        <pin1>true</pin1>
+                    </port>
+                    
+                    <port>
+                        <name>C</name>
+                        <pin0>true</pin0>
+                        <pin1>true</pin1>
+                    </port>
+                </GPIO>
+            </cpu>
+        </cpulist>
+    </stm32f1>
+</arch>

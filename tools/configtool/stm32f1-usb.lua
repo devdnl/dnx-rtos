@@ -1,6 +1,5 @@
 require("wx")
 require("wizcore")
-xml = require("xmlSimple").newParser()
 
 usb = {}
 
@@ -19,29 +18,18 @@ function usb:create_window(parent)
         ui.window:Enable(false)
 
 
-
-
-        local parsedXml = xml:loadFile("stm32f1-gpio.xml")
-
-
-        print(parsedXml.note.to:GetValue())
-        print(parsedXml.note.from:GetValue())
-        print(parsedXml.note.heading:GetValue())
-        print(parsedXml.note.body:GetValue())
-
-        print(parsedXml.microcontroller.STM32F107RCXX.GPIO:NumChildren(),
-               parsedXml.microcontroller.STM32F107RCXX.GPIO.PORT[1].name:GetValue(),
-               parsedXml.microcontroller.STM32F107RCXX.GPIO.PORT[2].NAME:GetValue(),
-               parsedXml.microcontroller.STM32F107RCXX.GPIO.PORT[2].NAME:SetValue("dupa"),
-               parsedXml.microcontroller.STM32F107RCXX.GPIO.PORT[2].NAME:GetValue(),
-               parsedXml.microcontroller.STM32F107RCXX.GPIO.PORT[3].NAME:GetValue())
-
-
-        print("Number of microcontrollers: "..parsedXml.stm32f1:NumChildren())
-        for i = 1, parsedXml.stm32f1:NumChildren() do
-                print(parsedXml.stm32f1.mcu[i].name:GetValue())
+        
+        print("Number of CPUs: "..config.arch.stm32f1.cpulist:NumChildren())
+        for i = 1, config.arch.stm32f1.cpulist:NumChildren() do
+            if config.arch.stm32f1.cpulist.cpu[i].name:GetValue() == "STM32F103RBxx" then
+                print("Number of ports: "..config.arch.stm32f1.cpulist.cpu[i].GPIO:NumChildren())
+            end
         end
-
+        
+        print(config.project.keys.CPU_ARCH.path:GetValue(), config.project.keys.CPU_ARCH.key:GetValue())
+        
+        
+        print(config.arch:NumChildren(), config.arch:Children()[1]:GetName())
 
         return ui.window
 end
