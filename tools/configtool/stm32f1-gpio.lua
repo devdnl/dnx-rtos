@@ -22,40 +22,76 @@ local port_mode_string = {"Output Push-Pull 2MHz",
                           "Alternative output Open drain 50MHz",
                           "Analog input",
                           "Float input",
-                          "Pulled input"}
+                          "Input pulled"}
 
-local port_mode_config = {"_GPIO_OUT_PUSH_PULL_2MHZ",
-                          "_GPIO_OUT_PUSH_PULL_10MHZ",
-                          "_GPIO_OUT_PUSH_PULL_50MHZ",
-                          "_GPIO_OUT_OPEN_DRAIN_2MHZ",
-                          "_GPIO_OUT_OPEN_DRAIN_10MHZ",
-                          "_GPIO_OUT_OPEN_DRAIN_50MHZ",
-                          "_GPIO_ALT_OUT_PUSH_PULL_2MHZ",
-                          "_GPIO_ALT_OUT_PUSH_PULL_10MHZ",
-                          "_GPIO_ALT_OUT_PUSH_PULL_50MHZ",
-                          "_GPIO_ALT_OUT_OPEN_DRAIN_2MHZ",
-                          "_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ",
-                          "_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ",
-                          "_GPIO_IN_ANALOG",
-                          "_GPIO_IN_FLOAT",
-                          "_GPIO_IN_PULLED"}
-                          
-local port_state_in_pulled = {"Down", "Up"}
+local port_mode_index = {["_GPIO_OUT_PUSH_PULL_2MHZ"]       = 0,
+                         ["_GPIO_OUT_PUSH_PULL_10MHZ"]      = 1,
+                         ["_GPIO_OUT_PUSH_PULL_50MHZ"]      = 2,
+                         ["_GPIO_OUT_OPEN_DRAIN_2MHZ"]      = 3,
+                         ["_GPIO_OUT_OPEN_DRAIN_10MHZ"]     = 4,
+                         ["_GPIO_OUT_OPEN_DRAIN_50MHZ"]     = 5,
+                         ["_GPIO_ALT_OUT_PUSH_PULL_2MHZ"]   = 6,
+                         ["_GPIO_ALT_OUT_PUSH_PULL_10MHZ"]  = 7,
+                         ["_GPIO_ALT_OUT_PUSH_PULL_50MHZ"]  = 8,
+                         ["_GPIO_ALT_OUT_OPEN_DRAIN_2MHZ"]  = 9,
+                         ["_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ"] = 10,
+                         ["_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ"] = 11,
+                         ["_GPIO_IN_ANALOG"]                = 12,
+                         ["_GPIO_IN_FLOAT"]                 = 13,
+                         ["_GPIO_IN_PULLED"]                = 14}
+
+local port_state_in_pulled     = {"Down", "Up"}
 local port_state_out_push_pull = {"Low (0)", "High (1)"}
+local port_state_float         = {"Hi-Z"}
 
 
 local function enable_controls(state)
         ui.Choice_port:Enable(state)
+        ui.StaticText1:Enable(state)
+        ui.StaticText2:Enable(state)
+        ui.StaticText3:Enable(state)
+        ui.StaticText4:Enable(state)
 
         for pin = 1, 16 do
                 ui.StaticText_pin[pin]:Enable(state)
                 ui.TextCtrl_pin_name[pin]:Enable(state)
                 ui.Choice_mode[pin]:Enable(state)
-                ui.Choice_state[pin]:Enable(state)
-                ui.StaticText1:Enable(state)
-                ui.StaticText2:Enable(state)
-                ui.StaticText3:Enable(state)
-                ui.StaticText4:Enable(state)
+
+                if not ui.Choice_state[pin].Inactive then
+                        ui.Choice_state[pin]:Enable(state)
+                end
+        end
+end
+
+
+local function set_pin_state_by_pin_mode(pin)
+        local pin_mode = ui.Choice_mode[pin + 1]:GetSelection()
+        for key, value in pairs(port_mode_index) do
+                if pin_mode == value then
+                        pin_mode = key
+                        break
+                end
+        end
+
+        ui.Choice_state[pin + 1]:Clear()
+        ui.Choice_state[pin + 1]:Enable(true)
+        ui.Choice_state[pin + 1].Inactive = false
+        if pin_mode:match("_GPIO_IN_PULLED") then
+                ui.Choice_state[pin + 1]:Append(port_state_in_pulled)
+        elseif pin_mode:match("_OUT_OPEN_DRAIN_") then
+                ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
+        elseif pin_mode:match("_OUT_PUSH_PULL_") then
+                ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
+        else
+                ui.Choice_state[pin + 1]:Append(port_state_float)
+                ui.Choice_state[pin + 1]:Enable(false)
+                ui.Choice_state[pin + 1].Inactive = true
+        end
+
+        if pin_state == "_HIGH" then
+                ui.Choice_state[pin + 1]:SetSelection(1)
+        else
+                ui.Choice_state[pin + 1]:SetSelection(0)
         end
 end
 
@@ -63,14 +99,14 @@ end
 local function load_controls()
         local port     = ui.Choice_port:GetSelection() + 1
         local pin_mask = periph:Children()[port].pinmask:GetValue()
-                
+
         for pin = 0, 15 do
                 if bit.band(pin_mask, 1) == 1 then
-                        
+
                         local pin_key = config.arch.stm32f1.key.GPIO
 
                         ui.StaticText_pin[pin + 1]:Show()
-                        
+
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_NAME__")
                         local pin_name = wizcore:key_read(pin_key)
                         ui.TextCtrl_pin_name[pin + 1]:SetValue(pin_name)
@@ -78,42 +114,24 @@ local function load_controls()
 
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_MODE__")
                         local pin_mode = wizcore:key_read(pin_key)
-                        ui.Choice_mode[pin + 1]:SetSelection(wizcore:get_string_index(port_mode_config, pin_mode) - 1)
+                        ui.Choice_mode[pin + 1]:SetSelection(port_mode_index[pin_mode])
                         ui.Choice_mode[pin + 1]:Show(true)
 
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_STATE__")
                         local pin_state = wizcore:key_read(pin_key)
                         ui.Choice_state[pin + 1]:Show()
-                        ui.Choice_state[pin + 1]:Clear()
-                        if pin_mode:match("_GPIO_IN_PULLED") then
-                                ui.Choice_state[pin + 1]:Append(port_state_in_pulled)
-                                ui.Choice_state[pin + 1]:Enable(true)
-                        elseif pin_mode:match("_OUT_OPEN_DRAIN_") then
-                                ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
-                                ui.Choice_state[pin + 1]:Enable(true)
-                        elseif pin_mode:match("_OUT_PUSH_PULL_") then
-                                ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
-                                ui.Choice_state[pin + 1]:Enable(true)
-                        else
-                                ui.Choice_state[pin + 1]:Enable(false)
-                        end
-                        
-                        if pin_state == "_HIGH" then
-                                ui.Choice_state[pin + 1]:SetSelection(1)
-                        else
-                                ui.Choice_state[pin + 1]:SetSelection(0)
-                        end
+                        set_pin_state_by_pin_mode(pin)
                 else
                         ui.StaticText_pin[pin + 1]:Hide()
                         ui.TextCtrl_pin_name[pin + 1]:Hide()
                         ui.Choice_mode[pin + 1]:Hide()
                         ui.Choice_state[pin + 1]:Hide()
                 end
-                
+
                 pin_mask = bit.rshift(pin_mask, 1)
         end
 
-        ui.window:Layout()       
+        ui.window:FitInside()
 
         local gpio_enabled = wizcore:get_module_state("GPIO")
         ui.CheckBox_enable:SetValue(gpio_enabled)
@@ -121,49 +139,60 @@ local function load_controls()
 end
 
 
+local function on_button_save_click()
+        print("on_button_save_click()")
+        ui.Button_save:Enable(false)
+end
+
+
 local function checkbox_changed(this)
         ui.Choice_port:Enable(this:IsChecked())
         enable_controls(this:IsChecked())
-        -- for pin = 1, 16 do
-                -- ui.StaticText_pin[pin]:Enable(this:IsChecked() and cpu.STM32F103C6xx.A[pin])
-                -- ui.TextCtrl_pin_name[pin]:Enable(this:IsChecked() and cpu.STM32F103C6xx.A[pin])
-                -- ui.Choice_mode[pin]:Enable(this:IsChecked() and cpu.STM32F103C6xx.A[pin])
-                -- ui.Choice_state[pin]:Enable(this:IsChecked() and cpu.STM32F103C6xx.A[pin])
-                -- ui.StaticText1:Enable(this:IsChecked())
-                -- ui.StaticText2:Enable(this:IsChecked())
-                -- ui.StaticText3:Enable(this:IsChecked())
-                -- ui.StaticText4:Enable(this:IsChecked())
-        -- end
 end
 
 
 local function port_number_changed(this)
+        if ui.Choice_port:GetSelection() == ui.Choice_port.OldSelection then
+                return
+        end
+
+        local answer = wx.wxID_NO
+        if ui.Button_save:IsEnabled() then
+                answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
+        end
+
+        if answer == wx.wxID_YES then
+                on_button_save_click()
+                ui.Choice_port.OldSelection = ui.Choice_port:GetSelection()
+        elseif answer == wx.wxID_NO then
+                ui.Choice_port.OldSelection = ui.Choice_port:GetSelection()
+        elseif answer == wx.wxID_CANCEL then
+                ui.Choice_port:SetSelection(ui.Choice_port.OldSelection)
+                return
+        end
+
         ui.window:Freeze()
         load_controls()
         ui.window:Thaw()
-end
 
-
-local function port_mode_changed_hdl(pin, selection)
-        ui.Choice_state[pin]:Clear()
-
-        if selection >= 0 and selection <= 11 then
-                ui.Choice_state[pin]:Append({"Low (0)", "High (1)"})
-                ui.Choice_state[pin]:Enable(true)
-
-        elseif selection >= 12 and selection <= 13  then
-                ui.Choice_state[pin]:Enable(false)
-
-        elseif selection == 14 then
-                ui.Choice_state[pin]:Append({"Down", "Up"})
-                ui.Choice_state[pin]:Enable(true)
+        if answer == wx.wxID_YES or answer == wx.wxID_NO then
+                ui.Button_save:Enable(false)
         end
-
-        ui.Choice_state[pin]:SetSelection(0)
 end
+
+
+local function pin_name_updated(this)
+        ui.Button_save:Enable(true)
+end
+
+
+local function pin_state_updated()
+        ui.Button_save:Enable(true)
+end
+
 
 local port_mode_changed = {}
-for i = 1, 16 do port_mode_changed[i] = function(this) port_mode_changed_hdl(i, this:GetSelection()) end end
+for i = 1, 16 do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
 
 
 function gpio:create_window(parent)
@@ -193,6 +222,7 @@ function gpio:create_window(parent)
         -- port selection choice
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Port selection")
         ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0)
+        ui.Choice_port.OldSelection = 0
 
         local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
         local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
@@ -232,9 +262,12 @@ function gpio:create_window(parent)
                 ui.FlexGridSizer2:Add(ui.Choice_mode[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
                 ui.Choice_state[i] = wx.wxChoice(this, ID.CHOICE_STATE[i], wx.wxDefaultPosition, wx.wxSize(100, -1), {})
+                ui.Choice_state[i].Inactive = false
                 ui.FlexGridSizer2:Add(ui.Choice_state[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
 
-                this:Connect(ID.CHOICE_MODE[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, port_mode_changed[i])
+                this:Connect(ID.TEXTCTRL_PIN_NAME[i], wx.wxEVT_COMMAND_TEXT_UPDATED,    pin_name_updated    )
+                this:Connect(ID.CHOICE_MODE[i],       wx.wxEVT_COMMAND_CHOICE_SELECTED, port_mode_changed[i])
+                this:Connect(ID.CHOICE_STATE[i],      wx.wxEVT_COMMAND_CHOICE_SELECTED, pin_state_updated   )
         end
 
         ui.StaticBoxSizer2:Add(ui.FlexGridSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -252,8 +285,9 @@ function gpio:create_window(parent)
         this:SetScrollRate(50, 50)
 
         --
-        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed)
-        this:Connect(ID.CHOICE_PORT, wx.wxEVT_COMMAND_CHOICE_SELECTED, port_number_changed)
+        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed    )
+        this:Connect(ID.CHOICE_PORT,     wx.wxEVT_COMMAND_CHOICE_SELECTED,  port_number_changed )
+        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
 
         --
         load_controls()

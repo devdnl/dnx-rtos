@@ -65,9 +65,9 @@ function wizcore:show_info_msg(title, caption)
 end
 
 
-function wizcore:show_question_msg(title, caption)
+function wizcore:show_question_msg(title, caption, buttons)
         print("["..title.."] "..caption)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxYES_NO, wx.wxICON_QUESTION))
+        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
         return dialog:ShowModal()
 end
 
@@ -168,7 +168,7 @@ function wizcore:key_read(keypath)
         local value = nil
         for line in file:lines() do
                 if line_found(line, filetype, key) then
-                        value = get_line_value(line, filetype, key)
+                        value = get_line_value(line, filetype, key):gsub("\r", "")
                         break
                 end
         end
