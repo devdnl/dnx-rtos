@@ -172,6 +172,10 @@
                 <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
                 <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>CPUCONFIG_CPUNAME</key></CPUCONFIG_CPUNAME>
                 <GPIO><path>../../config/stm32f1/gpio_flags.h</path><key></key></GPIO>
+                <WDG_DEVICE_LOCK_AT_OPEN><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DEVICE_LOCK_AT_OPEN__</key></WDG_DEVICE_LOCK_AT_OPEN>
+                <WDG_CLK_DIVIDER><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_CLK_DIVIDER__</key></WDG_CLK_DIVIDER>
+                <WDG_RELOAD_VALUE><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_RELOAD_VALUE__</key></WDG_RELOAD_VALUE>
+                <WDG_DISABLE_ON_DEBUG><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DISABLE_ON_DEBUG__</key></WDG_DISABLE_ON_DEBUG>
             </key>
 
             <cpulist>
@@ -188,6 +192,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -203,6 +209,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -218,6 +226,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -234,6 +244,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -252,6 +264,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -267,6 +281,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -282,6 +298,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -297,6 +315,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -312,6 +332,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -328,6 +350,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -344,6 +368,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -359,6 +385,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -374,6 +402,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -389,6 +419,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -404,6 +436,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -419,6 +453,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -434,6 +470,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -449,6 +487,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -464,6 +504,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -479,6 +521,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -494,6 +538,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -508,6 +554,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -524,6 +572,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -540,6 +590,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -556,6 +608,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -572,6 +626,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -588,6 +644,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -604,6 +662,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -622,6 +682,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -640,6 +702,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -658,6 +722,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -673,6 +739,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -688,6 +756,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -704,6 +774,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -720,6 +792,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -735,6 +809,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -751,6 +827,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -767,6 +845,8 @@
                         </TTY>
                         <CRC>
                         </CRC>
+                        <WDG>
+                        </WDG>
                     </peripherals>
                 </cpu>
             </cpulist>

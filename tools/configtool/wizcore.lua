@@ -82,8 +82,18 @@ function wizcore:key_write(keypath, value)
         local key      = keypath.key:GetValue()
 
         -- type check
-        if type(filename) ~= "string" or type(key) ~= "string" or type(value) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename' or 'key' or 'value'\n"..debug.traceback())
+        if type(filename) ~= "string" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename'\n"..debug.traceback())
+                return false
+        end
+
+        if type(key) ~= "string" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key'\n"..debug.traceback())
+                return false
+        end
+
+        if type(value) ~= "string" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value'\n"..debug.traceback())
                 return false
         end
 
@@ -141,8 +151,13 @@ function wizcore:key_read(keypath)
         local key      = keypath.key:GetValue()
 
         -- type check
-        if type(filename) ~= "string" or type(key) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename' or 'key'\n"..debug.traceback())
+        if type(filename) ~= "string" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback())
+                return false
+        end
+
+        if type(key) ~= "string" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback())
                 return false
         end
 
