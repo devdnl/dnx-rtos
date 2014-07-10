@@ -168,14 +168,18 @@ function wizcore:key_read(keypath)
         local value = nil
         for line in file:lines() do
                 if line_found(line, filetype, key) then
-                        value = get_line_value(line, filetype, key):gsub("\r", "")
+                        value = get_line_value(line, filetype, key)
+                        if type(value) == "string" then
+                                value = value:gsub("\r", "")
+                        end
+
                         break
                 end
         end
         file:close()
 
         if value == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): "..key..": key not found\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): '"..key.."': key not found\n"..debug.traceback())
         end
 
         return value

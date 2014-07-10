@@ -136,6 +136,18 @@
         </modules>
     </project>
 
+    <noarch>
+        <key>
+            <TTY_TERM_COLS><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_COLS__</key></TTY_TERM_COLS>
+            <TTY_TERM_ROWS><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_ROWS__</key></TTY_TERM_ROWS>
+            <TTY_OUT_STREAM_LEN><path>../../config/noarch/tty_flags.h</path><key>__TTY_OUT_STREAM_LEN__</key></TTY_OUT_STREAM_LEN>
+            <TTY_NUMBER_OF_TERM><path>../../config/noarch/tty_flags.h</path><key>__TTY_NUMBER_OF_TERM__</key></TTY_NUMBER_OF_TERM>
+            <TTY_ENABLE_TERM_SIZE_CHECK><path>../../config/noarch/tty_flags.h</path><key>__TTY_ENABLE_TERM_SIZE_CHECK__</key></TTY_ENABLE_TERM_SIZE_CHECK>
+            <TTY_TERM_IN_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_IN_FILE__</key></TTY_TERM_IN_FILE>
+            <TTY_TERM_OUT_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_OUT_FILE__</key></TTY_TERM_OUT_FILE>
+        </key>
+    </noarch>
+
     <arch>
         <stm32f1>
             <priorities>

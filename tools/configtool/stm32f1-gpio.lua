@@ -73,7 +73,7 @@ function port_mode_index:get_mode(idx)
                         return key
                 end
         end
-        
+
         return ""
 end
 
@@ -151,18 +151,18 @@ local function on_button_save_click()
         local port_to_save = periph:Children()[ui.Choice_port:GetSelection() + 1].name:GetValue()
         local pin_mask     = periph:Children()[ui.Choice_port:GetSelection() + 1].pinmask:GetValue()
         local key          = config.arch.stm32f1.key.GPIO
-        
+
         -- save pins configuration for selected port
         for pin = 0, number_of_pins - 1 do
                 local pin_name
                 local pin_mode
                 local pin_state
-        
+
                 if bit.band(pin_mask, 1) == 1 then
                         pin_name = ui.TextCtrl_pin_name[pin + 1]:GetValue()
-                        
+
                         pin_mode = port_mode_index:get_mode(ui.Choice_mode[pin + 1]:GetSelection())
-                        
+
                         if pin_mode == "_GPIO_IN_ANALOG" or pin_mode == "_GPIO_IN_FLOAT" then
                                 pin_state = "_FLOAT"
                         else
@@ -173,20 +173,20 @@ local function on_button_save_click()
                         pin_mode  = port_mode_index:get_mode(13)
                         pin_state = "_FLOAT"
                 end
-                
+
                 -- save pin settings
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_NAME__")
                 wizcore:key_write(key, pin_name)
-                
+
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_MODE__")
                 wizcore:key_write(key, pin_mode)
-                
+
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_STATE__")
                 wizcore:key_write(key, pin_state)
-                
+
                 pin_mask = bit.rshift(pin_mask, 1)
         end
-                        
+
         -- enable used ports by specified microcontroller
         for i, port_name in ipairs(port_names) do
                 local port_found = false
@@ -198,7 +198,7 @@ local function on_button_save_click()
                                 end
                         end
                 end
-        
+
                 if port_found then
                         key.key:SetValue("__GPIO_P"..port_name.."_ENABLE__")
                         wizcore:key_write(key, config.project.def.YES:GetValue())
@@ -207,10 +207,10 @@ local function on_button_save_click()
                         wizcore:key_write(key, config.project.def.NO:GetValue())
                 end
         end
-        
+
         -- module enable
         wizcore:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
-        
+
         ui.Button_save:Enable(false)
 end
 
