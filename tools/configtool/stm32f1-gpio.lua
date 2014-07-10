@@ -2,8 +2,10 @@ module(..., package.seeall)
 require("wx")
 require("wizcore")
 
+-- module's main object
 gpio = {}
 
+-- local objects
 local ui = {}
 local ID = {}
 local periph
@@ -264,6 +266,11 @@ local port_mode_changed = {}
 for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function gpio:create_window(parent)
         ui = {}
         ui.StaticText_pin    = {}
@@ -365,20 +372,36 @@ function gpio:create_window(parent)
         return ui.window
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @return Module name
+--------------------------------------------------------------------------------
 function gpio:get_window_name()
         return "GPIO"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called by parent when window is selected
+--------------------------------------------------------------------------------
 function gpio:selected()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns modify status
+-- @return If data is modified true is returned, otherwise false
+--------------------------------------------------------------------------------
 function gpio:is_modified()
         return ui.Button_save:IsEnabled()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module handler
+-- @return Module handler
+--------------------------------------------------------------------------------
 function get_handler()
         return gpio
 end

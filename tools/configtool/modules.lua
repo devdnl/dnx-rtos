@@ -71,6 +71,19 @@ function modules:refresh()
                 local module_name = peripheral:GetName():lower()
                 local module_file = cpu_arch.."-"..module_name
 
+                local f = io.open(module_file..".lua")
+                if f then
+                        f:close()
+                else
+                        dialog:Update(i, "Loading data of "..module_name:upper().."...")
+                        wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "Configuration file for specified architecture and microcontroller does not exist!\n"..
+                                                                         "Architecture: "..cpu_arch.."\n"..
+                                                                         "Microcontroller: "..cpu_name.."\n"..
+                                                                         "Module: "..module_name:upper().."\n"..
+                                                                         "Expected file: "..module_file..".lua")
+                        return
+                end
+                
                 local module = require(module_file).get_handler()
 
                 dialog:Update(i, "Loading data of "..module:get_window_name().."...")
