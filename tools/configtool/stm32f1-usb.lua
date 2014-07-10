@@ -14,9 +14,14 @@ function usb:create_window(parent)
         ui.window  = wx.wxPanel(parent, wx.wxID_ANY)
         local this = ui.window
 
+        choice = wx.wxChoice(this, -1, wx.wxPoint(10, 100), wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
+        gpio = require("stm32f1-gpio").get_handler()
+        choice:Append(gpio:get_pin_list())
+
         button = wx.wxButton(this, wx.wxID_ANY, "USB")
 
-        ui.window:Enable(false)
+
+--         ui.window:Enable(false)
 
         return ui.window
 end

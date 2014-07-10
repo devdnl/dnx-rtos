@@ -405,3 +405,11 @@ end
 function get_handler()
         return gpio
 end
+
+
+--------------------------------------------------------------------------------
+-- Module-specific methods
+--------------------------------------------------------------------------------
+function gpio:get_pin_list()
+        return {"A", "b"}
+end

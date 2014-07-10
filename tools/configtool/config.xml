@@ -188,12 +188,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -205,12 +202,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -222,12 +216,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -240,12 +231,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -260,12 +248,9 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -277,12 +262,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -294,12 +276,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -311,12 +290,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -328,12 +304,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -346,12 +319,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -364,12 +334,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -381,12 +348,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -398,12 +362,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -415,12 +376,9 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -432,12 +390,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -449,12 +404,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -466,12 +418,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -483,12 +432,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -500,12 +446,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -517,12 +460,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -534,12 +474,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -550,12 +487,9 @@
                             <port><name>B</name><pinmask>0x000F</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -568,12 +502,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -586,12 +517,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -604,12 +532,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -622,12 +547,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -640,12 +562,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -658,12 +577,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -678,12 +594,9 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -698,12 +611,9 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -718,12 +628,9 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -735,12 +642,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -752,12 +656,9 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -770,12 +671,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -788,12 +686,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -805,12 +700,10 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
+                        <USB></USB>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -823,12 +716,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -841,12 +731,9 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
-                        <TTY>
-                        </TTY>
-                        <CRC>
-                        </CRC>
-                        <WDG>
-                        </WDG>
+                        <TTY></TTY>
+                        <CRC></CRC>
+                        <WDG></WDG>
                     </peripherals>
                 </cpu>
             </cpulist>
