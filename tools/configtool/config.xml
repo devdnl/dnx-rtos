@@ -112,27 +112,27 @@
             <YES>__YES__</YES>
         </def>
         <modules>
-            <module>GPIO</module>
-            <module>AFIO</module>
-            <module>CRC</module>
-            <module>ETH</module>
-            <module>PLL</module>
-            <module>SDSPI</module>
-            <module>SPI</module>
-            <module>TTY</module>
-            <module>UART</module>
-            <module>WDG</module>
-            <module>I2S</module>
-            <module>USB</module>
-            <module>USBOTG</module>
-            <module>I2C</module>
-            <module>ADC</module>
-            <module>DAC</module>
-            <module>SDIO</module>
-            <module>FSMC</module>
-            <module>FDMC</module>
-            <module>HDMICEC</module>
-            <module>CAN</module>
+            <module noarch="false">GPIO</module>
+            <module noarch="false">AFIO</module>
+            <module noarch="false">CRC</module>
+            <module noarch="false">ETH</module>
+            <module noarch="false">PLL</module>
+            <module noarch="false">SDSPI</module>
+            <module noarch="false">SPI</module>
+            <module noarch="true" >TTY</module>
+            <module noarch="false">UART</module>
+            <module noarch="false">WDG</module>
+            <module noarch="false">I2S</module>
+            <module noarch="false">USB</module>
+            <module noarch="false">USBOTG</module>
+            <module noarch="false">I2C</module>
+            <module noarch="false">ADC</module>
+            <module noarch="false">DAC</module>
+            <module noarch="false">SDIO</module>
+            <module noarch="false">FSMC</module>
+            <module noarch="false">FDMC</module>
+            <module noarch="false">HDMICEC</module>
+            <module noarch="false">CAN</module>
         </modules>
     </project>
 
@@ -579,6 +579,8 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <TTY>
+                        </TTY>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>

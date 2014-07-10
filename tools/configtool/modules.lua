@@ -69,28 +69,49 @@ function modules:refresh()
         for i = 1, periph_num do
                 local peripheral  = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:Children()[i]
                 local module_name = peripheral:GetName():lower()
-                local module_file = cpu_arch.."-"..module_name
-
+                local no_arch     = false
+                local module_file
+                
+                -- find if module is a 'noarch' module
+                local module_list = config.project.modules
+                for m = 1, module_list:NumChildren() do
+                        if module_name == module_list:Children()[m]:GetValue():lower() then
+                                if module_list:Children()[m]:NumProperties() ~= 0 then
+                                        if module_list:Children()[m]["@noarch"] == "true" then
+                                                no_arch = true
+                                        end
+                                end
+                                
+                                break
+                        end
+                end
+                
+                -- create name of module file to load according to architecture
+                if no_arch then
+                        module_file = "noarch-"..module_name
+                else
+                        module_file = cpu_arch.."-"..module_name
+                end
+                
+                -- check that specified module file exist
                 local f = io.open(module_file..".lua")
                 if f then
                         f:close()
                 else
                         dialog:Update(i, "Loading data of "..module_name:upper().."...")
                         wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "Configuration file for specified architecture and microcontroller does not exist!\n"..
-                                                                         "Architecture: "..cpu_arch.."\n"..
+                                                                         "Architecture: "..ifs(no_arch, "noarch", cpu_arch).."\n"..
                                                                          "Microcontroller: "..cpu_name.."\n"..
                                                                          "Module: "..module_name:upper().."\n"..
                                                                          "Expected file: "..module_file..".lua")
                         return
                 end
                 
+                -- load module and gets handler
                 local module = require(module_file).get_handler()
-
                 dialog:Update(i, "Loading data of "..module:get_window_name().."...")
-
                 ui.notebook:AddPage(module:create_window(ui.notebook), module:get_window_name())
                 page[i] = module
-
                 dialog:Update(i+1)
         end
 
