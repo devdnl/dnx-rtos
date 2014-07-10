@@ -186,6 +186,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -199,6 +201,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -212,6 +216,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -226,6 +232,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -242,6 +250,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -255,6 +265,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -268,6 +280,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -281,6 +295,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -294,6 +310,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -308,6 +326,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -322,6 +342,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -335,6 +357,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -348,6 +372,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -361,6 +387,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -374,6 +402,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -387,6 +417,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -400,6 +432,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -413,6 +447,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -426,6 +462,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -439,6 +477,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -452,6 +492,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -464,6 +506,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -478,6 +522,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -492,6 +538,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -506,6 +554,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -520,6 +570,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -534,6 +586,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -548,6 +602,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -564,6 +620,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -580,6 +638,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -596,6 +656,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -609,6 +671,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -622,6 +686,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -636,6 +702,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -650,6 +718,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -663,6 +733,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -677,6 +749,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -691,6 +765,8 @@
                         </GPIO>
                         <TTY>
                         </TTY>
+                        <CRC>
+                        </CRC>
                     </peripherals>
                 </cpu>
             </cpulist>
