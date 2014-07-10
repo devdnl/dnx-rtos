@@ -37,6 +37,7 @@ local function set_cpu_specific_controls(cpu_arch)
                                 ui.Choice_CPU_name:Append(name)
                                 if name:match(micro) then
                                         ui.Choice_CPU_name:SetSelection(i - 1)
+                                        ui.Choice_CPU_name.OldSelection = i - 1
                                         micro_found = true
                                 end
                         end
@@ -125,7 +126,13 @@ local function on_button_save_click()
                 end
         end
         
-        -- TODO GPIO info
+        -- info about changed configuration
+        if ui.Choice_CPU_arch.Modified or ui.Choice_CPU_name.Modified then
+                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.")
+                
+                ui.Choice_CPU_arch.Modified = false
+                ui.Choice_CPU_name.Modified = false
+        end
 
         ui.Button_save:Enable(false)
 end
@@ -143,12 +150,17 @@ local function choice_cpu_arch_selected(this)
                 ui.Choice_default_irq_prio:Clear()
                 set_cpu_specific_controls(config.arch:Children()[this:GetSelection() + 1]:GetName())
                 ui.Button_save:Enable(true)
+                ui.Choice_CPU_arch.Modified = true
         end
 end
 
 
 local function choice_cpu_name_selected(this)
-        ui.Button_save:Enable(true)
+        if ui.Choice_CPU_name.OldSelection ~= this:GetSelection() then
+                ui.Button_save:Enable(true)
+                ui.Choice_CPU_name.Modified = true
+                ui.Choice_CPU_name.OldSelection = this:GetSelection()
+        end
 end
 
 
@@ -186,6 +198,7 @@ function project:create_window(parent)
                 -- CPU architecture groupbox
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture and family")
                 ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
+                ui.Choice_CPU_arch.Modified = false
                 for i = 1, config.arch:NumChildren() do ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName()) end
                 ui.StaticBoxSizer1:Add(ui.Choice_CPU_arch, 1, bit.bor(wx.wxALL, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -193,6 +206,8 @@ function project:create_window(parent)
                 -- Microcontroller selection groupbox
                 ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Microcontroller selection")
                 ui.Choice_CPU_name = wx.wxChoice(this, ID.CHOICE_CPU_NAME, wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.Choice_CPU_name.Modified = false
+                ui.Choice_CPU_name.OldSelection = 0
                 ui.StaticBoxSizer3:Add(ui.Choice_CPU_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
