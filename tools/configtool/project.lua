@@ -124,6 +124,8 @@ local function on_button_save_click()
                         wizcore:enable_module(module, exist)
                 end
         end
+        
+        -- TODO GPIO info
 
         ui.Button_save:Enable(false)
 end

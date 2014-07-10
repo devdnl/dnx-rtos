@@ -146,8 +146,6 @@ end
 
 
 local function on_button_save_click()
-        print("on_button_save_click()")
-        
         local port_to_save = periph:Children()[ui.Choice_port:GetSelection() + 1].name:GetValue()
         local pin_mask     = periph:Children()[ui.Choice_port:GetSelection() + 1].pinmask:GetValue()
         local key          = config.arch.stm32f1.key.GPIO
@@ -208,6 +206,9 @@ local function on_button_save_click()
                 end
         end
         
+        -- module enable
+        wizcore:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
+        
         ui.Button_save:Enable(false)
 end
 
@@ -215,6 +216,7 @@ end
 local function checkbox_changed(this)
         ui.Choice_port:Enable(this:IsChecked())
         enable_controls(this:IsChecked())
+        ui.Button_save:Enable(true)
 end
 
 
@@ -369,7 +371,6 @@ end
 
 
 function gpio:selected()
-        print("gpio:selected()")
 end
 
 

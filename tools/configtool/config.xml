@@ -167,10 +167,10 @@
                     <family>__STM32F10X_MD_VL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pinmask></pinmask>
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -178,10 +178,10 @@
                     <family>__STM32F10X_MD_VL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -189,11 +189,10 @@
                     <family>__STM32F10X_HD_VL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -201,11 +200,11 @@
                     <family>__STM32F10X_MD_VL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -213,11 +212,13 @@
                     <family>__STM32F10X_HD_VL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -225,11 +226,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -237,11 +237,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -249,11 +248,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -261,11 +259,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -273,11 +270,11 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -285,11 +282,11 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -297,11 +294,10 @@
                     <family>__STM32F10X_LD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -309,11 +305,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -321,11 +316,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xE000</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -333,11 +327,10 @@
                     <family>__STM32F10X_LD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -345,11 +338,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -357,11 +349,10 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -369,11 +360,10 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -381,11 +371,10 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -393,11 +382,10 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -405,11 +393,10 @@
                     <family>__STM32F10X_XL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -417,11 +404,9 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0x000F</pinmask></port>
+                            <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -429,11 +414,11 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -441,11 +426,11 @@
                     <family>__STM32F10X_MD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -453,11 +438,11 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -465,11 +450,11 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -477,11 +462,11 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -489,11 +474,11 @@
                     <family>__STM32F10X_XL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -501,11 +486,13 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -513,11 +500,13 @@
                     <family>__STM32F10X_HD__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -525,11 +514,13 @@
                     <family>__STM32F10X_XL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -537,11 +528,10 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -549,6 +539,10 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -556,11 +550,11 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -568,11 +562,11 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -583,20 +577,19 @@
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>B</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
-                        <USB></USB>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
@@ -604,11 +597,11 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port>
-                                <name>A</name>
-                                <pin0>true</pin0>
-
-                            </port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
                     </peripherals>
                 </cpu>
