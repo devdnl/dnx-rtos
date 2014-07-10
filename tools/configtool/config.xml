@@ -580,7 +580,7 @@
                     <family>__STM32F10X_CL__</family>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0x00FF</pinmask></port>
+                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>B</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>

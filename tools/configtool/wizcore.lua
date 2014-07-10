@@ -245,3 +245,11 @@ function wizcore:get_cpu_index(cpu_arch, cpu_name)
         return 0
 end
 
+
+function ifs(expr, ontrue, onfalse)
+        if expr then
+                return ontrue
+        else
+                return onfalse
+        end
+end

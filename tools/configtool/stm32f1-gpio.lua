@@ -43,7 +43,8 @@ local port_mode_index = {["_GPIO_OUT_PUSH_PULL_2MHZ"]       = 0,
 local port_state_in_pulled     = {"Down", "Up"}
 local port_state_out_push_pull = {"Low (0)", "High (1)"}
 local port_state_float         = {"Hi-Z"}
-
+local port_names               = {"A", "B", "C", "D", "E", "F", "G"}
+local number_of_pins           = 16
 
 local function enable_controls(state)
         ui.Choice_port:Enable(state)
@@ -52,7 +53,7 @@ local function enable_controls(state)
         ui.StaticText3:Enable(state)
         ui.StaticText4:Enable(state)
 
-        for pin = 1, 16 do
+        for pin = 1, number_of_pins do
                 ui.StaticText_pin[pin]:Enable(state)
                 ui.TextCtrl_pin_name[pin]:Enable(state)
                 ui.Choice_mode[pin]:Enable(state)
@@ -64,14 +65,19 @@ local function enable_controls(state)
 end
 
 
-local function set_pin_state_by_pin_mode(pin)
-        local pin_mode = ui.Choice_mode[pin + 1]:GetSelection()
+function port_mode_index:get_mode(idx)
         for key, value in pairs(port_mode_index) do
-                if pin_mode == value then
-                        pin_mode = key
-                        break
+                if idx == value then
+                        return key
                 end
         end
+        
+        return ""
+end
+
+
+local function set_pin_state_by_pin_mode(pin, pin_state)
+        local pin_mode = port_mode_index:get_mode(ui.Choice_mode[pin + 1]:GetSelection())
 
         ui.Choice_state[pin + 1]:Clear()
         ui.Choice_state[pin + 1]:Enable(true)
@@ -100,7 +106,7 @@ local function load_controls()
         local port     = ui.Choice_port:GetSelection() + 1
         local pin_mask = periph:Children()[port].pinmask:GetValue()
 
-        for pin = 0, 15 do
+        for pin = 0, number_of_pins - 1 do
                 if bit.band(pin_mask, 1) == 1 then
 
                         local pin_key = config.arch.stm32f1.key.GPIO
@@ -120,7 +126,7 @@ local function load_controls()
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_STATE__")
                         local pin_state = wizcore:key_read(pin_key)
                         ui.Choice_state[pin + 1]:Show()
-                        set_pin_state_by_pin_mode(pin)
+                        set_pin_state_by_pin_mode(pin, pin_state)
                 else
                         ui.StaticText_pin[pin + 1]:Hide()
                         ui.TextCtrl_pin_name[pin + 1]:Hide()
@@ -141,6 +147,67 @@ end
 
 local function on_button_save_click()
         print("on_button_save_click()")
+        
+        local port_to_save = periph:Children()[ui.Choice_port:GetSelection() + 1].name:GetValue()
+        local pin_mask     = periph:Children()[ui.Choice_port:GetSelection() + 1].pinmask:GetValue()
+        local key          = config.arch.stm32f1.key.GPIO
+        
+        -- save pins configuration for selected port
+        for pin = 0, number_of_pins - 1 do
+                local pin_name
+                local pin_mode
+                local pin_state
+        
+                if bit.band(pin_mask, 1) == 1 then
+                        pin_name = ui.TextCtrl_pin_name[pin + 1]:GetValue()
+                        
+                        pin_mode = port_mode_index:get_mode(ui.Choice_mode[pin + 1]:GetSelection())
+                        
+                        if pin_mode == "_GPIO_IN_ANALOG" or pin_mode == "_GPIO_IN_FLOAT" then
+                                pin_state = "_FLOAT"
+                        else
+                                pin_state = ifs(ui.Choice_state[pin + 1]:GetSelection() == 0, "_LOW", "_HIGH")
+                        end
+                else
+                        pin_name  = "NC_GPIO"..port_to_save.."_"..pin
+                        pin_mode  = port_mode_index:get_mode(13)
+                        pin_state = "_FLOAT"
+                end
+                
+                -- save pin settings
+                key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_NAME__")
+                wizcore:key_write(key, pin_name)
+                
+                key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_MODE__")
+                wizcore:key_write(key, pin_mode)
+                
+                key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_STATE__")
+                wizcore:key_write(key, pin_state)
+                
+                pin_mask = bit.rshift(pin_mask, 1)
+        end
+                        
+        -- enable used ports by specified microcontroller
+        for i, port_name in ipairs(port_names) do
+                local port_found = false
+                for i = 1, #port_names do
+                        if periph:Children()[i] then
+                                if periph:Children()[i].name:GetValue() == port_name then
+                                        port_found = true
+                                        break
+                                end
+                        end
+                end
+        
+                if port_found then
+                        key.key:SetValue("__GPIO_P"..port_name.."_ENABLE__")
+                        wizcore:key_write(key, config.project.def.YES:GetValue())
+                else
+                        key.key:SetValue("__GPIO_P"..port_name.."_ENABLE__")
+                        wizcore:key_write(key, config.project.def.NO:GetValue())
+                end
+        end
+        
         ui.Button_save:Enable(false)
 end
 
@@ -192,7 +259,7 @@ end
 
 
 local port_mode_changed = {}
-for i = 1, 16 do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
+for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
 
 
 function gpio:create_window(parent)
@@ -247,7 +314,7 @@ function gpio:create_window(parent)
         ui.FlexGridSizer2:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 1)
         ui.FlexGridSizer2:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 1)
 
-        for i = 1, 16 do
+        for i = 1, number_of_pins do
                 ID.TEXTCTRL_PIN_NAME[i] = wx.wxNewId()
                 ID.CHOICE_MODE[i]       = wx.wxNewId()
                 ID.CHOICE_STATE[i]      = wx.wxNewId()
