@@ -1,3 +1,32 @@
+--[[============================================================================
+@file    wizard.lua
+
+@author  Daniel Zorychta
+
+@brief   This file is the main file of wizard
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("welcome")
 require("project")
@@ -6,15 +35,29 @@ require("file_systems")
 require("network")
 require("modules")
 
+
+--==============================================================================
+-- PUBLIC OBJECTS
+--==============================================================================
+
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 -- configuration pages
 local page = {welcome, project, operating_system, file_systems, network, modules}
 
 -- container for UI controls
 local ui = {}
 
+
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
 --------------------------------------------------------------------------------
--- @brief Signal is called when page was changed
--- @param this          treebook object
+-- @brief  Signal is called when page was changed
+-- @param  this          treebook object
+-- @return None
 --------------------------------------------------------------------------------
 local function treebook_page_changed(this)
         local card = this:GetSelection() + 1
@@ -22,9 +65,11 @@ local function treebook_page_changed(this)
         this:Skip()
 end
 
+
 --------------------------------------------------------------------------------
--- @brief Signal is called when page is changing
--- @param this          treebook object
+-- @brief  Signal is called when page is changing
+-- @param  this          treebook object
+-- @return None
 --------------------------------------------------------------------------------
 local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
@@ -37,8 +82,11 @@ local function treebook_page_changing(this)
         end
 end
 
+
 --------------------------------------------------------------------------------
--- @brief Signal is called when main window is closing
+-- @brief  Signal is called when main window is closing
+-- @param  None
+-- @return None
 --------------------------------------------------------------------------------
 local function window_close()
         local card = ui.treebook:GetSelection() + 1
@@ -53,8 +101,11 @@ local function window_close()
         end
 end
 
+
 --------------------------------------------------------------------------------
--- @brief Function create widgets
+-- @brief  Function create widgets
+-- @param  None
+-- @return None
 --------------------------------------------------------------------------------
 local function main()
         -- creating controls

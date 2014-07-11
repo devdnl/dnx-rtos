@@ -1,7 +1,45 @@
+--[[============================================================================
+@file    project.lua
+
+@author  Daniel Zorychta
+
+@brief   This file is the configuration script for general project settings
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- PUBLIC OBJECTS
+--==============================================================================
 project  = {}
+
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui = {}
 local ID = {}
 ID.WINDOW                  = wx.wxNewId()
@@ -17,7 +55,16 @@ ID.CHOICE_DEFAULT_IRQ_PRIO = wx.wxNewId()
 ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Set all controls that depend on CPU selection
+-- @param  cpu_arch     CPU architecture
+-- @return None
+--------------------------------------------------------------------------------
 local function set_cpu_specific_controls(cpu_arch)
+        -- search CPU architecture
         local cpu_found = false
         for i = 1, config.arch:NumChildren() do
                 if config.arch:Children()[i]:GetName() == cpu_arch then
@@ -26,9 +73,11 @@ local function set_cpu_specific_controls(cpu_arch)
                 end
         end
 
+        -- check if CPU was found
         if cpu_found then
                 ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
 
+                -- load list with CPU names
                 local micro = wizcore:key_read(config.arch[cpu_arch].key.CPU_NAME)
                 local micro_found = false
                 if ui.Choice_CPU_name:IsEmpty() then
@@ -47,6 +96,7 @@ local function set_cpu_specific_controls(cpu_arch)
                         end
                 end
 
+                -- load list with CPU priorities
                 local prio = wizcore:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
                 if ui.Choice_default_irq_prio:IsEmpty() then
@@ -68,6 +118,11 @@ local function set_cpu_specific_controls(cpu_arch)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration files
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         local project_name   = wizcore:key_read(config.project.key.PROJECT_NAME)
         local toolchain_name = wizcore:key_read(config.project.key.PROJECT_TOOLCHAIN)
@@ -84,6 +139,11 @@ local function load_controls()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function handle Save button click event (configuration save)
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function on_button_save_click()
         local cpu_arch     = config.arch:Children()[ui.Choice_CPU_arch:GetSelection() + 1]:GetName()
         local cpu_name     = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].name:GetValue()
@@ -137,11 +197,21 @@ local function on_button_save_click()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function handle event of all TextCtrls when text was updated
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function textctrl_updated()
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function handle event of CPU architecture change
+-- @param  this     event object
+-- @return None
+--------------------------------------------------------------------------------
 local function choice_cpu_arch_selected(this)
         if ui.Choice_CPU_arch.OldSelection ~= this:GetSelection() then
                 ui.Choice_CPU_arch.OldSelection = this:GetSelection()
@@ -154,6 +224,11 @@ local function choice_cpu_arch_selected(this)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function handle event of CPU name change
+-- @param  this     event object
+-- @return None
+--------------------------------------------------------------------------------
 local function choice_cpu_name_selected(this)
         if ui.Choice_CPU_name.OldSelection ~= this:GetSelection() then
                 ui.Button_save:Enable(true)
@@ -163,16 +238,34 @@ local function choice_cpu_name_selected(this)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function handle event of CPU priority change
+-- @param  this     event object
+-- @return None
+--------------------------------------------------------------------------------
 local function choice_cpu_prio_selected(this)
         ui.Button_save:Enable(true)
 end
 
 
-local function spinctrl_osc_freq_updated(this)
+--------------------------------------------------------------------------------
+-- @brief  Function handle event of oscillator frequency update
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function spinctrl_osc_freq_updated()
         ui.Button_save:Enable(true)
 end
 
 
+--==============================================================================
+-- PUBLIC FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates new widgets
+-- @param  parent       parent window
+-- @return New window object
+--------------------------------------------------------------------------------
 function project:create_window(parent)
         if ui.window == nil then
                 ui.window  = wx.wxScrolledWindow(parent, ID.WINDOW)
@@ -237,7 +330,7 @@ function project:create_window(parent)
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
-                --
+                -- event connections
                 this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click     )
                 this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
@@ -253,17 +346,29 @@ function project:create_window(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns window name
+-- @return Window name
+--------------------------------------------------------------------------------
 function project:get_window_name()
         return "Project"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called when window is selected
+-- @return None
+--------------------------------------------------------------------------------
 function project:refresh()
         load_controls()
         ui.Button_save:Enable(false)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function check if options are modified
+-- @return true if options are modified, otherwise false
+--------------------------------------------------------------------------------
 function project:is_modified()
         return ui.Button_save:IsEnabled()
 end

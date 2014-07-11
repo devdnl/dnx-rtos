@@ -1,8 +1,43 @@
+--[[============================================================================
+@file    wizcore.lua
+
+@author  Daniel Zorychta
+
+@brief   The core functions used by wizard
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 xml = require("xmlSimple").newParser()
 
+
+--==============================================================================
+-- PUBLIC OBJECTS
+--==============================================================================
+-- entire xml configuration mapped in the lua's table
 config = xml:loadFile("config.xml").config
 
+-- shared module variables
 wizcore = {}
 wizcore.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
 wizcore.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
@@ -10,10 +45,23 @@ wizcore.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
 wizcore.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
 
 
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function try found specified key in the selected line
+-- @param  line         line where key is finding
+-- @param  filetype     type of file from line comes
+-- @param  key          key to find
+-- @return true if key was found, otherwise false
+--------------------------------------------------------------------------------
 local function line_found(line, filetype, key)
         if filetype == FILETYPE_HEADER then
                 return line:match('^%s*#define%s+'..key..'%s*.*')
@@ -26,6 +74,14 @@ local function line_found(line, filetype, key)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function modify selected line by adding new value to the specified key
+-- @param  line         line to modify
+-- @param  filetype     type of file from line comes
+-- @param  key          key to find
+-- @param  value        value to modify
+-- @return Modified line
+--------------------------------------------------------------------------------
 local function modify_line(line, filetype, key, value)
         if filetype == FILETYPE_HEADER then
                 return "#define "..key.." "..value
@@ -37,6 +93,13 @@ local function modify_line(line, filetype, key, value)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns a value of selected key
+-- @param  line         line from value is getting
+-- @param  filetype     type of file from line comes
+-- @param  key          key from value is getting
+-- @return Value of selected key
+--------------------------------------------------------------------------------
 local function get_line_value(line, filetype, key)
         if filetype == FILETYPE_HEADER then
                 local _, _, value = line:find("%s*#define%s+"..key.."%s+(.*)")
@@ -50,6 +113,15 @@ local function get_line_value(line, filetype, key)
 end
 
 
+--==============================================================================
+-- PUBLIC FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function shows error dialog. Function kills entire wizard.
+-- @param  title        window title
+-- @param  caption      window caption
+-- @return None
+--------------------------------------------------------------------------------
 function wizcore:show_error_msg(title, caption)
         print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
@@ -58,6 +130,12 @@ function wizcore:show_error_msg(title, caption)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function shows info dialog
+-- @param  title        window title
+-- @param  caption      window caption
+-- @return None
+--------------------------------------------------------------------------------
 function wizcore:show_info_msg(title, caption)
         print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
@@ -65,6 +143,13 @@ function wizcore:show_info_msg(title, caption)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function shows question dialog
+-- @param  title        window title
+-- @param  caption      window caption
+-- @param  buttons      wxWidgets button definitions to show
+-- @return Selected button
+--------------------------------------------------------------------------------
 function wizcore:show_question_msg(title, caption, buttons)
         print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
@@ -72,11 +157,22 @@ function wizcore:show_question_msg(title, caption, buttons)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns size of main window in form of table {xs, ys}
+-- @param  None
+-- @return Main window size if form of table {xs, ys}
+--------------------------------------------------------------------------------
 function wizcore:get_window_size()
         return wizcore.WINDOW_X_SIZE, wizcore.WINDOW_Y_SIZE
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Writes value of selected key
+-- @param  keypath      key and path from xml configuration (table)
+-- @param  value        value to write
+-- @return On success true is returned. On error false is returned.
+--------------------------------------------------------------------------------
 function wizcore:key_write(keypath, value)
         local filename = keypath.path:GetValue()
         local key      = keypath.key:GetValue()
@@ -146,6 +242,11 @@ function wizcore:key_write(keypath, value)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Reads value of selected key
+-- @param  keypath      key and path from xml configuration (table)
+-- @return On success a value with form of string, otherwise nil.
+--------------------------------------------------------------------------------
 function wizcore:key_read(keypath)
         local filename = keypath.path:GetValue()
         local key      = keypath.key:GetValue()
@@ -153,19 +254,19 @@ function wizcore:key_read(keypath)
         -- type check
         if type(filename) ~= "string" then
                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback())
-                return false
+                return nil
         end
 
         if type(key) ~= "string" then
                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback())
-                return false
+                return nil
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
-                return false
+                return nil
         end
 
         -- file type check
@@ -176,7 +277,7 @@ function wizcore:key_read(keypath)
                 filetype = FILETYPE_MAKEFILE
         else
                 wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
-                return false
+                return nil
         end
 
         -- key finding
@@ -201,9 +302,15 @@ function wizcore:key_read(keypath)
 end
 
 
-function wizcore:get_string_index(table, string)
-        for i, s in ipairs(table) do
-                if s:match(string) then
+--------------------------------------------------------------------------------
+-- @brief  Returns an index of the string in the selected table
+-- @param  tab      table of strings
+-- @param  str      string to find
+-- @return On success string index is returned (1..+). On error -1 is returned.
+--------------------------------------------------------------------------------
+function wizcore:get_string_index(tab, str)
+        for i, s in ipairs(tab) do
+                if s:match(str) then
                         return i
                 end
         end
@@ -212,6 +319,12 @@ function wizcore:get_string_index(table, string)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function enables/disables selected module
+-- @param  name     name of module (string)
+-- @param  state    new state of module (bool)
+-- @return None
+--------------------------------------------------------------------------------
 function wizcore:enable_module(name, state)
         local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
         local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
@@ -221,6 +334,11 @@ function wizcore:enable_module(name, state)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Gets module state (check configuration consistency)
+-- @param  name     name of module (string)
+-- @return Module state in form of bool
+--------------------------------------------------------------------------------
 function wizcore:get_module_state(name)
         local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
         local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
@@ -236,6 +354,11 @@ function wizcore:get_module_state(name)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function converts yes/no strings to bool
+-- @param  yes_no       yes/no string
+-- @return yes_no converted to bool
+--------------------------------------------------------------------------------
 function wizcore:yes_no_to_bool(yes_no)
         if yes_no:match(config.project.def.YES:GetValue()) then
                 return true
@@ -245,6 +368,11 @@ function wizcore:yes_no_to_bool(yes_no)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  
+-- @param  
+-- @return None
+--------------------------------------------------------------------------------
 function wizcore:bool_to_yes_no(bool)
         if bool then
                 return config.project.def.YES:GetValue()
@@ -254,6 +382,11 @@ function wizcore:bool_to_yes_no(bool)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  
+-- @param  
+-- @return None
+--------------------------------------------------------------------------------
 function wizcore:get_cpu_index(cpu_arch, cpu_name)
         for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
                 if config.arch[cpu_arch].cpulist:Children()[i].name:GetValue() == cpu_name then
@@ -265,6 +398,11 @@ function wizcore:get_cpu_index(cpu_arch, cpu_name)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  
+-- @param  
+-- @return None
+--------------------------------------------------------------------------------
 function ifs(expr, ontrue, onfalse)
         if expr then
                 return ontrue
