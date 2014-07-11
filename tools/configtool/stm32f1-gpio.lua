@@ -407,9 +407,37 @@ function get_handler()
 end
 
 
---------------------------------------------------------------------------------
+--==============================================================================
 -- Module-specific methods
+--==============================================================================
 --------------------------------------------------------------------------------
-function gpio:get_pin_list()
-        return {"A", "b"}
+-- @brief  Function returns list with pin names for selected microcontroller
+-- @return Pin name list
+--------------------------------------------------------------------------------
+function gpio:get_pin_list(sort_list)
+        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        local periph   = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
+        local list     = {}
+        
+        for i = 1, periph:NumChildren() do
+                local port_name = periph:Children()[i].name:GetValue()
+                local pin_mask  = periph:Children()[i].pinmask:GetValue()
+                
+                for pin = 0, number_of_pins do
+                        if bit.band(pin_mask, 1) == 1 then
+                                local key = config.arch.stm32f1.key.GPIO
+                                key.key:SetValue("__GPIO_P"..port_name.."_PIN_"..pin.."_NAME__")
+                                list[#list + 1] = wizcore:key_read(key)
+                        end
+                        
+                        pin_mask = bit.rshift(pin_mask, 1)
+                end
+        end
+        
+        if sort_list then
+                table.sort(list)
+        end
+        
+        return list
 end
