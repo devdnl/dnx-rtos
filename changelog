@@ -1,3 +1,11 @@
+dnx/FreeRTOS 1.3.5rc
+==================
+New Features, Improvements:
+-
+
+Fixed Bugs:
+- Makefile shows error in the 'dependecies' target in the Linuxes other than RHEL, e.g. based on Debian
+
 dnx/FreeRTOS 1.3.4
 ==================
 New Features, Improvements:
