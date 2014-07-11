@@ -272,3 +272,22 @@ function ifs(expr, ontrue, onfalse)
                 return onfalse
         end
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function return list of priorities for selected architecture
+-- @param  cpu_arch     selected CPU architecture
+-- @return List of priorities. Item format: {["name"] = name, ["value"] = value}
+--------------------------------------------------------------------------------
+function wizcore:get_priority_list(cpu_arch)
+        local list = {}
+
+        for i = 1, config.arch[cpu_arch].priorities:NumChildren() do
+                local item = {}
+                item.name  = config.arch[cpu_arch].priorities.priority[i].name:GetValue()
+                item.value = config.arch[cpu_arch].priorities.priority[i].value:GetValue()
+                list[#list + 1] = item
+        end
+        
+        return list
+end

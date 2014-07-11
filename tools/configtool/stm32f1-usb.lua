@@ -17,6 +17,11 @@ function usb:create_window(parent)
         choice = wx.wxChoice(this, -1, wx.wxPoint(10, 100), wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
         gpio = require("stm32f1-gpio").get_handler()
         choice:Append(gpio:get_pin_list(true))
+        
+        prio = wizcore:get_priority_list("stm32f1")
+        for idx, item in ipairs(prio) do
+                print(item.name, item.value)
+        end
 
         button = wx.wxButton(this, wx.wxID_ANY, "USB")
 

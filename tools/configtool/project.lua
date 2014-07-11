@@ -50,10 +50,9 @@ local function set_cpu_specific_controls(cpu_arch)
                 local prio = wizcore:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
                 if ui.Choice_default_irq_prio:IsEmpty() then
-                        for i = 1, config.arch[cpu_arch].priorities:NumChildren() do
-                                ui.Choice_default_irq_prio:Append(config.arch[cpu_arch].priorities.priority[i].name:GetValue())
-
-                                if prio:match(config.arch[cpu_arch].priorities.priority[i].value:GetValue()) then
+                        for i, item in pairs(wizcore:get_priority_list(cpu_arch)) do
+                                ui.Choice_default_irq_prio:Append(item.name)
+                                if prio == item.value then
                                         ui.Choice_default_irq_prio:SetSelection(i - 1)
                                         prio_found = true
                                 end
