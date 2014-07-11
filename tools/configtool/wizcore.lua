@@ -306,7 +306,7 @@ end
 -- @brief  Returns an index of the string in the selected table
 -- @param  tab      table of strings
 -- @param  str      string to find
--- @return On success string index is returned (1..+). On error -1 is returned.
+-- @return On success string index is returned (1..+). On error 0 is returned.
 --------------------------------------------------------------------------------
 function wizcore:get_string_index(tab, str)
         for i, s in ipairs(tab) do
@@ -315,7 +315,7 @@ function wizcore:get_string_index(tab, str)
                 end
         end
 
-        return -1
+        return 0
 end
 
 
@@ -369,9 +369,9 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  
--- @param  
--- @return None
+-- @brief  Function converts bool to strings yes/no
+-- @param  bool        value to convert
+-- @return yes/no string
 --------------------------------------------------------------------------------
 function wizcore:bool_to_yes_no(bool)
         if bool then
@@ -383,9 +383,10 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  
--- @param  
--- @return None
+-- @brief  Function returns index of selected CPU
+-- @param  cpu_arch     CPU architecture
+-- @param  cpu_name     name of CPU
+-- @return On success return CPU index from xml configuration. On error 0.
 --------------------------------------------------------------------------------
 function wizcore:get_cpu_index(cpu_arch, cpu_name)
         for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
@@ -399,8 +400,8 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  
--- @param  
+-- @brief
+-- @param
 -- @return None
 --------------------------------------------------------------------------------
 function ifs(expr, ontrue, onfalse)
@@ -426,6 +427,6 @@ function wizcore:get_priority_list(cpu_arch)
                 item.value = config.arch[cpu_arch].priorities.priority[i].value:GetValue()
                 list[#list + 1] = item
         end
-        
+
         return list
 end

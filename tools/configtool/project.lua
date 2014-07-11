@@ -184,11 +184,11 @@ local function on_button_save_click()
                         wizcore:enable_module(module, exist)
                 end
         end
-        
+
         -- info about changed configuration
         if ui.Choice_CPU_arch.Modified or ui.Choice_CPU_name.Modified then
                 wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.")
-                
+
                 ui.Choice_CPU_arch.Modified = false
                 ui.Choice_CPU_name.Modified = false
         end
@@ -259,7 +259,7 @@ end
 
 
 --==============================================================================
--- PUBLIC FUNCTIONS
+-- GLOBAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
 -- @brief  Function creates new widgets

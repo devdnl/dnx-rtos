@@ -176,6 +176,11 @@
                 <WDG_CLK_DIVIDER><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_CLK_DIVIDER__</key></WDG_CLK_DIVIDER>
                 <WDG_RELOAD_VALUE><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_RELOAD_VALUE__</key></WDG_RELOAD_VALUE>
                 <WDG_DISABLE_ON_DEBUG><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DISABLE_ON_DEBUG__</key></WDG_DISABLE_ON_DEBUG>
+                <SPI_GENERAL><path>../../config/stm32f1/spi_flags.h</path><key></key></SPI_GENERAL>
+                <SPI_DEFAULT_DUMMY_BYTE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_DUMMY_BYTE__</key></SPI_DEFAULT_DUMMY_BYTE>
+                <SPI_DEFAULT_CLK_DIV><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_CLK_DIV__</key></SPI_DEFAULT_CLK_DIV>
+                <SPI_DEFAULT_MODE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MODE__</key></SPI_DEFAULT_MODE>
+                <SPI_DEFAULT_MSB_FIRST><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MSB_FIRST__</key></SPI_DEFAULT_MSB_FIRST>
             </key>
 
             <cpulist>
@@ -703,7 +708,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
-                        <USB></USB>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
