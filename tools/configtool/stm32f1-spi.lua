@@ -47,6 +47,7 @@ spi = {}
 local ui = {}
 local ID = {}
 local number_of_cs = 8
+local spi_cfg
 
 
 --==============================================================================
@@ -59,7 +60,11 @@ local number_of_cs = 8
 --------------------------------------------------------------------------------
 local function load_controls()
         local enable     = wizcore:get_module_state("SPI")
-        local dummy_byte = wizcore:key_read()
+        local dummy_byte = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE)
+        local clkdiv     = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)
+        local spimode    = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MODE)
+        local bitorder   = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST)
+
 
 
         ui.CheckBox_enable:SetValue(enable)
@@ -158,14 +163,14 @@ function spi:create_window(parent)
         ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Clock divider", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_clkdiv = wx.wxChoice(ui.Panel1, ID.CHOICE_CLKDIV, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_CLKDIV")
-        ui.Choice_clkdiv:Append("/2")
-        ui.Choice_clkdiv:Append("/4")
-        ui.Choice_clkdiv:Append("/8")
-        ui.Choice_clkdiv:Append("/16")
-        ui.Choice_clkdiv:Append("/32")
-        ui.Choice_clkdiv:Append("/64")
-        ui.Choice_clkdiv:Append("/128")
-        ui.Choice_clkdiv:Append("/256")
+        ui.Choice_clkdiv:Append("Peripheral clock /2")
+        ui.Choice_clkdiv:Append("Peripheral clock /4")
+        ui.Choice_clkdiv:Append("Peripheral clock /8")
+        ui.Choice_clkdiv:Append("Peripheral clock /16")
+        ui.Choice_clkdiv:Append("Peripheral clock /32")
+        ui.Choice_clkdiv:Append("Peripheral clock /64")
+        ui.Choice_clkdiv:Append("Peripheral clock /128")
+        ui.Choice_clkdiv:Append("Peripheral clock /256")
         ui.FlexGridSizer3:Add(ui.Choice_clkdiv, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "SPI mode", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -183,31 +188,47 @@ function spi:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_bitorder, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer1:Add(ui.FlexGridSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticBoxSizer2 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Device settings")
+
+        ui.StaticBoxSizer2 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Device specific settings")
         ui.FlexGridSizer4 = wx.wxFlexGridSizer(0, 1, 0, 0)
+
         ui.Choice_device = wx.wxChoice(ui.Panel1, ID.CHOICE_DEVICE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_DEVICE")
+        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        spi_cfg        = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+        for i = 1, spi_cfg:NumChildren() do
+                ui.Choice_device:Append("SPI"..spi_cfg:Children()[i].name:GetValue())
+        end
+        ui.Choice_device:SetSelection(0)
         ui.FlexGridSizer4:Add(ui.Choice_device, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.Panel2 = wx.wxPanel(ui.Panel1, ID.PANEL2, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL2")
         ui.FlexGridSizer5 = wx.wxFlexGridSizer(0, 1, 0, 0)
         ui.CheckBox_device_enable = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_DEVICE_ENABLE, "Enable device", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_DEVICE_ENABLE")
         ui.FlexGridSizer4:Add(ui.CheckBox_device_enable, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.FlexGridSizer6 = wx.wxFlexGridSizer(0, 2, 0, 0)
+
         ui.StaticText5 = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.Choice_irqprio = wx.wxChoice(ui.Panel2, ID.CHOICE_IRQPRIO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_IRQPRIO")
+        for i, item in ipairs(wizcore:get_priority_list("stm32f1")) do ui.Choice_irqprio:Append(item.name) end
+        ui.Choice_irqprio:Append("Default")
         ui.FlexGridSizer6:Add(ui.Choice_irqprio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.StaticText6 = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Number of Chip Selects", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText6, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_csnum = wx.wxChoice(ui.Panel2, ID.CHOICE_CSNUM, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_CSNUM")
-        ui.Choice_csnum:Append("1 (CS0 only)")
-        ui.Choice_csnum:Append("2 (CS0..1)")
-        ui.Choice_csnum:Append("3 (CS0..2)")
-        ui.Choice_csnum:Append("4 (CS0..3)")
-        ui.Choice_csnum:Append("5 (CS0..4)")
-        ui.Choice_csnum:Append("6 (CS0..5)")
-        ui.Choice_csnum:Append("7 (CS0..6)")
-        ui.Choice_csnum:Append("8 (CS0..7)")
+        ui.Choice_csnum:Append("1 (CS 0 only)")
+        ui.Choice_csnum:Append("2 (CS 0..1)")
+        ui.Choice_csnum:Append("3 (CS 0..2)")
+        ui.Choice_csnum:Append("4 (CS 0..3)")
+        ui.Choice_csnum:Append("5 (CS 0..4)")
+        ui.Choice_csnum:Append("6 (CS 0..5)")
+        ui.Choice_csnum:Append("7 (CS 0..6)")
+        ui.Choice_csnum:Append("8 (CS 0..7)")
         ui.FlexGridSizer6:Add(ui.Choice_csnum, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         for i = 1, number_of_cs do
             ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i-1, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
             ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
