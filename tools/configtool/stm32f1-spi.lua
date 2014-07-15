@@ -105,7 +105,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                 if spi_cs_count == nil then
                         keygen.key:SetValue("__SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME__")
                         local devcspin = wizcore:key_read(keygen)
-                        ui.Choice_cspin[cs + 1]:SetSelection(wizcore:get_string_index(pin_list, devcspin) - 1)
+                        ui.Choice_cspin[cs + 1]:SetSelection(wizcore:get_string_index(pin_list, devcspin))
 
                 end
 
@@ -116,8 +116,6 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                         ui.StaticText_cspin[cs + 1]:Enable(false)
                         ui.Choice_cspin[cs + 1]:Enable(false)
                 end
-
-                ui.Choice_cspin[cs + 1]:Refresh()
         end
 
         -- load value of IRQ priority
@@ -128,7 +126,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                 ui.Choice_irqprio:SetSelection(devprio)
         end
 
-        ui.Panel2:Update()
+--         ui.Panel2:Update()
 end
 
 --------------------------------------------------------------------------------
@@ -409,7 +407,8 @@ function spi:create_window(parent)
                 ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i-1, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ID.CHOICE_CSPIN[i] = wx.wxNewId()
-                ui.Choice_cspin[i] = wx.wxChoice(ui.Panel2, ID.CHOICE_CSPIN[i], wx.wxDefaultPosition, wx.wxDefaultSize, pin_list, 0, wx.wxDefaultValidator, "ID.CHOICE_CSPIN")
+                ui.Choice_cspin[i] = wx.wxChoice(ui.Panel2, ID.CHOICE_CSPIN[i], wx.wxDefaultPosition, wx.wxDefaultSize, {"*UNDEFINED*"}, 0, wx.wxDefaultValidator, "ID.CHOICE_CSPIN")
+                ui.Choice_cspin[i]:Append(pin_list)
                 ui.FlexGridSizer6:Add(ui.Choice_cspin[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 this:Connect(ID.CHOICE_CSPIN[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, value_updated)
         end
@@ -440,9 +439,9 @@ function spi:create_window(parent)
         this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     dummy_byte_updated            )
 
         --
-        load_controls_of_defaults()
         local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
         load_controls_of_selected_SPI(spisel)
+        load_controls_of_defaults()
         ui.Button_save:Enable(false)
 
         return ui.window
