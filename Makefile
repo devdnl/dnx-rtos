@@ -121,6 +121,7 @@ PORT_LOC   = $(SYS_LOC)/portable
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
 SHELL    = sh
+ECHO     = /bin/echo -e
 RM       = rm -f
 MKDIR    = mkdir -p
 TEST     = test
@@ -145,7 +146,7 @@ else
     ifeq ($(findstring _NT, $(shell $(UNAME))), _NT)
         CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
     else
-        CONFIG_TOOL = echo "Not supported OS: $(shell $(UNAME))"; exit;
+        CONFIG_TOOL = $(ECHO) "Not supported OS: $(shell $(UNAME))"; exit;
     endif
 endif
 
@@ -161,7 +162,7 @@ EMPTY   =
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
 # number of threads used in compilation (cpu count)
-THREAD = $(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
+THREAD = $(shell $(ECHO) $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
@@ -219,16 +220,16 @@ all : dependencies buildobjects linkobjects hex status
 ####################################################################################################
 .PHONY : help
 help :
-	@echo "This is help for this $(THIS_MAKEFILE)"
-	@echo "Possible targets:"
-	@echo "   help                this help"
-	@echo "   config              project configuration (text mode)"
-	@echo "   xconfig             project configuration (GUI)"
-	@echo "   clean               clean project"
-	@echo "   cleanall            clean all non-project files"
-	@echo ""
-	@echo "Non-build targets:"
-	@echo "   check               static code analyze for stm32f1 target"
+	@$(ECHO) "This is help for this $(THIS_MAKEFILE)"
+	@$(ECHO) "Possible targets:"
+	@$(ECHO) "   help                this help"
+	@$(ECHO) "   config              project configuration (text mode)"
+	@$(ECHO) "   xconfig             project configuration (GUI)"
+	@$(ECHO) "   clean               clean project"
+	@$(ECHO) "   cleanall            clean all non-project files"
+	@$(ECHO) ""
+	@$(ECHO) "Non-build targets:"
+	@$(ECHO) "   check               static code analyze for stm32f1 target"
 
 ####################################################################################################
 # project configuration wizard
@@ -253,31 +254,31 @@ check :
 ####################################################################################################
 .PHONY : hex
 hex :
-	@echo 'Creating IHEX image...'
+	@$(ECHO) 'Creating IHEX image...'
 	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
 
-	@echo 'Creating binary image...'
+	@$(ECHO) 'Creating binary image...'
 	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
 
-	@echo 'Creating memory dump...'
+	@$(ECHO) 'Creating memory dump...'
 	@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
 
-	@echo 'Creating extended listing....'
+	@$(ECHO) 'Creating extended listing....'
 	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
-	@echo 'Creating objects size list...'
+	@$(ECHO) 'Creating objects size list...'
 	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) > $(TARGET_PATH)/$(PROJECT).size
 
-	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
+	@$(ECHO) "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
 
 ####################################################################################################
 # show compile status
 ####################################################################################################
 .PHONY : status
 status :
-	@echo "-----------------------------------"
-	@echo "| `$(DATE) "+Compilation completed: %k:%M:%S"` |"
-	@echo "-----------------------------------"
+	@$(ECHO) "-----------------------------------"
+	@$(ECHO) "| `$(DATE) "+Compilation completed: %k:%M:%S"` |"
+	@$(ECHO) "-----------------------------------"
 
 ####################################################################################################
 ####################################################################################################
@@ -285,22 +286,22 @@ status :
 ####################################################################################################
 .PHONY : dependencies
 dependencies :
-	@echo "Creating dependencies for '$(TARGET)' target..."
+	@$(ECHO) "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
-	@echo "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@$(ECHO) "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
 	@$(MKDEP) -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
-	@echo -e "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@echo -e "$(foreach var,$(CXXSRC),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@echo -e "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@$(ECHO) "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@$(ECHO) "$(foreach var,$(CXXSRC),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@$(ECHO) "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
 
 ####################################################################################################
 # linking rules
 ####################################################################################################
 .PHONY : linkobjects
 linkobjects :
-	@echo "Linking..."
-	@#echo $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(ECHO) "Linking..."
+	@#$(ECHO) $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
@@ -308,7 +309,7 @@ linkobjects :
 ####################################################################################################
 .PHONY : buildobjects buildobjects_$(TARGET)
 buildobjects :
-	@echo "Starting building objects up to $(THREAD) threads..."
+	@$(ECHO) "Starting building objects up to $(THREAD) threads..."
 	@$(MAKE) -s -j$(THREAD) -f$(THIS_MAKEFILE) buildobjects_$(TARGET)
 
 buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
@@ -317,7 +318,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 # rule used to compile object files from c sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
-	@echo "Building: $@..."
+	@$(ECHO) "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
@@ -325,7 +326,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 # rule used to compile object files from C++ sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
-	@echo "Building: $@..."
+	@$(ECHO) "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
@@ -333,7 +334,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 # rule used to compile object files from assembler sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
-	@echo "Building: $@..."
+	@$(ECHO) "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
@@ -342,7 +343,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 ####################################################################################################
 .PHONY : cleantarget
 cleantarget :
-	@echo "Cleaning target..."
+	@$(ECHO) "Cleaning target..."
 	-@$(RM) -r $(OBJ_PATH) $(LST_PATH)
 	-@$(RM) $(TARGET_DIR_NAME)/*.*
 
@@ -351,7 +352,7 @@ cleantarget :
 ####################################################################################################
 .PHONY : clean
 clean :
-	@echo "Deleting all build files..."
+	@$(ECHO) "Deleting all build files..."
 	-@$(RM) -r $(TARGET_DIR_NAME)/*
 
 ####################################################################################################
@@ -359,7 +360,7 @@ clean :
 ####################################################################################################
 .PHONY : cleanall
 cleanall:
-	@echo "Cleaning up project..."
+	@$(ECHO) "Cleaning up project..."
 	-@$(RM) -r $(TARGET_DIR_NAME) $(INFO_LOC)
 
 ####################################################################################################

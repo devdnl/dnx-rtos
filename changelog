@@ -1,13 +1,13 @@
-dnx/FreeRTOS 1.3.5rc
-==================
+dnx RTOS 1.3.5
+==============
 New Features, Improvements:
--
+- None
 
 Fixed Bugs:
-- Makefile shows error in the 'dependecies' target in the Linuxes other than RHEL, e.g. based on Debian
+- Fixed Makefile (dependecies generation and echo handling by using /bin/echo program)
 
-dnx/FreeRTOS 1.3.4
-==================
+dnx RTOS 1.3.4
+==============
 New Features, Improvements:
 - Implemented USB device driver for STM32F1xx microcontroller family
 - Added new macros: static_cast(), const_cast(), reinterpret_cast() to indicate type casting in C code
@@ -18,8 +18,8 @@ Fixed Bugs:
 - Fixed GPIO_PIN() macro
 - Fixed TTY driver: process is starved when the buffer of a stdin is not read
 
-dnx/FreeRTOS 1.3.3
-==================
+dnx RTOS 1.3.3
+==============
 New Features, Improvements:
 - Implemented mbus library (IPC Communication)
 
@@ -27,8 +27,8 @@ Fixed Bugs:
 - dsh: The wrong message is printed when a starting program has not enough free memory
 - Configuration scripts
 
-dnx/FreeRTOS 1.3.2
-==================
+dnx RTOS 1.3.2
+==============
 New Features, Improvements:
 - Reduced the size of the modules registry
 - Removed the STOP_IF() macro from the modules and file systems
@@ -42,8 +42,8 @@ New Features, Improvements:
 Fixed Bugs:
 - SDSPI: System crashes when ioctl IOCTL_SDSPI__INITIALIZE_CARD request have NULL argument
 
-dnx/FreeRTOS 1.3.1
-==================
+dnx RTOS 1.3.1
+==============
 New Features, Improvements:
 - Created centralized project configuration
 - Implemented text and GUI configuration wizard
@@ -52,8 +52,8 @@ New Features, Improvements:
 Fixed Bugs:
 - none
 
-dnx/FreeRTOS 1.3.0
-==================
+dnx RTOS 1.3.0
+==============
 New Features, Improvements:
 - CRC driver
 - WDG driver
@@ -73,8 +73,8 @@ Fixed Bugs:
 - ifconfig crashes if tcpipd was killed
 - TTY: process starvation by fast rate write cycles
 
-dnx/FreeRTOS 1.2.3
-==================
+dnx RTOS 1.2.3
+==============
 New Features, Improvements:
 - removed redundant c++ switches in c files
 - added stdin flush at program exit
@@ -83,8 +83,8 @@ New Features, Improvements:
 Fixed Bugs:
 - in the PuTTY terminal the screen is incorrectly cleared (cursor not got to home position)
 
-dnx/FreeRTOS 1.2.2
-==================
+dnx RTOS 1.2.2
+==============
 New Features, Improvements:
 - cleaned up standard headers, more logical libraries localization
 - pipe (in LFS and devfs) not blocks a program if stream is full
@@ -92,8 +92,8 @@ New Features, Improvements:
 Fixed Bugs:
 - none
 
-dnx/FreeRTOS 1.2.1
-==================
+dnx RTOS 1.2.1
+==============
 New Features, Improvements:
 - implemented SPI driver
 - implemented fully configurable STM32F10x PLL driver
@@ -105,8 +105,8 @@ Fixed Bugs:
 - TTY incorrectly shows lines (doubles)
 - UART driver sometimes cuts data
 
-dnx/FreeRTOS 1.2.0
-==================
+dnx RTOS 1.2.0
+==============
 New Features, Improvements:
 - added device lock, unlock functions
 - added network support using lwIP library
@@ -127,8 +127,8 @@ Fixed Bugs:
 - system creates dead task if not enough free memory
 - LFS not report errors when not enough free space left
 
-dnx/FreeRTOS 1.1.0
-==================
+dnx RTOS 1.1.0
+==============
 New Features, Improvements:
 - simplified Makefile
 - created fast devfs file system
@@ -155,7 +155,7 @@ Fixed Bugs:
 - system crash if program parameters start with " and ' characters
 - fatfs memory leakage
 
-dnx/FreeRTOS 1.0.0
-==================
+dnx RTOS 1.0.0
+==============
 New Features, Improvements:
 - first system release, basic features
