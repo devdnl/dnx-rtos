@@ -583,7 +583,7 @@ static inline const char *get_platform_name(void)
 //==============================================================================
 static inline const char *get_OS_name(void)
 {
-        return "dnx";
+        return "dnx RTOS";
 }
 
 //==============================================================================
@@ -609,7 +609,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.3.4";
+        return "1.3.5";
 }
 
 //==============================================================================
