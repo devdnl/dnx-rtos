@@ -67,8 +67,7 @@ PROGRAM_MAIN(uname, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf("%s/%s, %s %s, %s %s, %s\n",
-               get_OS_name(), get_kernel_name(),
+        printf("%s %s, %s %s, %s\n",
                get_OS_name(), get_OS_version(),
                get_kernel_name(), get_kernel_version(),
                get_platform_name());
