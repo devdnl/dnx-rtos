@@ -73,13 +73,23 @@ local prio_list = wizcore:get_priority_list("stm32f1")
 -- LOCAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
--- @brief  x
--- @param  None
+-- @brief  Load controls of selected SPI
+-- @param  spi_number       SPI number wich controls will be load
+-- @param  spi_cs_count     optional argument, if set then spi cs number is not loaded from config
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         local keygen = config.arch.stm32f1.key.SPI_GENERAL
-        
+
+        -- SPI enable status
+        if spi_cs_count == nil then
+                keygen.key:SetValue("__SPI_SPI"..spi_number.."_ENABLE__")
+                local deven = wizcore:yes_no_to_bool(wizcore:key_read(keygen))
+                ui.CheckBox_device_enable:SetValue(deven)
+                ui.Panel2:Enable(deven)
+        end
+
+        -- load current selection of number of cs pins
         local number_of_cs_pins
         if spi_cs_count ~= nil and spi_cs_count >= 1 and spi_cs_count <= number_of_cs then
                 number_of_cs_pins = spi_cs_count
@@ -89,15 +99,16 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         end
         ui.Choice_csnum:SetSelection(number_of_cs_pins - 1)
         ui.Choice_csnum.OldSelection = number_of_cs_pins - 1
-        
+
+        -- load names of CS pins
         for cs = 0, number_of_cs - 1 do
                 if spi_cs_count == nil then
                         keygen.key:SetValue("__SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME__")
                         local devcspin = wizcore:key_read(keygen)
                         ui.Choice_cspin[cs + 1]:SetSelection(wizcore:get_string_index(pin_list, devcspin) - 1)
- 
+
                 end
-                
+
                 if cs < number_of_cs_pins then
                         ui.StaticText_cspin[cs + 1]:Enable(true)
                         ui.Choice_cspin[cs + 1]:Enable(true)
@@ -105,17 +116,27 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                         ui.StaticText_cspin[cs + 1]:Enable(false)
                         ui.Choice_cspin[cs + 1]:Enable(false)
                 end
-                
+
+                ui.Choice_cspin[cs + 1]:Refresh()
         end
+
+        -- load value of IRQ priority
+        if spi_cs_count == nil then
+                keygen.key:SetValue("__SPI_SPI"..spi_number.."_PRIORITY__")
+                local devprio = wizcore:key_read(keygen)
+                if devprio == "CONFIG_USER_IRQ_PRIORITY" then devprio = #prio_list else devprio = math.floor(tonumber(devprio) / 16) end
+                ui.Choice_irqprio:SetSelection(devprio)
+        end
+
+        ui.Panel2:Update()
 end
 
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Load controls with default configuration for all interfaces
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
-        -- general device configration
+local function load_controls_of_defaults()
         local enable     = wizcore:get_module_state("SPI")
         local dummy_byte = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", "")
         local clkdividx  = clkdiv_str[wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)]
@@ -127,22 +148,7 @@ local function load_controls()
         ui.Choice_clkdiv:SetSelection(clkdividx)
         ui.Choice_mode:SetSelection(spimode)
         ui.Choice_bitorder:SetSelection(bitorder)
-   
-        -- device specific configuration
-        keygen.key:SetValue("__SPI_SPI"..spisel.."_ENABLE__")
-        local deven = wizcore:yes_no_to_bool(wizcore:key_read(keygen))
-        
-        keygen.key:SetValue("__SPI_SPI"..spisel.."_PRIORITY__")
-        local devprio = wizcore:key_read(keygen)
-        if devprio == "CONFIG_USER_IRQ_PRIORITY" then devprio = #prio_list else devprio = floor(tonumber(devprio) / 16) - 1 end
-        
-        load_controls_of_selected_SPI(spisel)
-        
-        ui.Choice_irqprio:SetSelection(devprio)
-       -- ui.Choice_csnum:SetSelection(devcsno - 1)
-        ui.CheckBox_device_enable:SetValue(deven)
-        ui.Panel2:Enable(deven)
-        
+
         --
         ui.CheckBox_enable:SetValue(enable)
         ui.Panel1:Enable(enable)
@@ -150,7 +156,7 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Event is called when Save button is clicked
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
@@ -163,8 +169,8 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
--- @param  None
+-- @brief  Event is called when module enable checkbox is changed
+-- @param  this     event object
 -- @return None
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
@@ -174,17 +180,18 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
--- @param  None
+-- @brief  Event is called when device enable checkbox is changed
+-- @param  this     event object
 -- @return None
 --------------------------------------------------------------------------------
 local function checkbox_device_enable_updated(this)
         ui.Panel2:Enable(this:IsChecked())
+        ui.Button_save:Enable(true)
 end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Event is called when value is changed in general
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
@@ -194,19 +201,18 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Event is called when SPI device is selected
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
 local function spi_device_selected()
-        if ui.Choice_device.OldSelection == ui.Choice_device:GetSelection() then
-                return
-        else
+        if ui.Choice_device.OldSelection ~= ui.Choice_device:GetSelection() then
+
                 local answer = wx.wxID_NO
                 if ui.Button_save:IsEnabled() then
                         answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
                 end
-        
+
                 if answer == wx.wxID_YES then
                         on_button_save_click()
                         ui.Choice_device.OldSelection = ui.Choice_device:GetSelection()
@@ -216,27 +222,19 @@ local function spi_device_selected()
                         ui.Choice_device:SetSelection(ui.Choice_device.OldSelection)
                         return
                 end
-        
-                -- TODO
-        
-                -- ui.Choice_device.OldSelection = ui.Choice_device:GetSelection()
+
                 local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
                 load_controls_of_selected_SPI(tonumber(spisel))
+
+                if answer == wx.wxID_YES or answer == wx.wxID_NO then
+                        ui.Button_save:Enable(false)
+                end
         end
-
-
-
-        
-        
-
-
-
-        
 end
 
 
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Event is called when number of CS pins is selected to a new value
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
@@ -246,7 +244,50 @@ local function number_of_cs_selected()
                 local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
                 local csnum  = ui.Choice_csnum:GetSelection() + 1
                 load_controls_of_selected_SPI(tonumber(spisel), csnum)
+                ui.Button_save:Enable(true)
         end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function filters input value to be only a hex value
+-- @param  this     TextCtrl object
+-- @return None
+--------------------------------------------------------------------------------
+local function textctrl_only_hex(this)
+        local function ischarhex(char)
+                char:upper()
+                return (char >= '0' and char <= '9') or (char >= 'A' and char <= 'F')
+        end
+
+        if this:IsModified() then
+                local text  = this:GetValue():upper()
+                local char1 = string.char(text:byte(1))
+                local char2 = string.char(text:byte(2))
+                text        = nil
+
+                if ischarhex(char1) then text = char1 end
+                if ischarhex(char2) then text = char1..char2 end
+
+                if text then
+                        this:SetValue(text)
+                        this:SetInsertionPointEnd()
+                else
+                        this:Clear()
+                end
+
+                ui.Button_save:Enable(true)
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Event is called when dummy byte value is updated
+-- @param  this     event object
+-- @return None
+--------------------------------------------------------------------------------
+local function dummy_byte_updated(this)
+        textctrl_only_hex(ui.TextCtrl_dummy_byte)
 end
 
 
@@ -293,6 +334,7 @@ function spi:create_window(parent)
         ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Dummy byte", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel1, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxSize(40,-1), 0, wx.wxDefaultValidator, "ID.TEXTCTRL_DUMMY_BYTE")
+        ui.TextCtrl_dummy_byte:SetMaxLength(2)
         ui.FlexGridSizer3:Add(ui.TextCtrl_dummy_byte, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Clock divider", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -364,13 +406,14 @@ function spi:create_window(parent)
         ui.FlexGridSizer6:Add(ui.Choice_csnum, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         for i = 1, number_of_cs do
-            ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i-1, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
-            ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ID.CHOICE_CSPIN[i] = wx.wxNewId()
-            ui.Choice_cspin[i] = wx.wxChoice(ui.Panel2, ID.CHOICE_CSPIN[i], wx.wxDefaultPosition, wx.wxDefaultSize, pin_list, 0, wx.wxDefaultValidator, "ID.CHOICE_CSPIN")
-            ui.FlexGridSizer6:Add(ui.Choice_cspin[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i-1, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+                ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ID.CHOICE_CSPIN[i] = wx.wxNewId()
+                ui.Choice_cspin[i] = wx.wxChoice(ui.Panel2, ID.CHOICE_CSPIN[i], wx.wxDefaultPosition, wx.wxDefaultSize, pin_list, 0, wx.wxDefaultValidator, "ID.CHOICE_CSPIN")
+                ui.FlexGridSizer6:Add(ui.Choice_cspin[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                this:Connect(ID.CHOICE_CSPIN[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, value_updated)
         end
-        
+
         ui.FlexGridSizer5:Add(ui.FlexGridSizer6, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.Panel2:SetSizer(ui.FlexGridSizer5)
         ui.FlexGridSizer4:Add(ui.Panel2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -394,13 +437,12 @@ function spi:create_window(parent)
         this:Connect(ID.CHECKBOX_DEVICE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_device_enable_updated)
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  spi_device_selected           )
         this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  number_of_cs_selected         )
---         this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_updated          )
---         this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_updated          )
---         this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated          )
---         this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
+        this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     dummy_byte_updated            )
 
         --
-        load_controls()
+        load_controls_of_defaults()
+        local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
+        load_controls_of_selected_SPI(spisel)
         ui.Button_save:Enable(false)
 
         return ui.window
