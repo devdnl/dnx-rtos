@@ -110,6 +110,7 @@
         <def>
             <NO>__NO__</NO>
             <YES>__YES__</YES>
+            <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
             <module noarch="false">GPIO</module>
