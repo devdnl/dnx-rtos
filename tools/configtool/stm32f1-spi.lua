@@ -433,10 +433,15 @@ function spi:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated       )
+        this:Connect(ID.CHOICE_CLKDIV,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
+        this:Connect(ID.CHOICE_MODE,            wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
+        this:Connect(ID.CHOICE_BITORDER,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHECKBOX_DEVICE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_device_enable_updated)
+        this:Connect(ID.CHOICE_IRQPRIO,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  spi_device_selected           )
         this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  number_of_cs_selected         )
         this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     dummy_byte_updated            )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click          )
 
         --
         local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
