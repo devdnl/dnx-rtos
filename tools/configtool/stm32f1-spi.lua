@@ -156,7 +156,7 @@ end
 --------------------------------------------------------------------------------
 -- @brief  Event is called when Save button is clicked
 -- @param  None
--- @return None
+-- @return On success true, otherwise false
 --------------------------------------------------------------------------------
 local function on_button_save_click()
         -- load selected values
@@ -188,7 +188,7 @@ local function on_button_save_click()
 
                 if undef_pin == true then
                         wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "Selected not existing pin as Chip Select!\n\nSelect defined pin name and try again.")
-                        return
+                        return false
                 end
         end
 
@@ -221,6 +221,7 @@ local function on_button_save_click()
 
         --
         ui.Button_save:Enable(false)
+        return true
 end
 
 
@@ -273,8 +274,12 @@ local function spi_device_selected()
                         local to_save = ui.Choice_device.OldSelection
                         ui.Choice_device.OldSelection = ui.Choice_device:GetSelection()
                         ui.Choice_device:SetSelection(to_save)
-                        on_button_save_click()
-                        ui.Choice_device:SetSelection(ui.Choice_device.OldSelection)
+                        if on_button_save_click() == false then
+                                ui.Choice_device.OldSelection = to_save
+                                return
+                        else
+                                ui.Choice_device:SetSelection(ui.Choice_device.OldSelection)
+                        end
                 elseif answer == wx.wxID_NO then
                         ui.Choice_device.OldSelection = ui.Choice_device:GetSelection()
                 elseif answer == wx.wxID_CANCEL then
@@ -465,7 +470,7 @@ function spi:create_window(parent)
         ui.FlexGridSizer6:Add(ui.Choice_csnum, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         for i = 0, number_of_cs - 1 do
-                ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i-1, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+                ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ID.CHOICE_CSPIN[i] = wx.wxNewId()
                 ui.Choice_cspin[i] = wx.wxChoice(ui.Panel2, ID.CHOICE_CSPIN[i], wx.wxDefaultPosition, wx.wxDefaultSize, {"*UNDEFINED*"}, 0, wx.wxDefaultValidator, "ID.CHOICE_CSPIN")
