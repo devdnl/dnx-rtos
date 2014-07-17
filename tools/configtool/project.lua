@@ -170,7 +170,7 @@ local function on_button_save_click()
         end
 
         for i = 1, config.project.modules:NumChildren() do
-                local module = config.project.modules:Children()[i]:GetValue()
+                local module = config.project.modules:Children()[i].name:GetValue()
                 local exist  = false
 
                 for j, name in ipairs(cpu_periph) do

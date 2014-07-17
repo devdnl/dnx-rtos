@@ -132,28 +132,28 @@ function modules:refresh()
                 local module_name = peripheral:GetName():lower()
                 local no_arch     = false
                 local module_file
-                
+
                 -- find if module is a 'noarch' module
                 local module_list = config.project.modules
                 for m = 1, module_list:NumChildren() do
-                        if module_name == module_list:Children()[m]:GetValue():lower() then
+                        if module_name == module_list:Children()[m].name:GetValue():lower() then
                                 if module_list:Children()[m]:NumProperties() ~= 0 then
                                         if module_list:Children()[m]["@noarch"] == "true" then
                                                 no_arch = true
                                         end
                                 end
-                                
+
                                 break
                         end
                 end
-                
+
                 -- create name of module file to load according to architecture
                 if no_arch then
                         module_file = "noarch-"..module_name
                 else
                         module_file = cpu_arch.."-"..module_name
                 end
-                
+
                 -- check that specified module file exist
                 local f = io.open(module_file..".lua")
                 if f then
@@ -167,7 +167,7 @@ function modules:refresh()
                                                                          "Expected file: "..module_file..".lua")
                         return
                 end
-                
+
                 -- load module and gets handler
                 local module = require(module_file).get_handler()
                 dialog:Update(i, "Loading data of "..module:get_window_name().."...")
