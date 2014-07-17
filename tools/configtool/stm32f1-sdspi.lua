@@ -88,12 +88,12 @@ local function load_controls()
         for i = 0, ui.Choice_SPI_port:GetCount() - 1 do
                 if ui.Choice_SPI_port:GetString(i) == "SPI"..spiport then
                         port_exist = true
+                        spiport = i
+                        break
                 end
         end
 
-        if port_exist then
-                spiport = spiport - 1
-        else
+        if not port_exist then
                 spiport = ui.Choice_SPI_port:GetCount() - 1
         end
 
