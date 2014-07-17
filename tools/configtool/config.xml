@@ -197,6 +197,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -211,6 +215,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -225,6 +233,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -240,6 +253,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -257,6 +274,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -271,6 +293,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -285,6 +311,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -299,6 +329,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -313,6 +347,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -328,6 +366,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -343,6 +385,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -357,6 +403,9 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -371,6 +420,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -385,6 +438,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -399,6 +456,9 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -413,6 +473,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -427,6 +491,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -441,6 +509,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -455,6 +528,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -469,6 +547,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -483,6 +566,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -496,6 +584,9 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -511,6 +602,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -526,6 +621,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -541,6 +640,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -556,6 +660,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -571,6 +680,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -586,6 +700,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -603,6 +722,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -620,6 +744,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -637,6 +766,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -651,6 +785,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -665,6 +804,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -680,6 +824,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -695,6 +844,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -729,6 +883,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -744,6 +903,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <SPI>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </SPI>
                     </peripherals>
                 </cpu>
             </cpulist>
