@@ -1,10 +1,46 @@
+--[[============================================================================
+@file    file_systems.lua
+
+@author  Daniel Zorychta
+
+@brief   Configuration script for file systems.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 file_systems = {}
 
-local ui = {}
 
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
+local ui = {}
 local ID = {}
 ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX_DEVFS = wx.wxNewId()
@@ -13,7 +49,6 @@ ID.CHECKBOX_FATFS_LFN = wx.wxNewId()
 ID.CHECKBOX_LFS = wx.wxNewId()
 ID.CHECKBOX_PROCFS = wx.wxNewId()
 ID.CHOICE_FATFS_LFN_CODEPAGE = wx.wxNewId()
-
 
 local codepage = {"437 - U.S.",
                   "720 - Arabic",
@@ -42,6 +77,14 @@ local codepage = {"437 - U.S.",
                   "1258 - Vietnam"}
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration files
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         ui.CheckBox_devfs:SetValue(wizcore:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(wizcore:get_module_state("LFS"))
@@ -52,6 +95,11 @@ local function load_controls()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when Save button is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function on_button_save_click()
         wizcore:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
         wizcore:enable_module("LFS", ui.CheckBox_lfs:GetValue())
@@ -64,11 +112,21 @@ local function on_button_save_click()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (by any control)
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function value_changed()
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when FATFS checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function FATFS_state_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
         ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
@@ -76,11 +134,24 @@ local function FATFS_state_changed(this)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when LFN checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function LFN_enable_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
 end
 
 
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function file_systems:create_window(parent)
         if ui.window == nil then
                 ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -178,16 +249,30 @@ function file_systems:create_window(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @param  None
+-- @return Module name
+--------------------------------------------------------------------------------
 function file_systems:get_window_name()
         return "File Systems"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called when window is selected
+-- @return None
+--------------------------------------------------------------------------------
 function file_systems:refresh()
         load_controls()
         ui.Button_save:Enable(false)
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Function check if options are modified
+-- @return true if options are modified, otherwise false
+--------------------------------------------------------------------------------
 function file_systems:is_modified()
         return ui.Button_save:IsEnabled()
 end

@@ -1,13 +1,57 @@
+--[[============================================================================
+@file    modules.lua
+
+@author  Daniel Zorychta
+
+@brief   Module is used to load CPU-specified peripherals configurations.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 modules = {}
 
 
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui   = {}
 local page = {}
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Event is called when notebook page is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function notebook_page_changed(this)
         local card = this:GetSelection() + 1
         if page[card] then page[card]:selected() end
@@ -15,6 +59,14 @@ local function notebook_page_changed(this)
 end
 
 
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function modules:create_window(parent)
         if ui.window == nil then
                 ui.window    = wx.wxPanel(parent, wx.wxNewId())
@@ -31,11 +83,20 @@ function modules:create_window(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @param  None
+-- @return Module name
+--------------------------------------------------------------------------------
 function modules:get_window_name()
         return "Modules"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called when window is selected
+-- @return None
+--------------------------------------------------------------------------------
 function modules:refresh()
         local cpu_arch   = wizcore:key_read(config.project.key.PROJECT_CPU_ARCH)
         local cpu_name   = wizcore:key_read(config.arch[cpu_arch].key.CPU_NAME)
@@ -119,6 +180,10 @@ function modules:refresh()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function check if options are modified
+-- @return true if options are modified, otherwise false
+--------------------------------------------------------------------------------
 function modules:is_modified()
         for i, module in ipairs(page) do
                 if module:is_modified() then

@@ -1,10 +1,46 @@
+--[[============================================================================
+@file    network.lua
+
+@author  Daniel Zorychta
+
+@brief   Network configuration script.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 network = {}
 
-local ui = {}
 
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
+local ui = {}
 local ID = {}
 ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX_ENABLE = wx.wxNewId()
@@ -17,6 +53,14 @@ ID.TEXTCTRL_MAC4 = wx.wxNewId()
 ID.TEXTCTRL_MAC5 = wx.wxNewId()
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function set state (enable/disable) of specified controls
+-- @param  state        state to set (bool)
+-- @return None
+--------------------------------------------------------------------------------
 local function set_controls_state(state)
         ui.TextCtrl_MAC0:Enable(state)
         ui.TextCtrl_MAC1:Enable(state)
@@ -28,6 +72,11 @@ local function set_controls_state(state)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration files
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         ui.CheckBox_enable:SetValue(wizcore:get_module_state("NETWORK"))
         ui.TextCtrl_MAC0:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_0):gsub("0x", ""))
@@ -41,6 +90,11 @@ local function load_controls()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when Save button is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function on_button_save_click()
         wizcore:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
         wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_0, "0x"..ui.TextCtrl_MAC0:GetValue())
@@ -55,19 +109,30 @@ local function on_button_save_click()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when module enable checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function checkbox_enable_clicked(this)
         set_controls_state(this:IsChecked())
         ui.Button_save:Enable(true)
 end
 
 
-local function ischarhex(char)
-        char:upper()
-        return (char >= '0' and char <= '9') or (char >= 'A' and char <= 'F')
-end
-
-
+--------------------------------------------------------------------------------
+-- @brief  Function handle TextCtrl object to check that text is a hex number
+-- @param  this         TextCtrl object
+-- @return None
+--------------------------------------------------------------------------------
 local function textctrl_only_hex(this)
+        -- function check if char is a hex value
+        local function ischarhex(char)
+                char:upper()
+                return (char >= '0' and char <= '9') or (char >= 'A' and char <= 'F')
+        end
+
+        -- analyze of TextCtrl value
         if this:IsModified() then
                 local text  = this:GetValue():upper()
                 local char1 = string.char(text:byte(1))
@@ -89,6 +154,11 @@ local function textctrl_only_hex(this)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Events are called when value of particular TextCtrl of MAC address is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function mac0_textctrl_changed(this) textctrl_only_hex(ui.TextCtrl_MAC0) end
 local function mac1_textctrl_changed(this) textctrl_only_hex(ui.TextCtrl_MAC1) end
 local function mac2_textctrl_changed(this) textctrl_only_hex(ui.TextCtrl_MAC2) end
@@ -97,11 +167,24 @@ local function mac4_textctrl_changed(this) textctrl_only_hex(ui.TextCtrl_MAC4) e
 local function mac5_textctrl_changed(this) textctrl_only_hex(ui.TextCtrl_MAC5) end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when combobox value is changed
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function combobox_changed()
         ui.Button_save:Enable(true)
 end
 
 
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function network:create_window(parent)
         if ui.window == nil then
                 ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -176,17 +259,32 @@ function network:create_window(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @param  None
+-- @return Module name
+--------------------------------------------------------------------------------
 function network:get_window_name()
         return "Network"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called when window is selected
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 function network:refresh()
         load_controls()
         ui.Button_save:Enable(false)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function check if options are modified
+-- @param  None
+-- @return true if options are modified, otherwise false
+--------------------------------------------------------------------------------
 function network:is_modified()
         return ui.Button_save:IsEnabled()
 end

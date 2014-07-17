@@ -1,12 +1,64 @@
+--[[============================================================================
+@file    stm32f1-usb.lua
+
+@author  Daniel Zorychta
+
+@brief   Configuration script for USB module
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
 module(..., package.seeall)
+
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 usb = {}
 
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui = {}
 local ID = {}
 
+
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+
+
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function usb:create_window(parent)
         ui = {}
         ID = {}
@@ -31,21 +83,42 @@ function usb:create_window(parent)
         return ui.window
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @param  None
+-- @return Module name
+--------------------------------------------------------------------------------
 function usb:get_window_name()
         return "USB"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called by parent when window is selected
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 function usb:selected()
         print("usb:selected()")
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns modify status
+-- @param  None
+-- @return If data is modified true is returned, otherwise false
+--------------------------------------------------------------------------------
 function usb:is_modified()
         return false
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module handler
+-- @param  None
+-- @return Module handler
+--------------------------------------------------------------------------------
 function get_handler()
         return usb
 end

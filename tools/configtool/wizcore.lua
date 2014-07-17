@@ -123,7 +123,6 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function wizcore:show_error_msg(title, caption)
-        print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
         dialog:ShowModal()
         wx.wxGetApp():ExitMainLoop()
@@ -137,7 +136,6 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function wizcore:show_info_msg(title, caption)
-        print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
         dialog:ShowModal()
 end
@@ -151,7 +149,6 @@ end
 -- @return Selected button
 --------------------------------------------------------------------------------
 function wizcore:show_question_msg(title, caption, buttons)
-        print("["..title.."] "..caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
         return dialog:ShowModal()
 end
@@ -400,9 +397,11 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief
--- @param
--- @return None
+-- @brief Short verion of if statement
+-- @param expr      test expression
+-- @param ontrue    return value if expr is true
+-- @param onfalse   return value if expr is false
+-- @return Return ontrue if expr is true, otherwise onfalse is returned.
 --------------------------------------------------------------------------------
 function ifs(expr, ontrue, onfalse)
         if expr then

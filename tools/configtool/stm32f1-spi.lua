@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Configuration script for SDSPI driver module
+@brief   Configuration script for SPI module
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 

@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Configuration script for SDSPI driver module
+@brief   Configuration script for SDSPI module.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -43,7 +43,6 @@ sdspi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
--- local objects
 local ui = {}
 local ID = {}
 
@@ -52,7 +51,7 @@ local ID = {}
 -- LOCAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
--- @brief  x
+-- @brief  Function loads all controls from configuration scripts
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------

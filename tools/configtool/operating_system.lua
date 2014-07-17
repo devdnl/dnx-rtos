@@ -1,8 +1,45 @@
+--[[============================================================================
+@file    operating_system.lua
+
+@author  Daniel Zorychta
+
+@brief   Operating System configuration script.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 operating_system = {}
 
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui = {}
 local ID = {}
 ID.BUTTON_SAVE = wx.wxNewId()
@@ -47,11 +84,24 @@ ID.STATICTEXT_TOTAL_STACK_SIZE = wx.wxNewId()
 ID.TEXTCTRL_HOSTNAME = wx.wxNewId()
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function calculate total stack size string using selected configuration
+-- @param  None
+-- @return Calculated value of total size of stack (string)
+--------------------------------------------------------------------------------
 local function get_total_stack_size_string()
         return tostring((ui.SpinCtrl_task_stack_size:GetValue() + ui.SpinCtrl_fs_stack_size:GetValue() + ui.SpinCtrl_irq_stack_size:GetValue()).." levels")
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration files
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         ui.SpinCtrl_task_stack_size:SetValue(tonumber(wizcore:key_read(config.project.key.OS_TASK_MIN_STACK_DEPTH)))
         ui.SpinCtrl_fs_stack_size:SetValue(tonumber(wizcore:key_read(config.project.key.OS_FILE_SYSTEM_STACK_DEPTH)))
@@ -83,6 +133,11 @@ local function load_controls()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when Save button is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function on_button_save_click()
         wizcore:key_write(config.project.key.OS_TASK_MIN_STACK_DEPTH, tostring(ui.SpinCtrl_task_stack_size:GetValue()))
         wizcore:key_write(config.project.key.OS_FILE_SYSTEM_STACK_DEPTH, tostring(ui.SpinCtrl_fs_stack_size:GetValue()))
@@ -114,23 +169,46 @@ local function on_button_save_click()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when stack value is changed
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function stack_value_changed()
         ui.StaticText_total_stack_size:SetLabel(get_total_stack_size_string())
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (general)
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function value_changed()
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when network memory monitor checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function net_memmon_changed(this)
         ui.SpinCtrl_net_mem_limit:Enable(this:IsChecked())
         ui.Button_save:Enable(true)
 end
 
 
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function creates a new window
+-- @param  parent       parent window
+-- @return New window handle
+--------------------------------------------------------------------------------
 function operating_system:create_window(parent)
         if ui.window == nil then
                 ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -318,17 +396,30 @@ function operating_system:create_window(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function returns module name
+-- @param  None
+-- @return Module name
+--------------------------------------------------------------------------------
 function operating_system:get_window_name()
         return "Operating System"
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function is called when window is selected
+-- @return None
+--------------------------------------------------------------------------------
 function operating_system:refresh()
         load_controls()
         ui.Button_save:Enable(false)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function check if options are modified
+-- @return true if options are modified, otherwise false
+--------------------------------------------------------------------------------
 function operating_system:is_modified()
         return ui.Button_save:IsEnabled()
 end

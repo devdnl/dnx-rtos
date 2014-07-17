@@ -1,11 +1,48 @@
+--[[============================================================================
+@file    stm32f1-gpio.lua
+
+@author  Daniel Zorychta
+
+@brief   Configuration script for GPIO module.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
 module(..., package.seeall)
+
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 -- module's main object
 gpio = {}
 
--- local objects
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui = {}
 local ID = {}
 local periph
@@ -48,6 +85,15 @@ local port_state_float         = {"Hi-Z"}
 local port_names               = {"A", "B", "C", "D", "E", "F", "G"}
 local number_of_pins           = 16
 
+
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration scripts
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function enable_controls(state)
         ui.Choice_port:Enable(state)
         ui.StaticText1:Enable(state)
@@ -67,6 +113,11 @@ local function enable_controls(state)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Method of port_mode_index table to translate selection index to particular pin mode
+-- @param  idx      mode index
+-- @return On success correct mode string is returned. On error an empty string is returned.
+--------------------------------------------------------------------------------
 function port_mode_index:get_mode(idx)
         for key, value in pairs(port_mode_index) do
                 if idx == value then
@@ -78,6 +129,12 @@ function port_mode_index:get_mode(idx)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function sets pin state string according to selected pin mode
+-- @param  pin          pin to update
+-- @param  pin_state    pin state to set
+-- @return None
+--------------------------------------------------------------------------------
 local function set_pin_state_by_pin_mode(pin, pin_state)
         local pin_mode = port_mode_index:get_mode(ui.Choice_mode[pin + 1]:GetSelection())
 
@@ -104,6 +161,11 @@ local function set_pin_state_by_pin_mode(pin, pin_state)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Function load all controls from configuration files
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         local port     = ui.Choice_port:GetSelection() + 1
         local pin_mask = periph:Children()[port].pinmask:GetValue()
@@ -147,6 +209,11 @@ local function load_controls()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when Save button is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function on_button_save_click()
         local port_to_save = periph:Children()[ui.Choice_port:GetSelection() + 1].name:GetValue()
         local pin_mask     = periph:Children()[ui.Choice_port:GetSelection() + 1].pinmask:GetValue()
@@ -215,6 +282,11 @@ local function on_button_save_click()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when module enable checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function checkbox_changed(this)
         ui.Choice_port:Enable(this:IsChecked())
         enable_controls(this:IsChecked())
@@ -222,6 +294,11 @@ local function checkbox_changed(this)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when port number is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
 local function port_number_changed(this)
         if ui.Choice_port:GetSelection() == ui.Choice_port.OldSelection then
                 return
@@ -252,20 +329,38 @@ local function port_number_changed(this)
 end
 
 
-local function pin_name_updated(this)
+--------------------------------------------------------------------------------
+-- @brief  Event is called when pin name is changed
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function pin_name_updated()
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when pin state is changed
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function pin_state_updated()
         ui.Button_save:Enable(true)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when port mode is changed
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local port_mode_changed = {}
 for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
 
 
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
 --------------------------------------------------------------------------------
 -- @brief  Function creates a new window
 -- @param  parent       parent window
@@ -375,6 +470,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns module name
+-- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
 function gpio:get_window_name()
@@ -384,6 +480,8 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function is called by parent when window is selected
+-- @param  None
+-- @return None
 --------------------------------------------------------------------------------
 function gpio:selected()
 end
@@ -391,6 +489,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns modify status
+-- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function gpio:is_modified()
@@ -400,6 +499,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns module handler
+-- @param  None
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
@@ -412,6 +512,7 @@ end
 --==============================================================================
 --------------------------------------------------------------------------------
 -- @brief  Function returns list with pin names for selected microcontroller
+-- @param  sort_list        list sort enable (bool)
 -- @return Pin name list
 --------------------------------------------------------------------------------
 function gpio:get_pin_list(sort_list)

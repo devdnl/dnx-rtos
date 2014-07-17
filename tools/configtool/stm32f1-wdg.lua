@@ -1,14 +1,50 @@
+--[[============================================================================
+@file    stm32f1-wdg.lua
+
+@author  Daniel Zorychta
+
+@brief   Configuration script for WDG module.
+
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+==============================================================================]]
 module(..., package.seeall)
+
+
+--==============================================================================
+-- EXTERNAL MODULES
+--==============================================================================
 require("wx")
 require("wizcore")
 
+
+--==============================================================================
+-- GLOBAL OBJECTS
+--==============================================================================
 -- module's main object
 wdg = {}
 
--- local objects
+
+--==============================================================================
+-- LOCAL OBJECTS
+--==============================================================================
 local ui = {}
 local ID = {}
-
 
 -- watchdog timeout table
 local timeout2reg = {{0.004, 4,   40  },
@@ -27,6 +63,14 @@ local timeout2reg = {{0.004, 4,   40  },
                      {25,    256, 3907}}
 
 
+--==============================================================================
+-- LOCAL FUNCTIONS
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Function loads all controls from configuration scripts
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
 local function load_controls()
         local enable = wizcore:get_module_state("WDG")
         local lock   = wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN))
@@ -48,7 +92,12 @@ local function load_controls()
 end
 
 
-local function on_button_save_click()
+--------------------------------------------------------------------------------
+-- @brief  Event is called when Save button is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_on_button_save_click()
         local enable = ui.CheckBox_enable:GetValue()
         local lock   = wizcore:bool_to_yes_no(ui.CheckBox_lock:GetValue())
         local debug  = wizcore:bool_to_yes_no(ui.CheckBox_debug:GetValue())
@@ -65,16 +114,30 @@ local function on_button_save_click()
 end
 
 
-local function checkbox_enable_updated(this)
+--------------------------------------------------------------------------------
+-- @brief  Event is called when module enbale checkbox is changed
+-- @param  this         event object
+-- @return None
+--------------------------------------------------------------------------------
+local function event_checkbox_enable_updated(this)
         ui.Button_save:Enable(true)
         ui.Panel1:Enable(this:IsChecked())
 end
 
 
-local function value_updated()
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (general)
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_value_updated()
         ui.Button_save:Enable(true)
 end
 
+
+--==============================================================================
+-- GLOBAL FUNCTIONS
+--==============================================================================
 --------------------------------------------------------------------------------
 -- @brief  Function creates a new window
 -- @param  parent       parent window
@@ -138,11 +201,11 @@ function wdg:create_window(parent)
         this:SetScrollRate(50, 50)
 
         --
-        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
-        this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_updated          )
-        this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_updated          )
-        this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated          )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
+        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_enable_updated)
+        this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
+        this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
+        this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated          )
+        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click   )
 
         --
         load_controls()
@@ -154,6 +217,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns module name
+-- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
 function wdg:get_window_name()
@@ -163,6 +227,8 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function is called by parent when window is selected
+-- @param  None
+-- @return None
 --------------------------------------------------------------------------------
 function wdg:selected()
 end
@@ -170,6 +236,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns modify status
+-- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function wdg:is_modified()
@@ -179,6 +246,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Function returns module handler
+-- @param  None
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
