@@ -176,17 +176,17 @@ function wizcore:key_write(keypath, value)
 
         -- type check
         if type(filename) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename'\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if type(key) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key'\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key <"..type(key)..">'\n"..debug.traceback())
                 return false
         end
 
         if type(value) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value'\n"..debug.traceback())
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value <"..type(value)..">'\n"..debug.traceback())
                 return false
         end
 

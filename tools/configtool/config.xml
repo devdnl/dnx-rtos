@@ -182,6 +182,12 @@
                 <SPI_DEFAULT_CLK_DIV><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_CLK_DIV__</key></SPI_DEFAULT_CLK_DIV>
                 <SPI_DEFAULT_MODE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MODE__</key></SPI_DEFAULT_MODE>
                 <SPI_DEFAULT_MSB_FIRST><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MSB_FIRST__</key></SPI_DEFAULT_MSB_FIRST>
+                <SDSPI_TIMEOUT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_TIMEOUT__</key></SDSPI_TIMEOUT>
+                <SDSPI_SPI_PORT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_PORT__</key></SDSPI_SPI_PORT>
+                <SDSPI_SPI_CLK_DIV><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_CLK_DIV__</key></SDSPI_SPI_CLK_DIV>
+                <SDSPI_SD_CS_PIN><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SD_CS_PIN__</key></SDSPI_SD_CS_PIN>
+                <SDSPI_ENABLE_DMA><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_ENABLE_DMA__</key></SDSPI_ENABLE_DMA>
+                <SDSPI_DMA_IRQ_PRIORITY><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_DMA_IRQ_PRIORITY__</key></SDSPI_DMA_IRQ_PRIORITY>
             </key>
 
             <cpulist>
@@ -940,6 +946,7 @@
                             <port><name>2</name></port>
                             <port><name>3</name></port>
                         </SPI>
+                        <SDSPI></SDSPI>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>

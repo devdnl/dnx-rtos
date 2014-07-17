@@ -31,7 +31,6 @@ module(..., package.seeall)
 --==============================================================================
 require("wx")
 require("wizcore")
-gpio = require("stm32f1-gpio").get_handler()
 
 
 --==============================================================================
@@ -45,10 +44,13 @@ spi = {}
 -- LOCAL OBJECTS
 --==============================================================================
 -- local objects
-local ui = {}
-local ID = {}
-local number_of_cs = 8
-local spi_cfg
+local ui           = {}
+local ID           = {}
+local NUMBER_OF_CS = 8
+local cpu_name     = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+local cpu_idx      = wizcore:get_cpu_index("stm32f1", cpu_name)
+local spi_cfg      = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+local gpio         = require("stm32f1-gpio").get_handler()
 
 local clkdiv_str = {}
 clkdiv_str.SPI_CLK_DIV_2   = 0
@@ -91,18 +93,18 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         end
 
         -- load current selection of number of cs pins
-        local number_of_cs_pins
-        if spi_cs_count ~= nil and spi_cs_count >= 1 and spi_cs_count <= number_of_cs then
-                number_of_cs_pins = spi_cs_count
+        local NUMBER_OF_CS_pins
+        if spi_cs_count ~= nil and spi_cs_count >= 1 and spi_cs_count <= NUMBER_OF_CS then
+                NUMBER_OF_CS_pins = spi_cs_count
         else
                 keygen.key:SetValue("__SPI_SPI"..spi_number.."_NUMBER_OF_CS__")
-                number_of_cs_pins = tonumber(wizcore:key_read(keygen))
+                NUMBER_OF_CS_pins = tonumber(wizcore:key_read(keygen))
         end
-        ui.Choice_csnum:SetSelection(number_of_cs_pins - 1)
-        ui.Choice_csnum.OldSelection = number_of_cs_pins - 1
+        ui.Choice_csnum:SetSelection(NUMBER_OF_CS_pins - 1)
+        ui.Choice_csnum.OldSelection = NUMBER_OF_CS_pins - 1
 
         -- load names of CS pins
-        for cs = 0, number_of_cs - 1 do
+        for cs = 0, NUMBER_OF_CS - 1 do
                 if spi_cs_count == nil then
                         keygen.key:SetValue("__SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME__")
                         local devcspin = wizcore:key_read(keygen)
@@ -110,7 +112,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
 
                 end
 
-                if cs < number_of_cs_pins then
+                if cs < NUMBER_OF_CS_pins then
                         ui.StaticText_cspin[cs]:Enable(true)
                         ui.Choice_cspin[cs]:Enable(true)
                 else
@@ -179,7 +181,7 @@ local function on_button_save_click()
         local cspin     = {}
         local undef_pin = false
         if ui.Panel2:IsEnabled() then
-                for pin = 0, number_of_cs - 1 do
+                for pin = 0, NUMBER_OF_CS - 1 do
                         cspin[pin] = pin_list[ui.Choice_cspin[pin]:GetSelection()]
                         if cspin[pin] == nil and ui.Choice_cspin[pin]:IsEnabled() then
                                 undef_pin  = true
@@ -209,7 +211,7 @@ local function on_button_save_click()
                 keygen.key:SetValue("__SPI_SPI"..spisel.."_NUMBER_OF_CS__")
                 wizcore:key_write(keygen, numofcs)
 
-                for pin = 0, number_of_cs - 1 do
+                for pin = 0, NUMBER_OF_CS - 1 do
                         if ui.Choice_cspin[pin]:IsEnabled() then
                                 keygen.key:SetValue("__SPI_SPI"..spisel.."_CS"..pin.."_PIN_NAME__")
                                 wizcore:key_write(keygen, cspin[pin])
@@ -302,7 +304,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function number_of_cs_selected()
+local function NUMBER_OF_CS_selected()
         if ui.Choice_csnum.OldSelection ~= ui.Choice_csnum:GetSelection() then
                 ui.Choice_csnum.OldSelection = ui.Choice_csnum:GetSelection()
                 local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
@@ -433,9 +435,6 @@ function spi:create_window(parent)
         ui.FlexGridSizer4 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         ui.Choice_device = wx.wxChoice(ui.Panel1, ID.CHOICE_DEVICE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_DEVICE")
-        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
-        spi_cfg        = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
         for i = 1, spi_cfg:NumChildren() do ui.Choice_device:Append("SPI"..spi_cfg:Children()[i].name:GetValue()) end
         ui.Choice_device:SetSelection(0)
         ui.Choice_device.OldSelection = 0
@@ -469,7 +468,7 @@ function spi:create_window(parent)
         ui.Choice_csnum.OldSelection = 0
         ui.FlexGridSizer6:Add(ui.Choice_csnum, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        for i = 0, number_of_cs - 1 do
+        for i = 0, NUMBER_OF_CS - 1 do
                 ui.StaticText_cspin[i] = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "Pin for Chip Select "..i, wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer6:Add(ui.StaticText_cspin[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ID.CHOICE_CSPIN[i] = wx.wxNewId()
@@ -505,7 +504,7 @@ function spi:create_window(parent)
         this:Connect(ID.CHECKBOX_DEVICE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_device_enable_updated)
         this:Connect(ID.CHOICE_IRQPRIO,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  spi_device_selected           )
-        this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  number_of_cs_selected         )
+        this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  NUMBER_OF_CS_selected         )
         this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     dummy_byte_updated            )
         this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click          )
 
