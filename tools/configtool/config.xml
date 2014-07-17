@@ -187,6 +187,8 @@
             <cpulist>
                 <cpu><name>STM32F100C8xx</name>
                     <family>__STM32F10X_MD_VL__</family>
+                    <ram>8192</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -205,6 +207,8 @@
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
                     <family>__STM32F10X_MD_VL__</family>
+                    <ram>8192</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -223,6 +227,8 @@
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
                     <family>__STM32F10X_HD_VL__</family>
+                    <ram>32768</ram>
+                    <flash>524288</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -242,6 +248,8 @@
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
                     <family>__STM32F10X_MD_VL__</family>
+                    <ram>8192</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -261,6 +269,8 @@
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
                     <family>__STM32F10X_HD_VL__</family>
+                    <ram>24576</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -283,6 +293,8 @@
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>10240</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -301,6 +313,8 @@
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>16384</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -319,6 +333,8 @@
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>10240</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -337,6 +353,8 @@
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>16384</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -355,6 +373,8 @@
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>10240</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -374,6 +394,8 @@
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>16384</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -393,6 +415,8 @@
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
                     <family>__STM32F10X_LD__</family>
+                    <ram>10240</ram>
+                    <flash>32768</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -410,6 +434,8 @@
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -428,6 +454,8 @@
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -446,6 +474,8 @@
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
                     <family>__STM32F10X_LD__</family>
+                    <ram>10240</ram>
+                    <flash>32768</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -463,6 +493,8 @@
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -481,6 +513,8 @@
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -499,6 +533,8 @@
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>49152</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -518,6 +554,8 @@
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>65536</ram>
+                    <flash>393216</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -537,6 +575,8 @@
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>65536</ram>
+                    <flash>524288</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -556,6 +596,8 @@
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
                     <family>__STM32F10X_XL__</family>
+                    <ram>98304</ram>
+                    <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -575,6 +617,8 @@
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -591,6 +635,8 @@
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>65536</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -610,6 +656,8 @@
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
                     <family>__STM32F10X_MD__</family>
+                    <ram>20480</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -629,6 +677,8 @@
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>49152</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -649,6 +699,8 @@
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>65536</ram>
+                    <flash>393216</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -669,6 +721,8 @@
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>65536</ram>
+                    <flash>524288</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -689,6 +743,8 @@
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
                     <family>__STM32F10X_XL__</family>
+                    <ram>98304</ram>
+                    <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -709,6 +765,8 @@
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>49152</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -731,6 +789,8 @@
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
                     <family>__STM32F10X_HD__</family>
+                    <ram>65536</ram>
+                    <flash>524288</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -753,6 +813,8 @@
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
                     <family>__STM32F10X_XL__</family>
+                    <ram>98304</ram>
+                    <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -775,6 +837,8 @@
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -794,6 +858,8 @@
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -813,6 +879,8 @@
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -833,6 +901,8 @@
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -853,6 +923,8 @@
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -872,6 +944,8 @@
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>131072</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
@@ -892,6 +966,8 @@
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
                     <family>__STM32F10X_CL__</family>
+                    <ram>65536</ram>
+                    <flash>262144</flash>
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
