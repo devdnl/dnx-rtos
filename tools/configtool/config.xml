@@ -115,25 +115,25 @@
         <modules>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
-            <module noarch="false"><name>CRC</name><description></description></module>
-            <module noarch="false"><name>ETH</name><description></description></module>
-            <module noarch="false"><name>PLL</name><description></description></module>
+            <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
+            <module noarch="false"><name>ETH</name><description>This module handles Ethernet interface.</description></module>
+            <module noarch="false"><name>PLL</name><description>This module handles PLL peripheral.</description></module>
             <module noarch="false"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
-            <module noarch="false"><name>SPI</name><description></description></module>
-            <module noarch="true" ><name>TTY</name><description></description></module>
-            <module noarch="false"><name>UART</name><description></description></module>
-            <module noarch="false"><name>WDG</name><description></description></module>
-            <module noarch="false"><name>I2S</name><description></description></module>
-            <module noarch="false"><name>USB</name><description></description></module>
-            <module noarch="false"><name>USBOTG</name><description></description></module>
-            <module noarch="false"><name>I2C</name><description></description></module>
-            <module noarch="false"><name>ADC</name><description></description></module>
-            <module noarch="false"><name>DAC</name><description></description></module>
-            <module noarch="false"><name>SDIO</name><description></description></module>
-            <module noarch="false"><name>FSMC</name><description></description></module>
-            <module noarch="false"><name>FDMC</name><description></description></module>
-            <module noarch="false"><name>HDMICEC</name><description></description></module>
-            <module noarch="false"><name>CAN</name><description></description></module>
+            <module noarch="false"><name>SPI</name><description>This module handles SPI peripherals.</description></module>
+            <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
+            <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
+            <module noarch="false"><name>WDG</name><description>This module handles Watchdog peripherals.</description></module>
+            <module noarch="false"><name>I2S</name><description>This module handles I2S peripherals.</description></module>
+            <module noarch="false"><name>USB</name><description>This module handles USB peripherals in the device mode.</description></module>
+            <module noarch="false"><name>USBOTG</name><description>This module handles USB-OTG peripherals in the device and host mode.</description></module>
+            <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
+            <module noarch="false"><name>ADC</name><description>This module handles ADC peripherals.</description></module>
+            <module noarch="false"><name>DAC</name><description>This module handles DAC peripherals.</description></module>
+            <module noarch="false"><name>SDIO</name><description>This module handles SD Cards by using native card interface.</description></module>
+            <module noarch="false"><name>FSMC</name><description>This module handles static memory controller.</description></module>
+            <module noarch="false"><name>FDMC</name><description>This module handles dynamic memory controller.</description></module>
+            <module noarch="false"><name>HDMICEC</name><description>This module handles HDMI-CEC peripherals.</description></module>
+            <module noarch="false"><name>CAN</name><description>This module handles CAN peripherals.</description></module>
         </modules>
     </project>
 
