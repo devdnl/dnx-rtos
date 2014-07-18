@@ -137,6 +137,21 @@
         </modules>
     </project>
 
+    <PHY>
+        <ethernet>
+            <device><name>DP83848</name>
+                <status_register_address>16</status_register_address>
+                <speed_status_mask>0x0002</speed_status_mask>
+                <duplex_status_mask>0x0004</duplex_status_mask>
+            </device>
+            <device><name>LAN8700</name>
+                <status_register_address>31</status_register_address>
+                <speed_status_mask>0x0004</speed_status_mask>
+                <duplex_status_mask>0x0010</duplex_status_mask>
+            </device>
+        </ethernet>
+    </PHY>
+
     <noarch>
         <key>
             <TTY_TERM_COLS><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_COLS__</key></TTY_TERM_COLS>
@@ -188,6 +203,16 @@
                 <SDSPI_SD_CS_PIN><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SD_CS_PIN__</key></SDSPI_SD_CS_PIN>
                 <SDSPI_ENABLE_DMA><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_ENABLE_DMA__</key></SDSPI_ENABLE_DMA>
                 <SDSPI_DMA_IRQ_PRIORITY><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_DMA_IRQ_PRIORITY__</key></SDSPI_DMA_IRQ_PRIORITY>
+                <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
+                <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>
+                <ETH_SPEED><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_SPEED__</key></ETH_SPEED>
+                <ETH_PHY_ADDRESS><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_ADDRESS__</key></ETH_PHY_ADDRESS>
+                <ETH_PHY_RESET_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_RESET_DELAY__</key></ETH_PHY_RESET_DELAY>
+                <ETH_PHY_CONFIG_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_CONFIG_DELAY__</key></ETH_PHY_CONFIG_DELAY>
+                <ETH_DEVICE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_DEVICE__</key></ETH_DEVICE>
+                <ETH_PHY_SR><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SR__</key></ETH_PHY_SR>
+                <ETH_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SPEED_STATUS_BM__</key></ETH_PHY_SPEED_STATUS_BM>
+                <ETH_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_DUPLEX_STATUS_BM__</key></ETH_PHY_DUPLEX_STATUS_BM>
             </key>
 
             <cpulist>
@@ -982,6 +1007,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <ETH></ETH>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -1005,6 +1031,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <ETH></ETH>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -1028,6 +1055,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <ETH></ETH>
                     </peripherals>
                 </cpu>
             </cpulist>

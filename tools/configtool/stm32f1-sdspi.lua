@@ -98,7 +98,7 @@ local function load_controls()
         end
 
         -- analyze priority value
-        if DMA_irq_prio == "CONFIG_USER_IRQ_PRIORITY" then
+        if DMA_irq_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
                 DMA_irq_prio = #prio_list
         else
                 DMA_irq_prio = math.floor(tonumber(DMA_irq_prio) / 16)

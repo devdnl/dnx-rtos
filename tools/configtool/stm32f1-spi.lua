@@ -125,7 +125,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         if spi_cs_count == nil then
                 keygen.key:SetValue("__SPI_SPI"..spi_number.."_PRIORITY__")
                 local devprio = wizcore:key_read(keygen)
-                if devprio == "CONFIG_USER_IRQ_PRIORITY" then devprio = #prio_list else devprio = math.floor(tonumber(devprio) / 16) end
+                if devprio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then devprio = #prio_list else devprio = math.floor(tonumber(devprio) / 16) end
                 ui.Choice_irqprio:SetSelection(devprio)
         end
 end
