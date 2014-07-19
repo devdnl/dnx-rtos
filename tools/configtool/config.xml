@@ -213,6 +213,62 @@
                 <ETH_PHY_SR><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SR__</key></ETH_PHY_SR>
                 <ETH_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SPEED_STATUS_BM__</key></ETH_PHY_SPEED_STATUS_BM>
                 <ETH_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_DUPLEX_STATUS_BM__</key></ETH_PHY_DUPLEX_STATUS_BM>
+                <AFIO_EVENT_OUT_ENABLE><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_ENABLE__</key></AFIO_EVENT_OUT_ENABLE>
+                <AFIO_EVENT_OUT_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PORT__</key></AFIO_EVENT_OUT_PORT>
+                <AFIO_EVENT_OUT_PIN><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PIN__</key></AFIO_EVENT_OUT_PIN>
+                <AFIO_REMAP_SPI1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SPI1__</key></AFIO_REMAP_SPI1>
+                <AFIO_REMAP_I2C1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_I2C1__</key></AFIO_REMAP_I2C1>
+                <AFIO_REMAP_USART1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART1__</key></AFIO_REMAP_USART1>
+                <AFIO_REMAP_USART2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART2__</key></AFIO_REMAP_USART2>
+                <AFIO_REMAP_USART3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART3__</key></AFIO_REMAP_USART3>
+                <AFIO_REMAP_TIM1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM1__</key></AFIO_REMAP_TIM1>
+                <AFIO_REMAP_TIM2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM2__</key></AFIO_REMAP_TIM2>
+                <AFIO_REMAP_TIM3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM3__</key></AFIO_REMAP_TIM3>
+                <AFIO_REMAP_TIM4><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM4__</key></AFIO_REMAP_TIM4>
+                <AFIO_REMAP_CAN><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CAN__</key></AFIO_REMAP_CAN>
+                <AFIO_REMAP_PD01><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_PD01__</key></AFIO_REMAP_PD01>
+                <AFIO_REMAP_TIM5CH4><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM5CH4__</key></AFIO_REMAP_TIM5CH4>
+                <AFIO_REMAP_ADC1_ETRGINJ><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC1_ETRGINJ__</key></AFIO_REMAP_ADC1_ETRGINJ>
+                <AFIO_REMAP_ADC1_ETRGREG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC1_ETRGREG__</key></AFIO_REMAP_ADC1_ETRGREG>
+                <AFIO_REMAP_ADC2_ETRGINJ><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC2_ETRGINJ__</key></AFIO_REMAP_ADC2_ETRGINJ>
+                <AFIO_REMAP_ADC2_ETRGREG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC2_ETRGREG__</key></AFIO_REMAP_ADC2_ETRGREG>
+                <AFIO_REMAP_SWJ_CFG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SWJ_CFG__</key></AFIO_REMAP_SWJ_CFG>
+                <AFIO_REMAP_ETH><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ETH__</key></AFIO_REMAP_ETH>
+                <AFIO_REMAP_CAN2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CAN2__</key></AFIO_REMAP_CAN2>
+                <AFIO_REMAP_MII_RMII_SEL><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_MII_RMII_SEL__</key></AFIO_REMAP_MII_RMII_SEL>
+                <AFIO_REMAP_SPI3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SPI3__</key></AFIO_REMAP_SPI3>
+                <AFIO_REMAP_TIM2ITR1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM2ITR1__</key></AFIO_REMAP_TIM2ITR1>
+                <AFIO_REMAP_PTP_PPS><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_PTP_PPS__</key></AFIO_REMAP_PTP_PPS>
+                <AFIO_REMAP_CEC><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CEC__</key></AFIO_REMAP_CEC>
+                <AFIO_REMAP_TIM1_DMA><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM1_DMA__</key></AFIO_REMAP_TIM1_DMA>
+                <AFIO_REMAP_TIM9><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM9__</key></AFIO_REMAP_TIM9>
+                <AFIO_REMAP_TIM10><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM10__</key></AFIO_REMAP_TIM10>
+                <AFIO_REMAP_TIM11><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM11__</key></AFIO_REMAP_TIM11>
+                <AFIO_REMAP_TIM12><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM12__</key></AFIO_REMAP_TIM12>
+                <AFIO_REMAP_TIM13><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM13__</key></AFIO_REMAP_TIM13>
+                <AFIO_REMAP_TIM14><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM14__</key></AFIO_REMAP_TIM14>
+                <AFIO_REMAP_TIM15><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM15__</key></AFIO_REMAP_TIM15>
+                <AFIO_REMAP_TIM16><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM16__</key></AFIO_REMAP_TIM16>
+                <AFIO_REMAP_TIM17><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM17__</key></AFIO_REMAP_TIM17>
+                <AFIO_REMAP_FSMC_NADV><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_FSMC_NADV__</key></AFIO_REMAP_FSMC_NADV>
+                <AFIO_REMAP_TIM76_DAC_DMA><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM76_DAC_DMA__</key></AFIO_REMAP_TIM76_DAC_DMA>
+                <AFIO_REMAP_MISC><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_MISC__</key></AFIO_REMAP_MISC>
+                <AFIO_EXTI0_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI0_PORT__</key></AFIO_EXTI0_PORT>
+                <AFIO_EXTI1_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI1_PORT__</key></AFIO_EXTI1_PORT>
+                <AFIO_EXTI2_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI2_PORT__</key></AFIO_EXTI2_PORT>
+                <AFIO_EXTI3_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI3_PORT__</key></AFIO_EXTI3_PORT>
+                <AFIO_EXTI4_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI4_PORT__</key></AFIO_EXTI4_PORT>
+                <AFIO_EXTI5_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI5_PORT__</key></AFIO_EXTI5_PORT>
+                <AFIO_EXTI6_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI6_PORT__</key></AFIO_EXTI6_PORT>
+                <AFIO_EXTI7_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI7_PORT__</key></AFIO_EXTI7_PORT>
+                <AFIO_EXTI8_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI8_PORT__</key></AFIO_EXTI8_PORT>
+                <AFIO_EXTI9_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI9_PORT__</key></AFIO_EXTI9_PORT>
+                <AFIO_EXTI10_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI10_PORT__</key></AFIO_EXTI10_PORT>
+                <AFIO_EXTI11_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI11_PORT__</key></AFIO_EXTI11_PORT>
+                <AFIO_EXTI12_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI12_PORT__</key></AFIO_EXTI12_PORT>
+                <AFIO_EXTI13_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI13_PORT__</key></AFIO_EXTI13_PORT>
+                <AFIO_EXTI14_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI14_PORT__</key></AFIO_EXTI14_PORT>
+                <AFIO_EXTI15_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI15_PORT__</key></AFIO_EXTI15_PORT>
             </key>
 
             <cpulist>
@@ -1008,6 +1064,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <ETH></ETH>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
