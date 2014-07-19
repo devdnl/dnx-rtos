@@ -291,6 +291,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -312,6 +313,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -334,6 +336,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -356,6 +359,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -381,6 +385,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -402,6 +407,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -423,6 +429,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -444,6 +451,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -465,6 +473,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -487,6 +496,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -509,6 +519,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -529,6 +540,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -550,6 +562,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -571,6 +584,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -591,6 +605,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -612,6 +627,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -633,6 +649,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -655,6 +672,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -677,6 +695,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -699,6 +718,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -721,6 +741,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -740,6 +761,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -762,6 +784,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -784,6 +807,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -807,6 +831,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -830,6 +855,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -853,6 +879,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -876,6 +903,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -901,6 +929,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -926,6 +955,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -951,6 +981,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -973,6 +1004,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -995,6 +1027,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -1018,6 +1051,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -1041,6 +1075,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -1089,6 +1124,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <ETH></ETH>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -1113,6 +1149,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <ETH></ETH>
+                        <AFIO></AFIO>
                     </peripherals>
                 </cpu>
             </cpulist>
