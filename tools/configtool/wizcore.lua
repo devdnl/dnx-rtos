@@ -461,3 +461,48 @@ function wizcore:get_priority_list(cpu_arch)
 
         return list
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief Function round value
+-- @param value         value to round
+-- @param precision     number of digits
+-- @return Rounded value
+--------------------------------------------------------------------------------
+function math.round(value, precision)
+        return math.floor(value * 10^(precision or 0)) / 10^(precision or 0)
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check time value and set unit
+-- @param  time         time [s]
+-- @return string with calculated time and adjusted unit
+--------------------------------------------------------------------------------
+function wizcore:print_time(time)
+        if time < 1e-6 then
+                return math.round(time*1e9, 3).." ns"
+        elseif time < 1e-3 then
+                return math.round(time*1e6, 3).." us"
+        elseif time < 1 then
+                return math.round(time*1e3, 3).." ms"
+        else
+                return time.." s"
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Calculate frequency unit
+-- @param  freq         frequency
+-- @return string of frequency with adjusted unit
+--------------------------------------------------------------------------------
+function wizcore:print_freq(freq)
+        if freq < 1e3 then
+                return math.round(freq, 3).." Hz"
+        elseif freq < 1e6 then
+                return math.round(freq/1e3, 3).." kHz"
+        else
+                return math.round(freq/1e6, 3).." MHz"
+        end
+end
