@@ -140,9 +140,6 @@ local function load_controls()
         for i = 0, 15 do
                 ui.Choice_EXTI[i]:SetSelection(tonumber(wizcore:key_read(config.arch.stm32f1.key["AFIO_EXTI"..i.."_PORT"])))
         end
-
-
-
 end
 
 

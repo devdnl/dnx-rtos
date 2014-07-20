@@ -272,6 +272,26 @@
                 <USB_PULLUP_PIN><path>../../config/stm32f1/usb_flags.h</path><key>__USB_PULLUP_PIN__</key></USB_PULLUP_PIN>
                 <USB_IRQ_PRIORITY><path>../../config/stm32f1/usb_flags.h</path><key>__USB_IRQ_PRIORITY__</key></USB_IRQ_PRIORITY>
                 <USB_ENDPOINT0_SIZE><path>../../config/stm32f1/usb_flags.h</path><key>__USB_ENDPOINT0_SIZE__</key></USB_ENDPOINT0_SIZE>
+                <UART_UART1_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART1_ENABLE__</key></UART_UART1_ENABLE>
+                <UART_UART2_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART2_ENABLE__</key></UART_UART2_ENABLE>
+                <UART_UART3_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART3_ENABLE__</key></UART_UART3_ENABLE>
+                <UART_UART4_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART4_ENABLE__</key></UART_UART4_ENABLE>
+                <UART_UART5_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART5_ENABLE__</key></UART_UART5_ENABLE>
+                <UART_UART1_PRIORITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART1_PRIORITY__</key></UART_UART1_PRIORITY>
+                <UART_UART2_PRIORITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART2_PRIORITY__</key></UART_UART2_PRIORITY>
+                <UART_UART3_PRIORITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART3_PRIORITY__</key></UART_UART3_PRIORITY>
+                <UART_UART4_PRIORITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART4_PRIORITY__</key></UART_UART4_PRIORITY>
+                <UART_UART5_PRIORITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART5_PRIORITY__</key></UART_UART5_PRIORITY>
+                <UART_RX_BUFFER_LEN><path>../../config/stm32f1/uart_flags.h</path><key>__UART_RX_BUFFER_LEN__</key></UART_RX_BUFFER_LEN>
+                <UART_DEFAULT_PARITY><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_PARITY__</key></UART_DEFAULT_PARITY>
+                <UART_DEFAULT_STOP_BITS><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_STOP_BITS__</key></UART_DEFAULT_STOP_BITS>
+                <UART_DEFAULT_LIN_BREAK_LEN><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_LIN_BREAK_LEN__</key></UART_DEFAULT_LIN_BREAK_LEN>
+                <UART_DEFAULT_TX_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_TX_ENABLE__</key></UART_DEFAULT_TX_ENABLE>
+                <UART_DEFAULT_RX_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_RX_ENABLE__</key></UART_DEFAULT_RX_ENABLE>
+                <UART_DEFAULT_LIN_MODE_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_LIN_MODE_ENABLE__</key></UART_DEFAULT_LIN_MODE_ENABLE>
+                <UART_DEFAULT_HW_FLOW_CTRL><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_HW_FLOW_CTRL__</key></UART_DEFAULT_HW_FLOW_CTRL>
+                <UART_DEFAULT_SINGLE_WIRE_MODE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_SINGLE_WIRE_MODE__</key></UART_DEFAULT_SINGLE_WIRE_MODE>
+                <UART_DEFAULT_BAUD><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_BAUD__</key></UART_DEFAULT_BAUD>
             </key>
 
             <cpulist>
@@ -289,6 +309,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -311,6 +336,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -333,6 +363,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -357,6 +394,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -382,6 +424,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -405,6 +454,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -427,6 +481,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -449,6 +508,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -471,6 +535,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -494,6 +563,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -517,6 +591,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -539,6 +618,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                         </SPI>
@@ -561,6 +644,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -584,6 +672,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -607,6 +700,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                         </SPI>
@@ -629,6 +726,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -652,6 +754,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -675,6 +782,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -699,6 +813,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -723,6 +844,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -747,6 +875,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -770,6 +905,10 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                         </SPI>
@@ -793,6 +932,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -817,6 +961,11 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -841,6 +990,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -866,6 +1022,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -891,6 +1054,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -916,6 +1086,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -943,6 +1120,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -970,6 +1154,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -997,6 +1188,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1021,6 +1219,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1044,6 +1249,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1068,6 +1280,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1092,6 +1311,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1115,6 +1341,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1140,6 +1373,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>
@@ -1165,6 +1405,13 @@
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
+                        <UART>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                            <port><name>3</name></port>
+                            <port><name>4</name></port>
+                            <port><name>5</name></port>
+                        </UART>
                         <SPI>
                             <port><name>1</name></port>
                             <port><name>2</name></port>

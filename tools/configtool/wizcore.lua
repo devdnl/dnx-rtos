@@ -171,6 +171,22 @@ end
 -- @return On success true is returned. On error false is returned.
 --------------------------------------------------------------------------------
 function wizcore:key_write(keypath, value)
+        -- check keypath
+        if type(keypath) ~= "table" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
+        if keypath.path == nil then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
+        if keypath.key == nil then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
         local filename = keypath.path:GetValue()
         local key      = keypath.key:GetValue()
 
@@ -245,6 +261,22 @@ end
 -- @return On success a value with form of string, otherwise nil.
 --------------------------------------------------------------------------------
 function wizcore:key_read(keypath)
+        -- check keypath
+        if type(keypath) ~= "table" then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
+        if keypath.path == nil then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
+        if keypath.key == nil then
+                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                return false
+        end
+
         local filename = keypath.path:GetValue()
         local key      = keypath.key:GetValue()
 
