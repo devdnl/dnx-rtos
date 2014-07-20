@@ -453,7 +453,7 @@ function spi:create_window(parent)
         ui.FlexGridSizer6:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.Choice_irqprio = wx.wxChoice(ui.Panel2, ID.CHOICE_IRQPRIO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_IRQPRIO")
-        for i, item in ipairs(wizcore:get_priority_list("stm32f1")) do ui.Choice_irqprio:Append(item.name) end
+        for i, item in ipairs(prio_list) do ui.Choice_irqprio:Append(item.name) end
         ui.Choice_irqprio:Append("System default")
         ui.FlexGridSizer6:Add(ui.Choice_irqprio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
