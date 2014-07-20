@@ -43,14 +43,15 @@ spi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
--- local objects
 local ui           = {}
 local ID           = {}
 local NUMBER_OF_CS = 8
-local cpu_name     = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-local cpu_idx      = wizcore:get_cpu_index("stm32f1", cpu_name)
-local spi_cfg      = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+local cpu_name     = nil
+local cpu_idx      = nil
+local spi_cfg      = nil
+local pin_list     = nil
 local gpio         = require("stm32f1-gpio").get_handler()
+local prio_list    = wizcore:get_priority_list("stm32f1")
 
 local clkdiv_str = {}
 clkdiv_str.SPI_CLK_DIV_2   = 0
@@ -67,9 +68,6 @@ spimode_str.SPI_MODE_0 = 0
 spimode_str.SPI_MODE_1 = 1
 spimode_str.SPI_MODE_2 = 2
 spimode_str.SPI_MODE_3 = 3
-
-local pin_list  = gpio:get_pin_list(true)
-local prio_list = wizcore:get_priority_list("stm32f1")
 
 
 --==============================================================================
@@ -366,6 +364,11 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function spi:create_window(parent)
+        cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        spi_cfg  = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+        pin_list = gpio:get_pin_list(true)
+
         ui = {}
         ui.StaticText_cspin = {}
         ui.Choice_cspin     = {}

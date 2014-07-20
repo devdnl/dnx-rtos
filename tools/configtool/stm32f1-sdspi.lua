@@ -45,11 +45,11 @@ sdspi = {}
 --==============================================================================
 local ui         = {}
 local ID         = {}
-local cpu_name   = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-local cpu_idx    = wizcore:get_cpu_index("stm32f1", cpu_name)
-local spi_cfg    = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+local cpu_name   = nil
+local cpu_idx    = nil
+local spi_cfg    = nil
 local gpio       = require("stm32f1-gpio").get_handler()
-local pin_list   = gpio:get_pin_list(true)
+local pin_list   = nil
 local prio_list  = wizcore:get_priority_list("stm32f1")
 
 
@@ -212,8 +212,12 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function sdspi:create_window(parent)
-        ui = {}
+        cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        spi_cfg  = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
+        pin_list = gpio:get_pin_list(true)
 
+        ui = {}
         ID = {}
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
         ID.CHOICE_SPI_PORT = wx.wxNewId()
