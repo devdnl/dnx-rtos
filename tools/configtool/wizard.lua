@@ -77,7 +77,7 @@ local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
 
         if page[card]:is_modified() then
-                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to discard changes?", wx.wxYES_NO)
+                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO)
                 if answer == wx.wxID_NO then
                         this:Veto()
                 end

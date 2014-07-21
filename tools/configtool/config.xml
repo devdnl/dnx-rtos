@@ -306,6 +306,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -333,6 +334,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -360,6 +362,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -391,6 +394,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -421,6 +425,7 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -451,6 +456,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -478,6 +484,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -505,6 +512,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -532,6 +540,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -560,6 +569,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -588,6 +598,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -615,6 +626,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -641,6 +653,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -669,6 +682,7 @@
                             <port><name>C</name><pinmask>0xE000</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -697,6 +711,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -723,6 +738,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -751,6 +767,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -779,6 +796,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -810,6 +828,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -841,6 +860,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -872,6 +892,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -902,6 +923,7 @@
                             <port><name>B</name><pinmask>0x000F</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -929,6 +951,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -958,6 +981,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -987,6 +1011,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1019,6 +1044,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1051,6 +1077,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1083,6 +1110,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1117,6 +1145,7 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1151,6 +1180,7 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1185,6 +1215,7 @@
                             <port><name>F</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>G</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1216,6 +1247,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1246,6 +1278,7 @@
                             <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>D</name><pinmask>0x0007</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1277,6 +1310,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1308,6 +1342,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1371,6 +1406,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
@@ -1403,6 +1439,7 @@
                             <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                             <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                         </GPIO>
+                        <PLL></PLL>
                         <TTY></TTY>
                         <CRC></CRC>
                         <WDG></WDG>
