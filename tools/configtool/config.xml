@@ -149,6 +149,11 @@
                 <speed_status_mask>0x0004</speed_status_mask>
                 <duplex_status_mask>0x0010</duplex_status_mask>
             </device>
+            <device><name>ST100</name>
+                <status_register_address>31</status_register_address>
+                <speed_status_mask>0x0004</speed_status_mask>
+                <duplex_status_mask>0x0010</duplex_status_mask>
+            </device>
         </ethernet>
     </PHY>
 
@@ -292,6 +297,34 @@
                 <UART_DEFAULT_HW_FLOW_CTRL><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_HW_FLOW_CTRL__</key></UART_DEFAULT_HW_FLOW_CTRL>
                 <UART_DEFAULT_SINGLE_WIRE_MODE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_SINGLE_WIRE_MODE__</key></UART_DEFAULT_SINGLE_WIRE_MODE>
                 <UART_DEFAULT_BAUD><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_BAUD__</key></UART_DEFAULT_BAUD>
+                <PLL_LSI_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_LSI_ON__</key></PLL_LSI_ON>
+                <PLL_LSE_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_LSE_ON__</key></PLL_LSE_ON>
+                <PLL_HSE_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_HSE_ON__</key></PLL_HSE_ON>
+                <PLL_RTC_CLK_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_RTC_CLK_SRC__</key></PLL_RTC_CLK_SRC>
+                <PLL_SYS_CLK_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_SYS_CLK_SRC__</key></PLL_SYS_CLK_SRC>
+                <PLL_MCO_SRC_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_MCO_SRC_CL__</key></PLL_MCO_SRC_CL>
+                <PLL_MCO_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_MCO_SRC__</key></PLL_MCO_SRC>
+                <PLL_I2S2_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_I2S2_SRC__</key></PLL_I2S2_SRC>
+                <PLL_I2S3_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_I2S3_SRC__</key></PLL_I2S3_SRC>
+                <PLL_PLL_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_ON__</key></PLL_PLL_ON>
+                <PLL_PLL_SRC_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_SRC_CL__</key></PLL_PLL_SRC_CL>
+                <PLL_PLL_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_SRC__</key></PLL_PLL_SRC>
+                <PLL_PLL_MULL_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MULL_CL__</key></PLL_PLL_MULL_CL>
+                <PLL_PLL_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MULL__</key></PLL_PLL_MULL>
+                <PLL_USB_DIV_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_USB_DIV_CL__</key></PLL_USB_DIV_CL>
+                <PLL_USB_DIV><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_USB_DIV__</key></PLL_USB_DIV>
+                <PLL_PREDIV1_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV1_SRC__</key></PLL_PREDIV1_SRC>
+                <PLL_PREDIV1_VAL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV1_VAL__</key></PLL_PREDIV1_VAL>
+                <PLL_PREDIV2_VAL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV2_VAL__</key></PLL_PREDIV2_VAL>
+                <PLL_PLL2_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL2_ON__</key></PLL_PLL2_ON>
+                <PLL_PLL2_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL2_MULL__</key></PLL_PLL2_MULL>
+                <PLL_PLL3_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL3_ON__</key></PLL_PLL3_ON>
+                <PLL_PLL3_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL3_MULL__</key></PLL_PLL3_MULL>
+                <PLL_AHB_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_AHB_PRE__</key></PLL_AHB_PRE>
+                <PLL_APB1_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB1_PRE__</key></PLL_APB1_PRE>
+                <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>
+                <PLL_ADC_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_ADC_PRE__</key></PLL_ADC_PRE>
+                <PLL_FLASH_LATENCY><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_FLASH_LATENCY__</key></PLL_FLASH_LATENCY>
             </key>
 
             <cpulist>
