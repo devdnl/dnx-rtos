@@ -277,10 +277,15 @@ local ADC_prescaler = {
 --------------------------------------------------------------------------------
 -- @brief  Function returns string suitable for labels that show calculated frequencies
 -- @param  freq         frequency to print (Hz)
+-- @param  str          string before value (optional)
 -- @return Converted frequnecy to string
 --------------------------------------------------------------------------------
-local function frequency(freq)
-        return ": "..wizcore:print_freq(freq)
+local function freqlabel(freq, str)
+        if type(str) == "string" then
+                return string.format(str, wizcore:print_freq(freq))
+        else
+                return wizcore:print_freq(freq)
+        end
 end
 
 
@@ -308,29 +313,27 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function calculate_frequencies()
-
-        -- TODO values readed also directly from configuration file
-        local PLLSRC            = ifs(cpu_family:is_CL(), PLL_clksrc_CL, PLL_clksrc)[ui.Choice_PLL_clksrc:GetSelection() + 1].key
-        local PLLMUL            = ifs(cpu_family:is_CL(), PLL_on_CL, PLL_on)[ui.Choice_PLL:GetSelection() + 1].value
-        local PLL2MUL           = ifs(cpu_family:is_CL(), PLL2_on[ui.Choice_PLL2:GetSelection() + 1].value, nil)
-        local PLL3MUL           = ifs(cpu_family:is_CL(), PLL3_on[ui.Choice_PLL3:GetSelection() + 1].value, nil)
-        local PREDIV1SRC        = ifs(cpu_family:is_CL(), PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key, nil)
-        local PREDIV1           = ifs(cpu_family:is_CL(), PREDIV1_val[ui.Choice_PREDIV1_value:GetSelection() + 1].value, nil)
-        local PREDIV2           = ifs(cpu_family:is_CL(), PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].value, nil)
-        local I2S2SEL           = ifs(cpu_family:is_CL(), I2S2_clksrc[ui.Choice_I2S2_clksrc:GetSelection() + 1].key, nil)
-        local I2S3SEL           = ifs(cpu_family:is_CL(), I2S3_clksrc[ui.Choice_I2S3_clksrc:GetSelection() + 1].key, nil)
-        local MCO_source        = ifs(cpu_family:is_CL(), MCO_clksrc_CL, MCO_clksrc)[ui.Choice_MCO_clksrc:GetSelection() + 1].key
-        local HSE               = HSE_on[ui.Choice_HSE:GetSelection() + 1].value
-        local LSE               = LSE_on[ui.Choice_LSE:GetSelection() + 1].value
-        local LSI               = LSI_on[ui.Choice_LSI:GetSelection() + 1].value
-        local SW                = SYSCLK_clksrc[ui.Choice_system_clksrc:GetSelection() + 1].key
-        local RTCSEL            = RTC_clksrc[ui.Choice_RTC_clksrc:GetSelection() + 1].key
-        local AHB_prescaler     = AHB_prescaler[ui.Choice_AHB_prescaler:GetSelection() + 1].value
-        local APB1_prescaler    = APB12_prescaler[ui.Choice_APB1_prescaler:GetSelection() + 1].value
-        local APB2_prescaler    = APB12_prescaler[ui.Choice_APB2_prescaler:GetSelection() + 1].value
-        local ADC_prescaler     = ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].value
+        local PLLSRC         if ui.Choice_PLL_clksrc then PLLSRC = ifs(cpu_family:is_CL(), PLL_clksrc_CL, PLL_clksrc)[ui.Choice_PLL_clksrc:GetSelection() + 1].key end
+        local PLLMUL         if ui.Choice_PLL then PLLMUL = ifs(cpu_family:is_CL(), PLL_on_CL, PLL_on)[ui.Choice_PLL:GetSelection() + 1].value end
+        local PLL2MUL        if ui.Choice_PLL2 then PLL2MUL = ifs(cpu_family:is_CL(), PLL2_on[ui.Choice_PLL2:GetSelection() + 1].value, nil) end
+        local PLL3MUL        if ui.Choice_PLL3 then PLL3MUL = ifs(cpu_family:is_CL(), PLL3_on[ui.Choice_PLL3:GetSelection() + 1].value, nil) end
+        local PREDIV1SRC     if ui.Choice_PREDIV1_clksrc then PREDIV1SRC = ifs(cpu_family:is_CL(), PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key, nil) end
+        local PREDIV1        if ui.Choice_PREDIV1_value then PREDIV1 = ifs(cpu_family:is_CL(), PREDIV1_val[ui.Choice_PREDIV1_value:GetSelection() + 1].value, nil) end
+        local PREDIV2        if ui.Choice_PREDIV2 then PREDIV2 = ifs(cpu_family:is_CL(), PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].value, nil) end
+        local I2S2SEL        if ui.Choice_I2S2_clksrc then I2S2SEL = ifs(cpu_family:is_CL(), I2S2_clksrc[ui.Choice_I2S2_clksrc:GetSelection() + 1].key, nil) end
+        local I2S3SEL        if ui.Choice_I2S3_clksrc then I2S3SEL = ifs(cpu_family:is_CL(), I2S3_clksrc[ui.Choice_I2S3_clksrc:GetSelection() + 1].key, nil) end
+        local MCO_source     = ifs(cpu_family:is_CL(), MCO_clksrc_CL, MCO_clksrc)[ui.Choice_MCO_clksrc:GetSelection() + 1].key
+        local HSE            = HSE_on[ui.Choice_HSE:GetSelection() + 1].value
+        local LSE            = LSE_on[ui.Choice_LSE:GetSelection() + 1].value
+        local LSI            = LSI_on[ui.Choice_LSI:GetSelection() + 1].value
+        local SW             = SYSCLK_clksrc[ui.Choice_system_clksrc:GetSelection() + 1].key
+        local RTCSEL         = RTC_clksrc[ui.Choice_RTC_clksrc:GetSelection() + 1].key
+        local AHB_prescaler  = AHB_prescaler[ui.Choice_AHB_prescaler:GetSelection() + 1].value
+        local APB1_prescaler = APB12_prescaler[ui.Choice_APB1_prescaler:GetSelection() + 1].value
+        local APB2_prescaler = APB12_prescaler[ui.Choice_APB2_prescaler:GetSelection() + 1].value
+        local ADC_prescaler  = ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].value
         
-        local USB_prescaler     = 0
+        local USB_prescaler
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                 USB_prescaler = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
         end
@@ -388,7 +391,7 @@ local function calculate_frequencies()
                 if cpu_family:is_CL() then
                         freq.PLLCLK     = freq.PREDIV1CLK * PLLMUL
                 else
-                        freq.PLLCLK = ifs(PLLSRC == "RCC_PLLSource_HSE_Div2", freq.HSE / 2, freq.HSE)
+                        freq.PLLCLK = ifs(PLLSRC == "RCC_PLLSource_HSE_Div2", (freq.HSE / 2) * PLLMUL, freq.HSE * PLLMUL)
                 end
         end
         freq.PLLVCO = 2 * freq.PLLCLK
@@ -520,7 +523,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
-        -- save module state
+        -- save module state TODO
 --         wizcore:enable_module("UART", ui.CheckBox_module_enable:GetValue())
 
         ui.Button_save:Enable(false)
@@ -545,31 +548,31 @@ end
 --------------------------------------------------------------------------------
 local function event_value_updated()
         freq = calculate_frequencies()
-        ui.StaticText_LSI:SetLabel(frequency(freq.LSI))
-        ui.StaticText_LSE:SetLabel(frequency(freq.LSE))
-        ui.StaticText_HSE:SetLabel(frequency(freq.HSE))
+        ui.StaticText_LSI:SetLabel(freqlabel(freq.LSI, "%s (LSI)"))
+        ui.StaticText_LSE:SetLabel(freqlabel(freq.LSE, "%s (LSE)"))
+        ui.StaticText_HSE:SetLabel(freqlabel(freq.HSE, "%s (HSE)"))
         
         if cpu_family:is_CL() then
-                ui.StaticText_PREDIV2:SetLabel(frequency(freq.PREDIV2CLK))
-                ui.StaticText_PREDIV1_value:SetLabel(frequency(freq.PREDIV1CLK))
-                ui.StaticText_PLL2:SetLabel(frequency(freq.PLL2CLK))
-                ui.StaticText_PLL3:SetLabel(frequency(freq.PLL3CLK))
+                ui.StaticText_PREDIV2:SetLabel(freqlabel(freq.PREDIV2CLK, "%s (PREDIV2CLK)"))
+                ui.StaticText_PREDIV1_value:SetLabel(freqlabel(freq.PREDIV1CLK, "%s (PREDIV1CLK)"))
+                ui.StaticText_PLL2:SetLabel(freqlabel(freq.PLL2CLK, "%s (PLL2CLK)"))
+                ui.StaticText_PLL3:SetLabel(freqlabel(freq.PLL3CLK, "%s (PLL3CLK)"))
+                ui.StaticText_I2S2_clksrc:SetLabel(freqlabel(freq.I2S2CLK, "%s (I2S2CLK)"))
+                ui.StaticText_I2S3_clksrc:SetLabel(freqlabel(freq.I2S3CLK, "%s (I2S3CLK)"))
         end
         
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
-                ui.StaticText_USB_clksrc:SetLabel(frequency(freq.USBCLK))
+                ui.StaticText_USB_clksrc:SetLabel(freqlabel(freq.USBCLK, "%s (USBCLK)"))
         end
         
-        ui.StaticText_PLL:SetLabel(frequency(freq.PLLCLK))
-        ui.StaticText_system_clksrc:SetLabel(frequency(freq.SYSCLK))
-        ui.StaticText_RTC_clksrc:SetLabel(frequency(freq.RTCCLK))
-        ui.StaticText_MCO_clksrc:SetLabel(frequency(freq.MCOCLK))
-        ui.StaticText_I2S2_clksrc:SetLabel(frequency(freq.I2S2CLK))
-        ui.StaticText_I2S3_clksrc:SetLabel(frequency(freq.I2S3CLK))
-        ui.StaticText_AHB_prescaler:SetLabel(frequency(freq.HCLK))
-        ui.StaticText_APB1_prescaler:SetLabel(frequency(freq.PCLK1))
-        ui.StaticText_APB2_prescaler:SetLabel(frequency(freq.PCLK2))
-        ui.StaticText_ADC_prescaler:SetLabel(frequency(freq.ADCCLK))       
+        ui.StaticText_PLL:SetLabel(freqlabel(freq.PLLCLK, "%s (PLLCLK)"))
+        ui.StaticText_system_clksrc:SetLabel(freqlabel(freq.SYSCLK, "%s (SYSCLK)"))
+        ui.StaticText_RTC_clksrc:SetLabel(freqlabel(freq.RTCCLK, "%s (RTCCLK)"))
+        ui.StaticText_MCO_clksrc:SetLabel(freqlabel(freq.MCOCLK, "%s (MCOCLK)"))
+        ui.StaticText_AHB_prescaler:SetLabel(freqlabel(freq.HCLK, "%s (HCLK)"))
+        ui.StaticText_APB1_prescaler:SetLabel(freqlabel(freq.PCLK1, "%s (PCLK1)"))
+        ui.StaticText_APB2_prescaler:SetLabel(freqlabel(freq.PCLK2, "%s (PCLK2)"))
+        ui.StaticText_ADC_prescaler:SetLabel(freqlabel(freq.ADCCLK, "%s (ADCCLK)"))       
         
         ui.Button_save:Enable(true)
 end
@@ -806,7 +809,7 @@ function pll:create_window(parent)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(5, 5)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
