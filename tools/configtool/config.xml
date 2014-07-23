@@ -309,17 +309,17 @@
                 <PLL_PLL_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_ON__</key></PLL_PLL_ON>
                 <PLL_PLL_SRC_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_SRC_CL__</key></PLL_PLL_SRC_CL>
                 <PLL_PLL_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_SRC__</key></PLL_PLL_SRC>
-                <PLL_PLL_MULL_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MULL_CL__</key></PLL_PLL_MULL_CL>
-                <PLL_PLL_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MULL__</key></PLL_PLL_MULL>
+                <PLL_PLL_MUL_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MUL_CL__</key></PLL_PLL_MUL_CL>
+                <PLL_PLL_MUL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL_MUL__</key></PLL_PLL_MUL>
                 <PLL_USB_DIV_CL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_USB_DIV_CL__</key></PLL_USB_DIV_CL>
                 <PLL_USB_DIV><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_USB_DIV__</key></PLL_USB_DIV>
                 <PLL_PREDIV1_SRC><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV1_SRC__</key></PLL_PREDIV1_SRC>
                 <PLL_PREDIV1_VAL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV1_VAL__</key></PLL_PREDIV1_VAL>
                 <PLL_PREDIV2_VAL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PREDIV2_VAL__</key></PLL_PREDIV2_VAL>
                 <PLL_PLL2_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL2_ON__</key></PLL_PLL2_ON>
-                <PLL_PLL2_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL2_MULL__</key></PLL_PLL2_MULL>
+                <PLL_PLL2_MUL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL2_MUL__</key></PLL_PLL2_MUL>
                 <PLL_PLL3_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL3_ON__</key></PLL_PLL3_ON>
-                <PLL_PLL3_MULL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL3_MULL__</key></PLL_PLL3_MULL>
+                <PLL_PLL3_MUL><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_PLL3_MUL__</key></PLL_PLL3_MUL>
                 <PLL_AHB_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_AHB_PRE__</key></PLL_AHB_PRE>
                 <PLL_APB1_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB1_PRE__</key></PLL_APB1_PRE>
                 <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>

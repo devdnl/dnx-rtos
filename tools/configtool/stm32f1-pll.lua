@@ -477,19 +477,19 @@ local function load_controls()
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == DISABLE then
                         ui.Choice_PLL:SetSelection(0)
                 else
-                        ui.Choice_PLL:SetSelection(get_table_index(PLL_on_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MULL_CL)) - 1)
+                        ui.Choice_PLL:SetSelection(get_table_index(PLL_on_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MUL_CL)) - 1)
                 end
         
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_ON) == DISABLE then
                         ui.Choice_PLL2:SetSelection(0)
                 else
-                        ui.Choice_PLL2:SetSelection(get_table_index(PLL2_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_MULL)) - 1)
+                        ui.Choice_PLL2:SetSelection(get_table_index(PLL2_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_MUL)) - 1)
                 end
                 
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_ON) == DISABLE then
                         ui.Choice_PLL3:SetSelection(0)
                 else
-                        ui.Choice_PLL3:SetSelection(get_table_index(PLL3_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_MULL)) - 1)
+                        ui.Choice_PLL3:SetSelection(get_table_index(PLL3_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_MUL)) - 1)
                 end
                 
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
@@ -507,7 +507,7 @@ local function load_controls()
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == DISABLE then
                         ui.Choice_PLL:SetSelection(0)
                 else
-                        ui.Choice_PLL:SetSelection(get_table_index(PLL_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MULL)) - 1)
+                        ui.Choice_PLL:SetSelection(get_table_index(PLL_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MUL)) - 1)
                 end
                 
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
@@ -546,21 +546,21 @@ local function event_on_button_save_click()
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, DISABLE)
                 else
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
-                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MULL_CL, PLL_on_CL[ui.Choice_PLL:GetSelection() + 1].key)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MUL_CL, PLL_on_CL[ui.Choice_PLL:GetSelection() + 1].key)
                 end
                 
                 if ui.Choice_PLL2:GetSelection() == 0 then
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, DISABLE)
                 else
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, ENABLE)
-                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_MULL, PLL2_on[ui.Choice_PLL2:GetSelection() + 1].key)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_MUL, PLL2_on[ui.Choice_PLL2:GetSelection() + 1].key)
                 end
                 
                 if ui.Choice_PLL3:GetSelection() == 0 then
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, DISABLE)
                 else
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, ENABLE)
-                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_MULL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].key)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_MUL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].key)
                 end
                 
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
@@ -579,7 +579,7 @@ local function event_on_button_save_click()
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, DISABLE)
                 else
                         wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
-                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MULL, PLL_on[ui.Choice_PLL:GetSelection() + 1].key)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MUL, PLL_on[ui.Choice_PLL:GetSelection() + 1].key)
                 end
                 
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
