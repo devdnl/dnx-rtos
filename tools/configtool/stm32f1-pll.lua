@@ -48,15 +48,17 @@ local ID               = {}
 local cpu_name         = nil    -- loaded when creating the window
 local cpu_idx          = nil    -- loaded when creating the window
 local cpu              = nil    -- loaded when creating the window
-local cpu_family       = nil    -- loaded when creating the window
-local CPU_FAMILY_CL    = "__STM32F10X_CL__"
-local CPU_FAMILY_LD_VL = "__STM32F10X_LD_VL__"
-local CPU_FAMILY_MD_VL = "__STM32F10X_MD_VL__"
-local CPU_FAMILY_HD_VL = "__STM32F10X_HD_VL__"
-local CPU_FAMILY_LD    = "__STM32F10X_LD__"
-local CPU_FAMILY_MD    = "__STM32F10X_MD__"
-local CPU_FAMILY_HD    = "__STM32F10X_HD__"
-local CPU_FAMILY_XL    = "__STM32F10X_XL__"
+local cpu_family       = {}
+cpu_family.value       = 0
+cpu_family.is_LD_VL    = function(self) return self.value == "__STM32F10X_LD_VL__" end
+cpu_family.is_MD_VL    = function(self) return self.value == "__STM32F10X_MD_VL__" end
+cpu_family.is_HD_VL    = function(self) return self.value == "__STM32F10X_HD_VL__" end
+cpu_family.is_VL       = function(self) return self.value:match("_VL_") end
+cpu_family.is_LD       = function(self) return self.value == "__STM32F10X_LD__" end
+cpu_family.is_MD       = function(self) return self.value == "__STM32F10X_MD__" end
+cpu_family.is_HD       = function(self) return self.value == "__STM32F10X_HD__" end
+cpu_family.is_XL       = function(self) return self.value == "__STM32F10X_XL__" end
+cpu_family.is_CL       = function(self) return self.value == "__STM32F10X_CL__" end
 local LSI_FREQ         = 40e3
 local LSE_FREQ         = 32768
 local HSI_FREQ         = 8e6
@@ -308,17 +310,16 @@ end
 local function calculate_frequencies()
 
         -- TODO values readed also directly from configuration file
-        local PLLSRC            = ifs(cpu_family == CPU_FAMILY_CL, PLL_clksrc_CL, PLL_clksrc)[ui.Choice_PLL_clksrc:GetSelection() + 1].key
-        local PLLMUL            = ifs(cpu_family == CPU_FAMILY_CL, PLL_on_CL, PLL_on)[ui.Choice_PLL:GetSelection() + 1].value
-        local PLL2MUL           = ifs(cpu_family == CPU_FAMILY_CL, PLL2_on[ui.Choice_PLL2:GetSelection() + 1].value, nil)
-        local PLL3MUL           = ifs(cpu_family == CPU_FAMILY_CL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].value, nil)
-        local PREDIV1SRC        = ifs(cpu_family == CPU_FAMILY_CL, PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key, nil)
-        local PREDIV1           = ifs(cpu_family == CPU_FAMILY_CL, PREDIV1_val[ui.Choice_PREDIV1_value:GetSelection() + 1].value, nil)
-        local PREDIV2           = ifs(cpu_family == CPU_FAMILY_CL, PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].value, nil)
-        local I2S2SEL           = ifs(cpu_family == CPU_FAMILY_CL, I2S2_clksrc[ui.Choice_I2S2_clksrc:GetSelection() + 1].key, nil)
-        local I2S3SEL           = ifs(cpu_family == CPU_FAMILY_CL, I2S3_clksrc[ui.Choice_I2S3_clksrc:GetSelection() + 1].key, nil)
-        local USB_prescaler     = ifs(cpu_family == CPU_FAMILY_CL, USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
-        local MCO_source        = ifs(cpu_family == CPU_FAMILY_CL, MCO_clksrc_CL, MCO_clksrc)[ui.Choice_MCO_clksrc:GetSelection() + 1].key
+        local PLLSRC            = ifs(cpu_family:is_CL(), PLL_clksrc_CL, PLL_clksrc)[ui.Choice_PLL_clksrc:GetSelection() + 1].key
+        local PLLMUL            = ifs(cpu_family:is_CL(), PLL_on_CL, PLL_on)[ui.Choice_PLL:GetSelection() + 1].value
+        local PLL2MUL           = ifs(cpu_family:is_CL(), PLL2_on[ui.Choice_PLL2:GetSelection() + 1].value, nil)
+        local PLL3MUL           = ifs(cpu_family:is_CL(), PLL3_on[ui.Choice_PLL3:GetSelection() + 1].value, nil)
+        local PREDIV1SRC        = ifs(cpu_family:is_CL(), PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key, nil)
+        local PREDIV1           = ifs(cpu_family:is_CL(), PREDIV1_val[ui.Choice_PREDIV1_value:GetSelection() + 1].value, nil)
+        local PREDIV2           = ifs(cpu_family:is_CL(), PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].value, nil)
+        local I2S2SEL           = ifs(cpu_family:is_CL(), I2S2_clksrc[ui.Choice_I2S2_clksrc:GetSelection() + 1].key, nil)
+        local I2S3SEL           = ifs(cpu_family:is_CL(), I2S3_clksrc[ui.Choice_I2S3_clksrc:GetSelection() + 1].key, nil)
+        local MCO_source        = ifs(cpu_family:is_CL(), MCO_clksrc_CL, MCO_clksrc)[ui.Choice_MCO_clksrc:GetSelection() + 1].key
         local HSE               = HSE_on[ui.Choice_HSE:GetSelection() + 1].value
         local LSE               = LSE_on[ui.Choice_LSE:GetSelection() + 1].value
         local LSI               = LSI_on[ui.Choice_LSI:GetSelection() + 1].value
@@ -328,6 +329,11 @@ local function calculate_frequencies()
         local APB1_prescaler    = APB12_prescaler[ui.Choice_APB1_prescaler:GetSelection() + 1].value
         local APB2_prescaler    = APB12_prescaler[ui.Choice_APB2_prescaler:GetSelection() + 1].value
         local ADC_prescaler     = ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].value
+        
+        local USB_prescaler     = 0
+        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                USB_prescaler = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
+        end
 
         local freq              = {}
         freq.HSE                = HSE
@@ -367,7 +373,7 @@ local function calculate_frequencies()
         end
         
         -- calculate Conectivity Linie-specific frequencies
-        if cpu_family == CPU_FAMILY_CL then
+        if cpu_family:is_CL() then
                 freq.PLL2CLK    = (freq.HSE / PREDIV2) * PLL2MUL
                 freq.PLL3CLK    = (freq.HSE / PREDIV2) * PLL3MUL
                 freq.PLL3VCO    = freq.PLL3CLK * 2
@@ -379,7 +385,7 @@ local function calculate_frequencies()
         if PLLSRC == "RCC_PLLSource_HSI_Div2" then
                 freq.PLLCLK = (freq.HSI / 2) * PLLMUL
         else
-                if cpu_family == CPU_FAMILY_CL then
+                if cpu_family:is_CL() then
                         freq.PLLCLK     = freq.PREDIV1CLK * PLLMUL
                 else
                         freq.PLLCLK = ifs(PLLSRC == "RCC_PLLSource_HSE_Div2", freq.HSE / 2, freq.HSE)
@@ -396,12 +402,14 @@ local function calculate_frequencies()
                 freq.SYSCLK = freq.PLLCLK
         end
         
-        -- calculate USB frequency
-        freq.USBCLK = ifs(cpu_family == CPU_FAMILY_CL, freq.PLLVCO / USB_prescaler, freq.PLLCLK / USB_prescaler)
+        -- calculate USB frequency (if USB exist)
+        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                freq.USBCLK = ifs(cpu_family:is_CL(), freq.PLLVCO / USB_prescaler, freq.PLLCLK / USB_prescaler)
+        end
         
         -- calculate I2S frequency
-        freq.I2S2CLK = ifs(I2S2SEL == "RCC_I2S2CLKSource_PLL3_VCO" and cpu_family == CPU_FAMILY_CL, freq.PLL3VCO, freq.SYSCLK)
-        freq.I2S3CLK = ifs(I2S3SEL == "RCC_I2S3CLKSource_PLL3_VCO" and cpu_family == CPU_FAMILY_CL, freq.PLL3VCO, freq.SYSCLK)
+        freq.I2S2CLK = ifs(I2S2SEL == "RCC_I2S2CLKSource_PLL3_VCO" and cpu_family:is_CL(), freq.PLL3VCO, freq.SYSCLK)
+        freq.I2S3CLK = ifs(I2S3SEL == "RCC_I2S3CLKSource_PLL3_VCO" and cpu_family:is_CL(), freq.PLL3VCO, freq.SYSCLK)
 
         -- calculate MCO frequency
         if MCO_source == "RCC_MCO_NoClock" then
@@ -448,7 +456,7 @@ local function load_controls()
         ui.Panel1:Enable(module_enable)
 
         -- load Conectivity Line specific controls
-        if cpu_family == CPU_FAMILY_CL then
+        if cpu_family:is_CL() then
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == PLL_on_CL[1].value then
                         ui.Choice_PLL:SetSelection(0)
                 else
@@ -474,7 +482,10 @@ local function load_controls()
                 ui.Choice_I2S2_clksrc:SetSelection(get_table_index(I2S2_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_I2S2_SRC)) - 1)
                 ui.Choice_I2S3_clksrc:SetSelection(get_table_index(I2S3_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_I2S3_SRC)) - 1)
                 ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_MCO_SRC_CL)) - 1)
-                ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
+                
+                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                        ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
+                end
         else
                 if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == PLL_on[1].key then
                         ui.Choice_PLL:SetSelection(0)
@@ -484,7 +495,10 @@ local function load_controls()
                 
                 ui.Choice_PLL_clksrc:SetSelection(get_table_index(PLL_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_SRC)) - 1)
                 ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_MCO_SRC)) - 1)
-                ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV)) - 1)
+                
+                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                        ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV)) - 1)
+                end
         end
 
         -- load common controls
@@ -535,16 +549,21 @@ local function event_value_updated()
         ui.StaticText_LSE:SetLabel(frequency(freq.LSE))
         ui.StaticText_HSE:SetLabel(frequency(freq.HSE))
         
-        ui.StaticText_PREDIV2:SetLabel(frequency(freq.PREDIV2CLK))
-        ui.StaticText_PREDIV1_value:SetLabel(frequency(freq.PREDIV1CLK))
-        ui.StaticText_PLL2:SetLabel(frequency(freq.PLL2CLK))
-        ui.StaticText_PLL3:SetLabel(frequency(freq.PLL3CLK))
+        if cpu_family:is_CL() then
+                ui.StaticText_PREDIV2:SetLabel(frequency(freq.PREDIV2CLK))
+                ui.StaticText_PREDIV1_value:SetLabel(frequency(freq.PREDIV1CLK))
+                ui.StaticText_PLL2:SetLabel(frequency(freq.PLL2CLK))
+                ui.StaticText_PLL3:SetLabel(frequency(freq.PLL3CLK))
+        end
+        
+        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                ui.StaticText_USB_clksrc:SetLabel(frequency(freq.USBCLK))
+        end
         
         ui.StaticText_PLL:SetLabel(frequency(freq.PLLCLK))
         ui.StaticText_system_clksrc:SetLabel(frequency(freq.SYSCLK))
         ui.StaticText_RTC_clksrc:SetLabel(frequency(freq.RTCCLK))
         ui.StaticText_MCO_clksrc:SetLabel(frequency(freq.MCOCLK))
-        ui.StaticText_USB_clksrc:SetLabel(frequency(freq.USBCLK))
         ui.StaticText_I2S2_clksrc:SetLabel(frequency(freq.I2S2CLK))
         ui.StaticText_I2S3_clksrc:SetLabel(frequency(freq.I2S3CLK))
         ui.StaticText_AHB_prescaler:SetLabel(frequency(freq.HCLK))
@@ -565,14 +584,14 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function pll:create_window(parent)
-        cpu_name        = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        cpu_idx         = wizcore:get_cpu_index("stm32f1", cpu_name)
-        cpu             = config.arch.stm32f1.cpulist:Children()[cpu_idx]
-        cpu_family      = cpu.family:GetValue()
-        HSE_FREQ        = tonumber(wizcore:key_read(config.project.key.CPU_OSC_FREQ))
-        HSE_on[2].value = HSE_FREQ
-        HSE_on[3].value = HSE_FREQ
-
+        cpu_name         = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx          = wizcore:get_cpu_index("stm32f1", cpu_name)
+        cpu              = config.arch.stm32f1.cpulist:Children()[cpu_idx]
+        cpu_family.value = cpu.family:GetValue()
+        HSE_FREQ         = tonumber(wizcore:key_read(config.project.key.CPU_OSC_FREQ))
+        HSE_on[2].value  = HSE_FREQ
+        HSE_on[3].value  = HSE_FREQ
+        
         ui = {}
         ID = {}
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
@@ -633,7 +652,7 @@ function pll:create_window(parent)
         ui.StaticText_HSE = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_HSE, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         
-        if cpu_family == CPU_FAMILY_CL then
+        if cpu_family:is_CL() then
                 ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PREDIV2", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_PREDIV2 = wx.wxChoice(ui.Panel1, ID.CHOICE_PREDIV2, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_PREDIV2")
@@ -678,12 +697,12 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.BoxSizer1 = wx.wxBoxSizer(wx.wxHORIZONTAL)
         ui.Choice_PLL_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_PLL_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_PLL_CLKSRC")
-        local PLL_clksrc_table = ifs(cpu_family == CPU_FAMILY_CL, PLL_clksrc_CL, PLL_clksrc)
+        local PLL_clksrc_table = ifs(cpu_family:is_CL(), PLL_clksrc_CL, PLL_clksrc)
         for i = 1, #PLL_clksrc_table do ui.Choice_PLL_clksrc:Append(PLL_clksrc_table[i].name) end
         ui.Choice_PLL_clksrc:SetToolTip("PLL clock source")
         ui.BoxSizer1:Add(ui.Choice_PLL_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_PLL = wx.wxChoice(ui.Panel1, ID.CHOICE_PLL, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_PLL")
-        local PLL_on_table = ifs(cpu_family == CPU_FAMILY_CL, PLL_on_CL, PLL_on)
+        local PLL_on_table = ifs(cpu_family:is_CL(), PLL_on_CL, PLL_on)
         for i = 1, #PLL_on_table do ui.Choice_PLL:Append(PLL_on_table[i].name) end
         ui.Choice_PLL:SetToolTip("PLL multiplier")
         ui.BoxSizer1:Add(ui.Choice_PLL, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -710,23 +729,24 @@ function pll:create_window(parent)
         ui.StaticText13 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "MCO clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText13, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_MCO_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_MCO_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_MCO_CLKSRC")
-        local MCO_clksrc_table = ifs(cpu_family == CPU_FAMILY_CL, MCO_clksrc_CL, MCO_clksrc)
+        local MCO_clksrc_table = ifs(cpu_family:is_CL(), MCO_clksrc_CL, MCO_clksrc)
         for i = 1, #MCO_clksrc_table do ui.Choice_MCO_clksrc:Append(MCO_clksrc_table[i].name) end
         ui.FlexGridSizer3:Add(ui.Choice_MCO_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_MCO_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_MCO_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         
-        -- TODO check if CPU have USB
-        ui.StaticText14 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "USB clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
-        ui.FlexGridSizer3:Add(ui.StaticText14, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Choice_USB_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_USB_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_USB_CLKSRC")
-        local USB_div_table = ifs(cpu_family == CPU_FAMILY_CL, USB_clksrc_CL, USB_clksrc)
-        for i = 1, #USB_div_table do ui.Choice_USB_clksrc:Append(USB_div_table[i].name) end
-        ui.FlexGridSizer3:Add(ui.Choice_USB_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticText_USB_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
-        ui.FlexGridSizer3:Add(ui.StaticText_USB_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                ui.StaticText14 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "USB clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+                ui.FlexGridSizer3:Add(ui.StaticText14, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_USB_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_USB_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_USB_CLKSRC")
+                local USB_div_table = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)
+                for i = 1, #USB_div_table do ui.Choice_USB_clksrc:Append(USB_div_table[i].name) end
+                ui.FlexGridSizer3:Add(ui.Choice_USB_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText_USB_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+                ui.FlexGridSizer3:Add(ui.StaticText_USB_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        end
         
-        if cpu_family == CPU_FAMILY_CL then
+        if cpu_family:is_CL() then
                 ui.StaticText15 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "I2S2 clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText15, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_I2S2_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_I2S2_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_I2S2_CLKSRC")
