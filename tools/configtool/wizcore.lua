@@ -126,6 +126,7 @@ function wizcore:show_error_msg(title, caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
         dialog:ShowModal()
         wx.wxGetApp():ExitMainLoop()
+        os.exit(0)
 end
 
 
