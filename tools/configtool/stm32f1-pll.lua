@@ -538,7 +538,7 @@ end
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
         -- save module state
-        wizcore:enable_module("USB", ui.CheckBox_module_enable:GetValue())
+        wizcore:enable_module("PLL", ui.CheckBox_module_enable:GetValue())
         
         -- save Conectivity Line specific controls
         if cpu_family:is_CL() then
