@@ -63,6 +63,8 @@ local LSI_FREQ         = 40e3
 local LSE_FREQ         = 32768
 local HSI_FREQ         = 8e6
 local HSE_FREQ         = -1    -- loaded when creating the window
+local ENABLE           = "ENABLE"
+local DISABLE          = "DISABLE"
 
 local LSI_on = {
         {["name"] = "Disabled", ["key"] = "DISABLE", ["value"] = 0       },
@@ -338,33 +340,34 @@ local function calculate_frequencies()
                 USB_prescaler = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
         end
 
-        local freq              = {}
-        freq.HSE                = HSE
-        freq.HSI                = HSI_FREQ
-        freq.LSI                = LSI
-        freq.LSE                = LSE
-        freq.IWDGCLK            = freq.LSI
-        freq.FLITFCLK           = freq.HSI
-        freq.RTCCLK             = 0
-        freq.PLLCLK             = 0
-        freq.PLLVCO             = 0
-        freq.USBCLK             = 0
-        freq.I2S2CLK            = 0
-        freq.I2S3CLK            = 0
-        freq.SYSCLK             = 0
-        freq.HCLK               = 0
-        freq.FCLK               = 0
-        freq.PCLK1              = 0
-        freq.PCLK2              = 0
-        freq.ADCCLK             = 0
-        freq.TIMxCLK1           = 0
-        freq.TIMxCLK2           = 0
-        freq.MCOCLK             = 0
-        freq.PLL2CLK            = 0
-        freq.PLL3CLK            = 0
-        freq.PLL3VCO            = 0
-        freq.PREDIV1CLK         = 0
-        freq.PREDIV2CLK         = 0
+        local freq         = {}
+        freq.HSE           = HSE
+        freq.HSI           = HSI_FREQ
+        freq.LSI           = LSI
+        freq.LSE           = LSE
+        freq.IWDGCLK       = freq.LSI
+        freq.FLITFCLK      = freq.HSI
+        freq.RTCCLK        = 0
+        freq.PLLCLK        = 0
+        freq.PLLVCO        = 0
+        freq.USBCLK        = 0
+        freq.I2S2CLK       = 0
+        freq.I2S3CLK       = 0
+        freq.SYSCLK        = 0
+        freq.HCLK          = 0
+        freq.FCLK          = 0
+        freq.PCLK1         = 0
+        freq.PCLK2         = 0
+        freq.ADCCLK        = 0
+        freq.TIMxCLK1      = 0
+        freq.TIMxCLK2      = 0
+        freq.MCOCLK        = 0
+        freq.PLL2CLK       = 0
+        freq.PLL3CLK       = 0
+        freq.PLL3VCO       = 0
+        freq.PREDIV1CLK    = 0
+        freq.PREDIV2CLK    = 0
+        freq.flash_latency = 0
      
         -- calculate RTCCLK
         if RTCSEL == "RCC_RTCCLKSource_LSI" then
@@ -443,6 +446,17 @@ local function calculate_frequencies()
         freq.ADCCLK   = freq.PCLK2 / ADC_prescaler
         freq.TIMxCLK1 = ifs(APB1_prescaler == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
         freq.TIMxCLK2 = ifs(APB2_prescaler == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
+        
+        -- calculate flash latency
+        if freq.SYSCLK <= 24e6 then
+                freq.flash_latency = 0
+        elseif freq.SYSCLK <= 48e6 then
+                freq.flash_latency = 1
+        elseif freq.SYSCLK <= 72e6 then
+                freq.flash_latency = 2
+        else
+                freq.flash_latency = 2
+        end
 
         return freq
 end
@@ -460,22 +474,26 @@ local function load_controls()
 
         -- load Conectivity Line specific controls
         if cpu_family:is_CL() then
-                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == PLL_on_CL[1].value then
+                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == DISABLE then
                         ui.Choice_PLL:SetSelection(0)
                 else
                         ui.Choice_PLL:SetSelection(get_table_index(PLL_on_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MULL_CL)) - 1)
                 end
         
-                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_ON) == PLL2_on[1].key then
+                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_ON) == DISABLE then
                         ui.Choice_PLL2:SetSelection(0)
                 else
                         ui.Choice_PLL2:SetSelection(get_table_index(PLL2_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL2_MULL)) - 1)
                 end
                 
-                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_ON) == PLL3_on[1].key then
+                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_ON) == DISABLE then
                         ui.Choice_PLL3:SetSelection(0)
                 else
                         ui.Choice_PLL3:SetSelection(get_table_index(PLL3_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL3_MULL)) - 1)
+                end
+                
+                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                        ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
                 end
 
                 ui.Choice_PLL_clksrc:SetSelection(get_table_index(PLL_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_SRC_CL)) - 1)
@@ -485,23 +503,19 @@ local function load_controls()
                 ui.Choice_I2S2_clksrc:SetSelection(get_table_index(I2S2_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_I2S2_SRC)) - 1)
                 ui.Choice_I2S3_clksrc:SetSelection(get_table_index(I2S3_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_I2S3_SRC)) - 1)
                 ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_MCO_SRC_CL)) - 1)
-                
-                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
-                        ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
-                end
         else
-                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == PLL_on[1].key then
+                if wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_ON) == DISABLE then
                         ui.Choice_PLL:SetSelection(0)
                 else
                         ui.Choice_PLL:SetSelection(get_table_index(PLL_on, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_MULL)) - 1)
                 end
                 
-                ui.Choice_PLL_clksrc:SetSelection(get_table_index(PLL_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_SRC)) - 1)
-                ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_MCO_SRC)) - 1)
-                
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                         ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_USB_DIV)) - 1)
                 end
+                
+                ui.Choice_PLL_clksrc:SetSelection(get_table_index(PLL_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_PLL_SRC)) - 1)
+                ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc, "key", wizcore:key_read(config.arch.stm32f1.key.PLL_MCO_SRC)) - 1)
         end
 
         -- load common controls
@@ -523,8 +537,70 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
-        -- save module state TODO
---         wizcore:enable_module("UART", ui.CheckBox_module_enable:GetValue())
+        -- save module state
+        wizcore:enable_module("USB", ui.CheckBox_module_enable:GetValue())
+        
+        -- save Conectivity Line specific controls
+        if cpu_family:is_CL() then
+                if ui.Choice_PLL:GetSelection() == 0 then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, DISABLE)
+                else
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MULL_CL, PLL_on_CL[ui.Choice_PLL:GetSelection() + 1].key)
+                end
+                
+                if ui.Choice_PLL2:GetSelection() == 0 then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, DISABLE)
+                else
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, ENABLE)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL2_MULL, PLL2_on[ui.Choice_PLL2:GetSelection() + 1].key)
+                end
+                
+                if ui.Choice_PLL3:GetSelection() == 0 then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, DISABLE)
+                else
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, ENABLE)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL3_MULL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].key)
+                end
+                
+                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_USB_DIV_CL, USB_clksrc_CL[ui.Choice_USB_clksrc:GetSelection() + 1].key)
+                end
+                
+                wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_SRC_CL, PLL_clksrc_CL[ui.Choice_PLL_clksrc:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_PREDIV2_VAL, PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_PREDIV1_SRC, PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_PREDIV1_VAL, PREDIV1_val[ui.Choice_PREDIV1_value:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_I2S2_SRC, I2S2_clksrc[ui.Choice_I2S2_clksrc:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_I2S3_SRC, I2S3_clksrc[ui.Choice_I2S3_clksrc:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_MCO_SRC_CL, MCO_clksrc_CL[ui.Choice_MCO_clksrc:GetSelection() + 1].key)
+        else
+                if ui.Choice_PLL:GetSelection() == 0 then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, DISABLE)
+                else
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_MULL, PLL_on[ui.Choice_PLL:GetSelection() + 1].key)
+                end
+                
+                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                        wizcore:key_write(config.arch.stm32f1.key.PLL_USB_DIV, USB_clksrc[ui.Choice_USB_clksrc:GetSelection() + 1].key)
+                end
+                
+                wizcore:key_write(config.arch.stm32f1.key.PLL_PLL_SRC, PLL_clksrc[ui.Choice_PLL_clksrc:GetSelection() + 1].key)
+                wizcore:key_write(config.arch.stm32f1.key.PLL_MCO_SRC, MCO_clksrc[ui.Choice_MCO_clksrc:GetSelection() + 1].key)
+        end
+        
+        -- save common configuration
+        wizcore:key_write(config.arch.stm32f1.key.PLL_LSI_ON, LSI_on[ui.Choice_LSI:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_LSE_ON, LSE_on[ui.Choice_LSE:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_HSE_ON, HSE_on[ui.Choice_HSE:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_SYS_CLK_SRC, SYSCLK_clksrc[ui.Choice_system_clksrc:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_RTC_CLK_SRC, RTC_clksrc[ui.Choice_RTC_clksrc:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_AHB_PRE, AHB_prescaler[ui.Choice_AHB_prescaler:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_APB1_PRE, APB12_prescaler[ui.Choice_APB1_prescaler:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_APB2_PRE, APB12_prescaler[ui.Choice_APB2_prescaler:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_ADC_PRE, ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].key)
+        wizcore:key_write(config.arch.stm32f1.key.PLL_FLASH_LATENCY, tostring(calculate_frequencies().flash_latency))
 
         ui.Button_save:Enable(false)
 end
