@@ -221,19 +221,23 @@ function operating_system:create_window(parent)
                 ui.FlexGridSizer3 = wx.wxFlexGridSizer(0, 2, 0, 0)
                 ui.StaticText2 = wx.wxStaticText(this, ID.STATICTEXT2, "Minimal size of task stack [levels]", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
                 ui.SpinCtrl_task_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_TASK_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 48, 8192, 0)
+                ui.SpinCtrl_task_stack_size:SetToolTip("This value determines the lowest possible stack size that can be assigned for the task. "..
+                                                       "The value is a part of entire stack size calculated by using few components.")
                 ui.FlexGridSizer3:Add(ui.SpinCtrl_task_stack_size, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText3 = wx.wxStaticText(this, ID.STATICTEXT3, "Size of file systems stack [levels]", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer3:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
                 ui.SpinCtrl_fs_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_FS_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 2048, 0)
+                ui.SpinCtrl_fs_stack_size:SetToolTip("This value determines the size of stack that is used by the file systems. This value depends on used file systems. "..
+                                                     "The value is a part of entire stack size calculated by using few components.")
                 ui.FlexGridSizer3:Add(ui.SpinCtrl_fs_stack_size, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText4 = wx.wxStaticText(this, ID.STATICTEXT4, "Size of interrupt stack [levels]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
                 ui.FlexGridSizer3:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_irq_stack_size = wx.wxSpinCtrl(this, ID.SPINCTRL_IRQ_STACK_SIZE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 2048, 0, "ID.SPINCTRL_IRQ_STACK_SIZE")
+                ui.SpinCtrl_irq_stack_size:SetToolTip("This value determines the size of stack that is used by the interrupts. "..
+                                                      "The value is a part of entire stack size calculated by using few components.")
                 ui.FlexGridSizer3:Add(ui.SpinCtrl_irq_stack_size, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText5 = wx.wxStaticText(this, ID.STATICTEXT5, "Total minimal stack size:", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT5")
@@ -250,16 +254,21 @@ function operating_system:create_window(parent)
                 ui.StaticText11 = wx.wxStaticText(this, ID.STATICTEXT11, "Number of task priorities", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT11")
                 ui.FlexGridSizer4:Add(ui.StaticText11, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_number_of_priorities = wx.wxSpinCtrl(this, ID.SPINCTRL_NUMBER_OF_PRIORITIES, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 3, 255, 0, "ID.SPINCTRL_NUMBER_OF_PRIORITIES")
+                ui.SpinCtrl_number_of_priorities:SetToolTip("This value determines total number of task priorities. By using this value task priorities are calculated. "..
+                                                            "If this value is set to e.g. 7, then system priorities are in range from -3 to 3.")
                 ui.FlexGridSizer4:Add(ui.SpinCtrl_number_of_priorities, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText12 = wx.wxStaticText(this, ID.STATICTEXT12, "Length of task name [bytes]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT12")
                 ui.FlexGridSizer4:Add(ui.StaticText12, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_task_name_len = wx.wxSpinCtrl(this, ID.SPINCTRL_TASK_NAME_LEN, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 8, 256, 0, "ID.SPINCTRL_TASK_NAME_LEN")
+                ui.SpinCtrl_task_name_len:SetToolTip("This value determines the maximum size of task name. If task name is longer than this value, then name will be cutted.")
                 ui.FlexGridSizer4:Add(ui.SpinCtrl_task_name_len, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText13 = wx.wxStaticText(this, ID.STATICTEXT13, "Context switch frequency [Hz]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT13")
                 ui.FlexGridSizer4:Add(ui.StaticText13, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_switch_freq = wx.wxSpinCtrl(this, ID.SPINCTRL_SWITCH_FREQ, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 1000, 0, "ID.SPINCTRL_SWITCH_FREQ")
+                ui.SpinCtrl_switch_freq:SetToolTip("Context switch frequency has influence to system response for events. If your system should response faster for events set this value to higher ones. "..
+                                                   "If your microcontroller works on slower frequency this value should be smaller to avoid wasting of CPU time for context switch.")
                 ui.FlexGridSizer4:Add(ui.SpinCtrl_switch_freq, 10, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticBoxSizer2:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -269,42 +278,56 @@ function operating_system:create_window(parent)
                 ui.StaticBoxSizer5 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Features")
                 ui.GridSizer2 = wx.wxGridSizer(0, 2, 0, 0)
                 ui.CheckBox_sleep_on_idle = wx.wxCheckBox(this, ID.CHECKBOX_SLEEP_ON_IDLE, "Sleep on idle", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_SLEEP_ON_IDLE")
+                 ui.CheckBox_sleep_on_idle:SetToolTip("If this option is selected then system is halted in the idle task (CPU goes to sleep mode). This option can prevent debugging.")
                 ui.GridSizer2:Add(ui.CheckBox_sleep_on_idle, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_printk = wx.wxCheckBox(this, ID.CHECKBOX_PRINTK, "pirntk() function", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_PRINTK")
+                ui.CheckBox_printk:SetToolTip("If this option is selected then system printing function can be used. Function can be used by modules to print system messages on the terminal.")
                 ui.GridSizer2:Add(ui.CheckBox_printk, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_printf = wx.wxCheckBox(this, ID.CHECKBOX_PRINTF, "printf() family functions", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_PRINTF")
+                ui.CheckBox_printf:SetToolTip("If this function is selected then printf() family function can be used by the application.")
                 ui.GridSizer2:Add(ui.CheckBox_printf, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_scanf = wx.wxCheckBox(this, ID.CHECKBOX_SCANF, "scanf() family functions", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_SCANF")
+                ui.CheckBox_scanf:SetToolTip("If this function is selected then scanf() family function can be used by the application.")
                 ui.GridSizer2:Add(ui.CheckBox_scanf, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_color_term = wx.wxCheckBox(this, ID.CHECKBOX_COLOR_TERM, "Color terminal", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_COLOR_TERM")
+                ui.CheckBox_color_term:SetToolTip("If this function is selected then terminal output can be colorized by using VT100 commands.")
                 ui.GridSizer2:Add(ui.CheckBox_color_term, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_stop_macro = wx.wxCheckBox(this, ID.CHECKBOX_STOP_MACRO, "Stop macro (development)", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_STOP_MACRO")
+                ui.CheckBox_stop_macro:SetToolTip("If this function is selected then system can be halted due to specific error conditions (e.g. wrong pointer value). "..
+                                                  "Use this option only for development purposes.")
                 ui.GridSizer2:Add(ui.CheckBox_stop_macro, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_task_memmon = wx.wxCheckBox(this, ID.CHECKBOX_TASK_MEMMON, "Task memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_TASK_MEMMON")
+                ui.CheckBox_task_memmon:SetToolTip("If this function is selected then system monitors memory usage of all tasks. This selection is recommended.")
                 ui.GridSizer2:Add(ui.CheckBox_task_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_task_filemon = wx.wxCheckBox(this, ID.CHECKBOX_TASK_FILEMON, "Task file monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_TASK_FILEMON")
+                ui.CheckBox_task_filemon:SetToolTip("If this function is selected then system monitors file usage of all tasks. This selection is recommended.")
                 ui.GridSizer2:Add(ui.CheckBox_task_filemon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_krn_memmon = wx.wxCheckBox(this, ID.CHECKBOX_KRN_MEMMON, "Kernel memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_KRN_MEMMON")
+                ui.CheckBox_krn_memmon:SetToolTip("If this function is selected then system monitors kernel memory usage.")
                 ui.GridSizer2:Add(ui.CheckBox_krn_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_mod_memmon = wx.wxCheckBox(this, ID.CHECKBOX_MOD_MEMMON, "Module memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_MOD_MEMMON")
+                ui.CheckBox_mod_memmon:SetToolTip("If this function is selected then system monitors memory usage of all modules (drivers).")
                 ui.GridSizer2:Add(ui.CheckBox_mod_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_sys_memmon = wx.wxCheckBox(this, ID.CHECKBOX1_SYS_MEMMON, "System memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX1_SYS_MEMMON")
+                ui.CheckBox_sys_memmon:SetToolTip("If this function is selected then memory usage of system is monitored.")
                 ui.GridSizer2:Add(ui.CheckBox_sys_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_CPU_loadmon = wx.wxCheckBox(this, ID.CHECKBOX_CPU_LOADMON, "CPU load monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_CPU_LOADMON")
+                ui.CheckBox_CPU_loadmon:SetToolTip("If this function is selected then system monitors CPU load.")
                 ui.GridSizer2:Add(ui.CheckBox_CPU_loadmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.CheckBox_net_memmon = wx.wxCheckBox(this, ID.CHECKBOX_NET_MEMMON, "Network memory monitoring", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_NET_MEMMON")
+                ui.CheckBox_net_memmon:SetToolTip("If this function is selected then system monitors memory usage of network layer.")
                 ui.GridSizer2:Add(ui.CheckBox_net_memmon, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_net_mem_limit = wx.wxSpinCtrl(this, ID.SPINCTRL_NET_MEM_LIMIT, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 16777216, 0, "ID.SPINCTRL_NET_MEM_LIMIT")
                 ui.SpinCtrl_net_mem_limit:SetToolTip("This value represents a maximum amount of memory in bytes that can be used by the network layer. Set this value to 0 to disable limit.")
@@ -320,11 +343,13 @@ function operating_system:create_window(parent)
                 ui.StaticText8 = wx.wxStaticText(this, ID.STATICTEXT8, "Length of stream buffer [bytes]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT8")
                 ui.FlexGridSizer2:Add(ui.StaticText8, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_stream_len = wx.wxSpinCtrl(this, ID.SPINCTRL_STREAM_LEN, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 8, 2048, 0, "ID.SPINCTRL_STREAM_LEN")
+                ui.SpinCtrl_stream_len:SetToolTip("This value determines a size of buffer used in the paricular streams.")
                 ui.FlexGridSizer2:Add(ui.SpinCtrl_stream_len, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText9 = wx.wxStaticText(this, ID.STATICTEXT9, "Length of pipe buffer [bytes]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT9")
                 ui.FlexGridSizer2:Add(ui.StaticText9, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_pipe_len = wx.wxSpinCtrl(this, ID.SPINCTRL_PIPE_LEN, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 8, 2048, 0, "ID.SPINCTRL_PIPE_LEN")
+                ui.SpinCtrl_pipe_len:SetToolTip("This value determines a size of buffer used in the each pipe (fifo file).")
                 ui.FlexGridSizer2:Add(ui.SpinCtrl_pipe_len, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText14 = wx.wxStaticText(this, ID.STATICTEXT14, "Allocation block size [bytes]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT14")
@@ -336,6 +361,8 @@ function operating_system:create_window(parent)
                 ui.StaticText10 = wx.wxStaticText(this, ID.STATICTEXT10, "Length of error messages", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT10")
                 ui.FlexGridSizer2:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_errno_size = wx.wxChoice(this, ID.CHOICE_ERRNO_SIZE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_ERRNO_SIZE")
+                ui.Choice_errno_size:SetToolTip("The error messages are used to deliver users an information about error that occured by using specified functions. "..
+                                                "This option is used to translate errno error number to user friedly strings.")
                 ui.Choice_errno_size:Append("Disabled (low memory usage)")
                 ui.Choice_errno_size:Append("Only numbers (small memory usage)")
                 ui.Choice_errno_size:Append("Abbreviations (medium memory usage)")
@@ -346,8 +373,9 @@ function operating_system:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer6, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- Hostname group box
-                ui.StaticBoxSizer7 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Hostname")
+                ui.StaticBoxSizer7 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Host name")
                 ui.TextCtrl_hostname = wx.wxTextCtrl(this, ID.TEXTCTRL_HOSTNAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.TEXTCTRL_HOSTNAME")
+                ui.TextCtrl_hostname:SetToolTip("This string configures system name in the e.g. network.")
                 ui.StaticBoxSizer7:Add(ui.TextCtrl_hostname, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer7, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 

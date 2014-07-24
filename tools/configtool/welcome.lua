@@ -78,10 +78,10 @@ function welcome:create_window(parent)
                 ui.StaticText6 = wx.wxStaticText(this, wx.wxID_ANY, "    - File Systems: configuration of all file systems existing in the system")
                 ui.FlexGridSizer1:Add(ui.StaticText6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.StaticText7 = wx.wxStaticText(this, wx.wxID_ANY, "    - Network: configuration of newtwork (Ethernet)")
+                ui.StaticText7 = wx.wxStaticText(this, wx.wxID_ANY, "    - Network: configuration of newtwork")
                 ui.FlexGridSizer1:Add(ui.StaticText7, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.StaticText8 = wx.wxStaticText(this, wx.wxID_ANY, "    - Modules: configuration of specified modules (drivers) that exist in the selected microcontroller")
+                ui.StaticText8 = wx.wxStaticText(this, wx.wxID_ANY, "    - Modules: configuration of modules existing in the selected microcontroller")
                 ui.FlexGridSizer1:Add(ui.StaticText8, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.BoxSizer1:Add(ui.FlexGridSizer1, 1, bit.bor(wx.wxALL,wx.wxALIGN_TOP,wx.wxALIGN_CENTER_HORIZONTAL), 0)

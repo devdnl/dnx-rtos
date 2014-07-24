@@ -163,7 +163,7 @@ function file_systems:create_window(parent)
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "devfs")
                 ui.FlexGridSizer2 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
-                ui.StaticText1 = wx.wxStaticText(this, wx.wxID_ANY, "The devfs is a small file system, that can store device and pipe files only. File system is minimalistic and thus is ideal for devices files, because it is fast. A data of this file system is stored in the RAM.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT1")
+                ui.StaticText1 = wx.wxStaticText(this, wx.wxID_ANY, "The devfs is a small file system, that can be used to store device and pipe files only. This file system is minimalistic and thus is ideal for devices-files, because is fast. A data of this file system is stored in the RAM.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT1")
                 ui.StaticText1:Wrap(ct.CONTROL_X_SIZE)
                 ui.FlexGridSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -178,7 +178,7 @@ function file_systems:create_window(parent)
 
                 ui.FlexGridSizer3 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
-                ui.StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "The lfs is a general purpose RAM file system, that can be used to store files, device-files, and pipes. The file system is the best choice if you want to use only one file system for each file operations. The lfs is not fast as devfs, because provide greater functionality.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT2")
+                ui.StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "The lfs is a general purpose RAM file system, that can be used to store files, device-files, and pipes. The file system is the best choice if you want to use only one file system for each file operations. The lfs is not fast as devfs, because provides greater functionality.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT2")
                 ui.StaticText2:Wrap(ct.CONTROL_X_SIZE)
                 ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -193,7 +193,7 @@ function file_systems:create_window(parent)
 
                 ui.FlexGridSizer4 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
-                ui.StaticText3 = wx.wxStaticText(this, wx.wxID_ANY, "If you want to use FAT12, FAT16, and FAT32 in your system then enable this file system. The fatfs store data in device-file e.g. SD cards and other bigger volumes. This file system does not support special files.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT3")
+                ui.StaticText3 = wx.wxStaticText(this, wx.wxID_ANY, "If you want to use FAT12, FAT16, and FAT32 in your system enable this file system. The fatfs read/write data from/to device-file e.g. SD cards and other bigger volumes. This file system does not support special files.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT3")
                 ui.StaticText3:Wrap(ct.CONTROL_X_SIZE)
                 ui.FlexGridSizer4:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.CheckBox_fatfs = wx.wxCheckBox(this, ID.CHECKBOX_FATFS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_FATFS")
@@ -214,7 +214,7 @@ function file_systems:create_window(parent)
                 ui.StaticBoxSizer4 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "procfs")
                 ui.FlexGridSizer5 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
-                ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "The procfs is a special file system, that provide special functionality; from this file system you can see all tasks and their names and so on. In this file system are stored special system files, that can be read to obtain system specified settings, or microcontroller information. If you do not need to read special information, then probably you do not need this file system.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
+                ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "The procfs is a special file system, that provides special functionality; by using this file system you can see all tasks and their names and so on. In this file system are stored special system files, that can be read to obtain system specified settings, or microcontroller information. If you do not need to read special information, then probably you do not need this file system.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
                 ui.StaticText4:Wrap(ct.CONTROL_X_SIZE)
                 ui.FlexGridSizer5:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 

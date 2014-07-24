@@ -276,19 +276,19 @@ function project:create_window(parent)
                 -- Project name groupbox
                 ui.StaticBoxSizer_project_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Project name")
                 ui.TextCtrl_project_name = wx.wxTextCtrl(this, ID.TEXTCTRL_PROJECT_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
-                ui.TextCtrl_project_name:SetToolTip("This is a name of your project.")
+                ui.TextCtrl_project_name:SetToolTip("This is a name of your project. The string is used to generate names of output files.")
                 ui.StaticBoxSizer_project_name:Add(ui.TextCtrl_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- Toolchain name groupbox
                 ui.StaticBoxSizer_toochain_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Toolchain name")
                 ui.TextCtrl_toolchain_name = wx.wxTextCtrl(this, ID.TEXTCTRL_TOOLCHAIN_NAME, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.TextCtrl_toolchain_name:SetToolTip("Enter a name of first part of your compiler name, example:\n - Linaro, CodeSourcery: arm-none-eabi-")
+                ui.TextCtrl_toolchain_name:SetToolTip("Enter a name of first part of your toolchain's name, example:\n - Linaro, CodeSourcery: arm-none-eabi-")
                 ui.StaticBoxSizer_toochain_name:Add(ui.TextCtrl_toolchain_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_toochain_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- CPU architecture groupbox
-                ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture and family")
+                ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture")
                 ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
                 ui.Choice_CPU_arch.Modified = false
                 for i = 1, config.arch:NumChildren() do ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName()) end
@@ -306,6 +306,8 @@ function project:create_window(parent)
                 -- Default priority groupbox
                 ui.StaticBoxSizer_default_irq_prio = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Default priority value for user\'s interrupts")
                 ui.Choice_default_irq_prio = wx.wxChoice(this, ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.Choice_default_irq_prio:SetToolTip("This is a default priority for interrupts that are selected as 'System default' in the particular modules."..
+                                                      "This value can be changed individually in the configuration of specified modules.")
                 ui.StaticBoxSizer_default_irq_prio:Add(ui.Choice_default_irq_prio, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_default_irq_prio, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
