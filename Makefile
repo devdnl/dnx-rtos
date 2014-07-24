@@ -136,7 +136,7 @@ AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
-CONFIGTOOL = ./tools/configtool/configtool.sh
+CONFIGTOOL = ./tools/configtool.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)

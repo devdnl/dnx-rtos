@@ -1,1 +1,0 @@
-bin\wxLua.exe configtool.lua
