@@ -149,8 +149,8 @@
                 <speed_status_mask>0x0004</speed_status_mask>
                 <duplex_status_mask>0x0010</duplex_status_mask>
             </device>
-            <device><name>ST100</name>
-                <status_register_address>31</status_register_address>
+            <device><name>STE100P</name>
+                <status_register_address>19</status_register_address>
                 <speed_status_mask>0x0004</speed_status_mask>
                 <duplex_status_mask>0x0010</duplex_status_mask>
             </device>

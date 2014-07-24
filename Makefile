@@ -72,7 +72,7 @@ CXXFLAGS = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/project/flags.h \
-           $(CPUCONFIG__CXXFLAGS)
+           $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
            $(CPUCONFIG_LDFLAGS) \
@@ -103,9 +103,6 @@ OBJ_DIR_NAME    = obj
 # dependencies file name
 DEP_FILE_NAME   = $(PROJECT).d
 
-# configuration script
-CONFIG_SCRIPT   = ./tools/wizard/wizard.lua
-
 # folder localizations
 PROG_LOC   = src/programs
 SYS_LOC    = src/system
@@ -120,35 +117,26 @@ PORT_LOC   = $(SYS_LOC)/portable
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL    = sh
-ECHO     = /bin/echo -e
-RM       = rm -f
-MKDIR    = mkdir -p
-TEST     = test
-DATE     = date
-CAT      = cat
-MKDEP    = makedepend
-WC       = wc
-GREP     = grep
-SIZEOF   = stat -c %s
-UNAME    = uname -s
-CC       = $(TOOLCHAIN)gcc
-CXX      = $(TOOLCHAIN)g++
-LD       = $(TOOLCHAIN)g++
-AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
-OBJCOPY  = $(TOOLCHAIN)objcopy
-OBJDUMP  = $(TOOLCHAIN)objdump
-SIZE     = $(TOOLCHAIN)size
-
-ifeq ($(shell $(UNAME)), Linux)
-    CONFIG_TOOL = ./tools/wizard/bin/config_tool.linux
-else
-    ifeq ($(findstring _NT, $(shell $(UNAME))), _NT)
-        CONFIG_TOOL = ./tools/wizard/bin/config_tool.win.exe
-    else
-        CONFIG_TOOL = $(ECHO) "Not supported OS: $(shell $(UNAME))"; exit;
-    endif
-endif
+SHELL      = sh
+ECHO       = /bin/echo -e
+RM         = rm -f
+MKDIR      = mkdir -p
+TEST       = test
+DATE       = date
+CAT        = cat
+MKDEP      = makedepend
+WC         = wc
+GREP       = grep
+SIZEOF     = stat -c %s
+UNAME      = uname -s
+CC         = $(TOOLCHAIN)gcc
+CXX        = $(TOOLCHAIN)g++
+LD         = $(TOOLCHAIN)g++
+AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY    = $(TOOLCHAIN)objcopy
+OBJDUMP    = $(TOOLCHAIN)objdump
+SIZE       = $(TOOLCHAIN)size
+CONFIGTOOL = ./tools/configtool/configtool.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -224,7 +212,6 @@ help :
 	@$(ECHO) "Possible targets:"
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   config              project configuration (text mode)"
-	@$(ECHO) "   xconfig             project configuration (GUI)"
 	@$(ECHO) "   clean               clean project"
 	@$(ECHO) "   cleanall            clean all non-project files"
 	@$(ECHO) ""
@@ -235,19 +222,16 @@ help :
 # project configuration wizard
 ####################################################################################################
 .PHONY : config
-config : clean
-	@$(CONFIG_TOOL) --no-gui $(CONFIG_SCRIPT)
-
-.PHONY : xconfig
-xconfig : clean
-	@$(CONFIG_TOOL) $(CONFIG_SCRIPT)
+config :
+	@$(CONFIGTOOL)
 
 ####################################################################################################
 # analisis
 ####################################################################################################
 .PHONY : check
 check :
-	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINE_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
+	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC)
+	@cppcheck -j $(THREAD) --std=c++11 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CXXSRC)
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.

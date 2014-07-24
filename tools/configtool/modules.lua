@@ -102,6 +102,7 @@ function modules:refresh()
         local cpu_name   = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
         local cpu_idx    = ct:get_cpu_index(cpu_arch, cpu_name)
         local periph_num = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:NumChildren()
+        page             = {}
 
         -- check if CPU exist
         if cpu_idx == 0 then

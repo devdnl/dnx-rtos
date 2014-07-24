@@ -24,10 +24,6 @@ The system features:
 
 To configure the project, type in the terminal:
     make config
-or
-    make xconfig
-
-The first one is the text wizard, and the second is the GUI wizard.
 
 To compile the project, type in the terminal:
     make
