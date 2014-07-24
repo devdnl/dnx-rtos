@@ -28,7 +28,7 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -98,20 +98,20 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function modules:refresh()
-        local cpu_arch   = wizcore:key_read(config.project.key.PROJECT_CPU_ARCH)
-        local cpu_name   = wizcore:key_read(config.arch[cpu_arch].key.CPU_NAME)
-        local cpu_idx    = wizcore:get_cpu_index(cpu_arch, cpu_name)
+        local cpu_arch   = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local cpu_name   = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
+        local cpu_idx    = ct:get_cpu_index(cpu_arch, cpu_name)
         local periph_num = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:NumChildren()
 
         -- check if CPU exist
         if cpu_idx == 0 then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, cpu_name..": no such microcontroller.")
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no such microcontroller.")
                 return
         end
 
         -- check if CPU has peripherals
         if periph_num == 0 then
-                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, cpu_name..": no peripherals!")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no peripherals!")
                 return
         end
 
@@ -160,7 +160,7 @@ function modules:refresh()
                         f:close()
                 else
                         dialog:Update(i, "Loading data of "..module_name:upper().."...")
-                        wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "Configuration file for specified architecture and microcontroller does not exist!\n"..
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Configuration file for specified architecture and microcontroller does not exist!\n"..
                                                                          "Architecture: "..ifs(no_arch, "noarch", cpu_arch).."\n"..
                                                                          "Microcontroller: "..cpu_name.."\n"..
                                                                          "Module: "..module_name:upper().."\n"..

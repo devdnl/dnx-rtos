@@ -1,5 +1,5 @@
 --[[============================================================================
-@file    wizcore.lua
+@file    ctcore.lua
 
 @author  Daniel Zorychta
 
@@ -38,11 +38,11 @@ xml = require("xmlSimple").newParser()
 config = xml:loadFile("config.xml").config
 
 -- shared module variables
-wizcore = {}
-wizcore.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
-wizcore.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
-wizcore.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
-wizcore.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
+ct = {}
+ct.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
+ct.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
+ct.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
+ct.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
 
 
 --==============================================================================
@@ -122,7 +122,7 @@ end
 -- @param  caption      window caption
 -- @return None
 --------------------------------------------------------------------------------
-function wizcore:show_error_msg(title, caption)
+function ct:show_error_msg(title, caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
         dialog:ShowModal()
         wx.wxGetApp():ExitMainLoop()
@@ -136,7 +136,7 @@ end
 -- @param  caption      window caption
 -- @return None
 --------------------------------------------------------------------------------
-function wizcore:show_info_msg(title, caption)
+function ct:show_info_msg(title, caption)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
         dialog:ShowModal()
 end
@@ -149,7 +149,7 @@ end
 -- @param  buttons      wxWidgets button definitions to show
 -- @return Selected button
 --------------------------------------------------------------------------------
-function wizcore:show_question_msg(title, caption, buttons)
+function ct:show_question_msg(title, caption, buttons)
         dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
         return dialog:ShowModal()
 end
@@ -160,8 +160,8 @@ end
 -- @param  None
 -- @return Main window size if form of table {xs, ys}
 --------------------------------------------------------------------------------
-function wizcore:get_window_size()
-        return wizcore.WINDOW_X_SIZE, wizcore.WINDOW_Y_SIZE
+function ct:get_window_size()
+        return ct.WINDOW_X_SIZE, ct.WINDOW_Y_SIZE
 end
 
 
@@ -171,20 +171,20 @@ end
 -- @param  value        value to write
 -- @return On success true is returned. On error false is returned.
 --------------------------------------------------------------------------------
-function wizcore:key_write(keypath, value)
+function ct:key_write(keypath, value)
         -- check keypath
         if type(keypath) ~= "table" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if keypath.path == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if keypath.key == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
@@ -193,24 +193,24 @@ function wizcore:key_write(keypath, value)
 
         -- type check
         if type(filename) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if type(key) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key <"..type(key)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key <"..type(key)..">'\n"..debug.traceback())
                 return false
         end
 
         if type(value) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value <"..type(value)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value <"..type(value)..">'\n"..debug.traceback())
                 return false
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback())
                 return false
         end
 
@@ -221,7 +221,7 @@ function wizcore:key_write(keypath, value)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
                 return false
         end
 
@@ -243,7 +243,7 @@ function wizcore:key_write(keypath, value)
         -- write the file.
         file = io.open(filename, "w")
         if file == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback())
                 return false
         end
 
@@ -261,20 +261,20 @@ end
 -- @param  keypath      key and path from xml configuration (table)
 -- @return On success a value with form of string, otherwise nil.
 --------------------------------------------------------------------------------
-function wizcore:key_read(keypath)
+function ct:key_read(keypath)
         -- check keypath
         if type(keypath) ~= "table" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if keypath.path == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
         if keypath.key == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
                 return false
         end
 
@@ -283,19 +283,19 @@ function wizcore:key_read(keypath)
 
         -- type check
         if type(filename) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback())
                 return nil
         end
 
         if type(key) ~= "string" then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback())
                 return nil
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
                 return nil
         end
 
@@ -306,7 +306,7 @@ function wizcore:key_read(keypath)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
                 return nil
         end
 
@@ -325,7 +325,7 @@ function wizcore:key_read(keypath)
         file:close()
 
         if value == nil then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "key_read(): '"..key.."': key not found\n"..debug.traceback())
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): '"..key.."': key not found\n"..debug.traceback())
         end
 
         return value
@@ -338,7 +338,7 @@ end
 -- @param  str      string to find
 -- @return On success string index is returned (1..+). On error 0 is returned.
 --------------------------------------------------------------------------------
-function wizcore:get_string_index(tab, str)
+function ct:get_string_index(tab, str)
         for i, s in ipairs(tab) do
                 if s:match(str) then
                         return i
@@ -355,12 +355,12 @@ end
 -- @param  state    new state of module (bool)
 -- @return None
 --------------------------------------------------------------------------------
-function wizcore:enable_module(name, state)
+function ct:enable_module(name, state)
         local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
         local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
 
-        wizcore:key_write(key1, wizcore:bool_to_yes_no(state))
-        wizcore:key_write(key2, wizcore:bool_to_yes_no(state))
+        ct:key_write(key1, ct:bool_to_yes_no(state))
+        ct:key_write(key2, ct:bool_to_yes_no(state))
 end
 
 
@@ -369,18 +369,18 @@ end
 -- @param  name     name of module (string)
 -- @return Module state in form of bool
 --------------------------------------------------------------------------------
-function wizcore:get_module_state(name)
+function ct:get_module_state(name)
         local key1 = config.project.key["ENABLE_"..name:upper().."_H"]
         local key2 = config.project.key["ENABLE_"..name:upper().."_MK"]
 
-        local key1_value = wizcore:key_read(key1)
-        local key2_value = wizcore:key_read(key2)
+        local key1_value = ct:key_read(key1)
+        local key2_value = ct:key_read(key2)
 
         if key1_value ~= key2_value then
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, "Configuration inconsistency detected!\nValues of keys: ENABLE_"..name:upper().."_H and ENABLE_"..name:upper().."_MK are different!")
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Configuration inconsistency detected!\nValues of keys: ENABLE_"..name:upper().."_H and ENABLE_"..name:upper().."_MK are different!")
         end
 
-        return wizcore:yes_no_to_bool(key1_value)
+        return ct:yes_no_to_bool(key1_value)
 end
 
 
@@ -389,7 +389,7 @@ end
 -- @param  yes_no       yes/no string
 -- @return yes_no converted to bool
 --------------------------------------------------------------------------------
-function wizcore:yes_no_to_bool(yes_no)
+function ct:yes_no_to_bool(yes_no)
         if yes_no:match(config.project.def.YES:GetValue()) then
                 return true
         else
@@ -403,7 +403,7 @@ end
 -- @param  bool        value to convert
 -- @return yes/no string
 --------------------------------------------------------------------------------
-function wizcore:bool_to_yes_no(bool)
+function ct:bool_to_yes_no(bool)
         if bool then
                 return config.project.def.YES:GetValue()
         else
@@ -418,7 +418,7 @@ end
 -- @param  cpu_name     name of CPU
 -- @return On success return CPU index from xml configuration. On error 0.
 --------------------------------------------------------------------------------
-function wizcore:get_cpu_index(cpu_arch, cpu_name)
+function ct:get_cpu_index(cpu_arch, cpu_name)
         for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
                 if config.arch[cpu_arch].cpulist:Children()[i].name:GetValue() == cpu_name then
                         return i
@@ -450,7 +450,7 @@ end
 -- @param  cpu_arch     selected CPU architecture
 -- @return List of priorities. Item format: {["name"] = name, ["value"] = value}
 --------------------------------------------------------------------------------
-function wizcore:get_priority_list(cpu_arch)
+function ct:get_priority_list(cpu_arch)
         local list = {}
 
         for i = 1, config.arch[cpu_arch].priorities:NumChildren() do
@@ -480,7 +480,7 @@ end
 -- @param  time         time [s]
 -- @return string with calculated time and adjusted unit
 --------------------------------------------------------------------------------
-function wizcore:print_time(time)
+function ct:print_time(time)
         if time < 1e-6 then
                 return math.round(time*1e9, 3).." ns"
         elseif time < 1e-3 then
@@ -498,7 +498,7 @@ end
 -- @param  freq         frequency
 -- @return string of frequency with adjusted unit
 --------------------------------------------------------------------------------
-function wizcore:print_freq(freq)
+function ct:print_freq(freq)
         if freq < 1e3 then
                 return math.round(freq, 3).." Hz"
         elseif freq < 1e6 then

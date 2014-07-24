@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    wizard.lua
+@file    configtool.lua
 
 @author  Daniel Zorychta
 
-@brief   This file is the main file of wizard
+@brief   This file is the main file of the configuration tool
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -30,6 +30,7 @@ os.setlocale('C')
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
+require("ctcore")
 require("welcome")
 require("project")
 require("operating_system")
@@ -77,7 +78,7 @@ local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
 
         if page[card]:is_modified() then
-                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO)
                 if answer == wx.wxID_NO then
                         this:Veto()
                 end
@@ -94,7 +95,7 @@ local function window_close()
         local card = ui.treebook:GetSelection() + 1
 
         if page[card]:is_modified() then
-                local answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO)
                 if answer == wx.wxID_YES then
                         ui.frame:Destroy()
                 end
@@ -111,10 +112,10 @@ end
 --------------------------------------------------------------------------------
 local function main()
         -- creating controls
-        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, wizcore.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(wizcore:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
-        ui.frame:SetMaxSize(wx.wxSize(wizcore:get_window_size()))
+        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
+        ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
-        ui.frame:SetMinSize(wx.wxSize(wizcore:get_window_size()))
+        ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
 
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
         for i, page in ipairs(page) do ui.treebook:AddPage(page:create_window(ui.treebook), page:get_window_name())end

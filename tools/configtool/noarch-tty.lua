@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -57,14 +57,14 @@ local ID = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        local enable          = wizcore:get_module_state("TTY")
-        local term_cols       = tonumber(wizcore:key_read(config.noarch.key.TTY_TERM_COLS))
-        local term_rows       = tonumber(wizcore:key_read(config.noarch.key.TTY_TERM_ROWS))
-        local out_stream_size = tonumber(wizcore:key_read(config.noarch.key.TTY_OUT_STREAM_LEN))
-        local number_of_term  = tonumber(wizcore:key_read(config.noarch.key.TTY_NUMBER_OF_TERM)) - 1
-        local autosize_enable = wizcore:yes_no_to_bool(wizcore:key_read(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK))
-        local term_in_file    = wizcore:key_read(config.noarch.key.TTY_TERM_IN_FILE):gsub('"', '')
-        local term_out_file   = wizcore:key_read(config.noarch.key.TTY_TERM_OUT_FILE):gsub('"', '')
+        local enable          = ct:get_module_state("TTY")
+        local term_cols       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_COLS))
+        local term_rows       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_ROWS))
+        local out_stream_size = tonumber(ct:key_read(config.noarch.key.TTY_OUT_STREAM_LEN))
+        local number_of_term  = tonumber(ct:key_read(config.noarch.key.TTY_NUMBER_OF_TERM)) - 1
+        local autosize_enable = ct:yes_no_to_bool(ct:key_read(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK))
+        local term_in_file    = ct:key_read(config.noarch.key.TTY_TERM_IN_FILE):gsub('"', '')
+        local term_out_file   = ct:key_read(config.noarch.key.TTY_TERM_OUT_FILE):gsub('"', '')
 
         ui.SpinCtrl_columns:SetValue(term_cols)
         ui.SpinCtrl_rows:SetValue(term_rows)
@@ -89,18 +89,18 @@ local function on_button_save_click()
         local term_rows       = tostring(ui.SpinCtrl_rows:GetValue())
         local out_stream_size = tostring(ui.SpinCtrl_outbufsize:GetValue())
         local number_of_term  = tostring(ui.Choice_termcount:GetSelection() + 1)
-        local autosize_enable = wizcore:bool_to_yes_no(ui.CheckBox_autosize:GetValue())
+        local autosize_enable = ct:bool_to_yes_no(ui.CheckBox_autosize:GetValue())
         local term_in_file    = '"'..ui.ComboBox_instreampath:GetValue()..'"'
         local term_out_file   = '"'..ui.ComboBox_outstreampath:GetValue()..'"'
 
-        wizcore:enable_module("TTY", enable)
-        wizcore:key_write(config.noarch.key.TTY_TERM_COLS, term_cols)
-        wizcore:key_write(config.noarch.key.TTY_TERM_ROWS, term_rows)
-        wizcore:key_write(config.noarch.key.TTY_OUT_STREAM_LEN, out_stream_size)
-        wizcore:key_write(config.noarch.key.TTY_NUMBER_OF_TERM, number_of_term)
-        wizcore:key_write(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK, autosize_enable)
-        wizcore:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
-        wizcore:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
+        ct:enable_module("TTY", enable)
+        ct:key_write(config.noarch.key.TTY_TERM_COLS, term_cols)
+        ct:key_write(config.noarch.key.TTY_TERM_ROWS, term_rows)
+        ct:key_write(config.noarch.key.TTY_OUT_STREAM_LEN, out_stream_size)
+        ct:key_write(config.noarch.key.TTY_NUMBER_OF_TERM, number_of_term)
+        ct:key_write(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK, autosize_enable)
+        ct:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
+        ct:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
 
         ui.Button_save:Enable(false)
 end
@@ -194,7 +194,7 @@ function tty:create_window(parent)
         ui.StaticBoxSizer2:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Number of virtual terminals")
-        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
+        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
         ui.Choice_termcount:Append("1 terminal")
         ui.Choice_termcount:Append("2 terminals")
         ui.Choice_termcount:Append("3 terminals")

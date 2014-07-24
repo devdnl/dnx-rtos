@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -51,7 +51,7 @@ local cpu_idx      = nil
 local spi_cfg      = nil
 local pin_list     = nil
 local gpio         = require("stm32f1-gpio").get_handler()
-local prio_list    = wizcore:get_priority_list("stm32f1")
+local prio_list    = ct:get_priority_list("stm32f1")
 
 local clkdiv_str = {}
 clkdiv_str.SPI_CLK_DIV_2   = 0
@@ -85,7 +85,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         -- SPI enable status
         if spi_cs_count == nil then
                 keygen.key:SetValue("__SPI_SPI"..spi_number.."_ENABLE__")
-                local deven = wizcore:yes_no_to_bool(wizcore:key_read(keygen))
+                local deven = ct:yes_no_to_bool(ct:key_read(keygen))
                 ui.CheckBox_device_enable:SetValue(deven)
                 ui.Panel2:Enable(deven)
         end
@@ -96,7 +96,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                 NUMBER_OF_CS_pins = spi_cs_count
         else
                 keygen.key:SetValue("__SPI_SPI"..spi_number.."_NUMBER_OF_CS__")
-                NUMBER_OF_CS_pins = tonumber(wizcore:key_read(keygen))
+                NUMBER_OF_CS_pins = tonumber(ct:key_read(keygen))
         end
         ui.Choice_csnum:SetSelection(NUMBER_OF_CS_pins - 1)
         ui.Choice_csnum.OldSelection = NUMBER_OF_CS_pins - 1
@@ -105,8 +105,8 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         for cs = 0, NUMBER_OF_CS - 1 do
                 if spi_cs_count == nil then
                         keygen.key:SetValue("__SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME__")
-                        local devcspin = wizcore:key_read(keygen)
-                        ui.Choice_cspin[cs]:SetSelection(wizcore:get_string_index(pin_list, devcspin))
+                        local devcspin = ct:key_read(keygen)
+                        ui.Choice_cspin[cs]:SetSelection(ct:get_string_index(pin_list, devcspin))
 
                 end
 
@@ -122,7 +122,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         -- load value of IRQ priority
         if spi_cs_count == nil then
                 keygen.key:SetValue("__SPI_SPI"..spi_number.."_PRIORITY__")
-                local devprio = wizcore:key_read(keygen)
+                local devprio = ct:key_read(keygen)
                 if devprio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then devprio = #prio_list else devprio = math.floor(tonumber(devprio) / 16) end
                 ui.Choice_irqprio:SetSelection(devprio)
         end
@@ -134,11 +134,11 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls_of_defaults()
-        local enable     = wizcore:get_module_state("SPI")
-        local dummy_byte = wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", "")
-        local clkdividx  = clkdiv_str[wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)]
-        local spimode    = spimode_str[wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MODE)]
-        local bitorder   = ifs(wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST)), 0, 1)
+        local enable     = ct:get_module_state("SPI")
+        local dummy_byte = ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", "")
+        local clkdividx  = clkdiv_str[ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)]
+        local spimode    = spimode_str[ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MODE)]
+        local bitorder   = ifs(ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST)), 0, 1)
         local keygen     = config.arch.stm32f1.key.SPI_GENERAL
         local spisel     = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
 
@@ -166,7 +166,7 @@ local function on_button_save_click()
         local mode       = "SPI_MODE_"..ui.Choice_mode:GetSelection()
         local bitorder   = ifs(ui.Choice_bitorder:GetSelection() == 0, config.project.def.YES:GetValue(), config.project.def.NO:GetValue())
         local spisel     = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
-        local spien      = wizcore:bool_to_yes_no(ui.CheckBox_device_enable:GetValue())
+        local spien      = ct:bool_to_yes_no(ui.CheckBox_device_enable:GetValue())
         local irqprio    = ui.Choice_irqprio:GetSelection() + 1
         local numofcs    = tostring(ui.Choice_csnum:GetSelection() + 1)
 
@@ -187,37 +187,37 @@ local function on_button_save_click()
                 end
 
                 if undef_pin == true then
-                        wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "Selected not existing pin as Chip Select!\n\nSelect defined pin name and try again.")
+                        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected not existing pin as Chip Select!\n\nSelect defined pin name and try again.")
                         return false
                 end
         end
 
         -- write selected values
-        wizcore:key_write(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE, dummy_byte)
-        wizcore:key_write(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV, clkdiv)
-        wizcore:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MODE, mode)
-        wizcore:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST, bitorder)
+        ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE, dummy_byte)
+        ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV, clkdiv)
+        ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MODE, mode)
+        ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST, bitorder)
 
         local keygen = config.arch.stm32f1.key.SPI_GENERAL
         keygen.key:SetValue("__SPI_SPI"..spisel.."_ENABLE__")
-        wizcore:key_write(keygen, spien)
+        ct:key_write(keygen, spien)
 
         if ui.Panel2:IsEnabled() then
                 keygen.key:SetValue("__SPI_SPI"..spisel.."_PRIORITY__")
-                wizcore:key_write(keygen, irqprio)
+                ct:key_write(keygen, irqprio)
 
                 keygen.key:SetValue("__SPI_SPI"..spisel.."_NUMBER_OF_CS__")
-                wizcore:key_write(keygen, numofcs)
+                ct:key_write(keygen, numofcs)
 
                 for pin = 0, NUMBER_OF_CS - 1 do
                         if ui.Choice_cspin[pin]:IsEnabled() then
                                 keygen.key:SetValue("__SPI_SPI"..spisel.."_CS"..pin.."_PIN_NAME__")
-                                wizcore:key_write(keygen, cspin[pin])
+                                ct:key_write(keygen, cspin[pin])
                         end
                 end
         end
 
-        wizcore:enable_module("SPI", enable)
+        ct:enable_module("SPI", enable)
 
         --
         ui.Button_save:Enable(false)
@@ -267,7 +267,7 @@ local function spi_device_selected()
 
                 local answer = wx.wxID_NO
                 if ui.Button_save:IsEnabled() then
-                        answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
+                        answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
                 end
 
                 if answer == wx.wxID_YES then
@@ -364,8 +364,8 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function spi:create_window(parent)
-        cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        cpu_name = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx  = ct:get_cpu_index("stm32f1", cpu_name)
         spi_cfg  = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
         pin_list = gpio:get_pin_list(true)
 
@@ -394,7 +394,7 @@ function spi:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 1, 0, 0)
@@ -445,7 +445,7 @@ function spi:create_window(parent)
 
         ui.Panel2 = wx.wxPanel(ui.Panel1, ID.PANEL2, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL2")
         ui.FlexGridSizer5 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_device_enable = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_DEVICE_ENABLE, "Enable device", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_DEVICE_ENABLE")
+        ui.CheckBox_device_enable = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_DEVICE_ENABLE, "Enable device", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_DEVICE_ENABLE")
         ui.FlexGridSizer4:Add(ui.CheckBox_device_enable, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.FlexGridSizer6 = wx.wxFlexGridSizer(0, 2, 0, 0)
 

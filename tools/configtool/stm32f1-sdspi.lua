@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -50,7 +50,7 @@ local cpu_idx    = nil
 local spi_cfg    = nil
 local gpio       = require("stm32f1-gpio").get_handler()
 local pin_list   = nil
-local prio_list  = wizcore:get_priority_list("stm32f1")
+local prio_list  = ct:get_priority_list("stm32f1")
 
 
 local clkdiv_str = {}
@@ -75,13 +75,13 @@ clkdiv_str["256"] = 7
 --------------------------------------------------------------------------------
 local function load_controls()
         -- load configuration from files
-        local module_enable = wizcore:get_module_state("SDSPI")
-        local spiport       = tonumber(wizcore:key_read(config.arch.stm32f1.key.SDSPI_SPI_PORT))
-        local spidiv        = clkdiv_str[wizcore:key_read(config.arch.stm32f1.key.SDSPI_SPI_CLK_DIV)]
-        local chip_select   = wizcore:get_string_index(pin_list, wizcore:key_read(config.arch.stm32f1.key.SDSPI_SD_CS_PIN))
-        local timeout       = tonumber(wizcore:key_read(config.arch.stm32f1.key.SDSPI_TIMEOUT))
-        local enable_DMA    = wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key.SDSPI_ENABLE_DMA))
-        local DMA_irq_prio  = wizcore:key_read(config.arch.stm32f1.key.SDSPI_DMA_IRQ_PRIORITY)
+        local module_enable = ct:get_module_state("SDSPI")
+        local spiport       = tonumber(ct:key_read(config.arch.stm32f1.key.SDSPI_SPI_PORT))
+        local spidiv        = clkdiv_str[ct:key_read(config.arch.stm32f1.key.SDSPI_SPI_CLK_DIV)]
+        local chip_select   = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.SDSPI_SD_CS_PIN))
+        local timeout       = tonumber(ct:key_read(config.arch.stm32f1.key.SDSPI_TIMEOUT))
+        local enable_DMA    = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.SDSPI_ENABLE_DMA))
+        local DMA_irq_prio  = ct:key_read(config.arch.stm32f1.key.SDSPI_DMA_IRQ_PRIORITY)
 
         -- check if port exist in the selected microcontroller (if not then warning value is selected)
         local port_exist = false
@@ -130,20 +130,20 @@ local function event_on_button_save_click()
         local spidiv        = tostring(math.pow(2, ui.Choice_clkdiv:GetSelection() + 1))
         local chip_select   = pin_list[ui.Choice_cs_pin_name:GetSelection()]
         local timeout       = tostring(ui.SpinCtrl_card_timeout:GetValue())
-        local DMA_enable    = wizcore:bool_to_yes_no(ui.CheckBox_DMA_enable:GetValue())
+        local DMA_enable    = ct:bool_to_yes_no(ui.CheckBox_DMA_enable:GetValue())
         local DMA_irq_prio  = ui.Choice_DMA_IRQ_prio:GetSelection() + 1
 
         -- check SPI port selection
         if spi_cfg:Children()[ui.Choice_SPI_port:GetSelection() + 1] ~= nil then
                 spiport = spi_cfg:Children()[ui.Choice_SPI_port:GetSelection() + 1].name:GetValue()
         else
-                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "Selected SPI port is not present!\n\nSelect correct SPI port and try again.")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected SPI port is not present!\n\nSelect correct SPI port and try again.")
                 return false
         end
 
         -- check Chip Select selection
         if chip_select == nil then
-                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
                 return false
         end
 
@@ -155,13 +155,13 @@ local function event_on_button_save_click()
         end
 
         -- save configuration
-        wizcore:enable_module("SDSPI", module_enable)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_SPI_PORT, spiport)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_SPI_CLK_DIV, spidiv)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_SD_CS_PIN, chip_select)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_TIMEOUT, timeout)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_ENABLE_DMA, DMA_enable)
-        wizcore:key_write(config.arch.stm32f1.key.SDSPI_DMA_IRQ_PRIORITY, DMA_irq_prio)
+        ct:enable_module("SDSPI", module_enable)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_SPI_PORT, spiport)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_SPI_CLK_DIV, spidiv)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_SD_CS_PIN, chip_select)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_TIMEOUT, timeout)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_ENABLE_DMA, DMA_enable)
+        ct:key_write(config.arch.stm32f1.key.SDSPI_DMA_IRQ_PRIORITY, DMA_irq_prio)
 
         --
         ui.Button_save:Enable(false)
@@ -212,8 +212,8 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function sdspi:create_window(parent)
-        cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        cpu_name = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx  = ct:get_cpu_index("stm32f1", cpu_name)
         spi_cfg  = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.SPI
         pin_list = gpio:get_pin_list(true)
 
@@ -234,9 +234,9 @@ function sdspi:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_MODULE_ENABLE")
+        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_MODULE_ENABLE")
         ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), wx.wxTAB_TRAVERSAL, "ID.PANEL1")
+        ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 2, 0, 0)
         ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "SPI port", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)

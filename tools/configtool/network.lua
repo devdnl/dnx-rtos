@@ -28,7 +28,7 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -78,14 +78,14 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        ui.CheckBox_enable:SetValue(wizcore:get_module_state("NETWORK"))
-        ui.TextCtrl_MAC0:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_0):gsub("0x", ""))
-        ui.TextCtrl_MAC1:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_1):gsub("0x", ""))
-        ui.TextCtrl_MAC2:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_2):gsub("0x", ""))
-        ui.TextCtrl_MAC3:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_3):gsub("0x", ""))
-        ui.TextCtrl_MAC4:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_4):gsub("0x", ""))
-        ui.TextCtrl_MAC5:SetValue(wizcore:key_read(config.project.key.NETWORK_MAC_ADDR_5):gsub("0x", ""))
-        ui.ComboBox_if_path:SetValue(wizcore:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
+        ui.CheckBox_enable:SetValue(ct:get_module_state("NETWORK"))
+        ui.TextCtrl_MAC0:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_0):gsub("0x", ""))
+        ui.TextCtrl_MAC1:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_1):gsub("0x", ""))
+        ui.TextCtrl_MAC2:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_2):gsub("0x", ""))
+        ui.TextCtrl_MAC3:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_3):gsub("0x", ""))
+        ui.TextCtrl_MAC4:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_4):gsub("0x", ""))
+        ui.TextCtrl_MAC5:SetValue(ct:key_read(config.project.key.NETWORK_MAC_ADDR_5):gsub("0x", ""))
+        ui.ComboBox_if_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
         set_controls_state(ui.CheckBox_enable:GetValue())
 end
 
@@ -96,14 +96,14 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function on_button_save_click()
-        wizcore:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_0, "0x"..ui.TextCtrl_MAC0:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_1, "0x"..ui.TextCtrl_MAC1:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_2, "0x"..ui.TextCtrl_MAC2:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_3, "0x"..ui.TextCtrl_MAC3:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_4, "0x"..ui.TextCtrl_MAC4:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_MAC_ADDR_5, "0x"..ui.TextCtrl_MAC5:GetValue())
-        wizcore:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_if_path:GetValue()..'"')
+        ct:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_0, "0x"..ui.TextCtrl_MAC0:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_1, "0x"..ui.TextCtrl_MAC1:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_2, "0x"..ui.TextCtrl_MAC2:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_3, "0x"..ui.TextCtrl_MAC3:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_4, "0x"..ui.TextCtrl_MAC4:GetValue())
+        ct:key_write(config.project.key.NETWORK_MAC_ADDR_5, "0x"..ui.TextCtrl_MAC5:GetValue())
+        ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_if_path:GetValue()..'"')
 
         ui.Button_save:Enable(false)
 end
@@ -191,7 +191,7 @@ function network:create_window(parent)
                 local this = ui.window
 
                 ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-                ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+                ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
                 ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "MAC address")
                 ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 11, 0, 0)

@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -46,7 +46,7 @@ local ui        = {}
 local ID        = {}
 local gpio      = require("stm32f1-gpio").get_handler()
 local pin_list  = nil
-local prio_list = wizcore:get_priority_list("stm32f1")
+local prio_list = ct:get_priority_list("stm32f1")
 
 local ep0_size_idx = {}
 ep0_size_idx["8"]  = 0
@@ -64,21 +64,21 @@ ep0_size_idx["64"] = 3
 --------------------------------------------------------------------------------
 local function load_controls()
         -- load module enable controls
-        local module_enable = wizcore:get_module_state("USB")
+        local module_enable = ct:get_module_state("USB")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel1:Enable(module_enable)
 
         -- load endpoint 0 size controls
-        local ep0_size = ep0_size_idx[wizcore:key_read(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE)]
+        local ep0_size = ep0_size_idx[ct:key_read(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE)]
         if ep0_size == nil then ep0_size = 0 end
         ui.Choice_EP0_size:SetSelection(ep0_size)
 
         -- load D+ pullup pin name
-        local pullup_pin = wizcore:get_string_index(pin_list, wizcore:key_read(config.arch.stm32f1.key.USB_PULLUP_PIN))
+        local pullup_pin = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.USB_PULLUP_PIN))
         ui.Choice_pullup_pin:SetSelection(pullup_pin)
 
         -- load interrupt priority
-        local irq_prio = wizcore:key_read(config.arch.stm32f1.key.USB_IRQ_PRIORITY)
+        local irq_prio = ct:key_read(config.arch.stm32f1.key.USB_IRQ_PRIORITY)
         if irq_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
                 irq_prio = #prio_list
         else
@@ -97,14 +97,14 @@ local function event_on_button_save_click()
         -- save pullup pin name
         local pullup_pin = ui.Choice_pullup_pin:GetSelection()
         if pullup_pin == 0 then
-                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
                 return
         else
-                wizcore:key_write(config.arch.stm32f1.key.USB_PULLUP_PIN, pin_list[pullup_pin])
+                ct:key_write(config.arch.stm32f1.key.USB_PULLUP_PIN, pin_list[pullup_pin])
         end
 
         -- save module enable settings
-        wizcore:enable_module("USB", ui.CheckBox_module_enable:GetValue())
+        ct:enable_module("USB", ui.CheckBox_module_enable:GetValue())
 
         -- save endpoint 0 size
         local ep0_size = ui.Choice_EP0_size:GetSelection()
@@ -115,17 +115,16 @@ local function event_on_button_save_click()
                 end
         end
         if type(ep0_size) == "number" then ep0_size = "8" end
-        wizcore:key_write(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE, ep0_size)
+        ct:key_write(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE, ep0_size)
 
         -- save interrupt priority
         local irq_prio = ui.Choice_irq_prio:GetSelection() + 1
-        print(irq_prio, #prio_list)
         if irq_prio > #prio_list then
                 irq_prio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
         else
                 irq_prio = prio_list[irq_prio].value
         end
-        wizcore:key_write(config.arch.stm32f1.key.USB_IRQ_PRIORITY, irq_prio)
+        ct:key_write(config.arch.stm32f1.key.USB_IRQ_PRIORITY, irq_prio)
 
         --
         ui.Button_save:Enable(false)
@@ -202,7 +201,7 @@ function usb:create_window(parent)
         ui.FlexGridSizer2:Add(ui.Choice_irq_prio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
+        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)

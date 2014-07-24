@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -49,7 +49,7 @@ local cpu_name  = nil    -- loaded when creating the window
 local cpu_idx   = nil    -- loaded when creating the window
 local cpu       = nil    -- loaded when creating the window
 local uart_cfg  = nil    -- loaded when creating the window
-local prio_list = wizcore:get_priority_list("stm32f1")
+local prio_list = ct:get_priority_list("stm32f1")
 
 local baud_list = {"50",
                    "75",
@@ -93,34 +93,34 @@ parity_idx.UART_PARITY_EVEN = 2
 --------------------------------------------------------------------------------
 local function load_controls()
         -- load module enable status
-        local module_enable = wizcore:get_module_state("UART")
+        local module_enable = ct:get_module_state("UART")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel1:Enable(module_enable)
 
         -- load default settings
-        local baud = wizcore:get_string_index(baud_list, wizcore:key_read(config.arch.stm32f1.key.UART_DEFAULT_BAUD)) - 1
+        local baud = ct:get_string_index(baud_list, ct:key_read(config.arch.stm32f1.key.UART_DEFAULT_BAUD)) - 1
         ui.Choice_baud:SetSelection(baud)
 
-        local stop_bits = stop_bits_idx[wizcore:key_read(config.arch.stm32f1.key.UART_DEFAULT_STOP_BITS)]
+        local stop_bits = stop_bits_idx[ct:key_read(config.arch.stm32f1.key.UART_DEFAULT_STOP_BITS)]
         if stop_bits == nil then stop_bits = 0 end
         ui.Choice_stop_bits:SetSelection(stop_bits)
 
-        local parity = parity_idx[wizcore:key_read(config.arch.stm32f1.key.UART_DEFAULT_PARITY)]
+        local parity = parity_idx[ct:key_read(config.arch.stm32f1.key.UART_DEFAULT_PARITY)]
         if parity == nil then parity = 0 end
         ui.Choice_parity:SetSelection(parity)
 
-        local rx_buf_size = tonumber(wizcore:key_read(config.arch.stm32f1.key.UART_RX_BUFFER_LEN))
+        local rx_buf_size = tonumber(ct:key_read(config.arch.stm32f1.key.UART_RX_BUFFER_LEN))
         ui.SpinCtrl_rx_buf_size:SetValue(rx_buf_size)
 
         -- load settings for each UART
         for i = 1, #uart_cfg.port do
                 local uart_num = uart_cfg.port[i].name:GetValue()
 
-                local uart_enable = wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"]))
+                local uart_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"]))
                 ui.UART[i].CheckBox_enable:SetValue(uart_enable)
                 ui.UART[i].Panel:Enable(uart_enable)
 
-                local irq_prio = wizcore:key_read(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"])
+                local irq_prio = ct:key_read(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"])
                 if irq_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
                 irq_prio = #prio_list
                 else
@@ -138,11 +138,11 @@ end
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
         -- save module state
-        wizcore:enable_module("UART", ui.CheckBox_module_enable:GetValue())
+        ct:enable_module("UART", ui.CheckBox_module_enable:GetValue())
 
         -- save defaults
         local baud = baud_list[ui.Choice_baud:GetSelection() + 1]
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_BAUD, baud)
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_BAUD, baud)
 
         local stop_bits = ui.Choice_stop_bits:GetSelection()
         for f, i in pairs(stop_bits_idx) do
@@ -151,7 +151,7 @@ local function event_on_button_save_click()
                         break
                 end
         end
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_STOP_BITS, stop_bits)
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_STOP_BITS, stop_bits)
 
         local parity = ui.Choice_parity:GetSelection()
         for f, i in pairs(parity_idx) do
@@ -160,28 +160,28 @@ local function event_on_button_save_click()
                         break
                 end
         end
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_PARITY, parity)
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_PARITY, parity)
 
         local rx_buf_size = tostring(ui.SpinCtrl_rx_buf_size:GetValue())
-        wizcore:key_write(config.arch.stm32f1.key.UART_RX_BUFFER_LEN, rx_buf_size)
+        ct:key_write(config.arch.stm32f1.key.UART_RX_BUFFER_LEN, rx_buf_size)
 
         -- save configuration not used by this script to default values
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_TX_ENABLE, config.project.def.YES:GetValue())
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_RX_ENABLE, config.project.def.YES:GetValue())
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_LIN_MODE_ENABLE, config.project.def.NO:GetValue())
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_HW_FLOW_CTRL, config.project.def.NO:GetValue())
-        wizcore:key_write(config.arch.stm32f1.key.UART_DEFAULT_SINGLE_WIRE_MODE, config.project.def.NO:GetValue())
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_TX_ENABLE, config.project.def.YES:GetValue())
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_RX_ENABLE, config.project.def.YES:GetValue())
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_LIN_MODE_ENABLE, config.project.def.NO:GetValue())
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_HW_FLOW_CTRL, config.project.def.NO:GetValue())
+        ct:key_write(config.arch.stm32f1.key.UART_DEFAULT_SINGLE_WIRE_MODE, config.project.def.NO:GetValue())
 
         -- save settings for each UART
         for i = 1, 5 do
-                wizcore:key_write(config.arch.stm32f1.key["UART_UART"..i.."_ENABLE"], config.project.def.NO:GetValue())
+                ct:key_write(config.arch.stm32f1.key["UART_UART"..i.."_ENABLE"], config.project.def.NO:GetValue())
         end
 
         for i = 1, #uart_cfg.port do
                 local uart_num = uart_cfg.port[i].name:GetValue()
 
-                local uart_enable = wizcore:bool_to_yes_no(ui.UART[i].CheckBox_enable:GetValue())
-                wizcore:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"], uart_enable)
+                local uart_enable = ct:bool_to_yes_no(ui.UART[i].CheckBox_enable:GetValue())
+                ct:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"], uart_enable)
 
                 local irq_prio = ui.UART[i].Choice_irq_prio:GetSelection() + 1
                 if irq_prio > #prio_list then
@@ -189,7 +189,7 @@ local function event_on_button_save_click()
                 else
                         irq_prio = prio_list[irq_prio].value
                 end
-                wizcore:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"], irq_prio)
+                ct:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"], irq_prio)
         end
 
         ui.Button_save:Enable(false)
@@ -238,8 +238,8 @@ end
 -- @return New window handle
 --------------------------------------------------------------------------------
 function uart:create_window(parent)
-        cpu_name   = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        cpu_idx    = wizcore:get_cpu_index("stm32f1", cpu_name)
+        cpu_name   = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
+        cpu_idx    = ct:get_cpu_index("stm32f1", cpu_name)
         cpu        = config.arch.stm32f1.cpulist:Children()[cpu_idx]
         uart_cfg   = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.UART
 
@@ -327,7 +327,7 @@ function uart:create_window(parent)
         --
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
+        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)

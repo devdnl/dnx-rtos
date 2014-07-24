@@ -28,7 +28,7 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -78,7 +78,7 @@ local function set_cpu_specific_controls(cpu_arch)
                 ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
 
                 -- load list with CPU names
-                local micro = wizcore:key_read(config.arch[cpu_arch].key.CPU_NAME)
+                local micro = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
                 local micro_found = false
                 if ui.Choice_CPU_name:IsEmpty() then
                         for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
@@ -92,15 +92,15 @@ local function set_cpu_specific_controls(cpu_arch)
                         end
 
                         if not micro_found then
-                                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
+                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
                         end
                 end
 
                 -- load list with CPU priorities
-                local prio = wizcore:key_read(config.project.key.IRQ_USER_PRIORITY)
+                local prio = ct:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
                 if ui.Choice_default_irq_prio:IsEmpty() then
-                        for i, item in pairs(wizcore:get_priority_list(cpu_arch)) do
+                        for i, item in pairs(ct:get_priority_list(cpu_arch)) do
                                 ui.Choice_default_irq_prio:Append(item.name)
                                 if prio == item.value then
                                         ui.Choice_default_irq_prio:SetSelection(i - 1)
@@ -109,11 +109,11 @@ local function set_cpu_specific_controls(cpu_arch)
                         end
 
                         if not prio_found then
-                                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, prio..": priority number not found!")
+                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, prio..": priority number not found!")
                         end
                 end
         else
-                wizcore:show_error_msg(wizcore.MAIN_WINDOW_NAME, cpu_arch..": Unknown CPU architecture!")
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_arch..": Unknown CPU architecture!")
         end
 end
 
@@ -124,10 +124,10 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        local project_name   = wizcore:key_read(config.project.key.PROJECT_NAME)
-        local toolchain_name = wizcore:key_read(config.project.key.PROJECT_TOOLCHAIN)
-        local cpu_arch       = wizcore:key_read(config.project.key.PROJECT_CPU_ARCH)
-        local cpu_osc_freq   = wizcore:key_read(config.project.key.CPU_OSC_FREQ)
+        local project_name   = ct:key_read(config.project.key.PROJECT_NAME)
+        local toolchain_name = ct:key_read(config.project.key.PROJECT_TOOLCHAIN)
+        local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local cpu_osc_freq   = ct:key_read(config.project.key.CPU_OSC_FREQ)
 
         ui.TextCtrl_project_name:SetValue(project_name)
         ui.TextCtrl_toolchain_name:SetValue(toolchain_name)
@@ -150,18 +150,18 @@ local function on_button_save_click()
         local cpu_family   = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].family:GetValue()
         local cpu_priority = config.arch[cpu_arch].priorities.priority[ui.Choice_default_irq_prio:GetSelection() + 1].value:GetValue()
 
-        wizcore:key_write(config.project.key.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
-        wizcore:key_write(config.project.key.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
-        wizcore:key_write(config.project.key.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
-        wizcore:key_write(config.project.key.PROJECT_CPU_ARCH, cpu_arch)
-        wizcore:key_write(config.project.key.CPU_ARCH, cpu_arch)
-        wizcore:key_write(config.project.key.IRQ_USER_PRIORITY, cpu_priority)
-        wizcore:key_write(config.arch[cpu_arch].key.CPU_NAME, cpu_name)             -- CPU name in the cpu.h file (one for each architecture)
-        wizcore:key_write(config.arch[cpu_arch].key.CPUCONFIG_CPUNAME, cpu_name)    -- CPU name in the Makefile (one for each architecture)
-        wizcore:key_write(config.arch[cpu_arch].key.CPU_FAMILY, cpu_family)
+        ct:key_write(config.project.key.PROJECT_NAME, ui.TextCtrl_project_name:GetValue())
+        ct:key_write(config.project.key.PROJECT_TOOLCHAIN, ui.TextCtrl_toolchain_name:GetValue())
+        ct:key_write(config.project.key.CPU_OSC_FREQ, tostring(ui.SpinCtrl_osc_freq:GetValue()))
+        ct:key_write(config.project.key.PROJECT_CPU_ARCH, cpu_arch)
+        ct:key_write(config.project.key.CPU_ARCH, cpu_arch)
+        ct:key_write(config.project.key.IRQ_USER_PRIORITY, cpu_priority)
+        ct:key_write(config.arch[cpu_arch].key.CPU_NAME, cpu_name)             -- CPU name in the cpu.h file (one for each architecture)
+        ct:key_write(config.arch[cpu_arch].key.CPUCONFIG_CPUNAME, cpu_name)    -- CPU name in the Makefile (one for each architecture)
+        ct:key_write(config.arch[cpu_arch].key.CPU_FAMILY, cpu_family)
 
         -- disables all peripherals that are not assigned to selected microcontroller
-        local cpu_idx    = wizcore:get_cpu_index(cpu_arch, cpu_name)
+        local cpu_idx    = ct:get_cpu_index(cpu_arch, cpu_name)
         local cpu        = config.arch[cpu_arch].cpulist:Children()[cpu_idx]
         local cpu_periph = {}
 
@@ -181,13 +181,13 @@ local function on_button_save_click()
                 end
 
                 if not exist then
-                        wizcore:enable_module(module, exist)
+                        ct:enable_module(module, exist)
                 end
         end
 
         -- info about changed configuration
         if ui.Choice_CPU_arch.Modified or ui.Choice_CPU_name.Modified then
-                wizcore:show_info_msg(wizcore.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.")
 
                 ui.Choice_CPU_arch.Modified = false
                 ui.Choice_CPU_name.Modified = false
@@ -275,7 +275,7 @@ function project:create_window(parent)
 
                 -- Project name groupbox
                 ui.StaticBoxSizer_project_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Project name")
-                ui.TextCtrl_project_name = wx.wxTextCtrl(this, ID.TEXTCTRL_PROJECT_NAME, "", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1))
+                ui.TextCtrl_project_name = wx.wxTextCtrl(this, ID.TEXTCTRL_PROJECT_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
                 ui.TextCtrl_project_name:SetToolTip("This is a name of your project.")
                 ui.StaticBoxSizer_project_name:Add(ui.TextCtrl_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_project_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)

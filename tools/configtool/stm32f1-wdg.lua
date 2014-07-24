@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -72,11 +72,11 @@ local timeout2reg = {{0.004, 4,   40  },
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        local enable = wizcore:get_module_state("WDG")
-        local lock   = wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN))
-        local debug  = wizcore:yes_no_to_bool(wizcore:key_read(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG))
-        local clkdiv = tonumber(wizcore:key_read(config.arch.stm32f1.key.WDG_CLK_DIVIDER))
-        local reload = tonumber(wizcore:key_read(config.arch.stm32f1.key.WDG_RELOAD_VALUE))
+        local enable = ct:get_module_state("WDG")
+        local lock   = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN))
+        local debug  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG))
+        local clkdiv = tonumber(ct:key_read(config.arch.stm32f1.key.WDG_CLK_DIVIDER))
+        local reload = tonumber(ct:key_read(config.arch.stm32f1.key.WDG_RELOAD_VALUE))
 
         for i = 1, #timeout2reg do
                 if timeout2reg[i][2] == clkdiv and timeout2reg[i][3] == reload then
@@ -99,16 +99,16 @@ end
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
         local enable = ui.CheckBox_enable:GetValue()
-        local lock   = wizcore:bool_to_yes_no(ui.CheckBox_lock:GetValue())
-        local debug  = wizcore:bool_to_yes_no(ui.CheckBox_debug:GetValue())
+        local lock   = ct:bool_to_yes_no(ui.CheckBox_lock:GetValue())
+        local debug  = ct:bool_to_yes_no(ui.CheckBox_debug:GetValue())
         local clkdiv = tostring(timeout2reg[ui.Choice_timeout:GetSelection() + 1][2])
         local reload = tostring(timeout2reg[ui.Choice_timeout:GetSelection() + 1][3])
 
-        wizcore:enable_module("WDG", enable)
-        wizcore:key_write(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN, lock)
-        wizcore:key_write(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG, debug)
-        wizcore:key_write(config.arch.stm32f1.key.WDG_CLK_DIVIDER, clkdiv)
-        wizcore:key_write(config.arch.stm32f1.key.WDG_RELOAD_VALUE, reload)
+        ct:enable_module("WDG", enable)
+        ct:key_write(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN, lock)
+        ct:key_write(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG, debug)
+        ct:key_write(config.arch.stm32f1.key.WDG_CLK_DIVIDER, clkdiv)
+        ct:key_write(config.arch.stm32f1.key.WDG_RELOAD_VALUE, reload)
 
         ui.Button_save:Enable(false)
 end
@@ -160,7 +160,7 @@ function wdg:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 1, 0, 0)
@@ -170,7 +170,7 @@ function wdg:create_window(parent)
         ui.CheckBox_debug = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_DEBUG, "Disable watchdog on debug", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_DEBUG")
         ui.FlexGridSizer2:Add(ui.CheckBox_debug, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Watchdog timeout")
-        ui.Choice_timeout = wx.wxChoice(ui.Panel1, ID.CHOICE_TIMEOUT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
+        ui.Choice_timeout = wx.wxChoice(ui.Panel1, ID.CHOICE_TIMEOUT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
         ui.Choice_timeout:Append("4 ms")
         ui.Choice_timeout:Append("8 ms")
         ui.Choice_timeout:Append("16 ms")

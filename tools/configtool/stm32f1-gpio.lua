@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -178,17 +178,17 @@ local function load_controls()
                         ui.StaticText_pin[pin + 1]:Show()
 
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_NAME__")
-                        local pin_name = wizcore:key_read(pin_key)
+                        local pin_name = ct:key_read(pin_key)
                         ui.TextCtrl_pin_name[pin + 1]:SetValue(pin_name)
                         ui.TextCtrl_pin_name[pin + 1]:Show(true)
 
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_MODE__")
-                        local pin_mode = wizcore:key_read(pin_key)
+                        local pin_mode = ct:key_read(pin_key)
                         ui.Choice_mode[pin + 1]:SetSelection(port_mode_index[pin_mode])
                         ui.Choice_mode[pin + 1]:Show(true)
 
                         pin_key.key:SetValue("__GPIO_P"..periph:Children()[port].name:GetValue().."_PIN_"..pin.."_STATE__")
-                        local pin_state = wizcore:key_read(pin_key)
+                        local pin_state = ct:key_read(pin_key)
                         ui.Choice_state[pin + 1]:Show()
                         set_pin_state_by_pin_mode(pin, pin_state)
                 else
@@ -203,7 +203,7 @@ local function load_controls()
 
         ui.window:FitInside()
 
-        local gpio_enabled = wizcore:get_module_state("GPIO")
+        local gpio_enabled = ct:get_module_state("GPIO")
         ui.CheckBox_enable:SetValue(gpio_enabled)
         enable_controls(gpio_enabled)
 end
@@ -243,13 +243,13 @@ local function on_button_save_click()
 
                 -- save pin settings
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_NAME__")
-                wizcore:key_write(key, pin_name)
+                ct:key_write(key, pin_name)
 
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_MODE__")
-                wizcore:key_write(key, pin_mode)
+                ct:key_write(key, pin_mode)
 
                 key.key:SetValue("__GPIO_P"..port_to_save.."_PIN_"..pin.."_STATE__")
-                wizcore:key_write(key, pin_state)
+                ct:key_write(key, pin_state)
 
                 pin_mask = bit.rshift(pin_mask, 1)
         end
@@ -268,15 +268,15 @@ local function on_button_save_click()
 
                 if port_found then
                         key.key:SetValue("__GPIO_P"..port_name.."_ENABLE__")
-                        wizcore:key_write(key, config.project.def.YES:GetValue())
+                        ct:key_write(key, config.project.def.YES:GetValue())
                 else
                         key.key:SetValue("__GPIO_P"..port_name.."_ENABLE__")
-                        wizcore:key_write(key, config.project.def.NO:GetValue())
+                        ct:key_write(key, config.project.def.NO:GetValue())
                 end
         end
 
         -- module enable
-        wizcore:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
+        ct:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
 
         ui.Button_save:Enable(false)
 end
@@ -306,7 +306,7 @@ local function port_number_changed(this)
 
         local answer = wx.wxID_NO
         if ui.Button_save:IsEnabled() then
-                answer = wizcore:show_question_msg(wizcore.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
+                answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
         end
 
         if answer == wx.wxID_YES then
@@ -392,11 +392,11 @@ function gpio:create_window(parent)
 
         -- port selection choice
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Port selection")
-        ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), {}, 0)
+        ui.Choice_port = wx.wxChoice(this, ID.CHOICE_PORT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0)
         ui.Choice_port.OldSelection = 0
 
-        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        local cpu_name = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
+        local cpu_idx  = ct:get_cpu_index("stm32f1", cpu_name)
         periph         = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
 
         for i = 1, periph:NumChildren() do ui.Choice_port:Append("Port "..periph:Children()[i].name:GetValue()) end
@@ -516,8 +516,8 @@ end
 -- @return Pin name list
 --------------------------------------------------------------------------------
 function gpio:get_pin_list(sort_list)
-        local cpu_name = wizcore:key_read(config.arch.stm32f1.key.CPU_NAME)
-        local cpu_idx  = wizcore:get_cpu_index("stm32f1", cpu_name)
+        local cpu_name = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
+        local cpu_idx  = ct:get_cpu_index("stm32f1", cpu_name)
         local periph   = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
         local list     = {}
 
@@ -529,7 +529,7 @@ function gpio:get_pin_list(sort_list)
                         if bit.band(pin_mask, 1) == 1 then
                                 local key = config.arch.stm32f1.key.GPIO
                                 key.key:SetValue("__GPIO_P"..port_name.."_PIN_"..pin.."_NAME__")
-                                list[#list + 1] = wizcore:key_read(key)
+                                list[#list + 1] = ct:key_read(key)
                         end
 
                         pin_mask = bit.rshift(pin_mask, 1)

@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("wizcore")
+require("ctcore")
 
 
 --==============================================================================
@@ -56,7 +56,7 @@ local ID = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        ui.CheckBox_enable:SetValue(wizcore:get_module_state("CRC"))
+        ui.CheckBox_enable:SetValue(ct:get_module_state("CRC"))
 end
 
 
@@ -66,7 +66,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function on_button_save_click()
-        wizcore:enable_module("CRC", ui.CheckBox_enable:GetValue())
+        ct:enable_module("CRC", ui.CheckBox_enable:GetValue())
         ui.Button_save:Enable(false)
 end
 
@@ -102,7 +102,7 @@ function crc:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(wizcore.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
