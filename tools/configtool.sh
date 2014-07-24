@@ -10,7 +10,7 @@ if [ "$os" = "Linux" ]; then
         if [ "$arch" = "x86_64" ] || [ "$arch" = "amd64" ]; then
                 LD_LIBRARY_PATH="./wxLua_linux_x86_64":$LD_LIBRARY_PATH ./wxLua_linux_x86_64/wxLua $script
         else
-                LD_LIBRARY_PATH="./wxLua_linux_i686":$LD_LIBRARY_PATH ./wxLua_linux_i386/wxLua $script
+                LD_LIBRARY_PATH="./wxLua_linux_i686":$LD_LIBRARY_PATH ./wxLua_linux_i686/wxLua $script
         fi
 elif [[ "$os" =~ '_NT' ]]; then
         ./wxLua_win32/wxLua $script
