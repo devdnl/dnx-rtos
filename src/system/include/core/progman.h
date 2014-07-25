@@ -40,6 +40,7 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define GLOBAL_VARIABLES                struct __global_vars__
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
 #define GLOBAL_VARIABLES_SECTION_END    };
 

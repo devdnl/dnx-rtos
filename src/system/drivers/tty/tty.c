@@ -5,7 +5,7 @@
 
 @brief   This file support virtual terminal.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 - 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -47,7 +47,8 @@ enum cmd {
         CMD_INPUT,
         CMD_SWITCH_TTY,
         CMD_CLEAR_TTY,
-        CMD_LINE_ADDED
+        CMD_LINE_ADDED,
+        CMD_REFRESH_LAST_LINE
 };
 
 typedef struct {
@@ -457,6 +458,10 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case IOCTL_TTY__REFRESH_LAST_LINE:
+                send_cmd(CMD_REFRESH_LAST_LINE, tty_module->current_tty);
+                break;
+
         default:
                 errno = EBADRQC;
                 return STD_RET_ERROR;
@@ -587,6 +592,24 @@ static void service_out(void *arg)
                                 break;
                         }
 
+                        case CMD_REFRESH_LAST_LINE: {
+                                tty_t *tty = tty_module->tty[rq.arg];
+
+                                if (rq.arg == tty_module->current_tty && mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                                        const char *cmd = ERASE_LINE VT100_SHIFT_CURSOR_LEFT(999);
+                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
+
+                                        const char *last_line = ttybfr_get_line(tty->screen, 1);
+                                        vfs_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
+
+                                        const char *editline = ttyedit_get(tty->editline);
+                                        vfs_fwrite(editline, sizeof(char), strlen(editline), tty_module->outfile);
+
+                                        mutex_unlock(tty->secure_mtx);
+                                }
+                                break;
+                        }
+
                         default:
                                 break;
                         }
@@ -701,17 +724,18 @@ static void vt100_analyze(const char c)
                 ttyedit_move_cursor_right(tty->editline);
                 break;
 
-        case TTYCMD_KEY_ARROW_UP: {
-                const char *str = "\033^[A";
-                copy_string_to_queue(str, tty->queue_out, true, 0);
+        case TTYCMD_KEY_ARROW_UP:
+                copy_string_to_queue("\033^[A", tty->queue_out, true, 0);
                 break;
-        }
 
-        case TTYCMD_KEY_ARROW_DOWN: {
-                const char *str = "\033^[B";
-                copy_string_to_queue(str, tty->queue_out, true, 0);
+        case TTYCMD_KEY_ARROW_DOWN:
+                copy_string_to_queue("\033^[B", tty->queue_out, true, 0);
                 break;
-        }
+
+        case TTYCMD_KEY_TAB:
+                copy_string_to_queue(ttyedit_get(tty->editline), tty->queue_out, false, 0);
+                copy_string_to_queue("\033^[T", tty->queue_out, true, 0);
+                break;
 
         case TTYCMD_KEY_HOME:
                 ttyedit_move_cursor_home(tty->editline);
@@ -721,10 +745,9 @@ static void vt100_analyze(const char c)
                 ttyedit_move_cursor_end(tty->editline);
                 break;
 
-        case TTYCMD_KEY_F1...TTYCMD_KEY_F12: {
+        case TTYCMD_KEY_F1...TTYCMD_KEY_F12:
                 switch_terminal(resp - TTYCMD_KEY_F1);
                 break;
-        }
 
         case TTYCMD_SIZE_CAPTURED:
                 ttycmd_get_size(tty->vtcmd, &tty_module->vt100_col, &tty_module->vt100_row);

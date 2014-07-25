@@ -1,3 +1,14 @@
+dnx RTOS 1.3.6rc
+==============
+New Features, Improvements:
+- New configuration tool
+- TTY module: implemented recognition of TAB key
+- TTY module: new ioctl request - REFRESH_LAST_LINE
+- OS: alernative macro to determine global variables in programs: GLOBAL_VARIABLES
+
+Fixed Bugs:
+- TTY module: edit line was wrongly refreshed when last string was longer than new one
+
 dnx RTOS 1.3.5
 ==============
 New Features, Improvements:
