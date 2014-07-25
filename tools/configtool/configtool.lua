@@ -37,6 +37,7 @@ require("operating_system")
 require("file_systems")
 require("network")
 require("modules")
+require("about")
 
 
 --==============================================================================
@@ -48,7 +49,7 @@ require("modules")
 -- LOCAL OBJECTS
 --==============================================================================
 -- configuration pages
-local page = {welcome, project, operating_system, file_systems, network, modules}
+local page = {welcome, project, operating_system, file_systems, network, modules, about}
 
 -- container for UI controls
 local ui = {}
