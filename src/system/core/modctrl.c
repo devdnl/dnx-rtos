@@ -437,6 +437,26 @@ const char *_get_driver_name(uint n)
 
 //==============================================================================
 /**
+ * @brief Returns driver ID
+ *
+ * @param name          driver name
+ *
+ * @return On success driver ID is returned. On error -1 is returned.
+ */
+//==============================================================================
+int _get_driver_ID(const char *name)
+{
+        for (uint i = 0; i < _regdrv_size_of_driver_table; i++) {
+                if (strcmp(_regdrv_driver_table[i].drv_name, name) == 0) {
+                        return i;
+                }
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
  * @brief Return driver module name
  *
  * @param n             driver number

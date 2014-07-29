@@ -47,6 +47,7 @@
 #define CWD_PATH_LEN                    128
 #define HISTORY_NEXT_KEY                "\033^[A"
 #define HISTORY_PREV_KEY                "\033^[B"
+#define COMMAND_HINT_KEY                "\033^[T"
 
 /*==============================================================================
   Local types, enums definitions
@@ -59,6 +60,7 @@ static void             clear_prompt            ();
 static void             print_prompt            ();
 static bool             read_input              ();
 static bool             history_request         ();
+static bool             command_hint            ();
 static char            *find_cmd_begin          ();
 static bool             is_cd_cmd               (const char *cmd);
 static bool             is_exit_cmd             (const char *cmd);
@@ -72,16 +74,14 @@ static bool             analyze_line            (char *cmd);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-char  line[PROMPT_LINE_LEN];
-char  history[PROMPT_LINE_LEN];
-char  cwd[CWD_PATH_LEN];
-bool  prompt_enable;
-FILE *input;
-bool  stream_closed;
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES {
+        char  line[PROMPT_LINE_LEN];
+        char  history[PROMPT_LINE_LEN];
+        char  cwd[CWD_PATH_LEN];
+        bool  prompt_enable;
+        FILE *input;
+        bool  stream_closed;
+};
 
 const char *pipe_file = "/tmp/dsh-";
 
@@ -136,7 +136,7 @@ static bool read_input()
                         global->stream_closed = true;
                 }
 
-                /* remove LF at the on of line */
+                /* remove LF at the end of line */
                 LAST_CHARACTER(global->line) = '\0';
                 return true;
         } else {
@@ -149,7 +149,7 @@ static bool read_input()
  * @brief Function handle history. Check if command line contain AUP, ADN keys
  *        and set prompt to historical value
  *
- * return true if history got, false is new command inserted
+ * @return true if history got, false is new command inserted
  */
 //==============================================================================
 static bool history_request()
@@ -166,11 +166,78 @@ static bool history_request()
                 global->prompt_enable = true;
 
                 if (strlen(global->line)) {
-                        strcpy(global->history, global->line);
+                        if (global->line[0] != '\033') {
+                                strcpy(global->history, global->line);
+                        }
                 }
 
                 return false;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Finds hint for typed command
+ * @param None
+ * @return true if hint key was recognized, otherwise false
+ */
+//==============================================================================
+static bool command_hint()
+{
+        char *tabstart = strchr(global->line, '\033');
+        if (tabstart) {
+                if (strcmp(tabstart, COMMAND_HINT_KEY) == 0) {
+                        *tabstart = '\0';
+
+                        if (strlen(global->line) != 0) {
+                                dirent_t dirent;
+                                int cnt  = 0;
+
+                                DIR *dir = opendir("/proc/bin");
+                                if (dir) {
+                                        while ((dirent = readdir(dir)).name != NULL) {
+                                                if (strncmp(dirent.name, global->line, strlen(global->line)) == 0) {
+                                                        cnt++;
+                                                }
+                                        }
+
+                                        closedir(dir);
+                                }
+
+                                dir = opendir("/proc/bin");
+                                if (dir) {
+                                        if (cnt > 1) {
+                                                puts("");
+                                        }
+
+                                        while ((dirent = readdir(dir)).name != NULL) {
+
+                                                if (strncmp(dirent.name, global->line, strlen(global->line)) == 0) {
+                                                        if (cnt > 1) {
+                                                                printf("%s ", dirent.name);
+                                                        } else  {
+                                                                ioctl(global->input, IOCTL_TTY__SET_EDITLINE, dirent.name);
+                                                                break;
+                                                        }
+                                                }
+                                        }
+
+                                        closedir(dir);
+
+                                        if (cnt > 1) {
+                                                puts(" ");
+                                                print_prompt();
+                                                ioctl(global->input, IOCTL_TTY__REFRESH_LAST_LINE);
+                                        }
+                                }
+                        }
+
+                        global->prompt_enable = false;
+                        return true;
+                }
+        }
+
+        return false;
 }
 
 //==============================================================================
@@ -593,11 +660,13 @@ PROGRAM_MAIN(dsh, int argc, char *argv[])
 
                 print_prompt();
 
-                if (!read_input()) {
+                if (!read_input())
                         break;
-                }
 
                 if (history_request())
+                        continue;
+
+                if (command_hint())
                         continue;
 
                 char *cmd = find_cmd_begin();

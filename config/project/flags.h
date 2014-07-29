@@ -66,8 +66,8 @@
 /* CPU configuration */
 #define __CPU_START_FREQ__ __CPU_START_FREQUENCY__
 #define __CPU_OSC_FREQ__ 8000000
-#define __IRQ_RTOS_KERNEL_PRIORITY__ 0xFF
-#define __IRQ_RTOS_SYSCALL_PRIORITY__ 0xEF
+#define __IRQ_RTOS_KERNEL_PRIORITY__ __CPU_IRQ_RTOS_KERNEL_PRIORITY__
+#define __IRQ_RTOS_SYSCALL_PRIORITY__ __CPU_IRQ_RTOS_SYSCALL_PRIORITY__
 #define __IRQ_USER_PRIORITY__ 0xDF
 
 /* dynamic memory configuration */
@@ -115,6 +115,8 @@
 #define __ENABLE_LFS__ __YES__
 #define __ENABLE_FATFS__ __YES__
 #define __ENABLE_PROCFS__ __YES__
+#define __FATFS_LFN_ENABLE__ __YES__
+#define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
 #define __ENABLE_GPIO__ __YES__

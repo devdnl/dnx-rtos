@@ -40,6 +40,7 @@ extern "C" {
 ==============================================================================*/
 #define VT100_ERASE_LINE_FROM_CUR               "\033[K"
 #define VT100_SHIFT_CURSOR_RIGHT(t)             "\033["#t"C"
+#define VT100_SHIFT_CURSOR_LEFT(t)              "\033["#t"D"
 #define VT100_CLEAR_SCREEN                      "\033[2J"
 #define VT100_CLEAR_LINE                        "\r\033[K"
 #define VT100_RESET_ATTRIBUTES                  "\033[0m"
@@ -63,6 +64,7 @@ typedef enum ttycmd_resp {
         TTYCMD_BUSY,
         TTYCMD_KEY_ENTER,
         TTYCMD_KEY_BACKSPACE,
+        TTYCMD_KEY_TAB,
         TTYCMD_KEY_DELETE,
         TTYCMD_KEY_ARROW_LEFT,
         TTYCMD_KEY_ARROW_RIGHT,

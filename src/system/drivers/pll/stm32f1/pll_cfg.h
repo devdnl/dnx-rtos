@@ -159,13 +159,13 @@ extern "C" {
  * PLL multiplication factor (PLLMUL)
  * RCC_PLLMul_x where x:{[4,9], 6_5}
  */
-#define _PLL_CFG__PLL_MUL               __PLL_PLL_MULL_CL__
+#define _PLL_CFG__PLL_MUL               __PLL_PLL_MUL_CL__
 #else
 /*
  * PLL multiplication (PLLMUL)
  * RCC_PLLMul_x where x:[2,16]          [Low-, medium-, high- and XL-density]
  */
-#define _PLL_CFG__PLL_MUL               __PLL_PLL_MULL__
+#define _PLL_CFG__PLL_MUL               __PLL_PLL_MUL__
 #endif
 
 #ifdef STM32F10X_CL
@@ -223,7 +223,7 @@ extern "C" {
  * PLL2 multiplication factor
  * RCC_PLL2Mul_x where x:{[8,14], 16, 20}
  */
-#define _PLL_CFG__PLL2_MUL              __PLL_PLL2_MULL__
+#define _PLL_CFG__PLL2_MUL              __PLL_PLL2_MUL__
 
 
 /*------------------------------------------------------------------------------
@@ -240,7 +240,7 @@ extern "C" {
  * PLL3 multiplication factor
  * RCC_PLL3Mul_x where x:{[8,14], 16, 20}
  */
-#define _PLL_CFG__PLL3_MUL              __PLL_PLL3_MULL__
+#define _PLL_CFG__PLL3_MUL              __PLL_PLL3_MUL__
 #endif
 
 

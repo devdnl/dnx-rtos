@@ -67,19 +67,19 @@ extern "C" {
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_TTY__CLEAR_SCR                    _IO( _IO_GROUP_TTY, 0x04)
+#define IOCTL_TTY__CLEAR_SCR                    _IO(_IO_GROUP_TTY, 0x04)
 
 /** @brief  Enable terminal echo
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_TTY__ECHO_ON                      _IO( _IO_GROUP_TTY, 0x05)
+#define IOCTL_TTY__ECHO_ON                      _IO(_IO_GROUP_TTY, 0x05)
 
 /** @brief  Disable terminal echo
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_TTY__ECHO_OFF                     _IO( _IO_GROUP_TTY, 0x06)
+#define IOCTL_TTY__ECHO_OFF                     _IO(_IO_GROUP_TTY, 0x06)
 
 /** @brief  Set edit line to specified user's text (string)
  *  @param  const char *
@@ -87,11 +87,18 @@ extern "C" {
  */
 #define IOCTL_TTY__SET_EDITLINE                 _IOW(_IO_GROUP_TTY, 0x07, const char*)
 
+
 /** @brief  Gets number of virtual terminals
  *  @param  int *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(_IO_GROUP_TTY, 0x08, int*)
+
+/** @brief  Refreshes last line
+ *  @param  None
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_TTY__REFRESH_LAST_LINE            _IO(_IO_GROUP_TTY, 0x09)
 
 /*==============================================================================
   Exported object types

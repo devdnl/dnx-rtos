@@ -207,6 +207,9 @@ void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 
                                 if (show) {
                                         vfs_fwrite(str, sizeof(char), strlen(str), this->out_file);
+
+                                        static const char *erase_line_end = ERASE_LINE_END;
+                                        vfs_fwrite(erase_line_end, sizeof(char), strlen(erase_line_end), this->out_file);
                                 }
                         }
                 }

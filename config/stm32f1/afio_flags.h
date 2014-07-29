@@ -32,45 +32,45 @@
 #define __AFIO_EVENT_OUT_PIN__ 0
 
 // AFIO_MAPR
-#define __AFIO_REMAP_SPI1__ __NO__
-#define __AFIO_REMAP_I2C1__ __NO__
-#define __AFIO_REMAP_USART1__ __NO__
-#define __AFIO_REMAP_USART2__ __NO__
+#define __AFIO_REMAP_SPI1__ 0
+#define __AFIO_REMAP_I2C1__ 0
+#define __AFIO_REMAP_USART1__ 0
+#define __AFIO_REMAP_USART2__ 0
 #define __AFIO_REMAP_USART3__ 0
 #define __AFIO_REMAP_TIM1__ 0
 #define __AFIO_REMAP_TIM2__ 0
 #define __AFIO_REMAP_TIM3__ 0
-#define __AFIO_REMAP_TIM4__ __NO__
+#define __AFIO_REMAP_TIM4__ 0
 #define __AFIO_REMAP_CAN__ 0
-#define __AFIO_REMAP_PD01__ __NO__
-#define __AFIO_REMAP_TIM5CH4__ __NO__
-#define __AFIO_REMAP_ADC1_ETRGINJ__ __NO__
-#define __AFIO_REMAP_ADC1_ETRGREG__ __NO__
-#define __AFIO_REMAP_ADC2_ETRGINJ__ __NO__
-#define __AFIO_REMAP_ADC2_ETRGREG__ __NO__
+#define __AFIO_REMAP_PD01__ 0
+#define __AFIO_REMAP_TIM5CH4__ 0
+#define __AFIO_REMAP_ADC1_ETRGINJ__ 0
+#define __AFIO_REMAP_ADC1_ETRGREG__ 0
+#define __AFIO_REMAP_ADC2_ETRGINJ__ 0
+#define __AFIO_REMAP_ADC2_ETRGREG__ 0
 #define __AFIO_REMAP_SWJ_CFG__ 0
-#define __AFIO_REMAP_ETH__ __NO__
-#define __AFIO_REMAP_CAN2__ __NO__
-#define __AFIO_REMAP_MII_RMII_SEL__ __NO__
-#define __AFIO_REMAP_SPI3__ __YES__
-#define __AFIO_REMAP_TIM2ITR1__ __NO__
-#define __AFIO_REMAP_PTP_PPS__ __NO__
+#define __AFIO_REMAP_ETH__ 0
+#define __AFIO_REMAP_CAN2__ 0
+#define __AFIO_REMAP_MII_RMII_SEL__ 0
+#define __AFIO_REMAP_SPI3__ 1
+#define __AFIO_REMAP_TIM2ITR1__ 0
+#define __AFIO_REMAP_PTP_PPS__ 0
 
 // AFIO_MAPR2
-#define __AFIO_REMAP_CEC__ __NO__
-#define __AFIO_REMAP_TIM1_DMA__ __NO__
-#define __AFIO_REMAP_TIM9__ __NO__
-#define __AFIO_REMAP_TIM10__ __NO__
-#define __AFIO_REMAP_TIM11__ __NO__
-#define __AFIO_REMAP_TIM12__ __NO__
-#define __AFIO_REMAP_TIM13__ __NO__
-#define __AFIO_REMAP_TIM14__ __NO__
-#define __AFIO_REMAP_TIM15__ __NO__
-#define __AFIO_REMAP_TIM16__ __NO__
-#define __AFIO_REMAP_TIM17__ __NO__
-#define __AFIO_REMAP_FSMC_NADV__ __NO__
-#define __AFIO_REMAP_TIM76_DAC_DMA__ __NO__
-#define __AFIO_REMAP_MISC__ __NO__
+#define __AFIO_REMAP_CEC__ 0
+#define __AFIO_REMAP_TIM1_DMA__ 0
+#define __AFIO_REMAP_TIM9__ 0
+#define __AFIO_REMAP_TIM10__ 0
+#define __AFIO_REMAP_TIM11__ 0
+#define __AFIO_REMAP_TIM12__ 0
+#define __AFIO_REMAP_TIM13__ 0
+#define __AFIO_REMAP_TIM14__ 0
+#define __AFIO_REMAP_TIM15__ 0
+#define __AFIO_REMAP_TIM16__ 0
+#define __AFIO_REMAP_TIM17__ 0
+#define __AFIO_REMAP_FSMC_NADV__ 0
+#define __AFIO_REMAP_TIM76_DAC_DMA__ 0
+#define __AFIO_REMAP_MISC__ 0
 
 // AFIO_EXTI
 #define __AFIO_EXTI0_PORT__ 0
