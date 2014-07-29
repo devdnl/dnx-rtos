@@ -213,11 +213,11 @@ const struct _driver_entry _regdrv_driver_table[] = {
 
         /* SDSPI =============================================================*/
         #if (__ENABLE_SDSPI__)
-        _DRIVER_INTERFACE(SDSPI, "sda" , _SDSPI_CARD_0, _SDSPI_FULL_VOLUME),
-        _DRIVER_INTERFACE(SDSPI, "sda1", _SDSPI_CARD_0, _SDSPI_PARTITION_1),
-        _DRIVER_INTERFACE(SDSPI, "sda2", _SDSPI_CARD_0, _SDSPI_PARTITION_2),
-        _DRIVER_INTERFACE(SDSPI, "sda3", _SDSPI_CARD_0, _SDSPI_PARTITION_3),
-        _DRIVER_INTERFACE(SDSPI, "sda4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
+        _DRIVER_INTERFACE(SDSPI, "sdspi" , _SDSPI_CARD_0, _SDSPI_FULL_VOLUME),
+        _DRIVER_INTERFACE(SDSPI, "sdspi1", _SDSPI_CARD_0, _SDSPI_PARTITION_1),
+        _DRIVER_INTERFACE(SDSPI, "sdspi2", _SDSPI_CARD_0, _SDSPI_PARTITION_2),
+        _DRIVER_INTERFACE(SDSPI, "sdspi3", _SDSPI_CARD_0, _SDSPI_PARTITION_3),
+        _DRIVER_INTERFACE(SDSPI, "sdspi4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
         #endif
 
         /* ETH ===============================================================*/

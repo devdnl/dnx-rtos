@@ -144,11 +144,11 @@ static int run_level_0(void)
         driver_init("tty1", "/dev/tty1");
         driver_init("tty2", "/dev/tty2");
         driver_init("tty3", "/dev/tty3");
-        driver_init("sda", "/dev/sda");
-        driver_init("sda1", "/dev/sda1");
-        driver_init("sda2", "/dev/sda2");
-        driver_init("sda3", "/dev/sda3");
-        driver_init("sda4", "/dev/sda4");
+        driver_init("sdspi", "/dev/sda");
+        driver_init("sdspi1", "/dev/sda1");
+        driver_init("sdspi2", "/dev/sda2");
+        driver_init("sdspi3", "/dev/sda3");
+        driver_init("sdspi4", "/dev/sda4");
         driver_init("ethmac", "/dev/eth0");
         driver_init("crc", "/dev/crc");
 

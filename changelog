@@ -5,6 +5,7 @@ New Features, Improvements:
 - TTY module: implemented recognition of TAB key
 - TTY module: new ioctl request - REFRESH_LAST_LINE
 - OS: alernative macro to determine global variables in programs: GLOBAL_VARIABLES
+- dsh: added command hints by using TAB key
 
 Fixed Bugs:
 - TTY module: edit line was wrongly refreshed when last string was longer than new one
