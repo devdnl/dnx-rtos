@@ -1,4 +1,4 @@
-dnx RTOS 1.3.6rc
+dnx RTOS 1.3.6
 ==============
 New Features, Improvements:
 - New configuration tool
@@ -8,7 +8,7 @@ New Features, Improvements:
 - dsh: added command hints by using TAB key
 
 Fixed Bugs:
-- TTY module: edit line was wrongly refreshed when last string was longer than new one
+- TTY module: edit line was wrongly refreshed when last string was longer than new one (artefacts in line)
 
 dnx RTOS 1.3.5
 ==============
