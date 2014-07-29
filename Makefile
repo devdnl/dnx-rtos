@@ -117,18 +117,17 @@ PORT_LOC   = $(SYS_LOC)/portable
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL      = sh
+SHELL      = /bin/sh
 ECHO       = /bin/echo -e
-RM         = rm -f
-MKDIR      = mkdir -p
-TEST       = test
-DATE       = date
-CAT        = cat
+RM         = /bin/rm -f
+MKDIR      = /bin/mkdir -p
+DATE       = /bin/date
+CAT        = /bin/cat
+GREP       = /bin/grep
+SIZEOF     = /bin/stat -c %s
+UNAME      = /bin/uname -s
 MKDEP      = makedepend
 WC         = wc
-GREP       = grep
-SIZEOF     = stat -c %s
-UNAME      = uname -s
 CC         = $(TOOLCHAIN)gcc
 CXX        = $(TOOLCHAIN)g++
 LD         = $(TOOLCHAIN)g++
