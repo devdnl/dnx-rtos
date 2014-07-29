@@ -113,6 +113,7 @@ extern uint        _get_number_of_modules       (void);
 extern int         _get_module_number           (const char*);
 extern uint        _get_number_of_drivers       (void);
 extern const char *_get_driver_name             (uint);
+extern int         _get_driver_ID               (const char*);
 extern const char *_get_driver_module_name      (uint);
 extern bool        _is_driver_active            (uint);
 

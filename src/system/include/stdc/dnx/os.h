@@ -915,6 +915,37 @@ static inline const char *get_driver_name(uint n)
 
 //==============================================================================
 /**
+ * @brief int get_driver_ID(const char *name)
+ * The function <b>get_driver_ID</b>() returns driver ID by <i>name</i>.
+ *
+ * @param name  driver name
+ *
+ * @errors None
+ *
+ * @return On success driver ID is returned. On error -1 is returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * int id = get_driver_ID("tty1");
+ * if (id >= 0) {
+ *         mknod("/dev/tty1", id);
+ * } else {
+ *         perror("Driver does not exist!);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_driver_ID(const char *name)
+{
+        return _get_driver_ID(name);
+}
+
+//==============================================================================
+/**
  * @brief const char *get_driver_module_name(uint n)
  * The function <b>get_driver_module_name</b>() return name of module which
  * contains driver indexed by <i>n</i>.
