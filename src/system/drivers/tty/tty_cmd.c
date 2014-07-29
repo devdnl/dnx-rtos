@@ -155,6 +155,10 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 return TTYCMD_KEY_BACKSPACE;
                         }
 
+                        if (c == '\t') {
+                                return TTYCMD_KEY_TAB;
+                        }
+
                         if (c == '\033') {
                                 memset(this->token, 0, VT100_TOKEN_LEN);
                                 this->token[0]  = c;

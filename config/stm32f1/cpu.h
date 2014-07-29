@@ -31,8 +31,10 @@
 #define __CPU_FAMILY__ __STM32F10X_CL__
 
 /* fixed configuration */
-#define __CPU_START_FREQUENCY__ (8000000UL)
-#define __CPU_HEAP_ALIGN__      (4)
+#define __CPU_START_FREQUENCY__           (8000000UL)
+#define __CPU_HEAP_ALIGN__                (4)
+#define __CPU_IRQ_RTOS_KERNEL_PRIORITY__  (0xFF)
+#define __CPU_IRQ_RTOS_SYSCALL_PRIORITY__ (0xEF)
 #define ARCH_stm32f1
 
 /* current CPU family definitions */

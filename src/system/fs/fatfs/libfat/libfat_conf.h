@@ -72,7 +72,7 @@
  * 874  - Thai (OEM, Windows)
  * 1    - ASCII only (Valid for non LFN cfg.)
  */
-#define _LIBFAT_CODE_PAGE        852
+#define _LIBFAT_CODE_PAGE        __FATFS_LFN_CODEPAGE__
 
 
 /* The _USE_LFN option switches the LFN support.
@@ -85,7 +85,11 @@
  * Unicode handling functions _libfat_convert() and _libfat_wtoupper() must be added
  * to the project. When enable to use heap, memory control functions
  * _libfat_malloc() and _libfat_free() must be added to the project. */
+#if __FATFS_LFN_ENABLE__ == __YES__
 #define _LIBFAT_USE_LFN         2       /* 0 to 2 */
+#else
+#define _LIBFAT_USE_LFN         0       /* 0 to 2 */
+#endif
 #define _LIBFAT_MAX_LFN         255     /* Maximum LFN length to handle (12 to 255) */
 
 

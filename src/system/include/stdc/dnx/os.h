@@ -609,7 +609,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.3.5";
+        return "1.3.6";
 }
 
 //==============================================================================
@@ -911,6 +911,37 @@ static inline uint get_number_of_drivers(void)
 static inline const char *get_driver_name(uint n)
 {
         return _get_driver_name(n);
+}
+
+//==============================================================================
+/**
+ * @brief int get_driver_ID(const char *name)
+ * The function <b>get_driver_ID</b>() returns driver ID by <i>name</i>.
+ *
+ * @param name  driver name
+ *
+ * @errors None
+ *
+ * @return On success driver ID is returned. On error -1 is returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * int id = get_driver_ID("tty1");
+ * if (id >= 0) {
+ *         mknod("/dev/tty1", id);
+ * } else {
+ *         perror("Driver does not exist!);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_driver_ID(const char *name)
+{
+        return _get_driver_ID(name);
 }
 
 //==============================================================================
