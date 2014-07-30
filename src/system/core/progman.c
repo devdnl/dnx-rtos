@@ -465,7 +465,9 @@ static int process_kill(task_t *taskhdl, int status)
         if (taskhdl) {
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 case TASK_TYPE_RAW:
+                        sysm_lock_access();
                         _task_delete(taskhdl);
+                        sysm_unlock_access();
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
@@ -647,6 +649,8 @@ int _program_kill(prog_t *prog)
                         semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
+                        sysm_lock_access();
+
                         if (prog->task != task_get_handle()) {
                                 task_suspend(prog->task);
                         }
@@ -659,6 +663,8 @@ int _program_kill(prog_t *prog)
                         make_RAW_task(prog->task);
                         semaphore_signal(prog->exit_sem);
                         _task_delete(prog->task);
+
+                        sysm_unlock_access();
                         return 0;
                 }
         }
@@ -876,6 +882,8 @@ int _thread_cancel(thread_t *thread)
                         semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
+                        sysm_lock_access();
+
                         if (thread->task != task_get_handle()) {
                                 task_suspend(thread->task);
                         }
@@ -883,6 +891,8 @@ int _thread_cancel(thread_t *thread)
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
                         _task_delete(thread->task);
+
+                        sysm_unlock_access();
                         return 0;
                 }
         }

@@ -189,6 +189,32 @@ stdret_t sysm_init(void)
 
 //==============================================================================
 /**
+ * @brief Function locks entire access to the system monitor to protect ongoing operations
+ *
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+void sysm_lock_access(void)
+{
+        mutex_force_lock(sysm_resource_mtx);
+}
+
+//==============================================================================
+/**
+ * @brief Function unlocks entire access to the system monitor
+ *
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+void sysm_unlock_access(void)
+{
+        mutex_unlock(sysm_resource_mtx);
+}
+
+//==============================================================================
+/**
  * @brief Function check if task is already in the monitor list
  *
  * @param *taskhdl      task handle

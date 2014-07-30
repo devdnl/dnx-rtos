@@ -77,6 +77,8 @@ struct sysmoni_used_memory {
   Exported function prototypes
 ==============================================================================*/
 extern stdret_t sysm_init                               (void);
+extern void     sysm_lock_access                        (void);
+extern void     sysm_unlock_access                      (void);
 extern bool     sysm_is_task_exist                      (task_t*);
 extern stdret_t sysm_start_task_monitoring              (task_t*);
 extern stdret_t sysm_stop_task_monitoring               (task_t*);
