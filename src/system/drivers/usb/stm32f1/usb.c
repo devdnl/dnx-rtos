@@ -251,8 +251,6 @@ API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor)
                         USB_ep_t *ep_hdl    = calloc(1, sizeof(USB_ep_t));
 
                         if (ep_hdl && tx_sem && rx_sem && (setup_sem || minor != USB_EP_NUM__ENDP0)) {
-                                semaphore_wait(rx_sem, 0);
-                                semaphore_wait(tx_sem, 0);
 
                                 if (minor == USB_EP_NUM__ENDP0) {
                                         semaphore_wait(setup_sem, 0);

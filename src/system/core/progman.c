@@ -564,7 +564,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                         struct _prog_data prog_data;
                         if (get_program_data(prog->argv[0], &prog_data) == STD_RET_OK) {
 
-                                prog->exit_sem = semaphore_new(1, 1);
+                                prog->exit_sem = semaphore_new(1, 0);
                                 if (prog->exit_sem) {
 
                                         prog->mem      = NULL;
@@ -813,7 +813,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
         }
 
         thread_t *thread = sysm_tskmalloc(sizeof(thread_t));
-        sem_t    *sem    = semaphore_new(1, 1);
+        sem_t    *sem    = semaphore_new(1, 0);
         if (thread && sem) {
                 _task_data_t *task_data = _task_get_data();
 

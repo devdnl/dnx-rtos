@@ -163,14 +163,9 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                sem->sem = semaphore_new(1, 0);
+                sem->sem = semaphore_new(1, count);
                 if (sem->sem) {
                         sem->valid = validation_value;
-
-                        if (count == 0) {
-                                semaphore_wait(sem->sem, 0);
-                        }
-
                         return ERR_OK;
                 }
 

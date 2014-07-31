@@ -310,7 +310,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create irq semaphore */
         if (!spi_module->wait_irq_sem[major]) {
-                spi_module->wait_irq_sem[major] = semaphore_new(1, 1);
+                spi_module->wait_irq_sem[major] = semaphore_new(1, 0);
                 if (!spi_module->wait_irq_sem[major]) {
                         return STD_RET_ERROR;
                 }

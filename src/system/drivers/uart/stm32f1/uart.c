@@ -172,7 +172,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         uart_data[major] = calloc(1, sizeof(struct UART_data));
         if (uart_data[major]) {
 
-                uart_data[major]->data_write_sem   = semaphore_new(1, 1);
+                uart_data[major]->data_write_sem   = semaphore_new(1, 0);
                 uart_data[major]->data_read_sem    = semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = mutex_new(MUTEX_NORMAL);
                 uart_data[major]->port_lock_tx_mtx = mutex_new(MUTEX_NORMAL);
