@@ -1,3 +1,12 @@
+dnx RTOS 1.3.7
+==============
+New Features, Improvements:
+- driver_init(): returns driver ID on success, -1 on error
+
+Fixed Bugs:
+- system monitor: possible system freeze when thread is canceled while is accessing to the system monitor
+- binary semaphore: fixed bug that ignores initial value of binary semaphore (always 1 - opened)
+
 dnx RTOS 1.3.6
 ==============
 New Features, Improvements:

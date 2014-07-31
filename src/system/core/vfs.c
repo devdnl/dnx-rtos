@@ -340,7 +340,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
 //==============================================================================
 int vfs_mknod(const char *path, dev_t dev)
 {
-        if (!path) {
+        if (!path || dev < 0) {
                 errno = EINVAL;
                 return -1;
         }

@@ -311,8 +311,12 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
                         sem->object = NULL;
                         if (cnt_max == 1) {
                                 vSemaphoreCreateBinary(sem->object);
-                                if (sem->object && cnt_init == 1) {
-                                        xSemaphoreTake(sem->object, 0);
+                                if (sem->object) {
+                                        if (cnt_init) {
+                                                xSemaphoreGive(sem->object);
+                                        } else {
+                                                xSemaphoreTake(sem->object, 0);
+                                        }
                                 }
                         } else {
                                 sem->object = xSemaphoreCreateCounting(cnt_max, cnt_init);

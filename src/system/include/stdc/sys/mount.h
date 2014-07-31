@@ -155,8 +155,8 @@ static inline int umount(const char *mount_point)
  *
  * @errors EINVAL, ENOMEM, EADDRINUSE
  *
- * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
- * is set appropriately.
+ * @return On success, driver ID is returned. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
  *
  * @example
  * // ...

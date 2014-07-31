@@ -1,4 +1,4 @@
-The dnx/FreeRTOS  is  a  general  purpose operating system based on the FreeRTOS
+The dnx RTOS  is  a  general  purpose operating  system  based  on  the FreeRTOS
 kernel. The dnx layer is modeled on  well-known Unix architecture (everything is
 a file). A  destination  of  the  system  are  small  microcontrollers supported
 by the FreeRTOS kernel,  especially  32-bit. The system  is easy scalable to the

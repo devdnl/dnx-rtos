@@ -78,7 +78,7 @@ typedef int uid_t;
 typedef int gid_t;
 
 /** device */
-typedef uint dev_t;
+typedef int dev_t;
 
 /*==============================================================================
   Exported objects
