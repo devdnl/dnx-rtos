@@ -89,7 +89,7 @@ extern const uint                  _regdrv_number_of_modules;
 //==============================================================================
 static bool is_device_valid(dev_t id)
 {
-        if (id < _regdrv_size_of_driver_table) {
+        if (id < (dev_t)_regdrv_size_of_driver_table) {
                 if (driver_memory_region[id]) {
                         return true;
                 }
