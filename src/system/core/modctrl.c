@@ -106,20 +106,20 @@ static bool is_device_valid(dev_t id)
  * @param drv_name            driver name
  * @param node_path           path name to create in the file system or NULL
  *
- * @return 0 on success, otherwise other value
+ * @return Driver ID on success, otherwise -1
  */
 //==============================================================================
 int _driver_init(const char *drv_name, const char *node_path)
 {
         if (drv_name == NULL) {
                 errno = EINVAL;
-                return 1;
+                return -1;
         }
 
         if (!driver_memory_region) {
                 driver_memory_region = sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
-                        return 1;
+                        return -1;
                 }
         }
 
@@ -132,7 +132,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                 if (driver_memory_region[drvid]) {
                         printk(drv_already_init_str, drv_name);
                         errno = EADDRINUSE;
-                        return 1;
+                        return -1;
                 }
 
                 printk(drv_initializing_str, drv_name);
@@ -143,7 +143,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                                                                     != STD_RET_OK) {
 
                         printk(drv_error_str, drv_name);
-                        return 1;
+                        return -1;
                 }
 
                 if (driver_memory_region[drvid] == NULL)
@@ -152,22 +152,22 @@ int _driver_init(const char *drv_name, const char *node_path)
                 if (node_path) {
                         if (vfs_mknod(node_path, drvid) == STD_RET_OK) {
                                 printk(drv_node_created_str, node_path);
-                                return 0;
+                                return drvid;
                         } else {
                                 _regdrv_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
                                 printk(drv_node_fail_str, node_path);
-                                return 1;
+                                return -1;
                         }
 
                 } else {
                         printk(drv_initialized_str);
-                        return 0;
+                        return drvid;
                 }
         }
 
         printk(drv_not_exist_str, drv_name);
         errno = EINVAL;
-        return 1;
+        return -1;
 }
 
 //==============================================================================
