@@ -137,14 +137,26 @@ local function event_on_button_save_click()
         if spi_cfg:Children()[ui.Choice_SPI_port:GetSelection() + 1] ~= nil then
                 spiport = spi_cfg:Children()[ui.Choice_SPI_port:GetSelection() + 1].name:GetValue()
         else
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected SPI port is not present!\n\nSelect correct SPI port and try again.")
-                return false
+                if not module_enable then
+                        ct:enable_module("SDSPI", module_enable)
+                        ui.Button_save:Enable(false)
+                        return true
+                else
+                        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected SPI port is not present!\n\nSelect correct SPI port and try again.")
+                        return false
+                end
         end
 
         -- check Chip Select selection
         if chip_select == nil then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
-                return false
+                if not module_enable then
+                        ct:enable_module("SDSPI", module_enable)
+                        ui.Button_save:Enable(false)
+                        return true
+                else
+                        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
+                        return false
+                end
         end
 
         -- convert DMA irq priority selection to configuration

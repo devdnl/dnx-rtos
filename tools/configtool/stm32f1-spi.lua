@@ -43,15 +43,16 @@ spi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local ui           = {}
-local ID           = {}
-local NUMBER_OF_CS = 8
-local cpu_name     = nil
-local cpu_idx      = nil
-local spi_cfg      = nil
-local pin_list     = nil
-local gpio         = require("stm32f1-gpio").get_handler()
-local prio_list    = ct:get_priority_list("stm32f1")
+local ui                    = {}
+local ID                    = {}
+local NUMBER_OF_CS          = 8
+local NUMBER_OF_SPI_DEVICES = 3
+local cpu_name              = nil
+local cpu_idx               = nil
+local spi_cfg               = nil
+local pin_list              = nil
+local gpio                  = require("stm32f1-gpio").get_handler()
+local prio_list             = ct:get_priority_list("stm32f1")
 
 local clkdiv_str = {}
 clkdiv_str.SPI_CLK_DIV_2   = 0
@@ -169,6 +170,7 @@ local function on_button_save_click()
         local spien      = ct:bool_to_yes_no(ui.CheckBox_device_enable:GetValue())
         local irqprio    = ui.Choice_irqprio:GetSelection() + 1
         local numofcs    = tostring(ui.Choice_csnum:GetSelection() + 1)
+        local keygen     = config.arch.stm32f1.key.SPI_GENERAL
 
         if ui.Choice_irqprio:GetSelection() + 1 > #prio_list then
                 irqprio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
@@ -198,10 +200,26 @@ local function on_button_save_click()
         ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MODE, mode)
         ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST, bitorder)
 
-        local keygen = config.arch.stm32f1.key.SPI_GENERAL
+        -- disables not existing ports
+        for i = 1, NUMBER_OF_SPI_DEVICES do
+                local exist = false
+                for j = 1, spi_cfg:NumChildren() do
+                        if tostring(i) == spi_cfg:Children()[j].name:GetValue() then
+                                exist = true
+                                break
+                        end
+                end
+
+                if not exist then
+                        keygen.key:SetValue("__SPI_SPI"..i.."_ENABLE__")
+                        ct:key_write(keygen, config.project.def.NO:GetValue())
+                end
+        end
+
         keygen.key:SetValue("__SPI_SPI"..spisel.."_ENABLE__")
         ct:key_write(keygen, spien)
 
+        -- save priority and Chip Selects
         if ui.Panel2:IsEnabled() then
                 keygen.key:SetValue("__SPI_SPI"..spisel.."_PRIORITY__")
                 ct:key_write(keygen, irqprio)

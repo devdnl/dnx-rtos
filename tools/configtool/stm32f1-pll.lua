@@ -67,209 +67,209 @@ local ENABLE           = "ENABLE"
 local DISABLE          = "DISABLE"
 
 local LSI_on = {
-        {["name"] = "Disabled", ["key"] = "DISABLE", ["value"] = 0       },
-        {["name"] = "Enabled",  ["key"] = "ENABLE",  ["value"] = LSI_FREQ}
+        {name = "Disabled", key = "DISABLE", value = 0       },
+        {name = "Enabled",  key = "ENABLE",  value = LSI_FREQ}
 }
-                
+
 local LSE_on = {
-        {["name"] = "Disabled",                     ["key"] = "RCC_LSE_OFF",    ["value"] = 0       },
-        {["name"] = "Enabled",                      ["key"] = "RCC_LSE_ON",     ["value"] = LSE_FREQ},
-        {["name"] = "Bypassed with external clock", ["key"] = "RCC_LSE_Bypass", ["value"] = LSE_FREQ}
+        {name = "Disabled",                     key = "RCC_LSE_OFF",    value = 0       },
+        {name = "Enabled",                      key = "RCC_LSE_ON",     value = LSE_FREQ},
+        {name = "Bypassed with external clock", key = "RCC_LSE_Bypass", value = LSE_FREQ}
 }
-                
+
 local HSE_on = {
-        {["name"] = "Disabled",                     ["key"] = "RCC_HSE_OFF",    ["value"] = 0       },
-        {["name"] = "Enabled",                      ["key"] = "RCC_HSE_ON",     ["value"] = HSE_FREQ},
-        {["name"] = "Bypassed with external clock", ["key"] = "RCC_HSE_Bypass", ["value"] = HSE_FREQ}
+        {name = "Disabled",                     key = "RCC_HSE_OFF",    value = 0       },
+        {name = "Enabled",                      key = "RCC_HSE_ON",     value = HSE_FREQ},
+        {name = "Bypassed with external clock", key = "RCC_HSE_Bypass", value = HSE_FREQ}
 }
 
 local PLL_on = {
-        {["name"] = "Disabled", ["key"] = "DISABLE",       ["value"] = 0 },
-        {["name"] = "x2" ,      ["key"] = "RCC_PLLMul_2",  ["value"] = 2 },
-        {["name"] = "x3" ,      ["key"] = "RCC_PLLMul_3",  ["value"] = 3 },
-        {["name"] = "x4" ,      ["key"] = "RCC_PLLMul_4",  ["value"] = 4 },
-        {["name"] = "x5" ,      ["key"] = "RCC_PLLMul_5",  ["value"] = 5 },
-        {["name"] = "x6" ,      ["key"] = "RCC_PLLMul_6",  ["value"] = 6 },
-        {["name"] = "x7" ,      ["key"] = "RCC_PLLMul_7",  ["value"] = 7 },
-        {["name"] = "x8" ,      ["key"] = "RCC_PLLMul_8",  ["value"] = 8 },
-        {["name"] = "x9" ,      ["key"] = "RCC_PLLMul_9",  ["value"] = 9 },
-        {["name"] = "x10",      ["key"] = "RCC_PLLMul_10", ["value"] = 10},
-        {["name"] = "x11",      ["key"] = "RCC_PLLMul_11", ["value"] = 11},
-        {["name"] = "x12",      ["key"] = "RCC_PLLMul_12", ["value"] = 12},
-        {["name"] = "x13",      ["key"] = "RCC_PLLMul_13", ["value"] = 13},
-        {["name"] = "x14",      ["key"] = "RCC_PLLMul_14", ["value"] = 14},
-        {["name"] = "x15",      ["key"] = "RCC_PLLMul_15", ["value"] = 15},
-        {["name"] = "x16",      ["key"] = "RCC_PLLMul_16", ["value"] = 16}
+        {name = "Disabled", key = "DISABLE",       value = 0 },
+        {name = "x2" ,      key = "RCC_PLLMul_2",  value = 2 },
+        {name = "x3" ,      key = "RCC_PLLMul_3",  value = 3 },
+        {name = "x4" ,      key = "RCC_PLLMul_4",  value = 4 },
+        {name = "x5" ,      key = "RCC_PLLMul_5",  value = 5 },
+        {name = "x6" ,      key = "RCC_PLLMul_6",  value = 6 },
+        {name = "x7" ,      key = "RCC_PLLMul_7",  value = 7 },
+        {name = "x8" ,      key = "RCC_PLLMul_8",  value = 8 },
+        {name = "x9" ,      key = "RCC_PLLMul_9",  value = 9 },
+        {name = "x10",      key = "RCC_PLLMul_10", value = 10},
+        {name = "x11",      key = "RCC_PLLMul_11", value = 11},
+        {name = "x12",      key = "RCC_PLLMul_12", value = 12},
+        {name = "x13",      key = "RCC_PLLMul_13", value = 13},
+        {name = "x14",      key = "RCC_PLLMul_14", value = 14},
+        {name = "x15",      key = "RCC_PLLMul_15", value = 15},
+        {name = "x16",      key = "RCC_PLLMul_16", value = 16}
 }
 
 local PLL_on_CL = {
-        {["name"] = "Disabled", ["key"] = "DISABLE",        ["value"] = 0  },
-        {["name"] = "x4",       ["key"] = "RCC_PLLMul_4",   ["value"] = 4  },
-        {["name"] = "x5",       ["key"] = "RCC_PLLMul_5",   ["value"] = 5  },
-        {["name"] = "x6",       ["key"] = "RCC_PLLMul_6",   ["value"] = 6  },
-        {["name"] = "x6.5",     ["key"] = "RCC_PLLMul_6_5", ["value"] = 6.5},
-        {["name"] = "x7",       ["key"] = "RCC_PLLMul_7",   ["value"] = 7  },
-        {["name"] = "x8",       ["key"] = "RCC_PLLMul_8",   ["value"] = 8  },
-        {["name"] = "x9",       ["key"] = "RCC_PLLMul_9",   ["value"] = 9  }
+        {name = "Disabled", key = "DISABLE",        value = 0  },
+        {name = "x4",       key = "RCC_PLLMul_4",   value = 4  },
+        {name = "x5",       key = "RCC_PLLMul_5",   value = 5  },
+        {name = "x6",       key = "RCC_PLLMul_6",   value = 6  },
+        {name = "x6.5",     key = "RCC_PLLMul_6_5", value = 6.5},
+        {name = "x7",       key = "RCC_PLLMul_7",   value = 7  },
+        {name = "x8",       key = "RCC_PLLMul_8",   value = 8  },
+        {name = "x9",       key = "RCC_PLLMul_9",   value = 9  }
 }
 
 local PLL2_on = {
-        {["name"] = "Disabled",          ["key"] = "DISABLE",        ["value"] = 0 },
-        {["name"] = "PREDIV2 clock x8",  ["key"] = "RCC_PLL2Mul_8",  ["value"] = 8 },
-        {["name"] = "PREDIV2 clock x9",  ["key"] = "RCC_PLL2Mul_9",  ["value"] = 9 },
-        {["name"] = "PREDIV2 clock x10", ["key"] = "RCC_PLL2Mul_10", ["value"] = 10},
-        {["name"] = "PREDIV2 clock x11", ["key"] = "RCC_PLL2Mul_11", ["value"] = 11},
-        {["name"] = "PREDIV2 clock x12", ["key"] = "RCC_PLL2Mul_12", ["value"] = 12},
-        {["name"] = "PREDIV2 clock x13", ["key"] = "RCC_PLL2Mul_13", ["value"] = 13},
-        {["name"] = "PREDIV2 clock x14", ["key"] = "RCC_PLL2Mul_14", ["value"] = 14},
-        {["name"] = "PREDIV2 clock x16", ["key"] = "RCC_PLL2Mul_16", ["value"] = 16},
-        {["name"] = "PREDIV2 clock x20", ["key"] = "RCC_PLL2Mul_20", ["value"] = 20}
+        {name = "Disabled",          key = "DISABLE",        value = 0 },
+        {name = "PREDIV2 clock x8",  key = "RCC_PLL2Mul_8",  value = 8 },
+        {name = "PREDIV2 clock x9",  key = "RCC_PLL2Mul_9",  value = 9 },
+        {name = "PREDIV2 clock x10", key = "RCC_PLL2Mul_10", value = 10},
+        {name = "PREDIV2 clock x11", key = "RCC_PLL2Mul_11", value = 11},
+        {name = "PREDIV2 clock x12", key = "RCC_PLL2Mul_12", value = 12},
+        {name = "PREDIV2 clock x13", key = "RCC_PLL2Mul_13", value = 13},
+        {name = "PREDIV2 clock x14", key = "RCC_PLL2Mul_14", value = 14},
+        {name = "PREDIV2 clock x16", key = "RCC_PLL2Mul_16", value = 16},
+        {name = "PREDIV2 clock x20", key = "RCC_PLL2Mul_20", value = 20}
 }
 
 local PLL3_on = {
-        {["name"] = "Disabled",          ["key"] = "DISABLE",        ["value"] = 0 },
-        {["name"] = "PREDIV2 clock x8",  ["key"] = "RCC_PLL3Mul_8",  ["value"] = 8 },
-        {["name"] = "PREDIV2 clock x9",  ["key"] = "RCC_PLL3Mul_9",  ["value"] = 9 },
-        {["name"] = "PREDIV2 clock x10", ["key"] = "RCC_PLL3Mul_10", ["value"] = 10},
-        {["name"] = "PREDIV2 clock x11", ["key"] = "RCC_PLL3Mul_11", ["value"] = 11},
-        {["name"] = "PREDIV2 clock x12", ["key"] = "RCC_PLL3Mul_12", ["value"] = 12},
-        {["name"] = "PREDIV2 clock x13", ["key"] = "RCC_PLL3Mul_13", ["value"] = 13},
-        {["name"] = "PREDIV2 clock x14", ["key"] = "RCC_PLL3Mul_14", ["value"] = 14},
-        {["name"] = "PREDIV2 clock x16", ["key"] = "RCC_PLL3Mul_16", ["value"] = 16},
-        {["name"] = "PREDIV2 clock x20", ["key"] = "RCC_PLL3Mul_20", ["value"] = 20}
+        {name = "Disabled",          key = "DISABLE",        value = 0 },
+        {name = "PREDIV2 clock x8",  key = "RCC_PLL3Mul_8",  value = 8 },
+        {name = "PREDIV2 clock x9",  key = "RCC_PLL3Mul_9",  value = 9 },
+        {name = "PREDIV2 clock x10", key = "RCC_PLL3Mul_10", value = 10},
+        {name = "PREDIV2 clock x11", key = "RCC_PLL3Mul_11", value = 11},
+        {name = "PREDIV2 clock x12", key = "RCC_PLL3Mul_12", value = 12},
+        {name = "PREDIV2 clock x13", key = "RCC_PLL3Mul_13", value = 13},
+        {name = "PREDIV2 clock x14", key = "RCC_PLL3Mul_14", value = 14},
+        {name = "PREDIV2 clock x16", key = "RCC_PLL3Mul_16", value = 16},
+        {name = "PREDIV2 clock x20", key = "RCC_PLL3Mul_20", value = 20}
 }
 
 local PLL_clksrc = {
-        {["name"] = "HSI/2", ["key"] = "RCC_PLLSource_HSI_Div2"},
-        {["name"] = "HSE",   ["key"] = "RCC_PLLSource_HSE_Div1"},
-        {["name"] = "HSE/2", ["key"] = "RCC_PLLSource_HSE_Div2"}
+        {name = "HSI/2", key = "RCC_PLLSource_HSI_Div2"},
+        {name = "HSE",   key = "RCC_PLLSource_HSE_Div1"},
+        {name = "HSE/2", key = "RCC_PLLSource_HSE_Div2"}
 }
 
 local PLL_clksrc_CL = {
-        {["name"] = "HSI/2",         ["key"] = "RCC_PLLSource_HSI_Div2"},
-        {["name"] = "PREDIV1 clock", ["key"] = "RCC_PLLSource_PREDIV1" }
+        {name = "HSI/2",         key = "RCC_PLLSource_HSI_Div2"},
+        {name = "PREDIV1 clock", key = "RCC_PLLSource_PREDIV1" }
 }
 
 local MCO_clksrc = {
-        {["name"] = "No clock",               ["key"] = "RCC_MCO_NoClock"    },
-        {["name"] = "System clock",           ["key"] = "RCC_MCO_SYSCLK"     },
-        {["name"] = "HSI oscillator clock",   ["key"] = "RCC_MCO_HSI"        },
-        {["name"] = "HSE oscillator clock",   ["key"] = "RCC_MCO_HSE"        },
-        {["name"] = "PLL clock divided by 2", ["key"] = "RCC_MCO_PLLCLK_Div2"}
+        {name = "No clock",               key = "RCC_MCO_NoClock"    },
+        {name = "System clock",           key = "RCC_MCO_SYSCLK"     },
+        {name = "HSI oscillator clock",   key = "RCC_MCO_HSI"        },
+        {name = "HSE oscillator clock",   key = "RCC_MCO_HSE"        },
+        {name = "PLL clock divided by 2", key = "RCC_MCO_PLLCLK_Div2"}
 }
 
 local MCO_clksrc_CL = {
-        {["name"] = "No clock",                  ["key"] = "RCC_MCO_NoClock"     },
-        {["name"] = "System clock",              ["key"] = "RCC_MCO_SYSCLK"      },
-        {["name"] = "HSI oscillator clock",      ["key"] = "RCC_MCO_HSI"         },
-        {["name"] = "HSE oscillator clock",      ["key"] = "RCC_MCO_HSE"         },
-        {["name"] = "PLL clock divided by 2",    ["key"] = "RCC_MCO_PLLCLK_Div2" },
-        {["name"] = "PLL2 clock",                ["key"] = "RCC_MCO_PLL2CLK"     },
-        {["name"] = "PLL3 clock divided by 2",   ["key"] = "RCC_MCO_PLL3CLK_Div2"},
-        {["name"] = "PLL3 clock",                ["key"] = "RCC_MCO_PLL3CLK"     },
-        {["name"] = "External oscillator clock", ["key"] = "RCC_MCO_XT1"         }
+        {name = "No clock",                  key = "RCC_MCO_NoClock"     },
+        {name = "System clock",              key = "RCC_MCO_SYSCLK"      },
+        {name = "HSI oscillator clock",      key = "RCC_MCO_HSI"         },
+        {name = "HSE oscillator clock",      key = "RCC_MCO_HSE"         },
+        {name = "PLL clock divided by 2",    key = "RCC_MCO_PLLCLK_Div2" },
+        {name = "PLL2 clock",                key = "RCC_MCO_PLL2CLK"     },
+        {name = "PLL3 clock divided by 2",   key = "RCC_MCO_PLL3CLK_Div2"},
+        {name = "PLL3 clock",                key = "RCC_MCO_PLL3CLK"     },
+        {name = "External oscillator clock", key = "RCC_MCO_XT1"         }
 }
-                    
+
 local I2S2_clksrc = {
-        {["name"] = "System clock",   ["key"] = "RCC_I2S2CLKSource_SYSCLK"  },
-        {["name"] = "PLL3 VCO clock", ["key"] = "RCC_I2S2CLKSource_PLL3_VCO"}
+        {name = "System clock",   key = "RCC_I2S2CLKSource_SYSCLK"  },
+        {name = "PLL3 VCO clock", key = "RCC_I2S2CLKSource_PLL3_VCO"}
 }
 
 local I2S3_clksrc = {
-        {["name"] = "System clock",   ["key"] = "RCC_I2S3CLKSource_SYSCLK"  },
-        {["name"] = "PLL3 VCO clock", ["key"] = "RCC_I2S3CLKSource_PLL3_VCO"}
+        {name = "System clock",   key = "RCC_I2S3CLKSource_SYSCLK"  },
+        {name = "PLL3 VCO clock", key = "RCC_I2S3CLKSource_PLL3_VCO"}
 }
-                     
+
 local RTC_clksrc = {
-        {["name"] = "LSE oscillator clock",                ["key"] = "RCC_RTCCLKSource_LSE"       },
-        {["name"] = "LSI oscillator clock",                ["key"] = "RCC_RTCCLKSource_LSI"       },
-        {["name"] = "HSE oscillator clock divided by 128", ["key"] = "RCC_RTCCLKSource_HSE_Div128"}
+        {name = "LSE oscillator clock",                key = "RCC_RTCCLKSource_LSE"       },
+        {name = "LSI oscillator clock",                key = "RCC_RTCCLKSource_LSI"       },
+        {name = "HSE oscillator clock divided by 128", key = "RCC_RTCCLKSource_HSE_Div128"}
 }
 
 local SYSCLK_clksrc = {
-        {["name"] = "HSI", ["key"] = "RCC_SYSCLKSource_HSI"   },
-        {["name"] = "HSE", ["key"] = "RCC_SYSCLKSource_HSE"   },
-        {["name"] = "PLL", ["key"] = "RCC_SYSCLKSource_PLLCLK"}
+        {name = "HSI", key = "RCC_SYSCLKSource_HSI"   },
+        {name = "HSE", key = "RCC_SYSCLKSource_HSE"   },
+        {name = "PLL", key = "RCC_SYSCLKSource_PLLCLK"}
 }
 
 local USB_clksrc = {
-        {["name"] = "PLL clock divided by 1",   ["key"] = "RCC_USBCLKSource_PLLCLK_Div1",  ["value"] = 1  },
-        {["name"] = "PLL clock divided by 1.5", ["key"] = "RCC_USBCLKSource_PLLCLK_1Div5", ["value"] = 1.5}
+        {name = "PLL clock divided by 1",   key = "RCC_USBCLKSource_PLLCLK_Div1",  value = 1  },
+        {name = "PLL clock divided by 1.5", key = "RCC_USBCLKSource_PLLCLK_1Div5", value = 1.5}
 }
 
 local USB_clksrc_CL = {
-        {["name"] = "PLL VCO divided by 2", ["key"] = "RCC_OTGFSCLKSource_PLLVCO_Div2", ["value"] = 2},
-        {["name"] = "PLL VCO divided by 3", ["key"] = "RCC_OTGFSCLKSource_PLLVCO_Div3", ["value"] = 3}
+        {name = "PLL VCO divided by 2", key = "RCC_OTGFSCLKSource_PLLVCO_Div2", value = 2},
+        {name = "PLL VCO divided by 3", key = "RCC_OTGFSCLKSource_PLLVCO_Div3", value = 3}
 }
 
 local PREDIV1_clksrc = {
-        {["name"] = "HSE",  ["key"] = "RCC_PREDIV1_Source_HSE" },
-        {["name"] = "PLL2", ["key"] = "RCC_PREDIV1_Source_PLL2"}
+        {name = "HSE",  key = "RCC_PREDIV1_Source_HSE" },
+        {name = "PLL2", key = "RCC_PREDIV1_Source_PLL2"}
 }
 
 local PREDIV1_val = {
-        {["name"] = "/1",  ["key"] = "RCC_PREDIV1_Div1",  ["value"] = 1 },
-        {["name"] = "/2",  ["key"] = "RCC_PREDIV1_Div2",  ["value"] = 2 },
-        {["name"] = "/3",  ["key"] = "RCC_PREDIV1_Div3",  ["value"] = 3 },
-        {["name"] = "/4",  ["key"] = "RCC_PREDIV1_Div4",  ["value"] = 4 },
-        {["name"] = "/5",  ["key"] = "RCC_PREDIV1_Div5",  ["value"] = 5 },
-        {["name"] = "/6",  ["key"] = "RCC_PREDIV1_Div6",  ["value"] = 6 },
-        {["name"] = "/7",  ["key"] = "RCC_PREDIV1_Div7",  ["value"] = 7 },
-        {["name"] = "/8",  ["key"] = "RCC_PREDIV1_Div8",  ["value"] = 8 },
-        {["name"] = "/9",  ["key"] = "RCC_PREDIV1_Div9",  ["value"] = 9 },
-        {["name"] = "/10", ["key"] = "RCC_PREDIV1_Div10", ["value"] = 10},
-        {["name"] = "/11", ["key"] = "RCC_PREDIV1_Div11", ["value"] = 11},
-        {["name"] = "/12", ["key"] = "RCC_PREDIV1_Div12", ["value"] = 12},
-        {["name"] = "/13", ["key"] = "RCC_PREDIV1_Div13", ["value"] = 13},
-        {["name"] = "/14", ["key"] = "RCC_PREDIV1_Div14", ["value"] = 14},
-        {["name"] = "/15", ["key"] = "RCC_PREDIV1_Div15", ["value"] = 15},
-        {["name"] = "/16", ["key"] = "RCC_PREDIV1_Div16", ["value"] = 16}
+        {name = "/1",  key = "RCC_PREDIV1_Div1",  value = 1 },
+        {name = "/2",  key = "RCC_PREDIV1_Div2",  value = 2 },
+        {name = "/3",  key = "RCC_PREDIV1_Div3",  value = 3 },
+        {name = "/4",  key = "RCC_PREDIV1_Div4",  value = 4 },
+        {name = "/5",  key = "RCC_PREDIV1_Div5",  value = 5 },
+        {name = "/6",  key = "RCC_PREDIV1_Div6",  value = 6 },
+        {name = "/7",  key = "RCC_PREDIV1_Div7",  value = 7 },
+        {name = "/8",  key = "RCC_PREDIV1_Div8",  value = 8 },
+        {name = "/9",  key = "RCC_PREDIV1_Div9",  value = 9 },
+        {name = "/10", key = "RCC_PREDIV1_Div10", value = 10},
+        {name = "/11", key = "RCC_PREDIV1_Div11", value = 11},
+        {name = "/12", key = "RCC_PREDIV1_Div12", value = 12},
+        {name = "/13", key = "RCC_PREDIV1_Div13", value = 13},
+        {name = "/14", key = "RCC_PREDIV1_Div14", value = 14},
+        {name = "/15", key = "RCC_PREDIV1_Div15", value = 15},
+        {name = "/16", key = "RCC_PREDIV1_Div16", value = 16}
 }
 
 local PREDIV2_val = {
-        {["name"] = "HSE/1",  ["key"] = "RCC_PREDIV2_Div1",  ["value"] = 1 },
-        {["name"] = "HSE/2",  ["key"] = "RCC_PREDIV2_Div2",  ["value"] = 2 },
-        {["name"] = "HSE/3",  ["key"] = "RCC_PREDIV2_Div3",  ["value"] = 3 },
-        {["name"] = "HSE/4",  ["key"] = "RCC_PREDIV2_Div4",  ["value"] = 4 },
-        {["name"] = "HSE/5",  ["key"] = "RCC_PREDIV2_Div5",  ["value"] = 5 },
-        {["name"] = "HSE/6",  ["key"] = "RCC_PREDIV2_Div6",  ["value"] = 6 },
-        {["name"] = "HSE/7",  ["key"] = "RCC_PREDIV2_Div7",  ["value"] = 7 },
-        {["name"] = "HSE/8",  ["key"] = "RCC_PREDIV2_Div8",  ["value"] = 8 },
-        {["name"] = "HSE/9",  ["key"] = "RCC_PREDIV2_Div9",  ["value"] = 9 },
-        {["name"] = "HSE/10", ["key"] = "RCC_PREDIV2_Div10", ["value"] = 10},
-        {["name"] = "HSE/11", ["key"] = "RCC_PREDIV2_Div11", ["value"] = 11},
-        {["name"] = "HSE/12", ["key"] = "RCC_PREDIV2_Div12", ["value"] = 12},
-        {["name"] = "HSE/13", ["key"] = "RCC_PREDIV2_Div13", ["value"] = 13},
-        {["name"] = "HSE/14", ["key"] = "RCC_PREDIV2_Div14", ["value"] = 14},
-        {["name"] = "HSE/15", ["key"] = "RCC_PREDIV2_Div15", ["value"] = 15},
-        {["name"] = "HSE/16", ["key"] = "RCC_PREDIV2_Div16", ["value"] = 16}
+        {name = "HSE/1",  key = "RCC_PREDIV2_Div1",  value = 1 },
+        {name = "HSE/2",  key = "RCC_PREDIV2_Div2",  value = 2 },
+        {name = "HSE/3",  key = "RCC_PREDIV2_Div3",  value = 3 },
+        {name = "HSE/4",  key = "RCC_PREDIV2_Div4",  value = 4 },
+        {name = "HSE/5",  key = "RCC_PREDIV2_Div5",  value = 5 },
+        {name = "HSE/6",  key = "RCC_PREDIV2_Div6",  value = 6 },
+        {name = "HSE/7",  key = "RCC_PREDIV2_Div7",  value = 7 },
+        {name = "HSE/8",  key = "RCC_PREDIV2_Div8",  value = 8 },
+        {name = "HSE/9",  key = "RCC_PREDIV2_Div9",  value = 9 },
+        {name = "HSE/10", key = "RCC_PREDIV2_Div10", value = 10},
+        {name = "HSE/11", key = "RCC_PREDIV2_Div11", value = 11},
+        {name = "HSE/12", key = "RCC_PREDIV2_Div12", value = 12},
+        {name = "HSE/13", key = "RCC_PREDIV2_Div13", value = 13},
+        {name = "HSE/14", key = "RCC_PREDIV2_Div14", value = 14},
+        {name = "HSE/15", key = "RCC_PREDIV2_Div15", value = 15},
+        {name = "HSE/16", key = "RCC_PREDIV2_Div16", value = 16}
 }
 
 local AHB_prescaler = {
-        {["name"] = "SYSCLK / 1",   ["key"] = "RCC_SYSCLK_Div1",   ["value"] = 1  },
-        {["name"] = "SYSCLK / 2",   ["key"] = "RCC_SYSCLK_Div2",   ["value"] = 2  },
-        {["name"] = "SYSCLK / 4",   ["key"] = "RCC_SYSCLK_Div4",   ["value"] = 4  },
-        {["name"] = "SYSCLK / 8",   ["key"] = "RCC_SYSCLK_Div8",   ["value"] = 8  },
-        {["name"] = "SYSCLK / 16",  ["key"] = "RCC_SYSCLK_Div16",  ["value"] = 16 },
-        {["name"] = "SYSCLK / 64",  ["key"] = "RCC_SYSCLK_Div64",  ["value"] = 64 },
-        {["name"] = "SYSCLK / 128", ["key"] = "RCC_SYSCLK_Div128", ["value"] = 128},
-        {["name"] = "SYSCLK / 256", ["key"] = "RCC_SYSCLK_Div256", ["value"] = 256},
-        {["name"] = "SYSCLK / 512", ["key"] = "RCC_SYSCLK_Div512", ["value"] = 512}
+        {name = "SYSCLK / 1",   key = "RCC_SYSCLK_Div1",   value = 1  },
+        {name = "SYSCLK / 2",   key = "RCC_SYSCLK_Div2",   value = 2  },
+        {name = "SYSCLK / 4",   key = "RCC_SYSCLK_Div4",   value = 4  },
+        {name = "SYSCLK / 8",   key = "RCC_SYSCLK_Div8",   value = 8  },
+        {name = "SYSCLK / 16",  key = "RCC_SYSCLK_Div16",  value = 16 },
+        {name = "SYSCLK / 64",  key = "RCC_SYSCLK_Div64",  value = 64 },
+        {name = "SYSCLK / 128", key = "RCC_SYSCLK_Div128", value = 128},
+        {name = "SYSCLK / 256", key = "RCC_SYSCLK_Div256", value = 256},
+        {name = "SYSCLK / 512", key = "RCC_SYSCLK_Div512", value = 512}
 }
 
 local APB12_prescaler = {
-        {["name"] = "HCLK / 1",  ["key"] = "RCC_HCLK_Div1",  ["value"] = 1 },
-        {["name"] = "HCLK / 2",  ["key"] = "RCC_HCLK_Div2",  ["value"] = 2 },
-        {["name"] = "HCLK / 4",  ["key"] = "RCC_HCLK_Div4",  ["value"] = 4 },
-        {["name"] = "HCLK / 8",  ["key"] = "RCC_HCLK_Div8",  ["value"] = 8 },
-        {["name"] = "HCLK / 16", ["key"] = "RCC_HCLK_Div16", ["value"] = 16}
+        {name = "HCLK / 1",  key = "RCC_HCLK_Div1",  value = 1 },
+        {name = "HCLK / 2",  key = "RCC_HCLK_Div2",  value = 2 },
+        {name = "HCLK / 4",  key = "RCC_HCLK_Div4",  value = 4 },
+        {name = "HCLK / 8",  key = "RCC_HCLK_Div8",  value = 8 },
+        {name = "HCLK / 16", key = "RCC_HCLK_Div16", value = 16}
 }
 
 local ADC_prescaler = {
-        {["name"] = "PCLK2 / 2", ["key"] = "RCC_PCLK2_Div2", ["value"] = 2},
-        {["name"] = "PCLK2 / 4", ["key"] = "RCC_PCLK2_Div4", ["value"] = 4},
-        {["name"] = "PCLK2 / 6", ["key"] = "RCC_PCLK2_Div6", ["value"] = 6},
-        {["name"] = "PCLK2 / 8", ["key"] = "RCC_PCLK2_Div8", ["value"] = 8}
+        {name = "PCLK2 / 2", key = "RCC_PCLK2_Div2", value = 2},
+        {name = "PCLK2 / 4", key = "RCC_PCLK2_Div4", value = 4},
+        {name = "PCLK2 / 6", key = "RCC_PCLK2_Div6", value = 6},
+        {name = "PCLK2 / 8", key = "RCC_PCLK2_Div8", value = 8}
 }
 
 
@@ -304,7 +304,7 @@ local function get_table_index(tab, field, value)
                         return i
                 end
         end
-        
+
         return 0
 end
 
@@ -334,7 +334,7 @@ local function calculate_frequencies()
         local APB1_prescaler = APB12_prescaler[ui.Choice_APB1_prescaler:GetSelection() + 1].value
         local APB2_prescaler = APB12_prescaler[ui.Choice_APB2_prescaler:GetSelection() + 1].value
         local ADC_prescaler  = ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].value
-        
+
         local USB_prescaler
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                 USB_prescaler = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
@@ -368,7 +368,7 @@ local function calculate_frequencies()
         freq.PREDIV1CLK    = 0
         freq.PREDIV2CLK    = 0
         freq.flash_latency = 0
-     
+
         -- calculate RTCCLK
         if RTCSEL == "RCC_RTCCLKSource_LSI" then
                 freq.RTCCLK = freq.LSI
@@ -377,7 +377,7 @@ local function calculate_frequencies()
         else
                 freq.RTCCLK = freq.HSE / 128
         end
-        
+
         -- calculate Conectivity Linie-specific frequencies
         if cpu_family:is_CL() then
                 freq.PLL2CLK    = (freq.HSE / PREDIV2) * PLL2MUL
@@ -386,7 +386,7 @@ local function calculate_frequencies()
                 freq.PREDIV2CLK = freq.HSE / PREDIV2
                 freq.PREDIV1CLK = ifs(PREDIV1SRC == "RCC_PREDIV1_Source_HSE", freq.HSE / PREDIV1, freq.PLL2CLK / PREDIV1)
         end
-        
+
         -- calculate PLL Clk frequency
         if PLLSRC == "RCC_PLLSource_HSI_Div2" then
                 freq.PLLCLK = (freq.HSI / 2) * PLLMUL
@@ -398,7 +398,7 @@ local function calculate_frequencies()
                 end
         end
         freq.PLLVCO = 2 * freq.PLLCLK
-        
+
         -- calculate SYSCLK
         if SW == "RCC_SYSCLKSource_HSE" then
                 freq.SYSCLK = freq.HSE
@@ -407,12 +407,12 @@ local function calculate_frequencies()
         else
                 freq.SYSCLK = freq.PLLCLK
         end
-        
+
         -- calculate USB frequency (if USB exist)
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                 freq.USBCLK = ifs(cpu_family:is_CL(), freq.PLLVCO / USB_prescaler, freq.PLLCLK / USB_prescaler)
         end
-        
+
         -- calculate I2S frequency
         freq.I2S2CLK = ifs(I2S2SEL == "RCC_I2S2CLKSource_PLL3_VCO" and cpu_family:is_CL(), freq.PLL3VCO, freq.SYSCLK)
         freq.I2S3CLK = ifs(I2S3SEL == "RCC_I2S3CLKSource_PLL3_VCO" and cpu_family:is_CL(), freq.PLL3VCO, freq.SYSCLK)
@@ -446,7 +446,7 @@ local function calculate_frequencies()
         freq.ADCCLK   = freq.PCLK2 / ADC_prescaler
         freq.TIMxCLK1 = ifs(APB1_prescaler == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
         freq.TIMxCLK2 = ifs(APB2_prescaler == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
-        
+
         -- calculate flash latency
         if freq.SYSCLK <= 24e6 then
                 freq.flash_latency = 0
@@ -479,19 +479,19 @@ local function load_controls()
                 else
                         ui.Choice_PLL:SetSelection(get_table_index(PLL_on_CL, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL_MUL_CL)) - 1)
                 end
-        
+
                 if ct:key_read(config.arch.stm32f1.key.PLL_PLL2_ON) == DISABLE then
                         ui.Choice_PLL2:SetSelection(0)
                 else
                         ui.Choice_PLL2:SetSelection(get_table_index(PLL2_on, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL2_MUL)) - 1)
                 end
-                
+
                 if ct:key_read(config.arch.stm32f1.key.PLL_PLL3_ON) == DISABLE then
                         ui.Choice_PLL3:SetSelection(0)
                 else
                         ui.Choice_PLL3:SetSelection(get_table_index(PLL3_on, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL3_MUL)) - 1)
                 end
-                
+
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                         ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", ct:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
                 end
@@ -509,11 +509,11 @@ local function load_controls()
                 else
                         ui.Choice_PLL:SetSelection(get_table_index(PLL_on, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL_MUL)) - 1)
                 end
-                
+
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                         ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc, "key", ct:key_read(config.arch.stm32f1.key.PLL_USB_DIV)) - 1)
                 end
-                
+
                 ui.Choice_PLL_clksrc:SetSelection(get_table_index(PLL_clksrc, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL_SRC)) - 1)
                 ui.Choice_MCO_clksrc:SetSelection(get_table_index(MCO_clksrc, "key", ct:key_read(config.arch.stm32f1.key.PLL_MCO_SRC)) - 1)
         end
@@ -539,7 +539,7 @@ end
 local function event_on_button_save_click()
         -- save module state
         ct:enable_module("PLL", ui.CheckBox_module_enable:GetValue())
-        
+
         -- save Conectivity Line specific controls
         if cpu_family:is_CL() then
                 if ui.Choice_PLL:GetSelection() == 0 then
@@ -548,25 +548,25 @@ local function event_on_button_save_click()
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL_MUL_CL, PLL_on_CL[ui.Choice_PLL:GetSelection() + 1].key)
                 end
-                
+
                 if ui.Choice_PLL2:GetSelection() == 0 then
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, DISABLE)
                 else
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL2_ON, ENABLE)
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL2_MUL, PLL2_on[ui.Choice_PLL2:GetSelection() + 1].key)
                 end
-                
+
                 if ui.Choice_PLL3:GetSelection() == 0 then
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, DISABLE)
                 else
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL3_ON, ENABLE)
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL3_MUL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].key)
                 end
-                
+
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                         ct:key_write(config.arch.stm32f1.key.PLL_USB_DIV_CL, USB_clksrc_CL[ui.Choice_USB_clksrc:GetSelection() + 1].key)
                 end
-                
+
                 ct:key_write(config.arch.stm32f1.key.PLL_PLL_SRC_CL, PLL_clksrc_CL[ui.Choice_PLL_clksrc:GetSelection() + 1].key)
                 ct:key_write(config.arch.stm32f1.key.PLL_PREDIV2_VAL, PREDIV2_val[ui.Choice_PREDIV2:GetSelection() + 1].key)
                 ct:key_write(config.arch.stm32f1.key.PLL_PREDIV1_SRC, PREDIV1_clksrc[ui.Choice_PREDIV1_clksrc:GetSelection() + 1].key)
@@ -581,15 +581,15 @@ local function event_on_button_save_click()
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL_ON, ENABLE)
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL_MUL, PLL_on[ui.Choice_PLL:GetSelection() + 1].key)
                 end
-                
+
                 if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                         ct:key_write(config.arch.stm32f1.key.PLL_USB_DIV, USB_clksrc[ui.Choice_USB_clksrc:GetSelection() + 1].key)
                 end
-                
+
                 ct:key_write(config.arch.stm32f1.key.PLL_PLL_SRC, PLL_clksrc[ui.Choice_PLL_clksrc:GetSelection() + 1].key)
                 ct:key_write(config.arch.stm32f1.key.PLL_MCO_SRC, MCO_clksrc[ui.Choice_MCO_clksrc:GetSelection() + 1].key)
         end
-        
+
         -- save common configuration
         ct:key_write(config.arch.stm32f1.key.PLL_LSI_ON, LSI_on[ui.Choice_LSI:GetSelection() + 1].key)
         ct:key_write(config.arch.stm32f1.key.PLL_LSE_ON, LSE_on[ui.Choice_LSE:GetSelection() + 1].key)
@@ -627,7 +627,7 @@ local function event_value_updated()
         ui.StaticText_LSI:SetLabel(freqlabel(freq.LSI, "%s (LSI)"))
         ui.StaticText_LSE:SetLabel(freqlabel(freq.LSE, "%s (LSE)"))
         ui.StaticText_HSE:SetLabel(freqlabel(freq.HSE, "%s (HSE)"))
-        
+
         if cpu_family:is_CL() then
                 ui.StaticText_PREDIV2:SetLabel(freqlabel(freq.PREDIV2CLK, "%s (PREDIV2CLK)"))
                 ui.StaticText_PREDIV1_value:SetLabel(freqlabel(freq.PREDIV1CLK, "%s (PREDIV1CLK)"))
@@ -636,11 +636,11 @@ local function event_value_updated()
                 ui.StaticText_I2S2_clksrc:SetLabel(freqlabel(freq.I2S2CLK, "%s (I2S2CLK)"))
                 ui.StaticText_I2S3_clksrc:SetLabel(freqlabel(freq.I2S3CLK, "%s (I2S3CLK)"))
         end
-        
+
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                 ui.StaticText_USB_clksrc:SetLabel(freqlabel(freq.USBCLK, "%s (USBCLK)"))
         end
-        
+
         ui.StaticText_PLL:SetLabel(freqlabel(freq.PLLCLK, "%s (PLLCLK)"))
         ui.StaticText_system_clksrc:SetLabel(freqlabel(freq.SYSCLK, "%s (SYSCLK)"))
         ui.StaticText_RTC_clksrc:SetLabel(freqlabel(freq.RTCCLK, "%s (RTCCLK)"))
@@ -648,8 +648,8 @@ local function event_value_updated()
         ui.StaticText_AHB_prescaler:SetLabel(freqlabel(freq.HCLK, "%s (HCLK)"))
         ui.StaticText_APB1_prescaler:SetLabel(freqlabel(freq.PCLK1, "%s (PCLK1)"))
         ui.StaticText_APB2_prescaler:SetLabel(freqlabel(freq.PCLK2, "%s (PCLK2)"))
-        ui.StaticText_ADC_prescaler:SetLabel(freqlabel(freq.ADCCLK, "%s (ADCCLK)"))       
-        
+        ui.StaticText_ADC_prescaler:SetLabel(freqlabel(freq.ADCCLK, "%s (ADCCLK)"))
+
         ui.Button_save:Enable(true)
 end
 
@@ -670,7 +670,7 @@ function pll:create_window(parent)
         HSE_FREQ         = tonumber(ct:key_read(config.project.key.CPU_OSC_FREQ))
         HSE_on[2].value  = HSE_FREQ
         HSE_on[3].value  = HSE_FREQ
-        
+
         ui = {}
         ID = {}
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
@@ -706,7 +706,7 @@ function pll:create_window(parent)
         ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 1, 0, 0)
         ui.FlexGridSizer3 = wx.wxFlexGridSizer(0, 3, 0, 0)
-        
+
         ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "LSI oscillator", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_LSI = wx.wxChoice(ui.Panel1, ID.CHOICE_LSI, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_LSI")
@@ -714,7 +714,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_LSI, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_LSI = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_LSI, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "LSE oscillator", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_LSE = wx.wxChoice(ui.Panel1, ID.CHOICE_LSE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_LSE")
@@ -722,7 +722,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_LSE, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_LSE = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_LSE, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "HSE oscillator", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_HSE = wx.wxChoice(ui.Panel1, ID.CHOICE_HSE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_HSE")
@@ -730,7 +730,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_HSE, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_HSE = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_HSE, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         if cpu_family:is_CL() then
                 ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PREDIV2", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -739,7 +739,7 @@ function pll:create_window(parent)
                 ui.FlexGridSizer3:Add(ui.Choice_PREDIV2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticText_PREDIV2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_PREDIV2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                
+
                 ui.StaticText5 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PLL2", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_PLL2 = wx.wxChoice(ui.Panel1, ID.CHOICE_PLL2, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_PLL2")
@@ -747,7 +747,7 @@ function pll:create_window(parent)
                 ui.FlexGridSizer3:Add(ui.Choice_PLL2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticText_PLL2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_PLL2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                
+
                 ui.StaticText6 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PLL3", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText6, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_PLL3 = wx.wxChoice(ui.Panel1, ID.CHOICE_PLL3, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_PLL3")
@@ -755,7 +755,7 @@ function pll:create_window(parent)
                 ui.FlexGridSizer3:Add(ui.Choice_PLL3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticText_PLL3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_PLL3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
                 ui.StaticText8 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PREDIV1", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText8, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.BoxSizer2 = wx.wxBoxSizer(wx.wxHORIZONTAL)
@@ -771,7 +771,7 @@ function pll:create_window(parent)
                 ui.StaticText_PREDIV1_value = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_PREDIV1_value, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         end
-        
+
         ui.StaticText10 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "PLL", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.BoxSizer1 = wx.wxBoxSizer(wx.wxHORIZONTAL)
@@ -788,7 +788,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.BoxSizer1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.StaticText_PLL = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_PLL, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText11 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "System clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText11, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_system_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_SYSTEM_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_SYSTEM_CLKSRC")
@@ -796,7 +796,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_system_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_system_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_system_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText12 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "RTC clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText12, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_RTC_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_RTC_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_RTC_CLKSRC")
@@ -804,7 +804,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_RTC_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_RTC_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_RTC_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText13 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "MCO clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText13, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_MCO_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_MCO_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_MCO_CLKSRC")
@@ -813,7 +813,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_MCO_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_MCO_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_MCO_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
                 ui.StaticText14 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "USB clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText14, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -824,7 +824,7 @@ function pll:create_window(parent)
                 ui.StaticText_USB_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_USB_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         end
-        
+
         if cpu_family:is_CL() then
                 ui.StaticText15 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "I2S2 clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText15, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -833,7 +833,7 @@ function pll:create_window(parent)
                 ui.FlexGridSizer3:Add(ui.Choice_I2S2_clksrc, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticText_I2S2_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_I2S2_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
                 ui.StaticText16 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "I2S3 clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText16, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_I2S3_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_I2S3_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_I2S3_CLKSRC")
@@ -842,7 +842,7 @@ function pll:create_window(parent)
                 ui.StaticText_I2S3_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText_I2S3_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         end
-        
+
         ui.StaticText17 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "AHB prescaler", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText17, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_AHB_prescaler = wx.wxChoice(ui.Panel1, ID.CHOICE_AHB_PRESCALER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_AHB_PRESCALER")
@@ -850,7 +850,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_AHB_prescaler, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_AHB_prescaler = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_AHB_prescaler, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText18 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "APB1 prescaler", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText18, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_APB1_prescaler = wx.wxChoice(ui.Panel1, ID.CHOICE_APB1_PRESCALER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_APB1_PRESCALER")
@@ -858,7 +858,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_APB1_prescaler, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_APB1_prescaler = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_APB1_prescaler, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText19 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "APB2 prescaler", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText19, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_APB2_prescaler = wx.wxChoice(ui.Panel1, ID.CHOICE_APB2_PRESCALER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_APB2_PRESCALER")
@@ -866,7 +866,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_APB2_prescaler, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_APB2_prescaler = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_APB2_prescaler, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.StaticText20 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "ADC prescaler", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText20, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_ADC_prescaler = wx.wxChoice(ui.Panel1, ID.CHOICE_ADC_PRESCALER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_ADC_PRESCALER")
@@ -874,7 +874,7 @@ function pll:create_window(parent)
         ui.FlexGridSizer3:Add(ui.Choice_ADC_prescaler, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText_ADC_prescaler = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_ADC_prescaler, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        
+
         ui.FlexGridSizer2:Add(ui.FlexGridSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
