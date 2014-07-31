@@ -1,4 +1,4 @@
-dnx RTOS 1.3.7rc
+dnx RTOS 1.3.7
 ==============
 New Features, Improvements:
 - driver_init(): returns driver ID on success, -1 on error
