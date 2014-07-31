@@ -335,6 +335,12 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function sdspi:selected()
+        -- refreshes pin list
+        pin_list = gpio:get_pin_list(true)
+        ui.Choice_cs_pin_name:Clear()
+        ui.Choice_cs_pin_name:Append("*UNDEFINED*")
+        ui.Choice_cs_pin_name:Append(pin_list)
+        load_controls()
 end
 
 

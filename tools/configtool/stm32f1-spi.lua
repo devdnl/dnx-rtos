@@ -555,6 +555,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function spi:selected()
+        -- refreshes pin list
+        pin_list = gpio:get_pin_list(true)
+
+        for i = 0, NUMBER_OF_CS - 1 do
+                ui.Choice_cspin[i]:Clear()
+                ui.Choice_cspin[i]:Append("*UNDEFINED*")
+                ui.Choice_cspin[i]:Append(pin_list)
+        end
+
+        local spisel = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
+        load_controls_of_selected_SPI(spisel)
 end
 
 

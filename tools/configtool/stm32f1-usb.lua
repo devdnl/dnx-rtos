@@ -241,6 +241,12 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function usb:selected()
+        -- refreshes pin list
+        pin_list = gpio:get_pin_list(true)
+        ui.Choice_pullup_pin:Clear()
+        ui.Choice_pullup_pin:Append("*UNDEFINED*")
+        ui.Choice_pullup_pin:Append(pin_list)
+        load_controls()
 end
 
 
