@@ -618,7 +618,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         if (arg) {
                                 struct SPI_transceive *trans = arg;
 
-                                if (trans->count && trans->rx_buffer && trans->tx_buffer) {
+                                if (trans->count) {
                                         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
                                                 spi_module->tx_buffer[hdl->major]  = trans->tx_buffer;
                                                 spi_module->rx_buffer[hdl->major]  = trans->rx_buffer;
