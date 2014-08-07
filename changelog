@@ -1,3 +1,13 @@
+dnx RTOS 1.3.8
+==============
+New Features, Improvements:
+- Config tool: fixed problem with disabling non existing SPI devices
+- Config tool: fixed minor problems
+- SPI: driver fixed and simplified
+
+Fixed Bugs:
+- None
+
 dnx RTOS 1.3.7
 ==============
 New Features, Improvements:
