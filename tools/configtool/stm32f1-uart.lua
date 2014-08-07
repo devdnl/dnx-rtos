@@ -113,8 +113,8 @@ local function load_controls()
         ui.SpinCtrl_rx_buf_size:SetValue(rx_buf_size)
 
         -- load settings for each UART
-        for i = 1, #uart_cfg.port do
-                local uart_num = uart_cfg.port[i].name:GetValue()
+        for i = 1, uart_cfg:NumChildren() do
+                local uart_num = uart_cfg:Children()[i].name:GetValue()
 
                 local uart_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"]))
                 ui.UART[i].CheckBox_enable:SetValue(uart_enable)
@@ -177,8 +177,8 @@ local function event_on_button_save_click()
                 ct:key_write(config.arch.stm32f1.key["UART_UART"..i.."_ENABLE"], config.project.def.NO:GetValue())
         end
 
-        for i = 1, #uart_cfg.port do
-                local uart_num = uart_cfg.port[i].name:GetValue()
+        for i = 1, uart_cfg:NumChildren() do
+                local uart_num = uart_cfg:Children()[i].name:GetValue()
 
                 local uart_enable = ct:bool_to_yes_no(ui.UART[i].CheckBox_enable:GetValue())
                 ct:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_ENABLE"], uart_enable)
@@ -297,10 +297,10 @@ function uart:create_window(parent)
         -- UART enable configuration
         ui.StaticBoxSizer_UART = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "UART configuration")
         ui.FlexGridSizer_UART  = wx.wxFlexGridSizer(0, 2, 0, 0)
-        for i = 1, #uart_cfg.port do
+        for i = 1, uart_cfg:NumChildren() do
                 ui.UART[i] = {}
                 ID.CHECKBOX_UART_ENABLE[i] = wx.wxNewId()
-                ui.UART[i].CheckBox_enable = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_UART_ENABLE[i], "Enable UART"..uart_cfg.port[i].name:GetValue(), wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_UART_ENABLE")
+                ui.UART[i].CheckBox_enable = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_UART_ENABLE[i], "Enable UART"..uart_cfg:Children()[i].name:GetValue(), wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_UART_ENABLE")
                 ui.FlexGridSizer_UART:Add(ui.UART[i].CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 this:Connect(ID.CHECKBOX_UART_ENABLE[i], wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(this) event_checkbox_UART_enable_updated(this, i) end)
 

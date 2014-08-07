@@ -953,7 +953,7 @@
                     <peripherals>
                         <GPIO>
                             <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0x000F</pinmask></port>
+                            <port><name>B</name><pinmask>0x00FF</pinmask></port>
                             <port><name>D</name><pinmask>0x0003</pinmask></port>
                         </GPIO>
                         <PLL></PLL>

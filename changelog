@@ -1,7 +1,18 @@
+dnx RTOS 1.3.8
+==============
+New Features, Improvements:
+- Config tool: fixed problem with disabling non existing SPI devices
+- Config tool: fixed minor problems
+- SPI: driver fixed and simplified
+
+Fixed Bugs:
+- None
+
 dnx RTOS 1.3.7
 ==============
 New Features, Improvements:
 - driver_init(): returns driver ID on success, -1 on error
+- SPI driver: simplified architecture and fixed RAW mode
 
 Fixed Bugs:
 - system monitor: possible system freeze when thread is canceled while is accessing to the system monitor
