@@ -459,7 +459,7 @@ int sys_fputc(int c, FILE *stream)
  * @param[in] *file     file
  * @param[in]  puts     puts functionality (true: add \n at the end of string)
  *
- * @return number of puts characters
+ * @return number of characters written to the stream
  */
 //==============================================================================
 int sys_f_puts(const char *s, FILE *file, bool puts)
@@ -467,7 +467,7 @@ int sys_f_puts(const char *s, FILE *file, bool puts)
         if (file) {
                 int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
 
-                if (puts && n) {
+                if (puts) {
                         n += vfs_fwrite("\n", sizeof(char), 1, file);
                 }
 
