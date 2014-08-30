@@ -378,7 +378,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
                 spi_module->number_of_virtual_spi[hdl->major]--;
 
                 /* deinitialize major device if all minor devices are deinitialized */
-                if (spi_module->number_of_virtual_spi == 0) {
+                if (spi_module->number_of_virtual_spi[hdl->major] == 0) {
                         mutex_delete(spi_module->device_protect_mtx[hdl->major]);
                         spi_module->device_protect_mtx[hdl->major] = NULL;
                         semaphore_delete(spi_module->wait_irq_sem[hdl->major]);
