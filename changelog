@@ -1,3 +1,11 @@
+dnx RTOS 1.3.9rc
+==============
+New Features, Improvements:
+-
+
+Fixed Bugs:
+- modinit: fixed interpretation of driver_init() status (issue #95)
+
 dnx RTOS 1.3.8
 ==============
 New Features, Improvements:

@@ -110,7 +110,7 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
                 }
         }
 
-        if (status == 0) {
+        if (status >= 0) {
                 puts("Success.");
         } else {
                 perror("Error");
