@@ -518,13 +518,20 @@ void _mutex_delete(mutex_t *mutex)
 //==============================================================================
 bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
-        if (mutex) {
+        if (mutex && _task_get_data()->f_task_kill == false) {
                 if (mutex->object && mutex->valid == mutex_valid_number) {
+                        bool status;
                         if (mutex->recursive) {
-                                return xSemaphoreTakeRecursive(mutex->object, MS2TICK((portTickType)blocktime_ms));
+                                status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((portTickType)blocktime_ms));
                         } else {
-                                return xSemaphoreTake(mutex->object, MS2TICK((portTickType)blocktime_ms));
+                                status = xSemaphoreTake(mutex->object, MS2TICK((portTickType)blocktime_ms));
                         }
+
+                        if (status) {
+                                _task_get_data()->f_mutex_section++;
+                        }
+
+                        return status;
                 }
         }
 
@@ -545,11 +552,24 @@ bool _mutex_unlock(mutex_t *mutex)
 {
         if (mutex) {
                 if (mutex->object && mutex->valid == mutex_valid_number) {
+                        bool status;
                         if (mutex->recursive) {
-                                return xSemaphoreGiveRecursive(mutex->object);
+                                status = xSemaphoreGiveRecursive(mutex->object);
                         } else {
-                                return xSemaphoreGive(mutex->object);
+                                status = xSemaphoreGive(mutex->object);
                         }
+
+                        if (status) {
+                                _task_get_data()->f_mutex_section--;
+
+                                if (  _task_get_data()->f_task_kill     == true
+                                   && _task_get_data()->f_mutex_section <= 0   ) {
+
+                                        _task_suspend_now();
+                                }
+                        }
+
+                        return status;
                 }
         }
 

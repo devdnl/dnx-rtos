@@ -95,17 +95,19 @@ typedef enum _task_type {
 } task_type_t;
 
 typedef struct _task_data {
-        FILE            *f_stdin;        /* stdin file                         */
-        FILE            *f_stdout;       /* stdout file                        */
-        FILE            *f_stderr;       /* stderr file                        */
-        const char      *f_cwd;          /* current working path               */
-        void            *f_mem;          /* address to global variables        */
-        void            *f_monitor;      /* pointer to task monitor data       */
-        task_t          *f_parent_task;  /* program's parent task              */
-        void            *f_task_object;  /* thread object                      */
-        u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
-        task_type_t      f_task_type;    /* task type                          */
-        int              f_errno;        /* program error number               */
+        FILE            *f_stdin;               /* stdin file                         */
+        FILE            *f_stdout;              /* stdout file                        */
+        FILE            *f_stderr;              /* stderr file                        */
+        const char      *f_cwd;                 /* current working path               */
+        void            *f_mem;                 /* address to global variables        */
+        void            *f_monitor;             /* pointer to task monitor data       */
+        task_t          *f_parent_task;         /* program's parent task              */
+        void            *f_task_object;         /* thread object                      */
+        u32_t            f_cpu_usage;           /* counter used to calculate CPU load */
+        int              f_errno;               /* program error number               */
+        task_type_t      f_task_type:2;         /* task type                          */
+        bool             f_task_kill:1;         /* task is already killing            */
+        uint             f_mutex_section:24;    /* mutex section counter              */
 } _task_data_t;
 
 enum mutex_type {
