@@ -560,7 +560,11 @@ static void service_out(void *arg)
 
                                         if (mutex_lock(tty->secure_mtx, 100)) {
                                                 ttybfr_clear(tty->screen);
-                                                vt100_init();
+
+                                                if (tty_module->current_tty == tty->major) {
+                                                        vt100_init();
+                                                }
+
                                                 mutex_unlock(tty->secure_mtx);
                                         }
                                 }
