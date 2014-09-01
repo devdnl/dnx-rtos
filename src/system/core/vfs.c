@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/thread.h>
 #include <dnx/misc.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include "core/vfs.h"
@@ -87,7 +88,7 @@ static int              fclose                  (FILE *file, bool force);
 static int              increase_task_priority  (void);
 static inline void      restore_priority        (int priority);
 static inline void      mutex_force_lock        (mutex_t *mtx);
-static int              file_mode_str_to_flags  (const char *str);
+static vfs_open_flags_t file_mode_str_to_flags  (const char *str);
 static struct FS_data  *find_mounted_FS         (const char *path, u16_t len, u32_t *itemid);
 static struct FS_data  *find_base_FS            (const char *path, char **extPath);
 static char            *new_corrected_path      (const char *path, enum path_correction corr);
@@ -100,7 +101,6 @@ static mutex_t         *vfs_resource_mtx;
 static u32_t            vfs_id_counter;
 static const u32_t      file_validation_number = 0x495D47CB;
 static const u32_t      dir_validation_number  = 0x297E823D;
-static const uint       mtx_block_time         = 10;
 
 /*==============================================================================
   Function definitions
@@ -843,8 +843,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        int flags = file_mode_str_to_flags(mode);
-        if (flags == -1) {
+        vfs_open_flags_t flags = file_mode_str_to_flags(mode);
+        if (flags == 0) {
                 return NULL;
         }
 
@@ -1392,7 +1392,9 @@ static inline void restore_priority(int priority)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, mtx_block_time) != true);
+        while (!mutex_lock(mtx, MAX_DELAY_MS)) {
+                sleep_ms(1);
+        }
 }
 
 //==============================================================================
@@ -1402,10 +1404,10 @@ static inline void mutex_force_lock(mutex_t *mtx)
  *
  * @param[in] *str      file open mode string
  *
- * @return file open flags, -1 if error
+ * @return file open flags, 0 if error
  */
 //==============================================================================
-static int file_mode_str_to_flags(const char *str)
+static vfs_open_flags_t file_mode_str_to_flags(const char *str)
 {
         if (strcmp("r", str) == 0) {
                 return (O_RDONLY);
@@ -1433,7 +1435,7 @@ static int file_mode_str_to_flags(const char *str)
 
         errno = EINVAL;
 
-        return -1;
+        return 0;
 }
 
 //==============================================================================

@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <string.h>
 #include <dnx/thread.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
@@ -78,12 +80,14 @@ static char   **new_argument_table      (const char *str, int *argc);
 static void     delete_argument_table   (char **argv);
 static void     program_startup         (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
+static void     restore_stdio_defaults  (task_t *task);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static const u32_t prog_valid_number   = 0x3B6BF19D;
 static const u32_t thread_valid_number = 0x8843D463;
+static const uint  mutex_wait_attempts = 10;
 
 /*==============================================================================
   Exported object definitions
@@ -164,15 +168,7 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
-                        vfs_ioctl(stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                        sys_getc(stdin);
-
-                        vfs_ioctl(stdin , IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stdin , IOCTL_VFS__DEFAULT_WR_MODE);
-                        vfs_ioctl(stdout, IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stdout, IOCTL_VFS__DEFAULT_WR_MODE);
-                        vfs_ioctl(stderr, IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stderr, IOCTL_VFS__DEFAULT_WR_MODE);
+                        restore_stdio_defaults(prog->task);
 
                         if (prog->mem) {
                                 memset(prog->mem, 0, prog->mem_size);
@@ -463,7 +459,10 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 static int process_kill(task_t *taskhdl, int status)
 {
         if (taskhdl) {
+                _task_get_data_of(taskhdl)->f_task_kill = true;
+
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
+                default:
                 case TASK_TYPE_RAW:
                         sysm_lock_access();
                         _task_delete(taskhdl);
@@ -478,8 +477,6 @@ static int process_kill(task_t *taskhdl, int status)
                 case TASK_TYPE_THREAD:
                         _thread_cancel(_task_get_data_of(taskhdl)->f_task_object);
                         break;
-                default:
-                        return -ESRCH;
                 }
 
                 return 0;
@@ -532,6 +529,50 @@ static bool thread_is_valid(thread_t *thread)
 
         errno = EINVAL;
         return false;
+}
+
+//==============================================================================
+/**
+ * @brief Do some attempts to check if task exit from mutex section
+ *
+ * @param task          task to examine
+ * @param attempts      number of attempts
+ *
+ * @return None
+ */
+//==============================================================================
+static void wait_for_end_of_mutex_section(task_t *task, size_t attempts)
+{
+        while (attempts && _task_get_data_of(task)->f_mutex_section > 0) {
+                sleep_ms(1);    // 1 tick delay
+                attempts--;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Restores default configuration of STDIO files
+ *
+ * @param task          task
+ *
+ * @return None
+ */
+//==============================================================================
+static void restore_stdio_defaults(task_t *task)
+{
+        struct _task_data *data = _task_get_data_of(task);
+
+        vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
+
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
+        sys_getc(data->f_stdin);
+
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
+        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
+        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
 }
 
 //==============================================================================
@@ -651,9 +692,14 @@ int _program_kill(prog_t *prog)
                 } else {
                         sysm_lock_access();
 
+                        _task_get_data_of(prog->task)->f_task_kill = true;
+
                         if (prog->task != task_get_handle()) {
+                                wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
                                 task_suspend(prog->task);
                         }
+
+                        restore_stdio_defaults(prog->task);
 
                         if (prog->mem) {
                                 sysm_tskfree_as(prog->task, prog->mem);
@@ -884,9 +930,14 @@ int _thread_cancel(thread_t *thread)
                 } else {
                         sysm_lock_access();
 
+                        _task_get_data_of(thread->task)->f_task_kill = true;
+
                         if (thread->task != task_get_handle()) {
+                                wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
                                 task_suspend(thread->task);
                         }
+
+                        restore_stdio_defaults(thread->task);
 
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
