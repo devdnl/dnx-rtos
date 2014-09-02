@@ -39,16 +39,15 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
-        int  timeout;
-        u8_t IRQ_number;
+        int  timeout;           // total wait time for interrupt trigger
+        u8_t number;            // EXTI line number (0-15)
 } IRQ_number_t;
 
 typedef struct {
-        u8_t IRQ_number;
-        bool enabled:1;
-        bool falling_edge:1;
-        bool rising_edge:1;
-        bool event:1;
+        u8_t number;            // EXTI line number (0-15)
+        bool enabled:1;         // EXTI line enable (true), disable (false) [IRQ & EVENT]
+        bool falling_edge:1;    // EXTI triggered on falling edge
+        bool rising_edge:1;     // EXTI triggered on rising edge
 } IRQ_config_t;
 
 /*==============================================================================
@@ -58,7 +57,7 @@ typedef struct {
  *  @param  IRQ_number_t *      pointer to interrupt number and timeout value
  *  @return Returns  0 if timeout occurred.
  *          Returns  1 if interrupt occurred.
- *          Returns -1 if illegal interrupt number or request.
+ *          Returns -1 if illegal interrupt number or request or configuration.
  */
 #define IOCTL_IRQ__CATCH                _IOW(_IO_GROUP_IRQ, 0, const IRQ_number_t*)
 
@@ -66,7 +65,7 @@ typedef struct {
  *  @param  IRQ_number_t *      pointer to interrupt number and timeout value
  *  @return On success 0, on error -1
  */
-#define IOCTL_GPIO__TRIGGER             _IOW(_IO_GROUP_IRQ, 1, const IRQ_number_t*)
+#define IOCTL_IRQ__TRIGGER              _IOW(_IO_GROUP_IRQ, 1, const IRQ_number_t*)
 
 /** @brief  Set IRQ configuration
  *  @param  IRQ_config_t *
