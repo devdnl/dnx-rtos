@@ -39,6 +39,7 @@
             <ENABLE_HDMICEC_MK><path>../../config/project/Makefile</path><key>ENABLE_HDMICEC</key></ENABLE_HDMICEC_MK>
             <ENABLE_CAN_MK><path>../../config/project/Makefile</path><key>ENABLE_CAN</key></ENABLE_CAN_MK>
             <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+            <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>ENABLE_IRQ</key></ENABLE_IRQ_MK>
 
             <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
             <CPU_START_FREQ><path>../../config/project/flags.h</path><key>__CPU_START_FREQ__</key></CPU_START_FREQ>
@@ -106,6 +107,7 @@
             <ENABLE_FDMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FDMC__</key></ENABLE_FDMC_H>
             <ENABLE_HDMICEC_H><path>../../config/project/flags.h</path><key>__ENABLE_HDMICEC__</key></ENABLE_HDMICEC_H>
             <ENABLE_CAN_H><path>../../config/project/flags.h</path><key>__ENABLE_CAN__</key></ENABLE_CAN_H>
+            <ENABLE_IRQ_H><path>../../config/project/flags.h</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_H>
         </key>
         <def>
             <NO>__NO__</NO>
@@ -134,6 +136,7 @@
             <module noarch="false"><name>FDMC</name><description>This module handles dynamic memory controller.</description></module>
             <module noarch="false"><name>HDMICEC</name><description>This module handles HDMI-CEC peripherals.</description></module>
             <module noarch="false"><name>CAN</name><description>This module handles CAN peripherals.</description></module>
+            <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
     </project>
 
@@ -354,6 +357,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -382,6 +386,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -413,6 +418,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -442,6 +448,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -476,6 +483,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -504,6 +512,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -532,6 +541,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -560,6 +570,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -588,6 +599,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -617,6 +629,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -646,6 +659,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -672,6 +686,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -701,6 +716,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -730,6 +746,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -757,6 +774,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -786,6 +804,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -815,6 +834,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -847,6 +867,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -879,6 +900,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -911,6 +933,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -943,6 +966,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -969,6 +993,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -999,6 +1024,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1029,6 +1055,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1062,6 +1089,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1095,6 +1123,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1128,6 +1157,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1161,6 +1191,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1196,6 +1227,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1231,6 +1263,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1266,6 +1299,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                         <USB></USB>
                     </peripherals>
                 </cpu>
@@ -1298,6 +1332,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -1329,6 +1364,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -1361,6 +1397,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -1393,6 +1430,7 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -1425,6 +1463,7 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -1458,6 +1497,7 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -1491,6 +1531,7 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
                     </peripherals>
                 </cpu>
             </cpulist>
