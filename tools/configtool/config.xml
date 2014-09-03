@@ -328,6 +328,7 @@
                 <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>
                 <PLL_ADC_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_ADC_PRE__</key></PLL_ADC_PRE>
                 <PLL_FLASH_LATENCY><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_FLASH_LATENCY__</key></PLL_FLASH_LATENCY>
+                <IRQ_GENERAL><path>../../config/stm32f1/irq_flags.h</path><key></key></IRQ_GENERAL>
             </key>
 
             <cpulist>

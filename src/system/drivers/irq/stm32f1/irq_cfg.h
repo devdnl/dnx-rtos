@@ -53,39 +53,39 @@ enum _IRQ_MODE {
         _IRQ_MODE_FALLING_AND_RISING_EDGE = 3
 };
 
-#define _IRQ_LINE_0_MODE                __IRQ_LINE_0_MODE
-#define _IRQ_LINE_1_MODE                __IRQ_LINE_1_MODE
-#define _IRQ_LINE_2_MODE                __IRQ_LINE_2_MODE
-#define _IRQ_LINE_3_MODE                __IRQ_LINE_3_MODE
-#define _IRQ_LINE_4_MODE                __IRQ_LINE_4_MODE
-#define _IRQ_LINE_5_MODE                __IRQ_LINE_5_MODE
-#define _IRQ_LINE_6_MODE                __IRQ_LINE_6_MODE
-#define _IRQ_LINE_7_MODE                __IRQ_LINE_7_MODE
-#define _IRQ_LINE_8_MODE                __IRQ_LINE_8_MODE
-#define _IRQ_LINE_9_MODE                __IRQ_LINE_9_MODE
-#define _IRQ_LINE_10_MODE               __IRQ_LINE_10_MODE
-#define _IRQ_LINE_11_MODE               __IRQ_LINE_11_MODE
-#define _IRQ_LINE_12_MODE               __IRQ_LINE_12_MODE
-#define _IRQ_LINE_13_MODE               __IRQ_LINE_13_MODE
-#define _IRQ_LINE_14_MODE               __IRQ_LINE_14_MODE
-#define _IRQ_LINE_15_MODE               __IRQ_LINE_15_MODE
+#define _IRQ_LINE_0_MODE                __IRQ_LINE_0_MODE__
+#define _IRQ_LINE_1_MODE                __IRQ_LINE_1_MODE__
+#define _IRQ_LINE_2_MODE                __IRQ_LINE_2_MODE__
+#define _IRQ_LINE_3_MODE                __IRQ_LINE_3_MODE__
+#define _IRQ_LINE_4_MODE                __IRQ_LINE_4_MODE__
+#define _IRQ_LINE_5_MODE                __IRQ_LINE_5_MODE__
+#define _IRQ_LINE_6_MODE                __IRQ_LINE_6_MODE__
+#define _IRQ_LINE_7_MODE                __IRQ_LINE_7_MODE__
+#define _IRQ_LINE_8_MODE                __IRQ_LINE_8_MODE__
+#define _IRQ_LINE_9_MODE                __IRQ_LINE_9_MODE__
+#define _IRQ_LINE_10_MODE               __IRQ_LINE_10_MODE__
+#define _IRQ_LINE_11_MODE               __IRQ_LINE_11_MODE__
+#define _IRQ_LINE_12_MODE               __IRQ_LINE_12_MODE__
+#define _IRQ_LINE_13_MODE               __IRQ_LINE_13_MODE__
+#define _IRQ_LINE_14_MODE               __IRQ_LINE_14_MODE__
+#define _IRQ_LINE_15_MODE               __IRQ_LINE_15_MODE__
 
-#define _IRQ_LINE_0_PRIO                __IRQ_LINE_0_PRIO
-#define _IRQ_LINE_1_PRIO                __IRQ_LINE_1_PRIO
-#define _IRQ_LINE_2_PRIO                __IRQ_LINE_2_PRIO
-#define _IRQ_LINE_3_PRIO                __IRQ_LINE_3_PRIO
-#define _IRQ_LINE_4_PRIO                __IRQ_LINE_4_PRIO
-#define _IRQ_LINE_5_PRIO                __IRQ_LINE_5_PRIO
-#define _IRQ_LINE_6_PRIO                __IRQ_LINE_6_PRIO
-#define _IRQ_LINE_7_PRIO                __IRQ_LINE_7_PRIO
-#define _IRQ_LINE_8_PRIO                __IRQ_LINE_8_PRIO
-#define _IRQ_LINE_9_PRIO                __IRQ_LINE_9_PRIO
-#define _IRQ_LINE_10_PRIO               __IRQ_LINE_10_PRIO
-#define _IRQ_LINE_11_PRIO               __IRQ_LINE_11_PRIO
-#define _IRQ_LINE_12_PRIO               __IRQ_LINE_12_PRIO
-#define _IRQ_LINE_13_PRIO               __IRQ_LINE_13_PRIO
-#define _IRQ_LINE_14_PRIO               __IRQ_LINE_14_PRIO
-#define _IRQ_LINE_15_PRIO               __IRQ_LINE_15_PRIO
+#define _IRQ_LINE_0_PRIO                __IRQ_LINE_0_PRIO__
+#define _IRQ_LINE_1_PRIO                __IRQ_LINE_1_PRIO__
+#define _IRQ_LINE_2_PRIO                __IRQ_LINE_2_PRIO__
+#define _IRQ_LINE_3_PRIO                __IRQ_LINE_3_PRIO__
+#define _IRQ_LINE_4_PRIO                __IRQ_LINE_4_PRIO__
+#define _IRQ_LINE_5_PRIO                __IRQ_LINE_5_PRIO__
+#define _IRQ_LINE_6_PRIO                __IRQ_LINE_6_PRIO__
+#define _IRQ_LINE_7_PRIO                __IRQ_LINE_7_PRIO__
+#define _IRQ_LINE_8_PRIO                __IRQ_LINE_8_PRIO__
+#define _IRQ_LINE_9_PRIO                __IRQ_LINE_9_PRIO__
+#define _IRQ_LINE_10_PRIO               __IRQ_LINE_10_PRIO__
+#define _IRQ_LINE_11_PRIO               __IRQ_LINE_11_PRIO__
+#define _IRQ_LINE_12_PRIO               __IRQ_LINE_12_PRIO__
+#define _IRQ_LINE_13_PRIO               __IRQ_LINE_13_PRIO__
+#define _IRQ_LINE_14_PRIO               __IRQ_LINE_14_PRIO__
+#define _IRQ_LINE_15_PRIO               __IRQ_LINE_15_PRIO__
 
 /*==============================================================================
   Exported types, enums definitions
