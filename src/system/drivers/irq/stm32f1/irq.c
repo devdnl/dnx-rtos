@@ -325,10 +325,10 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
         if (arg) {
                 switch (request) {
                 case IOCTL_IRQ__CATCH: {
-                        const IRQ_number_t *irqn = arg;
-                        if (irqn->number < NUMBER_OF_IRQs) {
-                                if (hdl->irqsem[irqn->number]) {
-                                        return semaphore_wait(hdl->irqsem[irqn->number], irqn->timeout);
+                        const IRQ_catch_t *irqn = arg;
+                        if (irqn->irq_number < NUMBER_OF_IRQs) {
+                                if (hdl->irqsem[irqn->irq_number]) {
+                                        return semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
                                 }
                         }
 
@@ -336,9 +336,9 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                 }
 
                 case IOCTL_IRQ__TRIGGER: {
-                        const IRQ_number_t *irqn = arg;
-                        if (irqn->number < NUMBER_OF_IRQs) {
-                                WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << irqn->number);
+                        const int irqn = (int)arg;
+                        if (irqn < NUMBER_OF_IRQs) {
+                                WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << irqn);
                                 return 0;
                         }
 
@@ -347,22 +347,22 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
-                        if (cfg->number < NUMBER_OF_IRQs) {
+                        if (cfg->irq_number < NUMBER_OF_IRQs) {
                                 if (cfg->enabled) {
-                                        if (hdl->irqsem[cfg->number] == NULL) {
-                                                hdl->irqsem[cfg->number] = semaphore_new(1, 0);
-                                                if (hdl->irqsem[cfg->number] == NULL)
+                                        if (hdl->irqsem[cfg->irq_number] == NULL) {
+                                                hdl->irqsem[cfg->irq_number] = semaphore_new(1, 0);
+                                                if (hdl->irqsem[cfg->irq_number] == NULL)
                                                         break;
                                         }
 
-                                        set_EXTI_edge_detector(cfg->number, cfg->falling_edge, cfg->rising_edge);
-                                        enable_EXTI_IRQ(cfg->number);
+                                        set_EXTI_edge_detector(cfg->irq_number, cfg->falling_edge, cfg->rising_edge);
+                                        enable_EXTI_IRQ(cfg->irq_number);
                                 } else {
-                                        if (hdl->irqsem[cfg->number]) {
-                                                semaphore_delete(hdl->irqsem[cfg->number]);
+                                        if (hdl->irqsem[cfg->irq_number]) {
+                                                semaphore_delete(hdl->irqsem[cfg->irq_number]);
                                         }
 
-                                        disable_EXTI_IRQ(cfg->number);
+                                        disable_EXTI_IRQ(cfg->irq_number);
                                 }
 
                                 return 0;
