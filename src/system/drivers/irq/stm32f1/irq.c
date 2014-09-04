@@ -347,8 +347,23 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
                         if (cfg->number < NUMBER_OF_IRQs) {
-                                set_EXTI_edge_detector(cfg->number, cfg->falling_edge, cfg->rising_edge);
-                                change_EXTI_IRQ_state(cfg->number, cfg->enabled);
+                                if (cfg->enabled) {
+                                        if (hdl->irqsem[cfg->number] == NULL) {
+                                                hdl->irqsem[cfg->number] = semaphore_new(1, 0);
+                                                if (hdl->irqsem[cfg->number] == NULL)
+                                                        break;
+                                        }
+
+                                        set_EXTI_edge_detector(cfg->number, cfg->falling_edge, cfg->rising_edge);
+                                        enable_EXTI_IRQ(cfg->number);
+                                } else {
+                                        if (hdl->irqsem[cfg->number]) {
+                                                semaphore_delete(hdl->irqsem[cfg->number]);
+                                        }
+
+                                        disable_EXTI_IRQ(cfg->number);
+                                }
+
                                 return 0;
                         }
 
