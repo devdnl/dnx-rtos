@@ -44,7 +44,6 @@
 ==============================================================================*/
 typedef struct {
         sem_t *irqsem[NUMBER_OF_IRQs];
-        u32_t  expected_irq;
 } IRQ_t;
 
 /*==============================================================================
@@ -197,8 +196,6 @@ API_MOD_RELEASE(IRQ, void *device_handle)
 
         critical_section_begin();
 
-        hdl->expected_irq = 0;
-
         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
                 disable_EXTI_IRQ(i);
 
@@ -330,7 +327,6 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         const IRQ_number_t *irqn = arg;
                         if (irqn->number < NUMBER_OF_IRQs) {
                                 if (hdl->irqsem[irqn->number]) {
-                                        SET_BIT(hdl->expected_irq, 1 << irqn->number);
                                         return semaphore_wait(hdl->irqsem[irqn->number], irqn->timeout);
                                 }
                         }
@@ -363,8 +359,6 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         errno = EBADRQC;
                         return -1;
                 }
-
-                return 0;
         }
 
         errno = EINVAL;
@@ -548,11 +542,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
         }
 
         bool woken = false;
-
-        if (IRQ->expected_irq & (1 << EXIT_IRQ_n)) {
-                semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
-                CLEAR_BIT(IRQ->expected_irq, (1 << EXIT_IRQ_n));
-        }
+        semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
 
         WRITE_REG(EXTI->PR, EXTI_PR_PR0 << EXIT_IRQ_n);
 
