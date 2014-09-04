@@ -170,6 +170,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                         }
 
                         *device_handle = hdl;
+                        IRQ = hdl;
 
                         return STD_RET_OK;
                 }
@@ -454,13 +455,46 @@ static void change_EXTI_IRQ_state(uint EXTI_IRQ_n, bool state)
 
         if (IRQn != 0) {
                 if (state) {
-                        NVIC_EnableIRQ(IRQn);
                         SET_BIT(EXTI->IMR, EXTI_IMR_MR0 << EXTI_IRQ_n);
                         SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << EXTI_IRQ_n);
+                        NVIC_EnableIRQ(IRQn);
                 } else {
-                        NVIC_DisableIRQ(IRQn);
                         CLEAR_BIT(EXTI->IMR, EXTI_IMR_MR0 << EXTI_IRQ_n);
                         CLEAR_BIT(EXTI->EMR, EXTI_EMR_MR0 << EXTI_IRQ_n);
+
+                        switch (IRQn) {
+                        case EXTI9_5_IRQn: {
+                                static const u32_t IRQ9_5_mask = EXTI_IMR_MR5
+                                                               | EXTI_IMR_MR6
+                                                               | EXTI_IMR_MR7
+                                                               | EXTI_IMR_MR8
+                                                               | EXTI_IMR_MR9;
+
+                                if ((EXTI->IMR & IRQ9_5_mask) == 0) {
+                                        NVIC_DisableIRQ(IRQn);
+                                }
+                                break;
+                        }
+
+                        case EXTI15_10_IRQn: {
+                                static const u32_t IRQ15_10_mask = EXTI_IMR_MR10
+                                                                 | EXTI_IMR_MR11
+                                                                 | EXTI_IMR_MR12
+                                                                 | EXTI_IMR_MR13
+                                                                 | EXTI_IMR_MR14
+                                                                 | EXTI_IMR_MR15;
+
+                                if ((EXTI->IMR & IRQ15_10_mask) == 0) {
+                                        NVIC_DisableIRQ(IRQn);
+                                }
+                                break;
+                        }
+
+                        default:
+                                NVIC_DisableIRQ(IRQn);
+                                break;
+                        }
+
                 }
         }
 }
@@ -551,15 +585,14 @@ static inline void enable_EXTI_IRQ(uint EXTI_IRQ_n)
 //==============================================================================
 static bool IRQ_handler(uint EXIT_IRQ_n)
 {
+        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << EXIT_IRQ_n);
+
         if (IRQ == NULL) {
-                WRITE_REG(EXTI->PR, EXTI_PR_PR0 << EXIT_IRQ_n);
                 return false;
         }
 
         bool woken = false;
         semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
-
-        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << EXIT_IRQ_n);
 
         return woken;
 }
