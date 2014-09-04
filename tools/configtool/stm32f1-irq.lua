@@ -150,6 +150,38 @@ local function event_value_updated()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (IRQ5-9)
+-- @param  this     Choice of priority
+-- @return None
+--------------------------------------------------------------------------------
+local function event_value_updated_IRQ9_5(this)
+        local selection = this:GetSelection()
+
+        for i = 5, 9 do
+                ui.Choice_EXTI_prio[i]:SetSelection(selection)
+        end
+
+        ui.Button_save:Enable(true)
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (IRQ10-15)
+-- @param  this     Choice of priority
+-- @return None
+--------------------------------------------------------------------------------
+local function event_value_updated_IRQ10_15(this)
+        local selection = this:GetSelection()
+
+        for i = 10, 15 do
+                ui.Choice_EXTI_prio[i]:SetSelection(selection)
+        end
+
+        ui.Button_save:Enable(true)
+end
+
+
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -184,6 +216,7 @@ function irq:create_window(parent)
         for i = 0, NUMBER_OF_IRQ - 1 do
                 ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "EXTI"..i, wx.wxDefaultPosition, wx.wxDefaultSize)
 
+                -- add mode Choice
                 ID.CHOICE_EXTI_MODE[i] = wx.wxNewId()
                 ui.Choice_EXTI_mode[i] = wx.wxChoice(ui.Panel1, ID.CHOICE_EXTI_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
                 ui.Choice_EXTI_mode[i]:Append("Disabled")
@@ -191,19 +224,38 @@ function irq:create_window(parent)
                 ui.Choice_EXTI_mode[i]:Append("Trigger on rising edge")
                 ui.Choice_EXTI_mode[i]:Append("Trigger on both edges")
 
+                -- add priority Choice
                 ID.CHOICE_EXTI_PRIO[i] = wx.wxNewId()
                 ui.Choice_EXTI_prio[i] = wx.wxChoice(ui.Panel1, ID.CHOICE_EXTI_PRIO[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
                 for _, item in ipairs(prio_list) do
                         ui.Choice_EXTI_prio[i]:Append(item.name)
                 end
+
                 ui.Choice_EXTI_prio[i]:Append("System default priority")
 
+                if i >= 10 then
+                        ui.Choice_EXTI_prio[i]:SetToolTip("This interrupt is handled by vector that is assigned for interrupts from 10 to 15. All interrupts in this group have the same priority.")
+                elseif i >= 5 then
+                        ui.Choice_EXTI_prio[i]:SetToolTip("This interrupt is handled by vector that is assigned for interrupts from 5 to 9. All interrupts in this group have the same priority.")
+                end
+
+                -- add object to layout
                 ui.FlexGridSizer2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer2:Add(ui.Choice_EXTI_mode[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer2:Add(ui.Choice_EXTI_prio[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- set event connections
+                local event_function
+                if i >= 10 then -- IRQ15..10 have the same IRQ vector - priority set as group
+                        event_function = event_value_updated_IRQ10_15
+                elseif i >= 5 then -- IRQ15..10 have the same IRQ vector - priority set as group
+                        event_function = event_value_updated_IRQ9_5
+                else
+                        event_function = event_value_updated
+                end
+
+                this:Connect(ID.CHOICE_EXTI_PRIO[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, event_function)
                 this:Connect(ID.CHOICE_EXTI_MODE[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-                this:Connect(ID.CHOICE_EXTI_PRIO[i], wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
         end
 
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
