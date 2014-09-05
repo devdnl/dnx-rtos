@@ -348,21 +348,36 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
                         if (cfg->irq_number < NUMBER_OF_IRQs) {
-                                if (cfg->enabled) {
+                                if (cfg->mode == IRQ_CONFIG_MODE__IRQ_DISABLED) {
+                                        disable_EXTI_IRQ(cfg->irq_number);
+
+                                        if (hdl->irqsem[cfg->irq_number]) {
+                                                semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                        }
+                                } else {
                                         if (hdl->irqsem[cfg->irq_number] == NULL) {
                                                 hdl->irqsem[cfg->irq_number] = semaphore_new(1, 0);
                                                 if (hdl->irqsem[cfg->irq_number] == NULL)
                                                         break;
                                         }
 
-                                        set_EXTI_edge_detector(cfg->irq_number, cfg->falling_edge, cfg->rising_edge);
-                                        enable_EXTI_IRQ(cfg->irq_number);
-                                } else {
-                                        if (hdl->irqsem[cfg->irq_number]) {
-                                                semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                        bool falling, rising;
+                                        if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_EDGE) {
+                                                falling = true;
+                                                rising  = false;
+                                        } else if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_RISING_EDGE) {
+                                                falling = false;
+                                                rising  = true;
+                                        } else if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_AND_RISING_EDGE) {
+                                                falling = true;
+                                                rising  = true;
+                                        } else {
+                                                falling = false;
+                                                rising  = false;
                                         }
 
-                                        disable_EXTI_IRQ(cfg->irq_number);
+                                        set_EXTI_edge_detector(cfg->irq_number, falling, rising);
+                                        enable_EXTI_IRQ(cfg->irq_number);
                                 }
 
                                 return 0;

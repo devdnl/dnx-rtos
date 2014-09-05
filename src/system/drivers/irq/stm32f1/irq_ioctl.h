@@ -44,41 +44,55 @@ typedef struct {
 } IRQ_catch_t;
 
 typedef struct {
-        u8_t irq_number;        // EXTI line number (0-15)
-        bool enabled:1;         // EXTI line enable (true), disable (false) [IRQ & EVENT]
-        bool falling_edge:1;    // EXTI triggered on falling edge
-        bool rising_edge:1;     // EXTI triggered on rising edge
+        uint irq_number:8;      // EXTI line number (0-15)
+        enum IRQ_config_mode {  // EXTI line mode
+                IRQ_CONFIG_MODE__IRQ_DISABLED,
+                IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_EDGE,
+                IRQ_CONFIG_MODE__TRIGGER_ON_RISING_EDGE,
+                IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_AND_RISING_EDGE
+        } mode:8;
 } IRQ_config_t;
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Macro can be used to initialize IRQ_catch_t type
- *  @param  irq_number          interrupt number (0-15)
- *  @param  timeout             wait timeout
- *  @return Initialized catch structure
+/**
+ * @brief  Macro can be used to initialize IRQ_catch_t type
+ * @param  irq_number          interrupt number (0-15)
+ * @param  timeout             wait timeout
+ * @return Initialized catch structure
  */
 #define IRQ_CATCH_SETUP(uint__irq_number, uint__timeout) {.irq_number = uint__irq_number, .timeout = uint__timeout}
 
+/**
+ * @brief  Macro can be used to initialize IRQ_config_t type
+ * @param  irq_number          number of interrupt to configure
+ * @param  mode                interrupt mode
+ * @return Initialized configuration structure
+ */
+#define IRQ_CONFIG_SETUP(uint__irq_number, enum_IRQ_config_mode__mode) {.irq_number = uint__irq_number, .mode = enum_IRQ_config_mode__mode}
 
 
-/** @brief  Wait for slected interrupt number
- *  @param  IRQ_catch_t *      pointer to interrupt number and timeout value
- *  @return Returns  0 if timeout occurred.
- *          Returns  1 if interrupt occurred.
- *          Returns -1 if illegal interrupt number or request or configuration.
+/**
+ * @brief  Wait for slected interrupt number
+ * @param  IRQ_catch_t *      pointer to interrupt number and timeout value
+ * @return Returns  0 if timeout occurred.
+ *         Returns  1 if interrupt occurred.
+ *         Returns -1 if illegal interrupt number or request or configuration.
  */
 #define IOCTL_IRQ__CATCH                _IOW(_IO_GROUP_IRQ, 0, const IRQ_catch_t*)
 
-/** @brief  Software interrupt trigger
- *  @param  int                 interrupt number to trigger (0-15)
- *  @return On success 0, on error -1
+/**
+ * @brief  Software interrupt trigger
+ * @param  int                 interrupt number to trigger (0-15)
+ * @return On success 0, on error -1
  */
 #define IOCTL_IRQ__TRIGGER              _IOW(_IO_GROUP_IRQ, 1, const int)
 
-/** @brief  Set IRQ configuration
- *  @param  IRQ_config_t *
- *  @return On success 0, on error -1
+/**
+ * @brief  Set IRQ configuration
+ * @param  IRQ_config_t *
+ * @return On success 0, on error -1
  */
 #define IOCTL_IRQ__CONFIGURE            _IOW(_IO_GROUP_IRQ, 2, const IRQ_config_t*)
 
