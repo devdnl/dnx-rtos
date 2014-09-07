@@ -39,19 +39,22 @@
   Local types, enums definitions
 ==============================================================================*/
 struct mutex {
-        void *object;
-        bool  recursive;
-        u32_t valid;
+        void         *object;
+        struct mutex *this;
+        bool          recursive;
+        u32_t         magic;
 };
 
 struct queue {
-        void *object;
-        u32_t valid;
+        void         *object;
+        struct queue *this;
+        u32_t         magic;
 };
 
 struct sem {
-        void *object;
-        u32_t valid;
+        void       *object;
+        struct sem *this;
+        u32_t       magic;
 };
 
 /*==============================================================================
@@ -61,9 +64,9 @@ struct sem {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const u32_t mutex_valid_number = 0x4379A85C;
-static const u32_t queue_valid_number = 0x97612C5B;
-static const u32_t sem_valid_number   = 0xDAD9B8E0;
+static const u32_t mutex_magic_number = 0x4379A85C;
+static const u32_t queue_magic_number = 0x97612C5B;
+static const u32_t sem_magic_number   = 0xDAD9B8E0;
 
 /*==============================================================================
   Exported object definitions
@@ -72,6 +75,54 @@ static const u32_t sem_valid_number   = 0xDAD9B8E0;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function check that semaphore is a valid object
+ * @param sem           semaphore object to examine
+ * @return If object is valid then true is returned, false otherwise.
+ */
+//==============================================================================
+static bool is_semaphore_valid(sem_t *sem)
+{
+        if (sem) {
+                return sem->object && sem->magic == sem_magic_number && sem->this == sem;
+        } else {
+                return false;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function check that mutex is a valid object
+ * @param mtx           mutex object to examine
+ * @return If object is valid then true is returned, false otherwise.
+ */
+//==============================================================================
+static bool is_mutex_valid(mutex_t *mtx)
+{
+        if (mtx) {
+                return mtx->object && mtx->magic == mutex_magic_number && mtx->this == mtx;
+        } else {
+                return false;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function check that queue is a valid object
+ * @param queue         queue object to examine
+ * @return If object is valid then true is returned, false otherwise.
+ */
+//==============================================================================
+static bool is_queue_valid(queue_t *queue)
+{
+        if (queue) {
+                return queue->object && queue->magic == queue_magic_number && queue->this == queue;
+        } else {
+                return false;
+        }
+}
+
 //==============================================================================
 /**
  * @brief Function create new task and if enabled add to monitor list
@@ -306,9 +357,8 @@ _task_data_t *_task_get_data(void)
 sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 {
         if (cnt_max > 0) {
-                sem_t *sem = sysm_kmalloc(sizeof(struct sem));
+                sem_t *sem = sysm_kcalloc(1, sizeof(struct sem));
                 if (sem) {
-                        sem->object = NULL;
                         if (cnt_max == 1) {
                                 vSemaphoreCreateBinary(sem->object);
                                 if (sem->object) {
@@ -323,9 +373,9 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
                         }
 
                         if (sem->object) {
-                                sem->valid = sem_valid_number;
+                                sem->magic = sem_magic_number;
+                                sem->this  = sem;
                         } else {
-                                sem->valid = 0;
                                 sysm_kfree(sem);
                                 sem = NULL;
                         }
@@ -346,12 +396,11 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 //==============================================================================
 void _semaphore_delete(sem_t *sem)
 {
-        if (sem) {
-                if (sem->object && sem->valid == sem_valid_number) {
-                        vSemaphoreDelete(sem->object);
-                        sem->valid = 0;
-                        sysm_kfree(sem);
-                }
+        if (is_semaphore_valid(sem)) {
+                vSemaphoreDelete(sem->object);
+                sem->magic = 0;
+                sem->this  = NULL;
+                sysm_kfree(sem);
         }
 }
 
@@ -368,13 +417,11 @@ void _semaphore_delete(sem_t *sem)
 //==============================================================================
 bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
 {
-        if (sem) {
-                if (sem->object && sem->valid == sem_valid_number) {
-                        return xSemaphoreTake(sem->object, MS2TICK((portTickType)blocktime_ms));
-                }
+        if (is_semaphore_valid(sem)) {
+                return xSemaphoreTake(sem->object, MS2TICK((portTickType)blocktime_ms));
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -389,13 +436,11 @@ bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
 //==============================================================================
 bool _semaphore_give(sem_t *sem)
 {
-        if (sem) {
-                if (sem->object && sem->valid == sem_valid_number) {
-                        return xSemaphoreGive(sem->object);
-                }
+        if (is_semaphore_valid(sem)) {
+                return xSemaphoreGive(sem->object);
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -411,19 +456,17 @@ bool _semaphore_give(sem_t *sem)
 //==============================================================================
 bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 {
-        if (sem) {
-                if (sem->object && sem->valid == sem_valid_number) {
-                        signed portBASE_TYPE woken = 0;
-                        int ret = xSemaphoreTakeFromISR(sem->object, &woken);
+        if (is_semaphore_valid(sem)) {
+                signed portBASE_TYPE woken = 0;
+                int ret = xSemaphoreTakeFromISR(sem->object, &woken);
 
-                        if (task_woken)
-                                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
 
-                        return ret;
-                }
+                return ret;
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -439,19 +482,17 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
 {
-        if (sem) {
-                if (sem->object && sem->valid == sem_valid_number) {
-                        signed portBASE_TYPE woken = 0;
-                        int ret = xSemaphoreGiveFromISR(sem->object, &woken);
+        if (is_semaphore_valid(sem)) {
+                signed portBASE_TYPE woken = 0;
+                int ret = xSemaphoreGiveFromISR(sem->object, &woken);
 
-                        if (task_woken)
-                                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
 
-                        return ret;
-                }
+                return ret;
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -465,7 +506,7 @@ bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 mutex_t *_mutex_new(enum mutex_type type)
 {
-        mutex_t *mtx = sysm_kmalloc(sizeof(struct mutex));
+        mutex_t *mtx = sysm_kcalloc(1, sizeof(struct mutex));
         if (mtx) {
                 if (type == MUTEX_RECURSIVE) {
                         mtx->object    = xSemaphoreCreateRecursiveMutex();
@@ -476,9 +517,9 @@ mutex_t *_mutex_new(enum mutex_type type)
                 }
 
                 if (mtx->object) {
-                        mtx->valid = mutex_valid_number;
+                        mtx->magic = mutex_magic_number;
+                        mtx->this  = mtx;
                 } else {
-                        mtx->valid = 0;
                         sysm_kfree(mtx);
                         mtx = NULL;
                 }
@@ -496,12 +537,11 @@ mutex_t *_mutex_new(enum mutex_type type)
 //==============================================================================
 void _mutex_delete(mutex_t *mutex)
 {
-        if (mutex) {
-                if (mutex->object && mutex->valid == mutex_valid_number) {
-                        vSemaphoreDelete(mutex);
-                        mutex->valid = 0;
-                        sysm_kfree(mutex);
-                }
+        if (is_mutex_valid(mutex)) {
+                vSemaphoreDelete(mutex);
+                mutex->magic = 0;
+                mutex->this  = NULL;
+                sysm_kfree(mutex);
         }
 }
 
@@ -518,24 +558,22 @@ void _mutex_delete(mutex_t *mutex)
 //==============================================================================
 bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
-        if (mutex && _task_get_data()->f_task_kill == false) {
-                if (mutex->object && mutex->valid == mutex_valid_number) {
-                        bool status;
-                        if (mutex->recursive) {
-                                status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((portTickType)blocktime_ms));
-                        } else {
-                                status = xSemaphoreTake(mutex->object, MS2TICK((portTickType)blocktime_ms));
-                        }
-
-                        if (status) {
-                                _task_get_data()->f_mutex_section++;
-                        }
-
-                        return status;
+        if (is_mutex_valid(mutex) && _task_get_data()->f_task_kill == false) {
+                bool status;
+                if (mutex->recursive) {
+                        status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((portTickType)blocktime_ms));
+                } else {
+                        status = xSemaphoreTake(mutex->object, MS2TICK((portTickType)blocktime_ms));
                 }
-        }
 
-        return false;
+                if (status) {
+                        _task_get_data()->f_mutex_section++;
+                }
+
+                return status;
+        } else {
+                return false;
+        }
 }
 
 //==============================================================================
@@ -550,30 +588,28 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 //==============================================================================
 bool _mutex_unlock(mutex_t *mutex)
 {
-        if (mutex) {
-                if (mutex->object && mutex->valid == mutex_valid_number) {
-                        bool status;
-                        if (mutex->recursive) {
-                                status = xSemaphoreGiveRecursive(mutex->object);
-                        } else {
-                                status = xSemaphoreGive(mutex->object);
-                        }
-
-                        if (status) {
-                                _task_get_data()->f_mutex_section--;
-
-                                if (  _task_get_data()->f_task_kill     == true
-                                   && _task_get_data()->f_mutex_section <= 0   ) {
-
-                                        _task_suspend_now();
-                                }
-                        }
-
-                        return status;
+        if (is_mutex_valid(mutex)) {
+                bool status;
+                if (mutex->recursive) {
+                        status = xSemaphoreGiveRecursive(mutex->object);
+                } else {
+                        status = xSemaphoreGive(mutex->object);
                 }
-        }
 
-        return false;
+                if (status) {
+                        _task_data_t *data = _task_get_data();
+
+                        data->f_mutex_section--;
+
+                        if (data->f_task_kill == true && data->f_mutex_section <= 0) {
+                                _task_suspend_now();
+                        }
+                }
+
+                return status;
+        } else {
+                return false;
+        }
 }
 
 //==============================================================================
@@ -588,13 +624,13 @@ bool _mutex_unlock(mutex_t *mutex)
 //==============================================================================
 queue_t *_queue_new(const uint length, const uint item_size)
 {
-        queue_t *queue = sysm_kmalloc(sizeof(struct queue));
+        queue_t *queue = sysm_kcalloc(1, sizeof(struct queue));
         if (queue) {
                 queue->object = xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
                 if (queue->object) {
-                        queue->valid = queue_valid_number;
+                        queue->magic = queue_magic_number;
+                        queue->this  = queue;
                 } else {
-                        queue->valid = 0;
                         sysm_kfree(queue);
                         queue = NULL;
                 }
@@ -612,12 +648,11 @@ queue_t *_queue_new(const uint length, const uint item_size)
 //==============================================================================
 void _queue_delete(queue_t *queue)
 {
-        if (queue) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        vQueueDelete(queue->object);
-                        queue->valid = 0;
-                        sysm_kfree(queue);
-                }
+        if (is_queue_valid(queue)) {
+                vQueueDelete(queue->object);
+                queue->magic = 0;
+                queue->this  = NULL;
+                sysm_kfree(queue);
         }
 }
 
@@ -630,10 +665,8 @@ void _queue_delete(queue_t *queue)
 //==============================================================================
 void _queue_reset(queue_t *queue)
 {
-        if (queue) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        xQueueReset(queue->object);
-                }
+        if (is_queue_valid(queue)) {
+                xQueueReset(queue->object);
         }
 }
 
@@ -651,13 +684,11 @@ void _queue_reset(queue_t *queue)
 //==============================================================================
 bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 {
-        if (queue && item) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        return xQueueSend(queue->object, item, MS2TICK((portTickType)waittime_ms));
-                }
+        if (is_queue_valid(queue) && item) {
+                return xQueueSend(queue->object, item, MS2TICK((portTickType)waittime_ms));
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -674,19 +705,17 @@ bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 //==============================================================================
 bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
-        if (queue && item) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        signed portBASE_TYPE woken = 0;
-                        int ret = xQueueSendFromISR(queue->object, item, &woken);
+        if (is_queue_valid(queue) && item) {
+                signed portBASE_TYPE woken = 0;
+                int ret = xQueueSendFromISR(queue->object, item, &woken);
 
-                        if (task_woken)
-                                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
 
-                        return ret;
-                }
+                return ret;
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -703,13 +732,11 @@ bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 //==============================================================================
 bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 {
-        if (queue && item) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        return xQueueReceive(queue->object, item, MS2TICK((portTickType)waittime_ms));
-                }
+        if (is_queue_valid(queue) && item) {
+                return xQueueReceive(queue->object, item, MS2TICK((portTickType)waittime_ms));
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -726,19 +753,17 @@ bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 //==============================================================================
 bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
-        if (queue && item) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        signed portBASE_TYPE woken = 0;
-                        int ret = xQueueReceiveFromISR(queue->object, item, &woken);
+        if (is_queue_valid(queue) && item) {
+                signed portBASE_TYPE woken = 0;
+                int ret = xQueueReceiveFromISR(queue->object, item, &woken);
 
-                        if (task_woken)
-                                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
 
-                        return ret;
-                }
+                return ret;
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -755,13 +780,11 @@ bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 //==============================================================================
 bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 {
-        if (queue && item) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        return xQueuePeek(queue->object, item, MS2TICK((portTickType)waittime_ms));
-                }
+        if (is_queue_valid(queue) && item) {
+                return xQueuePeek(queue->object, item, MS2TICK((portTickType)waittime_ms));
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 //==============================================================================
@@ -775,13 +798,11 @@ bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 //==============================================================================
 int _queue_get_number_of_items(queue_t *queue)
 {
-        if (queue) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        return uxQueueMessagesWaiting(queue->object);
-                }
+        if (is_queue_valid(queue)) {
+                return uxQueueMessagesWaiting(queue->object);
+        } else {
+                return -1;
         }
-
-        return -1;
 }
 
 //==============================================================================
@@ -795,13 +816,11 @@ int _queue_get_number_of_items(queue_t *queue)
 //==============================================================================
 int _queue_get_number_of_items_from_ISR(queue_t *queue)
 {
-        if (queue) {
-                if (queue->object && queue->valid == queue_valid_number) {
-                        return uxQueueMessagesWaitingFromISR(queue->object);
-                }
+        if (is_queue_valid(queue)) {
+                return uxQueueMessagesWaitingFromISR(queue->object);
+        } else {
+                return -1;
         }
-
-        return -1;
 }
 
 /*==============================================================================
