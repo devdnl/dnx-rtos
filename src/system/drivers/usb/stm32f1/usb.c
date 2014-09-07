@@ -158,7 +158,7 @@ static void        set_read_in_progress         (usb_ep_num_t ep, bool state);
 /*==============================================================================
   Local objects
 ==============================================================================*/
-MODULE_NAME("USBD");
+MODULE_NAME(USBD);
 
 static USB_mem_t *usb_mem;
 

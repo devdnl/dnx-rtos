@@ -92,7 +92,7 @@ static void     switch_terminal         (int term_no);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME("TTY");
+MODULE_NAME(TTY);
 
 static struct module *tty_module;
 static const char    *service_in_name           = "tty-in";

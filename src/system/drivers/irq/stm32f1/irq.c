@@ -60,7 +60,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME("IRQ");
+MODULE_NAME(IRQ);
 
 static const enum _IRQ_MODE default_config[NUMBER_OF_IRQs] = {
         _IRQ_LINE_0_MODE,
@@ -191,8 +191,6 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
-
         IRQ_t *hdl = device_handle;
 
         critical_section_begin();

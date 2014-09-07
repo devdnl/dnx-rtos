@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    crc.c
+@file    i2c.c
 
 @author  Daniel Zorychta
 
-@brief   CRC driver (CRCCU - CRC Calculation Unit)
+@brief   This driver support I2C peripherals.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,37 +28,35 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
 #include <dnx/misc.h>
-#include "stm32f1/crc_cfg.h"
-#include "stm32f1/crc_def.h"
+#include <dnx/thread.h>
+#include "stm32f1/i2c_cfg.h"
+#include "stm32f1/i2c_def.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
-  Local macros
+  Local symbolic constants/macros
 ==============================================================================*/
 
+
 /*==============================================================================
-  Local object types
+  Local types, enums definitions
 ==============================================================================*/
-typedef struct CRCCU
-{
-        dev_lock_t              file_lock;
-        enum CRC_input_mode     input_mode;
-} CRCCU;
+
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static inline void reset_CRC();
+
 
 /*==============================================================================
-  Local objects
+  Local object definitions
 ==============================================================================*/
-MODULE_NAME(CRCCU);
+MODULE_NAME(I2C);
+
 
 /*==============================================================================
-  Exported objects
+  Exported object definitions
 ==============================================================================*/
 
 /*==============================================================================
@@ -77,26 +75,10 @@ MODULE_NAME(CRCCU);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 {
-        if (  major != _CRC_MAJOR_NUMBER
-           || minor != _CRC_MINOR_NUMBER
-           || (RCC->AHBENR & RCC_AHBENR_CRCEN) ) {
 
-                return STD_RET_ERROR;
-        }
-
-        CRCCU *hdl = calloc(1, sizeof(CRCCU));
-        if (hdl) {
-                SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-
-                hdl->input_mode = CRC_INPUT_MODE_WORD;
-                *device_handle  = hdl;
-
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
-        }
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -109,25 +91,9 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_RELEASE(CRCCU, void *device_handle)
+API_MOD_RELEASE(I2C, void *device_handle)
 {
-        CRCCU *hdl = device_handle;
-
-        critical_section_begin();
-
-        stdret_t status = STD_RET_ERROR;
-
-        if (device_is_unlocked(hdl->file_lock)) {
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                free(hdl);
-                status = STD_RET_OK;
-        } else {
-                errno = EBUSY;
-        }
-
-        critical_section_end();
-
-        return status;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -141,13 +107,12 @@ API_MOD_RELEASE(CRCCU, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(CRCCU, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(I2C, void *device_handle, vfs_open_flags_t flags)
 {
+        UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        CRCCU *hdl = device_handle;
-
-        return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -161,17 +126,12 @@ API_MOD_OPEN(CRCCU, void *device_handle, vfs_open_flags_t flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
+API_MOD_CLOSE(I2C, void *device_handle, bool force)
 {
-        CRCCU *hdl = device_handle;
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(force);
 
-        if (device_is_access_granted(&hdl->file_lock) || force) {
-                device_unlock(&hdl->file_lock, force);
-                return STD_RET_OK;
-        } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -187,51 +147,17 @@ API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(src);
+        UNUSED_ARG(count);
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        CRCCU *hdl = device_handle;
+        errno = EPERM;
 
-        ssize_t n = -1;
-
-        if (device_is_access_granted(&hdl->file_lock)) {
-                reset_CRC();
-
-                if (hdl->input_mode == CRC_INPUT_MODE_BYTE) {
-
-                        for (n = 0; n < (ssize_t)count; n++) {
-                                CRC->DR = src[n];
-                        }
-
-                } else if (hdl->input_mode == CRC_INPUT_MODE_HALF_WORD) {
-
-                        size_t len = count / sizeof(u16_t);
-                        u16_t *ptr = (u16_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRC->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u16_t);
-
-                } else {
-
-                        size_t len = count / sizeof(u32_t);
-                        u32_t *ptr = (u32_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRC->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u32_t);
-                }
-        } else {
-                errno = EACCES;
-        }
-
-        return n;
+        return 0;
 }
 
 //==============================================================================
@@ -247,34 +173,17 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, fpos_t 
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(count);
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        CRCCU *hdl = device_handle;
+        errno = EPERM;
 
-        ssize_t n = -1;
-
-        if (device_is_access_granted(&hdl->file_lock)) {
-
-                u8_t  crc[4] = {CRC->DR, CRC->DR >> 8, CRC->DR >> 16, CRC->DR >> 24};
-
-                n = 0;
-                size_t pos = *fpos;
-                for (size_t i = 0; i < count && sizeof(u32_t); i++) {
-                        if (pos + n < sizeof(u32_t)) {
-                                *(dst++) = crc[n + pos];
-                                n++;
-                        } else {
-                                break;
-                        }
-                }
-        } else {
-                errno = EACCES;
-        }
-
-        return n;
+        return 0;
 }
 
 //==============================================================================
@@ -285,45 +194,24 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return On success return 0 or 1. On error, -1 is returned, and errno set
+ *         appropriately.
  */
 //==============================================================================
-API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 {
-        CRCCU *hdl = device_handle;
+        UNUSED_ARG(device_handle);
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (arg) {
                 switch (request) {
-                case IOCTL_CRC__SET_INPUT_MODE:
-                        if (arg) {
-                                enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
-                                if (mode <= CRC_INPUT_MODE_WORD) {
-                                        hdl->input_mode = mode;
-                                        return STD_RET_OK;
-                                }
-                        }
-                        errno = EINVAL;
-                        break;
-
-                case IOCTL_CRC__GET_INPUT_MODE:
-                        if (arg) {
-                                *(enum CRC_input_mode *)arg = hdl->input_mode;
-                                return STD_RET_OK;
-                        } else {
-                                errno = EINVAL;
-                        }
-                        break;
-
                 default:
                         errno = EBADRQC;
-                        break;
+                        return -1;
                 }
-        } else {
-                errno = EACCES;
         }
 
-        return STD_RET_ERROR;
+        errno = EINVAL;
+        return -1;
 }
 
 //==============================================================================
@@ -336,7 +224,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_FLUSH(CRCCU, void *device_handle)
+API_MOD_FLUSH(I2C, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -354,25 +242,15 @@ API_MOD_FLUSH(CRCCU, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_STAT(CRCCU, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG(device_handle);
 
-        device_stat->st_major = _CRC_MAJOR_NUMBER;
-        device_stat->st_minor = _CRC_MINOR_NUMBER;
-        device_stat->st_size  = 4;
+        device_stat->st_size  = 0;
+        device_stat->st_major = _I2C_MAJOR_NUMBER;
+        device_stat->st_minor = _I2C_MINOR_NUMBER;
 
         return STD_RET_OK;
-}
-
-//==============================================================================
-/**
- * @brief Reset CRC value register
- */
-//==============================================================================
-static inline void reset_CRC()
-{
-        CRC->CR = CRC_CR_RESET;
 }
 
 /*==============================================================================

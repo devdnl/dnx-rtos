@@ -59,7 +59,7 @@ struct eth_mem {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-MODULE_NAME("ETHMAC");
+MODULE_NAME(ETHMAC);
 
 static struct eth_mem *eth_mem;         /* required by IRQ */
 

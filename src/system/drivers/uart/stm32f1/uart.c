@@ -88,7 +88,7 @@ static void     handle_irq              (u8_t major);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME("UART");
+MODULE_NAME(UART);
 
 /* addresses of UART devices */
 static USART_t *const uart[_UART_NUMBER] = {
