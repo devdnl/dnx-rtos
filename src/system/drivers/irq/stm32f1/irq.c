@@ -353,6 +353,7 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 
                                         if (hdl->irqsem[cfg->irq_number]) {
                                                 semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                                hdl->irqsem[cfg->irq_number] = NULL;
                                         }
                                 } else {
                                         if (hdl->irqsem[cfg->irq_number] == NULL) {
