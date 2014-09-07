@@ -1,7 +1,8 @@
 dnx RTOS 1.3.9rc
 ==============
 New Features, Improvements:
--
+- Added IRQ driver
+- Improved objects validation (mutex, queue, sempahore)
 
 Fixed Bugs:
 - modinit: fixed interpretation of driver_init() status (issue #95)

@@ -151,6 +151,7 @@ static int run_level_0(void)
         driver_init("sdspi4", "/dev/sda4");
         driver_init("ethmac", "/dev/eth0");
         driver_init("crc", "/dev/crc");
+        driver_init("irq", "/dev/irq");
 
         return STD_RET_OK;
 }

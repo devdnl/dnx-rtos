@@ -101,7 +101,7 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
 
         int status;
         if (release) {
-                status = driver_release(argv[2]);
+                status = driver_release(argv[2]) ? -1 : 0;
         } else {
                 if (argc == 2) {
                         status = driver_init(argv[1], NULL);

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    assert.h
+@file    irq_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file provide assert macro.
+@brief   This driver support external interrupts (EXTI).
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
+#ifndef _IRQ_DEF_H_
+#define _IRQ_DEF_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,51 +34,31 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
-#include <stdlib.h>
+#include "stm32f1/irq_ioctl.h"
 
 /*==============================================================================
-  Exported macros
+  Exported symbolic constants/macros
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief assert(ignore)
- * Aborts the program if user-defined condition is not <b>true</b>. Macro can be
- * disabled if <b>NDEBUG</b> is defined.
- *
- * @param ignore        user-defined condition
- *
- * @example
- * void some_function(int *number)
- * {
- *         assert(number != NULL);
- *
- *         // ...
- * }
- */
-//==============================================================================
-#if !defined(NDEBUG)
-#       define assert(ignore) do{if ((ignore)) break; printf("Assertion failed: %s, file %s, line %d\n", #ignore, __FILE__, __LINE__); abort();}while(0)
-#endif
+#define _IRQ_MAJOR_NUMBER      0
+#define _IRQ_MINOR_NUMBER      0
 
 /*==============================================================================
-  Exported object types
+  Exported types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported objects
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  Exported function prototypes
 ==============================================================================*/
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _ASSERT_H_ */
+#endif /* _IRQ_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

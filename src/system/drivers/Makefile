@@ -10,3 +10,4 @@ include $(DRV_LOC)/tty/Makefile
 include $(DRV_LOC)/uart/Makefile
 include $(DRV_LOC)/wdg/Makefile
 include $(DRV_LOC)/usb/Makefile
+include $(DRV_LOC)/irq/Makefile

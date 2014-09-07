@@ -44,23 +44,24 @@
 
 /* include specific CPU architecture files */
 #if (__CPU_ARCH__ == stm32f1)
-#include "../stm32f1/cpu.h"
-#include "../stm32f1/crc_flags.h"
-#include "../stm32f1/gpio_flags.h"
-#include "../stm32f1/afio_flags.h"
-#include "../stm32f1/eth_flags.h"
-#include "../stm32f1/pll_flags.h"
-#include "../stm32f1/sdspi_flags.h"
-#include "../stm32f1/spi_flags.h"
-#include "../stm32f1/wdg_flags.h"
-#include "../stm32f1/uart_flags.h"
-#include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/cpu.h"
+#       include "../stm32f1/crc_flags.h"
+#       include "../stm32f1/gpio_flags.h"
+#       include "../stm32f1/afio_flags.h"
+#       include "../stm32f1/eth_flags.h"
+#       include "../stm32f1/pll_flags.h"
+#       include "../stm32f1/sdspi_flags.h"
+#       include "../stm32f1/spi_flags.h"
+#       include "../stm32f1/wdg_flags.h"
+#       include "../stm32f1/uart_flags.h"
+#       include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/irq_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
-#include "stm32f2/cpu.h"
+#       include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)
-#include "stm32f3/cpu.h"
+#       include "stm32f3/cpu.h"
 #elif (__CPU_ARCH__ == stm32f4)
-#include "stm32f4/cpu.h"
+#       include "stm32f4/cpu.h"
 #endif
 
 /* CPU configuration */
@@ -140,6 +141,7 @@
 #define __ENABLE_FDMC__ __NO__
 #define __ENABLE_HDMICEC__ __NO__
 #define __ENABLE_CAN__ __NO__
+#define __ENABLE_IRQ__ __YES__
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

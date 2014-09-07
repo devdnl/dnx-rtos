@@ -84,6 +84,11 @@
 #               include "stm32f1/usb_def.h"
 #       endif
 #endif
+#if (__ENABLE_IRQ__)
+#       ifdef ARCH_stm32f1
+#               include "stm32f1/irq_def.h"
+#       endif
+#endif
 #if (__ENABLE_TTY__)
 #       include "tty_def.h"
 #endif
@@ -128,6 +133,9 @@
 #if (__ENABLE_USB__)
         _IMPORT_MODULE_INTERFACE(USBD);
 #endif
+#if (__ENABLE_IRQ__)
+        _IMPORT_MODULE_INTERFACE(IRQ);
+#endif
 
 /*==============================================================================
   Exported object definitions
@@ -169,6 +177,9 @@ const char *const _regdrv_module_name[] = {
         #endif
         #if (__ENABLE_USB__)
         _MODULE_NAME(USBD),
+        #endif
+        #if (__ENABLE_IRQ__)
+        _MODULE_NAME(IRQ),
         #endif
 };
 
@@ -331,6 +342,10 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _DRIVER_INTERFACE(USBD, "usb_ep5", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_5),
         _DRIVER_INTERFACE(USBD, "usb_ep6", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_6),
         _DRIVER_INTERFACE(USBD, "usb_ep7", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_7),
+        #endif
+
+        #if (__ENABLE_IRQ__)
+        _DRIVER_INTERFACE(IRQ, "irq", _IRQ_MAJOR_NUMBER, _IRQ_MINOR_NUMBER),
         #endif
 };
 

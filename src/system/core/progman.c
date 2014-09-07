@@ -459,14 +459,16 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 static int process_kill(task_t *taskhdl, int status)
 {
         if (taskhdl) {
-                _task_get_data_of(taskhdl)->f_task_kill = true;
-
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 default:
                 case TASK_TYPE_RAW:
-                        sysm_lock_access();
-                        _task_delete(taskhdl);
-                        sysm_unlock_access();
+                        if (taskhdl == task_get_handle()) {
+                                _task_delete(taskhdl);
+                        } else {
+                                sysm_lock_access();
+                                _task_delete(taskhdl);
+                                sysm_unlock_access();
+                        }
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
@@ -692,25 +694,22 @@ int _program_kill(prog_t *prog)
                 } else {
                         sysm_lock_access();
 
-                        _task_get_data_of(prog->task)->f_task_kill = true;
-
                         if (prog->task != task_get_handle()) {
+                                _task_get_data_of(prog->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
                                 task_suspend(prog->task);
                         }
-
-                        restore_stdio_defaults(prog->task);
 
                         if (prog->mem) {
                                 sysm_tskfree_as(prog->task, prog->mem);
                                 prog->mem = NULL;
                         }
 
+                        restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
                         semaphore_signal(prog->exit_sem);
-                        _task_delete(prog->task);
-
                         sysm_unlock_access();
+                        _task_delete(prog->task);
                         return 0;
                 }
         }
@@ -930,20 +929,17 @@ int _thread_cancel(thread_t *thread)
                 } else {
                         sysm_lock_access();
 
-                        _task_get_data_of(thread->task)->f_task_kill = true;
-
                         if (thread->task != task_get_handle()) {
+                                _task_get_data_of(thread->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
                                 task_suspend(thread->task);
                         }
 
                         restore_stdio_defaults(thread->task);
-
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
-                        _task_delete(thread->task);
-
                         sysm_unlock_access();
+                        _task_delete(thread->task);
                         return 0;
                 }
         }
