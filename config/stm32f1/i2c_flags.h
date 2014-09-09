@@ -27,7 +27,71 @@
 #ifndef _I2C_FLAGS_H_
 #define _I2C_FLAGS_H_
 
+/*
+ * __I2Cx_DEV_x_ADDRESS: u16_t
+ * __I2Cx_DEV_x_10BIT_ADDR: bool
+ * __I2C1_DEV_0_SEND_SUB_ADDR: 0 - none; 1 - 1 Byte; 2 - 2 Bytes; 3 - 3 Bytes
+ */
 
+#define __I2C1_ENABLE__ __YES__
+#define __I2C1_USE_DMA__ __NO__
+#define __I2C1_SCL_FREQ__ 100000
+#define __I2C1_IRQ_PRIO__ CONFIG_USER_IRQ_PRIORITY
+#define __I2C1_NUMBER_OF_DEVICES__ 8
+#define __I2C1_DEV_0_ADDRESS 0xD0
+#define __I2C1_DEV_0_10BIT_ADDR __NO__
+#define __I2C1_DEV_0_SEND_SUB_ADDR 0
+#define __I2C1_DEV_1_ADDRESS 0xD0
+#define __I2C1_DEV_1_10BIT_ADDR __NO__
+#define __I2C1_DEV_1_SEND_SUB_ADDR 0
+#define __I2C1_DEV_2_ADDRESS 0xD0
+#define __I2C1_DEV_2_10BIT_ADDR __NO__
+#define __I2C1_DEV_2_SEND_SUB_ADDR 0
+#define __I2C1_DEV_3_ADDRESS 0xD0
+#define __I2C1_DEV_3_10BIT_ADDR __NO__
+#define __I2C1_DEV_3_SEND_SUB_ADDR 0
+#define __I2C1_DEV_4_ADDRESS 0xD0
+#define __I2C1_DEV_4_10BIT_ADDR __NO__
+#define __I2C1_DEV_4_SEND_SUB_ADDR 0
+#define __I2C1_DEV_5_ADDRESS 0xD0
+#define __I2C1_DEV_5_10BIT_ADDR __NO__
+#define __I2C1_DEV_5_SEND_SUB_ADDR 0
+#define __I2C1_DEV_6_ADDRESS 0xD0
+#define __I2C1_DEV_6_10BIT_ADDR __NO__
+#define __I2C1_DEV_6_SEND_SUB_ADDR 0
+#define __I2C1_DEV_7_ADDRESS 0xD0
+#define __I2C1_DEV_7_10BIT_ADDR __NO__
+#define __I2C1_DEV_7_SEND_SUB_ADDR 0
+
+#define __I2C2_ENABLE__ __YES__
+#define __I2C2_USE_DMA__ __NO__
+#define __I2C2_SCL_FREQ__ 100000
+#define __I2C2_IRQ_PRIO__ CONFIG_USER_IRQ_PRIORITY
+#define __I2C2_NUMBER_OF_DEVICES__ 8
+#define __I2C2_DEV_0_ADDRESS 0xD0
+#define __I2C2_DEV_0_10BIT_ADDR __NO__
+#define __I2C2_DEV_0_SEND_SUB_ADDR 0
+#define __I2C2_DEV_1_ADDRESS 0xD0
+#define __I2C2_DEV_1_10BIT_ADDR __NO__
+#define __I2C2_DEV_1_SEND_SUB_ADDR 0
+#define __I2C2_DEV_2_ADDRESS 0xD0
+#define __I2C2_DEV_2_10BIT_ADDR __NO__
+#define __I2C2_DEV_2_SEND_SUB_ADDR 0
+#define __I2C2_DEV_3_ADDRESS 0xD0
+#define __I2C2_DEV_3_10BIT_ADDR __NO__
+#define __I2C2_DEV_3_SEND_SUB_ADDR 0
+#define __I2C2_DEV_4_ADDRESS 0xD0
+#define __I2C2_DEV_4_10BIT_ADDR __NO__
+#define __I2C2_DEV_4_SEND_SUB_ADDR 0
+#define __I2C2_DEV_5_ADDRESS 0xD0
+#define __I2C2_DEV_5_10BIT_ADDR __NO__
+#define __I2C2_DEV_5_SEND_SUB_ADDR 0
+#define __I2C2_DEV_6_ADDRESS 0xD0
+#define __I2C2_DEV_6_10BIT_ADDR __NO__
+#define __I2C2_DEV_6_SEND_SUB_ADDR 0
+#define __I2C2_DEV_7_ADDRESS 0xD0
+#define __I2C2_DEV_7_10BIT_ADDR __NO__
+#define __I2C2_DEV_7_SEND_SUB_ADDR 0
 
 #endif /* _I2C_FLAGS_H_ */
 /*==============================================================================

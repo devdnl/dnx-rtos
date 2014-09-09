@@ -34,13 +34,32 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/irq_ioctl.h"
+#include "stm32f1/i2c_ioctl.h"
+#include "stm32f1/i2c_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define _I2C_MAJOR_NUMBER      0
-#define _I2C_MINOR_NUMBER      0
+enum _I2C_major {
+#if defined(I2C1) && (_I2C1_ENABLE > 0)
+        _I2C1,
+#endif
+#if defined(I2C2) && (_I2C2_ENABLE > 0)
+        _I2C2,
+#endif
+        _I2C_NUMBER_OF_PERIPHERALS
+};
+
+enum _I2C_minor {
+        _I2C_DEV_0,
+        _I2C_DEV_1,
+        _I2C_DEV_2,
+        _I2C_DEV_3,
+        _I2C_DEV_4,
+        _I2C_DEV_5,
+        _I2C_DEV_6,
+        _I2C_DEV_7
+};
 
 /*==============================================================================
   Exported types, enums definitions

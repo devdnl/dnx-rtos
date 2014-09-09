@@ -190,7 +190,7 @@ const char *const _regdrv_module_name[] = {
         _MODULE_NAME(IRQ),
         #endif
         #if (__ENABLE_I2C__)
-        _MODULE_NAME(IRQ),
+        _MODULE_NAME(I2C),
         #endif
 };
 
@@ -362,53 +362,53 @@ const struct _driver_entry _regdrv_driver_table[] = {
 
         /* I2C ===============================================================*/
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 1)
-        _DRIVER_INTERFACE(SPI, "i2c1:0", _I2C1, 0),
+        _DRIVER_INTERFACE(I2C, "i2c1:0", _I2C1, _I2C_DEV_0),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 2)
-        _DRIVER_INTERFACE(SPI, "i2c1:1", _I2C1, 1),
+        _DRIVER_INTERFACE(I2C, "i2c1:1", _I2C1, _I2C_DEV_1),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 3)
-        _DRIVER_INTERFACE(SPI, "i2c1:2", _I2C1, 2),
+        _DRIVER_INTERFACE(I2C, "i2c1:2", _I2C1, _I2C_DEV_2),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 4)
-        _DRIVER_INTERFACE(SPI, "i2c1:3", _I2C1, 3),
+        _DRIVER_INTERFACE(I2C, "i2c1:3", _I2C1, _I2C_DEV_3),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 5)
-        _DRIVER_INTERFACE(SPI, "i2c1:4", _I2C1, 4),
+        _DRIVER_INTERFACE(I2C, "i2c1:4", _I2C1, _I2C_DEV_4),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 6)
-        _DRIVER_INTERFACE(SPI, "i2c1:5", _I2C1, 5),
+        _DRIVER_INTERFACE(I2C, "i2c1:5", _I2C1, _I2C_DEV_5),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 7)
-        _DRIVER_INTERFACE(SPI, "i2c1:6", _I2C1, 6),
+        _DRIVER_INTERFACE(I2C, "i2c1:6", _I2C1, _I2C_DEV_6),
         #endif
         #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 8)
-        _DRIVER_INTERFACE(SPI, "i2c1:7", _I2C1, 7),
+        _DRIVER_INTERFACE(I2C, "i2c1:7", _I2C1, _I2C_DEV_7),
         #endif
 
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 1)
-        _DRIVER_INTERFACE(SPI, "i2c2:0", _I2C2, 0),
+        _DRIVER_INTERFACE(I2C, "i2c2:0", _I2C2, _I2C_DEV_0),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 2)
-        _DRIVER_INTERFACE(SPI, "i2c2:1", _I2C2, 1),
+        _DRIVER_INTERFACE(I2C, "i2c2:1", _I2C2, _I2C_DEV_1),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 3)
-        _DRIVER_INTERFACE(SPI, "i2c2:2", _I2C2, 2),
+        _DRIVER_INTERFACE(I2C, "i2c2:2", _I2C2, _I2C_DEV_2),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 4)
-        _DRIVER_INTERFACE(SPI, "i2c2:3", _I2C2, 3),
+        _DRIVER_INTERFACE(I2C, "i2c2:3", _I2C2, _I2C_DEV_3),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 5)
-        _DRIVER_INTERFACE(SPI, "i2c2:4", _I2C2, 4),
+        _DRIVER_INTERFACE(I2C, "i2c2:4", _I2C2, _I2C_DEV_4),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 6)
-        _DRIVER_INTERFACE(SPI, "i2c2:5", _I2C2, 5),
+        _DRIVER_INTERFACE(I2C, "i2c2:5", _I2C2, _I2C_DEV_5),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 7)
-        _DRIVER_INTERFACE(SPI, "i2c2:6", _I2C2, 6),
+        _DRIVER_INTERFACE(I2C, "i2c2:6", _I2C2, _I2C_DEV_6),
         #endif
         #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 8)
-        _DRIVER_INTERFACE(SPI, "i2c2:7", _I2C2, 7),
+        _DRIVER_INTERFACE(I2C, "i2c2:7", _I2C2, _I2C_DEV_7),
         #endif
 };
 
