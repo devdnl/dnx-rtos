@@ -50,6 +50,7 @@ extern "C" {
 #       include "stm32f1/uart_ioctl.h"
 #       include "stm32f1/usb_ioctl.h"
 #       include "stm32f1/irq_ioctl.h"
+#       include "stm32f1/i2c_ioctl.h"
 #else
 #       error Unknown architecture!
 #endif
