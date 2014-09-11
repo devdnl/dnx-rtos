@@ -72,14 +72,10 @@ local function load_controls()
 
         -- load IRQ mode and priorty
         for i = 0, NUMBER_OF_IRQ - 1 do
-                local key = config.arch.stm32f1.key.IRQ_GENERAL
+                local mode = irq_mode[ct:key_read(config.arch.stm32f1.key["IRQ_"..i.."_MODE"])]
+                mode = ifs(mode < 0 or mode > 3, 0, mode)
 
-                key.key:SetValue("__IRQ_LINE_"..i.."_MODE__")
-                local mode = irq_mode[ct:key_read(key)]
-                if mode < 0 or mode > 3 then mode = 0 end
-
-                key.key:SetValue("__IRQ_LINE_"..i.."_PRIO__")
-                local prio = ct:key_read(key)
+                local prio = ct:key_read(config.arch.stm32f1.key["IRQ_"..i.."_PRIO"])
                 if prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
                         prio = #prio_list
                 else
@@ -114,9 +110,6 @@ local function event_on_button_save_click()
 
         -- save IRQ mode and priorty
         for i = 0, NUMBER_OF_IRQ - 1 do
-                local key = config.arch.stm32f1.key.IRQ_GENERAL
-
-                key.key:SetValue("__IRQ_LINE_"..i.."_MODE__")
                 local mode = ui.Choice_EXTI_mode[i]:GetSelection()
                 for k, i in pairs(irq_mode) do
                         if i == mode then
@@ -124,16 +117,15 @@ local function event_on_button_save_click()
                                 break
                         end
                 end
-                ct:key_write(key, mode)
+                ct:key_write(config.arch.stm32f1.key["IRQ_"..i.."_MODE"], mode)
 
-                key.key:SetValue("__IRQ_LINE_"..i.."_PRIO__")
                 local prio = ui.Choice_EXTI_prio[i]:GetSelection() + 1
                 if prio > #prio_list then
                         prio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
                 else
                         prio = prio_list[prio].value
                 end
-                ct:key_write(key, prio)
+                ct:key_write(config.arch.stm32f1.key["IRQ_"..i.."_PRIO"], prio)
         end
 
         ui.Button_save:Enable(false)
