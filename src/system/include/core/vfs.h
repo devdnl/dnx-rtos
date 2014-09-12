@@ -115,13 +115,14 @@ typedef struct dirent {
 
 /** directory type */
 struct vfs_dir {
-        dirent_t (*f_readdir)(void *fshdl, struct vfs_dir *dir);
-        stdret_t (*f_closedir)(void *fshdl, struct vfs_dir *dir);
-        void      *f_dd;
-        void      *f_handle;
-        size_t     f_items;
-        size_t     f_seek;
-        u32_t      validation;          /**< only for system purposes */
+        dirent_t      (*f_readdir)(void *fshdl, struct vfs_dir *dir);
+        stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
+        void           *f_dd;
+        void           *f_handle;
+        struct vfs_dir *this;
+        size_t          f_items;
+        size_t          f_seek;
+        u32_t           magic;          /**< only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
