@@ -10,6 +10,7 @@ Fixed Bugs:
 - TTY: clear screen of not active terminal (issue #97)
 - Fixed tasks killing if are in the mutex section (issue #92)
 - Fixed memory and resource leaks (issue #105)
+- Fixed rewind() function (issue #104)
 
 dnx RTOS 1.3.8
 ==============
