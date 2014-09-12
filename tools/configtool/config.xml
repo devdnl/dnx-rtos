@@ -328,7 +328,38 @@
                 <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>
                 <PLL_ADC_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_ADC_PRE__</key></PLL_ADC_PRE>
                 <PLL_FLASH_LATENCY><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_FLASH_LATENCY__</key></PLL_FLASH_LATENCY>
-                <IRQ_GENERAL><path>../../config/stm32f1/irq_flags.h</path><key></key></IRQ_GENERAL>
+                <IRQ_0_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_0_MODE__</key></IRQ_0_MODE>
+                <IRQ_1_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_1_MODE__</key></IRQ_1_MODE>
+                <IRQ_2_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_2_MODE__</key></IRQ_2_MODE>
+                <IRQ_3_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_3_MODE__</key></IRQ_3_MODE>
+                <IRQ_4_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_4_MODE__</key></IRQ_4_MODE>
+                <IRQ_5_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_5_MODE__</key></IRQ_5_MODE>
+                <IRQ_6_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_6_MODE__</key></IRQ_6_MODE>
+                <IRQ_7_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_7_MODE__</key></IRQ_7_MODE>
+                <IRQ_8_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_8_MODE__</key></IRQ_8_MODE>
+                <IRQ_9_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_9_MODE__</key></IRQ_9_MODE>
+                <IRQ_10_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_10_MODE__</key></IRQ_10_MODE>
+                <IRQ_11_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_11_MODE__</key></IRQ_11_MODE>
+                <IRQ_12_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_12_MODE__</key></IRQ_12_MODE>
+                <IRQ_13_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_13_MODE__</key></IRQ_13_MODE>
+                <IRQ_14_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_14_MODE__</key></IRQ_14_MODE>
+                <IRQ_15_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_15_MODE__</key></IRQ_15_MODE>
+                <IRQ_0_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_0_PRIO__</key></IRQ_0_PRIO>
+                <IRQ_1_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_1_PRIO__</key></IRQ_1_PRIO>
+                <IRQ_2_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_2_PRIO__</key></IRQ_2_PRIO>
+                <IRQ_3_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_3_PRIO__</key></IRQ_3_PRIO>
+                <IRQ_4_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_4_PRIO__</key></IRQ_4_PRIO>
+                <IRQ_5_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_5_PRIO__</key></IRQ_5_PRIO>
+                <IRQ_6_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_6_PRIO__</key></IRQ_6_PRIO>
+                <IRQ_7_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_7_PRIO__</key></IRQ_7_PRIO>
+                <IRQ_8_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_8_PRIO__</key></IRQ_8_PRIO>
+                <IRQ_9_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_9_PRIO__</key></IRQ_9_PRIO>
+                <IRQ_10_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_10_PRIO__</key></IRQ_10_PRIO>
+                <IRQ_11_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_11_PRIO__</key></IRQ_11_PRIO>
+                <IRQ_12_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_12_PRIO__</key></IRQ_12_PRIO>
+                <IRQ_13_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_13_PRIO__</key></IRQ_13_PRIO>
+                <IRQ_14_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_14_PRIO__</key></IRQ_14_PRIO>
+                <IRQ_15_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_15_PRIO__</key></IRQ_15_PRIO>
             </key>
 
             <cpulist>

@@ -184,36 +184,37 @@ static int free_the_oldest_line(ttybfr_t *this)
 //==============================================================================
 static char *merge_or_create_line(ttybfr_t *this, const char *src, bool *new)
 {
-        char   *line          = NULL;
-        char   *last_line     = this->line[get_line_index(this, 1)];
-        size_t  last_line_len = strlen(last_line);
+        char *line      = const_cast(char*, src);
+        char *last_line = this->line[get_line_index(this, 1)];
 
-        if (last_line && LAST_CHARACTER(last_line) != '\n') {
-                last_line_len += 1;
+        *new = false;
 
-                if (FIRST_CHARACTER(src) == '\r' && strncmp(src, "\r\n", 2) != 0) {
-                        line = malloc(strlen(src + 1) + 1);
-                        if (line) {
-                                strcpy(line, src + 1);
+        if (last_line) {
+                if (LAST_CHARACTER(last_line) != '\n') {
+
+                        size_t last_line_len = strlen(last_line) + 1;
+
+                        if (FIRST_CHARACTER(src) == '\r' && strncmp(src, "\r\n", 2) != 0) {
+                                line = malloc(strlen(src + 1) + 1);
+                                if (line) {
+                                        strcpy(line, src + 1);
+                                } else {
+                                        return NULL;
+                                }
                         } else {
-                                return NULL;
+                                line = malloc(last_line_len + strlen(src) + 1);
+                                if (line) {
+                                        strcpy(line, last_line);
+                                        strcat(line, src);
+                                } else {
+                                        return NULL;
+                                }
                         }
-                } else {
-                        line = malloc(last_line_len + strlen(src) + 1);
-                        if (line) {
-                                strcpy(line, last_line);
-                                strcat(line, src);
-                        } else {
-                                return NULL;
-                        }
+
+                        this->write_index = get_line_index(this, 1);
+
+                        *new = true;
                 }
-
-                this->write_index = get_line_index(this, 1);
-
-                *new = true;
-        } else {
-                line = (char *)src;
-                *new = false;
         }
 
         return line;

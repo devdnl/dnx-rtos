@@ -180,10 +180,10 @@ static u8_t             card_send_cmd                           (sdpart_t *hdl, 
 static u8_t             card_wait_ready                         (void);
 static bool             card_receive_data_block                 (u8_t *buff);
 static bool             card_transmit_data_block                (const u8_t *buff, u8_t token);
-static ssize_t          card_read_whole_sectors                 (sdpart_t *hdl, void *dst, size_t nsectors, u64_t lseek);
-static ssize_t          card_read_partial_sectors               (sdpart_t *hdl, void *dst, size_t size, u64_t lseek);
-static ssize_t          card_write_whole_sectors                (sdpart_t *hdl, const void *src, size_t nsectors, u64_t lseek);
-static ssize_t          card_write_partial_sectors              (sdpart_t *hdl, const void *src, size_t size, u64_t lseek);
+static ssize_t          card_read_whole_sectors                 (sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek);
+static ssize_t          card_read_partial_sectors               (sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek);
+static ssize_t          card_write_whole_sectors                (sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek);
+static ssize_t          card_write_partial_sectors              (sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek);
 static stdret_t         card_initialize                         (sdpart_t *hdl);
 static ssize_t          card_read                               (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek);
 static ssize_t          card_write                              (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek);
@@ -922,7 +922,7 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
  * @retval number of read sectors
  */
 //==============================================================================
-static ssize_t card_read_whole_sectors(sdpart_t *hdl, void *dst, size_t nsectors, u64_t lseek)
+static ssize_t card_read_whole_sectors(sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek)
 {
         if (sdspi_ctrl->card_type.block) {
                 lseek >>= 9;    /* divide by 512 */
@@ -967,7 +967,7 @@ static ssize_t card_read_whole_sectors(sdpart_t *hdl, void *dst, size_t nsectors
  * @retval number of read bytes
  */
 //==============================================================================
-static ssize_t card_read_partial_sectors(sdpart_t *hdl, void *dst, size_t size, u64_t lseek)
+static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek)
 {
         u8_t *buffer = malloc(sector_size);
         if (!buffer)
@@ -1027,7 +1027,7 @@ exit:
  * @retval number of written sectors
  */
 //==============================================================================
-static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t nsectors, u64_t lseek)
+static ssize_t card_write_whole_sectors(sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek)
 {
         if (sdspi_ctrl->card_type.block) {
                 lseek >>= 9;    /* divide by 512 */
@@ -1078,7 +1078,7 @@ static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t n
  * @retval number of written bytes
  */
 //==============================================================================
-static ssize_t card_write_partial_sectors(sdpart_t *hdl, const void *src, size_t size, u64_t lseek)
+static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek)
 {
         u8_t *buffer = malloc(sector_size);
         if (!buffer)

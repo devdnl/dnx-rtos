@@ -402,9 +402,9 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
  * // ...
  */
 //==============================================================================
-static inline int rewind(FILE *file)
+static inline void rewind(FILE *file)
 {
-        return vfs_rewind(file);
+        vfs_rewind(file);
 }
 
 //==============================================================================

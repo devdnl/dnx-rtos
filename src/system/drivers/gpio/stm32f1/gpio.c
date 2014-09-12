@@ -349,7 +349,6 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
                 case IOCTL_GPIO__GET_PIN: {
                         GPIO_pin_t *io = arg;
                         return (GPIOx[io->port_index].GPIO->IDR & (1 << io->pin_number)) >> io->pin_number;
-                        break;
                 }
 
                 default:

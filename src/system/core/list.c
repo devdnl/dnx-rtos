@@ -237,6 +237,8 @@ stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *d
 
                                         return STD_RET_OK;
                                 }
+
+                                free(new_item);
                         }
                 }
         }
@@ -283,6 +285,8 @@ stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *dat
 
                                         return STD_RET_OK;
                                 }
+
+                                free(new_item);
                         }
                 }
         }

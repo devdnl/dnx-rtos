@@ -441,7 +441,7 @@ PROGRAM_MAIN(keyboard, int argc, char *argv[])
                                 }
 
                                 if (size && data) {
-                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), size);
+                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), static_cast(int, size));
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);

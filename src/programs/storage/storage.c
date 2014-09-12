@@ -360,7 +360,7 @@ static void ep1_handler(void *arg)
                         printf("global->msc.CBW.dCBWSignature: 0x%x (0x%x)\n", global->msc.CBW.dCBWSignature, USB_MASS_STORAGE_BOT_CBW_SIGNATURE);
                         printf("global->msc.CBW.bCBWLUN: %d\n", global->msc.CBW.bCBWLUN);
                         printf("global->msc.CBW.bCBWCBLength: %d (max %d)\n", global->msc.CBW.bCBWCBLength, USB_MASS_STORAGE_REQUEST_CBWCB_LENGTH);
-                        printf("read: %d\n (max %d)\n", n, sizeof(usb_msc_bot_cbw_t));
+                        printf("read: %d\n (max %d)\n", static_cast(int, n), static_cast(int, sizeof(usb_msc_bot_cbw_t)));
 
                         ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
                         ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
@@ -541,6 +541,12 @@ static void ep1_handler(void *arg)
 
         if (gpio)
                 fclose(gpio);
+
+        if (ep1)
+                fclose(ep1);
+
+        if (sda)
+                fclose(sda);
 }
 
 //==============================================================================
@@ -688,7 +694,7 @@ PROGRAM_MAIN(storage, int argc, char *argv[])
                                 }
 
                                 if (size && data) {
-                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), size);
+                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), static_cast(int, size));
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
