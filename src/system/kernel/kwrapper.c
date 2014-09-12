@@ -599,9 +599,11 @@ bool _mutex_unlock(mutex_t *mutex)
                 if (status) {
                         _task_data_t *data = _task_get_data();
 
-                        data->f_mutex_section--;
+                        if (data->f_mutex_section) {
+                                data->f_mutex_section--;
+                        }
 
-                        if (data->f_task_kill == true && data->f_mutex_section <= 0) {
+                        if (data->f_task_kill == true && data->f_mutex_section == 0) {
                                 _task_suspend_now();
                         }
                 }

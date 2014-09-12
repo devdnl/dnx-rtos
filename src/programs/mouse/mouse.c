@@ -405,7 +405,7 @@ start:
                                         if (n == 0) {
                                                 printf(FONT_COLOR_RED" (%d/%d)"RESET_ATTRIBUTES"\n", n, size);
                                         } else {
-                                                printf(" (%d/%d)\n", n, size);
+                                                printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
                                         }
 
                                 } else {

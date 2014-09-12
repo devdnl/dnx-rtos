@@ -691,13 +691,13 @@ static void vt100_analyze(const char c)
                 if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                         const char *str  = ttyedit_get(tty->editline);
                         const char *lf   = "\n";
-                        const char *crlf = "\r\n";
 
                         ttybfr_add_line(tty->screen, str, strlen(str));
                         ttybfr_add_line(tty->screen, lf, strlen(lf));
                         ttybfr_clear_fresh_line_counter(tty->screen);
 
                         if (ttyedit_is_echo_enabled(tty->editline)) {
+                                const char *crlf = "\r\n";
                                 vfs_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
                         }
 

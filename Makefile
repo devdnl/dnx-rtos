@@ -235,7 +235,7 @@ check :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
 	
 quickcheck :
-	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h $(CSRC) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/stdc/dnx $(CSRC) $(CXXSRC)
 	
 
 ####################################################################################################
@@ -290,7 +290,6 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@$(ECHO) "Linking..."
-	@#$(ECHO) $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################

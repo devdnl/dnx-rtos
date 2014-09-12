@@ -870,7 +870,6 @@ static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
 
         dirent_t dirent;
         dirent.name     = NULL;
-        dirent.size     = 0;
         dirent.filetype = FILE_TYPE_DIR;
         dirent.size     = 0;
 
