@@ -90,9 +90,9 @@ static void serve(net_conn_t *conn)
                                 uint cwd_len = strlen(path);
 
                                 char *path_end = strchr(buf + 4, ' ');
-                                *path_end = '\0';
-
                                 if (path_end) {
+                                        *path_end = '\0';
+
                                         strcat(path, buf + 4);
 
                                         printf("Requested: %s\n", path);

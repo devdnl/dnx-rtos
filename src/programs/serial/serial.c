@@ -303,9 +303,6 @@ static void ep1_handler(void *arg)
 {
         (void) arg;
 
-        static const char *hello = "Welcome to dnxRTOS!\r\n";
-        static const char *help  = "Press 'W' to turn on and 'w' to turn off the white LED\r\n";
-
         FILE *ep1  = fopen("/dev/usb_ep1", "r+");
         FILE *ep2  = fopen("/dev/usb_ep2", "r+");
         FILE *gpio = fopen("/dev/gpio", "r+");
@@ -319,11 +316,13 @@ static void ep1_handler(void *arg)
                 fwrite(&serial_state, 1, sizeof(usb_serial_state_notification_t), ep2);
 
                 while (true) {
+                        rewind(ep1);
                         size_t n = fread(&global->buffer, 1, BULK_BUF_SIZE, ep1);
 
                         if (n > 0) {
                                 global->buffer[1] = '\r';
                                 global->buffer[2] = '\n';
+                                rewind(ep1);
                                 fwrite(&global->buffer, 1, n+2, ep1);
 
                                 char c = global->buffer[0];
@@ -332,6 +331,9 @@ static void ep1_handler(void *arg)
                                 } else if (c == 'w') {
                                         ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &pin_led_white);
                                 } else if (c == 'h') {
+                                        static const char *hello = "Welcome to dnxRTOS!\r\n";
+                                        static const char *help  = "Press 'W' to turn on and 'w' to turn off the white LED\r\n";
+
                                         fwrite(hello, 1, strlen(hello), ep1);
                                         fwrite(help,  1, strlen(help),  ep1);
                                 }
@@ -492,7 +494,7 @@ PROGRAM_MAIN(serial, int argc, char *argv[])
                                 }
 
                                 if (size && data) {
-                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), size);
+                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), (int)size);
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
@@ -508,7 +510,7 @@ PROGRAM_MAIN(serial, int argc, char *argv[])
                                         printf(tostring(SET_LINE_CODING)":");
                                         size = min(setup.packet.wLength, sizeof(usb_cdc_line_coding_t));
                                         n    = fread(&global->line_coding, 1, size, ep0);
-                                        printf(" (%d/%d)\n", n, size);
+                                        printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
 
                                         printf("  dwDTERate  : %d\n"
                                                "  bCharFormat: %d\n"

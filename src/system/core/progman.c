@@ -54,11 +54,12 @@ struct prog {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
+        struct prog     *this;
         char            **argv;
         int              argc;
         uint             mem_size;
         int              exit_code;
-        u32_t            valid;
+        u32_t            magic;
 };
 
 struct thread {
@@ -70,7 +71,8 @@ struct thread {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
-        u32_t            valid;
+        struct thread   *this;
+        u32_t            magic;
 };
 
 /*==============================================================================
@@ -85,8 +87,8 @@ static void     restore_stdio_defaults  (task_t *task);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const u32_t prog_valid_number   = 0x3B6BF19D;
-static const u32_t thread_valid_number = 0x8843D463;
+static const u32_t prog_magic_number   = 0x3B6BF19D;
+static const u32_t thread_magic_number = 0x8843D463;
 static const uint  mutex_wait_attempts = 10;
 
 /*==============================================================================
@@ -501,7 +503,7 @@ static int process_kill(task_t *taskhdl, int status)
 static bool prog_is_valid(prog_t *prog)
 {
         if (prog) {
-                if (prog->valid == prog_valid_number) {
+                if (prog->magic == prog_magic_number && prog->this == prog) {
                         return true;
                 }
         }
@@ -524,7 +526,7 @@ static bool prog_is_valid(prog_t *prog)
 static bool thread_is_valid(thread_t *thread)
 {
         if (thread) {
-                if (thread->valid == thread_valid_number) {
+                if (thread->magic == thread_magic_number && thread->this == thread) {
                         return true;
                 }
         }
@@ -623,25 +625,20 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->valid = prog_valid_number;
+                                                prog->magic = prog_magic_number;
+                                                prog->this  = prog;
                                                 return prog;
                                         }
+
+                                        semaphore_delete(prog->exit_sem);
                                 }
                         } else {
                                 errno = ENOENT;
                         }
+
+                        delete_argument_table(prog->argv);
                 }
-        }
 
-        if (prog->argv) {
-                delete_argument_table(prog->argv);
-        }
-
-        if (prog->exit_sem) {
-                semaphore_delete(prog->exit_sem);
-        }
-
-        if (prog) {
                 sysm_tskfree(prog);
                 prog = NULL;
         }
@@ -664,7 +661,8 @@ int _program_delete(prog_t *prog)
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argv);
-                        prog->valid = 0;
+                        prog->magic = 0;
+                        prog->this  = NULL;
                         sysm_tskfree(prog);
                         return 0;
                 } else {
@@ -872,7 +870,8 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->valid = thread_valid_number;
+                        thread->magic = thread_magic_number;
+                        thread->this  = thread;
                         return thread;
                 }
         }
@@ -981,7 +980,8 @@ int _thread_delete(thread_t *thread)
         if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_delete(thread->exit_sem);
-                        thread->valid = 0;
+                        thread->magic = 0;
+                        thread->this  = NULL;
                         sysm_tskfree(thread);
                         return 0;
                 } else {
