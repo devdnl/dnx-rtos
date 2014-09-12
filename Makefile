@@ -136,6 +136,7 @@ OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
+CODECHECK  = cppcheck
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -215,7 +216,8 @@ help :
 	@$(ECHO) "   cleanall            clean all non-project files"
 	@$(ECHO) ""
 	@$(ECHO) "Non-build targets:"
-	@$(ECHO) "   check               static code analyze for stm32f1 target"
+	@$(ECHO) "   check               static code analyze by using cppcheck"
+	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
 
 ####################################################################################################
 # project configuration wizard
@@ -230,8 +232,11 @@ config :
 ####################################################################################################
 .PHONY : check
 check :
-	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC)
-	@cppcheck -j $(THREAD) --std=c++11 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
+	
+quickcheck :
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h $(CSRC) $(CXXSRC)
+	
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
