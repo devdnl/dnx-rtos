@@ -89,9 +89,10 @@ typedef struct {
                 mutex_t *lock;
                 sem_t   *event;
                 u8_t    *data;
-                ssize_t  size;
+                size_t   size;
                 u8_t     dev_cnt;
                 bool     error:1;
+                bool     stop:1;
                 bool     initialized:1;
         } periph[_I2C_NUMBER_OF_PERIPHERALS];
 } I2C_mem_t;
@@ -107,8 +108,8 @@ static void disable_I2C(u8_t major);
 static bool I2C_start(I2C_dev_t *hdl);
 static bool I2C_send_address(I2C_dev_t *hdl, bool wr);
 static bool I2C_send_sub_address(I2C_dev_t *hdl, u32_t addr);
-static ssize_t I2C_transmit(I2C_dev_t *hdl, const u8_t *src, size_t size);
-static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size);
+static size_t I2C_transmit(I2C_dev_t *hdl, const u8_t *src, size_t size, bool stop);
+static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size);
 static void I2C_stop(I2C_dev_t *hdl);
 
 /*==============================================================================
@@ -410,11 +411,9 @@ API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *f
                         if (!I2C_send_sub_address(hdl, *fpos))
                                 goto exit;
 
-                        n = I2C_transmit(hdl, src, count);
+                        n = I2C_transmit(hdl, src, count, true);
 
                         exit:
-                        I2C_stop(hdl);
-
                         mutex_unlock(I2C->periph[hdl->config->major].lock);
                 } else {
                         errno = ETIME;
@@ -678,9 +677,11 @@ static void disable_I2C(u8_t major)
 //==============================================================================
 static bool wait_for_event(I2C_dev_t *hdl)
 {
-        SET_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITEVTEN);
+        I2C->periph[hdl->config->major].error = false;
+        SET_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN);
 
         if (!semaphore_wait(I2C->periph[hdl->config->major].event, timeout)) {
+                CLEAR_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITERREN | I2C_CR2_ITBUFEN | I2C_CR2_ITEVTEN);
                 I2C->periph[hdl->config->major].error = true;
                 errno = ETIME;
                 return false;
@@ -701,6 +702,8 @@ static bool wait_for_event(I2C_dev_t *hdl)
 //==============================================================================
 static bool I2C_start(I2C_dev_t *hdl)
 {
+        printk("start\n");
+
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
         return wait_for_event(hdl);
 }
@@ -712,8 +715,10 @@ static bool I2C_start(I2C_dev_t *hdl)
 //==============================================================================
 static bool I2C_send_address(I2C_dev_t *hdl, bool wr)
 {
+        printk("address\n");
+
         I2C_t *i2c = get_I2C(hdl);
-        u16_t  tmp;
+        volatile u16_t  tmp;
         (void) tmp;
 
         if (hdl->config->addr10bit) {
@@ -758,41 +763,30 @@ static bool I2C_send_address(I2C_dev_t *hdl, bool wr)
 //==============================================================================
 static bool I2C_send_sub_address(I2C_dev_t *hdl, u32_t addr)
 {
-        I2C_t *i2c = get_I2C(hdl);
-        u16_t  tmp;
-        (void) tmp;
+        printk("sub-address\n");
 
+        int  i = 0;
+        u8_t bfr[4];
 
         switch (hdl->config->sub_addr_mode) {
         default:
-                break;
+                return true;
 
         case I2C_SUB_ADDR_MODE__3_BYTES:
-                tmp = i2c->SR1;
-                tmp = i2c->SR2;
-                i2c->DR = addr >> 16;
-                if (!wait_for_event(hdl))
-                        return false;
+                bfr[i++] = addr >> 16;
                 // flow through
 
         case I2C_SUB_ADDR_MODE__2_BYTES:
-                tmp = i2c->SR1;
-                tmp = i2c->SR2;
-                i2c->DR = addr >> 8;
-                if (!wait_for_event(hdl))
-                        return false;
+                bfr[i++] = addr >> 8;
                 // flow through
 
         case I2C_SUB_ADDR_MODE__1_BYTE:
-                tmp = i2c->SR1;
-                tmp = i2c->SR2;
-                i2c->DR = addr;
-                if (!wait_for_event(hdl))
-                        return false;
+                bfr[i++] = addr;
                 break;
         }
 
-        return true;
+        size_t len = static_cast(size_t, hdl->config->sub_addr_mode);
+        return I2C_transmit(hdl, bfr, len, false) == len;
 }
 
 //==============================================================================
@@ -800,17 +794,20 @@ static bool I2C_send_sub_address(I2C_dev_t *hdl, u32_t addr)
  * @brief
  */
 //==============================================================================
-static ssize_t I2C_transmit(I2C_dev_t *hdl, const u8_t *src, size_t size)
+static size_t I2C_transmit(I2C_dev_t *hdl, const u8_t *src, size_t size, bool stop)
 {
+        printk("transmit\n");
+
         I2C_t *i2c = get_I2C(hdl);
 
         if (I2C_cfg[hdl->config->major].use_DMA) {
                 // TODO
         } else {
+                I2C->periph[hdl->config->major].stop = stop;
                 I2C->periph[hdl->config->major].data = const_cast(u8_t*, src);
                 I2C->periph[hdl->config->major].size = size;
 
-                SET_BIT(i2c->CR2, I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+                SET_BIT(i2c->CR2, I2C_CR2_ITERREN | I2C_CR2_ITBUFEN | I2C_CR2_ITEVTEN);
 
                 if (!wait_for_event(hdl)) {
                         return 0;
@@ -825,7 +822,7 @@ static ssize_t I2C_transmit(I2C_dev_t *hdl, const u8_t *src, size_t size)
  * @brief
  */
 //==============================================================================
-static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size)
+static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size)
 {
 
 }
@@ -837,6 +834,8 @@ static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size)
 //==============================================================================
 static void I2C_stop(I2C_dev_t *hdl)
 {
+        printk("stop\n");
+
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_STOP);
 }
 
@@ -850,15 +849,28 @@ static bool IRQ_EV_handler(u8_t major)
         I2C_t *i2c  = const_cast(I2C_t*, I2C_cfg[major].I2C);
         bool  woken = false;
 
-        if ((i2c->SR1 & I2C_SR1_TXE) && (i2c->SR2 & I2C_SR2_TRA)) {
+        if ((i2c->SR1 & I2C_SR1_TXE) && (i2c->SR2 & I2C_SR2_TRA) && (i2c->CR2 & I2C_CR2_ITBUFEN)) {
                 if (I2C->periph[major].size) {
                         i2c->DR = *(I2C->periph[major].data++);
-                        I2C->periph[major].size--;
-                } else {
-                        semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
                 }
 
-        } else if ((i2c->SR1 & I2C_SR1_RXNE) && !(i2c->SR2 & I2C_SR2_TRA)) {
+                CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN);
+
+        } else if ((i2c->SR1 & I2C_SR1_BTF) && (i2c->SR2 & I2C_SR2_TRA)) {
+                if (I2C->periph[major].size == 1 && I2C->periph[major].stop) {
+                        SET_BIT(i2c->CR1, I2C_CR1_STOP);
+                        I2C->periph[major].stop = false;
+                }
+
+                if (I2C->periph[major].size == 0) {
+                        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITBUFEN);
+                        semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
+                } else {
+                        I2C->periph[major].size--;
+                        SET_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITBUFEN);
+                }
+
+        } else if ((i2c->SR1 & I2C_SR1_RXNE) && !(i2c->SR2 & I2C_SR2_TRA) && (i2c->CR2 & I2C_CR2_ITBUFEN)) {
                 if (I2C->periph[major].size) {
                         if (I2C->periph[major].size == 1)
                                 CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
@@ -868,10 +880,12 @@ static bool IRQ_EV_handler(u8_t major)
                         *(I2C->periph[major].data++) = i2c->DR;
                         I2C->periph[major].size--;
                 } else {
+                        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITBUFEN);
                         semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
                 }
 
         } else {
+                CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN);
                 semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
         }
 
