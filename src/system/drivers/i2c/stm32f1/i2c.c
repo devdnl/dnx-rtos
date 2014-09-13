@@ -451,9 +451,10 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
                 if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
                         if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 I2C_transmit(hdl, true, *fpos, NULL, 0, false);
+                                if (I2C->periph[hdl->config->major].error == false) {
+                                        n = I2C_receive(hdl, dst, count, true);
+                                }
                         }
-
-                        n = I2C_receive(hdl, dst, count, true);
 
                         mutex_unlock(I2C->periph[hdl->config->major].lock);
                 } else {
