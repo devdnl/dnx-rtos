@@ -42,6 +42,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/// macro used to simplify configuration of particular device
 #define I2C_DEV_CFG(_major, _minor)\
 {\
         .addr          = _major##_DEV_##_minor##_ADDRESS,\
@@ -54,65 +55,71 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/// type defines possible modes of sub-addressing sequence (used e.g. in EEPROM)
 typedef enum {
-        I2C_SUB_ADDR_MODE__DISABLED = 0,
-        I2C_SUB_ADDR_MODE__1_BYTE   = 1,
-        I2C_SUB_ADDR_MODE__2_BYTES  = 2,
-        I2C_SUB_ADDR_MODE__3_BYTES  = 3
+        I2C_SUB_ADDR_MODE__DISABLED = 0,                //!< sub-addressing disabled
+        I2C_SUB_ADDR_MODE__1_BYTE   = 1,                //!< sub-address is 1 byte long
+        I2C_SUB_ADDR_MODE__2_BYTES  = 2,                //!< sub-address is 2 byte long
+        I2C_SUB_ADDR_MODE__3_BYTES  = 3                 //!< sub-address is 3 byte long
 } I2C_sub_addr_mode_t;
 
-typedef struct {
-        const u16_t               addr:16;
-        const bool                addr10bit:1;
-        const I2C_sub_addr_mode_t sub_addr_mode:2;
-        const u8_t                major:4;
-        const u8_t                minor:4;
-} I2C_dev_config_t;
-
-typedef struct {
-        const I2C_t            *const I2C;
-        const DMA_Channel_t    *const DMA_tx;
-        const DMA_Channel_t    *const DMA_rx;
-        const u32_t             freq;
-        const u32_t             I2C_clken;
-        const bool              use_DMA;
-        const u8_t              IRQ_prio;
-        const IRQn_Type         IRQ_EV_n;
-        const IRQn_Type         IRQ_ER_n;
-        const I2C_dev_config_t *const devices;
-} I2C_config_t;
-
-typedef struct {
-        const I2C_dev_config_t *config;
-        dev_lock_t              lock;
-        u16_t                   address;
-} I2C_dev_t;
-
+/// type defines state of state machine implemented in the IRQ that controls data flow
 typedef enum {
-        STATE_IDLE,
-        STATE_START,
-        STATE_ADDRESS_HEADER_SENT,
-        STATE_ADDRESS_SENT,
-        STATE_SUB_ADDRESS,
-        STATE_TRANSFER
+        STATE_IDLE,                                     //!< state used when IRQ is disabled
+        STATE_START,                                    //!< I2C start or repeated start sequence done
+        STATE_ADDRESS_HEADER_SENT,                      //!< 10-bit address mode header sent
+        STATE_ADDRESS_SENT,                             //!< 7- or 10-bit address sent
+        STATE_SUB_ADDRESS,                              //!< sub-address send state
+        STATE_TRANSFER                                  //!< data transfer (tx/rx and DMA)
 } state_t;
 
+/// type defines single device configuration connected to the specified I2C peripheral
+typedef struct {
+        const u16_t               addr:16;              //!< address of device (7- or 10-bit)
+        const bool                addr10bit:1;          //!< 10-bit mode addressing (true)
+        const I2C_sub_addr_mode_t sub_addr_mode:2;      //!< mode of sub-address (0, 1, 2, or 3 byte)
+        const u8_t                major:4;              //!< major number of the device (I2C peripheral number)
+        const u8_t                minor:4;              //!< minor number of the device (device identifier)
+} I2C_dev_config_t;
+
+/// type defines configuration of single I2C peripheral
+typedef struct {
+        const I2C_t            *const I2C;              //!< pointer to the I2C peripheral
+        const DMA_Channel_t    *const DMA_tx;           //!< pointer to the DMA Tx channel peripheral
+        const DMA_Channel_t    *const DMA_rx;           //!< pointer to the DMA Rx channel peripheral
+        const u32_t             freq;                   //!< peripheral SCL frequency [Hz]
+        const u32_t             APB1ENR_clk_mask;       //!< mask used to enable I2C clock in the APB1ENR register
+        const bool              use_DMA;                //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
+        const u8_t              IRQ_prio;               //!< priority of IRQ (event, error, and DMA)
+        const IRQn_Type         IRQ_EV_n;               //!< number of event IRQ vector
+        const IRQn_Type         IRQ_ER_n;               //!< number of error IRQ vector
+        const I2C_dev_config_t *const devices;          //!< pointer to devices' configuration table
+} I2C_config_t;
+
+/// type defines I2C device in the runtime environment
+typedef struct {
+        const I2C_dev_config_t *config;                 //!< pointer to the device configuration
+        dev_lock_t              lock;                   //!< object used to lock access to opened device
+        u16_t                   address;                //!< device address
+} I2C_dev_t;
+
+/// type defines main memory of this module
 typedef struct {
         struct I2C_per {
-                mutex_t            *lock;
-                sem_t              *event;
-                I2C_dev_t          *dev;
-                u8_t               *data;
-                u32_t               sub_addr;
-                size_t              size;
-                state_t             state;
-                u8_t                dev_cnt;
-                I2C_sub_addr_mode_t sub_addr_mode:2;
-                bool                addr10rd:1;
-                bool                write:1;
-                bool                error:1;
-                bool                stop:1;
-                bool                initialized:1;
+                mutex_t            *lock;               //!< mutex used to lock access to the particular peripheral
+                sem_t              *event;              //!< semaphore used to indicate event (operation finished)
+                I2C_dev_t          *dev;                //!< pointer to the currently handling device
+                u8_t               *data;               //!< pointer to the data input/output buffer
+                u32_t               sub_addr;           //!< sub-address value
+                size_t              data_size;          //!< input/output buffer data_size
+                state_t             state;              //!< state of I2C peripheral
+                u8_t                dev_cnt;            //!< number of initialized devices
+                I2C_sub_addr_mode_t sub_addr_mode:2;    //!< sub-address mode and byte counter
+                bool                addr10rd:1;         //!< enabled 10-bit addressing mode
+                bool                write:1;            //!< indicates write transaction
+                bool                error:1;            //!< indicates error event
+                bool                stop:1;             //!< indicates stop sequence after current transaction
+                bool                initialized:1;      //!< indicates that module for this peripheral is initialized
         } periph[_I2C_NUMBER_OF_PERIPHERALS];
 } I2C_mem_t;
 
@@ -138,6 +145,7 @@ static const uint access_timeout = 30000;
 static const uint device_timeout = 2000;
 static const u8_t header10b      = 0xF0;
 
+/// configuration of devices of I2C1 peripheral
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0)
 static const I2C_dev_config_t I2C1_dev_cfg[_I2C1_NUMBER_OF_DEVICES] = {
         #if (_I2C1_NUMBER_OF_DEVICES >= 1)
@@ -167,6 +175,7 @@ static const I2C_dev_config_t I2C1_dev_cfg[_I2C1_NUMBER_OF_DEVICES] = {
 };
 #endif
 
+/// configuration of devices of I2C2 peripheral
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0)
 static const I2C_dev_config_t I2C2_dev_cfg[_I2C2_NUMBER_OF_DEVICES] = {
         #if (_I2C2_NUMBER_OF_DEVICES >= 1)
@@ -196,39 +205,40 @@ static const I2C_dev_config_t I2C2_dev_cfg[_I2C2_NUMBER_OF_DEVICES] = {
 };
 #endif
 
+/// peripherals configuration
 static const I2C_config_t I2C_cfg[_I2C_NUMBER_OF_PERIPHERALS] = {
         #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0)
         {
-                .I2C         = I2C1,
-                .freq        = _I2C1_FREQUENCY,
-                .use_DMA     = _I2C1_USE_DMA,
-                .DMA_tx      = DMA1_Channel6,
-                .DMA_rx      = DMA1_Channel7,
-                .I2C_clken   = RCC_APB1ENR_I2C1EN,
-                .IRQ_prio    = _I2C1_IRQ_PRIO,
-                .IRQ_EV_n    = I2C1_EV_IRQn,
-                .IRQ_ER_n    = I2C1_ER_IRQn,
-                .devices     = I2C1_dev_cfg
+                .I2C              = I2C1,
+                .freq             = _I2C1_FREQUENCY,
+                .use_DMA          = _I2C1_USE_DMA,
+                .DMA_tx           = DMA1_Channel6,
+                .DMA_rx           = DMA1_Channel7,
+                .APB1ENR_clk_mask = RCC_APB1ENR_I2C1EN,
+                .IRQ_prio         = _I2C1_IRQ_PRIO,
+                .IRQ_EV_n         = I2C1_EV_IRQn,
+                .IRQ_ER_n         = I2C1_ER_IRQn,
+                .devices          = I2C1_dev_cfg
         },
         #endif
         #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0)
         {
-                .I2C         = I2C2,
-                .freq        = _I2C2_FREQUENCY,
-                .use_DMA     = _I2C2_USE_DMA,
-                .DMA_tx      = DMA1_Channel4,
-                .DMA_rx      = DMA1_Channel5,
-                .I2C_clken   = RCC_APB1ENR_I2C2EN,
-                .IRQ_prio    = _I2C2_IRQ_PRIO,
-                .IRQ_EV_n    = I2C2_EV_IRQn,
-                .IRQ_ER_n    = I2C2_ER_IRQn,
-                .devices     = I2C2_dev_cfg
+                .I2C              = I2C2,
+                .freq             = _I2C2_FREQUENCY,
+                .use_DMA          = _I2C2_USE_DMA,
+                .DMA_tx           = DMA1_Channel4,
+                .DMA_rx           = DMA1_Channel5,
+                .APB1ENR_clk_mask = RCC_APB1ENR_I2C2EN,
+                .IRQ_prio         = _I2C2_IRQ_PRIO,
+                .IRQ_EV_n         = I2C2_EV_IRQn,
+                .IRQ_ER_n         = I2C2_ER_IRQn,
+                .devices          = I2C2_dev_cfg
         },
         #endif
 };
 
+/// main memory of module
 static I2C_mem_t *I2C;
-
 
 /*==============================================================================
   Exported object definitions
@@ -272,7 +282,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         #endif
 
 
-        /* create basic module structures */
+        /* creates basic module structures */
         if (I2C == NULL) {
                 I2C = calloc(1, sizeof(I2C_mem_t));
                 if (!I2C) {
@@ -301,7 +311,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
 
-        /* create device structure */
+        /* creates device structure */
         I2C_dev_t *hdl = calloc(1, sizeof(I2C_dev_t));
         if (hdl) {
                 hdl->config  = &I2C_cfg[major].devices[minor];
@@ -592,9 +602,9 @@ static bool enable_I2C(u8_t major)
         const I2C_config_t *cfg = &I2C_cfg[major];
         I2C_t              *i2c = (I2C_t *)I2C_cfg[major].I2C;
 
-        SET_BIT(RCC->APB1RSTR, cfg->I2C_clken);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->I2C_clken);
-        SET_BIT(RCC->APB1ENR, cfg->I2C_clken);
+        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
 
         RCC_ClocksTypeDef clocks = {0};
         RCC_GetClocksFreq(&clocks);
@@ -659,9 +669,9 @@ static void disable_I2C(u8_t major)
         NVIC_DisableIRQ(I2C1_ER_IRQn);
 
         WRITE_REG(i2c->CR1, 0);
-        SET_BIT(RCC->APB1RSTR, cfg->I2C_clken);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->I2C_clken);
-        CLEAR_BIT(RCC->APB1ENR, cfg->I2C_clken);
+        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
 
         I2C->periph[major].initialized = false;
 }
@@ -709,7 +719,7 @@ static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, c
         struct I2C_per *per = &I2C->periph[hdl->config->major];
 
         per->data          = const_cast(u8_t*, src);
-        per->size          = size;
+        per->data_size     = size;
         per->stop          = stop;
         per->write         = true;
         per->sub_addr      = sub_addr;
@@ -723,7 +733,7 @@ static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, c
         wait_for_event(hdl);
 
         GPIO_CLEAR_PIN(TP204); // TEST
-        return size - per->size;
+        return size - per->data_size;
 }
 
 //==============================================================================
@@ -738,7 +748,7 @@ static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
         struct I2C_per *per = &I2C->periph[hdl->config->major];
 
         per->data          = dst;
-        per->size          = size;
+        per->data_size     = size;
         per->stop          = stop;
         per->write         = false;
         per->sub_addr      = 0;
@@ -752,7 +762,7 @@ static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
         wait_for_event(hdl);
 
         GPIO_CLEAR_PIN(TP204); // TEST
-        return size - per->size;
+        return size - per->data_size;
 }
 
 //==============================================================================
@@ -814,7 +824,7 @@ static bool IRQ_EV_handler(u8_t major)
                                 if (per->write) {
                                         i2c->DR = per->dev->address & 0xFE;
                                 } else {
-                                        if (per->size > 1) {
+                                        if (per->data_size > 1) {
                                                 SET_BIT(i2c->CR1, I2C_CR1_ACK);
                                         } else {
                                                 CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
@@ -864,7 +874,7 @@ static bool IRQ_EV_handler(u8_t major)
                                         break;
                                 }
 
-                                if (per->size == 1) {
+                                if (per->data_size == 1) {
                                         SET_BIT(i2c->CR1, I2C_CR1_STOP);
                                 }
 
@@ -912,28 +922,28 @@ static bool IRQ_EV_handler(u8_t major)
         case STATE_TRANSFER:
                 GPIO_SET_PIN(TP204); // TEST
 
-                if (!per->data || !per->size) {
+                if (!per->data || !per->data_size) {
                         finish();
 
                 } else if ((i2c->SR1 & I2C_SR1_TXE) && (i2c->SR2 & I2C_SR2_TRA)) {
 
                         i2c->DR = *(per->data++);
 
-                        if (--per->size == 0) {
+                        if (--per->data_size == 0) {
                                 CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN);
                         }
 
                 } else if ((i2c->SR1 & I2C_SR1_RXNE) && !(i2c->SR2 & I2C_SR2_TRA)) {
 
-                        if (per->size == 2) {
+                        if (per->data_size == 2) {
                                 CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                                 SET_BIT(i2c->CR1, I2C_CR1_STOP);
-                        } else if (per->size <= 1) {
+                        } else if (per->data_size <= 1) {
                                 finish();
                         }
 
                         *(per->data++) = i2c->DR;
-                        per->size--;
+                        per->data_size--;
 
                 } else {
                         error();
