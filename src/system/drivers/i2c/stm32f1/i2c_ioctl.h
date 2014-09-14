@@ -42,6 +42,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ * @brief  Changes a device address
+ * @param  int          a new address (7 or 10-bit)
+ * @return Returns  0 on success.
+ *         Returns -1 on error and appropriate error number is set.
+ */
+#define IOCTL_I2C__SET_ADDRESS          _IOW(_IO_GROUP_I2C, 0, int)
 
 /*==============================================================================
   Exported objects

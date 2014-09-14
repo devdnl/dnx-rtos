@@ -24,6 +24,8 @@
 
 *//*==========================================================================*/
 
+// NOTE: 10-bit addressing mode is experimental and not tested!
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -77,13 +79,13 @@ typedef struct {
         const u8_t              IRQ_prio;
         const IRQn_Type         IRQ_EV_n;
         const IRQn_Type         IRQ_ER_n;
-        const u8_t              num_of_devs; // FIXME is needed?
         const I2C_dev_config_t *const devices;
 } I2C_config_t;
 
 typedef struct {
         const I2C_dev_config_t *config;
         dev_lock_t              lock;
+        u16_t                   address;
 } I2C_dev_t;
 
 typedef enum {
@@ -206,7 +208,6 @@ static const I2C_config_t I2C_cfg[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .IRQ_prio    = _I2C1_IRQ_PRIO,
                 .IRQ_EV_n    = I2C1_EV_IRQn,
                 .IRQ_ER_n    = I2C1_ER_IRQn,
-                .num_of_devs = _I2C1_NUMBER_OF_DEVICES,
                 .devices     = I2C1_dev_cfg
         },
         #endif
@@ -221,7 +222,6 @@ static const I2C_config_t I2C_cfg[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .IRQ_prio    = _I2C2_IRQ_PRIO,
                 .IRQ_EV_n    = I2C2_EV_IRQn,
                 .IRQ_ER_n    = I2C2_ER_IRQn,
-                .num_of_devs = _I2C2_NUMBER_OF_DEVICES,
                 .devices     = I2C2_dev_cfg
         },
         #endif
@@ -304,7 +304,8 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         /* create device structure */
         I2C_dev_t *hdl = calloc(1, sizeof(I2C_dev_t));
         if (hdl) {
-                hdl->config = &I2C_cfg[major].devices[minor];
+                hdl->config  = &I2C_cfg[major].devices[minor];
+                hdl->address =  I2C_cfg[major].devices[minor].addr;
                 I2C->periph[major].dev_cnt++;
                 *device_handle = hdl;
                 return STD_RET_OK;
@@ -475,23 +476,28 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return On success return 0 or 1. On error, -1 is returned, and errno set
+ * @return On success return 0. On error, -1 is returned, and errno set
  *         appropriately.
  */
 //==============================================================================
 API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
+        I2C_dev_t *hdl = device_handle;
 
-        if (arg) {
+        if (device_is_access_granted(&hdl->lock)) {
                 switch (request) {
+                case IOCTL_I2C__SET_ADDRESS:
+                        hdl->address = reinterpret_cast(int, arg);
+                        return 0;
+
                 default:
                         errno = EBADRQC;
-                        return -1;
+                        break;
                 }
+        } else {
+                errno = EBUSY;
         }
 
-        errno = EINVAL;
         return -1;
 }
 
@@ -771,7 +777,8 @@ static bool IRQ_EV_handler(u8_t major)
 
         void finish()
         {
-                per->state = STATE_IDLE;
+                per->addr10rd = false;
+                per->state    = STATE_IDLE;
                 CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
 
                 if (per->stop)
@@ -784,8 +791,7 @@ static bool IRQ_EV_handler(u8_t major)
         switch (per->state) {
         default:
         case STATE_IDLE:
-                per->stop     = true;
-                per->addr10rd = false;
+                per->stop = true;
                 finish();
                 break;
 
@@ -801,12 +807,12 @@ static bool IRQ_EV_handler(u8_t major)
                                         per->state = STATE_ADDRESS_HEADER_SENT;
                                 }
 
-                                i2c->DR = header10b | ((per->dev->config->addr & 0x300) >> 7) | (per->addr10rd ? 1 : 0);
+                                i2c->DR = header10b | ((per->dev->address & 0x300) >> 7) | (per->addr10rd ? 1 : 0);
 
                         } else {
                                 per->state = STATE_ADDRESS_SENT;
                                 if (per->write) {
-                                        i2c->DR = per->dev->config->addr & 0xFE;
+                                        i2c->DR = per->dev->address & 0xFE;
                                 } else {
                                         if (per->size > 1) {
                                                 SET_BIT(i2c->CR1, I2C_CR1_ACK);
@@ -814,7 +820,7 @@ static bool IRQ_EV_handler(u8_t major)
                                                 CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                                         }
 
-                                        i2c->DR = per->dev->config->addr | 0x01;
+                                        i2c->DR = per->dev->address | 0x01;
                                 }
                         }
 
@@ -835,7 +841,7 @@ static bool IRQ_EV_handler(u8_t major)
                 if (i2c->SR1 & I2C_SR1_ADD10) {
                         per->state    = STATE_ADDRESS_SENT;
                         per->addr10rd = !per->write;
-                        i2c->DR       = per->dev->config->addr;
+                        i2c->DR       = per->dev->address;
 
                 } else {
                         error();
@@ -952,8 +958,9 @@ static bool IRQ_ER_handler(u8_t major)
 {
         I2C_t *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
-        I2C->periph[major].error = true;
-        I2C->periph[major].state = STATE_IDLE;
+        I2C->periph[major].addr10rd = false;
+        I2C->periph[major].error    = true;
+        I2C->periph[major].state    = STATE_IDLE;
 
         WRITE_REG(i2c->SR1, 0);
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITBUFEN | I2C_CR2_ITERREN);
