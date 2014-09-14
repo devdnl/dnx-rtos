@@ -35,6 +35,8 @@
 #include "stm32f1/stm32f10x.h"
 #include "lib/stm32f10x_rcc.h"
 
+#include "stm32f1/gpio_cfg.h" // TEST
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -708,11 +710,13 @@ static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, c
         per->sub_addr_mode = sub_addr_mode ? hdl->config->sub_addr_mode : I2C_SUB_ADDR_MODE__DISABLED;
         per->dev           = hdl;
 
+        GPIO_SET_PIN(TP204); // TEST
         per->state = STATE_START;
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
 
         wait_for_event(hdl);
 
+        GPIO_CLEAR_PIN(TP204); // TEST
         return size - per->size;
 }
 
@@ -735,11 +739,13 @@ static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
         per->sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED;
         per->dev           = hdl;
 
+        GPIO_SET_PIN(TP204); // TEST
         per->state = STATE_START;
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
 
         wait_for_event(hdl);
 
+        GPIO_CLEAR_PIN(TP204); // TEST
         return size - per->size;
 }
 
@@ -750,6 +756,8 @@ static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
 //==============================================================================
 static bool IRQ_EV_handler(u8_t major)
 {
+        GPIO_SET_PIN(TP223); // TEST
+
         I2C_t          *i2c   = const_cast(I2C_t*, I2C_cfg[major].I2C);
         struct I2C_per *per   = &I2C->periph[major];
         bool            woken = false;
@@ -781,8 +789,10 @@ static bool IRQ_EV_handler(u8_t major)
                 finish();
                 break;
 
-        case STATE_START:
+        case STATE_START: {
                 if (i2c->SR1 & I2C_SR1_SB) {
+                        GPIO_SET_PIN(TP224); // TEST
+
                         if (per->dev->config->addr10bit) {
                                 if (per->addr10rd) {
                                         per->state    = STATE_ADDRESS_SENT;
@@ -808,8 +818,18 @@ static bool IRQ_EV_handler(u8_t major)
                                 }
                         }
 
+                        GPIO_CLEAR_PIN(TP224); // TEST
+                } else if (i2c->SR1 & I2C_SR1_BTF) {
+                        // IRQ caught when repeated-start is generated after transmit sequence
+                        // this operation prevents function from continuously IRQ
+                        // generation at repeated start sequence
+                        u8_t tmp = i2c->DR;
+                        (void)tmp;
+                } else {
+                        error();
                 }
                 break;
+        }
 
         case STATE_ADDRESS_HEADER_SENT:
                 if (i2c->SR1 & I2C_SR1_ADD10) {
@@ -824,6 +844,8 @@ static bool IRQ_EV_handler(u8_t major)
 
         case STATE_ADDRESS_SENT:
                 if (i2c->SR1 & I2C_SR1_ADDR) {
+                        GPIO_SET_PIN(TP218); // TEST
+
                         int tmp = i2c->SR2;
                         (void)tmp;
 
@@ -844,6 +866,8 @@ static bool IRQ_EV_handler(u8_t major)
                         }
 
                         SET_BIT(i2c->CR2, I2C_CR2_ITBUFEN);
+
+                        GPIO_CLEAR_PIN(TP218); // TEST
                 } else {
                         error();
                 }
@@ -851,6 +875,8 @@ static bool IRQ_EV_handler(u8_t major)
 
         case STATE_SUB_ADDRESS:
                 if (i2c->SR1 & I2C_SR1_TXE) {
+                        GPIO_SET_PIN(TP220); // TEST
+
                         switch (per->sub_addr_mode) {
                         case I2C_SUB_ADDR_MODE__3_BYTES:
                                 i2c->DR = per->sub_addr >> 16;
@@ -865,16 +891,21 @@ static bool IRQ_EV_handler(u8_t major)
                         case I2C_SUB_ADDR_MODE__1_BYTE:
                                 i2c->DR = per->sub_addr;
                                 per->sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED;
+                                per->state = STATE_TRANSFER;
                                 break;
                         default:
                                 per->state = STATE_TRANSFER;
                         }
+
+                        GPIO_CLEAR_PIN(TP220); // TEST
                 } else {
                         error();
                 }
                 break;
 
         case STATE_TRANSFER:
+                GPIO_SET_PIN(TP204); // TEST
+
                 if (!per->data || !per->size) {
                         finish();
 
@@ -901,8 +932,13 @@ static bool IRQ_EV_handler(u8_t major)
                 } else {
                         error();
                 }
+
+                GPIO_CLEAR_PIN(TP204); // TEST
+
                 break;
         }
+
+        GPIO_CLEAR_PIN(TP223); // TEST
 
         return woken;
 }
