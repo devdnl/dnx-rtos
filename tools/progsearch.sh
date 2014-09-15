@@ -42,7 +42,7 @@ function get_program_list()
 #-------------------------------------------------------------------------------
 function create_makefile()
 {
-    echo '# Makefile for GNU make' > "$Makefile_path"
+    echo '# Makefile for GNU make - file generated at build process' > "$Makefile_path"
     echo '' >> "$Makefile_path"
 
     for prog in $program_list; do
