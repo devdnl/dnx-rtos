@@ -621,7 +621,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->mem_size = *prog_data.globals_size;
                                         prog->task     = task_new(program_startup,
                                                                   prog_data.program_name,
-                                                                  prog_data.stack_depth,
+                                                                  *prog_data.stack_depth,
                                                                   prog);
 
                                         if (prog->task) {

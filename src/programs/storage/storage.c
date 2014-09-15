@@ -554,7 +554,7 @@ static void ep1_handler(void *arg)
  * @brief Storage main function
  */
 //==============================================================================
-PROGRAM_MAIN(storage, int argc, char *argv[])
+PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

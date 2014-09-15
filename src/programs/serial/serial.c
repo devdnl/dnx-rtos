@@ -347,7 +347,7 @@ static void ep1_handler(void *arg)
  * @brief Serial main function
  */
 //==============================================================================
-PROGRAM_MAIN(serial, int argc, char *argv[])
+PROGRAM_MAIN(serial, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

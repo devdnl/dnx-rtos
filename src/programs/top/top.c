@@ -84,7 +84,7 @@ static void println(const char *fmt, ...)
  * @brief Main function
  */
 //==============================================================================
-PROGRAM_MAIN(top, int argc, char *argv[])
+PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

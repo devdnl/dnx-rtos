@@ -124,7 +124,7 @@ static void print_help(char *name)
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(cat, int argc, char *argv[])
+PROGRAM_MAIN(cat, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
 

@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(reboot, int argc, char *argv[])
+PROGRAM_MAIN(reboot, STACK_DEPTH_MINIMAL, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

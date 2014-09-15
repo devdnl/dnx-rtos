@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(uname, int argc, char *argv[])
+PROGRAM_MAIN(uname, STACK_DEPTH_MINIMAL, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

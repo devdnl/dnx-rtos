@@ -257,7 +257,7 @@ static void print_setup(usb_setup_packet_t *setup)
  * @brief Keyboard main function
  */
 //==============================================================================
-PROGRAM_MAIN(keyboard, int argc, char *argv[])
+PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;
