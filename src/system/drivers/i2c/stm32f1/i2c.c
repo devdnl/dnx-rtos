@@ -128,11 +128,11 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static void release_resources(u8_t major);
-static I2C_t *get_I2C(I2C_dev_t *hdl);
+static inline I2C_t *get_I2C(I2C_dev_t *hdl);
 static bool enable_I2C(u8_t major);
 static void disable_I2C(u8_t major);
-static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
-static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
+static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
+static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
 static bool IRQ_EV_handler(u8_t major);
 static bool IRQ_ER_handler(u8_t major);
 
@@ -552,7 +552,9 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function release all resource allocated during initialization phase
+ * @param  major         major device number
+ * @return None
  */
 //==============================================================================
 static void release_resources(u8_t major)
@@ -584,23 +586,27 @@ static void release_resources(u8_t major)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Returns I2C address of current device
+ * @param  hdl          device handle
+ * @return I2C peripheral address
  */
 //==============================================================================
-static I2C_t *get_I2C(I2C_dev_t *hdl)
+static inline I2C_t *get_I2C(I2C_dev_t *hdl)
 {
-        return (I2C_t *)I2C_cfg[hdl->config->major].I2C;
+        return const_cast(I2C_t*, I2C_cfg[hdl->config->major].I2C);
 }
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Enables selected I2C peripheral according with configuration
+ * @param  major        peripheral number
+ * @return On success true is returned, otherwise false and appropriate error is set
  */
 //==============================================================================
 static bool enable_I2C(u8_t major)
 {
         const I2C_config_t *cfg = &I2C_cfg[major];
-        I2C_t              *i2c = (I2C_t *)I2C_cfg[major].I2C;
+        I2C_t              *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
         SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
         CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
@@ -657,13 +663,15 @@ static bool enable_I2C(u8_t major)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Disables selected I2C peripheral
+ * @param  major        I2C peripheral number
+ * @return None
  */
 //==============================================================================
 static void disable_I2C(u8_t major)
 {
         const I2C_config_t *cfg = &I2C_cfg[major];
-        I2C_t              *i2c = (I2C_t *)I2C_cfg[major].I2C;
+        I2C_t              *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
         NVIC_DisableIRQ(I2C1_EV_IRQn);
         NVIC_DisableIRQ(I2C1_ER_IRQn);
@@ -678,7 +686,9 @@ static void disable_I2C(u8_t major)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Waits for IRQ event
+ * @param  hdl          device handle
+ * @return On success true is returned, otherwise false and appropriate error is set
  */
 //==============================================================================
 state_t last_state; // TEST
@@ -709,10 +719,18 @@ static bool wait_for_event(I2C_dev_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Configure IRQ's state machine to perform data transmission
+ * @param  hdl                  device's handle
+ * @param  sub_addr_mode        sub-address send enabled (details read from configuration)
+ * @param  sub_addr             sub-address value
+ * @param  src                  data source
+ * @param  size                 size of data
+ * @param  stop                 send STOP sequence after transaction (true)
+ * @return On success returns number of transfered bytes, otherwise -1 and
+ *         appropriate error is set
  */
 //==============================================================================
-static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop)
+static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop)
 {
         printk("transmit\n"); // TEST
 
@@ -725,23 +743,25 @@ static size_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, c
         per->sub_addr      = sub_addr;
         per->sub_addr_mode = sub_addr_mode ? hdl->config->sub_addr_mode : I2C_SUB_ADDR_MODE__DISABLED;
         per->dev           = hdl;
+        per->state         = STATE_START;
 
-        GPIO_SET_PIN(TP204); // TEST
-        per->state = STATE_START;
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
 
-        wait_for_event(hdl);
-
-        GPIO_CLEAR_PIN(TP204); // TEST
-        return size - per->data_size;
+        return wait_for_event(hdl) ? static_cast(ssize_t, size - per->data_size) : -1;
 }
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Configre IRQ's state machine to perform data reception
+ * @param  hdl                  device's handle
+ * @param  dst                  data destination buffer
+ * @param  size                 number of bytes to read
+ * @param  stop                 send STOP sequence after transaction (true)
+ * @param  On success returns number of received bytes, otherwise -1 and
+ *         appropriate error is set
  */
 //==============================================================================
-static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
+static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
 {
         printk("receive\n"); // TEST
 
@@ -754,20 +774,18 @@ static size_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
         per->sub_addr      = 0;
         per->sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED;
         per->dev           = hdl;
+        per->state         = STATE_START;
 
-        GPIO_SET_PIN(TP204); // TEST
-        per->state = STATE_START;
         SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
 
-        wait_for_event(hdl);
-
-        GPIO_CLEAR_PIN(TP204); // TEST
-        return size - per->data_size;
+        return wait_for_event(hdl) ? static_cast(ssize_t, size - per->data_size) : -1;
 }
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Event IRQ handler (transaction state machine)
+ * @param  major        number of peripheral
+ * @return If IRQ was woken then true is returned, otherwise false
  */
 //==============================================================================
 static bool IRQ_EV_handler(u8_t major)
@@ -961,7 +979,9 @@ static bool IRQ_EV_handler(u8_t major)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Error IRQ handler
+ * @param  major        number of peripheral
+ * @return If IRQ was woken then true is returned, otherwise false
  */
 //==============================================================================
 static bool IRQ_ER_handler(u8_t major)
@@ -984,7 +1004,9 @@ static bool IRQ_ER_handler(u8_t major)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  I2C1 Event IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0)
@@ -996,7 +1018,9 @@ void I2C1_EV_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  I2C1 Error IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0)
@@ -1008,7 +1032,9 @@ void I2C1_ER_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  I2C2 Event IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0)
@@ -1020,7 +1046,9 @@ void I2C2_EV_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  I2C2 Error IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0)
@@ -1032,31 +1060,9 @@ void I2C2_ER_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
- */
-//==============================================================================
-#if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
-void DMA1_Channel4_IRQHandler(void)
-{
-
-}
-#endif
-
-//==============================================================================
-/**
- * @brief
- */
-//==============================================================================
-#if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
-void DMA1_Channel5_IRQHandler(void)
-{
-
-}
-#endif
-
-//==============================================================================
-/**
- * @brief
+ * @brief  I2C1 DMA Tx Complete IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0) && (_I2C1_USE_DMA > 0)
@@ -1068,11 +1074,42 @@ void DMA1_Channel6_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  I2C1 DMA Rx Complete IRQ handler
+ * @param  None
+ * @return None
  */
 //==============================================================================
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0) && (_I2C1_USE_DMA > 0)
 void DMA1_Channel7_IRQHandler(void)
+{
+
+}
+#endif
+
+
+//==============================================================================
+/**
+ * @brief  I2C2 DMA Tx Complete IRQ handler
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+#if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
+void DMA1_Channel4_IRQHandler(void)
+{
+
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief  I2C2 DMA Rx Complete IRQ handler
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+#if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
+void DMA1_Channel5_IRQHandler(void)
 {
 
 }
