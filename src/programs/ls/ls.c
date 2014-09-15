@@ -73,7 +73,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(ls, int argc, char *argv[])
+PROGRAM_MAIN(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         char *path = malloc(100);
         if (!path) {

@@ -150,7 +150,7 @@ static void serve(net_conn_t *conn)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(httpserver, int argc, char *argv[])
+PROGRAM_MAIN(httpserver, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

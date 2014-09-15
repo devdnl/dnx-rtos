@@ -126,7 +126,7 @@ static void show_details()
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(ifconfig, int argc, char *argv[])
+PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 show_details();

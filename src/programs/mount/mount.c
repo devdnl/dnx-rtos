@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(mount, int argc, char *argv[])
+PROGRAM_MAIN(mount, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc != 4) {
                 printf("Usage: %s [file system name] [source path|-] [mount point]\n", argv[0]);

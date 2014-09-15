@@ -245,7 +245,7 @@ static void print_setup(usb_setup_packet_t *setup)
  * @brief Mouse main function
  */
 //==============================================================================
-PROGRAM_MAIN(mouse, int argc, char *argv[])
+PROGRAM_MAIN(mouse, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

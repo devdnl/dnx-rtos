@@ -67,7 +67,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(mbus_daemon, int argc, char *argv[])
+PROGRAM_MAIN(mbus_daemon, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         errno = 0;
 

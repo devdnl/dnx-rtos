@@ -69,7 +69,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(helloworld, int argc, char *argv[])
+PROGRAM_MAIN(helloworld, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         puts("Hello world!");
         printf("Free stack: %d\n", task_get_free_stack());

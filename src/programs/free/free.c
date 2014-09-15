@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(free, int argc, char *argv[])
+PROGRAM_MAIN(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         (void)argc;
 

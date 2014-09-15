@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(mknod, int argc, char *argv[])
+PROGRAM_MAIN(mknod, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc < 3) {
                 printf("%s <file> <dev id>\n", argv[0]);

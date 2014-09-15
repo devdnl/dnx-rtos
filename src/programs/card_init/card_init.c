@@ -63,7 +63,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(card_init, int argc, char *argv[])
+PROGRAM_MAIN(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_FAILURE;
 
