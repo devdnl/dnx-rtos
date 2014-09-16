@@ -28,7 +28,7 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("ctcore")
+require("modules/ctcore")
 
 
 --==============================================================================
@@ -150,9 +150,9 @@ function modules:refresh()
 
                 -- create name of module file to load according to architecture
                 if no_arch then
-                        module_file = "noarch-"..module_name
+                        module_file = "arch/noarch/"..module_name
                 else
-                        module_file = cpu_arch.."-"..module_name
+                        module_file = "arch/"..cpu_arch.."/"..module_name
                 end
 
                 -- check that specified module file exist

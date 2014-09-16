@@ -1,5 +1,5 @@
 --[[============================================================================
-@file    stm32f1-usb.lua
+@file    usb.lua
 
 @author  Daniel Zorychta
 
@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("ctcore")
+require("modules/ctcore")
 
 
 --==============================================================================
@@ -44,7 +44,7 @@ usb = {}
 --==============================================================================
 local ui        = {}
 local ID        = {}
-local gpio      = require("stm32f1-gpio").get_handler()
+local gpio      = require("arch/stm32f1/gpio").get_handler()
 local pin_list  = nil
 local prio_list = ct:get_priority_list("stm32f1")
 

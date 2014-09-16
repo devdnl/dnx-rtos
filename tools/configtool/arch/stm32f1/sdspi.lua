@@ -1,5 +1,5 @@
 --[[============================================================================
-@file    stm32f1-sdspi.lua
+@file    sdspi.lua
 
 @author  Daniel Zorychta
 
@@ -30,7 +30,7 @@ module(..., package.seeall)
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("ctcore")
+require("modules/ctcore")
 
 
 --==============================================================================
@@ -48,7 +48,7 @@ local ID         = {}
 local cpu_name   = nil
 local cpu_idx    = nil
 local spi_cfg    = nil
-local gpio       = require("stm32f1-gpio").get_handler()
+local gpio       = require("arch/stm32f1/gpio").get_handler()
 local pin_list   = nil
 local prio_list  = ct:get_priority_list("stm32f1")
 
