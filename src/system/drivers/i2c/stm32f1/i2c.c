@@ -637,6 +637,7 @@ static bool enable_I2C(u8_t major)
         u16_t CR2 = (clocks.PCLK1_Frequency) & I2C_CR2_FREQ;
 
         if (cfg->use_DMA) {
+                #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
                 if ((cfg->DMA_rx->CCR & DMA_CCR1_EN) || (cfg->DMA_tx->CCR & DMA_CCR1_EN)) {
                         errno = EADDRINUSE;
                         return false;
@@ -650,6 +651,7 @@ static bool enable_I2C(u8_t major)
                         NVIC_SetPriority(cfg->DMA_tx_IRQ_n, cfg->IRQ_prio);
                         NVIC_SetPriority(cfg->DMA_rx_IRQ_n, cfg->IRQ_prio);
                 }
+                #endif
         } else {
                 NVIC_EnableIRQ(cfg->IRQ_EV_n);
                 NVIC_EnableIRQ(cfg->IRQ_ER_n);
@@ -692,8 +694,10 @@ static void disable_I2C(u8_t major)
         const I2C_config_t *cfg = &I2C_cfg[major];
         I2C_t              *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
-        NVIC_DisableIRQ(I2C1_EV_IRQn);
-        NVIC_DisableIRQ(I2C1_ER_IRQn);
+        NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
+        NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
+        NVIC_DisableIRQ(cfg->IRQ_EV_n);
+        NVIC_DisableIRQ(cfg->IRQ_ER_n);
 
         WRITE_REG(i2c->CR1, 0);
         SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
@@ -745,7 +749,9 @@ static bool wait_for_event(I2C_dev_t *hdl)
 //==============================================================================
 static void clear_DMA_IRQ_flags(u8_t major)
 {
-        I2C_config_t *cfg = const_cast(I2C_config_t*, &I2C_cfg[major]);
+        I2C_config_t  *cfg    = const_cast(I2C_config_t*, &I2C_cfg[major]);
+        DMA_Channel_t *DMA_tx = const_cast(DMA_Channel_t*, cfg->DMA_tx);
+        DMA_Channel_t *DMA_rx = const_cast(DMA_Channel_t*, cfg->DMA_rx);
 
         WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF1  << (cfg->DMA_tx_number - 1))
                             | (DMA_IFCR_CTCIF1 << (cfg->DMA_tx_number - 1))
@@ -755,6 +761,9 @@ static void clear_DMA_IRQ_flags(u8_t major)
                             | (DMA_IFCR_CTCIF1 << (cfg->DMA_rx_number - 1))
                             | (DMA_IFCR_CHTIF1 << (cfg->DMA_rx_number - 1))
                             | (DMA_IFCR_CTEIF1 << (cfg->DMA_rx_number - 1)) );
+
+        CLEAR_BIT(DMA_tx->CCR, DMA_CCR1_EN);
+        CLEAR_BIT(DMA_rx->CCR, DMA_CCR1_EN);
 }
 
 //==============================================================================
@@ -1192,7 +1201,7 @@ void DMA1_Channel6_IRQHandler(void)
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0) && (_I2C1_USE_DMA > 0)
 void DMA1_Channel7_IRQHandler(void)
 {
-        if IRQ_DMA_handler(_I2C1) {
+        if (IRQ_DMA_handler(_I2C1)) {
                 task_yield_from_ISR();
         }
 }
@@ -1209,7 +1218,7 @@ void DMA1_Channel7_IRQHandler(void)
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
 void DMA1_Channel4_IRQHandler(void)
 {
-        if IRQ_DMA_handler(_I2C2) {
+        if (IRQ_DMA_handler(_I2C2)) {
                 task_yield_from_ISR();
         }
 }
@@ -1225,7 +1234,7 @@ void DMA1_Channel4_IRQHandler(void)
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
 void DMA1_Channel5_IRQHandler(void)
 {
-        if IRQ_DMA_handler(_I2C2) {
+        if (IRQ_DMA_handler(_I2C2)) {
                 task_yield_from_ISR();
         }
 }
