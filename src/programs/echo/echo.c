@@ -61,7 +61,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(echo, int argc, char *argv[])
+PROGRAM_MAIN(echo, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         for (int i = 1; i < argc; i++) {
                 if (i == argc - 1) {

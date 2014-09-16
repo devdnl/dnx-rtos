@@ -78,7 +78,7 @@ static void show_help(const char *name)
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(modinit, int argc, char *argv[])
+PROGRAM_MAIN(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc < 2) {
                 show_help(argv[0]);

@@ -212,7 +212,7 @@ static void test_remove_fifo()
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(fsstack, int argc, char *argv[])
+PROGRAM_MAIN(fsstack, STACK_DEPTH_LARGE, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

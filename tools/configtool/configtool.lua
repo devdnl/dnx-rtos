@@ -30,14 +30,14 @@ os.setlocale('C')
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-require("ctcore")
-require("welcome")
-require("project")
-require("operating_system")
-require("file_systems")
-require("network")
-require("modules")
-require("about")
+require("modules/ctcore")
+require("modules/welcome")
+require("modules/project")
+require("modules/operating_system")
+require("modules/file_systems")
+require("modules/network")
+require("modules/modules")
+require("modules/about")
 
 
 --==============================================================================

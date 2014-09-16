@@ -114,7 +114,7 @@ static void telnet_thread(void *arg)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(telnet, int argc, char *argv[])
+PROGRAM_MAIN(telnet, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

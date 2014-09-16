@@ -44,19 +44,21 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
-#define PROGRAM_MAIN(name, argc, argv) \
+#define PROGRAM_MAIN(name, stack_depth, argc, argv) \
         const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        const int __prog_##name##_ss__ = stack_depth;\
         int _program_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
         extern const int __prog_##name##_gs__;\
+        extern const int __prog_##name##_ss__;\
         extern int _program_##name##_main(int, char**)
 
-#define _PROGRAM_CONFIG(name, stack_size) \
+#define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
          .main_function = _program_##name##_main,\
          .globals_size  = &__prog_##name##_gs__,\
-         .stack_depth   = stack_size}
+         .stack_depth   = &__prog_##name##_ss__}
 
 /*==============================================================================
   Exported types, enums definitions
@@ -65,7 +67,7 @@ struct _prog_data {
         char      *program_name;
         int      (*main_function)(int, char**);
         const int *globals_size;
-        int        stack_depth;
+        const int *stack_depth;
 };
 
 typedef struct thread thread_t;

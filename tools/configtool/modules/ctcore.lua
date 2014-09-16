@@ -28,7 +28,7 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("wx")
-xml = require("xmlSimple").newParser()
+xml = require("modules/xmlSimple").newParser()
 
 
 --==============================================================================

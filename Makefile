@@ -137,6 +137,8 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
+ADDPROGS   = ./tools/progsearch.sh
+ADDLIBS    = ./tools/libsearch.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -165,9 +167,9 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
-include $(PROG_LOC)/Makefile
+-include $(PROG_LOC)/Makefile   # file is created in the add_programs target
+-include $(LIB_LOC)/Makefile    # file is created in the add_programs target
 include $(SYS_LOC)/Makefile
-include $(LIB_LOC)/Makefile
 
 # defines objects localizations
 HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
@@ -201,7 +203,11 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : dependencies buildobjects linkobjects hex status
+all : add_programs
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
+
+.PHONY : build_start
+build_start : dependencies buildobjects linkobjects hex status
 
 ####################################################################################################
 # help
@@ -270,6 +276,18 @@ status :
 	@$(ECHO) "-----------------------------------"
 
 ####################################################################################################
+####################################################################################################
+# Adds programs and libraries to the project
+# This target is used to generate ./src/programs/program_registration.c,
+# ./src/programs/Makefile, and ./src/lib/Makefile files required in the
+# build process
+####################################################################################################
+.PHONY : add_programs
+add_programs :
+	@$(ECHO) "Adding user's programs and libraries to the project..."
+	@$(ADDPROGS) ./src/programs
+	@$(ADDLIBS) ./src/lib
+
 ####################################################################################################
 # makes dependences
 ####################################################################################################

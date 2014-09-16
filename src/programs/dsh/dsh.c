@@ -640,7 +640,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-PROGRAM_MAIN(dsh, int argc, char *argv[])
+PROGRAM_MAIN(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
