@@ -636,8 +636,8 @@ static bool enable_I2C(u8_t major)
 
         u16_t CR2 = (clocks.PCLK1_Frequency) & I2C_CR2_FREQ;
 
+        #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
         if (cfg->use_DMA) {
-                #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
                 if ((cfg->DMA_rx->CCR & DMA_CCR1_EN) || (cfg->DMA_tx->CCR & DMA_CCR1_EN)) {
                         errno = EADDRINUSE;
                         return false;
@@ -651,13 +651,13 @@ static bool enable_I2C(u8_t major)
                         NVIC_SetPriority(cfg->DMA_tx_IRQ_n, cfg->IRQ_prio);
                         NVIC_SetPriority(cfg->DMA_rx_IRQ_n, cfg->IRQ_prio);
                 }
-                #endif
-        } else {
-                NVIC_EnableIRQ(cfg->IRQ_EV_n);
-                NVIC_EnableIRQ(cfg->IRQ_ER_n);
-                NVIC_SetPriority(cfg->IRQ_EV_n, cfg->IRQ_prio);
-                NVIC_SetPriority(cfg->IRQ_ER_n, cfg->IRQ_prio);
         }
+        #endif
+
+        NVIC_EnableIRQ(cfg->IRQ_EV_n);
+        NVIC_EnableIRQ(cfg->IRQ_ER_n);
+        NVIC_SetPriority(cfg->IRQ_EV_n, cfg->IRQ_prio);
+        NVIC_SetPriority(cfg->IRQ_ER_n, cfg->IRQ_prio);
 
         u16_t CCR;
         if (cfg->freq <= 100000) {
@@ -753,14 +753,14 @@ static void clear_DMA_IRQ_flags(u8_t major)
         DMA_Channel_t *DMA_tx = const_cast(DMA_Channel_t*, cfg->DMA_tx);
         DMA_Channel_t *DMA_rx = const_cast(DMA_Channel_t*, cfg->DMA_rx);
 
-        WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF1  << (cfg->DMA_tx_number - 1))
-                            | (DMA_IFCR_CTCIF1 << (cfg->DMA_tx_number - 1))
-                            | (DMA_IFCR_CHTIF1 << (cfg->DMA_tx_number - 1))
-                            | (DMA_IFCR_CTEIF1 << (cfg->DMA_tx_number - 1))
-                            | (DMA_IFCR_CGIF1  << (cfg->DMA_rx_number - 1))
-                            | (DMA_IFCR_CTCIF1 << (cfg->DMA_rx_number - 1))
-                            | (DMA_IFCR_CHTIF1 << (cfg->DMA_rx_number - 1))
-                            | (DMA_IFCR_CTEIF1 << (cfg->DMA_rx_number - 1)) );
+        WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_rx_number - 1))) );
 
         CLEAR_BIT(DMA_tx->CCR, DMA_CCR1_EN);
         CLEAR_BIT(DMA_rx->CCR, DMA_CCR1_EN);
@@ -990,22 +990,28 @@ static bool IRQ_EV_handler(u8_t major)
                 break;
 
         case STATE_TRANSFER:
-                GPIO_SET_PIN(TP204); // TEST
-
                 if (!per->data || !per->data_size) {
                         finish();
+                        GPIO_SET_PIN(TP204); // TEST
+                        GPIO_CLEAR_PIN(TP204); // TEST
+                        GPIO_SET_PIN(TP204); // TEST
+                        GPIO_CLEAR_PIN(TP204); // TEST
 
                 } else {
+                        GPIO_SET_PIN(TP204); // TEST
+
                         if (cfg->use_DMA) {
                                 #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
                                 DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, per->write ? cfg->DMA_tx : cfg->DMA_rx);
 
+                                CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
+                                WRITE_REG(i2c->SR1, 0);
+
                                 DMA->CPAR  = reinterpret_cast(u32_t, &i2c->DR);
                                 DMA->CMAR  = reinterpret_cast(u32_t, per->data);
                                 DMA->CNDTR = per->data_size;
-                                DMA->CCR   = DMA_CCR1_DIR | DMA_CCR1_TCIE | DMA_CCR1_TEIE;
+                                DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE | (per->write ? DMA_CCR1_DIR : 0);
 
-                                CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
                                 SET_BIT(i2c->CR2, I2C_CR2_DMAEN);
 
                                 if (per->stop) {
@@ -1041,9 +1047,9 @@ static bool IRQ_EV_handler(u8_t major)
                                         error();
                                 }
                         }
-                }
 
-                GPIO_CLEAR_PIN(TP204); // TEST
+                        GPIO_CLEAR_PIN(TP204); // TEST
+                }
 
                 break;
         }
@@ -1092,14 +1098,23 @@ static bool IRQ_DMA_handler(u8_t major)
 
         bool            woken = false;
         I2C_config_t   *cfg   = const_cast(I2C_config_t*, &I2C_cfg[major]);
+        I2C_t          *i2c   = const_cast(I2C_t*, cfg->I2C);
+        struct I2C_per *per   = &I2C->periph[major];
         int             txno  = cfg->DMA_tx_number - 1;
         int             rxno  = cfg->DMA_rx_number - 1;
 
-        if (DMA1->ISR & ((DMA_ISR_TCIF1 << txno) | (DMA_ISR_TCIF1 << rxno))) {
-                I2C->periph[major].data_size = 0;
+        if (DMA1->ISR & ((DMA_ISR_TCIF1 << (4 * txno)) | (DMA_ISR_TCIF1 << (4 * rxno)))) {
+
+                per->data_size = 0;
+                per->addr10rd  = false;
+                per->state     = STATE_IDLE;
+
+                if (per->stop)
+                        SET_BIT(i2c->CR1, I2C_CR1_STOP);
+
                 semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
 
-        } else if (DMA1->ISR & ((DMA_ISR_TEIF1 << txno) | (DMA_ISR_TEIF1 << rxno))) {
+        } else if (DMA1->ISR & ((DMA_ISR_TEIF1 << (4 * txno)) | (DMA_ISR_TEIF1 << (4 * rxno)))) {
                 woken = IRQ_ER_handler(major);
         }
 
