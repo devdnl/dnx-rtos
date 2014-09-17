@@ -135,6 +135,7 @@ static void release_resources(u8_t major);
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
 static bool enable_I2C(u8_t major);
 static void disable_I2C(u8_t major);
+static bool wait_for_event(I2C_dev_t *hdl);
 static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
 static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
 static bool IRQ_EV_handler(u8_t major);
@@ -474,8 +475,11 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
 
         if (device_is_access_granted(&hdl->lock)) {
                 if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+
                         if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+
                                 I2C_transmit(hdl, true, *fpos, NULL, 0, false);
+
                                 if (I2C->periph[hdl->config->major].error == false) {
                                         n = I2C_receive(hdl, dst, count, true);
                                 }
@@ -749,7 +753,6 @@ static void disable_I2C(u8_t major)
  * @return On success true is returned, otherwise false and appropriate error is set
  */
 //==============================================================================
-state_t last_state; // TEST
 static bool wait_for_event(I2C_dev_t *hdl)
 {
         I2C->periph[hdl->config->major].error = false;
@@ -759,15 +762,10 @@ static bool wait_for_event(I2C_dev_t *hdl)
                 CLEAR_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITERREN | I2C_CR2_ITBUFEN | I2C_CR2_ITEVTEN);
                 I2C->periph[hdl->config->major].error = true;
                 errno = ETIME;
-
-                printk("Timout %d\n", last_state); // TEST
-
                 return false;
         }
 
         if (I2C->periph[hdl->config->major].error) {
-                printk("Error %d\n", last_state); // TEST
-
                 errno = EIO;
                 return false;
         }
@@ -790,8 +788,6 @@ static bool wait_for_event(I2C_dev_t *hdl)
 //==============================================================================
 static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop)
 {
-        printk("transmit\n"); // TEST
-
         struct I2C_per *per = &I2C->periph[hdl->config->major];
 
         per->data          = const_cast(u8_t*, src);
@@ -821,8 +817,6 @@ static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, 
 //==============================================================================
 static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
 {
-        printk("receive\n"); // TEST
-
         struct I2C_per *per = &I2C->periph[hdl->config->major];
 
         per->data          = dst;
@@ -860,7 +854,6 @@ static bool IRQ_EV_handler(u8_t major)
 
         void error()
         {
-                last_state = per->state; //TEST
                 woken = IRQ_ER_handler(major);
         }
 

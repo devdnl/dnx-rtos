@@ -1496,6 +1496,10 @@
                         <ETH></ETH>
                         <AFIO></AFIO>
                         <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
