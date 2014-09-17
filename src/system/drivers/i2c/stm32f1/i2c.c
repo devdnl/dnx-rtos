@@ -137,7 +137,6 @@ static bool enable_I2C(u8_t major);
 static void disable_I2C(u8_t major);
 static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
 static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
-static void clear_DMA_IRQ_flags(u8_t major);
 static bool IRQ_EV_handler(u8_t major);
 static bool IRQ_ER_handler(u8_t major);
 
@@ -611,6 +610,34 @@ static inline I2C_t *get_I2C(I2C_dev_t *hdl)
 
 //==============================================================================
 /**
+ * @brief  Clear all DMA IRQ flags (of tx and rx)
+ * @param  major        peripheral major number
+ * @return None
+ */
+//==============================================================================
+#if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
+static void clear_DMA_IRQ_flags(u8_t major)
+{
+        I2C_config_t  *cfg    = const_cast(I2C_config_t*, &I2C_cfg[major]);
+        DMA_Channel_t *DMA_tx = const_cast(DMA_Channel_t*, cfg->DMA_tx);
+        DMA_Channel_t *DMA_rx = const_cast(DMA_Channel_t*, cfg->DMA_rx);
+
+        WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_tx_number - 1)))
+                            | (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_rx_number - 1)))
+                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_rx_number - 1))) );
+
+        CLEAR_BIT(DMA_tx->CCR, DMA_CCR1_EN);
+        CLEAR_BIT(DMA_rx->CCR, DMA_CCR1_EN);
+}
+#endif
+
+//==============================================================================
+/**
  * @brief  Enables selected I2C peripheral according with configuration
  * @param  major        peripheral number
  * @return On success true is returned, otherwise false and appropriate error is set
@@ -694,8 +721,16 @@ static void disable_I2C(u8_t major)
         const I2C_config_t *cfg = &I2C_cfg[major];
         I2C_t              *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
-        NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
-        NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
+        #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
+        if (cfg->use_DMA) {
+                NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
+                NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
+
+                cfg->DMA_rx->CCR = 0;
+                cfg->DMA_tx->CCR = 0;
+        }
+        #endif
+
         NVIC_DisableIRQ(cfg->IRQ_EV_n);
         NVIC_DisableIRQ(cfg->IRQ_ER_n);
 
@@ -738,32 +773,6 @@ static bool wait_for_event(I2C_dev_t *hdl)
         }
 
         return true;
-}
-
-//==============================================================================
-/**
- * @brief  Clear all DMA IRQ flags (of tx and rx)
- * @param  major        peripheral major number
- * @return None
- */
-//==============================================================================
-static void clear_DMA_IRQ_flags(u8_t major)
-{
-        I2C_config_t  *cfg    = const_cast(I2C_config_t*, &I2C_cfg[major]);
-        DMA_Channel_t *DMA_tx = const_cast(DMA_Channel_t*, cfg->DMA_tx);
-        DMA_Channel_t *DMA_rx = const_cast(DMA_Channel_t*, cfg->DMA_rx);
-
-        WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_tx_number - 1)))
-                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_tx_number - 1)))
-                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_tx_number - 1)))
-                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_tx_number - 1)))
-                            | (DMA_IFCR_CGIF1  << (4 * (cfg->DMA_rx_number - 1)))
-                            | (DMA_IFCR_CTCIF1 << (4 * (cfg->DMA_rx_number - 1)))
-                            | (DMA_IFCR_CHTIF1 << (4 * (cfg->DMA_rx_number - 1)))
-                            | (DMA_IFCR_CTEIF1 << (4 * (cfg->DMA_rx_number - 1))) );
-
-        CLEAR_BIT(DMA_tx->CCR, DMA_CCR1_EN);
-        CLEAR_BIT(DMA_rx->CCR, DMA_CCR1_EN);
 }
 
 //==============================================================================
