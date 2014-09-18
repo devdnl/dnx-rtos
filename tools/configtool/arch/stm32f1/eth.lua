@@ -176,48 +176,6 @@ local function event_value_updated()
 end
 
 
---------------------------------------------------------------------------------
--- @brief  Function filters input value to be only a hex value
--- @param  this     TextCtrl object
--- @return None
---------------------------------------------------------------------------------
-local function textctrl_only_hex(this)
-        local function ischarhex(char)
-                char:upper()
-                return (char >= '0' and char <= '9') or (char >= 'A' and char <= 'F')
-        end
-
-        if this:IsModified() then
-                local text  = this:GetValue():upper()
-                local char1 = string.char(text:byte(1))
-                local char2 = string.char(text:byte(2))
-                text        = nil
-
-                if ischarhex(char1) then text = char1 end
-                if ischarhex(char2) then text = char1..char2 end
-
-                if text then
-                        this:SetValue(text)
-                        this:SetInsertionPointEnd()
-                else
-                        this:Clear()
-                end
-
-                ui.Button_save:Enable(true)
-        end
-end
-
-
---------------------------------------------------------------------------------
--- @brief  Event is called when PHY device address is updated
--- @param  None
--- @return None
---------------------------------------------------------------------------------
-local function event_PHY_addr_updated()
-        textctrl_only_hex(ui.TextCtrl_PHY_addr)
-end
-
-
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -279,7 +237,7 @@ function eth:create_window(parent)
         ui.FlexGridSizer5:Add(ui.Choice_device, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Address [hex]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer5:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.TextCtrl_PHY_addr = wx.wxTextCtrl(ui.Panel1, ID.TEXTCTRL_PHY_ADDR, "", wx.wxDefaultPosition, wx.wxSize(30,-1), 0, wx.wxDefaultValidator, "ID.TEXTCTRL_PHY_ADDR")
+        ui.TextCtrl_PHY_addr = wx.wxTextCtrl(ui.Panel1, ID.TEXTCTRL_PHY_ADDR, "", wx.wxDefaultPosition, wx.wxSize(30,-1), 0, ct.hexvalidator)
         ui.TextCtrl_PHY_addr:SetMaxLength(2)
         ui.FlexGridSizer5:Add(ui.TextCtrl_PHY_addr, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Reset delay [ms]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
@@ -310,7 +268,7 @@ function eth:create_window(parent)
         this:Connect(ID.CHOICE_IRQ_PRIO,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_LINK_SPEED,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
-        this:Connect(ID.TEXTCTRL_PHY_ADDR,      wx.wxEVT_COMMAND_TEXT_UPDATED,     event_PHY_addr_updated              )
+        this:Connect(ID.TEXTCTRL_PHY_ADDR,      wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
         this:Connect(ID.SPINCTRL_RESET_DELAY,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )
         this:Connect(ID.SPINCTRL_RESET_DELAY,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
         this:Connect(ID.SPINCTRL_SETUP_DELAY,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )

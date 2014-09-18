@@ -331,48 +331,6 @@ local function NUMBER_OF_CS_selected()
 end
 
 
---------------------------------------------------------------------------------
--- @brief  Function filters input value to be only a hex value
--- @param  this     TextCtrl object
--- @return None
---------------------------------------------------------------------------------
-local function textctrl_only_hex(this)
-        local function ischarhex(char)
-                char:upper()
-                return (char >= '0' and char <= '9') or (char >= 'A' and char <= 'F')
-        end
-
-        if this:IsModified() then
-                local text  = this:GetValue():upper()
-                local char1 = string.char(text:byte(1))
-                local char2 = string.char(text:byte(2))
-                text        = nil
-
-                if ischarhex(char1) then text = char1 end
-                if ischarhex(char2) then text = char1..char2 end
-
-                if text then
-                        this:SetValue(text)
-                        this:SetInsertionPointEnd()
-                else
-                        this:Clear()
-                end
-
-                ui.Button_save:Enable(true)
-        end
-end
-
-
---------------------------------------------------------------------------------
--- @brief  Event is called when dummy byte value is updated
--- @param  this     event object
--- @return None
---------------------------------------------------------------------------------
-local function dummy_byte_updated(this)
-        textctrl_only_hex(ui.TextCtrl_dummy_byte)
-end
-
-
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -420,7 +378,7 @@ function spi:create_window(parent)
         ui.FlexGridSizer3 = wx.wxFlexGridSizer(0, 2, 0, 0)
         ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Dummy byte", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel1, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxSize(40,-1), 0, wx.wxDefaultValidator, "ID.TEXTCTRL_DUMMY_BYTE")
+        ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel1, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxSize(40,-1), 0, ct.hexvalidator)
         ui.TextCtrl_dummy_byte:SetMaxLength(2)
         ui.FlexGridSizer3:Add(ui.TextCtrl_dummy_byte, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Clock divider", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
@@ -526,7 +484,7 @@ function spi:create_window(parent)
         this:Connect(ID.CHOICE_IRQPRIO,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  spi_device_selected           )
         this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  NUMBER_OF_CS_selected         )
-        this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     dummy_byte_updated            )
+        this:Connect(ID.TEXTCTRL_DUMMY_BYTE,    wx.wxEVT_COMMAND_TEXT_UPDATED,     value_updated                 )
         this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click          )
 
         --
