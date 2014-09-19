@@ -56,6 +56,7 @@
 #       include "../stm32f1/uart_flags.h"
 #       include "../stm32f1/usb_flags.h"
 #       include "../stm32f1/irq_flags.h"
+#       include "../stm32f1/i2c_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #       include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)
@@ -133,7 +134,7 @@
 #define __ENABLE_I2S__ __NO__
 #define __ENABLE_USB__ __NO__
 #define __ENABLE_USBOTG__ __NO__
-#define __ENABLE_I2C__ __NO__
+#define __ENABLE_I2C__ __YES__
 #define __ENABLE_ADC__ __NO__
 #define __ENABLE_DAC__ __NO__
 #define __ENABLE_SDIO__ __NO__

@@ -53,7 +53,7 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
-#define MODULE_NAME(modname)                    static const char *_module_name_ = modname
+#define MODULE_NAME(modname)                    static const char *_module_name_ = #modname
 
 #define API_MOD_INIT(modname, ...)              stdret_t _##modname##_init(__VA_ARGS__)
 #define API_MOD_RELEASE(modname, ...)           stdret_t _##modname##_release(__VA_ARGS__)

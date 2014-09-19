@@ -68,7 +68,7 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-MODULE_NAME("SPI");
+MODULE_NAME(SPI);
 
 /* configuration of single CS line (port and pin) */
 struct cs_pin_cfg {

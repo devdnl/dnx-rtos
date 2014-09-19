@@ -195,7 +195,7 @@ static stdret_t         mbr_detect_partitions                   (sdpart_t *hdl);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME("SDSPI");
+MODULE_NAME(SDSPI);
 
 static sdctrl_t   *sdspi_ctrl;
 static const u16_t sector_size = 512;

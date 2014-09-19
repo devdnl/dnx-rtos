@@ -152,6 +152,7 @@ static int run_level_0(void)
         driver_init("ethmac", "/dev/eth0");
         driver_init("crc", "/dev/crc");
         driver_init("irq", "/dev/irq");
+        driver_init("i2c1:0", "/dev/ds1307");
 
         return STD_RET_OK;
 }

@@ -46,6 +46,11 @@ typedef struct {
         sem_t *irqsem[NUMBER_OF_IRQs];
 } IRQ_t;
 
+typedef struct {
+        u8_t           priority;
+        enum _IRQ_MODE mode;
+} default_cfg_t;
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -60,44 +65,25 @@ static bool IRQ_handler(uint EXIT_IRQ_n);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME("IRQ");
+MODULE_NAME(IRQ);
 
-static const enum _IRQ_MODE default_config[NUMBER_OF_IRQs] = {
-        _IRQ_LINE_0_MODE,
-        _IRQ_LINE_1_MODE,
-        _IRQ_LINE_2_MODE,
-        _IRQ_LINE_3_MODE,
-        _IRQ_LINE_4_MODE,
-        _IRQ_LINE_5_MODE,
-        _IRQ_LINE_6_MODE,
-        _IRQ_LINE_7_MODE,
-        _IRQ_LINE_8_MODE,
-        _IRQ_LINE_9_MODE,
-        _IRQ_LINE_10_MODE,
-        _IRQ_LINE_11_MODE,
-        _IRQ_LINE_12_MODE,
-        _IRQ_LINE_13_MODE,
-        _IRQ_LINE_14_MODE,
-        _IRQ_LINE_15_MODE
-};
-
-static const u8_t EXTI_priority[NUMBER_OF_IRQs] = {
-        _IRQ_LINE_0_PRIO,
-        _IRQ_LINE_1_PRIO,
-        _IRQ_LINE_2_PRIO,
-        _IRQ_LINE_3_PRIO,
-        _IRQ_LINE_4_PRIO,
-        _IRQ_LINE_5_PRIO,
-        _IRQ_LINE_6_PRIO,
-        _IRQ_LINE_7_PRIO,
-        _IRQ_LINE_8_PRIO,
-        _IRQ_LINE_9_PRIO,
-        _IRQ_LINE_10_PRIO,
-        _IRQ_LINE_11_PRIO,
-        _IRQ_LINE_12_PRIO,
-        _IRQ_LINE_13_PRIO,
-        _IRQ_LINE_14_PRIO,
-        _IRQ_LINE_15_PRIO
+static const default_cfg_t default_config[NUMBER_OF_IRQs] = {
+        {.priority = _IRQ_LINE_0_PRIO,  .mode = _IRQ_LINE_0_MODE },
+        {.priority = _IRQ_LINE_1_PRIO,  .mode = _IRQ_LINE_1_MODE },
+        {.priority = _IRQ_LINE_2_PRIO,  .mode = _IRQ_LINE_2_MODE },
+        {.priority = _IRQ_LINE_3_PRIO,  .mode = _IRQ_LINE_3_MODE },
+        {.priority = _IRQ_LINE_4_PRIO,  .mode = _IRQ_LINE_4_MODE },
+        {.priority = _IRQ_LINE_5_PRIO,  .mode = _IRQ_LINE_5_MODE },
+        {.priority = _IRQ_LINE_6_PRIO,  .mode = _IRQ_LINE_6_MODE },
+        {.priority = _IRQ_LINE_7_PRIO,  .mode = _IRQ_LINE_7_MODE },
+        {.priority = _IRQ_LINE_8_PRIO,  .mode = _IRQ_LINE_8_MODE },
+        {.priority = _IRQ_LINE_9_PRIO,  .mode = _IRQ_LINE_9_MODE },
+        {.priority = _IRQ_LINE_10_PRIO, .mode = _IRQ_LINE_10_MODE},
+        {.priority = _IRQ_LINE_11_PRIO, .mode = _IRQ_LINE_11_MODE},
+        {.priority = _IRQ_LINE_12_PRIO, .mode = _IRQ_LINE_12_MODE},
+        {.priority = _IRQ_LINE_13_PRIO, .mode = _IRQ_LINE_13_MODE},
+        {.priority = _IRQ_LINE_14_PRIO, .mode = _IRQ_LINE_14_MODE},
+        {.priority = _IRQ_LINE_15_PRIO, .mode = _IRQ_LINE_15_MODE}
 };
 
 static IRQ_t *IRQ;
@@ -128,7 +114,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                 IRQ_t *hdl = calloc(1, sizeof(IRQ_t));
                 if (hdl) {
                         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
-                                switch (default_config[i]) {
+                                switch (default_config[i].mode) {
                                 default:
                                 case _IRQ_MODE_DISABLED:
                                         disable_EXTI_IRQ(i);
@@ -150,12 +136,14 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                         break;
                                 }
 
-                                if (default_config[i] != _IRQ_MODE_DISABLED) {
-                                        set_EXTI_IRQ_priority(i, EXTI_priority[i]);
+                                if (default_config[i].mode != _IRQ_MODE_DISABLED) {
+                                        set_EXTI_IRQ_priority(i, default_config[i].priority);
 
                                         hdl->irqsem[i] = semaphore_new(1, 0);
                                         if (hdl->irqsem[i] == NULL) {
                                                 for (int s = 0; s < NUMBER_OF_IRQs; s++) {
+                                                        disable_EXTI_IRQ(s);
+
                                                         if (hdl->irqsem[s]) {
                                                                 semaphore_delete(hdl->irqsem[s]);
                                                                 hdl->irqsem[s] = NULL;
@@ -191,8 +179,6 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
-
         IRQ_t *hdl = device_handle;
 
         critical_section_begin();
