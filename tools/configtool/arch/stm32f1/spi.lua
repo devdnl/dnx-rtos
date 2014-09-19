@@ -285,7 +285,7 @@ local function spi_device_selected()
 
                 local answer = wx.wxID_NO
                 if ui.Button_save:IsEnabled() then
-                        answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
+                        answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to SAVE changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
                 end
 
                 if answer == wx.wxID_YES then
