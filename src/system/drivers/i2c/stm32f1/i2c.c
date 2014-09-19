@@ -37,8 +37,6 @@
 #include "stm32f1/stm32f10x.h"
 #include "lib/stm32f10x_rcc.h"
 
-#include "stm32f1/gpio_cfg.h" // TEST
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -730,8 +728,11 @@ static void disable_I2C(u8_t major)
                 NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
                 NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
 
-                cfg->DMA_rx->CCR = 0;
-                cfg->DMA_tx->CCR = 0;
+                DMA_Channel_t *DMA_rx = const_cast(DMA_Channel_t*, cfg->DMA_rx);
+                DMA_Channel_t *DMA_tx = const_cast(DMA_Channel_t*, cfg->DMA_tx);
+
+                DMA_rx->CCR = 0;
+                DMA_tx->CCR = 0;
         }
         #endif
 
@@ -842,10 +843,6 @@ static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop)
 //==============================================================================
 static bool IRQ_EV_handler(u8_t major)
 {
-        // TEST check stack usage for this function
-
-        GPIO_SET_PIN(TP223); // TEST
-
         I2C_config_t   *cfg   = const_cast(I2C_config_t*, &I2C_cfg[major]);
         I2C_t          *i2c   = const_cast(I2C_t*, cfg->I2C);
         struct I2C_per *per   = &I2C->periph[major];
@@ -879,8 +876,6 @@ static bool IRQ_EV_handler(u8_t major)
 
         case STATE_START: {
                 if (i2c->SR1 & I2C_SR1_SB) {
-                        GPIO_SET_PIN(TP224); // TEST
-
                         if (per->dev->config->addr10bit) {
                                 if (per->addr10rd) {
                                         per->state    = STATE_ADDRESS_SENT;
@@ -906,7 +901,6 @@ static bool IRQ_EV_handler(u8_t major)
                                 }
                         }
 
-                        GPIO_CLEAR_PIN(TP224); // TEST
                 } else if (i2c->SR1 & I2C_SR1_BTF) {
                         // IRQ caught when repeated-start is generated after transmit sequence
                         // this operation prevents function from continuously IRQ
@@ -932,7 +926,6 @@ static bool IRQ_EV_handler(u8_t major)
 
         case STATE_ADDRESS_SENT:
                 if (i2c->SR1 & I2C_SR1_ADDR) {
-                        GPIO_SET_PIN(TP218); // TEST
 
                         int tmp = i2c->SR2;
                         (void)tmp;
@@ -955,7 +948,6 @@ static bool IRQ_EV_handler(u8_t major)
 
                         SET_BIT(i2c->CR2, I2C_CR2_ITBUFEN);
 
-                        GPIO_CLEAR_PIN(TP218); // TEST
                 } else {
                         error();
                 }
@@ -963,7 +955,6 @@ static bool IRQ_EV_handler(u8_t major)
 
         case STATE_SUB_ADDRESS:
                 if (i2c->SR1 & I2C_SR1_TXE) {
-                        GPIO_SET_PIN(TP220); // TEST
 
                         switch (per->sub_addr_mode) {
                         case I2C_SUB_ADDR_MODE__3_BYTES:
@@ -985,7 +976,6 @@ static bool IRQ_EV_handler(u8_t major)
                                 per->state = STATE_TRANSFER;
                         }
 
-                        GPIO_CLEAR_PIN(TP220); // TEST
                 } else {
                         error();
                 }
@@ -994,14 +984,8 @@ static bool IRQ_EV_handler(u8_t major)
         case STATE_TRANSFER:
                 if (!per->data || !per->data_size) {
                         finish();
-                        GPIO_SET_PIN(TP204); // TEST
-                        GPIO_CLEAR_PIN(TP204); // TEST
-                        GPIO_SET_PIN(TP204); // TEST
-                        GPIO_CLEAR_PIN(TP204); // TEST
 
                 } else {
-                        GPIO_SET_PIN(TP204); // TEST
-
                         if (cfg->use_DMA) {
                                 #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
                                 DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, per->write ? cfg->DMA_tx : cfg->DMA_rx);
@@ -1049,14 +1033,10 @@ static bool IRQ_EV_handler(u8_t major)
                                         error();
                                 }
                         }
-
-                        GPIO_CLEAR_PIN(TP204); // TEST
                 }
 
                 break;
         }
-
-        GPIO_CLEAR_PIN(TP223); // TEST
 
         return woken;
 }
@@ -1096,8 +1076,6 @@ static bool IRQ_ER_handler(u8_t major)
 #if (_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0)
 static bool IRQ_DMA_handler(u8_t major)
 {
-        GPIO_SET_PIN(TP204); // TEST
-
         bool            woken = false;
         I2C_config_t   *cfg   = const_cast(I2C_config_t*, &I2C_cfg[major]);
         I2C_t          *i2c   = const_cast(I2C_t*, cfg->I2C);
@@ -1121,8 +1099,6 @@ static bool IRQ_DMA_handler(u8_t major)
         }
 
         clear_DMA_IRQ_flags(major);
-
-        GPIO_CLEAR_PIN(TP204); // TEST
 
         return woken;
 }

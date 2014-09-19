@@ -46,6 +46,7 @@ i2c = {}
 local ui = {}
 local ID = {}
 local prio_list = ct:get_priority_list("stm32f1")
+local MAX_NUMBER_OF_PERIPHERALS = 2
 local MAX_NUMBER_OF_DEVICES = 8
 
 --==============================================================================
@@ -106,8 +107,23 @@ local function on_button_save_click()
         ct:enable_module("I2C", ui.CheckBox_enable:GetValue())
 
 
-        local I2C_enable = ct:bool_to_yes_no(ui.CheckBox_I2C_enable:IsChecked())
-        ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"], I2C_enable)
+        -- enable existing I2C port and disable all not existing in this microcontroller
+        for i = 1, MAX_NUMBER_OF_PERIPHERALS do
+                local exist = false
+                for j = 1, i2c_cfg:NumChildren() do
+                        if tostring(i) == i2c_cfg:Children()[j].name:GetValue() then
+                                exist = true
+                                break
+                        end
+                end
+
+                if not exist then
+                        ct:key_write(config.arch.stm32f1.key["I2C"..i.."_ENABLE"], config.project.def.NO:GetValue())
+                else
+                        local I2C_enable = ct:bool_to_yes_no(ui.CheckBox_I2C_enable:IsChecked())
+                        ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"], I2C_enable)
+                end
+        end
 
 
         local use_DMA = ct:bool_to_yes_no(ui.CheckBox_use_DMA:IsChecked())
