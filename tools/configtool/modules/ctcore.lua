@@ -125,10 +125,11 @@ end
 -- @brief  Function shows error dialog. Function kills entire wizard.
 -- @param  title        window title
 -- @param  caption      window caption
+-- @param  parent       parent window
 -- @return None
 --------------------------------------------------------------------------------
-function ct:show_error_msg(title, caption)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
+function ct:show_error_msg(title, caption, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
         dialog:ShowModal()
         wx.wxGetApp():ExitMainLoop()
         os.exit(0)
@@ -139,10 +140,11 @@ end
 -- @brief  Function shows info dialog
 -- @param  title        window title
 -- @param  caption      window caption
+-- @param  parent       parent window
 -- @return None
 --------------------------------------------------------------------------------
-function ct:show_info_msg(title, caption)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
+function ct:show_info_msg(title, caption, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
         dialog:ShowModal()
 end
 
@@ -152,10 +154,11 @@ end
 -- @param  title        window title
 -- @param  caption      window caption
 -- @param  buttons      wxWidgets button definitions to show
+-- @param  parent       parent window
 -- @return Selected button
 --------------------------------------------------------------------------------
-function ct:show_question_msg(title, caption, buttons)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
+function ct:show_question_msg(title, caption, buttons, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
         return dialog:ShowModal()
 end
 

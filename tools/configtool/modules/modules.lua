@@ -106,13 +106,13 @@ function modules:refresh()
 
         -- check if CPU exist
         if cpu_idx == 0 then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no such microcontroller.")
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no such microcontroller.", ui.window)
                 return
         end
 
         -- check if CPU has peripherals
         if periph_num == 0 then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no peripherals!")
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, cpu_name..": no peripherals!", ui.window)
                 return
         end
 
@@ -165,7 +165,7 @@ function modules:refresh()
                                                                          "Architecture: "..ifs(no_arch, "noarch", cpu_arch).."\n"..
                                                                          "Microcontroller: "..cpu_name.."\n"..
                                                                          "Module: "..module_name:upper().."\n"..
-                                                                         "Expected file: "..module_file..".lua")
+                                                                         "Expected file: "..module_file..".lua", ui.window)
                         return
                 end
 

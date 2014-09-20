@@ -93,7 +93,7 @@ local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO, ui.frame)
                 if answer == wx.wxID_NO then
                         this:Veto()
                 end
@@ -110,7 +110,7 @@ local function window_close()
         local card = ui.treebook:GetSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO, ui.frame)
                 if answer == wx.wxID_YES then
                         ui.frame:Destroy()
                 end
