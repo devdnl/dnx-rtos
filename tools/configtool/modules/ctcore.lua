@@ -516,25 +516,114 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Found line by using regular expressions
--- @param  file         file where line will be search
+-- @param  filename     file where line will be search
+-- @param  startline    start line
 -- @param  regex        regular expression (Lua's version)
 -- @return Number of line where expression was found or 0 when not found
 --------------------------------------------------------------------------------
-function ct:found_line(file, regex)
+function ct:find_line(filename, startline, regex)
+        assert(type(filename) == "string", "find_line(): filename is not the string type")
+        assert(type(startline) == "number", "find_line(): startline is not the number type")
+        assert(type(regex) == "string", "find_line(): regex is not the string type")
 
-        local n = 1
+        file = io.open(filename, "r")
+        assert(file, "find_line(): file does not exist")
 
         file:seek("set", 0)
 
-        for line in file:lines() do
-                print(line, regex, line:match(regex))
+        local n = 1
 
-                if line:match(regex) then
+        for line in file:lines() do
+                if line:match(regex) and n >= startline then
+                        file:close()
                         return n
                 end
 
                 n = n + 1
         end
 
+        file:close()
         return 0
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Insert new line at selected position. If position does not exist then
+--         line is not placed.
+-- @param  filename     file where line will be inserted
+-- @param  lineno       line number where a new line shall be inserted
+-- @param  newline      a new line
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:insert_line(filename, lineno, newline)
+        assert(type(filename) == "string", "insert_line(): filename is not the string type")
+        assert(type(lineno) == "number", "insert_line(): lineno is not the number type")
+        assert(type(newline) == "string", "insert_line(): newline is not the string type")
+
+        file = io.open(filename, "r+")
+        assert(file, "insert_line(): file does not exist")
+
+        file:seek("set", 0)
+
+        local data = {}
+        for line in file:lines() do
+                table.insert(data, line)
+        end
+
+        if lineno > #data then
+                return false
+        else
+                table.insert(data, lineno, newline)
+        end
+
+        file:seek("set", 0)
+        for i, line in ipairs(data) do
+                file:write(line, "\n")
+        end
+
+        file:close()
+
+        return true
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected line from file
+-- @param  filename     file where line will be removed
+-- @param  lineno       number of line that will be removed
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:remove_line(filename, lineno)
+        assert(type(filename) == "string", "remove_line(): filename is not the string type")
+        assert(type(lineno) == "number", "remove_line(): lineno is not the number type")
+
+        file = io.open(filename, "r")
+        assert(file, "remove_line(): '"..filename.."' file does not exist")
+
+        file:seek("set", 0)
+
+        local data = {}
+        for line in file:lines() do
+                table.insert(data, line)
+        end
+
+        if lineno > #data then
+                return false
+        else
+                table.remove(data, lineno)
+        end
+
+        file:close()
+
+        file = io.open(filename, "w")
+        assert(file, "remove_line(): '"..filename.."' no permissions to write file")
+
+        file:seek("set", 0)
+        for i, line in ipairs(data) do
+                file:write(line, "\n")
+        end
+
+        file:close()
+
+        return true
 end
