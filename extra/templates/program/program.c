@@ -44,9 +44,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
+GLOBAL_VARIABLES {
 
-GLOBAL_VARIABLES_SECTION_END
+};
 
 /*==============================================================================
   Exported object definitions
@@ -60,7 +60,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(program, int argc, char *argv[])
+PROGRAM_MAIN(program, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         return 0;
 }

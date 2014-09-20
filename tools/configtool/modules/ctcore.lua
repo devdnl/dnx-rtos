@@ -512,3 +512,29 @@ function ct:print_freq(freq)
                 return math.round(freq/1e6, 3).." MHz"
         end
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Found line by using regular expressions
+-- @param  file         file where line will be search
+-- @param  regex        regular expression (Lua's version)
+-- @return Number of line where expression was found or 0 when not found
+--------------------------------------------------------------------------------
+function ct:found_line(file, regex)
+
+        local n = 1
+
+        file:seek("set", 0)
+
+        for line in file:lines() do
+                print(line, regex, line:match(regex))
+
+                if line:match(regex) then
+                        return n
+                end
+
+                n = n + 1
+        end
+
+        return 0
+end

@@ -355,7 +355,7 @@ function operating_system:create_window(parent)
                 ui.StaticText14 = wx.wxStaticText(this, ID.STATICTEXT14, "Allocation block size [bytes]", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT14")
                 ui.FlexGridSizer2:Add(ui.StaticText14, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_mem_block = wx.wxSpinCtrl(this, ID.SPINCTRL_MEM_BLOCK, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 4, 4096, 0, "ID.SPINCTRL_MEM_BLOCK")
-                ui.SpinCtrl_mem_block:SetToolTip("The allocation block size is a minimal memory block that can be allocated by the Dynamic Memory Management (e.g. malloc()).")
+                ui.SpinCtrl_mem_block:SetToolTip("The allocation block size is a minimal memory block that can be allocated by the Dynamic Memory Management (e.g. malloc function).")
                 ui.FlexGridSizer2:Add(ui.SpinCtrl_mem_block, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.StaticText10 = wx.wxStaticText(this, ID.STATICTEXT10, "Length of error messages", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT10")

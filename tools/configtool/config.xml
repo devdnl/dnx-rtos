@@ -2,7 +2,7 @@
     <tool>
         <window>
             <name>dnx RTOS Configuration</name>
-            <xsize>800</xsize>
+            <xsize>850</xsize>
             <ysize>600</ysize>
             <csize>550</csize>
         </window>

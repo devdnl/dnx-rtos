@@ -32,12 +32,15 @@ os.setlocale('C')
 require("wx")
 require("modules/ctcore")
 require("modules/welcome")
+require("modules/configinfo")
 require("modules/project")
 require("modules/operating_system")
 require("modules/file_systems")
 require("modules/network")
 require("modules/modules")
 require("modules/about")
+require("modules/creators")
+require("modules/new_module")
 
 
 --==============================================================================
@@ -49,7 +52,18 @@ require("modules/about")
 -- LOCAL OBJECTS
 --==============================================================================
 -- configuration pages
-local page = {welcome, project, operating_system, file_systems, network, modules, about}
+local page = {
+    {form = welcome,            subpage = false},
+    {form = configinfo,         subpage = false};
+    {form = project,            subpage = true },
+    {form = operating_system,   subpage = true },
+    {form = file_systems,       subpage = true },
+    {form = network,            subpage = true },
+    {form = modules,            subpage = true },
+    {form = creators,           subpage = false},
+    {form = new_module,         subpage = true },
+    {form = about,              subpage = false},
+}
 
 -- container for UI controls
 local ui = {}
@@ -65,7 +79,7 @@ local ui = {}
 --------------------------------------------------------------------------------
 local function treebook_page_changed(this)
         local card = this:GetSelection() + 1
-        page[card]:refresh()
+        page[card].form:refresh()
         this:Skip()
 end
 
@@ -78,7 +92,7 @@ end
 local function treebook_page_changing(this)
         local card = this:GetOldSelection() + 1
 
-        if page[card]:is_modified() then
+        if page[card].form:is_modified() then
                 local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO)
                 if answer == wx.wxID_NO then
                         this:Veto()
@@ -95,7 +109,7 @@ end
 local function window_close()
         local card = ui.treebook:GetSelection() + 1
 
-        if page[card]:is_modified() then
+        if page[card].form:is_modified() then
                 local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO)
                 if answer == wx.wxID_YES then
                         ui.frame:Destroy()
@@ -112,14 +126,26 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function main()
-        -- creating controls
+
         ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
         ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
         ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
 
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
-        for i, page in ipairs(page) do ui.treebook:AddPage(page:create_window(ui.treebook), page:get_window_name())end
+
+        for i, page in ipairs(page) do
+                if page.subpage then
+                        ui.treebook:AddSubPage(page.form:create_window(ui.treebook), page.form:get_window_name())
+                else
+                        ui.treebook:AddPage(page.form:create_window(ui.treebook), page.form:get_window_name())
+                end
+        end
+
+        for i = 0, ui.treebook:GetPageCount() do
+                ui.treebook:ExpandNode(i)
+        end
+
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
 
