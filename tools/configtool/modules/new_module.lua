@@ -55,6 +55,7 @@ local FILE_PROJECT_FLAGS             = config.project.path.project_flags_file:Ge
 local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetValue()
 local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
 local FILE_SYS_IOCTL                 = config.project.path.sys_ioctl_file:GetValue()
+local FILE_XML_CONFIG                = config.project.path.xml_config_file:GetValue()
 
 local DIR_CONFIG          = config.project.path.config_dir:GetValue()
 local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
@@ -246,7 +247,7 @@ function event_button_create_clicked(event)
                 if n then
                         ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#       include \"../"..arch.."/"..module_name.."_flags.h\"")
                 else
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 1.", ui.window)
                         return
                 end
 
@@ -256,11 +257,35 @@ function event_button_create_clicked(event)
                 if n then
                         ct:insert_line(FILE_SYS_IOCTL, n + 1, "#       include \""..arch.."/"..module_name.."_ioctl.h\"")
                 else
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file. Error code: 2.", ui.window)
                         return
                 end
+        end
 
-                -- add module to the configtool's xml configuration
+        -- add module to the configtool's xml configuration
+        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
+        if n then
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
+                return
+        end
+
+        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_ENABLE_FLAGS_>%s*</_DRV_ENABLE_FLAGS_>")
+        if n then
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_H><path>"..FILE_PROJECT_FLAGS.."</path><key>__ENABLE_"..module_name:upper().."__</key></ENABLE_"..module_name:upper().."_H>")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 4.", ui.window)
+                return
+        end
+
+        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<modules>")
+        if n then
+                local noarchval = ifs(selected_arch[1] == "noarch", "true", "false")
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <module noarch=\""..noarchval.."\"><name>"..module_name:upper().."</name><description>"..module_description.."</description></module>")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 5.", ui.window)
+                return
         end
 
 
@@ -269,7 +294,7 @@ function event_button_create_clicked(event)
         if n then
                 ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ __NO__")
         else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 6.", ui.window)
                 return
         end
 
@@ -279,13 +304,13 @@ function event_button_create_clicked(event)
         if n then
                 ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."__=__NO__")
         else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Error code: 7.", ui.window)
                 return
         end
 
 
         -- add module makefile
-        if arch == "noarch" then
+        if selected_arch[1] == "noarch" then
                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_NOARCH, DIR_DRIVERS.."/"..module_name.."/Makefile", tags)
         else
                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, DIR_DRIVERS.."/"..module_name.."/Makefile", tags)
