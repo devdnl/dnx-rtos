@@ -13,6 +13,7 @@
             <PROJECT_NAME><path>../../config/project/Makefile</path><key>PROJECT_NAME</key></PROJECT_NAME>
             <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>PROJECT_CPU_ARCH</key></PROJECT_CPU_ARCH>
             <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>PROJECT_TOOLCHAIN</key></PROJECT_TOOLCHAIN>
+            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
             <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>ENABLE_LFS</key></ENABLE_LFS_MK>
             <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>ENABLE_DEVFS</key></ENABLE_DEVFS_MK>
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>ENABLE_PROCFS</key></ENABLE_PROCFS_MK>
@@ -27,18 +28,8 @@
             <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>ENABLE_TTY</key></ENABLE_TTY_MK>
             <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>ENABLE_UART</key></ENABLE_UART_MK>
             <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>ENABLE_WDG</key></ENABLE_WDG_MK>
-            <ENABLE_I2S_MK><path>../../config/project/Makefile</path><key>ENABLE_I2S</key></ENABLE_I2S_MK>
             <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>ENABLE_USB</key></ENABLE_USB_MK>
-            <ENABLE_USBOTG_MK><path>../../config/project/Makefile</path><key>ENABLE_USBOTG</key></ENABLE_USBOTG_MK>
             <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>ENABLE_I2C</key></ENABLE_I2C_MK>
-            <ENABLE_ADC_MK><path>../../config/project/Makefile</path><key>ENABLE_ADC</key></ENABLE_ADC_MK>
-            <ENABLE_DAC_MK><path>../../config/project/Makefile</path><key>ENABLE_DAC</key></ENABLE_DAC_MK>
-            <ENABLE_SDIO_MK><path>../../config/project/Makefile</path><key>ENABLE_SDIO</key></ENABLE_SDIO_MK>
-            <ENABLE_FSMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FSMC</key></ENABLE_FSMC_MK>
-            <ENABLE_FDMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FDMC</key></ENABLE_FDMC_MK>
-            <ENABLE_HDMICEC_MK><path>../../config/project/Makefile</path><key>ENABLE_HDMICEC</key></ENABLE_HDMICEC_MK>
-            <ENABLE_CAN_MK><path>../../config/project/Makefile</path><key>ENABLE_CAN</key></ENABLE_CAN_MK>
-            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
             <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>ENABLE_IRQ</key></ENABLE_IRQ_MK>
 
             <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
@@ -96,17 +87,8 @@
             <ENABLE_TTY_H><path>../../config/project/flags.h</path><key>__ENABLE_TTY__</key></ENABLE_TTY_H>
             <ENABLE_UART_H><path>../../config/project/flags.h</path><key>__ENABLE_UART__</key></ENABLE_UART_H>
             <ENABLE_WDG_H><path>../../config/project/flags.h</path><key>__ENABLE_WDG__</key></ENABLE_WDG_H>
-            <ENABLE_I2S_H><path>../../config/project/flags.h</path><key>__ENABLE_I2S__</key></ENABLE_I2S_H>
             <ENABLE_USB_H><path>../../config/project/flags.h</path><key>__ENABLE_USB__</key></ENABLE_USB_H>
-            <ENABLE_USBOTG_H><path>../../config/project/flags.h</path><key>__ENABLE_USBOTG__</key></ENABLE_USBOTG_H>
             <ENABLE_I2C_H><path>../../config/project/flags.h</path><key>__ENABLE_I2C__</key></ENABLE_I2C_H>
-            <ENABLE_ADC_H><path>../../config/project/flags.h</path><key>__ENABLE_ADC__</key></ENABLE_ADC_H>
-            <ENABLE_DAC_H><path>../../config/project/flags.h</path><key>__ENABLE_DAC__</key></ENABLE_DAC_H>
-            <ENABLE_SDIO_H><path>../../config/project/flags.h</path><key>__ENABLE_SDIO__</key></ENABLE_SDIO_H>
-            <ENABLE_FSMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FSMC__</key></ENABLE_FSMC_H>
-            <ENABLE_FDMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FDMC__</key></ENABLE_FDMC_H>
-            <ENABLE_HDMICEC_H><path>../../config/project/flags.h</path><key>__ENABLE_HDMICEC__</key></ENABLE_HDMICEC_H>
-            <ENABLE_CAN_H><path>../../config/project/flags.h</path><key>__ENABLE_CAN__</key></ENABLE_CAN_H>
             <ENABLE_IRQ_H><path>../../config/project/flags.h</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_H>
         </key>
         <def>
@@ -125,17 +107,8 @@
             <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
             <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
             <module noarch="false"><name>WDG</name><description>This module handles Watchdog peripherals.</description></module>
-            <module noarch="false"><name>I2S</name><description>This module handles I2S peripherals.</description></module>
             <module noarch="false"><name>USB</name><description>This module handles USB peripherals in the device mode.</description></module>
-            <module noarch="false"><name>USBOTG</name><description>This module handles USB-OTG peripherals in the device and host mode.</description></module>
             <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
-            <module noarch="false"><name>ADC</name><description>This module handles ADC peripherals.</description></module>
-            <module noarch="false"><name>DAC</name><description>This module handles DAC peripherals.</description></module>
-            <module noarch="false"><name>SDIO</name><description>This module handles SD Cards by using native card interface.</description></module>
-            <module noarch="false"><name>FSMC</name><description>This module handles static memory controller.</description></module>
-            <module noarch="false"><name>FDMC</name><description>This module handles dynamic memory controller.</description></module>
-            <module noarch="false"><name>HDMICEC</name><description>This module handles HDMI-CEC peripherals.</description></module>
-            <module noarch="false"><name>CAN</name><description>This module handles CAN peripherals.</description></module>
             <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
         <path>

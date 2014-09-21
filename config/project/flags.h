@@ -132,17 +132,8 @@
 #define __ENABLE_TTY__ __YES__
 #define __ENABLE_UART__ __YES__
 #define __ENABLE_WDG__ __YES__
-#define __ENABLE_I2S__ __NO__
 #define __ENABLE_USB__ __NO__
-#define __ENABLE_USBOTG__ __NO__
 #define __ENABLE_I2C__ __YES__
-#define __ENABLE_ADC__ __NO__
-#define __ENABLE_DAC__ __NO__
-#define __ENABLE_SDIO__ __NO__
-#define __ENABLE_FSMC__ __NO__
-#define __ENABLE_FDMC__ __NO__
-#define __ENABLE_HDMICEC__ __NO__
-#define __ENABLE_CAN__ __NO__
 #define __ENABLE_IRQ__ __YES__
 
 #endif /* _FLAGS_H_ */
