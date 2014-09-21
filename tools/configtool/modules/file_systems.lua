@@ -195,7 +195,7 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "fatfs (FAT12, FAT16, FAT32,")
+                ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "fatfs (FAT12, FAT16, FAT32)")
 
                 ui.FlexGridSizer4 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
