@@ -43,16 +43,18 @@ new_module = {}
 local ui = {}
 local ID = {}
 
-local FILE_MODULE_TEMPLATE_CFG       = config.project.path.module_template_cfg_file:GetValue()
-local FILE_MODULE_TEMPLATE_DEF       = config.project.path.module_template_def_file:GetValue()
-local FILE_MODULE_TEMPLATE_FLAGS     = config.project.path.module_template_flags_file:GetValue()
-local FILE_MODULE_TEMPLATE_IOCTL     = config.project.path.module_template_ioctl_file:GetValue()
-local FILE_MODULE_TEMPLATE_SRC       = config.project.path.module_template_src_file:GetValue()
-local FILE_MODULE_TEMPLATE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
-local FILE_MODULE_TEMPLATE_MK_NOARCH = config.project.path.module_template_makefile_noarch_file:GetValue()
+local FILE_TEMPLATE_MODULE_CFG       = config.project.path.module_template_cfg_file:GetValue()
+local FILE_TEMPLATE_MODULE_DEF       = config.project.path.module_template_def_file:GetValue()
+local FILE_TEMPLATE_MODULE_FLAGS     = config.project.path.module_template_flags_file:GetValue()
+local FILE_TEMPLATE_MODULE_IOCTL     = config.project.path.module_template_ioctl_file:GetValue()
+local FILE_TEMPLATE_MODULE_SRC       = config.project.path.module_template_src_file:GetValue()
+local FILE_TEMPLATE_MODULE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
+local FILE_TEMPLATE_MODULE_MK_NOARCH = config.project.path.module_template_makefile_noarch_file:GetValue()
+local FILE_TEMPLATE_CONFIGTOOL_FORM  = config.project.path.configtool_template_form_file:GetValue()
 
-local DIR_CONFIG  = config.project.path.config_dir:GetValue()
-local DIR_DRIVERS = config.project.path.drivers_dir:GetValue()
+local DIR_CONFIG          = config.project.path.config_dir:GetValue()
+local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
+local DIR_CONFIGTOOL_ARCH = config.project.path.configtool_arch_dir:GetValue()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -164,7 +166,7 @@ function event_button_create_clicked(event)
         local selected_arch      = get_checked_items(ui.CheckListBox_arch_list)
         local selected_cpu       = get_checked_items(ui.CheckListBox_module_assign)
         local noarch             = ui.CheckBox_noarch:IsChecked()
-        local module_name        = ui.TextCtrl_module_name:GetValue()
+        local module_name        = ui.TextCtrl_module_name:GetValue():lower()
         local module_description = ui.TextCtrl_module_description:GetValue()
         local module_author      = ui.TextCtrl_module_author:GetValue()
         local author_email       = ui.TextCtrl_author_email:GetValue()
@@ -195,51 +197,45 @@ function event_button_create_clicked(event)
         end
 
         -- checks if module exist
-        if ct:exists(DIR_DRIVERS.."/"..module_name:lower()) then
+        if ct:exists(DIR_DRIVERS.."/"..module_name) then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
                 return
         end
 
-        -- create a new folders for module's source files
-        if not noarch then
-                for _, arch in pairs(selected_arch) do
-                        if not ct:mkdir(DIR_DRIVERS.."/"..module_name:lower().."/"..arch) then
-                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
-                                return
-                        end
-                end
+        -- checks if project is not read only
+        if not ct:mkdir("_test_") then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
+                return
         else
-                if not ct:mkdir(DIR_DRIVERS.."/"..module_name:lower()) then
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
-                        return
-                end
+                io.remove("_test_")
         end
 
-        -- create a new folder for module's configuration
+        -- create a new folders and files for module
         if not noarch then
                 for _, arch in pairs(selected_arch) do
-                        if not ct:mkdir(DIR_CONFIG.."/"..arch) then
-                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
-                                return
-                        end
+                        ct:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
+                        ct:mkdir(DIR_CONFIG.."/"..arch)
+                        ct:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
+
+                        ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/"..arch.."/"..module_name.."_flags.h", tags)
+                        ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_cfg.h", tags)
+                        ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_def.h", tags)
+                        ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_ioctl.h", tags)
+                        ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name..".c", tags)
+
+                        -- makefiles..
+
                 end
         else
-                if not ct:mkdir(DIR_CONFIG.."/noarch") then
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
-                        return
-                end
-        end
+                ct:mkdir(DIR_DRIVERS.."/"..module_name)
+                ct:mkdir(DIR_CONFIG.."/noarch")
+                ct:mkdir(DIR_CONFIGTOOL_ARCH.."/noarch")
 
-        -- create module's flag file
-        if not noarch then
-                for _, arch in pairs(selected_arch) do
-                        if not ct:apply_template(FILE_MODULE_TEMPLATE_FLAGS, ) then
-                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
-                                return
-                        end
-                end
-        else
-
+                ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/noarch/"..module_name.."_flags.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_cfg.h")
+                ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_def.h")
+                ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..module_name.."_ioctl.h")
+                ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..module_name..".c")
         end
 end
 

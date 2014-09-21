@@ -151,6 +151,8 @@
             <module_template_src_file>../../extra/templates/module/module.c</module_template_src_file>
             <module_template_makefile_arch_file>../../extra/templates/module/Makefile_arch</module_template_makefile_arch_file>
             <module_template_makefile_noarch_file>../../extra/templates/module/Makefile_noarch</module_template_makefile_noarch_file>
+            <configtool_template_form_file>../../extra/templates/configtool/form.lua</configtool_template_form_file>
+            <configtool_arch_dir>./arch</configtool_arch_dir>
         </path>
     </project>
 

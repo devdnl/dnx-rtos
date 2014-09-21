@@ -1,11 +1,11 @@
 --[[============================================================================
-@file    generic.lua
+@file    <!module_name!>.lua
 
-@author  
+@author  <!author!>
 
-@brief   
+@brief   <!module_description!>   
 
-@note    Copyright (C) <year> <author> <email>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ require("modules/ctcore")
 -- GLOBAL OBJECTS
 --==============================================================================
 -- module's main object
-generic = {}
+<!module_name!> = {}
 
 
 --==============================================================================
@@ -56,7 +56,7 @@ local ID = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        ui.CheckBox_enable:SetValue(ct:get_module_state("generic"))
+        ui.CheckBox_enable:SetValue(ct:get_module_state("<!module_name!>"))
 end
 
 
@@ -66,7 +66,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function on_button_save_click()
-        ct:enable_module("generic", ui.CheckBox_enable:GetValue())
+        ct:enable_module("<!module_name!>", ui.CheckBox_enable:GetValue())
         ui.Button_save:Enable(false)
 end
 
@@ -89,7 +89,7 @@ end
 -- @param  parent       parent window
 -- @return New window handle
 --------------------------------------------------------------------------------
-function generic:create_window(parent)
+function <!module_name!>:create_window(parent)
         ui = {}
 
         ID = {}
@@ -113,7 +113,7 @@ function generic:create_window(parent)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(25, 25)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
@@ -132,8 +132,8 @@ end
 -- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
-function generic:get_window_name()
-        return "Generic"
+function <!module_name!>:get_window_name()
+        return "<!MODULE_NAME!>"
 end
 
 
@@ -142,7 +142,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-function generic:selected()
+function <!module_name!>:selected()
 end
 
 
@@ -151,7 +151,7 @@ end
 -- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
-function generic:is_modified()
+function <!module_name!>:is_modified()
         return ui.Button_save:IsEnabled()
 end
 
@@ -162,5 +162,5 @@ end
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
-        return generic
+        return <!module_name!>
 end
