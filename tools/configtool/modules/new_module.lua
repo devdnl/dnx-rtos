@@ -51,6 +51,9 @@ local FILE_TEMPLATE_MODULE_SRC       = config.project.path.module_template_src_f
 local FILE_TEMPLATE_MODULE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
 local FILE_TEMPLATE_MODULE_MK_NOARCH = config.project.path.module_template_makefile_noarch_file:GetValue()
 local FILE_TEMPLATE_CONFIGTOOL_FORM  = config.project.path.configtool_template_form_file:GetValue()
+local FILE_PROJECT_FLAGS             = config.project.path.project_flags_file:GetValue()
+local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetValue()
+local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
 
 local DIR_CONFIG          = config.project.path.config_dir:GetValue()
 local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
@@ -175,6 +178,7 @@ function event_button_create_clicked(event)
         end
 
         local tags = {
+                {tag = "<!cpu_arch!>", to = ""},
                 {tag = "<!author!>", to = module_author},
                 {tag = "<!module_description!>", to = module_description},
                 {tag = "<!year!>", to = os.date("%Y")},
@@ -214,8 +218,12 @@ function event_button_create_clicked(event)
                 os.remove("_test_")
         end
 
-        -- create a new folders and files for module
+        -- add module to the system for selected architectures
         for _, arch in pairs(selected_arch) do
+                tags[1] = {tag = "<!cpu_arch!>", to = arch}
+
+
+                -- create new folders
                 ct:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
                 ct:mkdir(DIR_CONFIG.."/"..arch)
                 ct:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
@@ -226,20 +234,64 @@ function event_button_create_clicked(event)
                 ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_ioctl.h", tags)
                 ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name..".c", tags)
 
+
+                -- add module form to configtool
                 ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/"..arch.."/"..module_name..".lua", tags)
+
+
+                -- include module in the system
+                local n = ct:find_line(FILE_PROJECT_FLAGS, 1, "#.?.?if %(__CPU_ARCH__%s*==%s*"..arch.."%)")
+                if n then
+                        ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#       include \"../"..arch.."/"..module_name.."_flags.h\"")
+                else
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file.", ui.window)
+                        return
+                end
+
+
+                -- add module to ioctl requests
+
+                -- add module to the configtool's xml configuration
         end
 
-        -- add module to project flags and makefile
-        for _, arch in pairs(selected_arch) do
 
+        -- adds enable flag in the flags.h file
+        n = ct:find_line(FILE_PROJECT_FLAGS, 1, "/%* modules %*/")
+        if n then
+                ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ __NO__")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file.", ui.window)
+                return
         end
 
-        -- add module's makefile
 
-        -- add module to ioctl requests
+        -- adds enable flag in the Makefile
+        n = ct:find_line(FILE_PROJECT_MAKEFILE, 1, "# modules enable flags")
+        if n then
+                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."__=__NO__")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file.", ui.window)
+                return
+        end
+
+
+        -- add module makefile
+        if arch == "noarch" then
+                ct:apply_template(FILE_TEMPLATE_MODULE_MK_NOARCH, DIR_DRIVERS.."/"..module_name.."/Makefile", tags)
+        else
+                ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, DIR_DRIVERS.."/"..module_name.."/Makefile", tags)
+        end
+
+
+        -- add module to drivers' main makefile
+        ct:insert_line(FILE_DRIVERS_MAIN_MAKEFILE, 2, "include $(DRV_LOC)/"..module_name.."/Makefile")
+
 
         -- register module in the system
 
+
+        -- finished
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module added successfully.", ui.window)
 end
 
 

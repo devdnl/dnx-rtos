@@ -29,9 +29,9 @@
 ==============================================================================*/
 #include "core/module.h"
 #include <dnx/misc.h>
-#include "<!cpu_arch!><!module_name!>_cfg.h"
-#include "<!cpu_arch!><!module_name!>_def.h"
-#include "<!cpu_arch!><!module_name!>_ioctl.h"
+#include "<!cpu_arch!>/<!module_name!>_cfg.h"
+#include "<!cpu_arch!>/<!module_name!>_def.h"
+#include "<!cpu_arch!>/<!module_name!>_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -48,7 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-MODULE_NAME(<!MODULE_NAME!>)
+MODULE_NAME(<!MODULE_NAME!>);
 
 /*==============================================================================
   Exported objects

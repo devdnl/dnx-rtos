@@ -39,6 +39,7 @@
 /* current CPU architecture */
 #define __CPU_ARCH__ stm32f1
 #define noarch __CPU_ARCH__ /* always valid */
+#define ARCH_noarch
 
 /* include modules flags divided to architecture */
 #if (__CPU_ARCH__ == noarch)
