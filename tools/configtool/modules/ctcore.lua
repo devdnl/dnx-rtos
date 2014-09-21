@@ -630,3 +630,120 @@ function ct:remove_line(filename, lineno)
 
         return true
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected line from file
+-- @param  template_path        path to the template file
+-- @param  destination_path     path where modified template will be saved
+-- @param  replace_tags         tag translation table {{.tag = "", .to = ""}, ...}
+-- @return Number of repleaced tags
+--------------------------------------------------------------------------------
+function ct:apply_template(template_path, destination_path, replace_tags)
+        assert(type(template_path) == "string", "apply_template(): template_path is not the string type")
+        assert(type(destination_path) == "string", "apply_template(): destination_path is not the string type")
+        assert(type(replace_tags) == "table", "apply_template(): replace_tags is not the table type")
+
+        local n = 0
+
+        template = io.open(template_path, "r")
+        if not template then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..template_path.."' does not exist.\n"..debug.traceback())
+                return n
+        end
+
+        dest = io.open(destination_path, "w")
+        if not dest then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
+                template:close()
+                return n
+        end
+
+        template:seek("set", 0)
+        dest:seek("set", 0)
+
+        for line in template:lines() do
+                for _, t in pairs(replace_tags) do
+                        line = line:gsub(t.tag, t.to)
+                end
+
+                dest:write(line, "\n")
+        end
+
+        template:close()
+        dest:close()
+
+        return n
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if file or directory exists
+-- @param  name     file/directory name
+-- @return Retrun true if file/dir exists, otherwise false
+--------------------------------------------------------------------------------
+function ct:exists(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        return os.rename(name, name) and true or false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if path is a file
+-- @param  name     path
+-- @return Retrun true if path is file, otherwise false
+--------------------------------------------------------------------------------
+function ct:is_file(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        if not ct:exists(name) then
+                return false
+        end
+
+        local f = io.open(name, "r")
+        if f then
+                if f:read(1) then
+                        f:close()
+                        return true
+                else
+                        f:close()
+                        return false
+                end
+        end
+
+        return false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if path is a directory
+-- @param  name     path
+-- @return Retrun true if path is directory, otherwise false
+--------------------------------------------------------------------------------
+function ct:is_dir(name)
+        return (ct:exists(name) and not ct:is_file(name))
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Create a new directory
+-- @param  name     path
+-- @return Retrun true if directory is created, otherwise false
+--------------------------------------------------------------------------------
+function ct:mkdir(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        if ct:is_dir(name) then
+                return true
+        else
+                os.execute("mkdir "..name)
+                return ct:is_dir(name)
+        end
+end

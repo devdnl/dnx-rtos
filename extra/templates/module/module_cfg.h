@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    genericmod_cfg.h
+@file    <!file_name!>_cfg.h
 
-@author  Author
+@author  <!author!>
 
-@brief   This driver support generic device configuration.
+@brief   <!module_description!>
 
-@note    Copyright (C) year  Author <email>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _GENERICMOD_CFG_H_
-#define _GENERICMOD_CFG_H_
+#ifndef _<!MODULE_NAME!>_CFG_H_
+#define _<!MODULE_NAME!>_CFG_H_
 
 /*==============================================================================
   Include files
@@ -59,7 +59,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _GENERICMOD_CFG_H_ */
+#endif /* _<!MODULE_NAME!>_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

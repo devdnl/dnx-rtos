@@ -151,14 +151,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function event_button_create_clicked(event)
-        local selected_arch = get_checked_items(ui.CheckListBox_arch_list)
-        local selected_cpu  = get_checked_items(ui.CheckListBox_module_assign)
-        local noarch        = ui.CheckBox_noarch:IsChecked()
-        local module_name   = ui.TextCtrl_module_name:GetValue()
+        local selected_arch      = get_checked_items(ui.CheckListBox_arch_list)
+        local selected_cpu       = get_checked_items(ui.CheckListBox_module_assign)
+        local noarch             = ui.CheckBox_noarch:IsChecked()
+        local module_name        = ui.TextCtrl_module_name:GetValue()
+        local module_description = ui.TextCtrl_module_description:GetValue()
+        local module_author      = ui.TextCtrl_module_author:GetValue()
+        local author_email       = ui.TextCtrl_author_email:GetValue()
 
         -- check if all fields are filled
-        if module_name:len() == 0 then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Enter module name.", ui.window)
+        if module_name:len() == 0 or module_description:len() == 0 or module_author:len() == 0 or author_email:len() == 0 then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Fill all fields in the 'Module details'.", ui.window)
                 return
         end
 
@@ -173,7 +176,22 @@ function event_button_create_clicked(event)
         end
 
 
+        -- checks if module exist
+        if ct:exists(config.project.path.drivers_dir:GetValue().."/"..module_name:lower()) then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
+                return
+        end
+
+
         --
+        local test = io.open("test", "r")
+        assert(test, "TEST: nil")
+
+        ct:mkdir("test")
+
+--         local file = io.open(config.project.config_dir:GetValue().."/"..)
+
+--         ct:apply_template("testfile.c", "result.lua", {{tag = "<mytag>", to = "test"}, {tag = "<func>", to = "nowa"}})
 end
 
 
@@ -188,6 +206,9 @@ end
 function new_module:create_window(parent)
         if ui.window == nil then
                 ID.TEXTCTRL_MODULE_NAME = wx.wxNewId()
+                ID.TEXTCTRL_MODULE_DESCRIPTION = wx.wxNewId()
+                ID.TEXTCTRL_MODULE_AUTHOR = wx.wxNewId()
+                ID.TEXTCTRL_AUTHOR_EMAIL = wx.wxNewId()
                 ID.CHECKBOX_NOARCH = wx.wxNewId()
                 ID.CHECKLISTBOX_ARCH_LIST = wx.wxNewId()
                 ID.CHECKLISTBOX_MODULE_ASSIGN = wx.wxNewId()
@@ -200,11 +221,27 @@ function new_module:create_window(parent)
 
                 ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
-
-                ui.StaticBoxSizer_module_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Module\'s name")
-                ui.TextCtrl_module_name = wx.wxTextCtrl(this, ID.TEXTCTRL_MODULE_NAME, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.StaticBoxSizer_module_name:Add(ui.TextCtrl_module_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticBoxSizer_module_name = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Module details")
+                ui.FlexGridSizer4 = wx.wxFlexGridSizer(0, 2, 0, 0)
+                ui.StaticText1 = wx.wxStaticText(this, wx.wxID_ANY, "Module name", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.TextCtrl_module_name = wx.wxTextCtrl(this, ID.TEXTCTRL_MODULE_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE * 0.8, -1))
+                ui.FlexGridSizer4:Add(ui.TextCtrl_module_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "Description", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.TextCtrl_module_description = wx.wxTextCtrl(this, ID.TEXTCTRL_MODULE_DESCRIPTION, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.TextCtrl_module_description, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText3 = wx.wxStaticText(this, wx.wxID_ANY, "Author name", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.TextCtrl_module_author = wx.wxTextCtrl(this, ID.TEXTCTRL_MODULE_AUTHOR, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.TextCtrl_module_author, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "Email", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.TextCtrl_author_email = wx.wxTextCtrl(this, ID.TEXTCTRL_AUTHOR_EMAIL, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer4:Add(ui.TextCtrl_author_email, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticBoxSizer_module_name:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer_module_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
 
 
                 ui.StaticBoxSizer_module_arch = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Module\'s architecture")

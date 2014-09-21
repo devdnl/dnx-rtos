@@ -138,6 +138,13 @@
             <module noarch="false"><name>CAN</name><description>This module handles CAN peripherals.</description></module>
             <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
+        <path>
+            <config_dir>../../config</config_dir>
+            <src_dir>../../src</src_dir>
+            <drivers_dir>../../src/system/drivers</drivers_dir>
+            <drivers_reg_file>../../src/system/drivers/driver_registration.c</drivers_reg_file>
+            <drivers_main_makefile>../../src/system/drivers/Makefile</drivers_main_makefile>
+        </path>
     </project>
 
     <PHY>

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    genericmod_def.h
+@file    <!file_name!>_ioctl.h
 
-@author  Author
+@author  <!author!>
 
-@brief   This driver support generic device definitions.
+@brief   <!module_description!>
 
-@note    Copyright (C) year  Author <email>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,13 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _GENERICMOD_DEF_H_
-#define _GENERICMOD_DEF_H_
+#ifndef _<!MODULE_NAME!>_IOCTL_H_
+#define _<!MODULE_NAME!>_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "genericmod_cfg.h"
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,8 +39,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _GENERICMOD_MAJOR               0
-#define _GENERICMOD_MINOR               0
+/**
+ * @brief  ...
+ * @param  ...
+ * @return ...
+ */
+#define IOCTL_<!MODULE_NAME!>__EX1           _IO(_IO_GROUP_GENERIC, 0x00)
+
 
 /*==============================================================================
   Exported object types
@@ -62,7 +67,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _GENERICMOD_DEF_H_ */
+#endif /* _<!MODULE_NAME!>_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
