@@ -2,8 +2,6 @@
 HDRLOC_ARCH += drivers/<!module_name!>
 
 ifeq ($(ENABLE_<!MODULE_NAME!>), __YES__)
-   ifeq ($(TARGET), <!cpu_arch!>)
-      CSRC_ARCH   += drivers/<!module_name!>/$(TARGET)/<!module_name!>.c
-	   CXXSRC_ARCH += 
-   endif
+   CSRC_ARCH   += drivers/<!module_name!>/$(TARGET)/<!module_name!>.c
+	CXXSRC_ARCH += 
 endif

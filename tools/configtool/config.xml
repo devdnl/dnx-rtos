@@ -153,6 +153,8 @@
             <module_template_makefile_noarch_file>../../extra/templates/module/Makefile_noarch</module_template_makefile_noarch_file>
             <configtool_template_form_file>../../extra/templates/configtool/form.lua</configtool_template_form_file>
             <configtool_arch_dir>./arch</configtool_arch_dir>
+            <project_flags_file>../../config/project/flags.h</project_flags_file>
+            <project_makefile>../../config/project/Makefile</project_makefile>
         </path>
     </project>
 

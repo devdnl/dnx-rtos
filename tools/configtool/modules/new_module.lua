@@ -165,11 +165,14 @@ end
 function event_button_create_clicked(event)
         local selected_arch      = get_checked_items(ui.CheckListBox_arch_list)
         local selected_cpu       = get_checked_items(ui.CheckListBox_module_assign)
-        local noarch             = ui.CheckBox_noarch:IsChecked()
         local module_name        = ui.TextCtrl_module_name:GetValue():lower()
         local module_description = ui.TextCtrl_module_description:GetValue()
         local module_author      = ui.TextCtrl_module_author:GetValue()
         local author_email       = ui.TextCtrl_author_email:GetValue()
+
+        if ui.CheckBox_noarch:IsChecked() then
+                selected_arch = {"noarch"}
+        end
 
         local tags = {
                 {tag = "<!author!>", to = module_author},
@@ -180,14 +183,15 @@ function event_button_create_clicked(event)
                 {tag = "<!module_name!>", to = module_name:lower()},
         }
 
+
         -- check if all fields are filled
         if module_name:len() == 0 or module_description:len() == 0 or module_author:len() == 0 or author_email:len() == 0 then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Fill all fields in the 'Module details'.", ui.window)
                 return
         end
 
-        if #selected_arch == 0 and not noarch then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Select architectures.", ui.window)
+        if #selected_arch == 0 then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Select architecture.", ui.window)
                 return
         end
 
@@ -211,36 +215,31 @@ function event_button_create_clicked(event)
         end
 
         -- create a new folders and files for module
-        if not noarch then
-                for _, arch in pairs(selected_arch) do
-                        ct:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
-                        ct:mkdir(DIR_CONFIG.."/"..arch)
-                        ct:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
+        for _, arch in pairs(selected_arch) do
+                ct:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
+                ct:mkdir(DIR_CONFIG.."/"..arch)
+                ct:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
 
-                        ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/"..arch.."/"..module_name.."_flags.h", tags)
-                        ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_cfg.h", tags)
-                        ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_def.h", tags)
-                        ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_ioctl.h", tags)
-                        ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name..".c", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/"..arch.."/"..module_name.."_flags.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_cfg.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_def.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_ioctl.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name..".c", tags)
 
-                        ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/"..arch.."/"..module_name..".lua", tags)
-
-                        -- makefiles..
-
-                end
-        else
-                ct:mkdir(DIR_DRIVERS.."/"..module_name)
-                ct:mkdir(DIR_CONFIG.."/noarch")
-                ct:mkdir(DIR_CONFIGTOOL_ARCH.."/noarch")
-
-                ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/noarch/"..module_name.."_flags.h", tags)
-                ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_cfg.h", tags)
-                ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_def.h", tags)
-                ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..module_name.."_ioctl.h", tags)
-                ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..module_name..".c", tags)
-
-                ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/noarch"..module_name..".lua", tags)
+                ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/"..arch.."/"..module_name..".lua", tags)
         end
+
+        -- add module to project flags and makefile
+        for _, arch in pairs(selected_arch) do
+
+        end
+
+        -- add module's makefile
+
+        -- add module to ioctl requests
+
+        -- register module in the system
+
 end
 
 
