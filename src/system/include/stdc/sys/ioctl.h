@@ -37,7 +37,7 @@ extern "C" {
 #include "core/ioctl_macros.h"
 #include "core/vfs.h"
 
-#include "tty_ioctl.h"
+#include "noarch/tty_ioctl.h"
 
 #ifdef ARCH_stm32f1
 #       include "stm32f1/afio_ioctl.h"
