@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    <!file_name!>_flags.h
+@file    <!module_name!>_flags.h
 
 @author  <!author!>
 

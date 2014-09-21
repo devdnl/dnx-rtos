@@ -43,6 +43,16 @@ new_module = {}
 local ui = {}
 local ID = {}
 
+local FILE_MODULE_TEMPLATE_CFG       = config.project.path.module_template_cfg_file:GetValue()
+local FILE_MODULE_TEMPLATE_DEF       = config.project.path.module_template_def_file:GetValue()
+local FILE_MODULE_TEMPLATE_FLAGS     = config.project.path.module_template_flags_file:GetValue()
+local FILE_MODULE_TEMPLATE_IOCTL     = config.project.path.module_template_ioctl_file:GetValue()
+local FILE_MODULE_TEMPLATE_SRC       = config.project.path.module_template_src_file:GetValue()
+local FILE_MODULE_TEMPLATE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
+local FILE_MODULE_TEMPLATE_MK_NOARCH = config.project.path.module_template_makefile_noarch_file:GetValue()
+
+local DIR_CONFIG  = config.project.path.config_dir:GetValue()
+local DIR_DRIVERS = config.project.path.drivers_dir:GetValue()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -159,6 +169,15 @@ function event_button_create_clicked(event)
         local module_author      = ui.TextCtrl_module_author:GetValue()
         local author_email       = ui.TextCtrl_author_email:GetValue()
 
+        local tags = {
+                {tag = "<!author!>", to = module_author},
+                {tag = "<!module_description!>", to = module_description},
+                {tag = "<!year!>", to = os.date("%Y")},
+                {tag = "<!email!>", to = author_email},
+                {tag = "<!MODULE_NAME!>", to = module_name:upper()},
+                {tag = "<!module_name!>", to = module_name:lower()},
+        }
+
         -- check if all fields are filled
         if module_name:len() == 0 or module_description:len() == 0 or module_author:len() == 0 or author_email:len() == 0 then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Fill all fields in the 'Module details'.", ui.window)
@@ -175,23 +194,53 @@ function event_button_create_clicked(event)
                 return
         end
 
-
         -- checks if module exist
-        if ct:exists(config.project.path.drivers_dir:GetValue().."/"..module_name:lower()) then
+        if ct:exists(DIR_DRIVERS.."/"..module_name:lower()) then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
                 return
         end
 
+        -- create a new folders for module's source files
+        if not noarch then
+                for _, arch in pairs(selected_arch) do
+                        if not ct:mkdir(DIR_DRIVERS.."/"..module_name:lower().."/"..arch) then
+                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
+                                return
+                        end
+                end
+        else
+                if not ct:mkdir(DIR_DRIVERS.."/"..module_name:lower()) then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
+                        return
+                end
+        end
 
-        --
-        local test = io.open("test", "r")
-        assert(test, "TEST: nil")
+        -- create a new folder for module's configuration
+        if not noarch then
+                for _, arch in pairs(selected_arch) do
+                        if not ct:mkdir(DIR_CONFIG.."/"..arch) then
+                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
+                                return
+                        end
+                end
+        else
+                if not ct:mkdir(DIR_CONFIG.."/noarch") then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
+                        return
+                end
+        end
 
-        ct:mkdir("test")
+        -- create module's flag file
+        if not noarch then
+                for _, arch in pairs(selected_arch) do
+                        if not ct:apply_template(FILE_MODULE_TEMPLATE_FLAGS, ) then
+                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Cannot create directory!", ui.window)
+                                return
+                        end
+                end
+        else
 
---         local file = io.open(config.project.config_dir:GetValue().."/"..)
-
---         ct:apply_template("testfile.c", "result.lua", {{tag = "<mytag>", to = "test"}, {tag = "<func>", to = "nowa"}})
+        end
 end
 
 

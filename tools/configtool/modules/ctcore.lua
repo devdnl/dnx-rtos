@@ -731,7 +731,7 @@ end
 
 
 --------------------------------------------------------------------------------
--- @brief  Create a new directory
+-- @brief  Create a new directory (can create an entire path)
 -- @param  name     path
 -- @return Retrun true if directory is created, otherwise false
 --------------------------------------------------------------------------------
@@ -743,7 +743,7 @@ function ct:mkdir(name)
         if ct:is_dir(name) then
                 return true
         else
-                os.execute("mkdir "..name)
+                os.execute("mkdir -p "..name)
                 return ct:is_dir(name)
         end
 end

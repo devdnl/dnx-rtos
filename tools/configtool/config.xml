@@ -144,6 +144,13 @@
             <drivers_dir>../../src/system/drivers</drivers_dir>
             <drivers_reg_file>../../src/system/drivers/driver_registration.c</drivers_reg_file>
             <drivers_main_makefile>../../src/system/drivers/Makefile</drivers_main_makefile>
+            <module_template_cfg_file>../../extra/templates/module/module_cfg.h</module_template_cfg_file>
+            <module_template_def_file>../../extra/templates/module/module_def.h</module_template_def_file>
+            <module_template_flags_file>../../extra/templates/module/module_flags.h</module_template_flags_file>
+            <module_template_ioctl_file>../../extra/templates/module/module_ioctl.h</module_template_ioctl_file>
+            <module_template_src_file>../../extra/templates/module/module.c</module_template_src_file>
+            <module_template_makefile_arch_file>../../extra/templates/module/Makefile_arch</module_template_makefile_arch_file>
+            <module_template_makefile_noarch_file>../../extra/templates/module/Makefile_noarch</module_template_makefile_noarch_file>
         </path>
     </project>
 

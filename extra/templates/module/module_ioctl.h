@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    <!file_name!>_ioctl.h
+@file    <!module_name!>_ioctl.h
 
 @author  <!author!>
 
