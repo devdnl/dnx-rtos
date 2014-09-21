@@ -207,7 +207,7 @@ function event_button_create_clicked(event)
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
                 return
         else
-                io.remove("_test_")
+                os.remove("_test_")
         end
 
         -- create a new folders and files for module
@@ -223,6 +223,8 @@ function event_button_create_clicked(event)
                         ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_ioctl.h", tags)
                         ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name..".c", tags)
 
+                        ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/"..arch.."/"..module_name..".lua", tags)
+
                         -- makefiles..
 
                 end
@@ -232,10 +234,12 @@ function event_button_create_clicked(event)
                 ct:mkdir(DIR_CONFIGTOOL_ARCH.."/noarch")
 
                 ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/noarch/"..module_name.."_flags.h", tags)
-                ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_cfg.h")
-                ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_def.h")
-                ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..module_name.."_ioctl.h")
-                ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..module_name..".c")
+                ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_cfg.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_DEF,   DIR_DRIVERS.."/"..module_name.."/"..module_name.."_def.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_IOCTL, DIR_DRIVERS.."/"..module_name.."/"..module_name.."_ioctl.h", tags)
+                ct:apply_template(FILE_TEMPLATE_MODULE_SRC,   DIR_DRIVERS.."/"..module_name.."/"..module_name..".c", tags)
+
+                ct:apply_template(FILE_TEMPLATE_CONFIGTOOL_FORM, DIR_CONFIGTOOL_ARCH.."/noarch"..module_name..".lua", tags)
         end
 end
 
