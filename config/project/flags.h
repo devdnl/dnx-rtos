@@ -38,11 +38,12 @@
 
 /* current CPU architecture */
 #define __CPU_ARCH__ stm32f1
+#define noarch __CPU_ARCH__ /* always valid */
 
-/* include noarch files */
-#include "../noarch/tty_flags.h"
-
-/* include specific CPU architecture files */
+/* include modules flags divided to architecture */
+#if (__CPU_ARCH__ == noarch)
+#       include "../noarch/tty_flags.h"
+#endif
 #if (__CPU_ARCH__ == stm32f1)
 #       include "../stm32f1/cpu.h"
 #       include "../stm32f1/crc_flags.h"
