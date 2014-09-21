@@ -14,10 +14,12 @@
             <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>PROJECT_CPU_ARCH</key></PROJECT_CPU_ARCH>
             <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>PROJECT_TOOLCHAIN</key></PROJECT_TOOLCHAIN>
             <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+            <_FS_MK_ENABLE_FLAGS_></_FS_MK_ENABLE_FLAGS_>
             <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>ENABLE_LFS</key></ENABLE_LFS_MK>
             <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>ENABLE_DEVFS</key></ENABLE_DEVFS_MK>
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>ENABLE_PROCFS</key></ENABLE_PROCFS_MK>
             <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>ENABLE_FATFS</key></ENABLE_FATFS_MK>
+            <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>ENABLE_GPIO</key></ENABLE_GPIO_MK>
             <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>ENABLE_AFIO</key></ENABLE_AFIO_MK>
             <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>ENABLE_CRC</key></ENABLE_CRC_MK>
@@ -71,12 +73,14 @@
             <NETWORK_MAC_ADDR_4><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
             <NETWORK_MAC_ADDR_5><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
             <NETWORK_ETHIF_FILE><path>../../config/project/flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+            <_FS_ENABLE_FLAGS_></_FS_ENABLE_FLAGS_>
             <ENABLE_DEVFS_H><path>../../config/project/flags.h</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_H>
             <ENABLE_LFS_H><path>../../config/project/flags.h</path><key>__ENABLE_LFS__</key></ENABLE_LFS_H>
             <ENABLE_FATFS_H><path>../../config/project/flags.h</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_H>
             <FATFS_LFN_ENABLE><path>../../config/project/flags.h</path><key>__FATFS_LFN_ENABLE__</key></FATFS_LFN_ENABLE>
             <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
             <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
+            <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
             <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
             <ENABLE_CRC_H><path>../../config/project/flags.h</path><key>__ENABLE_CRC__</key></ENABLE_CRC_H>
@@ -129,6 +133,7 @@
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
+            <xml_config_file>./config.xml</xml_config_file>
         </path>
     </project>
 
