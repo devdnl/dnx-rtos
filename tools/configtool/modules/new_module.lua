@@ -262,15 +262,6 @@ function event_button_create_clicked(event)
                 end
         end
 
-        -- add module to the configtool's xml configuration
-        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
-        if n then
-                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
-        else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
-                return
-        end
-
         n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_ENABLE_FLAGS_>%s*</_DRV_ENABLE_FLAGS_>")
         if n then
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_H><path>"..FILE_PROJECT_FLAGS.."</path><key>__ENABLE_"..module_name:upper().."__</key></ENABLE_"..module_name:upper().."_H>")
@@ -302,7 +293,7 @@ function event_button_create_clicked(event)
         -- adds enable flag in the Makefile
         n = ct:find_line(FILE_PROJECT_MAKEFILE, 1, "# modules enable flags")
         if n then
-                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."__=__NO__")
+                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."=__NO__")
         else
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Error code: 7.", ui.window)
                 return
@@ -317,14 +308,39 @@ function event_button_create_clicked(event)
         end
 
 
+        -- add module to the configtool's xml configuration
+        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
+        if n then
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
+                return
+        end
+
+
+        -- assign modules to microcontrollers in the xml file
+        for _, cpu_name in pairs(selected_cpu) do
+                n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<cpu>%s*<name>"..cpu_name.."</name>")
+                if n == 0 then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 8.", ui.window)
+                        return
+                end
+
+                n = ct:find_line(FILE_XML_CONFIG, n, "%s*</peripherals>")
+                if n == 0 then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 9.", ui.window)
+                        return
+                end
+
+                ct:insert_line(FILE_XML_CONFIG, n, "                        <"..module_name:upper().."></"..module_name:upper()..">")
+        end
+
+
         -- add module to drivers' main makefile
         ct:insert_line(FILE_DRIVERS_MAIN_MAKEFILE, 2, "include $(DRV_LOC)/"..module_name.."/Makefile")
 
 
         -- register module in the system
-
-
-        -- assign modules to microcontrollers in the xml file
 
 
         -- finished
