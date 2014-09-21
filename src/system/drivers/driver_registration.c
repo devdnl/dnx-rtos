@@ -95,7 +95,9 @@
 #       endif
 #endif
 #if (__ENABLE_TTY__)
-#       include "noarch/tty_def.h"
+#       ifdef ARCH_noarch
+#               include "noarch/tty_def.h"
+#       endif
 #endif
 
 /**
