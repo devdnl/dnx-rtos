@@ -54,6 +54,7 @@ local FILE_TEMPLATE_CONFIGTOOL_FORM  = config.project.path.configtool_template_f
 local FILE_PROJECT_FLAGS             = config.project.path.project_flags_file:GetValue()
 local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetValue()
 local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
+local FILE_SYS_IOCTL                 = config.project.path.sys_ioctl_file:GetValue()
 
 local DIR_CONFIG          = config.project.path.config_dir:GetValue()
 local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
@@ -172,6 +173,7 @@ function event_button_create_clicked(event)
         local module_description = ui.TextCtrl_module_description:GetValue()
         local module_author      = ui.TextCtrl_module_author:GetValue()
         local author_email       = ui.TextCtrl_author_email:GetValue()
+        local n
 
         if ui.CheckBox_noarch:IsChecked() then
                 selected_arch = {"noarch"}
@@ -240,7 +242,7 @@ function event_button_create_clicked(event)
 
 
                 -- include module in the system
-                local n = ct:find_line(FILE_PROJECT_FLAGS, 1, "#.?.?if %(__CPU_ARCH__%s*==%s*"..arch.."%)")
+                n = ct:find_line(FILE_PROJECT_FLAGS, 1, "#.?.?if %(__CPU_ARCH__%s*==%s*"..arch.."%)")
                 if n then
                         ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#       include \"../"..arch.."/"..module_name.."_flags.h\"")
                 else
@@ -250,6 +252,13 @@ function event_button_create_clicked(event)
 
 
                 -- add module to ioctl requests
+                n = ct:find_line(FILE_SYS_IOCTL, 1, "#ifdef%s+ARCH_"..arch)
+                if n then
+                        ct:insert_line(FILE_SYS_IOCTL, n + 1, "#       include \""..arch.."/"..module_name.."_ioctl.h\"")
+                else
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file.", ui.window)
+                        return
+                end
 
                 -- add module to the configtool's xml configuration
         end
@@ -288,6 +297,9 @@ function event_button_create_clicked(event)
 
 
         -- register module in the system
+
+
+        -- assign modules to microcontrollers in the xml file
 
 
         -- finished
