@@ -122,6 +122,14 @@ end
 -- PUBLIC FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
+-- @brief  Function loads configuration file (xml)
+-- @return None
+--------------------------------------------------------------------------------
+function ct:reload_config_file()
+        config = xml:loadFile("config.xml").config
+end
+
+--------------------------------------------------------------------------------
 -- @brief  Function shows error dialog. Function kills entire wizard.
 -- @param  title        window title
 -- @param  caption      window caption
