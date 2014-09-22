@@ -37,8 +37,10 @@ extern "C" {
 #include "core/ioctl_macros.h"
 #include "core/vfs.h"
 
-#include "tty_ioctl.h"
-
+/* ioctl requests */
+#ifdef ARCH_noarch
+#       include "noarch/tty_ioctl.h"
+#endif
 #ifdef ARCH_stm32f1
 #       include "stm32f1/afio_ioctl.h"
 #       include "stm32f1/crc_ioctl.h"
@@ -51,8 +53,6 @@ extern "C" {
 #       include "stm32f1/usb_ioctl.h"
 #       include "stm32f1/irq_ioctl.h"
 #       include "stm32f1/i2c_ioctl.h"
-#else
-#       error Unknown architecture!
 #endif
 
 /*==============================================================================

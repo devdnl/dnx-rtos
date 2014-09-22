@@ -60,33 +60,33 @@ function about:create_window(parent)
                 ui.BoxSizer2 = wx.wxFlexGridSizer(3, 1, 0, 0)
 
                 ui.BoxSizer2:AddSpacer(10)
-                
+
                 ui.StaticText1 = wx.wxStaticText(this, wx.wxID_ANY, "dnx RTOS Configuration Tool")
                 ui.StaticText1:SetFont(wx.wxFont(14, wx.wxDEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxBOLD, false, "", wx.wxFONTENCODING_DEFAULT))
                 ui.BoxSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.BoxSizer2:AddSpacer(20)
-                
-                ui.StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "dnx Configuration Tool is a tool that helps users to configure dnx RTOS project. "..
+
+                ui.StaticText2 = wx.wxStaticText(this, wx.wxID_ANY, "The dnx Configuration Tool is a tool that helps users to configure dnx RTOS project. "..
                                                                      "From tool a particular microcontroller's modules can be configured more easily "..
                                                                      "than by editing source file flags. The application takes care of disabling unused modules "..
                                                                      "for the selected microcontroller and resolves some dependencies between configuration flags.",
                                                                      wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxALIGN_CENTER)
                 ui.StaticText2:Wrap(400)
                 ui.BoxSizer2:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                
+
                 ui.BoxSizer2:AddSpacer(20)
 
                 ui.StaticText3 = wx.wxStaticText(this, wx.wxID_ANY, "© 2014 Daniel Zorychta")
                 ui.BoxSizer2:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                
+
                 ui.BoxSizer2:AddSpacer(20)
-                
+
                 ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "http://www.dnx-rtos.org/")
                 ui.BoxSizer2:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 ui.BoxSizer2:AddSpacer(20)
-                
+
                 ui.StaticText5 = wx.wxStaticText(this, wx.wxID_ANY, "This program is free software; you can redistribute it and/or modify\n"..
                                                                     "it under the terms of the GNU General Public License as published by\n"..
                                                                     "the  Free Software  Foundation;  either version 2 of the License, or\n"..
@@ -100,10 +100,10 @@ function about:create_window(parent)
                                                                     "You  should  have received a copy  of the GNU General Public License\n"..
                                                                     "along  with  this  program;  if not,  write  to  the  Free  Software\n"..
                                                                     "Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.")
-                
-         
+
+
                 ui.BoxSizer2:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            
+
                 ui.BoxSizer1:Add(ui.BoxSizer2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_VERTICAL,wx.wxALIGN_CENTER_HORIZONTAL), 0)
 
                 this:SetSizer(ui.BoxSizer1)

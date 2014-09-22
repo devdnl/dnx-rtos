@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    genericmod.c
+@file    <!module_name!>.c
 
-@author  Author
+@author  <!author!>
 
-@brief   This driver support generic device.
+@brief   <!module_description!>
 
-@note    Copyright (C) year  Author <email>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@
 ==============================================================================*/
 #include "core/module.h"
 #include <dnx/misc.h>
-#include "genericmod_cfg.h"
-#include "genericmod_def.h"
-#include "genericmod_ioctl.h"
+#include "<!cpu_arch!>/<!module_name!>_cfg.h"
+#include "<!cpu_arch!>/<!module_name!>_def.h"
+#include "<!cpu_arch!>/<!module_name!>_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -48,6 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+MODULE_NAME(<!MODULE_NAME!>);
 
 /*==============================================================================
   Exported objects
@@ -73,7 +74,7 @@
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_INIT(GENERICMOD, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(<!MODULE_NAME!>, void **device_handle, u8_t major, u8_t minor)
 {
         return STD_RET_OK;
 }
@@ -88,7 +89,7 @@ API_MOD_INIT(GENERICMOD, void **device_handle, u8_t major, u8_t minor)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_RELEASE(GENERICMOD, void *device_handle)
+API_MOD_RELEASE(<!MODULE_NAME!>, void *device_handle)
 {
         return STD_RET_OK;
 }
@@ -104,7 +105,7 @@ API_MOD_RELEASE(GENERICMOD, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(GENERICMOD, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, vfs_open_flags_t flags)
 {
         return STD_RET_OK;
 }
@@ -120,7 +121,7 @@ API_MOD_OPEN(GENERICMOD, void *device_handle, vfs_open_flags_t flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force)
+API_MOD_CLOSE(<!MODULE_NAME!>, void *device_handle, bool force)
 {
         return STD_RET_OK;
 }
@@ -138,7 +139,7 @@ API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(<!MODULE_NAME!>, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -156,7 +157,7 @@ API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, fp
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(<!MODULE_NAME!>, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -173,7 +174,7 @@ API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, fpos_t *f
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(<!MODULE_NAME!>, void *device_handle, int request, void *arg)
 {
         switch (request) {
         default:
@@ -194,7 +195,7 @@ API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_FLUSH(GENERICMOD, void *device_handle)
+API_MOD_FLUSH(<!MODULE_NAME!>, void *device_handle)
 {
         return STD_RET_OK;
 }
@@ -210,7 +211,7 @@ API_MOD_FLUSH(GENERICMOD, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_STAT(GENERICMOD, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(<!MODULE_NAME!>, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         device_stat->st_size  = 0;
         device_stat->st_major = 0;

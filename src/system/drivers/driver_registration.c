@@ -34,6 +34,7 @@
 /*==============================================================================
   Modules include files
 ==============================================================================*/
+/* CT: module definition includes */
 #if (__ENABLE_GPIO__)
 #       ifdef ARCH_stm32f1
 #               include "stm32f1/gpio_def.h"
@@ -95,7 +96,9 @@
 #       endif
 #endif
 #if (__ENABLE_TTY__)
-#       include "tty_def.h"
+#       ifdef ARCH_noarch
+#               include "noarch/tty_def.h"
+#       endif
 #endif
 
 /**
@@ -105,6 +108,7 @@
 /*==============================================================================
   Modules interfaces
 ==============================================================================*/
+/* CT: import of module interface */
 #if (__ENABLE_GPIO__)
         _IMPORT_MODULE_INTERFACE(GPIO);
 #endif

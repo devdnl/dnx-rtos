@@ -39,6 +39,7 @@ config = xml:loadFile("config.xml").config
 
 -- shared module variables
 ct = {}
+ct.fs = {}
 ct.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
 ct.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
 ct.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
@@ -122,13 +123,22 @@ end
 -- PUBLIC FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
+-- @brief  Function loads configuration file (xml)
+-- @return None
+--------------------------------------------------------------------------------
+function ct:reload_config_file()
+        config = xml:loadFile("config.xml").config
+end
+
+--------------------------------------------------------------------------------
 -- @brief  Function shows error dialog. Function kills entire wizard.
 -- @param  title        window title
 -- @param  caption      window caption
+-- @param  parent       parent window
 -- @return None
 --------------------------------------------------------------------------------
-function ct:show_error_msg(title, caption)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
+function ct:show_error_msg(title, caption, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(wx.wxOK, wx.wxICON_ERROR))
         dialog:ShowModal()
         wx.wxGetApp():ExitMainLoop()
         os.exit(0)
@@ -139,10 +149,11 @@ end
 -- @brief  Function shows info dialog
 -- @param  title        window title
 -- @param  caption      window caption
+-- @param  parent       parent window
 -- @return None
 --------------------------------------------------------------------------------
-function ct:show_info_msg(title, caption)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
+function ct:show_info_msg(title, caption, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(wx.wxOK, wx.wxICON_INFORMATION))
         dialog:ShowModal()
 end
 
@@ -152,10 +163,11 @@ end
 -- @param  title        window title
 -- @param  caption      window caption
 -- @param  buttons      wxWidgets button definitions to show
+-- @param  parent       parent window
 -- @return Selected button
 --------------------------------------------------------------------------------
-function ct:show_question_msg(title, caption, buttons)
-        dialog = wx.wxMessageDialog(wx.NULL, caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
+function ct:show_question_msg(title, caption, buttons, parent)
+        dialog = wx.wxMessageDialog(ifs(parent, parent, wx.NULL), caption, title, bit.bor(buttons, wx.wxICON_QUESTION))
         return dialog:ShowModal()
 end
 
@@ -511,4 +523,251 @@ function ct:print_freq(freq)
         else
                 return math.round(freq/1e6, 3).." MHz"
         end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Found line by using regular expressions
+-- @param  filename     file where line will be search
+-- @param  startline    start line
+-- @param  regex        regular expression (Lua's version)
+-- @return Number of line where expression was found or 0 when not found
+--------------------------------------------------------------------------------
+function ct:find_line(filename, startline, regex)
+        assert(type(filename) == "string", "find_line(): filename is not the string type")
+        assert(type(startline) == "number", "find_line(): startline is not the number type")
+        assert(type(regex) == "string", "find_line(): regex is not the string type")
+
+        file = io.open(filename, "r")
+        assert(file, "find_line(): file does not exist")
+
+        file:seek("set", 0)
+
+        local n = 1
+
+        for line in file:lines() do
+                if line:match(regex) and n >= startline then
+                        file:close()
+                        return n
+                end
+
+                n = n + 1
+        end
+
+        file:close()
+        return 0
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Insert new line at selected position. If position does not exist then
+--         line is not placed.
+-- @param  filename     file where line will be inserted
+-- @param  lineno       line number where a new line shall be inserted
+-- @param  newline      a new line
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:insert_line(filename, lineno, newline)
+        assert(type(filename) == "string", "insert_line(): filename is not the string type")
+        assert(type(lineno) == "number", "insert_line(): lineno is not the number type")
+        assert(type(newline) == "string", "insert_line(): newline is not the string type")
+
+        file = io.open(filename, "r+")
+        assert(file, "insert_line(): file does not exist")
+
+        file:seek("set", 0)
+
+        local data = {}
+        for line in file:lines() do
+                table.insert(data, line)
+        end
+
+        if lineno > #data then
+                return false
+        else
+                table.insert(data, lineno, newline)
+        end
+
+        file:seek("set", 0)
+        for i, line in ipairs(data) do
+                file:write(line, "\n")
+        end
+
+        file:close()
+
+        return true
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected line from file
+-- @param  filename     file where line will be removed
+-- @param  lineno       number of line that will be removed
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:remove_line(filename, lineno)
+        assert(type(filename) == "string", "remove_line(): filename is not the string type")
+        assert(type(lineno) == "number", "remove_line(): lineno is not the number type")
+
+        file = io.open(filename, "r")
+        assert(file, "remove_line(): '"..filename.."' file does not exist")
+
+        file:seek("set", 0)
+
+        local data = {}
+        for line in file:lines() do
+                table.insert(data, line)
+        end
+
+        if lineno > #data then
+                return false
+        else
+                table.remove(data, lineno)
+        end
+
+        file:close()
+
+        file = io.open(filename, "w")
+        assert(file, "remove_line(): '"..filename.."' no permissions to write file")
+
+        file:seek("set", 0)
+        for i, line in ipairs(data) do
+                file:write(line, "\n")
+        end
+
+        file:close()
+
+        return true
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected line from file
+-- @param  template_path        path to the template file
+-- @param  destination_path     path where modified template will be saved
+-- @param  replace_tags         tag translation table {{.tag = "", .to = ""}, ...}
+-- @return Number of repleaced tags
+--------------------------------------------------------------------------------
+function ct:apply_template(template_path, destination_path, replace_tags)
+        assert(type(template_path) == "string", "apply_template(): template_path is not the string type")
+        assert(type(destination_path) == "string", "apply_template(): destination_path is not the string type")
+        assert(type(replace_tags) == "table", "apply_template(): replace_tags is not the table type")
+
+        local n = 0
+
+        template = io.open(template_path, "r")
+        if not template then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..template_path.."' does not exist.\n"..debug.traceback())
+                return n
+        end
+
+        dest = io.open(destination_path, "w")
+        if not dest then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
+                template:close()
+                return n
+        end
+
+        template:seek("set", 0)
+        dest:seek("set", 0)
+
+        for line in template:lines() do
+                for _, t in pairs(replace_tags) do
+                        line = line:gsub(t.tag, t.to)
+                end
+
+                dest:write(line, "\n")
+        end
+
+        template:close()
+        dest:close()
+
+        return n
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if file or directory exists
+-- @param  name     file/directory name
+-- @return Retrun true if file/dir exists, otherwise false
+--------------------------------------------------------------------------------
+function ct.fs:exists(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        return os.rename(name, name) and true or false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if path is a file
+-- @param  name     path
+-- @return Retrun true if path is file, otherwise false
+--------------------------------------------------------------------------------
+function ct.fs:is_file(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        if not ct.fs:exists(name) then
+                return false
+        end
+
+        local f = io.open(name, "r")
+        if f then
+                if f:read(1) then
+                        f:close()
+                        return true
+                else
+                        f:close()
+                        return false
+                end
+        end
+
+        return false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Check if path is a directory
+-- @param  name     path
+-- @return Retrun true if path is directory, otherwise false
+--------------------------------------------------------------------------------
+function ct.fs:is_dir(name)
+        return (ct.fs:exists(name) and not ct.fs:is_file(name))
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Create a new directory (can create an entire path)
+-- @param  name     path
+-- @return Retrun true if directory is created, otherwise false
+--------------------------------------------------------------------------------
+function ct.fs:mkdir(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        if ct.fs:is_dir(name) then
+                return true
+        else
+                os.execute("bash -c '/bin/mkdir -p "..name.."'")
+                return ct.fs:is_dir(name)
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected file or directory
+-- @param  name     path
+-- @return Retrun true if object is removed, otherwise false
+--------------------------------------------------------------------------------
+function ct.fs:remove(name)
+        if type(name)~="string" then
+                return false
+        end
+
+        os.execute("bash -c '/bin/rm -rf "..name.."'")
+        return true
 end
