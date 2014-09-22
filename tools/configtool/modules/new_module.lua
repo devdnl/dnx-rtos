@@ -208,17 +208,17 @@ function event_button_create_clicked(event)
         end
 
         -- checks if module exist
-        if ct:exists(DIR_DRIVERS.."/"..module_name) then
+        if ct.fs:exists(DIR_DRIVERS.."/"..module_name) then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
                 return
         end
 
         -- checks if project is not read only
-        if not ct:mkdir("_test_") then
+        if not ct.fs:mkdir("_test_") then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
                 return
         else
-                ct:remove("_test_")
+                ct.fs:remove("_test_")
         end
 
         -- add module to the system for selected architectures
@@ -227,9 +227,9 @@ function event_button_create_clicked(event)
 
 
                 -- create new folders
-                ct:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
-                ct:mkdir(DIR_CONFIG.."/"..arch)
-                ct:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
+                ct.fs:mkdir(DIR_DRIVERS.."/"..module_name.."/"..arch)
+                ct.fs:mkdir(DIR_CONFIG.."/"..arch)
+                ct.fs:mkdir(DIR_CONFIGTOOL_ARCH.."/"..arch)
 
                 ct:apply_template(FILE_TEMPLATE_MODULE_FLAGS, DIR_CONFIG.."/"..arch.."/"..module_name.."_flags.h", tags)
                 ct:apply_template(FILE_TEMPLATE_MODULE_CFG,   DIR_DRIVERS.."/"..module_name.."/"..arch.."/"..module_name.."_cfg.h", tags)

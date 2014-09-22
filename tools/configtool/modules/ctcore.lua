@@ -39,6 +39,7 @@ config = xml:loadFile("config.xml").config
 
 -- shared module variables
 ct = {}
+ct.fs = {}
 ct.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
 ct.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
 ct.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
@@ -690,7 +691,7 @@ end
 -- @param  name     file/directory name
 -- @return Retrun true if file/dir exists, otherwise false
 --------------------------------------------------------------------------------
-function ct:exists(name)
+function ct.fs:exists(name)
         if type(name)~="string" then
                 return false
         end
@@ -704,12 +705,12 @@ end
 -- @param  name     path
 -- @return Retrun true if path is file, otherwise false
 --------------------------------------------------------------------------------
-function ct:is_file(name)
+function ct.fs:is_file(name)
         if type(name)~="string" then
                 return false
         end
 
-        if not ct:exists(name) then
+        if not ct.fs:exists(name) then
                 return false
         end
 
@@ -733,8 +734,8 @@ end
 -- @param  name     path
 -- @return Retrun true if path is directory, otherwise false
 --------------------------------------------------------------------------------
-function ct:is_dir(name)
-        return (ct:exists(name) and not ct:is_file(name))
+function ct.fs:is_dir(name)
+        return (ct.fs:exists(name) and not ct.fs:is_file(name))
 end
 
 
@@ -743,16 +744,25 @@ end
 -- @param  name     path
 -- @return Retrun true if directory is created, otherwise false
 --------------------------------------------------------------------------------
-function ct:mkdir(name)
+function ct.fs:mkdir(name)
+        print("mkdir")
+
         if type(name)~="string" then
+                print("not string", name)
                 return false
         end
 
-        if ct:is_dir(name) then
+        if ct.fs:is_dir(name) then
+
+                print("dir exist")
+
                 return true
         else
                 os.execute("bash -c '/bin/mkdir -p "..name.."'")
-                return ct:is_dir(name)
+
+                print("after creation")
+
+                return ct.fs:is_dir(name)
         end
 end
 
@@ -762,11 +772,11 @@ end
 -- @param  name     path
 -- @return Retrun true if object is removed, otherwise false
 --------------------------------------------------------------------------------
-function ct:remove(name)
+function ct.fs:remove(name)
         if type(name)~="string" then
                 return false
         end
-        
+
         os.execute("bash -c '/bin/rm -rf "..name.."'")
         return true
 end
