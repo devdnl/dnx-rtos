@@ -346,8 +346,6 @@ function event_button_create_clicked(event)
         if n then
                 local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
 
-                table.insert(selected_arch, "stm32f2")
-
                 for _, arch in pairs(selected_arch) do
                         entry = entry.."#       ifdef ARCH_"..arch.."\n"
                         entry = entry.."#               include \""..arch.."/"..module_name.."_def.h\"\n"
@@ -355,6 +353,30 @@ function event_button_create_clicked(event)
                 end
 
                 entry = entry.."#endif"
+
+                ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                return
+        end
+
+        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*/%* CT: import of module interface %*/")
+        if n then
+                local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
+                entry = entry.."        _IMPORT_MODULE_INTERFACE("..module_name:upper()..");\n"
+                entry = entry.."#endif"
+
+                ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                return
+        end
+
+        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+char%s+%*const%s+_regdrv_module_name[]%s+=%s+{")
+        if n then
+                local entry = "        #if (__ENABLE_"..module_name:upper().."__)\n"
+                entry = entry.."        _MODULE_NAME("..module_name:upper().."),\n"
+                entry = entry.."        #endif"
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
