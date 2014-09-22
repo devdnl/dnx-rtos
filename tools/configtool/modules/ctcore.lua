@@ -745,23 +745,14 @@ end
 -- @return Retrun true if directory is created, otherwise false
 --------------------------------------------------------------------------------
 function ct.fs:mkdir(name)
-        print("mkdir")
-
         if type(name)~="string" then
-                print("not string", name)
                 return false
         end
 
         if ct.fs:is_dir(name) then
-
-                print("dir exist")
-
                 return true
         else
                 os.execute("bash -c '/bin/mkdir -p "..name.."'")
-
-                print("after creation")
-
                 return ct.fs:is_dir(name)
         end
 end

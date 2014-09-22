@@ -56,6 +56,7 @@ local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetV
 local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
 local FILE_SYS_IOCTL                 = config.project.path.sys_ioctl_file:GetValue()
 local FILE_XML_CONFIG                = config.project.path.xml_config_file:GetValue()
+local FILE_DRIVER_REGISTARTION       = config.project.path.drivers_reg_file:GetValue()
 
 local DIR_CONFIG          = config.project.path.config_dir:GetValue()
 local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
@@ -340,7 +341,26 @@ function event_button_create_clicked(event)
         ct:insert_line(FILE_DRIVERS_MAIN_MAKEFILE, 2, "include $(DRV_LOC)/"..module_name.."/Makefile")
 
 
-        -- register module in the system
+        -- registration of module in the system
+        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*/%* CT: module definition includes %*/")
+        if n then
+                local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
+
+                table.insert(selected_arch, "stm32f2")
+
+                for _, arch in pairs(selected_arch) do
+                        entry = entry.."#       ifdef ARCH_"..arch.."\n"
+                        entry = entry.."#               include \""..arch.."/"..module_name.."_def.h\"\n"
+                        entry = entry.."#       endif\n"
+                end
+
+                entry = entry.."#endif"
+
+                ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                return
+        end
 
 
         ct:reload_config_file()
