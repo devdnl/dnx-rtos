@@ -347,9 +347,9 @@ function event_button_create_clicked(event)
                 local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
 
                 for _, arch in pairs(selected_arch) do
-                        entry = entry.."#       ifdef ARCH_"..arch.."\n"
-                        entry = entry.."#               include \""..arch.."/"..module_name.."_def.h\"\n"
-                        entry = entry.."#       endif\n"
+                        entry = entry.."#       ifdef ARCH_"..arch.."\n"..
+                                       "#               include \""..arch.."/"..module_name.."_def.h\"\n"..
+                                       "#       endif\n"
                 end
 
                 entry = entry.."#endif"
@@ -362,9 +362,9 @@ function event_button_create_clicked(event)
 
         n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*/%* CT: import of module interface %*/")
         if n then
-                local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
-                entry = entry.."        _IMPORT_MODULE_INTERFACE("..module_name:upper()..");\n"
-                entry = entry.."#endif"
+                local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"..
+                              "        _IMPORT_MODULE_INTERFACE("..module_name:upper()..");\n"..
+                              "#endif"
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
@@ -372,11 +372,11 @@ function event_button_create_clicked(event)
                 return
         end
 
-        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+char%s+%*const%s+_regdrv_module_name[]%s+=%s+{")
+        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+char%s+%*const%s+_regdrv_module_name%[%]%s*=%s*{")
         if n then
-                local entry = "        #if (__ENABLE_"..module_name:upper().."__)\n"
-                entry = entry.."        _MODULE_NAME("..module_name:upper().."),\n"
-                entry = entry.."        #endif"
+                local entry = "        #if (__ENABLE_"..module_name:upper().."__)\n"..
+                              "        _MODULE_NAME("..module_name:upper().."),\n"..
+                              "        #endif"
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
@@ -384,6 +384,18 @@ function event_button_create_clicked(event)
                 return
         end
 
+        n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+struct%s+_driver_entry%s+_regdrv_driver_table%[%]%s*=%s*{")
+        if n then
+                local entry  = "        /* "..module_name:upper().." */\n"..
+                               "        #if (__ENABLE_"..module_name:upper().."__)\n"..
+                               "        _DRIVER_INTERFACE("..module_name:upper()..", \""..module_name.."\", _"..module_name:upper().."_MAJOR_NUMBER, _"..module_name:upper().."_MINOR_NUMBER),\n"..
+                               "        #endif"
+
+                ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
+        else
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                return
+        end
 
         ct:reload_config_file()
 
