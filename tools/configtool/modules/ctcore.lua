@@ -751,7 +751,22 @@ function ct:mkdir(name)
         if ct:is_dir(name) then
                 return true
         else
-                os.execute("mkdir -p "..name)
+                os.execute("bash -c '/bin/mkdir -p "..name.."'")
                 return ct:is_dir(name)
         end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected file or directory
+-- @param  name     path
+-- @return Retrun true if object is removed, otherwise false
+--------------------------------------------------------------------------------
+function ct:remove(name)
+        if type(name)~="string" then
+                return false
+        end
+        
+        os.execute("bash -c '/bin/rm -rf "..name.."'")
+        return true
 end

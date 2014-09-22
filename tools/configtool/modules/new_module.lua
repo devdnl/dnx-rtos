@@ -209,16 +209,16 @@ function event_button_create_clicked(event)
 
         -- checks if module exist
         if ct:exists(DIR_DRIVERS.."/"..module_name) then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module already exists in the system.", ui.window)
                 return
         end
 
         -- checks if project is not read only
         if not ct:mkdir("_test_") then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
                 return
         else
-                os.remove("_test_")
+                ct:remove("_test_")
         end
 
         -- add module to the system for selected architectures
