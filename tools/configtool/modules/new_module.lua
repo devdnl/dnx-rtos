@@ -223,6 +223,12 @@ function event_button_create_clicked(event)
         end
 
         -- add module to the system for selected architectures
+        local progress = wx.wxProgressDialog("Adding module", "Create module's folders and basic files...", 13 + #selected_cpu, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+        p = 0 local function pulse() p = p + 1 return p end
+        progress:SetMinSize(wx.wxSize(300, 100))
+        progress:Update(0)
+        progress:Centre()
+
         for _, arch in pairs(selected_arch) do
                 tags[1] = {tag = "<!cpu_arch!>", to = arch}
 
@@ -248,6 +254,7 @@ function event_button_create_clicked(event)
                 if n then
                         ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#       include \"../"..arch.."/"..module_name.."_flags.h\"")
                 else
+                        progress:Destroy()
                         ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 1.", ui.window)
                         return
                 end
@@ -258,50 +265,75 @@ function event_button_create_clicked(event)
                 if n then
                         ct:insert_line(FILE_SYS_IOCTL, n + 1, "#       include \""..arch.."/"..module_name.."_ioctl.h\"")
                 else
+                        progress:Destroy()
                         ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file. Error code: 2.", ui.window)
                         return
                 end
         end
 
+        -- add enable flags to xml configuration
+        progress:Update(pulse(), "Add enable keys to the xml configuration...")
         n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_ENABLE_FLAGS_>%s*</_DRV_ENABLE_FLAGS_>")
         if n then
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_H><path>"..FILE_PROJECT_FLAGS.."</path><key>__ENABLE_"..module_name:upper().."__</key></ENABLE_"..module_name:upper().."_H>")
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 4.", ui.window)
                 return
         end
 
+
+        -- add module to the configtool's xml configuration
+        progress:Update(pulse())
+        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
+        if n then
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
+        else
+                progress:Destroy()
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
+                return
+        end
+
+
+        -- add module description to xml configuration
+        progress:Update(pulse(), "Add module description to the xml configuration...")
         n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<modules>")
         if n then
                 local noarchval = ifs(selected_arch[1] == "noarch", "true", "false")
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <module noarch=\""..noarchval.."\"><name>"..module_name:upper().."</name><description>"..module_description.."</description></module>")
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 5.", ui.window)
                 return
         end
 
 
         -- adds enable flag in the flags.h file
+        progress:Update(pulse(), "Update flags.h file to new module...")
         n = ct:find_line(FILE_PROJECT_FLAGS, 1, "/%* modules %*/")
         if n then
                 ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ __NO__")
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 6.", ui.window)
                 return
         end
 
 
         -- adds enable flag in the Makefile
+        progress:Update(pulse(), "Update project's Makefile to new module...")
         n = ct:find_line(FILE_PROJECT_MAKEFILE, 1, "# modules enable flags")
         if n then
                 ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."=__NO__")
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Error code: 7.", ui.window)
                 return
         end
 
 
         -- add module makefile
+        progress:Update(pulse(), "Add module's Makefile from template...")
         if selected_arch[1] == "noarch" then
                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_NOARCH, DIR_DRIVERS.."/"..module_name.."/Makefile", tags)
         else
@@ -309,26 +341,20 @@ function event_button_create_clicked(event)
         end
 
 
-        -- add module to the configtool's xml configuration
-        n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
-        if n then
-                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
-        else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
-                return
-        end
-
-
         -- assign modules to microcontrollers in the xml file
         for _, cpu_name in pairs(selected_cpu) do
+                progress:Update(pulse(), "Assigning module to "..cpu_name.."...")
+
                 n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<cpu>%s*<name>"..cpu_name.."</name>")
                 if n == 0 then
+                        progress:Destroy()
                         ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 8.", ui.window)
                         return
                 end
 
                 n = ct:find_line(FILE_XML_CONFIG, n, "%s*</peripherals>")
                 if n == 0 then
+                        progress:Destroy()
                         ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 9.", ui.window)
                         return
                 end
@@ -338,10 +364,12 @@ function event_button_create_clicked(event)
 
 
         -- add module to drivers' main makefile
+        progress:Update(pulse(), "Add module to driver's main Makefile...")
         ct:insert_line(FILE_DRIVERS_MAIN_MAKEFILE, 2, "include $(DRV_LOC)/"..module_name.."/Makefile")
 
 
         -- registration of module in the system
+        progress:Update(pulse(), "Register module in the system register...")
         n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*/%* CT: module definition includes %*/")
         if n then
                 local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"
@@ -356,10 +384,12 @@ function event_button_create_clicked(event)
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
                 return
         end
 
+        progress:Update(pulse())
         n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*/%* CT: import of module interface %*/")
         if n then
                 local entry = "#if (__ENABLE_"..module_name:upper().."__)\n"..
@@ -368,10 +398,12 @@ function event_button_create_clicked(event)
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
                 return
         end
 
+        progress:Update(pulse())
         n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+char%s+%*const%s+_regdrv_module_name%[%]%s*=%s*{")
         if n then
                 local entry = "        #if (__ENABLE_"..module_name:upper().."__)\n"..
@@ -380,27 +412,35 @@ function event_button_create_clicked(event)
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
                 return
         end
 
+        progress:Update(pulse())
         n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, "%s*const%s+struct%s+_driver_entry%s+_regdrv_driver_table%[%]%s*=%s*{")
         if n then
                 local entry  = "        /* "..module_name:upper().." */\n"..
                                "        #if (__ENABLE_"..module_name:upper().."__)\n"..
                                "        _DRIVER_INTERFACE("..module_name:upper()..", \""..module_name.."\", _"..module_name:upper().."_MAJOR_NUMBER, _"..module_name:upper().."_MINOR_NUMBER),\n"..
-                               "        #endif"
+                               "        #endif\n"
 
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
+                progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
                 return
         end
 
+
+        -- reload configuration
+        progress:Update(pulse(), "Reload configuration...")
         ct:reload_config_file()
 
 
         -- finished
+        progress:Update(pulse())
+        progress:Destroy()
         ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module added successfully.", ui.window)
 end
 

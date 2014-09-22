@@ -39,8 +39,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _<!MODULE_NAME!>_MAJOR               0
-#define _<!MODULE_NAME!>_MINOR               0
+#define _<!MODULE_NAME!>_MAJOR_NUMBER               0
+#define _<!MODULE_NAME!>_MINOR_NUMBER               0
 
 /*==============================================================================
   Exported object types
