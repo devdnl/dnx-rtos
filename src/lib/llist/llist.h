@@ -1,35 +1,86 @@
-#ifndef _List_H_
-#define _List_H_
+/*=========================================================================*//**
+@file    llist.h
 
-#include <stdlib.h>
-#include <string.h>
+@author  Kamil Zorychta
+@author  Daniel Zorychta
 
-typedef struct 
-{
-    struct tPrivate *private;
-}tList;
+@brief   C implementation of linked list
 
-extern tList *newList(void);
-extern void   deleteList(tList *this);
+@note    Copyright (C) 2014 Kamil Zorychta <kamil.zorychta@gmail.com>
+         Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-extern void   List_append(tList *this, void *data);
-extern void  *List_appendAlloc(tList *this, void *data, int size);
-extern void   List_insert(tList *this, int index, void *data);
-extern void  *List_insertAlloc(tList *this, int index, void *data, int size);
-extern void   List_insertBack(tList *this, int index, void *data);
-extern void  *List_insertBackAlloc(tList *this, int index, void *data, int size);
-extern void   List_remove(tList *this, int index);
-extern void   List_removeBack(tList *this, int index);
-extern void   List_unlink(tList *this, int index);
-extern void   List_unlinkBack(tList *this, int index);
-extern void   List_clear(tList *this);
-extern void  *List_at(tList *this, int index);
-extern void  *List_atBack(tList *this, int index);
-extern int    List_count(tList *this);
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
 
-extern void  *List_begin(tList *this);
-extern void  *List_end(tList *this);
-extern void  *List_iteratorNext(tList *this);
-extern void  *List_iteratorPrev(tList *this);
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
 
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==========================================================================*/
+
+#ifndef _LLIST_H_
+#define _LLIST_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/*==============================================================================
+  Exported macros
+==============================================================================*/
+#define llist__foreach(voidp__data, llist__iterator_t__iterator)\
+        for (void *voidp__data = llist__first(llist__iterator_t__iterator); voidp__data; voidp__data = llist__iterator_next(llist__iterator_t__iterator))
+
+/*==============================================================================
+  Exported object types
+==============================================================================*/
+typedef struct llist llist_t;
+typedef struct llist_iterator llist__iterator_t;
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+extern llist_t           *llist__new(void);
+extern int                llist__delete(llist_t *this);
+extern int                llist__append(llist_t *this, const void *data);
+extern void              *llist__append_alloc(llist_t *this, const void *data, size_t size);
+extern int                llist__insert(llist_t *this, int index, const void *data);
+extern void              *llist__insert_alloc(llist_t *this, int index, const void *data, size_t size);
+extern int                llist__remove(llist_t *this, int index);
+extern int                llist__unlink(llist_t *this, int index);
+extern int                llist__clear(llist_t *this);
+extern void              *llist__at(llist_t *this, int index);
+extern int                llist__count(llist_t *this);
+extern int                llist__contains(llist_t *this, const void *data);
+extern llist__iterator_t *llist__new_iterator(llist_t *this);
+extern int                llist__delete_iterator(llist__iterator_t *iterator);
+extern void              *llist__first(llist__iterator_t *iterator);
+extern void              *llist__last(llist__iterator_t *iterator);
+extern void              *llist__iterator_next(llist__iterator_t *iterator);
+extern void              *llist__iterator_prev(llist__iterator_t *iterator);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _LLIST_H_ */
+/*==============================================================================
+  End of file
+==============================================================================*/
