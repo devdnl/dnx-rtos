@@ -42,7 +42,6 @@ extern "C" {
 #       include "noarch/tty_ioctl.h"
 #endif
 #ifdef ARCH_stm32f1
-#       include "stm32f1/cpp_ioctl.h"
 #       include "stm32f1/afio_ioctl.h"
 #       include "stm32f1/crc_ioctl.h"
 #       include "stm32f1/ethmac_ioctl.h"
