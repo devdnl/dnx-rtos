@@ -497,7 +497,7 @@ DIR *vfs_opendir(const char *path)
                         dir = NULL;
                 } else {
                         dir->magic = dir_magic_number;
-                        dir->this  = dir;
+                        dir->self  = dir;
                 }
         }
 
@@ -519,7 +519,7 @@ int vfs_closedir(DIR *dir)
                 if (dir->f_closedir) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
                                 dir->magic = 0;
-                                dir->this  = NULL;
+                                dir->self  = NULL;
                                 sysm_sysfree(dir);
                                 return 0;
                         }
@@ -1362,7 +1362,7 @@ static bool is_file_valid(FILE *file)
 static bool is_dir_valid(DIR *dir)
 {
         if (dir) {
-                if (dir->magic == dir_magic_number && dir->this == dir) {
+                if (dir->magic == dir_magic_number && dir->self == dir) {
                         return true;
                 }
         }

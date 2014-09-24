@@ -305,7 +305,7 @@ static inline int _task_get_free_stack(void)
 //==============================================================================
 static inline void _task_set_tag(task_t *taskhdl, void *tag)
 {
-        vTaskSetApplicationTaskTag(taskhdl, tag);
+        vTaskSetApplicationTaskTag(taskhdl, (pdTASK_HOOK_CODE)tag);
 }
 
 //==============================================================================
@@ -333,7 +333,7 @@ static inline void *_task_get_tag(task_t *taskhdl)
 //==============================================================================
 static inline struct _task_data *_task_get_data_of(task_t *taskhdl)
 {
-        return _task_get_tag(taskhdl);
+        return (struct _task_data *)_task_get_tag(taskhdl);
 }
 
 //==============================================================================
