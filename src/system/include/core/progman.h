@@ -44,15 +44,27 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
+#ifdef __cplusplus
+        inline void* operator new     (size_t size) {return sysm_tskmalloc(size);}
+        inline void* operator new[]   (size_t size) {return sysm_tskmalloc(size);}
+        inline void  operator delete  (void* ptr  ) {sysm_tskfree(ptr);}
+        inline void  operator delete[](void* ptr  ) {sysm_tskfree(ptr);}
+#       define _PROGMAN_CXX extern "C"
+#       define _PROGMAN_EXTERN_C extern "C"
+#else
+#       define _PROGMAN_CXX
+#       define _PROGMAN_EXTERN_C extern
+#endif
+
 #define PROGRAM_MAIN(name, stack_depth, argc, argv) \
-        const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
-        const int __prog_##name##_ss__ = stack_depth;\
-        int _program_##name##_main(argc, argv)
+        _PROGMAN_CXX const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        _PROGMAN_CXX const int __prog_##name##_ss__ = stack_depth;\
+        _PROGMAN_CXX int _program_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
-        extern const int __prog_##name##_gs__;\
-        extern const int __prog_##name##_ss__;\
-        extern int _program_##name##_main(int, char**)
+        _PROGMAN_EXTERN_C const int __prog_##name##_gs__;\
+        _PROGMAN_EXTERN_C const int __prog_##name##_ss__;\
+        _PROGMAN_EXTERN_C int _program_##name##_main(int, char**)
 
 #define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
