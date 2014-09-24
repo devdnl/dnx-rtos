@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    loop_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   Universal virtual device that allow to connect applications together
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,41 +24,28 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _LOOP_IOCTL_H_
+#define _LOOP_IOCTL_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
-#include "core/vfs.h"
-
-/* ioctl requests */
-#ifdef ARCH_noarch
-#       include "noarch/loop_ioctl.h"
-#       include "noarch/tty_ioctl.h"
-#endif
-#ifdef ARCH_stm32f1
-#       include "stm32f1/afio_ioctl.h"
-#       include "stm32f1/crc_ioctl.h"
-#       include "stm32f1/ethmac_ioctl.h"
-#       include "stm32f1/gpio_ioctl.h"
-#       include "stm32f1/pll_ioctl.h"
-#       include "stm32f1/sdspi_ioctl.h"
-#       include "stm32f1/spi_ioctl.h"
-#       include "stm32f1/uart_ioctl.h"
-#       include "stm32f1/usb_ioctl.h"
-#       include "stm32f1/irq_ioctl.h"
-#       include "stm32f1/i2c_ioctl.h"
-#endif
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ * @brief  ...
+ * @param  ...
+ * @return ...
+ */
+#define IOCTL_LOOP__EX1           _IO(_IO_GROUP_GENERIC, 0x00)
+
 
 /*==============================================================================
   Exported object types
@@ -69,52 +56,18 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief int ioctl(FILE *stream, int request, ...)
- * The <b>ioctl</b>() function manipulates the file parameters.  In particular, many
- * operating characteristics of character special files (e.g., drivers) may
- * be controlled with <b>ioctl</b>() requests.
- *
- * The second argument is a device-dependent request code. The third
- * argument is an untyped pointer to memory.
- *
- * @param seconds   number of seconds to sleep
- *
- * @errors EINVAL, ENOENT, EBADRQC, ...
- *
- * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
- * return value as an output parameter and return a nonnegative value on
- * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
- *
- * @example
- * // ...
- * FILE *file = fopen("/dev/tty0", "r");
- * if (file) {
- *         ioctl(file, TTY_IORQ_CLEAR_SCR);
- *
- *         // ...
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        int status = vfs_vioctl(stream, request, arg);
-        va_end(arg);
-        return status;
-}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _LOOP_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -35,6 +35,11 @@
   Modules include files
 ==============================================================================*/
 /* CT: module definition includes */
+#if (__ENABLE_LOOP__)
+#       ifdef ARCH_noarch
+#               include "noarch/loop_def.h"
+#       endif
+#endif
 #if (__ENABLE_GPIO__)
 #       ifdef ARCH_stm32f1
 #               include "stm32f1/gpio_def.h"
@@ -109,6 +114,9 @@
   Modules interfaces
 ==============================================================================*/
 /* CT: import of module interface */
+#if (__ENABLE_LOOP__)
+        _IMPORT_MODULE_INTERFACE(LOOP);
+#endif
 #if (__ENABLE_GPIO__)
         _IMPORT_MODULE_INTERFACE(GPIO);
 #endif
@@ -157,6 +165,9 @@
  * only 1 time.
  */
 const char *const _regdrv_module_name[] = {
+        #if (__ENABLE_LOOP__)
+        _MODULE_NAME(LOOP),
+        #endif
         #if (__ENABLE_GPIO__)
         _MODULE_NAME(GPIO),
         #endif
@@ -204,6 +215,11 @@ const char *const _regdrv_module_name[] = {
  * connected to its module.
  */
 const struct _driver_entry _regdrv_driver_table[] = {
+        /* LOOP */
+        #if (__ENABLE_LOOP__)
+        _DRIVER_INTERFACE(LOOP, "loop", _LOOP_MAJOR_NUMBER, _LOOP_MINOR_NUMBER),
+        #endif
+
         /* UART ==============================================================*/
         #if (__ENABLE_UART__ && _UART1_ENABLE)
         _DRIVER_INTERFACE(UART, "uart1", _UART1, _UART_MINOR_NUMBER),
