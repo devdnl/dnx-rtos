@@ -7,6 +7,7 @@ New Features, Improvements:
 - Improved objects validation (mutex, queue, sempahore, file, directory)
 - Systematized files of the configtool
 - Added to the configtool a wizard that helps in creation of new modules (issue #110)
+- C++ support (programs, modules, and file system can be write by using C++)
 
 Fixed Bugs:
 - modinit: fixed interpretation of driver_init() status (issue #95)
