@@ -39,7 +39,33 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _LOOP_MAJOR_NUMBER               0
+enum _LOOP_MAJOR_NUMBER {
+        #if (_LOOP_NUMBER_OF_DEVICES > 0)
+        _LOOP0,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 1)
+        _LOOP1,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 2)
+        _LOOP2,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 3)
+        _LOOP3,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 4)
+        _LOOP4,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 5)
+        _LOOP5,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 6)
+        _LOOP6,
+        #endif
+        #if (_LOOP_NUMBER_OF_DEVICES > 7)
+        _LOOP7,
+        #endif
+};
+
 #define _LOOP_MINOR_NUMBER               0
 
 /*==============================================================================

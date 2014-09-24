@@ -215,9 +215,30 @@ const char *const _regdrv_module_name[] = {
  * connected to its module.
  */
 const struct _driver_entry _regdrv_driver_table[] = {
-        /* LOOP */
-        #if (__ENABLE_LOOP__)
-        _DRIVER_INTERFACE(LOOP, "loop", _LOOP_MAJOR_NUMBER, _LOOP_MINOR_NUMBER),
+        /* LOOP ============================================================= */
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 0)
+        _DRIVER_INTERFACE(LOOP, "loop0", _LOOP0, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 1)
+        _DRIVER_INTERFACE(LOOP, "loop1", _LOOP1, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 2)
+        _DRIVER_INTERFACE(LOOP, "loop2", _LOOP2, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 3)
+        _DRIVER_INTERFACE(LOOP, "loop3", _LOOP3, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 4)
+        _DRIVER_INTERFACE(LOOP, "loop4", _LOOP4, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 5)
+        _DRIVER_INTERFACE(LOOP, "loop5", _LOOP5, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 6)
+        _DRIVER_INTERFACE(LOOP, "loop6", _LOOP6, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 7)
+        _DRIVER_INTERFACE(LOOP, "loop7", _LOOP7, _LOOP_MINOR_NUMBER),
         #endif
 
         /* UART ==============================================================*/
