@@ -53,26 +53,36 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_sysfree(void__pmem)
 
-#define API_FS_INIT(fsname, ...)                stdret_t _##fsname##_init(__VA_ARGS__)
-#define API_FS_RELEASE(fsname, ...)             stdret_t _##fsname##_release(__VA_ARGS__)
-#define API_FS_OPEN(fsname, ...)                stdret_t _##fsname##_open(__VA_ARGS__)
-#define API_FS_CLOSE(fsname, ...)               stdret_t _##fsname##_close(__VA_ARGS__)
-#define API_FS_WRITE(fsname, ...)               ssize_t _##fsname##_write(__VA_ARGS__)
-#define API_FS_READ(fsname, ...)                ssize_t _##fsname##_read(__VA_ARGS__)
-#define API_FS_IOCTL(fsname, ...)               stdret_t _##fsname##_ioctl(__VA_ARGS__)
-#define API_FS_FSTAT(fsname, ...)               stdret_t _##fsname##_fstat(__VA_ARGS__)
-#define API_FS_FLUSH(fsname, ...)               stdret_t _##fsname##_flush(__VA_ARGS__)
-#define API_FS_MKDIR(fsname, ...)               stdret_t _##fsname##_mkdir(__VA_ARGS__)
-#define API_FS_MKFIFO(fsname, ...)              stdret_t _##fsname##_mkfifo(__VA_ARGS__)
-#define API_FS_MKNOD(fsname, ...)               stdret_t _##fsname##_mknod(__VA_ARGS__)
-#define API_FS_OPENDIR(fsname, ...)             stdret_t _##fsname##_opendir(__VA_ARGS__)
-#define API_FS_REMOVE(fsname, ...)              stdret_t _##fsname##_remove(__VA_ARGS__)
-#define API_FS_RENAME(fsname, ...)              stdret_t _##fsname##_rename(__VA_ARGS__)
-#define API_FS_CHMOD(fsname, ...)               stdret_t _##fsname##_chmod(__VA_ARGS__)
-#define API_FS_CHOWN(fsname, ...)               stdret_t _##fsname##_chown(__VA_ARGS__)
-#define API_FS_STAT(fsname, ...)                stdret_t _##fsname##_stat(__VA_ARGS__)
-#define API_FS_STATFS(fsname, ...)              stdret_t _##fsname##_statfs(__VA_ARGS__)
-#define API_FS_SYNC(fsname, ...)                void     _##fsname##_sync(__VA_ARGS__)
+#ifdef __cplusplus
+        inline void* operator new     (size_t size) {return sysm_sysmalloc(size);}\
+        inline void* operator new[]   (size_t size) {return sysm_sysmalloc(size);}\
+        inline void  operator delete  (void* ptr  ) {sysm_sysfree(ptr);}\
+        inline void  operator delete[](void* ptr  ) {sysm_sysfree(ptr);}
+#       define _FS_EXTERN_C extern "C"
+#else
+#       define _FS_EXTERN_C
+#endif
+
+#define API_FS_INIT(fsname, ...)                _FS_EXTERN_C stdret_t _##fsname##_init(__VA_ARGS__)
+#define API_FS_RELEASE(fsname, ...)             _FS_EXTERN_C stdret_t _##fsname##_release(__VA_ARGS__)
+#define API_FS_OPEN(fsname, ...)                _FS_EXTERN_C stdret_t _##fsname##_open(__VA_ARGS__)
+#define API_FS_CLOSE(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_close(__VA_ARGS__)
+#define API_FS_WRITE(fsname, ...)               _FS_EXTERN_C ssize_t _##fsname##_write(__VA_ARGS__)
+#define API_FS_READ(fsname, ...)                _FS_EXTERN_C ssize_t _##fsname##_read(__VA_ARGS__)
+#define API_FS_IOCTL(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_ioctl(__VA_ARGS__)
+#define API_FS_FSTAT(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_fstat(__VA_ARGS__)
+#define API_FS_FLUSH(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_flush(__VA_ARGS__)
+#define API_FS_MKDIR(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_mkdir(__VA_ARGS__)
+#define API_FS_MKFIFO(fsname, ...)              _FS_EXTERN_C stdret_t _##fsname##_mkfifo(__VA_ARGS__)
+#define API_FS_MKNOD(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_mknod(__VA_ARGS__)
+#define API_FS_OPENDIR(fsname, ...)             _FS_EXTERN_C stdret_t _##fsname##_opendir(__VA_ARGS__)
+#define API_FS_REMOVE(fsname, ...)              _FS_EXTERN_C stdret_t _##fsname##_remove(__VA_ARGS__)
+#define API_FS_RENAME(fsname, ...)              _FS_EXTERN_C stdret_t _##fsname##_rename(__VA_ARGS__)
+#define API_FS_CHMOD(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_chmod(__VA_ARGS__)
+#define API_FS_CHOWN(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_chown(__VA_ARGS__)
+#define API_FS_STAT(fsname, ...)                _FS_EXTERN_C stdret_t _##fsname##_stat(__VA_ARGS__)
+#define API_FS_STATFS(fsname, ...)              _FS_EXTERN_C stdret_t _##fsname##_statfs(__VA_ARGS__)
+#define API_FS_SYNC(fsname, ...)                _FS_EXTERN_C void     _##fsname##_sync(__VA_ARGS__)
 
 /*==============================================================================
   Exported types, enums definitions

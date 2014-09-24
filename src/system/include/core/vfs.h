@@ -119,7 +119,7 @@ struct vfs_dir {
         stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void           *f_dd;
         void           *f_handle;
-        struct vfs_dir *this;
+        struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
         u32_t           magic;          /**< only for system purposes */
@@ -258,7 +258,7 @@ extern void             vfs_sync                (void);
 //==============================================================================
 static inline vfs_open_flags_t vfs_filter_open_flags_for_device(vfs_open_flags_t flags)
 {
-        return flags & (O_RDONLY | O_WRONLY | O_RDWR);
+        return (vfs_open_flags_t)(flags & (O_RDONLY | O_WRONLY | O_RDWR));
 }
 
 #ifdef __cplusplus
