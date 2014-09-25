@@ -61,8 +61,8 @@ typedef int             ssize_t;
 /** universal status type */
 typedef enum stdret
 {
-        STD_RET_OK      =  0,
-        STD_RET_ERROR   = -1,
+        STD_RET_OK = 0,
+        STD_RET_ERROR = -1,
 } stdret_t;
 
 /** file descriptor */
