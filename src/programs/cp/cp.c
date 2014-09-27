@@ -132,6 +132,7 @@ PROGRAM_MAIN(cp, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 fwrite(buffer, sizeof(char), n, dst_file);
                 if (ferror(dst_file)) {
+                        puts("");
                         perror(argv[2]);
                         break;
                 }

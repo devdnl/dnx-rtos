@@ -39,32 +39,37 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-
 /**
- * @brief  Host request. Set this program as Host.
+ * @brief  Host request. Set this program as Host. After this operation this
+ *         program has only possibility to gets requests from Client program.
  * @param  None
  * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_OPEN                   _IO(_IO_GROUP_LOOP, 0x00)
 
 /**
- * @brief  Host request. Set this program as Host.
+ * @brief  Host request. Disconnect this program as host function. After this
+ *         operation any program can be a host if request OPEN function.
  * @param  None
  * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_CLOSE                  _IO(_IO_GROUP_LOOP, 0x01)
 
 /**
- * @brief  Host request. Wait for request from Client
+ * @brief  Host request. Wait for request from Client. Client request and
+ *         arguments are set in the loop_client_rq_t-type variable. Host application
+ *         should read this variable and perform requested actions.
  * @param  loop_client_rq_t             request details
  * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_WAIT_FOR_REQUEST       _IOR(_IO_GROUP_LOOP, 0x02, loop_client_rq_t*)
 
 /**
- * @brief  Host request. Read data from buffers shared by the client. Read operation
- *         is finished and Client is resumed when buffer size is set to 0 (this
- *         means that Host read all bytes from buffer)
+ * @brief  Host request. Read data from buffers shared by the Client. When
+ *         host send all bytes or send 0-length buffer then read operation is
+ *         finished. If operation is not finished, then timeout was generated.
+ *         If host wants to finish operation earlier the ZLB (Zero-Length Buffer)
+ *         should be send (buffer size = 0).
  * @param  loop_buffer_t                host buffer descriptor
  * @return Return 1 if client's buffer contains bytes.
  *         Return 0 if client's buffer is empty.
@@ -75,7 +80,9 @@ extern "C" {
 /**
  * @brief  Host request. Write data to the client. Write operation is finished
  *         and Client is resumed when buffer size is set to 0 (this means that
- *         Host written all data to the buffer)
+ *         Host written all data to the buffer) or all bytes was written. Write
+ *         operation can be done by sending small buffers (is not required to send
+ *         entire requested buffer in one part).
  * @param  loop_buffer_t                host buffer descriptor
  * @return Return 1 if client's buffer is not filled yet.
  *         Return 0 if client's buffer is filled.
@@ -84,14 +91,16 @@ extern "C" {
 #define IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT   _IOW(_IO_GROUP_LOOP, 0x04, loop_buffer_t*)
 
 /**
- * @brief  Host request. Response to the captured ioctl request
+ * @brief  Host request. Response to the captured ioctl request. This request
+ *         is send as response when Client requested IOCTL action in the command
+ *         capture request.
  * @param  loop_ioctl_response_t        ioctl response data
  * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_SET_IOCTL_STATUS       _IOW(_IO_GROUP_LOOP, 0x05, loop_ioctl_response_t*)
 
 /**
- * @brief  Host request. Response to the captured stat request
+ * @brief  Host request. Response to the captured stat request.
  * @param  loop_stat_response_t         device statistics response
  * @return On success 0 is returned, otherwise -1
  */
@@ -105,7 +114,9 @@ extern "C" {
 #define IOCTL_LOOP__HOST_FLUSH_DONE             _IOW(_IO_GROUP_LOOP, 0x07, int)
 
 /**
- * @brief  Client request. General purpose RAW request. Depends on host protocol
+ * @brief  Client request. General purpose RAW request. Depends on host protocol.
+ *         By this request Client can send request from another device type.
+ *         In this case is not required to use CLIENT_REQUEST() macro.
  * @param  n                            request number (macro's argument)
  * @param  void*                        request argument
  * @return Depends on host program protocol
@@ -118,52 +129,52 @@ extern "C" {
 ==============================================================================*/
 // client request codes
 typedef enum {
-        LOOP_CMD_IDLE,
-        LOOP_CMD_TRANSMISSION_CLIENT2HOST,
-        LOOP_CMD_TRANSMISSION_HOST2CLIENT,
-        LOOP_CMD_IOCTL_REQUEST,
-        LOOP_CMD_DEVICE_STAT,
-        LOOP_CMD_FLUSH_BUFFERS
+        LOOP_CMD_IDLE,                          //!< idle command, no action
+        LOOP_CMD_TRANSMISSION_CLIENT2HOST,      //!< transmission request client to host (rw arguments are valid)
+        LOOP_CMD_TRANSMISSION_HOST2CLIENT,      //!< transmission request host to client (rw arguments are valid)
+        LOOP_CMD_IOCTL_REQUEST,                 //!< ioctl operation request (ioctl arguments are valid)
+        LOOP_CMD_DEVICE_STAT,                   //!< request to response by device's statistics
+        LOOP_CMD_FLUSH_BUFFERS                  //!< request to flush device buffers
 } loop_cmd_t;
 
 
 // buffer descriptor to write/read access
 typedef struct {
-        u8_t    *data;          //!< write/read Host buffer address
-        size_t   size;          //!< number of bytes to write/read
-        int      errno_val;     //!< errno value if error occurred (if no error must be set to ESUCC)
+        u8_t    *data;                          //!< write/read Host buffer address
+        size_t   size;                          //!< number of bytes to write/read
+        int      errno_val;                     //!< errno value if error occurred (if no error must be set to ESUCC)
 } loop_buffer_t;
 
 
 // response host->client to the ioctl request from client
 typedef struct {
-        stdret_t status;        //!< ioctl operation status
-        int      errno_val;     //!< errno value if error occurred (if no error must be set to ESUCC)
+        int status;                             //!< ioctl operation status
+        int errno_val;                          //!< errno value if error occurred (if no error must be set to ESUCC)
 } loop_ioctl_response_t;
 
 
 // response host->client to the stat() request from client
 typedef struct {
-        u64_t size;             //!< device capacity/file size
-        int   errno_val;        //!< errno value if error occurred (if no error must be set to ESUCC)
+        u64_t size;                             //!< device capacity/file size
+        int   errno_val;                        //!< errno value if error occurred (if no error must be set to ESUCC)
 } loop_stat_response_t;
 
 
 // request structure
 typedef struct {
-        loop_cmd_t cmd;
+        loop_cmd_t cmd;                         //!< requested action (command from Client)
 
         union {
                 struct {
-                        size_t size;
-                        fpos_t seek;
-                } rw;
+                        size_t size;            //!< requested size of read/write operation
+                        fpos_t seek;            //!< position in the device's file
+                } rw;                           //!< read/write transmission arguments group
 
                 struct {
-                        int   request;
-                        void *arg;
-                } ioctl;
-        } arg;
+                        int   request;          //!< ioctl's request number
+                        void *arg;              //!< ioctl's request argument
+                } ioctl;                        //!< ioctl argument group
+        } arg;                                  //!< command's arguments
 } loop_request_t;
 
 
