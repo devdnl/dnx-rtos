@@ -99,17 +99,18 @@ extern "C" {
 
 /**
  * @brief  Host request. Response to the captured flush request
- * @param  None
+ * @param  int                          errno value
  * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_FLUSH_DONE             _IO(_IO_GROUP_LOOP, 0x07)
+#define IOCTL_LOOP__HOST_FLUSH_DONE             _IOW(_IO_GROUP_LOOP, 0x07, int)
 
 /**
  * @brief  Client request. General purpose RAW request. Depends on host protocol
- * @param  n                            request number
+ * @param  n                            request number (macro's argument)
+ * @param  void*                        request argument
  * @return Depends on host program protocol
  */
-#define IOCTL_LOOP__CLIENT_REQUEST(n)           _IOWR(_IO_GROUP_LOOP, 0x08 + n)
+#define IOCTL_LOOP__CLIENT_REQUEST(n)           _IOWR(_IO_GROUP_LOOP, 0x08 + n, void*)
 
 
 /*==============================================================================
@@ -162,7 +163,7 @@ typedef struct {
                         int   request;
                         void *arg;
                 } ioctl;
-        } args;
+        } arg;
 } loop_request_t;
 
 
