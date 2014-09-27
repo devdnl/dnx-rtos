@@ -315,7 +315,9 @@ API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                                 hdl->operation.rw.size = count;
                                         }
 
-                                        memcpy(dst, hdl->operation.rw.data, hdl->operation.rw.size);
+                                        if (hdl->operation.rw.size && hdl->operation.rw.data) {
+                                                memcpy(dst, hdl->operation.rw.data, hdl->operation.rw.size);
+                                        }
 
                                         dst   += hdl->operation.rw.size;
                                         count -= hdl->operation.rw.size;
@@ -363,17 +365,19 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_LOOP__HOST_OPEN:
                 critical_section_begin();
-                if (hdl->host == NULL) {
-                        hdl->host = task_get_handle();
-                        status = STD_RET_OK;
-                } else {
-                        errno = EBUSY;
-                }
+                        if (hdl->host == NULL) {
+                                hdl->host = task_get_handle();
+                                status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
+                        }
                 critical_section_end();
                 break;
 
         case IOCTL_LOOP__HOST_CLOSE:
                 if (hdl->host == task_get_handle()) {
+                        semaphore_wait(hdl->event_req, 0);
+                        semaphore_wait(hdl->event_res, 0);
                         hdl->host = NULL;
                         status = STD_RET_OK;
                 } else {
@@ -424,12 +428,14 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                         buf->size = hdl->operation.rw.size;
                                 }
 
-                                memcpy(buf->data, hdl->operation.rw.data, buf->size);
+                                if (buf->size > 0 && buf->data) {
+                                        memcpy(buf->data, hdl->operation.rw.data, buf->size);
 
-                                hdl->operation.rw.data += buf->size;
-                                hdl->operation.rw.size -= buf->size;
+                                        hdl->operation.rw.data += buf->size;
+                                        hdl->operation.rw.size -= buf->size;
+                                }
 
-                                if (hdl->operation.rw.size == 0) {
+                                if (hdl->operation.rw.size == 0 || buf->size == 0 || !buf->data) {
                                         semaphore_signal(hdl->event_res);
                                         status = 0;
                                 } else {
@@ -439,7 +445,6 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         } else {
                                 hdl->operation.errno_val = buf->errno_val;
                                 semaphore_signal(hdl->event_res);
-
                                 status = 0;
                         }
 
@@ -453,7 +458,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         loop_buffer_t *buf = static_cast(loop_buffer_t*, arg);
 
                         if (buf->errno_val == ESUCC) {
-                                if (buf->size == 0 || buf->size == hdl->operation.rw.size) {
+                                if (buf->size == 0 || !buf->data || buf->size == hdl->operation.rw.size) {
                                         status = 0;
 
                                 } else if (buf->size >= hdl->operation.rw.size) {
@@ -480,7 +485,6 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         } else {
                                 hdl->operation.errno_val = buf->errno_val;
                                 semaphore_signal(hdl->event_res);
-
                                 status = 0;
                         }
 
