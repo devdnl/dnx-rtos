@@ -70,6 +70,7 @@ typedef struct {
         mutex_t *lock;
         sem_t   *event_req;
         sem_t   *event_res;
+        task_t  *host;
         u8_t     major;
         req_t    operation;
 } loop_t;
@@ -235,6 +236,9 @@ API_MOD_WRITE(LOOP, void *device_handle, const u8_t *src, size_t count, fpos_t *
 
         ssize_t n = 0;
 
+        if (hdl->host == NULL)
+                return n;
+
         if (mutex_lock(hdl->lock, operation_timeout)) {
 
                 hdl->operation.cmd     = LOOP_CMD_TRANSMISSION_CLIENT2HOST;
@@ -286,6 +290,9 @@ API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
         loop_t *hdl = device_handle;
 
         ssize_t n = 0;
+
+        if (hdl->host == NULL)
+                return n;
 
         if (mutex_lock(hdl->lock, operation_timeout)) {
 
@@ -350,8 +357,28 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         stdret_t status = -1;
 
         switch (request) {
+        case IOCTL_LOOP__HOST_OPEN:
+                critical_section_begin();
+                if (hdl->host == NULL) {
+                        hdl->host = task_get_handle();
+                        status = STD_RET_OK;
+                } else {
+                        errno = EBUSY;
+                }
+                critical_section_end();
+                break;
+
+        case IOCTL_LOOP__HOST_CLOSE:
+                if (hdl->host == task_get_handle()) {
+                        hdl->host = NULL;
+                        status = STD_RET_OK;
+                } else {
+                        errno = EPERM;
+                }
+                break;
+
         case IOCTL_LOOP__HOST_WAIT_FOR_REQUEST:
-                if (arg) {
+                if (arg && hdl->host == task_get_handle()) {
                         if (semaphore_wait(hdl->event_req, host_request_timeout)) {
                                 loop_request_t *req = static_cast(loop_request_t*, arg);
 
@@ -369,7 +396,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT:
-                if (arg) {
+                if (arg && hdl->host == task_get_handle()) {
                         loop_buffer_t *buf = static_cast(loop_buffer_t*, arg);
 
                         if (buf->errno_val == ESUCC) {
@@ -402,7 +429,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT:
-                if (arg) {
+                if (arg && hdl->host == task_get_handle()) {
                         loop_buffer_t *buf = static_cast(loop_buffer_t*, arg);
 
                         if (buf->errno_val == ESUCC) {
@@ -438,7 +465,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_LOOP__HOST_SET_IOCTL_STATUS:
-                if (arg) {
+                if (arg && hdl->host == task_get_handle()) {
                         loop_ioctl_response_t *res  = static_cast(loop_ioctl_response_t*, arg);
 
                         hdl->operation.ioctl.status = res->status;
@@ -453,7 +480,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_LOOP__HOST_SET_DEVICE_STATS:
-                if (arg) {
+                if (arg && hdl->host == task_get_handle()) {
                         loop_stat_response_t *res = static_cast(loop_stat_response_t*, arg);
 
                         hdl->operation.stat.size  = res->size;
@@ -468,23 +495,30 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_LOOP__HOST_FLUSH_DONE:
-                semaphore_signal(hdl->event_req);
+                if (hdl->host == task_get_handle()) {
+                        semaphore_signal(hdl->event_req);
+                        status = STD_RET_OK;
+                } else {
+                        errno = EPERM;
+                }
                 break;
 
         default: //IOCTL_LOOP__CLIENT_REQUEST(n)
-                hdl->operation.cmd       = LOOP_CMD_IOCTL_REQUEST;
-                hdl->operation.ioctl.arg = arg;
-                hdl->operation.ioctl.rq  = request;
+                if (hdl->host != NULL) {
+                        hdl->operation.cmd       = LOOP_CMD_IOCTL_REQUEST;
+                        hdl->operation.ioctl.arg = arg;
+                        hdl->operation.ioctl.rq  = request;
 
-                semaphore_signal(hdl->event_req);
+                        semaphore_signal(hdl->event_req);
 
-                if (semaphore_wait(hdl->event_res, request_timeout)) {
-                        status = hdl->operation.ioctl.status;
+                        if (semaphore_wait(hdl->event_res, request_timeout)) {
+                                status = hdl->operation.ioctl.status;
+                        } else {
+                                errno  = ETIME;
+                        }
                 } else {
-                        errno  = ETIME;
-                        status = -1;
+                        errno = ESRCH;
                 }
-
                 break;
         }
 
@@ -504,6 +538,9 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 API_MOD_FLUSH(LOOP, void *device_handle)
 {
         loop_t *hdl = device_handle;
+
+        if (hdl->host == NULL)
+                return STD_RET_OK;
 
         hdl->operation.cmd = LOOP_CMD_FLUSH_BUFFERS;
 
@@ -539,6 +576,14 @@ API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         loop_t *hdl = device_handle;
 
+        device_stat->st_major = hdl->major;
+        device_stat->st_minor = _LOOP_MINOR_NUMBER;
+        device_stat->st_size  = 0;
+
+        if (hdl->host == NULL) {
+                return STD_RET_OK;
+        }
+
         hdl->operation.cmd = LOOP_CMD_DEVICE_STAT;
 
         semaphore_signal(hdl->event_req);
@@ -546,10 +591,7 @@ API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
         if (semaphore_wait(hdl->event_res, request_timeout)) {
 
                 if (hdl->operation.errno_val == ESUCC) {
-                        device_stat->st_size  = hdl->operation.stat.size;
-                        device_stat->st_major = hdl->major;
-                        device_stat->st_minor = _LOOP_MINOR_NUMBER;
-
+                        device_stat->st_size = hdl->operation.stat.size;
                         return STD_RET_OK;
                 } else {
                         errno = hdl->operation.errno_val;

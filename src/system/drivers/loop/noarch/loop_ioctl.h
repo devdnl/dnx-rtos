@@ -39,12 +39,27 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+
+/**
+ * @brief  Host request. Set this program as Host.
+ * @param  None
+ * @return On success 0 is returned, otherwise -1
+ */
+#define IOCTL_LOOP__HOST_OPEN                   _IO(_IO_GROUP_LOOP, 0x00)
+
+/**
+ * @brief  Host request. Set this program as Host.
+ * @param  None
+ * @return On success 0 is returned, otherwise -1
+ */
+#define IOCTL_LOOP__HOST_CLOSE                  _IO(_IO_GROUP_LOOP, 0x01)
+
 /**
  * @brief  Host request. Wait for request from Client
  * @param  loop_client_rq_t             request details
- * @return On success 1 is returned, otherwise 0
+ * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_WAIT_FOR_REQUEST       _IOR(_IO_GROUP_LOOP, 0x00, loop_client_rq_t*)
+#define IOCTL_LOOP__HOST_WAIT_FOR_REQUEST       _IOR(_IO_GROUP_LOOP, 0x02, loop_client_rq_t*)
 
 /**
  * @brief  Host request. Read data from buffers shared by the client. Read operation
@@ -55,7 +70,7 @@ extern "C" {
  *         Return 0 if client's buffer is empty.
  *         Return -1 on error.
  */
-#define IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT  _IOR(_IO_GROUP_LOOP, 0x01, loop_buffer_t*)
+#define IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT  _IOR(_IO_GROUP_LOOP, 0x03, loop_buffer_t*)
 
 /**
  * @brief  Host request. Write data to the client. Write operation is finished
@@ -66,35 +81,35 @@ extern "C" {
  *         Return 0 if client's buffer is filled.
  *         Return -1 on error.
  */
-#define IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT   _IOW(_IO_GROUP_LOOP, 0x02, loop_buffer_t*)
+#define IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT   _IOW(_IO_GROUP_LOOP, 0x04, loop_buffer_t*)
 
 /**
  * @brief  Host request. Response to the captured ioctl request
  * @param  loop_ioctl_response_t        ioctl response data
  * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_SET_IOCTL_STATUS       _IOW(_IO_GROUP_LOOP, 0x03, loop_ioctl_response_t*)
+#define IOCTL_LOOP__HOST_SET_IOCTL_STATUS       _IOW(_IO_GROUP_LOOP, 0x05, loop_ioctl_response_t*)
 
 /**
  * @brief  Host request. Response to the captured stat request
  * @param  loop_stat_response_t         device statistics response
  * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_SET_DEVICE_STATS       _IOW(_IO_GROUP_LOOP, 0x04, loop_stat_response_t*)
+#define IOCTL_LOOP__HOST_SET_DEVICE_STATS       _IOW(_IO_GROUP_LOOP, 0x06, loop_stat_response_t*)
 
 /**
  * @brief  Host request. Response to the captured flush request
  * @param  None
  * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_FLUSH_DONE             _IO(_IO_GROUP_LOOP, 0x05)
+#define IOCTL_LOOP__HOST_FLUSH_DONE             _IO(_IO_GROUP_LOOP, 0x07)
 
 /**
  * @brief  Client request. General purpose RAW request. Depends on host protocol
  * @param  n                            request number
  * @return Depends on host program protocol
  */
-#define IOCTL_LOOP__CLIENT_REQUEST(n)           _IOWR(_IO_GROUP_LOOP, 0x06 + n)
+#define IOCTL_LOOP__CLIENT_REQUEST(n)           _IOWR(_IO_GROUP_LOOP, 0x08 + n)
 
 
 /*==============================================================================
