@@ -27,7 +27,7 @@
 #ifndef _LOOP_FLAGS_H_
 #define _LOOP_FLAGS_H_
 
-
+#define __LOOP_CFG_NUMBER_OF_DEVICES__ 1
 
 #endif /* _LOOP_FLAGS_H_ */
 /*==============================================================================

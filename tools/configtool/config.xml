@@ -169,6 +169,7 @@
             <TTY_ENABLE_TERM_SIZE_CHECK><path>../../config/noarch/tty_flags.h</path><key>__TTY_ENABLE_TERM_SIZE_CHECK__</key></TTY_ENABLE_TERM_SIZE_CHECK>
             <TTY_TERM_IN_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_IN_FILE__</key></TTY_TERM_IN_FILE>
             <TTY_TERM_OUT_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_OUT_FILE__</key></TTY_TERM_OUT_FILE>
+            <LOOP_DEVCOUNT><path>../../config/noarch/loop_flags.h</path><key>__LOOP_CFG_NUMBER_OF_DEVICES__</key></LOOP_DEVCOUNT>
         </key>
     </noarch>
 
