@@ -175,7 +175,7 @@ static void host2client_transaction(int i)
 static void ioctl_request(int i)
 {
         if (global->log) {
-                printf("CMD %i: ioctl [rq = %d, arg = 0x%x] => ", i,
+                printf("CRQ %i: ioctl [rq = %d, arg = 0x%x] => ", i,
                        global->client_req.arg.ioctl.request,
                        reinterpret_cast<int>(global->client_req.arg.ioctl.arg));
         }
@@ -318,7 +318,7 @@ static void loopd(const char *src, const char *loop)
 
                 default:
                         if (global->log) {
-                                printf("CMD %i: unknown\n", i);
+                                printf("CRQ %i: unknown\n", i);
                         }
                         break;
                 }
