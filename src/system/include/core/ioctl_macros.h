@@ -47,7 +47,6 @@ extern "C" {
 enum _IO_GROUP {
         _IO_GROUP_PIPE,
         _IO_GROUP_VFS,
-        _IO_GROUP_GENERIC,
         _IO_GROUP_AFIO,
         _IO_GROUP_CRC,
         _IO_GROUP_ETH,
