@@ -48,7 +48,7 @@ extern "C" {
  * @return Returns  0 on success.
  *         Returns -1 on error and appropriate error number is set.
  */
-#define IOCTL_I2C__SET_ADDRESS          _IOW(_IO_GROUP_I2C, 0, int)
+#define IOCTL_I2C__SET_ADDRESS          _IOW(I2C, 0, int)
 
 /*==============================================================================
   Exported objects

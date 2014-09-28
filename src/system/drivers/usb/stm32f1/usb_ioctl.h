@@ -105,7 +105,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__START                        _IO (_IO_GROUP_USB, 0x00)
+#define IOCTL_USB__START                        _IO (USB, 0x00)
 
 //==============================================================================
 /**
@@ -114,7 +114,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__STOP                         _IO (_IO_GROUP_USB, 0x01)
+#define IOCTL_USB__STOP                         _IO (USB, 0x01)
 
 //==============================================================================
 /**
@@ -123,7 +123,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__CONFIGURE_EP_1_7             _IOW(_IO_GROUP_USB, 0x02, const usb_ep_config_t*)
+#define IOCTL_USB__CONFIGURE_EP_1_7             _IOW(USB, 0x02, const usb_ep_config_t*)
 
 //==============================================================================
 /**
@@ -132,7 +132,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_ADDRESS                  _IOW(_IO_GROUP_USB, 0x03, int)
+#define IOCTL_USB__SET_ADDRESS                  _IOW(USB, 0x03, int)
 
 //==============================================================================
 /**
@@ -141,7 +141,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SEND_ZLP                     _IO (_IO_GROUP_USB, 0x04)
+#define IOCTL_USB__SEND_ZLP                     _IO (USB, 0x04)
 
 //==============================================================================
 /**
@@ -151,7 +151,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_EP_STALL                 _IOW(_IO_GROUP_USB, 0x05, int)
+#define IOCTL_USB__SET_EP_STALL                 _IOW(USB, 0x05, int)
 
 //==============================================================================
 /**
@@ -161,7 +161,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_EP_VALID                 _IOW(_IO_GROUP_USB, 0x06, int)
+#define IOCTL_USB__SET_EP_VALID                 _IOW(USB, 0x06, int)
 
 //==============================================================================
 /**
@@ -170,7 +170,7 @@ extern "C" {
  * @return On success returns true or false, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__WAS_RESET                    _IO (_IO_GROUP_USB, 0x07)
+#define IOCTL_USB__WAS_RESET                    _IO (USB, 0x07)
 
 //==============================================================================
 /**
@@ -180,7 +180,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__GET_SETUP_PACKET             _IOR(_IO_GROUP_USB, 0x08, usb_setup_container_t*)
+#define IOCTL_USB__GET_SETUP_PACKET             _IOR(USB, 0x08, usb_setup_container_t*)
 
 //==============================================================================
 /**
@@ -189,7 +189,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_ERROR_STATUS             _IO (_IO_GROUP_USB, 0x09)
+#define IOCTL_USB__SET_ERROR_STATUS             _IO (USB, 0x09)
 
 //==============================================================================
 /**
@@ -198,7 +198,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__GET_ERROR_COUNTER            _IOR(_IO_GROUP_USB, 0x0A, int*)
+#define IOCTL_USB__GET_ERROR_COUNTER            _IOR(USB, 0x0A, int*)
 
 /*==============================================================================
   Exported object types

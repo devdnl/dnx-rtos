@@ -80,21 +80,21 @@ typedef struct {
  *         Returns  1 if interrupt occurred.
  *         Returns -1 if illegal interrupt number or request or configuration.
  */
-#define IOCTL_IRQ__CATCH                _IOW(_IO_GROUP_IRQ, 0, const IRQ_catch_t*)
+#define IOCTL_IRQ__CATCH                _IOW(IRQ, 0, const IRQ_catch_t*)
 
 /**
  * @brief  Software interrupt trigger
  * @param  int                 interrupt number to trigger (0-15)
  * @return On success 0, on error -1
  */
-#define IOCTL_IRQ__TRIGGER              _IOW(_IO_GROUP_IRQ, 1, const int)
+#define IOCTL_IRQ__TRIGGER              _IOW(IRQ, 1, const int)
 
 /**
  * @brief  Set IRQ configuration
  * @param  IRQ_config_t *
  * @return On success 0, on error -1
  */
-#define IOCTL_IRQ__CONFIGURE            _IOW(_IO_GROUP_IRQ, 2, const IRQ_config_t*)
+#define IOCTL_IRQ__CONFIGURE            _IOW(IRQ, 2, const IRQ_config_t*)
 
 /*==============================================================================
   Exported objects

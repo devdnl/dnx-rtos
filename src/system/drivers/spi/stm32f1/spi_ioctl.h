@@ -43,31 +43,31 @@ extern "C" {
  *  @param  struct SPI_config *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_SPI__SET_CONFIGURATION    _IOW(_IO_GROUP_SPI, 0x00, struct SPI_config*)
+#define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, struct SPI_config*)
 
 /** @brief  Gets SPI configuration
  *  @param  struct SPI_config *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_SPI__GET_CONFIGURATION    _IOR(_IO_GROUP_SPI, 0x01, struct SPI_config*)
+#define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, struct SPI_config*)
 
 /** @brief  Select specified slave (CS = 0) [RAW mode]
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_SPI__SELECT               _IO(_IO_GROUP_SPI, 0x02)
+#define IOCTL_SPI__SELECT               _IO(SPI, 0x02)
 
 /** @brief  Deselect specified slave (CS = 1) [RAW mode]
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_SPI__DESELECT             _IO(_IO_GROUP_SPI, 0x03)
+#define IOCTL_SPI__DESELECT             _IO(SPI, 0x03)
 
 /** @brief  Transmit and receive specified buffer
  *  @param  struct SPI_transive *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_SPI__TRANSCEIVE           _IOWR(_IO_GROUP_SPI, 0x04, struct SPI_transive*)
+#define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, struct SPI_transive*)
 
 /*==============================================================================
   Exported object types

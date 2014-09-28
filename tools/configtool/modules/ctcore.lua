@@ -572,6 +572,10 @@ function ct:insert_line(filename, lineno, newline)
         assert(type(lineno) == "number", "insert_line(): lineno is not the number type")
         assert(type(newline) == "string", "insert_line(): newline is not the string type")
 
+        if lineno == 0 then
+                return false
+        end
+
         file = io.open(filename, "r+")
         assert(file, "insert_line(): file does not exist")
 
