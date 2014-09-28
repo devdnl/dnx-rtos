@@ -43,6 +43,7 @@ extern "C" {
 #define _IOW(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 #define _IOWR(g, n, t)          (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 
+/* CT: IO group list */
 enum _IO_GROUP {
         _IO_GROUP_PIPE,
         _IO_GROUP_VFS,

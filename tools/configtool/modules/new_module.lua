@@ -55,6 +55,7 @@ local FILE_PROJECT_FLAGS             = config.project.path.project_flags_file:Ge
 local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetValue()
 local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
 local FILE_SYS_IOCTL                 = config.project.path.sys_ioctl_file:GetValue()
+local FILE_IOCTL_MACROS              = config.project.path.ioctl_macros_file:GetValue()
 local FILE_XML_CONFIG                = config.project.path.xml_config_file:GetValue()
 local FILE_DRIVER_REGISTARTION       = config.project.path.drivers_reg_file:GetValue()
 
@@ -223,7 +224,7 @@ function event_button_create_clicked(event)
         end
 
         -- add module to the system for selected architectures
-        local progress = wx.wxProgressDialog("Adding module", "Create module's folders and basic files...", 13 + #selected_cpu, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+        local progress = wx.wxProgressDialog("Adding module", "Create module's folders and basic files...", 14 + #selected_cpu, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 100))
         progress:Update(0)
@@ -255,7 +256,7 @@ function event_button_create_clicked(event)
                         ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#       include \"../"..arch.."/"..module_name.."_flags.h\"")
                 else
                         progress:Destroy()
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 1.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Location of error: 1.", ui.window)
                         return
                 end
 
@@ -266,10 +267,23 @@ function event_button_create_clicked(event)
                         ct:insert_line(FILE_SYS_IOCTL, n + 1, "#       include \""..arch.."/"..module_name.."_ioctl.h\"")
                 else
                         progress:Destroy()
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file. Error code: 2.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_SYS_IOCTL.."' file. Location of error: 2.", ui.window)
                         return
                 end
         end
+
+        -- add module to the IOCTL request list
+        progress:Update(pulse(), "Add module to the ioctl() request list...")
+                n = ct:find_line(FILE_IOCTL_MACROS, 1, "%s*enum _IO_GROUP {")
+        if n then
+                n = ct:find_line(FILE_IOCTL_MACROS, 1, "%s*};")
+                ct:insert_line(FILE_IOCTL_MACROS, n, "        _IO_GROUP_"..module_name:upper()..",")
+        else
+                progress:Destroy()
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_IOCTL_MACROS.."' file. Location of error: 3.", ui.window)
+                return
+        end
+
 
         -- add enable flags to xml configuration
         progress:Update(pulse(), "Add enable keys to the xml configuration...")
@@ -278,7 +292,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_H><path>"..FILE_PROJECT_FLAGS.."</path><key>__ENABLE_"..module_name:upper().."__</key></ENABLE_"..module_name:upper().."_H>")
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 4.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 4.", ui.window)
                 return
         end
 
@@ -290,7 +304,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 3.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 5.", ui.window)
                 return
         end
 
@@ -303,7 +317,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_XML_CONFIG, n + 1, "            <module noarch=\""..noarchval.."\"><name>"..module_name:upper().."</name><description>"..module_description.."</description></module>")
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 5.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 6.", ui.window)
                 return
         end
 
@@ -315,7 +329,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ __NO__")
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Error code: 6.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Location of error: 7.", ui.window)
                 return
         end
 
@@ -327,7 +341,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."=__NO__")
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Error code: 7.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Location of error: 8.", ui.window)
                 return
         end
 
@@ -348,14 +362,14 @@ function event_button_create_clicked(event)
                 n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<cpu>%s*<name>"..cpu_name.."</name>")
                 if n == 0 then
                         progress:Destroy()
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 8.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 9.", ui.window)
                         return
                 end
 
                 n = ct:find_line(FILE_XML_CONFIG, n, "%s*</peripherals>")
                 if n == 0 then
                         progress:Destroy()
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Error code: 9.", ui.window)
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 10.", ui.window)
                         return
                 end
 
@@ -385,7 +399,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Location of error: 11.", ui.window)
                 return
         end
 
@@ -399,7 +413,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Location of error: 12.", ui.window)
                 return
         end
 
@@ -413,7 +427,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Location of error: 13.", ui.window)
                 return
         end
 
@@ -428,7 +442,7 @@ function event_button_create_clicked(event)
                 ct:insert_line(FILE_DRIVER_REGISTARTION, n + 1, entry)
         else
                 progress:Destroy()
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Error code: 10.", ui.window)
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_DRIVER_REGISTARTION.."' file. Location of error: 14.", ui.window)
                 return
         end
 
