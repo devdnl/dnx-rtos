@@ -555,6 +555,7 @@ static inline void abort(void)
 static inline void exit(int status)
 {
         _exit(status);
+        for (;;);
 }
 
 //==============================================================================

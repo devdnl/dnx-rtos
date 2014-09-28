@@ -83,11 +83,11 @@ extern "C" {
 #define EOT                                     0x04
 
 /* IO operations on files */
-#define IOCTL_PIPE__CLOSE                       _IO(_IO_GROUP_PIPE, 0x00)
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(_IO_GROUP_VFS,  0x01)
-#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(_IO_GROUP_VFS,  0x02)
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(_IO_GROUP_VFS,  0x03)
-#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(_IO_GROUP_VFS,  0x04)
+#define IOCTL_PIPE__CLOSE                       _IO(PIPE, 0x00)
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x01)
+#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x02)
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
+#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
 
 /*==============================================================================
   Exported object types
