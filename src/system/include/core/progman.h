@@ -66,6 +66,9 @@ extern "C" {
         _PROGMAN_EXTERN_C const int __prog_##name##_ss__;\
         _PROGMAN_EXTERN_C int _program_##name##_main(int, char**)
 
+#define int_main(name, stack_depth, argc, argv)\
+        PROGRAM_MAIN(name, stack_depth, argc, argv)
+
 #define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
          .main_function = _program_##name##_main,\

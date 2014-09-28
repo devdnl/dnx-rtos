@@ -1,4 +1,5 @@
 # Makefile for GNU make
+include $(DRV_LOC)/loop/Makefile
 include $(DRV_LOC)/gpio/Makefile
 include $(DRV_LOC)/afio/Makefile
 include $(DRV_LOC)/crc/Makefile

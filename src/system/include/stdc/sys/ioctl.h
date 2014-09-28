@@ -39,6 +39,7 @@ extern "C" {
 
 /* ioctl requests */
 #ifdef ARCH_noarch
+#       include "noarch/loop_ioctl.h"
 #       include "noarch/tty_ioctl.h"
 #endif
 #ifdef ARCH_stm32f1

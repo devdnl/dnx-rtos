@@ -532,6 +532,7 @@ static inline void *realloc(void *ptr, size_t size)
 static inline void abort(void)
 {
         _abort();
+        for (;;);
 }
 
 //==============================================================================

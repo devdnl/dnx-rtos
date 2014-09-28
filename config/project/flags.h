@@ -43,6 +43,7 @@
 
 /* include modules flags divided to architecture */
 #if (__CPU_ARCH__ == noarch)
+#       include "../noarch/loop_flags.h"
 #       include "../noarch/tty_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
@@ -123,6 +124,7 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
+#define __ENABLE_LOOP__ __YES__
 #define __ENABLE_GPIO__ __YES__
 #define __ENABLE_AFIO__ __YES__
 #define __ENABLE_CRC__ __YES__
