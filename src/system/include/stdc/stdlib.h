@@ -532,7 +532,7 @@ static inline void *realloc(void *ptr, size_t size)
 static inline void abort(void)
 {
         _abort();
-        for (;;);
+        for (;;); // no return function - this makes C++ compiler happy
 }
 
 //==============================================================================
@@ -555,7 +555,7 @@ static inline void abort(void)
 static inline void exit(int status)
 {
         _exit(status);
-        for (;;);
+        for (;;); // no return function - this makes C++ compiler happy
 }
 
 //==============================================================================
