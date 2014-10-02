@@ -42,44 +42,46 @@
 #define const_cast(t, v) (t)(v)
 #endif
 
+#ifndef reinterpret_cast
+#define reinterpret_cast(t, v) (t)(v)
+#endif
+
+#ifndef static_cast
+#define static_cast(t, v) (t)(v)
+#endif
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
-// list's item
+// list's begin
 typedef struct item {
         struct item *prev;
         struct item *next;
-        void *data;
+        void        *data;
 } item_t;
 
 // list main object
 struct llist {
-        size_t   count;
-        size_t   count_half;
-        item_t  *head;
-        item_t  *tail;
-        item_t  *iterator;
-        llist_t *self;
-        uint32_t magic;
-};
-
-// iterator object
-struct llist_iterator {
-        llist_t           *list;
-        item_t            *item;
-        llist__iterator_t *self;
-        uint32_t           magic;
+        llist_cmp_functor_t cmp_functor;
+        llist_obj_dtor_t    obj_dtor;
+        item_t             *head;
+        item_t             *tail;
+        llist_t            *self;
+        size_t              count;
+        uint32_t            magic;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool  is_list_valid(llist_t *this);
-static bool  is_iterator_valid(llist__iterator_t *this);
-static int   insert_item(llist_t *this, int index, const void *data, int direction);
-static void *at_item(llist_t *this, int index, int direction);
-static int   remove_item(llist_t *this, int index, int direction, bool unlink);
-static int   append_prepend(llist_t *this, const void *data, int direction);
+static bool    is_list_valid(llist_t *this);
+static bool    is_iterator_valid(llist_iterator_t *this);
+static int     prepend(llist_t *this, const void *data);
+static int     append(llist_t *this, const void *data);
+static int     insert_item(llist_t *this, int index, const void *data);
+static item_t *get_item(llist_t *this, int position);
+static int     remove_item(llist_t *this, item_t *item, bool unlink);
+static void    quicksort(llist_t *this, int left, int right);
 
 /*==============================================================================
   Local objects
@@ -93,21 +95,23 @@ static const uint32_t magic_number = 0x6D89B264;
 //==============================================================================
 /**
  * @brief  List constructor
- * @param  None
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
  * @return On success list object is returned, otherwise NULL
  */
 //==============================================================================
-llist_t *llist__new(void)
+llist_t *llist_new(llist_cmp_functor_t cmp_functor, llist_obj_dtor_t obj_dtor)
 {
         llist_t *this = calloc(1, sizeof(llist_t));
         if (this) {
-                this->magic = magic_number;
-                this->self  = this;
+                this->cmp_functor = cmp_functor;
+                this->obj_dtor    = obj_dtor;
+                this->magic       = magic_number;
+                this->self        = this;
         }
 
         return this;
 }
-
 
 //==============================================================================
 /**
@@ -116,10 +120,10 @@ llist_t *llist__new(void)
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-int llist__delete(llist_t *this)
+int llist_delete(llist_t *this)
 {
         if (is_list_valid(this)) {
-                llist__clear(this);
+                llist_clear(this);
 
                 this->magic = 0;
                 this->self  = NULL;
@@ -132,214 +136,30 @@ int llist__delete(llist_t *this)
         return 0;
 }
 
-
 //==============================================================================
 /**
- * @brief  Append data to list
+ * @brief  Check if list is empty
  * @param  this         list object
- * @param  data         data to append
- * @return On success 1 is returned, otherwise 0
+ * @return If list is empty then true is returned, otherwise false
  */
 //==============================================================================
-int llist__append(llist_t *this, const void *data)
+bool llist_empty(llist_t *this)
 {
-        if (is_list_valid(this) && data) {
-                return append_prepend(this, data, 1);
+        if (is_list_valid(this)) {
+                return this->count == 0;
         } else {
-                return 0;
+                return true;
         }
 }
 
-
 //==============================================================================
 /**
- * @brief  Append data to list and allocate memory
+ * @brief  Return number of elements of the list
  * @param  this         list object
- * @param  data         data source to append
- * @return Pointer to allocated memory or NULL on error
+ * @return Number of elements of the list or -1 on error
  */
 //==============================================================================
-void *llist__append_alloc(llist_t *this, const void *data, size_t size)
-{
-        if (is_list_valid(this) && data && size) {
-                void *mem = malloc(size);
-                if (mem) {
-                        memcpy(mem, data, size);
-
-                        if (append_prepend(this, mem, 1) >= 0) {
-                                return mem;
-                        } else {
-                                free(mem);
-                        }
-                }
-        }
-
-        return NULL;
-}
-
-
-//==============================================================================
-/**
- * @brief  Clear list
- * @param  this         list object
- * @return On success 1 is returned, otherwise 0
- */
-//==============================================================================
-int llist__clear(llist_t *this)
-{
-        if (is_list_valid(this)) {
-                if (this->count == 0)
-                        return 1;
-
-                item_t *item = this->head;
-                while (item != NULL) {
-                        item_t *citem = item;
-                        item = item->next;
-
-                        if (citem->data) {
-                                free(citem->data);
-                        }
-
-                        free(citem);
-                }
-
-                this->count      = 0;
-                this->count_half = 0;
-                this->head       = NULL;
-                this->tail       = NULL;
-
-                return 1;
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Remove list item
- * @param  this         list object
- * @param  index        index to remove (negative values for backward indexing)
- * @return On success 1 is returned, otherwise 0
- */
-//==============================================================================
-int llist__remove(llist_t *this, int index)
-{
-        if (is_list_valid(this)) {
-                if (abs(index) <= this->count_half) {
-                        return remove_item(this, abs(index), (index < 0 ? -1 : 1), false);
-                } else {
-                        return remove_item(this, this->count - abs(index) - 1, (index < 0 ? 1 : -1), false);
-                }
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Remove list item without freeing item's data
- * @param  this         list object
- * @param  index        index to unlink (negative values for backward indexing)
- * @return On success 1 is returned, otherwise 0
- */
-//==============================================================================
-int llist__unlink(llist_t *this, int index)
-{
-        if (is_list_valid(this)) {
-                if (abs(index) <= this->count_half) {
-                        return remove_item(this, abs(index), (index < 0 ? -1 : 1), true);
-                } else {
-                        return remove_item(this, this->count - abs(index) - 1, (index < 0 ? 1 : -1), true);
-                }
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Insert an element to the list
- * @param  this         list object
- * @param  index        index to insert (negative values for backward indexing)
- * @return On success 1 is returned, otherwise 0
- */
-//==============================================================================
-int llist__insert(llist_t *this, int index, const void *data)
-{
-        if (is_list_valid(this) && data) {
-                if (abs(index) <= this->count_half) {
-                        return insert_item(this, abs(index), data, (index < 0 ? -1 : 1));
-                } else {
-                        return insert_item(this, this->count - abs(index), data, (index < 0 ? 1 : -1));
-                }
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Allocate memory and insert element to the list
- * @param  this         list object
- * @param  index        index to insert (negative values for backward indexing)
- * @param  data         data to insert
- * @param  size         size of data
- * @return Pointer to allocated memory or NULL on error
- */
-//==============================================================================
-void *llist__insert_alloc(llist_t *this, int index, const void *data, size_t size)
-{
-        if (is_list_valid(this) && data && size) {
-                void *mem = malloc(size);
-                if (mem) {
-                        memcpy(mem, data, size);
-
-                        if (llist__insert(this, index, mem) > 0) {
-                                return mem;
-                        } else {
-                                free(mem);
-                        }
-                }
-        }
-
-        return NULL;
-}
-
-
-//==============================================================================
-/**
- * @brief  Get element form list at selected index
- * @param  this         list object
- * @param  index        index (negative values for backward indexing)
- * @return Pointer to data
- */
-//==============================================================================
-void *llist__at(llist_t *this, int index)
-{
-        if (is_list_valid(this)) {
-                if (abs(index) <= this->count_half) {
-                        return at_item(this, index, (index < 0 ? -1 : 1));
-                } else {
-                        return at_item(this, this->count - index - 1, (index < 0 ? 1 : -1));
-                }
-        }
-
-        return NULL;
-}
-
-
-//==============================================================================
-/**
- * @brief  Get number of items of the list
- * @param  this         list object
- * @return On success number of items, on error -1
- */
-//==============================================================================
-int llist__count(llist_t *this)
+int llist_size(llist_t *this)
 {
         if (is_list_valid(this)) {
                 return this->count;
@@ -348,80 +168,535 @@ int llist__count(llist_t *this)
         }
 }
 
-
 //==============================================================================
 /**
- * @brief  Find in the list that specified object exists
+ * @brief  Push selected data to the front of the list. Creates a new object
  * @param  this         list object
- * @param  data         data to find
- * @return Number of objects existing in the list
+ * @param  size         data size
+ * @param  data         data source
+ * @return On success allocated memory pointer is returned, otherwise NULL
  */
 //==============================================================================
-int llist__contains(llist_t *this, const void *data)
+void *llist_push_emplace_front(llist_t *this, size_t size, const void *data)
 {
-        if (is_list_valid(this) && data) {
-                int n = 0;
+        if (is_list_valid(this) && data && size) {
+                void *mem = malloc(size);
+                if (mem) {
+                        memcpy(mem, data, size);
 
-                for (item_t *item = this->head; item; item = item->next) {
-                        if (item->data == data) {
-                                n++;
+                        if (prepend(this, mem)) {
+                                return mem;
+                        } else {
+                                free(mem);
                         }
-                }
-
-                return n;
-
-        } else {
-                return 0;
-        }
-}
-
-
-//==============================================================================
-/**
- * @brief  Create new iterator
- * @param  this         list object
- * @return On success returns iterator object, otherwise NULL
- */
-//==============================================================================
-llist__iterator_t *llist__new_iterator(llist_t *this)
-{
-        if (is_list_valid(this)) {
-                llist__iterator_t *iterator = calloc(1, sizeof(llist__iterator_t));
-                if (iterator) {
-                        iterator->list  = this;
-                        iterator->item  = this->head;
-                        iterator->magic = magic_number;
-                        iterator->self  = iterator;
-
-                        return iterator;
                 }
         }
 
         return NULL;
 }
 
+//==============================================================================
+/**
+ * @brief  Push selected object to the front of the list
+ * @param  this         list object
+ * @param  object       object to push
+ * @return On success pointer to the object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_push_front(llist_t *this, void *object)
+{
+        if (is_list_valid(this) && object) {
+                if (prepend(this, object)) {
+                        return object;
+                }
+        }
+
+        return NULL;
+}
 
 //==============================================================================
 /**
- * @brief  Delete created iterator
- * @param  iterator     iterator object
+ * @brief  Delete first element of the list. This destroys element
+ * @param  this         list object
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-int llist__delete_iterator(llist__iterator_t *iterator)
+int llist_pop_front(llist_t *this)
 {
-        if (is_iterator_valid(iterator)) {
-                if (is_list_valid(iterator->list)) {
-                        iterator->magic = 0;
-                        iterator->self  = NULL;
-                        free(iterator);
+        if (is_list_valid(this)) {
+                return remove_item(this, this->head, false);
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Push selected data to the back of the list. Creates a new object
+ * @param  this         list object
+ * @param  size         data size
+ * @param  data         data source
+ * @return On success allocated memory pointer is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_push_emplace_back(llist_t *this, size_t size, const void *data)
+{
+        if (is_list_valid(this) && data && size) {
+                void *mem = malloc(size);
+                if (mem) {
+                        memcpy(mem, data, size);
+
+                        if (append(this, mem)) {
+                                return mem;
+                        } else {
+                                free(mem);
+                        }
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Push selected object to the back of the list
+ * @param  this         list object
+ * @return On success pointer to the object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_push_back(llist_t *this, void *object)
+{
+        if (is_list_valid(this) && object) {
+                if (append(this, object)) {
+                        return object;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Delete the last element of the list. This destroys element
+ * @param  this         list object
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+int llist_pop_back(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                return remove_item(this, this->tail, false);
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate and append data at selected position in the list
+ * @param  this         list object
+ * @param  position     element position
+ * @param  size         element's size
+ * @param  data         element's data
+ * @return On success pointer to the object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_emplace(llist_t *this, int position, size_t size, const void *data)
+{
+        if (is_list_valid(this) && position >= 0 && data && size) {
+                void *mem = malloc(size);
+                if (mem) {
+                        memcpy(mem, data, size);
+
+                        if (insert_item(this, position, mem)) {
+                                return mem;
+                        } else {
+                                free(mem);
+                        }
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Insert an element to the list
+ * @param  this         list object
+ * @param  position     position to insert
+ * @param  object       object to insert
+ * @return On success object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_insert(llist_t *this, int position, void *object)
+{
+        if (is_list_valid(this) && position >= 0 && object) {
+                return insert_item(this, position, object) ? object : NULL;
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Erase selected begin of the list. The element is destroyed
+ * @param  this         list object
+ * @param  position     position to remove
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+int llist_erase(llist_t *this, int position)
+{
+        if (is_list_valid(this)) {
+                return remove_item(this, get_item(this, position), false);
+        }
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Return selected begin and remove from the list. The element is not destroyed
+ * @param  this         list object
+ * @param  position     position to take (unlink)
+ * @return On success taken object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_take(llist_t *this, int position)
+{
+        void *obj = NULL;
+
+        if (is_list_valid(this) && position >= 0) {
+                item_t *item = get_item(this, position);
+                obj = item->data;
+                if (obj) {
+                        remove_item(this, item, true);
+                }
+        }
+
+        return obj;
+}
+
+//==============================================================================
+/**
+ * @brief  Return first begin and remove from the list. The element is not destroyed
+ * @param  this         list object
+ * @return On success taken object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_take_front(llist_t *this)
+{
+        void *obj = NULL;
+
+        if (is_list_valid(this)) {
+                item_t *item = this->head;
+                obj = item->data;
+                if (obj) {
+                        remove_item(this, item, true);
+                }
+        }
+
+        return obj;
+}
+
+//==============================================================================
+/**
+ * @brief  Return last begin and remove from the list. The element is not destroyed
+ * @param  this         list object
+ * @return On success taken object is returned, otherwise NULL
+ */
+//==============================================================================
+void *llist_take_back(llist_t *this)
+{
+        void *obj = NULL;
+
+        if (is_list_valid(this)) {
+                item_t *item = this->tail;
+                obj = item->data;
+                if (obj) {
+                        remove_item(this, item, true);
+                }
+        }
+
+        return obj;
+}
+
+//==============================================================================
+/**
+ * @brief  Clear entire list (objects are destroyed)
+ * @param  this         list object
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+int llist_clear(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                if (this->count == 0)
                         return 1;
+
+                item_t *item = this->head;
+                while (item) {
+                        item_t *item_rm = item;
+                        item = item->next;
+
+                        remove_item(this, item_rm, false);
+                }
+
+                this->count = 0;
+                this->head  = NULL;
+                this->tail  = NULL;
+
+                return 1;
+        }
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Sort elements of the list
+ * @param  this         list object
+ * @return None
+ */
+//==============================================================================
+void llist_sort(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                if (this->cmp_functor) {
+                        quicksort(this, 0, this->count - 1);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Leave only unique elements, not unique are removed (are destroyed)
+ * @param  this         list object
+ * @return None
+ */
+//==============================================================================
+void llist_unique(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                if (this->cmp_functor) {
+                        quicksort(this, 0, this->count - 1);
+
+                        item_t *item = this->head;
+                        while (item && item->next) {
+                                item_t *item_rm = item;
+                                item = item->next;
+
+                                if (this->cmp_functor(item_rm->data, item_rm->next->data) == 0) {
+                                        remove_item(this, item_rm, false);
+                                }
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Reverse entire table
+ * @param  this         list object
+ * @return None
+ */
+//==============================================================================
+void llist_reverse(llist_t *this)
+{
+    if (is_list_valid(this)) {
+            item_t *item_h = this->head;
+            item_t *item_t = this->tail;
+            int     n      = this->count / 2;
+
+            while (n && item_h && item_t) {
+                    void *data   = item_t->data;
+                    item_t->data = item_h->data;
+                    item_h->data = data;
+
+                    item_h = item_h->next;
+                    item_t = item_t->prev;
+
+                    n--;
+            }
+    }
+}
+
+//==============================================================================
+/**
+ * @brief  Get element from the list at selected position
+ * @param  this         list object
+ * @param  position     begin position
+ * @return Pointer to data, or NULL on error
+ */
+//==============================================================================
+void *llist_at(llist_t *this, int position)
+{
+        if (is_list_valid(this)) {
+                item_t *item = get_item(this, position);
+                if (item) {
+                        return item->data;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Check if list contains selected object
+ * @param  this         list object
+ * @param  object       object to find
+ * @return Number of found objects, or -1 on error
+ */
+//==============================================================================
+int llist_contains(llist_t *this, const void *object)
+{
+        int cnt = -1;
+
+        if (is_list_valid(this)) {
+                if (this->cmp_functor) {
+                        cnt = 0;
+                        for (item_t *item = this->head; item; item = item->next) {
+                                if (this->cmp_functor(item->data, object) == 0) {
+                                        cnt++;
+                                }
+                        }
+                }
+        }
+
+        return cnt;
+}
+
+//==============================================================================
+/**
+ * @brief  Find selected object in the list from the beginning
+ * @param  this         list object
+ * @param  object       object to find
+ * @return Object position, or -1 on error
+ */
+//==============================================================================
+int llist_find_begin(llist_t *this, const void *object)
+{
+        if (is_list_valid(this)) {
+                if (this->cmp_functor) {
+                        int cnt = 0;
+                        for (item_t *item = this->head; item; item = item->next, cnt++) {
+                                if (this->cmp_functor(item->data, object) == 0) {
+                                        return cnt;
+                                }
+                        }
+                }
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief  Find selected object in the list from the end
+ * @param  this         list object
+ * @param  object       object to find
+ * @return Object position, or -1 on error
+ */
+//==============================================================================
+int llist_find_end(llist_t *this, const void *object)
+{
+        if (is_list_valid(this)) {
+                if (this->cmp_functor) {
+                        int cnt = this->count - 1;
+                        for (item_t *item = this->tail; item; item = item->prev, cnt--) {
+                                if (this->cmp_functor(item->data, object) == 0) {
+                                        return cnt;
+                                }
+                        }
+                }
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief  Access first element
+ * @param  this         list object
+ * @return Pointer to data, or NULL on error
+ */
+//==============================================================================
+void *llist_front(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                return this->head->data;
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Access last element
+ * @param  this         list object
+ * @return Pointer to data, or NULL on error
+ */
+//==============================================================================
+void *llist_back(llist_t *this)
+{
+        if (is_list_valid(this)) {
+                return this->tail->data;
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Swap 2 elements
+ * @param  this         list object
+ * @param  j            position of element a
+ * @param  k            position of element b
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+int llist_swap(llist_t *this, int j, int k)
+{
+        if (is_list_valid(this) && j >= 0 && k >= 0) {
+                if (static_cast(size_t, j) < this->count && static_cast(size_t, k) < this->count) {
+
+                        item_t *item_a = get_item(this, j);
+                        item_t *item_b = get_item(this, k);
+
+                        if (item_a && item_b) {
+                                void *data   = item_b->data;
+                                item_b->data = item_a->data;
+                                item_a->data = data;
+
+                                return 1;
+                        }
                 }
         }
 
         return 0;
 }
 
+//==============================================================================
+/**
+ * @brief  Create an iterator to the list
+ * @param  this         list object
+ * @return Iterator object
+ */
+//==============================================================================
+llist_iterator_t llist_iterator(llist_t *this)
+{
+        llist_iterator_t iterator;
+        memset(&iterator, 0, sizeof(llist_iterator_t));
+
+        if (is_list_valid(this)) {
+                iterator.list  = this;
+                iterator.begin  = NULL;
+                iterator.magic = magic_number;
+        }
+
+        return iterator;
+}
 
 //==============================================================================
 /**
@@ -430,21 +705,22 @@ int llist__delete_iterator(llist__iterator_t *iterator)
  * @return Pointer to data object
  */
 //==============================================================================
-void *llist__first(llist__iterator_t *iterator)
+void *llist_begin(llist_iterator_t *iterator)
 {
         if (is_iterator_valid(iterator)) {
                 if (is_list_valid(iterator->list)) {
-                        iterator->item = iterator->list->head;
+                        iterator->begin = iterator->list->head;
+                        iterator->end   = iterator->list->tail;
+                        iterator->fini  = false;
 
-                        if (iterator->item) {
-                                return iterator->item->data;
+                        if (iterator->begin) {
+                                return (reinterpret_cast(item_t*, iterator->begin))->data;
                         }
                 }
         }
 
         return NULL;
 }
-
 
 //==============================================================================
 /**
@@ -453,14 +729,16 @@ void *llist__first(llist__iterator_t *iterator)
  * @return Pointer to data object
  */
 //==============================================================================
-void *llist__last(llist__iterator_t *iterator)
+void *llist_end(llist_iterator_t *iterator)
 {
         if (is_iterator_valid(iterator)) {
                 if (is_list_valid(iterator->list)) {
-                        iterator->item = iterator->list->tail;
+                        iterator->begin = iterator->list->tail;
+                        iterator->end   = iterator->list->head;
+                        iterator->fini  = false;
 
-                        if (iterator->item) {
-                                return iterator->item->data;
+                        if (iterator->begin) {
+                                return (reinterpret_cast(item_t*, iterator->begin))->data;
                         }
                 }
         }
@@ -468,6 +746,31 @@ void *llist__last(llist__iterator_t *iterator)
         return NULL;
 }
 
+//==============================================================================
+/**
+ * @brief  Return selected objects from list by using range iterator (forward)
+ * @param  iterator     iterator object
+ * @param  begin        begin position
+ * @param  end          end position
+ * @return Pointer to data object
+ */
+//==============================================================================
+void *llist_range(llist_iterator_t *iterator, int begin, int end)
+{
+        if (is_iterator_valid(iterator) && begin >= 0 && end >= 0) {
+                if (is_list_valid(iterator->list)) {
+                        iterator->begin = get_item(iterator->list, begin);
+                        iterator->end   = get_item(iterator->list, end);
+                        iterator->fini  = begin == end;
+
+                        if (iterator->begin) {
+                                return (reinterpret_cast(item_t*, iterator->begin))->data;
+                        }
+                }
+        }
+
+        return NULL;
+}
 
 //==============================================================================
 /**
@@ -476,21 +779,26 @@ void *llist__last(llist__iterator_t *iterator)
  * @return Pointer to data object
  */
 //==============================================================================
-void *llist__iterator_next(llist__iterator_t *iterator)
+void *llist_iterator_next(llist_iterator_t *iterator)
 {
-        if (is_iterator_valid(iterator)) {
-                if (is_list_valid(iterator->list) && iterator->item) {
-                        iterator->item = iterator->item->next;
+        void *obj = NULL;
 
-                        if (iterator->item) {
-                                return iterator->item->data;
+        if (is_iterator_valid(iterator)) {
+                if (is_list_valid(iterator->list) && iterator->begin && !iterator->fini) {
+                        iterator->begin = (reinterpret_cast(item_t*, iterator->begin))->next;
+
+                        if (iterator->begin) {
+                                obj = (reinterpret_cast(item_t*, iterator->begin))->data;
+
+                                if (iterator->begin == iterator->end) {
+                                        iterator->fini = true;
+                                }
                         }
                 }
         }
 
-        return NULL;
+        return obj;
 }
-
 
 //==============================================================================
 /**
@@ -499,21 +807,26 @@ void *llist__iterator_next(llist__iterator_t *iterator)
  * @return Pointer to data object
  */
 //==============================================================================
-void *llist__iterator_prev(llist__iterator_t *iterator)
+void *llist_iterator_prev(llist_iterator_t *iterator)
 {
-        if (is_iterator_valid(iterator)) {
-                if (is_list_valid(iterator->list) && iterator->item) {
-                        iterator->item = iterator->item->prev;
+        void *obj = NULL;
 
-                        if (iterator->item) {
-                                return iterator->item->data;
+        if (is_iterator_valid(iterator)) {
+                if (is_list_valid(iterator->list) && iterator->begin && !iterator->fini) {
+                        iterator->begin = (reinterpret_cast(item_t*, iterator->begin))->prev;
+
+                        if (iterator->begin) {
+                                obj = (reinterpret_cast(item_t*, iterator->begin))->data;
+
+                                if (iterator->begin == iterator->end) {
+                                        iterator->fini = true;
+                                }
                         }
                 }
         }
 
-        return NULL;
+        return obj;
 }
-
 
 //==============================================================================
 /**
@@ -533,7 +846,6 @@ static bool is_list_valid(llist_t *this)
         return false;
 }
 
-
 //==============================================================================
 /**
  * @brief  Check if iterator object is valid
@@ -541,10 +853,10 @@ static bool is_list_valid(llist_t *this)
  * @return If object is valid true is returned, otherwise false
  */
 //==============================================================================
-static bool is_iterator_valid(llist__iterator_t *this)
+static bool is_iterator_valid(llist_iterator_t *this)
 {
         if (this) {
-                if (this->magic == magic_number && this->self == this) {
+                if (this->magic == magic_number) {
                         return true;
                 }
         }
@@ -552,189 +864,254 @@ static bool is_iterator_valid(llist__iterator_t *this)
         return false;
 }
 
-
 //==============================================================================
 /**
- * @brief  Remove list item
+ * @brief  Return pointer to the element container
  * @param  this         list object
- * @param  index        index of item to delete
- * @param  unlink       unlink data from list instead of remove
- * @param  direction    item find direction
- * @return On success 1 is returned, otherwise 0
+ * @param  position     begin's position
+ * @return On success begin is returned, otherwise NULL
  */
 //==============================================================================
-static int remove_item(llist_t *this, int index, int direction, bool unlink)
+static item_t *get_item(llist_t *this, int position)
 {
-        if (this->count == 0 || index < 0 || index >= this->count) {
-                return 0;
-        }
+        enum direction {DIR_FORWARD, DIR_BACKWARD};
 
-        item_t *item = direction >= 0 ? this->head : this->tail;
+        if (position < 0 || static_cast(size_t, position) >= this->count) {
+                return NULL;
 
-        while (item != NULL) {
-                if (index-- == 0) {
-                        if (item->prev == NULL) {
-                                this->head = item->next;
-                        } else {
-                                item->prev->next = item->next;
-                        }
+        } else {
+                enum direction dir;
+                item_t        *item;
 
-                        if (item->next == NULL) {
-                                this->tail = item->prev;
-                        } else {
-                                item->next->prev = item->prev;
-                        }
-
-                        if (item->data && !unlink) {
-                                free(item->data);
-                        }
-
-                        free(item);
-
-                        this->count--;
-                        this->count_half = this->count / 2;
-
-                        return 1;
-                }
-
-                item = direction >= 0 ? item->next : item->prev;
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Insert item to the list
- * @param  this         list object
- * @param  index        element index
- * @param  data         data inserted to the item
- * @param  direction    insert direction
- * @param  On success 1 is returned, otherwise 0
- */
-//==============================================================================
-static int insert_item(llist_t *this, int index, const void *data, int direction)
-{
-        if (index <= 0) {
-                return append_prepend(this, data, (direction >= 0 ? -1 : 1));
-        } else if (index >= this->count) {
-                return 0;
-        }
-
-        item_t *new_item = calloc(1, sizeof(item_t));
-        if (new_item) {
-                new_item->data = const_cast(void*, data);
-
-                index = direction >= 0 ? index : index - 1;
-
-                item_t *item = direction >= 0 ? this->head : this->tail;
-                if (item == NULL) {
-                        this->head = new_item;
-                        this->tail = new_item;
-                        this->count++;
-                        this->count_half = this->count / 2;
-
-                        return 1;
+                if (static_cast(size_t, position) <= this->count / 2) {
+                        dir      = DIR_FORWARD;
+                        item     = this->head;
+                } else {
+                        dir      = DIR_BACKWARD;
+                        item     = this->tail;
+                        position = this->count - position - 1;
                 }
 
                 while (item) {
-                        if (index-- == 0) {
-                                if (item->prev == NULL) {
-                                        this->head = new_item;
-                                } else {
-                                        item->prev->next = new_item;
-                                }
-
-                                new_item->prev = item->prev;
-                                new_item->next = item;
-                                item->prev     = new_item;
-
-                                this->count++;
-                                this->count_half = this->count / 2;
-
-                                return 1;
+                        if (position-- == 0) {
+                                return item;
+                        } else {
+                                item = dir == DIR_FORWARD ? item->next : item->prev;
                         }
-
-                        item = direction >= 0 ? item->next : item->prev;
                 }
-
-                free(new_item);
-        }
-
-        return 0;
-}
-
-
-//==============================================================================
-/**
- * @brief  Get indexed element from list
- * @param  this         list object
- * @param  index        item index
- * @param  direction    find direction
- * @return Pointer to item's data
- */
-//==============================================================================
-static void *at_item(llist_t *this, int index, int direction)
-{
-        if (index < 0 || index >= this->count) {
-                return NULL;
-        }
-
-        item_t *item = direction >= 0 ? this->head : this->tail;
-        while (item) {
-                if (index-- == 0) {
-                        return item->data;
-                }
-
-                item = direction >= 0 ? item->next : item->prev;
         }
 
         return NULL;
 }
 
-
 //==============================================================================
 /**
- * @brief  Append data to the list
+ * @brief  Remove begin of the list
  * @param  this         list object
- * @param  data         data to append
- * @param  direction    append direction
+ * @param  begin         begin to remove
+ * @param  unlink       unlink data from list instead of remove
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-static int append_prepend(llist_t *this, const void *data, int direction)
+static int remove_item(llist_t *this, item_t *item, bool unlink)
 {
-        item_t* new_item = calloc(1, sizeof(item_t));
+        if (item) {
+                if (item->prev == NULL) {
+                        this->head = item->next;
+                } else {
+                        item->prev->next = item->next;
+                }
+
+                if (item->next == NULL) {
+                        this->tail = item->prev;
+                } else {
+                        item->next->prev = item->prev;
+                }
+
+                item->next = NULL;
+                item->prev = NULL;
+
+                if (item->data && !unlink) {
+                        if (this->obj_dtor) {
+                                this->obj_dtor(item->data);
+                        } else {
+                                free(item->data);
+                        }
+
+                        item->data = NULL;
+                }
+
+                free(item);
+
+                this->count--;
+
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Insert begin to the list
+ * @param  this         list object
+ * @param  index        element index
+ * @param  data         data inserted to the begin
+ * @param  On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+static int insert_item(llist_t *this, int index, const void *data)
+{
+        if (index == 0) {
+                return prepend(this, data);
+
+        } else if (static_cast(size_t, index) == this->count) {
+                return append(this, data);
+
+        } else if (static_cast(size_t, index) > this->count) {
+                return 0;
+
+        } else {
+                item_t *new_item = malloc(sizeof(item_t));
+                if (new_item) {
+                        new_item->data = const_cast(void*, data);
+
+                        item_t *item = get_item(this, index);
+                        if (item) {
+                                new_item->prev   = item->prev;
+                                new_item->next   = item;
+                                item->prev->next = new_item;
+                                item->prev       = new_item;
+
+                                this->count++;
+
+                                return 1;
+                        }
+
+                        free(new_item);
+                }
+
+        }
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Prepend a new begin to the list
+ * @param  this         list object
+ * @param  data         data to append
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+static int prepend(llist_t *this, const void *data)
+{
+        item_t *new_item = malloc(sizeof(item_t));
         if (new_item) {
                 new_item->data = const_cast(void*, data);
 
                 if (this->head == NULL) {
-                        this->head = new_item;
-                        this->tail = new_item;
+                        new_item->next   = NULL;
+                        new_item->prev   = NULL;
+                        this->head       = new_item;
+                        this->tail       = new_item;
                 } else {
-                        if (direction >= 0) {
-                                item_t *prev_item = this->tail;
-                                prev_item->next   = new_item;
-                                new_item->prev    = prev_item;
-                                new_item->next    = NULL;
-                                this->tail        = new_item;
-                        } else {
-                                item_t* next_item = this->head;
-                                next_item->prev   = new_item;
-                                new_item->prev    = NULL;
-                                new_item->next    = next_item;
-                                this->head        = new_item;
-                        }
+                        this->head->prev = new_item;
+                        new_item->prev   = NULL;
+                        new_item->next   = this->head;
+                        this->head       = new_item;
                 }
 
                 this->count++;
-                this->count_half = this->count / 2;
 
                 return 1;
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Append a new begin to the list
+ * @param  this         list object
+ * @param  data         data to append
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+static int append(llist_t *this, const void *data)
+{
+        item_t *new_item = malloc(sizeof(item_t));
+        if (new_item) {
+                new_item->data = const_cast(void*, data);
+
+                if (this->head == NULL) {
+                        new_item->next   = NULL;
+                        new_item->prev   = NULL;
+                        this->head       = new_item;
+                        this->tail       = new_item;
+                } else {
+                        this->tail->next = new_item;
+                        new_item->prev   = this->tail;
+                        new_item->next   = NULL;
+                        this->tail       = new_item;
+                }
+
+                this->count++;
+
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Quicksort algorithm
+ * @param  this         list object
+ * @param  left         left position (sort border)
+ * @param  right        right position (sort border)
+ * @return None
+ */
+//==============================================================================
+static void quicksort(llist_t *this, int left, int right)
+{
+        int     i, j;
+        void   *pivot;
+        item_t *item_i, *item_j, *item_r, *item_l;
+
+        i = (left + right) / 2;
+
+        item_i = get_item(this, i);
+        item_r = get_item(this, right);
+        item_l = get_item(this, left);
+        pivot  = item_i->data;
+
+        item_i->data = item_r->data;
+
+        item_j = item_i = item_l;
+        for (i = j = left; i < right; item_i = item_i->next, i++) {
+
+                if (this->cmp_functor(item_i->data, pivot) < 0) {
+
+                        void *data   = item_j->data;
+                        item_j->data = item_i->data;
+                        item_i->data = data;
+
+                        item_j = item_j->next;
+                        j++;
+                }
         }
 
-        return 0;
+        item_r->data = item_j->data;
+        item_j->data = pivot;
+
+        if (left < j - 1) {
+                quicksort(this, left, j - 1);
+        }
+
+        if (j + 1 < right) {
+                quicksort(this, j + 1, right);
+        }
 }
 
 /*==============================================================================
