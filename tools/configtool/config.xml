@@ -2,7 +2,7 @@
     <tool>
         <window>
             <name>dnx RTOS Configuration</name>
-            <xsize>800</xsize>
+            <xsize>850</xsize>
             <ysize>600</ysize>
             <csize>550</csize>
         </window>
@@ -13,10 +13,14 @@
             <PROJECT_NAME><path>../../config/project/Makefile</path><key>PROJECT_NAME</key></PROJECT_NAME>
             <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>PROJECT_CPU_ARCH</key></PROJECT_CPU_ARCH>
             <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>PROJECT_TOOLCHAIN</key></PROJECT_TOOLCHAIN>
+            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+            <_FS_MK_ENABLE_FLAGS_></_FS_MK_ENABLE_FLAGS_>
             <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>ENABLE_LFS</key></ENABLE_LFS_MK>
             <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>ENABLE_DEVFS</key></ENABLE_DEVFS_MK>
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>ENABLE_PROCFS</key></ENABLE_PROCFS_MK>
             <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>ENABLE_FATFS</key></ENABLE_FATFS_MK>
+            <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
+            <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>ENABLE_LOOP</key></ENABLE_LOOP_MK>
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>ENABLE_GPIO</key></ENABLE_GPIO_MK>
             <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>ENABLE_AFIO</key></ENABLE_AFIO_MK>
             <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>ENABLE_CRC</key></ENABLE_CRC_MK>
@@ -27,18 +31,9 @@
             <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>ENABLE_TTY</key></ENABLE_TTY_MK>
             <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>ENABLE_UART</key></ENABLE_UART_MK>
             <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>ENABLE_WDG</key></ENABLE_WDG_MK>
-            <ENABLE_I2S_MK><path>../../config/project/Makefile</path><key>ENABLE_I2S</key></ENABLE_I2S_MK>
             <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>ENABLE_USB</key></ENABLE_USB_MK>
-            <ENABLE_USBOTG_MK><path>../../config/project/Makefile</path><key>ENABLE_USBOTG</key></ENABLE_USBOTG_MK>
             <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>ENABLE_I2C</key></ENABLE_I2C_MK>
-            <ENABLE_ADC_MK><path>../../config/project/Makefile</path><key>ENABLE_ADC</key></ENABLE_ADC_MK>
-            <ENABLE_DAC_MK><path>../../config/project/Makefile</path><key>ENABLE_DAC</key></ENABLE_DAC_MK>
-            <ENABLE_SDIO_MK><path>../../config/project/Makefile</path><key>ENABLE_SDIO</key></ENABLE_SDIO_MK>
-            <ENABLE_FSMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FSMC</key></ENABLE_FSMC_MK>
-            <ENABLE_FDMC_MK><path>../../config/project/Makefile</path><key>ENABLE_FDMC</key></ENABLE_FDMC_MK>
-            <ENABLE_HDMICEC_MK><path>../../config/project/Makefile</path><key>ENABLE_HDMICEC</key></ENABLE_HDMICEC_MK>
-            <ENABLE_CAN_MK><path>../../config/project/Makefile</path><key>ENABLE_CAN</key></ENABLE_CAN_MK>
-            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+            <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>ENABLE_IRQ</key></ENABLE_IRQ_MK>
 
             <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
             <CPU_START_FREQ><path>../../config/project/flags.h</path><key>__CPU_START_FREQ__</key></CPU_START_FREQ>
@@ -79,12 +74,15 @@
             <NETWORK_MAC_ADDR_4><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
             <NETWORK_MAC_ADDR_5><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
             <NETWORK_ETHIF_FILE><path>../../config/project/flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+            <_FS_ENABLE_FLAGS_></_FS_ENABLE_FLAGS_>
             <ENABLE_DEVFS_H><path>../../config/project/flags.h</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_H>
             <ENABLE_LFS_H><path>../../config/project/flags.h</path><key>__ENABLE_LFS__</key></ENABLE_LFS_H>
             <ENABLE_FATFS_H><path>../../config/project/flags.h</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_H>
             <FATFS_LFN_ENABLE><path>../../config/project/flags.h</path><key>__FATFS_LFN_ENABLE__</key></FATFS_LFN_ENABLE>
             <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
             <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
+            <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
+            <ENABLE_LOOP_H><path>../../config/project/flags.h</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_H>
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
             <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
             <ENABLE_CRC_H><path>../../config/project/flags.h</path><key>__ENABLE_CRC__</key></ENABLE_CRC_H>
@@ -95,17 +93,9 @@
             <ENABLE_TTY_H><path>../../config/project/flags.h</path><key>__ENABLE_TTY__</key></ENABLE_TTY_H>
             <ENABLE_UART_H><path>../../config/project/flags.h</path><key>__ENABLE_UART__</key></ENABLE_UART_H>
             <ENABLE_WDG_H><path>../../config/project/flags.h</path><key>__ENABLE_WDG__</key></ENABLE_WDG_H>
-            <ENABLE_I2S_H><path>../../config/project/flags.h</path><key>__ENABLE_I2S__</key></ENABLE_I2S_H>
             <ENABLE_USB_H><path>../../config/project/flags.h</path><key>__ENABLE_USB__</key></ENABLE_USB_H>
-            <ENABLE_USBOTG_H><path>../../config/project/flags.h</path><key>__ENABLE_USBOTG__</key></ENABLE_USBOTG_H>
             <ENABLE_I2C_H><path>../../config/project/flags.h</path><key>__ENABLE_I2C__</key></ENABLE_I2C_H>
-            <ENABLE_ADC_H><path>../../config/project/flags.h</path><key>__ENABLE_ADC__</key></ENABLE_ADC_H>
-            <ENABLE_DAC_H><path>../../config/project/flags.h</path><key>__ENABLE_DAC__</key></ENABLE_DAC_H>
-            <ENABLE_SDIO_H><path>../../config/project/flags.h</path><key>__ENABLE_SDIO__</key></ENABLE_SDIO_H>
-            <ENABLE_FSMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FSMC__</key></ENABLE_FSMC_H>
-            <ENABLE_FDMC_H><path>../../config/project/flags.h</path><key>__ENABLE_FDMC__</key></ENABLE_FDMC_H>
-            <ENABLE_HDMICEC_H><path>../../config/project/flags.h</path><key>__ENABLE_HDMICEC__</key></ENABLE_HDMICEC_H>
-            <ENABLE_CAN_H><path>../../config/project/flags.h</path><key>__ENABLE_CAN__</key></ENABLE_CAN_H>
+            <ENABLE_IRQ_H><path>../../config/project/flags.h</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_H>
         </key>
         <def>
             <NO>__NO__</NO>
@@ -113,6 +103,7 @@
             <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
+            <module noarch="true"><name>LOOP</name><description>Universal virtual device that allow to connect applications together</description></module>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
             <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
@@ -123,18 +114,31 @@
             <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
             <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
             <module noarch="false"><name>WDG</name><description>This module handles Watchdog peripherals.</description></module>
-            <module noarch="false"><name>I2S</name><description>This module handles I2S peripherals.</description></module>
             <module noarch="false"><name>USB</name><description>This module handles USB peripherals in the device mode.</description></module>
-            <module noarch="false"><name>USBOTG</name><description>This module handles USB-OTG peripherals in the device and host mode.</description></module>
             <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
-            <module noarch="false"><name>ADC</name><description>This module handles ADC peripherals.</description></module>
-            <module noarch="false"><name>DAC</name><description>This module handles DAC peripherals.</description></module>
-            <module noarch="false"><name>SDIO</name><description>This module handles SD Cards by using native card interface.</description></module>
-            <module noarch="false"><name>FSMC</name><description>This module handles static memory controller.</description></module>
-            <module noarch="false"><name>FDMC</name><description>This module handles dynamic memory controller.</description></module>
-            <module noarch="false"><name>HDMICEC</name><description>This module handles HDMI-CEC peripherals.</description></module>
-            <module noarch="false"><name>CAN</name><description>This module handles CAN peripherals.</description></module>
+            <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
+        <path>
+            <config_dir>../../config</config_dir>
+            <src_dir>../../src</src_dir>
+            <drivers_dir>../../src/system/drivers</drivers_dir>
+            <drivers_reg_file>../../src/system/drivers/driver_registration.c</drivers_reg_file>
+            <drivers_main_makefile>../../src/system/drivers/Makefile</drivers_main_makefile>
+            <module_template_cfg_file>../../extra/templates/module/module_cfg.h</module_template_cfg_file>
+            <module_template_def_file>../../extra/templates/module/module_def.h</module_template_def_file>
+            <module_template_flags_file>../../extra/templates/module/module_flags.h</module_template_flags_file>
+            <module_template_ioctl_file>../../extra/templates/module/module_ioctl.h</module_template_ioctl_file>
+            <module_template_src_file>../../extra/templates/module/module.c</module_template_src_file>
+            <module_template_makefile_arch_file>../../extra/templates/module/Makefile_arch</module_template_makefile_arch_file>
+            <module_template_makefile_noarch_file>../../extra/templates/module/Makefile_noarch</module_template_makefile_noarch_file>
+            <configtool_template_form_file>../../extra/templates/configtool/form.lua</configtool_template_form_file>
+            <configtool_arch_dir>./arch</configtool_arch_dir>
+            <project_flags_file>../../config/project/flags.h</project_flags_file>
+            <project_makefile>../../config/project/Makefile</project_makefile>
+            <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
+            <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
+            <xml_config_file>./config.xml</xml_config_file>
+        </path>
     </project>
 
     <PHY>
@@ -166,6 +170,7 @@
             <TTY_ENABLE_TERM_SIZE_CHECK><path>../../config/noarch/tty_flags.h</path><key>__TTY_ENABLE_TERM_SIZE_CHECK__</key></TTY_ENABLE_TERM_SIZE_CHECK>
             <TTY_TERM_IN_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_IN_FILE__</key></TTY_TERM_IN_FILE>
             <TTY_TERM_OUT_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_OUT_FILE__</key></TTY_TERM_OUT_FILE>
+            <LOOP_DEVCOUNT><path>../../config/noarch/loop_flags.h</path><key>__LOOP_CFG_NUMBER_OF_DEVICES__</key></LOOP_DEVCOUNT>
         </key>
     </noarch>
 
@@ -325,6 +330,96 @@
                 <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>
                 <PLL_ADC_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_ADC_PRE__</key></PLL_ADC_PRE>
                 <PLL_FLASH_LATENCY><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_FLASH_LATENCY__</key></PLL_FLASH_LATENCY>
+                <IRQ_0_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_0_MODE__</key></IRQ_0_MODE>
+                <IRQ_1_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_1_MODE__</key></IRQ_1_MODE>
+                <IRQ_2_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_2_MODE__</key></IRQ_2_MODE>
+                <IRQ_3_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_3_MODE__</key></IRQ_3_MODE>
+                <IRQ_4_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_4_MODE__</key></IRQ_4_MODE>
+                <IRQ_5_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_5_MODE__</key></IRQ_5_MODE>
+                <IRQ_6_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_6_MODE__</key></IRQ_6_MODE>
+                <IRQ_7_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_7_MODE__</key></IRQ_7_MODE>
+                <IRQ_8_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_8_MODE__</key></IRQ_8_MODE>
+                <IRQ_9_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_9_MODE__</key></IRQ_9_MODE>
+                <IRQ_10_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_10_MODE__</key></IRQ_10_MODE>
+                <IRQ_11_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_11_MODE__</key></IRQ_11_MODE>
+                <IRQ_12_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_12_MODE__</key></IRQ_12_MODE>
+                <IRQ_13_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_13_MODE__</key></IRQ_13_MODE>
+                <IRQ_14_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_14_MODE__</key></IRQ_14_MODE>
+                <IRQ_15_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_15_MODE__</key></IRQ_15_MODE>
+                <IRQ_0_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_0_PRIO__</key></IRQ_0_PRIO>
+                <IRQ_1_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_1_PRIO__</key></IRQ_1_PRIO>
+                <IRQ_2_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_2_PRIO__</key></IRQ_2_PRIO>
+                <IRQ_3_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_3_PRIO__</key></IRQ_3_PRIO>
+                <IRQ_4_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_4_PRIO__</key></IRQ_4_PRIO>
+                <IRQ_5_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_5_PRIO__</key></IRQ_5_PRIO>
+                <IRQ_6_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_6_PRIO__</key></IRQ_6_PRIO>
+                <IRQ_7_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_7_PRIO__</key></IRQ_7_PRIO>
+                <IRQ_8_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_8_PRIO__</key></IRQ_8_PRIO>
+                <IRQ_9_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_9_PRIO__</key></IRQ_9_PRIO>
+                <IRQ_10_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_10_PRIO__</key></IRQ_10_PRIO>
+                <IRQ_11_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_11_PRIO__</key></IRQ_11_PRIO>
+                <IRQ_12_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_12_PRIO__</key></IRQ_12_PRIO>
+                <IRQ_13_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_13_PRIO__</key></IRQ_13_PRIO>
+                <IRQ_14_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_14_PRIO__</key></IRQ_14_PRIO>
+                <IRQ_15_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_15_PRIO__</key></IRQ_15_PRIO>
+                <I2C1_ENABLE><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_ENABLE__</key></I2C1_ENABLE>
+                <I2C1_USE_DMA><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_USE_DMA__</key></I2C1_USE_DMA>
+                <I2C1_SCL_FREQ><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_SCL_FREQ__</key></I2C1_SCL_FREQ>
+                <I2C1_IRQ_PRIO><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_IRQ_PRIO__</key></I2C1_IRQ_PRIO>
+                <I2C1_NUMBER_OF_DEVICES><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_NUMBER_OF_DEVICES__</key></I2C1_NUMBER_OF_DEVICES>
+                <I2C1_DEV_0_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_0_ADDRESS__</key></I2C1_DEV_0_ADDRESS>
+                <I2C1_DEV_0_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_0_10BIT_ADDR__</key></I2C1_DEV_0_10BIT_ADDR>
+                <I2C1_DEV_0_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_0_SEND_SUB_ADDR__</key></I2C1_DEV_0_SEND_SUB_ADDR>
+                <I2C1_DEV_1_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_1_ADDRESS__</key></I2C1_DEV_1_ADDRESS>
+                <I2C1_DEV_1_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_1_10BIT_ADDR__</key></I2C1_DEV_1_10BIT_ADDR>
+                <I2C1_DEV_1_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_1_SEND_SUB_ADDR__</key></I2C1_DEV_1_SEND_SUB_ADDR>
+                <I2C1_DEV_2_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_2_ADDRESS__</key></I2C1_DEV_2_ADDRESS>
+                <I2C1_DEV_2_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_2_10BIT_ADDR__</key></I2C1_DEV_2_10BIT_ADDR>
+                <I2C1_DEV_2_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_2_SEND_SUB_ADDR__</key></I2C1_DEV_2_SEND_SUB_ADDR>
+                <I2C1_DEV_3_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_3_ADDRESS__</key></I2C1_DEV_3_ADDRESS>
+                <I2C1_DEV_3_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_3_10BIT_ADDR__</key></I2C1_DEV_3_10BIT_ADDR>
+                <I2C1_DEV_3_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_3_SEND_SUB_ADDR__</key></I2C1_DEV_3_SEND_SUB_ADDR>
+                <I2C1_DEV_4_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_4_ADDRESS__</key></I2C1_DEV_4_ADDRESS>
+                <I2C1_DEV_4_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_4_10BIT_ADDR__</key></I2C1_DEV_4_10BIT_ADDR>
+                <I2C1_DEV_4_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_4_SEND_SUB_ADDR__</key></I2C1_DEV_4_SEND_SUB_ADDR>
+                <I2C1_DEV_5_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_5_ADDRESS__</key></I2C1_DEV_5_ADDRESS>
+                <I2C1_DEV_5_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_5_10BIT_ADDR__</key></I2C1_DEV_5_10BIT_ADDR>
+                <I2C1_DEV_5_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_5_SEND_SUB_ADDR__</key></I2C1_DEV_5_SEND_SUB_ADDR>
+                <I2C1_DEV_6_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_6_ADDRESS__</key></I2C1_DEV_6_ADDRESS>
+                <I2C1_DEV_6_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_6_10BIT_ADDR__</key></I2C1_DEV_6_10BIT_ADDR>
+                <I2C1_DEV_6_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_6_SEND_SUB_ADDR__</key></I2C1_DEV_6_SEND_SUB_ADDR>
+                <I2C1_DEV_7_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_7_ADDRESS__</key></I2C1_DEV_7_ADDRESS>
+                <I2C1_DEV_7_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_7_10BIT_ADDR__</key></I2C1_DEV_7_10BIT_ADDR>
+                <I2C1_DEV_7_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_DEV_7_SEND_SUB_ADDR__</key></I2C1_DEV_7_SEND_SUB_ADDR>
+                <I2C2_ENABLE><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_ENABLE__</key></I2C2_ENABLE>
+                <I2C2_USE_DMA><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_USE_DMA__</key></I2C2_USE_DMA>
+                <I2C2_SCL_FREQ><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_SCL_FREQ__</key></I2C2_SCL_FREQ>
+                <I2C2_IRQ_PRIO><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_IRQ_PRIO__</key></I2C2_IRQ_PRIO>
+                <I2C2_NUMBER_OF_DEVICES><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_NUMBER_OF_DEVICES__</key></I2C2_NUMBER_OF_DEVICES>
+                <I2C2_DEV_0_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_0_ADDRESS__</key></I2C2_DEV_0_ADDRESS>
+                <I2C2_DEV_0_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_0_10BIT_ADDR__</key></I2C2_DEV_0_10BIT_ADDR>
+                <I2C2_DEV_0_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_0_SEND_SUB_ADDR__</key></I2C2_DEV_0_SEND_SUB_ADDR>
+                <I2C2_DEV_1_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_1_ADDRESS__</key></I2C2_DEV_1_ADDRESS>
+                <I2C2_DEV_1_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_1_10BIT_ADDR__</key></I2C2_DEV_1_10BIT_ADDR>
+                <I2C2_DEV_1_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_1_SEND_SUB_ADDR__</key></I2C2_DEV_1_SEND_SUB_ADDR>
+                <I2C2_DEV_2_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_2_ADDRESS__</key></I2C2_DEV_2_ADDRESS>
+                <I2C2_DEV_2_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_2_10BIT_ADDR__</key></I2C2_DEV_2_10BIT_ADDR>
+                <I2C2_DEV_2_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_2_SEND_SUB_ADDR__</key></I2C2_DEV_2_SEND_SUB_ADDR>
+                <I2C2_DEV_3_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_3_ADDRESS__</key></I2C2_DEV_3_ADDRESS>
+                <I2C2_DEV_3_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_3_10BIT_ADDR__</key></I2C2_DEV_3_10BIT_ADDR>
+                <I2C2_DEV_3_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_3_SEND_SUB_ADDR__</key></I2C2_DEV_3_SEND_SUB_ADDR>
+                <I2C2_DEV_4_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_4_ADDRESS__</key></I2C2_DEV_4_ADDRESS>
+                <I2C2_DEV_4_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_4_10BIT_ADDR__</key></I2C2_DEV_4_10BIT_ADDR>
+                <I2C2_DEV_4_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_4_SEND_SUB_ADDR__</key></I2C2_DEV_4_SEND_SUB_ADDR>
+                <I2C2_DEV_5_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_5_ADDRESS__</key></I2C2_DEV_5_ADDRESS>
+                <I2C2_DEV_5_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_5_10BIT_ADDR__</key></I2C2_DEV_5_10BIT_ADDR>
+                <I2C2_DEV_5_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_5_SEND_SUB_ADDR__</key></I2C2_DEV_5_SEND_SUB_ADDR>
+                <I2C2_DEV_6_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_6_ADDRESS__</key></I2C2_DEV_6_ADDRESS>
+                <I2C2_DEV_6_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_6_10BIT_ADDR__</key></I2C2_DEV_6_10BIT_ADDR>
+                <I2C2_DEV_6_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_6_SEND_SUB_ADDR__</key></I2C2_DEV_6_SEND_SUB_ADDR>
+                <I2C2_DEV_7_ADDRESS><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_7_ADDRESS__</key></I2C2_DEV_7_ADDRESS>
+                <I2C2_DEV_7_10BIT_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_7_10BIT_ADDR__</key></I2C2_DEV_7_10BIT_ADDR>
+                <I2C2_DEV_7_SEND_SUB_ADDR><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C2_DEV_7_SEND_SUB_ADDR__</key></I2C2_DEV_7_SEND_SUB_ADDR>
             </key>
 
             <cpulist>
@@ -354,6 +449,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -382,6 +483,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -413,6 +520,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -442,6 +555,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -476,6 +595,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -504,6 +629,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -532,6 +663,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -560,6 +697,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -588,6 +731,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -617,6 +766,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -646,6 +801,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -672,7 +833,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -701,7 +867,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -730,7 +902,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -757,7 +935,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -786,7 +969,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -815,7 +1004,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -847,7 +1042,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -879,7 +1080,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -911,7 +1118,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -943,7 +1156,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -969,7 +1188,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -999,7 +1223,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -1029,7 +1259,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -1062,7 +1298,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -1095,7 +1337,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -1128,7 +1376,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -1161,7 +1415,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -1196,7 +1456,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -1231,7 +1497,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -1266,7 +1538,13 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
                         <USB></USB>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -1298,6 +1576,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -1329,6 +1613,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -1361,6 +1651,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -1393,6 +1689,12 @@
                         </SPI>
                         <SDSPI></SDSPI>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                            <port><name>2</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -1425,6 +1727,11 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -1458,6 +1765,11 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -1491,6 +1803,11 @@
                         <SDSPI></SDSPI>
                         <ETH></ETH>
                         <AFIO></AFIO>
+                        <IRQ></IRQ>
+                        <I2C>
+                            <port><name>1</name></port>
+                        </I2C>
+                        <LOOP></LOOP>
                     </peripherals>
                 </cpu>
             </cpulist>

@@ -57,9 +57,6 @@ typedef enum {
         MBUS_STATUS_DAEMON_IS_RUNNING   = 8     //!< The daemon is already started and is not possible to start a new one
 } mbus_status_t;
 
-/** a slot object */
-typedef struct mbus_slot mbus_slot_t;
-
 /** a mbus main object */
 typedef struct mbus mbus_t;
 

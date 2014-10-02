@@ -237,6 +237,16 @@
  */
 #define LWIP_ICMP                               1
 
+/*
+ * LWIP_BROADCAST_PING==1: respond to broadcast pings (default is unicast only)
+ */
+#define LWIP_BROADCAST_PING                     1
+
+/*
+ * LWIP_MULTICAST_PING==1: respond to multicast pings (default is unicast only)
+ */
+#define LWIP_MULTICAST_PING                     1
+
 
 /*
    ----------------------------------
@@ -286,7 +296,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  - To disable it and process by CPU set to 0.
  - Make sure that ETH driver support hardware checksum calculation.
 */
-#define LWIP_CHECKSUM_BY_HARDWARE               __ETHMAC_CHECKSUM_BY_HARDWARE__
+#define LWIP_CHECKSUM_BY_HARDWARE               __ETH_CHECKSUM_BY_HARDWARE__
 
 #if (LWIP_CHECKSUM_BY_HARDWARE != 0 && defined(ARCH_stm32f1))
   /* CHECKSUM_GEN_IP==0: Generate checksums by hardware for outgoing IP packets.*/
@@ -314,6 +324,12 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
   #define CHECKSUM_CHECK_UDP                    1
   /* CHECKSUM_CHECK_TCP==1: Check checksums in software for incoming TCP packets.*/
   #define CHECKSUM_CHECK_TCP                    1
+#endif
+
+#if __ETH_CHECKSUM_BY_HARDWARE__
+  #define CHECKSUM_GEN_ICMP                     0
+#else
+  #define CHECKSUM_GEN_ICMP                     1
 #endif
 
 

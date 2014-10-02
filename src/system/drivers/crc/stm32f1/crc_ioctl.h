@@ -43,13 +43,13 @@ extern "C" {
  *  @param  enum CRC_input_mode *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_CRC__SET_INPUT_MODE       _IOW(_IO_GROUP_CRC, 0x00, enum CRC_input_mode*)
+#define IOCTL_CRC__SET_INPUT_MODE       _IOW(CRC, 0x00, enum CRC_input_mode*)
 
 /** @brief  Get CRC input mode
  *  @param  enum CRC_input_mode *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_CRC__GET_INPUT_MODE       _IOR(_IO_GROUP_CRC, 0x01, enum CRC_input_mode*)
+#define IOCTL_CRC__GET_INPUT_MODE       _IOR(CRC, 0x01, enum CRC_input_mode*)
 
 /*==============================================================================
   Exported object types

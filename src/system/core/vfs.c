@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/thread.h>
 #include <dnx/misc.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include "core/vfs.h"
@@ -52,18 +53,19 @@ typedef struct file_flags {
 /** file type */
 struct vfs_file
 {
-        void           *FS_hdl;
-        stdret_t      (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
-        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        stdret_t      (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
-        stdret_t      (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
-        stdret_t      (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
-        void           *f_extra_data;
-        fd_t            fd;
-        fpos_t          f_lseek;
-        file_flags_t    f_flag;
-        u32_t           validation;
+        void            *FS_hdl;
+        stdret_t       (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
+        ssize_t        (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
+        ssize_t        (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
+        stdret_t       (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
+        stdret_t       (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
+        stdret_t       (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
+        void            *f_extra_data;
+        struct vfs_file *this;
+        fd_t             fd;
+        fpos_t           f_lseek;
+        file_flags_t     f_flag;
+        u32_t            magic;
 };
 
 struct FS_data {
@@ -84,10 +86,12 @@ enum path_correction {
   Local function prototypes
 ==============================================================================*/
 static int              fclose                  (FILE *file, bool force);
+static bool             is_file_valid           (FILE *file);
+static bool             is_dir_valid            (DIR *dir);
 static int              increase_task_priority  (void);
 static inline void      restore_priority        (int priority);
 static inline void      mutex_force_lock        (mutex_t *mtx);
-static int              file_mode_str_to_flags  (const char *str);
+static vfs_open_flags_t file_mode_str_to_flags  (const char *str);
 static struct FS_data  *find_mounted_FS         (const char *path, u16_t len, u32_t *itemid);
 static struct FS_data  *find_base_FS            (const char *path, char **extPath);
 static char            *new_corrected_path      (const char *path, enum path_correction corr);
@@ -98,9 +102,8 @@ static char            *new_corrected_path      (const char *path, enum path_cor
 static list_t          *vfs_mnt_list;
 static mutex_t         *vfs_resource_mtx;
 static u32_t            vfs_id_counter;
-static const u32_t      file_validation_number = 0x495D47CB;
-static const u32_t      dir_validation_number  = 0x297E823D;
-static const uint       mtx_block_time         = 10;
+static const u32_t      file_magic_number = 0x495D47CB;
+static const u32_t      dir_magic_number  = 0x297E823D;
 
 /*==============================================================================
   Function definitions
@@ -493,7 +496,8 @@ DIR *vfs_opendir(const char *path)
                         sysm_sysfree(dir);
                         dir = NULL;
                 } else {
-                        dir->validation = dir_validation_number;
+                        dir->magic = dir_magic_number;
+                        dir->self  = dir;
                 }
         }
 
@@ -511,10 +515,11 @@ DIR *vfs_opendir(const char *path)
 //==============================================================================
 int vfs_closedir(DIR *dir)
 {
-        if (dir) {
-                if (dir->f_closedir && dir->validation == dir_validation_number) {
+        if (is_dir_valid(dir)) {
+                if (dir->f_closedir) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
-                                dir->validation = 0;
+                                dir->magic = 0;
+                                dir->self  = NULL;
                                 sysm_sysfree(dir);
                                 return 0;
                         }
@@ -540,8 +545,8 @@ dirent_t vfs_readdir(DIR *dir)
         direntry.name = NULL;
         direntry.size = 0;
 
-        if (dir) {
-                if (dir->f_readdir && dir->validation == dir_validation_number) {
+        if (is_dir_valid(dir)) {
+                if (dir->f_readdir) {
                         int priority = increase_task_priority();
                         direntry = dir->f_readdir(dir->f_handle, dir);
                         restore_priority(priority);
@@ -843,8 +848,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        int flags = file_mode_str_to_flags(mode);
-        if (flags == -1) {
+        vfs_open_flags_t flags = file_mode_str_to_flags(mode);
+        if (flags == 0) {
                 return NULL;
         }
 
@@ -891,7 +896,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
-                        file->validation = file_validation_number;
+                        file->magic = file_magic_number;
+                        file->this  = file;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -975,8 +981,8 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
-        if (ptr && size && count && file) {
-                if (file->f_write && file->validation == file_validation_number) {
+        if (ptr && size && count && is_file_valid(file)) {
+                if (file->f_write) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1018,8 +1024,8 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
-        if (ptr && size && count && file) {
-                if (file->f_read && file->validation == file_validation_number) {
+        if (ptr && size && count && is_file_valid(file)) {
+                if (file->f_read) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1059,13 +1065,7 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
 {
         struct stat stat;
 
-        if (!file || mode > VFS_SEEK_END) {
-                errno = EINVAL;
-                return -1;
-        }
-
-        if (file->validation != file_validation_number) {
-                errno = ENOENT;
+        if (!is_file_valid(file) || mode > VFS_SEEK_END) {
                 return -1;
         }
 
@@ -1100,10 +1100,9 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 i64_t vfs_ftell(FILE *file)
 {
-        if (file) {
+        if (is_file_valid(file)) {
                 return file->f_lseek;
         } else {
-                errno = EINVAL;
                 return -1;
         }
 }
@@ -1141,24 +1140,18 @@ int vfs_ioctl(FILE *file, int rq, ...)
 //==============================================================================
 int vfs_vioctl(FILE *file, int rq, va_list arg)
 {
-        if (!file) {
-                errno = EINVAL;
+        if (is_file_valid(file)) {
+                switch (rq) {
+                case IOCTL_VFS__NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
+                case IOCTL_VFS__NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
+                case IOCTL_VFS__DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
+                case IOCTL_VFS__DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
+                }
+
+                return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
+        } else {
                 return -1;
         }
-
-        if (!file->f_ioctl && file->validation != file_validation_number) {
-                errno = ENOENT;
-                return -1;
-        }
-
-        switch (rq) {
-        case IOCTL_VFS__NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
-        case IOCTL_VFS__NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
-        case IOCTL_VFS__DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
-        case IOCTL_VFS__DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
-        }
-
-        return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
 }
 
 //==============================================================================
@@ -1173,12 +1166,11 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
 //==============================================================================
 int vfs_fstat(FILE *file, struct stat *stat)
 {
-        if (!file || !stat) {
-                errno = EINVAL;
+        if (!is_file_valid(file) || !stat) {
                 return -1;
         }
 
-        if (!file->f_stat && file->validation != file_validation_number) {
+        if (!file->f_stat) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1201,12 +1193,11 @@ int vfs_fstat(FILE *file, struct stat *stat)
 //==============================================================================
 int vfs_fflush(FILE *file)
 {
-        if (!file) {
-                errno = EINVAL;
+        if (!is_file_valid(file)) {
                 return -1;
         }
 
-        if (!file->f_flush && file->validation != file_validation_number) {
+        if (!file->f_flush) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1229,17 +1220,11 @@ int vfs_fflush(FILE *file)
 //==============================================================================
 int vfs_feof(FILE *file)
 {
-        if (file) {
-                if (file->validation == file_validation_number) {
-                        return file->f_flag.eof ? 1 : 0;
-                } else {
-                        errno = ENOENT;
-                }
+        if (is_file_valid(file)) {
+                return file->f_flag.eof ? 1 : 0;
         } else {
-                errno = EINVAL;
+                return 1;
         }
-
-        return 1;
 }
 
 //==============================================================================
@@ -1251,15 +1236,9 @@ int vfs_feof(FILE *file)
 //==============================================================================
 void vfs_clearerr(FILE *file)
 {
-        if (file) {
-                if (file->validation == file_validation_number) {
-                        file->f_flag.eof   = false;
-                        file->f_flag.error = false;
-                } else {
-                        errno = ENOENT;
-                }
-        } else {
-                errno = EINVAL;
+        if (is_file_valid(file)) {
+                file->f_flag.eof   = false;
+                file->f_flag.error = false;
         }
 }
 
@@ -1274,17 +1253,11 @@ void vfs_clearerr(FILE *file)
 //==============================================================================
 int vfs_ferror(FILE *file)
 {
-        if (file) {
-                if (file->validation == file_validation_number) {
-                        return file->f_flag.error ? 1 : 0;
-                } else {
-                        errno = ENOENT;
-                }
+        if (is_file_valid(file)) {
+                return file->f_flag.error ? 1 : 0;
         } else {
-                errno = EINVAL;
+                return 1;
         }
-
-        return 1;
 }
 
 //==============================================================================
@@ -1336,21 +1309,66 @@ void vfs_sync(void)
 //==============================================================================
 static int fclose(FILE *file, bool force)
 {
-        if (file) {
-                if (file->f_close && file->validation == file_validation_number) {
+        if (is_file_valid(file)) {
+                if (file->f_close) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
-                                file->validation = 0;
+                                file->magic = 0;
+                                file->this  = NULL;
                                 sysm_sysfree(file);
                                 return 0;
                         }
                 } else {
                         errno = ENOENT;
                 }
-        } else {
-                errno = EINVAL;
         }
 
         return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Check if file object is valid
+ *
+ * @errno EINVAL
+ *
+ * @param file  file object to examine
+ *
+ * @return true if object is valid, otherwise false
+ */
+//==============================================================================
+static bool is_file_valid(FILE *file)
+{
+        if (file) {
+                if (file->magic == file_magic_number && file->this == file) {
+                        return true;
+                }
+        }
+
+        errno = EINVAL;
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief Check if dir object is valid
+ *
+ * @errno EINVAL
+ *
+ * @param file  file object to examine
+ *
+ * @return true if object is valid, otherwise false
+ */
+//==============================================================================
+static bool is_dir_valid(DIR *dir)
+{
+        if (dir) {
+                if (dir->magic == dir_magic_number && dir->self == dir) {
+                        return true;
+                }
+        }
+
+        errno = EINVAL;
+        return false;
 }
 
 //==============================================================================
@@ -1392,7 +1410,9 @@ static inline void restore_priority(int priority)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, mtx_block_time) != true);
+        while (!mutex_lock(mtx, MAX_DELAY_MS)) {
+                sleep_ms(1);
+        }
 }
 
 //==============================================================================
@@ -1402,10 +1422,10 @@ static inline void mutex_force_lock(mutex_t *mtx)
  *
  * @param[in] *str      file open mode string
  *
- * @return file open flags, -1 if error
+ * @return file open flags, 0 if error
  */
 //==============================================================================
-static int file_mode_str_to_flags(const char *str)
+static vfs_open_flags_t file_mode_str_to_flags(const char *str)
 {
         if (strcmp("r", str) == 0) {
                 return (O_RDONLY);
@@ -1433,7 +1453,7 @@ static int file_mode_str_to_flags(const char *str)
 
         errno = EINVAL;
 
-        return -1;
+        return 0;
 }
 
 //==============================================================================

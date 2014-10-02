@@ -78,7 +78,7 @@ static void show_help(const char *name)
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(modinit, int argc, char *argv[])
+PROGRAM_MAIN(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc < 2) {
                 show_help(argv[0]);
@@ -101,7 +101,7 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
 
         int status;
         if (release) {
-                status = driver_release(argv[2]);
+                status = driver_release(argv[2]) ? -1 : 0;
         } else {
                 if (argc == 2) {
                         status = driver_init(argv[1], NULL);
@@ -110,7 +110,7 @@ PROGRAM_MAIN(modinit, int argc, char *argv[])
                 }
         }
 
-        if (status == 0) {
+        if (status >= 0) {
                 puts("Success.");
         } else {
                 perror("Error");

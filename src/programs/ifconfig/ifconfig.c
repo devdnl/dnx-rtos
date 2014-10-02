@@ -68,7 +68,7 @@ static net_ip_t strtoip(const char *str)
         net_ip_t ip;
         int a = 0, b = 0, c = 0, d = 0;
 
-        sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
+        sscanf(str, "%3d.%3d.%3d.%3d", &a, &b, &c, &d);
 
         net_set_ip(&ip, a, b, c, d);
 
@@ -126,7 +126,7 @@ static void show_details()
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(ifconfig, int argc, char *argv[])
+PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 show_details();

@@ -68,7 +68,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(time, int argc, char *argv[])
+PROGRAM_MAIN(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [program]\n", argv[0]);

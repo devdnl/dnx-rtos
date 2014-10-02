@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(umount, int argc, char *argv[])
+PROGRAM_MAIN(umount, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [mount point]\n", argv[0]);

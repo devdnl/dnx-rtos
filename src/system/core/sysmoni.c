@@ -58,20 +58,20 @@ typedef struct mem_slot_chain {
 
 /* task information */
 struct task_monitor_data {
-#if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
+        #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         u32_t            used_memory;
         mem_slot_chain_t mem_chain;
-#endif
+        #endif
 
-#if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
+        #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         FILE  *file_slot[TASK_FILE_SLOTS];
         DIR   *dir_slot[TASK_DIR_SLOTS];
         uint   opened_files;
-#endif
+        #endif
 
-#if (CONFIG_MONITOR_TASK_MEMORY_USAGE == 0) && (CONFIG_MONITOR_TASK_FILE_USAGE == 0)
+        #if (CONFIG_MONITOR_TASK_MEMORY_USAGE == 0) && (CONFIG_MONITOR_TASK_FILE_USAGE == 0)
         int dummy; /* used only to create structure when above fields doesn't exist */
-#endif
+        #endif
 };
 
 /*==============================================================================
@@ -1037,7 +1037,10 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                 }
         } while ((chain = chain->next) != NULL);
 
-        printk("%s: free(): address does not exist!\n", task_get_name());
+        /* block not found */
+        sys_fprintf(stdout, "*** Error in %s: double free or corruption: 0x%x ***\n", task_get_name(), mem);
+        mutex_unlock(sysm_resource_mtx);
+        _abort();
 
 exit:
         mutex_unlock(sysm_resource_mtx);

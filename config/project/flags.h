@@ -38,29 +38,34 @@
 
 /* current CPU architecture */
 #define __CPU_ARCH__ stm32f1
+#define noarch __CPU_ARCH__ /* always valid */
+#define ARCH_noarch
 
-/* include noarch files */
-#include "../noarch/tty_flags.h"
-
-/* include specific CPU architecture files */
+/* include modules flags divided to architecture */
+#if (__CPU_ARCH__ == noarch)
+#       include "../noarch/loop_flags.h"
+#       include "../noarch/tty_flags.h"
+#endif
 #if (__CPU_ARCH__ == stm32f1)
-#include "../stm32f1/cpu.h"
-#include "../stm32f1/crc_flags.h"
-#include "../stm32f1/gpio_flags.h"
-#include "../stm32f1/afio_flags.h"
-#include "../stm32f1/eth_flags.h"
-#include "../stm32f1/pll_flags.h"
-#include "../stm32f1/sdspi_flags.h"
-#include "../stm32f1/spi_flags.h"
-#include "../stm32f1/wdg_flags.h"
-#include "../stm32f1/uart_flags.h"
-#include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/cpu.h"
+#       include "../stm32f1/crc_flags.h"
+#       include "../stm32f1/gpio_flags.h"
+#       include "../stm32f1/afio_flags.h"
+#       include "../stm32f1/eth_flags.h"
+#       include "../stm32f1/pll_flags.h"
+#       include "../stm32f1/sdspi_flags.h"
+#       include "../stm32f1/spi_flags.h"
+#       include "../stm32f1/wdg_flags.h"
+#       include "../stm32f1/uart_flags.h"
+#       include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/irq_flags.h"
+#       include "../stm32f1/i2c_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
-#include "stm32f2/cpu.h"
+#       include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)
-#include "stm32f3/cpu.h"
+#       include "stm32f3/cpu.h"
 #elif (__CPU_ARCH__ == stm32f4)
-#include "stm32f4/cpu.h"
+#       include "stm32f4/cpu.h"
 #endif
 
 /* CPU configuration */
@@ -119,6 +124,7 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
+#define __ENABLE_LOOP__ __YES__
 #define __ENABLE_GPIO__ __YES__
 #define __ENABLE_AFIO__ __YES__
 #define __ENABLE_CRC__ __YES__
@@ -129,17 +135,9 @@
 #define __ENABLE_TTY__ __YES__
 #define __ENABLE_UART__ __YES__
 #define __ENABLE_WDG__ __YES__
-#define __ENABLE_I2S__ __NO__
 #define __ENABLE_USB__ __NO__
-#define __ENABLE_USBOTG__ __NO__
-#define __ENABLE_I2C__ __NO__
-#define __ENABLE_ADC__ __NO__
-#define __ENABLE_DAC__ __NO__
-#define __ENABLE_SDIO__ __NO__
-#define __ENABLE_FSMC__ __NO__
-#define __ENABLE_FDMC__ __NO__
-#define __ENABLE_HDMICEC__ __NO__
-#define __ENABLE_CAN__ __NO__
+#define __ENABLE_I2C__ __YES__
+#define __ENABLE_IRQ__ __YES__
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

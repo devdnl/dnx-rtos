@@ -84,7 +84,7 @@ static void println(const char *fmt, ...)
  * @brief Main function
  */
 //==============================================================================
-PROGRAM_MAIN(top, int argc, char *argv[])
+PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
@@ -184,16 +184,20 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         scanf("%8X", &task_handle);
 
                         task_t *task = (task_t *)task_handle;
-                        if (task != task_get_handle() && task != task_get_parent_handle()) {
+                        if (task == task_get_parent_handle()) {
+                                puts("Parent task cannot be killed!");
+                                sleep(2);
+                        } else if (task != task_get_handle()) {
                                 errno = 0;
                                 if (task_is_exist(task)) {
-                                        task_delete(task);
+                                        task_delete(task); /* TEST*/
                                 } else {
                                         perror(NULL);
                                         timer = timer_reset();
                                 }
                         } else {
                                 puts(strerror(EPERM));
+                                sleep(2);
                         }
 
                         ioctl(stdin, IOCTL_TTY__ECHO_OFF);

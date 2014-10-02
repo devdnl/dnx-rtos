@@ -83,11 +83,11 @@ extern "C" {
 #define EOT                                     0x04
 
 /* IO operations on files */
-#define IOCTL_PIPE__CLOSE                       _IO(_IO_GROUP_PIPE, 0x00)
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(_IO_GROUP_VFS,  0x01)
-#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(_IO_GROUP_VFS,  0x02)
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(_IO_GROUP_VFS,  0x03)
-#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(_IO_GROUP_VFS,  0x04)
+#define IOCTL_PIPE__CLOSE                       _IO(PIPE, 0x00)
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x01)
+#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x02)
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
+#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
 
 /*==============================================================================
   Exported object types
@@ -115,13 +115,14 @@ typedef struct dirent {
 
 /** directory type */
 struct vfs_dir {
-        dirent_t (*f_readdir)(void *fshdl, struct vfs_dir *dir);
-        stdret_t (*f_closedir)(void *fshdl, struct vfs_dir *dir);
-        void      *f_dd;
-        void      *f_handle;
-        size_t     f_items;
-        size_t     f_seek;
-        u32_t      validation;          /**< only for system purposes */
+        dirent_t      (*f_readdir)(void *fshdl, struct vfs_dir *dir);
+        stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
+        void           *f_dd;
+        void           *f_handle;
+        struct vfs_dir *self;
+        size_t          f_items;
+        size_t          f_seek;
+        u32_t           magic;          /**< only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
@@ -257,7 +258,7 @@ extern void             vfs_sync                (void);
 //==============================================================================
 static inline vfs_open_flags_t vfs_filter_open_flags_for_device(vfs_open_flags_t flags)
 {
-        return flags & (O_RDONLY | O_WRONLY | O_RDWR);
+        return (vfs_open_flags_t)(flags & (O_RDONLY | O_WRONLY | O_RDWR));
 }
 
 #ifdef __cplusplus

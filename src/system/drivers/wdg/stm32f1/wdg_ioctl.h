@@ -43,7 +43,7 @@ extern "C" {
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_WDG__RESET                _IO(_IO_GROUP_WDG, 0x00)
+#define IOCTL_WDG__RESET                _IO(WDG, 0x00)
 
 /*==============================================================================
   Exported object types

@@ -61,7 +61,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(touch, int argc, char *argv[])
+PROGRAM_MAIN(touch, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
 

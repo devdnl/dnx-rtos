@@ -44,19 +44,36 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
-#define PROGRAM_MAIN(name, argc, argv) \
-        const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
-        int _program_##name##_main(argc, argv)
+#ifdef __cplusplus
+        inline void* operator new     (size_t size) {return sysm_tskmalloc(size);}
+        inline void* operator new[]   (size_t size) {return sysm_tskmalloc(size);}
+        inline void  operator delete  (void* ptr  ) {sysm_tskfree(ptr);}
+        inline void  operator delete[](void* ptr  ) {sysm_tskfree(ptr);}
+#       define _PROGMAN_CXX extern "C"
+#       define _PROGMAN_EXTERN_C extern "C"
+#else
+#       define _PROGMAN_CXX
+#       define _PROGMAN_EXTERN_C extern
+#endif
+
+#define PROGRAM_MAIN(name, stack_depth, argc, argv) \
+        _PROGMAN_CXX const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        _PROGMAN_CXX const int __prog_##name##_ss__ = stack_depth;\
+        _PROGMAN_CXX int _program_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
-        extern const int __prog_##name##_gs__;\
-        extern int _program_##name##_main(int, char**)
+        _PROGMAN_EXTERN_C const int __prog_##name##_gs__;\
+        _PROGMAN_EXTERN_C const int __prog_##name##_ss__;\
+        _PROGMAN_EXTERN_C int _program_##name##_main(int, char**)
 
-#define _PROGRAM_CONFIG(name, stack_size) \
+#define int_main(name, stack_depth, argc, argv)\
+        PROGRAM_MAIN(name, stack_depth, argc, argv)
+
+#define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
          .main_function = _program_##name##_main,\
          .globals_size  = &__prog_##name##_gs__,\
-         .stack_depth   = stack_size}
+         .stack_depth   = &__prog_##name##_ss__}
 
 /*==============================================================================
   Exported types, enums definitions
@@ -65,7 +82,7 @@ struct _prog_data {
         char      *program_name;
         int      (*main_function)(int, char**);
         const int *globals_size;
-        int        stack_depth;
+        const int *stack_depth;
 };
 
 typedef struct thread thread_t;

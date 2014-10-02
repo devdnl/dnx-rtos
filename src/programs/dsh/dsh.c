@@ -429,6 +429,7 @@ static bool start_program(char *master, char *slave, char *file)
         prog_t  *pm        = NULL;
         prog_t  *ps        = NULL;
         char    *pipe_name = NULL;
+        bool     status    = true;
 
         if (master) {
                 master = remove_leading_spaces(master);
@@ -527,7 +528,7 @@ static bool start_program(char *master, char *slave, char *file)
                 program_wait_for_close(pm, MAX_DELAY_MS);
 
         } else {
-                return false;
+                status = false;
         }
 
 free_resources:
@@ -552,7 +553,7 @@ free_resources:
                 program_delete(ps);
         }
 
-        return true;
+        return status;
 }
 
 //==============================================================================
@@ -639,7 +640,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-PROGRAM_MAIN(dsh, int argc, char *argv[])
+PROGRAM_MAIN(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;

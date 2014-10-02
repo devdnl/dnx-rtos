@@ -5,7 +5,7 @@
 
 @brief   This file is used to registration drivers
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012-2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,6 +34,12 @@
 /*==============================================================================
   Modules include files
 ==============================================================================*/
+/* CT: module definition includes */
+#if (__ENABLE_LOOP__)
+#       ifdef ARCH_noarch
+#               include "noarch/loop_def.h"
+#       endif
+#endif
 #if (__ENABLE_GPIO__)
 #       ifdef ARCH_stm32f1
 #               include "stm32f1/gpio_def.h"
@@ -84,8 +90,20 @@
 #               include "stm32f1/usb_def.h"
 #       endif
 #endif
+#if (__ENABLE_IRQ__)
+#       ifdef ARCH_stm32f1
+#               include "stm32f1/irq_def.h"
+#       endif
+#endif
+#if (__ENABLE_I2C__)
+#       ifdef ARCH_stm32f1
+#               include "stm32f1/i2c_def.h"
+#       endif
+#endif
 #if (__ENABLE_TTY__)
-#       include "tty_def.h"
+#       ifdef ARCH_noarch
+#               include "noarch/tty_def.h"
+#       endif
 #endif
 
 /**
@@ -95,6 +113,10 @@
 /*==============================================================================
   Modules interfaces
 ==============================================================================*/
+/* CT: import of module interface */
+#if (__ENABLE_LOOP__)
+        _IMPORT_MODULE_INTERFACE(LOOP);
+#endif
 #if (__ENABLE_GPIO__)
         _IMPORT_MODULE_INTERFACE(GPIO);
 #endif
@@ -128,6 +150,12 @@
 #if (__ENABLE_USB__)
         _IMPORT_MODULE_INTERFACE(USBD);
 #endif
+#if (__ENABLE_IRQ__)
+        _IMPORT_MODULE_INTERFACE(IRQ);
+#endif
+#if (__ENABLE_I2C__)
+        _IMPORT_MODULE_INTERFACE(I2C);
+#endif
 
 /*==============================================================================
   Exported object definitions
@@ -137,6 +165,9 @@
  * only 1 time.
  */
 const char *const _regdrv_module_name[] = {
+        #if (__ENABLE_LOOP__)
+        _MODULE_NAME(LOOP),
+        #endif
         #if (__ENABLE_GPIO__)
         _MODULE_NAME(GPIO),
         #endif
@@ -170,6 +201,12 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_USB__)
         _MODULE_NAME(USBD),
         #endif
+        #if (__ENABLE_IRQ__)
+        _MODULE_NAME(IRQ),
+        #endif
+        #if (__ENABLE_I2C__)
+        _MODULE_NAME(I2C),
+        #endif
 };
 
 
@@ -178,6 +215,32 @@ const char *const _regdrv_module_name[] = {
  * connected to its module.
  */
 const struct _driver_entry _regdrv_driver_table[] = {
+        /* LOOP ============================================================= */
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 0)
+        _DRIVER_INTERFACE(LOOP, "loop0", _LOOP0, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 1)
+        _DRIVER_INTERFACE(LOOP, "loop1", _LOOP1, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 2)
+        _DRIVER_INTERFACE(LOOP, "loop2", _LOOP2, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 3)
+        _DRIVER_INTERFACE(LOOP, "loop3", _LOOP3, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 4)
+        _DRIVER_INTERFACE(LOOP, "loop4", _LOOP4, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 5)
+        _DRIVER_INTERFACE(LOOP, "loop5", _LOOP5, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 6)
+        _DRIVER_INTERFACE(LOOP, "loop6", _LOOP6, _LOOP_MINOR_NUMBER),
+        #endif
+        #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 7)
+        _DRIVER_INTERFACE(LOOP, "loop7", _LOOP7, _LOOP_MINOR_NUMBER),
+        #endif
+
         /* UART ==============================================================*/
         #if (__ENABLE_UART__ && _UART1_ENABLE)
         _DRIVER_INTERFACE(UART, "uart1", _UART1, _UART_MINOR_NUMBER),
@@ -237,78 +300,78 @@ const struct _driver_entry _regdrv_driver_table[] = {
 
         /* SPI ===============================================================*/
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 1)
-        _DRIVER_INTERFACE(SPI, "spi1_cs0", _SPI1, 0),
+        _DRIVER_INTERFACE(SPI, "spi1-0", _SPI1, 0),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 2)
-        _DRIVER_INTERFACE(SPI, "spi1_cs1", _SPI1, 1),
+        _DRIVER_INTERFACE(SPI, "spi1-1", _SPI1, 1),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 3)
-        _DRIVER_INTERFACE(SPI, "spi1_cs2", _SPI1, 2),
+        _DRIVER_INTERFACE(SPI, "spi1-2", _SPI1, 2),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 4)
-        _DRIVER_INTERFACE(SPI, "spi1_cs3", _SPI1, 3),
+        _DRIVER_INTERFACE(SPI, "spi1-3", _SPI1, 3),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 5)
-        _DRIVER_INTERFACE(SPI, "spi1_cs4", _SPI1, 4),
+        _DRIVER_INTERFACE(SPI, "spi1-4", _SPI1, 4),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 6)
-        _DRIVER_INTERFACE(SPI, "spi1_cs5", _SPI1, 5),
+        _DRIVER_INTERFACE(SPI, "spi1-5", _SPI1, 5),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 7)
-        _DRIVER_INTERFACE(SPI, "spi1_cs6", _SPI1, 6),
+        _DRIVER_INTERFACE(SPI, "spi1-6", _SPI1, 6),
         #endif
         #if (__ENABLE_SPI__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 8)
-        _DRIVER_INTERFACE(SPI, "spi1_cs7", _SPI1, 7),
+        _DRIVER_INTERFACE(SPI, "spi1-7", _SPI1, 7),
         #endif
 
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 1)
-        _DRIVER_INTERFACE(SPI, "spi2_cs0", _SPI2, 0),
+        _DRIVER_INTERFACE(SPI, "spi2-0", _SPI2, 0),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 2)
-        _DRIVER_INTERFACE(SPI, "spi2_cs1", _SPI2, 1),
+        _DRIVER_INTERFACE(SPI, "spi2-1", _SPI2, 1),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 3)
-        _DRIVER_INTERFACE(SPI, "spi2_cs2", _SPI2, 2),
+        _DRIVER_INTERFACE(SPI, "spi2-2", _SPI2, 2),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 4)
-        _DRIVER_INTERFACE(SPI, "spi2_cs3", _SPI2, 3),
+        _DRIVER_INTERFACE(SPI, "spi2-3", _SPI2, 3),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 5)
-        _DRIVER_INTERFACE(SPI, "spi2_cs4", _SPI2, 4),
+        _DRIVER_INTERFACE(SPI, "spi2-4", _SPI2, 4),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 6)
-        _DRIVER_INTERFACE(SPI, "spi2_cs5", _SPI2, 5),
+        _DRIVER_INTERFACE(SPI, "spi2-5", _SPI2, 5),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 7)
-        _DRIVER_INTERFACE(SPI, "spi2_cs6", _SPI2, 6),
+        _DRIVER_INTERFACE(SPI, "spi2-6", _SPI2, 6),
         #endif
         #if (__ENABLE_SPI__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 8)
-        _DRIVER_INTERFACE(SPI, "spi2_cs7", _SPI2, 7),
+        _DRIVER_INTERFACE(SPI, "spi2-7", _SPI2, 7),
         #endif
 
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 1)
-        _DRIVER_INTERFACE(SPI, "spi3_cs0", _SPI3, 0),
+        _DRIVER_INTERFACE(SPI, "spi3-0", _SPI3, 0),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 2)
-        _DRIVER_INTERFACE(SPI, "spi3_cs1", _SPI3, 1),
+        _DRIVER_INTERFACE(SPI, "spi3-1", _SPI3, 1),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 3)
-        _DRIVER_INTERFACE(SPI, "spi3_cs2", _SPI3, 2),
+        _DRIVER_INTERFACE(SPI, "spi3-2", _SPI3, 2),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 4)
-        _DRIVER_INTERFACE(SPI, "spi3_cs3", _SPI3, 3),
+        _DRIVER_INTERFACE(SPI, "spi3-3", _SPI3, 3),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 5)
-        _DRIVER_INTERFACE(SPI, "spi3_cs4", _SPI3, 4),
+        _DRIVER_INTERFACE(SPI, "spi3-4", _SPI3, 4),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 6)
-        _DRIVER_INTERFACE(SPI, "spi3_cs5", _SPI3, 5),
+        _DRIVER_INTERFACE(SPI, "spi3-5", _SPI3, 5),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 7)
-        _DRIVER_INTERFACE(SPI, "spi3_cs6", _SPI3, 6),
+        _DRIVER_INTERFACE(SPI, "spi3-6", _SPI3, 6),
         #endif
         #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 8)
-        _DRIVER_INTERFACE(SPI, "spi3_cs7", _SPI3, 7),
+        _DRIVER_INTERFACE(SPI, "spi3-7", _SPI3, 7),
         #endif
 
         /* AFIO ==============================================================*/
@@ -331,6 +394,62 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _DRIVER_INTERFACE(USBD, "usb_ep5", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_5),
         _DRIVER_INTERFACE(USBD, "usb_ep6", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_6),
         _DRIVER_INTERFACE(USBD, "usb_ep7", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_7),
+        #endif
+
+        /* IRQ ===============================================================*/
+        #if (__ENABLE_IRQ__)
+        _DRIVER_INTERFACE(IRQ, "irq", _IRQ_MAJOR_NUMBER, _IRQ_MINOR_NUMBER),
+        #endif
+
+        /* I2C ===============================================================*/
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 1)
+        _DRIVER_INTERFACE(I2C, "i2c1-0", _I2C1, _I2C_DEV_0),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 2)
+        _DRIVER_INTERFACE(I2C, "i2c1-1", _I2C1, _I2C_DEV_1),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 3)
+        _DRIVER_INTERFACE(I2C, "i2c1-2", _I2C1, _I2C_DEV_2),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 4)
+        _DRIVER_INTERFACE(I2C, "i2c1-3", _I2C1, _I2C_DEV_3),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 5)
+        _DRIVER_INTERFACE(I2C, "i2c1-4", _I2C1, _I2C_DEV_4),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 6)
+        _DRIVER_INTERFACE(I2C, "i2c1-5", _I2C1, _I2C_DEV_5),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 7)
+        _DRIVER_INTERFACE(I2C, "i2c1-6", _I2C1, _I2C_DEV_6),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C1_ENABLE && _I2C1_NUMBER_OF_DEVICES >= 8)
+        _DRIVER_INTERFACE(I2C, "i2c1-7", _I2C1, _I2C_DEV_7),
+        #endif
+
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 1)
+        _DRIVER_INTERFACE(I2C, "i2c2-0", _I2C2, _I2C_DEV_0),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 2)
+        _DRIVER_INTERFACE(I2C, "i2c2-1", _I2C2, _I2C_DEV_1),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 3)
+        _DRIVER_INTERFACE(I2C, "i2c2-2", _I2C2, _I2C_DEV_2),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 4)
+        _DRIVER_INTERFACE(I2C, "i2c2-3", _I2C2, _I2C_DEV_3),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 5)
+        _DRIVER_INTERFACE(I2C, "i2c2-4", _I2C2, _I2C_DEV_4),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 6)
+        _DRIVER_INTERFACE(I2C, "i2c2-5", _I2C2, _I2C_DEV_5),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 7)
+        _DRIVER_INTERFACE(I2C, "i2c2-6", _I2C2, _I2C_DEV_6),
+        #endif
+        #if (__ENABLE_I2C__ && _I2C2_ENABLE && _I2C2_NUMBER_OF_DEVICES >= 8)
+        _DRIVER_INTERFACE(I2C, "i2c2-7", _I2C2, _I2C_DEV_7),
         #endif
 };
 

@@ -1069,7 +1069,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
 
                         n = count;
                 } else {
-                        memcpy(node->data + seek, src, write_size);
+                        memcpy(static_cast(u8_t*, node->data) + seek, src, write_size);
                         n = count;
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
@@ -1147,7 +1147,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 /* copy if file buffer exist */
                 if (node->data) {
                         if (items_to_read > 0) {
-                                memcpy(dst, node->data + seek, items_to_read);
+                                memcpy(dst, static_cast(u8_t*, node->data) + seek, items_to_read);
                                 n = items_to_read;
                         } else {
                                 n = 0;

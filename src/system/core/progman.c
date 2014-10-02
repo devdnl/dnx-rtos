@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <string.h>
 #include <dnx/thread.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
@@ -52,11 +54,12 @@ struct prog {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
+        struct prog     *this;
         char            **argv;
         int              argc;
         uint             mem_size;
         int              exit_code;
-        u32_t            valid;
+        u32_t            magic;
 };
 
 struct thread {
@@ -68,7 +71,8 @@ struct thread {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
-        u32_t            valid;
+        struct thread   *this;
+        u32_t            magic;
 };
 
 /*==============================================================================
@@ -78,12 +82,14 @@ static char   **new_argument_table      (const char *str, int *argc);
 static void     delete_argument_table   (char **argv);
 static void     program_startup         (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
+static void     restore_stdio_defaults  (task_t *task);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const u32_t prog_valid_number   = 0x3B6BF19D;
-static const u32_t thread_valid_number = 0x8843D463;
+static const u32_t prog_magic_number   = 0x3B6BF19D;
+static const u32_t thread_magic_number = 0x8843D463;
+static const uint  mutex_wait_attempts = 10;
 
 /*==============================================================================
   Exported object definitions
@@ -164,15 +170,7 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
-                        vfs_ioctl(stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                        sys_getc(stdin);
-
-                        vfs_ioctl(stdin , IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stdin , IOCTL_VFS__DEFAULT_WR_MODE);
-                        vfs_ioctl(stdout, IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stdout, IOCTL_VFS__DEFAULT_WR_MODE);
-                        vfs_ioctl(stderr, IOCTL_VFS__DEFAULT_RD_MODE);
-                        vfs_ioctl(stderr, IOCTL_VFS__DEFAULT_WR_MODE);
+                        restore_stdio_defaults(prog->task);
 
                         if (prog->mem) {
                                 memset(prog->mem, 0, prog->mem_size);
@@ -464,10 +462,15 @@ static int process_kill(task_t *taskhdl, int status)
 {
         if (taskhdl) {
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
+                default:
                 case TASK_TYPE_RAW:
-                        sysm_lock_access();
-                        _task_delete(taskhdl);
-                        sysm_unlock_access();
+                        if (taskhdl == task_get_handle()) {
+                                _task_delete(taskhdl);
+                        } else {
+                                sysm_lock_access();
+                                _task_delete(taskhdl);
+                                sysm_unlock_access();
+                        }
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
@@ -478,8 +481,6 @@ static int process_kill(task_t *taskhdl, int status)
                 case TASK_TYPE_THREAD:
                         _thread_cancel(_task_get_data_of(taskhdl)->f_task_object);
                         break;
-                default:
-                        return -ESRCH;
                 }
 
                 return 0;
@@ -502,7 +503,7 @@ static int process_kill(task_t *taskhdl, int status)
 static bool prog_is_valid(prog_t *prog)
 {
         if (prog) {
-                if (prog->valid == prog_valid_number) {
+                if (prog->magic == prog_magic_number && prog->this == prog) {
                         return true;
                 }
         }
@@ -525,13 +526,57 @@ static bool prog_is_valid(prog_t *prog)
 static bool thread_is_valid(thread_t *thread)
 {
         if (thread) {
-                if (thread->valid == thread_valid_number) {
+                if (thread->magic == thread_magic_number && thread->this == thread) {
                         return true;
                 }
         }
 
         errno = EINVAL;
         return false;
+}
+
+//==============================================================================
+/**
+ * @brief Do some attempts to check if task exit from mutex section
+ *
+ * @param task          task to examine
+ * @param attempts      number of attempts
+ *
+ * @return None
+ */
+//==============================================================================
+static void wait_for_end_of_mutex_section(task_t *task, size_t attempts)
+{
+        while (attempts && _task_get_data_of(task)->f_mutex_section > 0) {
+                sleep_ms(1);    // 1 tick delay
+                attempts--;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Restores default configuration of STDIO files
+ *
+ * @param task          task
+ *
+ * @return None
+ */
+//==============================================================================
+static void restore_stdio_defaults(task_t *task)
+{
+        struct _task_data *data = _task_get_data_of(task);
+
+        vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
+
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
+        sys_getc(data->f_stdin);
+
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
+        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
+        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
+        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
 }
 
 //==============================================================================
@@ -576,29 +621,24 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->mem_size = *prog_data.globals_size;
                                         prog->task     = task_new(program_startup,
                                                                   prog_data.program_name,
-                                                                  prog_data.stack_depth,
+                                                                  *prog_data.stack_depth,
                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->valid = prog_valid_number;
+                                                prog->magic = prog_magic_number;
+                                                prog->this  = prog;
                                                 return prog;
                                         }
+
+                                        semaphore_delete(prog->exit_sem);
                                 }
                         } else {
                                 errno = ENOENT;
                         }
+
+                        delete_argument_table(prog->argv);
                 }
-        }
 
-        if (prog->argv) {
-                delete_argument_table(prog->argv);
-        }
-
-        if (prog->exit_sem) {
-                semaphore_delete(prog->exit_sem);
-        }
-
-        if (prog) {
                 sysm_tskfree(prog);
                 prog = NULL;
         }
@@ -621,7 +661,8 @@ int _program_delete(prog_t *prog)
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argv);
-                        prog->valid = 0;
+                        prog->magic = 0;
+                        prog->this  = NULL;
                         sysm_tskfree(prog);
                         return 0;
                 } else {
@@ -652,6 +693,8 @@ int _program_kill(prog_t *prog)
                         sysm_lock_access();
 
                         if (prog->task != task_get_handle()) {
+                                _task_get_data_of(prog->task)->f_task_kill = true;
+                                wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
                                 task_suspend(prog->task);
                         }
 
@@ -660,11 +703,11 @@ int _program_kill(prog_t *prog)
                                 prog->mem = NULL;
                         }
 
+                        restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
                         semaphore_signal(prog->exit_sem);
-                        _task_delete(prog->task);
-
                         sysm_unlock_access();
+                        _task_delete(prog->task);
                         return 0;
                 }
         }
@@ -753,6 +796,8 @@ void _exit(int status)
 //==============================================================================
 void _abort(void)
 {
+        sys_fprintf(stdout, "Aborted\n");
+
         process_kill(task_get_handle(), -1);
 
         /* wait to kill program */
@@ -827,7 +872,8 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->valid = thread_valid_number;
+                        thread->magic = thread_magic_number;
+                        thread->this  = thread;
                         return thread;
                 }
         }
@@ -885,14 +931,16 @@ int _thread_cancel(thread_t *thread)
                         sysm_lock_access();
 
                         if (thread->task != task_get_handle()) {
+                                _task_get_data_of(thread->task)->f_task_kill = true;
+                                wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
                                 task_suspend(thread->task);
                         }
 
+                        restore_stdio_defaults(thread->task);
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
-                        _task_delete(thread->task);
-
                         sysm_unlock_access();
+                        _task_delete(thread->task);
                         return 0;
                 }
         }
@@ -934,7 +982,8 @@ int _thread_delete(thread_t *thread)
         if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_delete(thread->exit_sem);
-                        thread->valid = 0;
+                        thread->magic = 0;
+                        thread->this  = NULL;
                         sysm_tskfree(thread);
                         return 0;
                 } else {

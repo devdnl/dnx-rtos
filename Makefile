@@ -136,6 +136,9 @@ OBJCOPY    = $(TOOLCHAIN)objcopy
 OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
+CODECHECK  = cppcheck
+ADDPROGS   = ./tools/progsearch.sh
+ADDLIBS    = ./tools/libsearch.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -164,9 +167,9 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
-include $(PROG_LOC)/Makefile
+-include $(PROG_LOC)/Makefile   # file is created in the add_programs target
+-include $(LIB_LOC)/Makefile    # file is created in the add_programs target
 include $(SYS_LOC)/Makefile
-include $(LIB_LOC)/Makefile
 
 # defines objects localizations
 HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
@@ -200,7 +203,11 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : dependencies buildobjects linkobjects hex status
+all : add_programs
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
+
+.PHONY : build_start
+build_start : dependencies buildobjects linkobjects hex status
 
 ####################################################################################################
 # help
@@ -215,7 +222,8 @@ help :
 	@$(ECHO) "   cleanall            clean all non-project files"
 	@$(ECHO) ""
 	@$(ECHO) "Non-build targets:"
-	@$(ECHO) "   check               static code analyze for stm32f1 target"
+	@$(ECHO) "   check               static code analyze by using cppcheck"
+	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
 
 ####################################################################################################
 # project configuration wizard
@@ -230,8 +238,11 @@ config :
 ####################################################################################################
 .PHONY : check
 check :
-	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC)
-	@cppcheck -j $(THREAD) --std=c++11 --enable=all --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
+	
+quickcheck :
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/stdc/dnx $(CSRC) $(CXXSRC)
+	
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
@@ -266,6 +277,18 @@ status :
 
 ####################################################################################################
 ####################################################################################################
+# Adds programs and libraries to the project
+# This target is used to generate ./src/programs/program_registration.c,
+# ./src/programs/Makefile, and ./src/lib/Makefile files required in the
+# build process
+####################################################################################################
+.PHONY : add_programs
+add_programs :
+	@$(ECHO) "Adding user's programs and libraries to the project..."
+	@$(ADDPROGS) ./src/programs
+	@$(ADDLIBS) ./src/lib
+
+####################################################################################################
 # makes dependences
 ####################################################################################################
 .PHONY : dependencies
@@ -285,7 +308,6 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@$(ECHO) "Linking..."
-	@#$(ECHO) $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################

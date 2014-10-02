@@ -47,9 +47,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -60,11 +59,13 @@ GLOBAL_VARIABLES_SECTION_END
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Cat main function
+ * @brief Main function
  */
 //==============================================================================
-PROGRAM_MAIN(card_init, int argc, char *argv[])
+PROGRAM_MAIN(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
 {
+        int status = EXIT_FAILURE;
+
         if (argc == 1) {
                 printf("Usage: %s [file]\n", argv[0]);
                 return EXIT_FAILURE;
@@ -75,21 +76,21 @@ PROGRAM_MAIN(card_init, int argc, char *argv[])
                 bool status = false;
                 if (ioctl(sd, INIT_REQUEST, &status) != 0) {
                         perror(argv[1]);
-                        return EXIT_FAILURE;
                 }
 
                 if (status == true) {
                         puts("Card initialized.");
-                        return EXIT_SUCCESS;
+                        status = EXIT_SUCCESS;
                 } else {
                         puts("Card not detected.");
-                        return EXIT_FAILURE;
                 }
+
+                fclose(sd);
         } else {
                 perror(argv[1]);
         }
 
-        return EXIT_FAILURE;
+        return status;
 }
 
 /*==============================================================================
