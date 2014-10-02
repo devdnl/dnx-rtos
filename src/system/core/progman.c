@@ -796,6 +796,8 @@ void _exit(int status)
 //==============================================================================
 void _abort(void)
 {
+        sys_fprintf(stdout, "Aborted\n");
+
         process_kill(task_get_handle(), -1);
 
         /* wait to kill program */

@@ -46,7 +46,7 @@ function create_makefile()
     echo '' >> "$Makefile_path"
 
     for prog in $program_list; do
-        echo 'include $(PROG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
+        echo '-include $(PROG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
     done
 }
 

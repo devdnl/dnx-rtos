@@ -44,7 +44,7 @@ function create_makefile()
     echo '' >> "$Makefile_path"
 
     for lib in $library_list; do
-        echo 'include $(LIB_LOC)/'"$lib"'/Makefile' >> "$Makefile_path"
+        echo '-include $(LIB_LOC)/'"$lib"'/Makefile' >> "$Makefile_path"
     done
 }
 
