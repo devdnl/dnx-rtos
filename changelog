@@ -5,6 +5,7 @@ New Features, Improvements:
 - Added IRQ driver
 - Added I2C driver (master mode only)
 - Added LOOP driver (virtual module that can be used to realize e.g. discs, etc (USBOTG pendrive as /dev/sdb))
+- Added user space linked list library
 - Improved objects validation (mutex, queue, sempahore, file, directory)
 - Systematized files of the configtool
 - Added to the configtool a wizard that helps in creation of new modules (issue #110)
@@ -19,6 +20,7 @@ Fixed Bugs:
 - Fixed memory and resource leaks (issue #105)
 - Fixed rewind() function (issue #104)
 - Fixed ICMP ping response (issue #111)
+- Fixed mbus double type declaration (issue #112)
 
 dnx RTOS 1.3.8
 ==============
