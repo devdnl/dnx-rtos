@@ -88,6 +88,10 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
                 ui.Panel2:Enable(deven)
         end
 
+        -- DMA enable
+        local DMA_en = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["SPI_SPI"..spi_number.."_USE_DMA"]))
+        ui.CheckBox_DMA_enable:SetValue(DMA_en)
+
         -- load current selection of number of cs pins
         local NUMBER_OF_CS_pins
         if spi_cs_count ~= nil and spi_cs_count >= 1 and spi_cs_count <= NUMBER_OF_CS then
@@ -167,15 +171,18 @@ local function on_button_save_click()
         local bitorder   = ifs(ui.Choice_bitorder:GetSelection() == 0, config.project.def.YES:GetValue(), config.project.def.NO:GetValue())
         local spisel     = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
         local spien      = ct:bool_to_yes_no(ui.CheckBox_device_enable:GetValue())
+        local DMA_en     = ct:bool_to_yes_no(ui.CheckBox_DMA_enable:GetValue())
         local irqprio    = ui.Choice_irqprio:GetSelection() + 1
         local numofcs    = tostring(ui.Choice_csnum:GetSelection() + 1)
 
+        -- convert priority selection to value
         if ui.Choice_irqprio:GetSelection() + 1 > #prio_list then
                 irqprio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
         else
                 irqprio = prio_list[irqprio].value
         end
 
+        -- check if all pins has defined connection to GPIO's pin name
         local cspin     = {}
         local undef_pin = false
         if ui.Panel2:IsEnabled() then
@@ -192,7 +199,7 @@ local function on_button_save_click()
                 end
         end
 
-        -- write selected values
+        -- write default values
         ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE, dummy_byte)
         ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV, clkdiv)
         ct:key_write(config.arch.stm32f1.key.SPI_DEFAULT_MODE, mode)
@@ -215,8 +222,9 @@ local function on_button_save_click()
 
         ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_ENABLE"], spien)
 
-        -- save priority and Chip Selects
+        -- save DMA enable, priority and Chip Selects
         if ui.Panel2:IsEnabled() then
+                ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_USE_DMA"], DMA_en)
                 ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_PRIORITY"], irqprio)
                 ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_NUMBER_OF_CS"], numofcs)
 
@@ -349,6 +357,7 @@ function spi:create_window(parent)
         ID.CHOICE_BITORDER = wx.wxNewId()
         ID.CHOICE_DEVICE = wx.wxNewId()
         ID.CHECKBOX_DEVICE_ENABLE = wx.wxNewId()
+        ID.CHECKBOX_DMA_ENABLE = wx.wxNewId()
         ID.CHOICE_IRQPRIO = wx.wxNewId()
         ID.CHOICE_CSNUM = wx.wxNewId()
         ID.CHOICE_CSPIN = {}
@@ -406,7 +415,9 @@ function spi:create_window(parent)
         ui.FlexGridSizer4 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         ui.Choice_device = wx.wxChoice(ui.Panel1, ID.CHOICE_DEVICE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_DEVICE")
-        for i = 1, spi_cfg:NumChildren() do ui.Choice_device:Append("SPI"..spi_cfg:Children()[i].name:GetValue()) end
+        for i = 1, spi_cfg:NumChildren() do
+                ui.Choice_device:Append("SPI"..spi_cfg:Children()[i].name:GetValue())
+        end
         ui.Choice_device:SetSelection(0)
         ui.Choice_device.OldSelection = 0
         ui.FlexGridSizer4:Add(ui.Choice_device, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -417,11 +428,17 @@ function spi:create_window(parent)
         ui.FlexGridSizer4:Add(ui.CheckBox_device_enable, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.FlexGridSizer6 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
+        ui.CheckBox_DMA_enable = wx.wxCheckBox(ui.Panel2, ID.CHECKBOX_DMA_ENABLE, "Enable DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer6:Add(ui.CheckBox_DMA_enable, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticText = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer6:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.StaticText5 = wx.wxStaticText(ui.Panel2, wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
         ui.Choice_irqprio = wx.wxChoice(ui.Panel2, ID.CHOICE_IRQPRIO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_IRQPRIO")
-        for i, item in ipairs(prio_list) do ui.Choice_irqprio:Append(item.name) end
+        for i, item in ipairs(prio_list) do
+                ui.Choice_irqprio:Append(item.name)
+        end
         ui.Choice_irqprio:Append("System default")
         ui.FlexGridSizer6:Add(ui.Choice_irqprio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -465,7 +482,7 @@ function spi:create_window(parent)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(15, 15)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated       )
@@ -473,6 +490,7 @@ function spi:create_window(parent)
         this:Connect(ID.CHOICE_MODE,            wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHOICE_BITORDER,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHECKBOX_DEVICE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_device_enable_updated)
+        this:Connect(ID.CHECKBOX_DMA_ENABLE,    wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_updated                 )
         this:Connect(ID.CHOICE_IRQPRIO,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_updated                 )
         this:Connect(ID.CHOICE_DEVICE,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  spi_device_selected           )
         this:Connect(ID.CHOICE_CSNUM,           wx.wxEVT_COMMAND_CHOICE_SELECTED,  NUMBER_OF_CS_selected         )
