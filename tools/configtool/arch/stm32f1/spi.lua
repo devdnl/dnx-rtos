@@ -81,12 +81,9 @@ spimode_str.SPI_MODE_3 = 3
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
-        local keygen = config.arch.stm32f1.key.SPI_GENERAL
-
         -- SPI enable status
         if spi_cs_count == nil then
-                keygen.key:SetValue("__SPI_SPI"..spi_number.."_ENABLE__")
-                local deven = ct:yes_no_to_bool(ct:key_read(keygen))
+                local deven = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["SPI_SPI"..spi_number.."_ENABLE"]))
                 ui.CheckBox_device_enable:SetValue(deven)
                 ui.Panel2:Enable(deven)
         end
@@ -96,8 +93,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         if spi_cs_count ~= nil and spi_cs_count >= 1 and spi_cs_count <= NUMBER_OF_CS then
                 NUMBER_OF_CS_pins = spi_cs_count
         else
-                keygen.key:SetValue("__SPI_SPI"..spi_number.."_NUMBER_OF_CS__")
-                NUMBER_OF_CS_pins = tonumber(ct:key_read(keygen))
+                NUMBER_OF_CS_pins = tonumber(ct:key_read(config.arch.stm32f1.key["SPI_SPI"..spi_number.."_NUMBER_OF_CS"]))
         end
         ui.Choice_csnum:SetSelection(NUMBER_OF_CS_pins - 1)
         ui.Choice_csnum.OldSelection = NUMBER_OF_CS_pins - 1
@@ -105,8 +101,7 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
         -- load names of CS pins
         for cs = 0, NUMBER_OF_CS - 1 do
                 if spi_cs_count == nil then
-                        keygen.key:SetValue("__SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME__")
-                        local devcspin = ct:key_read(keygen)
+                        local devcspin = ct:key_read(config.arch.stm32f1.key["SPI_SPI"..spi_number.."_CS"..cs.."_PIN_NAME"])
                         ui.Choice_cspin[cs]:SetSelection(ct:get_string_index(pin_list, devcspin))
 
                 end
@@ -122,9 +117,14 @@ local function load_controls_of_selected_SPI(spi_number, spi_cs_count)
 
         -- load value of IRQ priority
         if spi_cs_count == nil then
-                keygen.key:SetValue("__SPI_SPI"..spi_number.."_PRIORITY__")
-                local devprio = ct:key_read(keygen)
-                if devprio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then devprio = #prio_list else devprio = math.floor(tonumber(devprio) / 16) end
+                local devprio = ct:key_read(config.arch.stm32f1.key["SPI_SPI"..spi_number.."_PRIORITY"])
+
+                if devprio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
+                        devprio = #prio_list
+                else
+                        devprio = math.floor(tonumber(devprio) / 16)
+                end
+
                 ui.Choice_irqprio:SetSelection(devprio)
         end
 end
@@ -136,11 +136,10 @@ end
 --------------------------------------------------------------------------------
 local function load_controls_of_defaults()
         local enable     = ct:get_module_state("SPI")
-        local dummy_byte = ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", "")
+        local dummy_byte = ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", ""):upper()
         local clkdividx  = clkdiv_str[ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)]
         local spimode    = spimode_str[ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MODE)]
         local bitorder   = ifs(ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_MSB_FIRST)), 0, 1)
-        local keygen     = config.arch.stm32f1.key.SPI_GENERAL
         local spisel     = spi_cfg:Children()[ui.Choice_device:GetSelection() + 1].name:GetValue()
 
         ui.TextCtrl_dummy_byte:SetValue(dummy_byte)
@@ -162,7 +161,7 @@ end
 local function on_button_save_click()
         -- load selected values
         local enable     = ui.CheckBox_enable:GetValue()
-        local dummy_byte = "0x"..ui.TextCtrl_dummy_byte:GetValue()
+        local dummy_byte = "0x"..ui.TextCtrl_dummy_byte:GetValue():upper()
         local clkdiv     = "SPI_CLK_DIV_"..math.pow(2, ui.Choice_clkdiv:GetSelection() + 1)
         local mode       = "SPI_MODE_"..ui.Choice_mode:GetSelection()
         local bitorder   = ifs(ui.Choice_bitorder:GetSelection() == 0, config.project.def.YES:GetValue(), config.project.def.NO:GetValue())
@@ -170,7 +169,6 @@ local function on_button_save_click()
         local spien      = ct:bool_to_yes_no(ui.CheckBox_device_enable:GetValue())
         local irqprio    = ui.Choice_irqprio:GetSelection() + 1
         local numofcs    = tostring(ui.Choice_csnum:GetSelection() + 1)
-        local keygen     = config.arch.stm32f1.key.SPI_GENERAL
 
         if ui.Choice_irqprio:GetSelection() + 1 > #prio_list then
                 irqprio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
@@ -211,26 +209,20 @@ local function on_button_save_click()
                 end
 
                 if not exist then
-                        keygen.key:SetValue("__SPI_SPI"..i.."_ENABLE__")
-                        ct:key_write(keygen, config.project.def.NO:GetValue())
+                        ct:key_write(config.arch.stm32f1.key["SPI_SPI"..i.."_ENABLE"], config.project.def.NO:GetValue())
                 end
         end
 
-        keygen.key:SetValue("__SPI_SPI"..spisel.."_ENABLE__")
-        ct:key_write(keygen, spien)
+        ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_ENABLE"], spien)
 
         -- save priority and Chip Selects
         if ui.Panel2:IsEnabled() then
-                keygen.key:SetValue("__SPI_SPI"..spisel.."_PRIORITY__")
-                ct:key_write(keygen, irqprio)
-
-                keygen.key:SetValue("__SPI_SPI"..spisel.."_NUMBER_OF_CS__")
-                ct:key_write(keygen, numofcs)
+                ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_PRIORITY"], irqprio)
+                ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_NUMBER_OF_CS"], numofcs)
 
                 for pin = 0, NUMBER_OF_CS - 1 do
                         if ui.Choice_cspin[pin]:IsEnabled() then
-                                keygen.key:SetValue("__SPI_SPI"..spisel.."_CS"..pin.."_PIN_NAME__")
-                                ct:key_write(keygen, cspin[pin])
+                                ct:key_write(config.arch.stm32f1.key["SPI_SPI"..spisel.."_CS"..pin.."_PIN_NAME"], cspin[pin])
                         end
                 end
         end

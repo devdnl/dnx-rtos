@@ -198,21 +198,60 @@
                 <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
                 <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>CPUCONFIG_CPUNAME</key></CPUCONFIG_CPUNAME>
                 <GPIO><path>../../config/stm32f1/gpio_flags.h</path><key></key></GPIO>
+
                 <WDG_DEVICE_LOCK_AT_OPEN><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DEVICE_LOCK_AT_OPEN__</key></WDG_DEVICE_LOCK_AT_OPEN>
                 <WDG_CLK_DIVIDER><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_CLK_DIVIDER__</key></WDG_CLK_DIVIDER>
                 <WDG_RELOAD_VALUE><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_RELOAD_VALUE__</key></WDG_RELOAD_VALUE>
                 <WDG_DISABLE_ON_DEBUG><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DISABLE_ON_DEBUG__</key></WDG_DISABLE_ON_DEBUG>
-                <SPI_GENERAL><path>../../config/stm32f1/spi_flags.h</path><key></key></SPI_GENERAL>
+
+                <SPI_SPI1_ENABLE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_ENABLE__</key></SPI_SPI1_ENABLE>
+                <SPI_SPI2_ENABLE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_ENABLE__</key></SPI_SPI2_ENABLE>
+                <SPI_SPI3_ENABLE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_ENABLE__</key></SPI_SPI3_ENABLE>
+                <SPI_SPI1_PRIORITY><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_PRIORITY__</key></SPI_SPI1_PRIORITY>
+                <SPI_SPI2_PRIORITY><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_PRIORITY__</key></SPI_SPI2_PRIORITY>
+                <SPI_SPI3_PRIORITY><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_PRIORITY__</key></SPI_SPI3_PRIORITY>
                 <SPI_DEFAULT_DUMMY_BYTE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_DUMMY_BYTE__</key></SPI_DEFAULT_DUMMY_BYTE>
                 <SPI_DEFAULT_CLK_DIV><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_CLK_DIV__</key></SPI_DEFAULT_CLK_DIV>
                 <SPI_DEFAULT_MODE><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MODE__</key></SPI_DEFAULT_MODE>
                 <SPI_DEFAULT_MSB_FIRST><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_DEFAULT_MSB_FIRST__</key></SPI_DEFAULT_MSB_FIRST>
+                <SPI_SPI1_NUMBER_OF_CS><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_NUMBER_OF_CS__</key></SPI_SPI1_NUMBER_OF_CS>
+                <SPI_SPI2_NUMBER_OF_CS><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_NUMBER_OF_CS__</key></SPI_SPI2_NUMBER_OF_CS>
+                <SPI_SPI3_NUMBER_OF_CS><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_NUMBER_OF_CS__</key></SPI_SPI3_NUMBER_OF_CS>
+                <SPI_SPI1_USE_DMA><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_USE_DMA__</key></SPI_SPI1_USE_DMA>
+                <SPI_SPI2_USE_DMA><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_USE_DMA__</key></SPI_SPI2_USE_DMA>
+                <SPI_SPI3_USE_DMA><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_USE_DMA__</key></SPI_SPI3_USE_DMA>
+                <SPI_SPI1_CS0_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS0_PIN_NAME__</key></SPI_SPI1_CS0_PIN_NAME>
+                <SPI_SPI1_CS1_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS1_PIN_NAME__</key></SPI_SPI1_CS1_PIN_NAME>
+                <SPI_SPI1_CS2_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS2_PIN_NAME__</key></SPI_SPI1_CS2_PIN_NAME>
+                <SPI_SPI1_CS3_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS3_PIN_NAME__</key></SPI_SPI1_CS3_PIN_NAME>
+                <SPI_SPI1_CS4_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS4_PIN_NAME__</key></SPI_SPI1_CS4_PIN_NAME>
+                <SPI_SPI1_CS5_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS5_PIN_NAME__</key></SPI_SPI1_CS5_PIN_NAME>
+                <SPI_SPI1_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS6_PIN_NAME__</key></SPI_SPI1_CS6_PIN_NAME>
+                <SPI_SPI1_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI1_CS7_PIN_NAME__</key></SPI_SPI1_CS7_PIN_NAME>
+                <SPI_SPI2_CS0_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS0_PIN_NAME__</key></SPI_SPI2_CS0_PIN_NAME>
+                <SPI_SPI2_CS1_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS1_PIN_NAME__</key></SPI_SPI2_CS1_PIN_NAME>
+                <SPI_SPI2_CS2_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS2_PIN_NAME__</key></SPI_SPI2_CS2_PIN_NAME>
+                <SPI_SPI2_CS3_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS3_PIN_NAME__</key></SPI_SPI2_CS3_PIN_NAME>
+                <SPI_SPI2_CS4_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS4_PIN_NAME__</key></SPI_SPI2_CS4_PIN_NAME>
+                <SPI_SPI2_CS5_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS5_PIN_NAME__</key></SPI_SPI2_CS5_PIN_NAME>
+                <SPI_SPI2_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS6_PIN_NAME__</key></SPI_SPI2_CS6_PIN_NAME>
+                <SPI_SPI2_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI2_CS7_PIN_NAME__</key></SPI_SPI2_CS7_PIN_NAME>
+                <SPI_SPI3_CS0_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS0_PIN_NAME__</key></SPI_SPI3_CS0_PIN_NAME>
+                <SPI_SPI3_CS1_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS1_PIN_NAME__</key></SPI_SPI3_CS1_PIN_NAME>
+                <SPI_SPI3_CS2_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS2_PIN_NAME__</key></SPI_SPI3_CS2_PIN_NAME>
+                <SPI_SPI3_CS3_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS3_PIN_NAME__</key></SPI_SPI3_CS3_PIN_NAME>
+                <SPI_SPI3_CS4_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS4_PIN_NAME__</key></SPI_SPI3_CS4_PIN_NAME>
+                <SPI_SPI3_CS5_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS5_PIN_NAME__</key></SPI_SPI3_CS5_PIN_NAME>
+                <SPI_SPI3_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS6_PIN_NAME__</key></SPI_SPI3_CS6_PIN_NAME>
+                <SPI_SPI3_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS7_PIN_NAME__</key></SPI_SPI3_CS7_PIN_NAME>
+
                 <SDSPI_TIMEOUT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_TIMEOUT__</key></SDSPI_TIMEOUT>
                 <SDSPI_SPI_PORT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_PORT__</key></SDSPI_SPI_PORT>
                 <SDSPI_SPI_CLK_DIV><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_CLK_DIV__</key></SDSPI_SPI_CLK_DIV>
                 <SDSPI_SD_CS_PIN><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SD_CS_PIN__</key></SDSPI_SD_CS_PIN>
                 <SDSPI_ENABLE_DMA><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_ENABLE_DMA__</key></SDSPI_ENABLE_DMA>
                 <SDSPI_DMA_IRQ_PRIORITY><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_DMA_IRQ_PRIORITY__</key></SDSPI_DMA_IRQ_PRIORITY>
+
                 <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
                 <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>
                 <ETH_SPEED><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_SPEED__</key></ETH_SPEED>
@@ -223,6 +262,7 @@
                 <ETH_PHY_SR><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SR__</key></ETH_PHY_SR>
                 <ETH_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SPEED_STATUS_BM__</key></ETH_PHY_SPEED_STATUS_BM>
                 <ETH_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_DUPLEX_STATUS_BM__</key></ETH_PHY_DUPLEX_STATUS_BM>
+
                 <AFIO_EVENT_OUT_ENABLE><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_ENABLE__</key></AFIO_EVENT_OUT_ENABLE>
                 <AFIO_EVENT_OUT_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PORT__</key></AFIO_EVENT_OUT_PORT>
                 <AFIO_EVENT_OUT_PIN><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PIN__</key></AFIO_EVENT_OUT_PIN>
@@ -279,9 +319,11 @@
                 <AFIO_EXTI13_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI13_PORT__</key></AFIO_EXTI13_PORT>
                 <AFIO_EXTI14_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI14_PORT__</key></AFIO_EXTI14_PORT>
                 <AFIO_EXTI15_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI15_PORT__</key></AFIO_EXTI15_PORT>
+
                 <USB_PULLUP_PIN><path>../../config/stm32f1/usb_flags.h</path><key>__USB_PULLUP_PIN__</key></USB_PULLUP_PIN>
                 <USB_IRQ_PRIORITY><path>../../config/stm32f1/usb_flags.h</path><key>__USB_IRQ_PRIORITY__</key></USB_IRQ_PRIORITY>
                 <USB_ENDPOINT0_SIZE><path>../../config/stm32f1/usb_flags.h</path><key>__USB_ENDPOINT0_SIZE__</key></USB_ENDPOINT0_SIZE>
+
                 <UART_UART1_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART1_ENABLE__</key></UART_UART1_ENABLE>
                 <UART_UART2_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART2_ENABLE__</key></UART_UART2_ENABLE>
                 <UART_UART3_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART3_ENABLE__</key></UART_UART3_ENABLE>
@@ -302,6 +344,7 @@
                 <UART_DEFAULT_HW_FLOW_CTRL><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_HW_FLOW_CTRL__</key></UART_DEFAULT_HW_FLOW_CTRL>
                 <UART_DEFAULT_SINGLE_WIRE_MODE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_SINGLE_WIRE_MODE__</key></UART_DEFAULT_SINGLE_WIRE_MODE>
                 <UART_DEFAULT_BAUD><path>../../config/stm32f1/uart_flags.h</path><key>__UART_DEFAULT_BAUD__</key></UART_DEFAULT_BAUD>
+
                 <PLL_LSI_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_LSI_ON__</key></PLL_LSI_ON>
                 <PLL_LSE_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_LSE_ON__</key></PLL_LSE_ON>
                 <PLL_HSE_ON><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_HSE_ON__</key></PLL_HSE_ON>
@@ -330,6 +373,7 @@
                 <PLL_APB2_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_APB2_PRE__</key></PLL_APB2_PRE>
                 <PLL_ADC_PRE><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_ADC_PRE__</key></PLL_ADC_PRE>
                 <PLL_FLASH_LATENCY><path>../../config/stm32f1/pll_flags.h</path><key>__PLL_FLASH_LATENCY__</key></PLL_FLASH_LATENCY>
+
                 <IRQ_0_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_0_MODE__</key></IRQ_0_MODE>
                 <IRQ_1_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_1_MODE__</key></IRQ_1_MODE>
                 <IRQ_2_MODE><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_2_MODE__</key></IRQ_2_MODE>
@@ -362,6 +406,7 @@
                 <IRQ_13_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_13_PRIO__</key></IRQ_13_PRIO>
                 <IRQ_14_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_14_PRIO__</key></IRQ_14_PRIO>
                 <IRQ_15_PRIO><path>../../config/stm32f1/irq_flags.h</path><key>__IRQ_LINE_15_PRIO__</key></IRQ_15_PRIO>
+
                 <I2C1_ENABLE><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_ENABLE__</key></I2C1_ENABLE>
                 <I2C1_USE_DMA><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_USE_DMA__</key></I2C1_USE_DMA>
                 <I2C1_SCL_FREQ><path>../../config/stm32f1/i2c_flags.h</path><key>__I2C1_SCL_FREQ__</key></I2C1_SCL_FREQ>
