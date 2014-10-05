@@ -2,6 +2,7 @@ dnx RTOS 1.4.1RC
 ==============
 New Features, Improvements:
 - Added DMA support to the SPI driver
+- SDSPI driver use SPI interface from SPI module instead of direct access
 
 Fixed Bugs:
 - None
