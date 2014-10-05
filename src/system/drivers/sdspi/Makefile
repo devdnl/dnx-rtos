@@ -2,6 +2,6 @@
 HDRLOC_ARCH += drivers/sdspi
 
 ifeq ($(ENABLE_SDSPI), __YES__)
-   CSRC_ARCH   += drivers/sdspi/$(TARGET)/sdspi.c
-   CXXSRC_ARCH += 
+   CSRC_NOARCH += drivers/sdspi/noarch/sdspi.c
+   CXXSRC_ARCH +=
 endif

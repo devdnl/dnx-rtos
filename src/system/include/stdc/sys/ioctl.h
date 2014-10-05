@@ -41,6 +41,7 @@ extern "C" {
 #ifdef ARCH_noarch
 #       include "noarch/loop_ioctl.h"
 #       include "noarch/tty_ioctl.h"
+#       include "noarch/sdspi_ioctl.h"
 #endif
 #ifdef ARCH_stm32f1
 #       include "stm32f1/afio_ioctl.h"
@@ -48,7 +49,6 @@ extern "C" {
 #       include "stm32f1/ethmac_ioctl.h"
 #       include "stm32f1/gpio_ioctl.h"
 #       include "stm32f1/pll_ioctl.h"
-#       include "stm32f1/sdspi_ioctl.h"
 #       include "stm32f1/spi_ioctl.h"
 #       include "stm32f1/uart_ioctl.h"
 #       include "stm32f1/usb_ioctl.h"

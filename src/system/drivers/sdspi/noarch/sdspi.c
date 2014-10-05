@@ -34,9 +34,8 @@
 #include <dnx/misc.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include "stm32f1/sdspi_cfg.h"
-#include "stm32f1/sdspi_def.h"
-#include "stm32f1/stm32f10x.h"
+#include "noarch/sdspi_cfg.h"
+#include "noarch/sdspi_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -109,7 +109,7 @@
             <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
             <module noarch="false"><name>ETH</name><description>This module handles Ethernet interface.</description></module>
             <module noarch="false"><name>PLL</name><description>This module handles PLL peripheral.</description></module>
-            <module noarch="false"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
+            <module noarch="true"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
             <module noarch="false"><name>SPI</name><description>This module handles SPI peripherals.</description></module>
             <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
             <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
@@ -251,12 +251,6 @@
                 <SPI_SPI3_CS5_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS5_PIN_NAME__</key></SPI_SPI3_CS5_PIN_NAME>
                 <SPI_SPI3_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS6_PIN_NAME__</key></SPI_SPI3_CS6_PIN_NAME>
                 <SPI_SPI3_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS7_PIN_NAME__</key></SPI_SPI3_CS7_PIN_NAME>
-
-                <SDSPI_NUMBER_OF_CARDS><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_NUMBER_OF_CARDS__</key></SDSPI_NUMBER_OF_CARDS>
-                <SDSPI_CARD0_TIMEOUT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_CARD0_TIMEOUT__</key></SDSPI_CARD0_TIMEOUT>
-                <SDSPI_CARD1_TIMEOUT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_CARD1_TIMEOUT__</key></SDSPI_CARD1_TIMEOUT>
-                <SDSPI_CARD0_FILE><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_CARD0_FILE__</key></SDSPI_CARD0_FILE>
-                <SDSPI_CARD1_FILE><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_CARD1_FILE__</key></SDSPI_CARD1_FILE>
 
                 <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
                 <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>

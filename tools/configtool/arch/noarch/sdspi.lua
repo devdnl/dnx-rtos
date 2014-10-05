@@ -57,14 +57,14 @@ local NUMBER_OF_CARDS = 2
 --------------------------------------------------------------------------------
 local function load_controls()
         local module_enable   = ct:get_module_state("SDSPI")
-        local number_of_cards = tonumber(ct:key_read(config.arch.stm32f1.key.SDSPI_NUMBER_OF_CARDS))
+        local number_of_cards = tonumber(ct:key_read(config.noarch.key.SDSPI_NUMBER_OF_CARDS))
 
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Choice_card_count:SetSelection(number_of_cards - 1)
 
         for i = 0, NUMBER_OF_CARDS - 1 do
-                local SPI_file     = ct:key_read(config.arch.stm32f1.key["SDSPI_CARD"..i.."_FILE"]):gsub("\"", "")
-                local card_timeout = tonumber(ct:key_read(config.arch.stm32f1.key["SDSPI_CARD"..i.."_TIMEOUT"]))
+                local SPI_file     = ct:key_read(config.noarch.key["SDSPI_CARD"..i.."_FILE"]):gsub("\"", "")
+                local card_timeout = tonumber(ct:key_read(config.noarch.key["SDSPI_CARD"..i.."_TIMEOUT"]))
 
                 ui.ComboBox_card[i]:SetValue(SPI_file)
                 ui.SpinCtrl_card[i]:SetValue(card_timeout)
@@ -82,11 +82,11 @@ end
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
         ct:enable_module("SDSPI", ui.CheckBox_module_enable:GetValue())
-        ct:key_write(config.arch.stm32f1.key.SDSPI_NUMBER_OF_CARDS, tostring(ui.Choice_card_count:GetSelection() + 1))
+        ct:key_write(config.noarch.key.SDSPI_NUMBER_OF_CARDS, tostring(ui.Choice_card_count:GetSelection() + 1))
 
         for i = 0, NUMBER_OF_CARDS - 1 do
-                ct:key_write(config.arch.stm32f1.key["SDSPI_CARD"..i.."_FILE"], "\""..ui.ComboBox_card[i]:GetValue().."\"")
-                ct:key_write(config.arch.stm32f1.key["SDSPI_CARD"..i.."_TIMEOUT"], tostring(ui.SpinCtrl_card[i]:GetValue()))
+                ct:key_write(config.noarch.key["SDSPI_CARD"..i.."_FILE"], "\""..ui.ComboBox_card[i]:GetValue().."\"")
+                ct:key_write(config.noarch.key["SDSPI_CARD"..i.."_TIMEOUT"], tostring(ui.SpinCtrl_card[i]:GetValue()))
         end
 
         --

@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/sdspi_ioctl.h"
-#include "stm32f1/sdspi_cfg.h"
+#include "noarch/sdspi_ioctl.h"
+#include "noarch/sdspi_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

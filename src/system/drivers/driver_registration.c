@@ -61,8 +61,8 @@
 #       endif
 #endif
 #if (__ENABLE_SDSPI__)
-#       ifdef ARCH_stm32f1
-#               include "stm32f1/sdspi_def.h"
+#       ifdef ARCH_noarch
+#               include "noarch/sdspi_def.h"
 #       endif
 #endif
 #if (__ENABLE_ETH__)
