@@ -43,9 +43,9 @@ sdspi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local ui         = {}
-local ID         = {}
-
+local ui = {}
+local ID = {}
+local NUMBER_OF_CARDS = 2
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -56,7 +56,22 @@ local ID         = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
+        local module_enable   = ct:get_module_state("SDSPI")
+        local number_of_cards = tonumber(ct:key_read(config.arch.stm32f1.key.SDSPI_NUMBER_OF_CARDS))
 
+        ui.CheckBox_module_enable:SetValue(module_enable)
+        ui.Choice_card_count:SetSelection(number_of_cards - 1)
+
+        for i = 0, NUMBER_OF_CARDS - 1 do
+                local SPI_file     = ct:key_read(config.arch.stm32f1.key["SDSPI_CARD"..i.."_FILE"]):gsub("\"", "")
+                local card_timeout = tonumber(ct:key_read(config.arch.stm32f1.key["SDSPI_CARD"..i.."_TIMEOUT"]))
+
+                ui.ComboBox_card[i]:SetValue(SPI_file)
+                ui.SpinCtrl_card[i]:SetValue(card_timeout)
+                ui.Panel_card[i]:Enable(i <= number_of_cards - 1)
+        end
+
+        ui.Panel1:Enable(module_enable)
 end
 
 
@@ -66,16 +81,13 @@ end
 -- @return On success true, otherwise false
 --------------------------------------------------------------------------------
 local function event_on_button_save_click()
+        ct:enable_module("SDSPI", ui.CheckBox_module_enable:GetValue())
+        ct:key_write(config.arch.stm32f1.key.SDSPI_NUMBER_OF_CARDS, tostring(ui.Choice_card_count:GetSelection() + 1))
 
-
-        -- save configuration
-        ct:enable_module("SDSPI", module_enable)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_SPI_PORT, spiport)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_SPI_CLK_DIV, spidiv)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_SD_CS_PIN, chip_select)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_TIMEOUT, timeout)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_ENABLE_DMA, DMA_enable)
-        ct:key_write(config.arch.stm32f1.key.SDSPI_DMA_IRQ_PRIORITY, DMA_irq_prio)
+        for i = 0, NUMBER_OF_CARDS - 1 do
+                ct:key_write(config.arch.stm32f1.key["SDSPI_CARD"..i.."_FILE"], "\""..ui.ComboBox_card[i]:GetValue().."\"")
+                ct:key_write(config.arch.stm32f1.key["SDSPI_CARD"..i.."_TIMEOUT"], tostring(ui.SpinCtrl_card[i]:GetValue()))
+        end
 
         --
         ui.Button_save:Enable(false)
@@ -105,6 +117,22 @@ local function event_value_updated()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Event is called when value is changed (general)
+-- @param  event    event object
+-- @return None
+--------------------------------------------------------------------------------
+local function event_number_of_cards_changed(event)
+        local card_count = event:GetSelection()
+
+        for i = 0, NUMBER_OF_CARDS - 1 do
+                ui.Panel_card[i]:Enable(i <= card_count)
+        end
+
+        ui.Button_save:Enable(true)
+end
+
+
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -115,13 +143,16 @@ end
 --------------------------------------------------------------------------------
 function sdspi:create_window(parent)
         ui = {}
+        ui.Panel_card    = {}
+        ui.ComboBox_card = {}
+        ui.SpinCtrl_card = {}
+
         ID = {}
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
         ID.PANEL1 = wx.wxNewId()
         ID.CHOICE_CARD_COUNT = wx.wxNewId()
-        ID.PANEL_CARD = wx.wxNewId()
-        ID.COMBOBOX_CARD = wx.wxNewId()
-        ID.SPINCTRL_CARD = wx.wxNewId()
+        ID.COMBOBOX_CARD = {}
+        ID.SPINCTRL_CARD = {}
         ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -143,25 +174,39 @@ function sdspi:create_window(parent)
         ui.FlexGridSizer2:Add(ui.Choice_card_count, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.FlexGridSizerPanel1:Add(ui.FlexGridSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Panel_card = wx.wxPanel(ui.Panel1, ID.PANEL_CARD, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
-        ui.StaticBoxSizer_card = wx.wxStaticBoxSizer(wx.wxVERTICAL, ui.Panel_card, "Card 0")
-        ui.FlexGridSizer_card = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-        ui.StaticText_card_file = wx.wxStaticText(ui.Panel_card, wx.wxID_ANY, "SPI file path", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_card:Add(ui.StaticText_card_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.ComboBox_card = wx.wxComboBox(ui.Panel_card, ID.COMBOBOX_CARD, "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-        ui.ComboBox_card:Append("/dev/spi_sda")
-        ui.FlexGridSizer_card:Add(ui.ComboBox_card, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        for i = 0, NUMBER_OF_CARDS - 1 do
+                ID.COMBOBOX_CARD[i] = wx.wxNewId()
+                ID.SPINCTRL_CARD[i] = wx.wxNewId()
 
-        ui.StaticText_card_timeout = wx.wxStaticText(ui.Panel_card, wx.wxID_ANY, "Card timeout [ms]", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_card:Add(ui.StaticText_card_timeout, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.SpinCtrl_card = wx.wxSpinCtrl(ui.Panel_card, ID.SPINCTRL_CARD, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 100, 2000)
-        ui.FlexGridSizer_card:Add(ui.SpinCtrl_card, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Panel_card[i] = wx.wxPanel(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+                ui.StaticBoxSizer_card = wx.wxStaticBoxSizer(wx.wxVERTICAL, ui.Panel_card[i], "Card "..i)
+                ui.FlexGridSizer_card = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-        ui.StaticBoxSizer_card:Add(ui.FlexGridSizer_card, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Panel_card:SetSizer(ui.StaticBoxSizer_card)
+                ui.StaticText_card_file = wx.wxStaticText(ui.Panel_card[i], wx.wxID_ANY, "SPI file path", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_card:Add(ui.StaticText_card_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_card[i] = wx.wxComboBox(ui.Panel_card[i], ID.COMBOBOX_CARD[i], "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                ui.ComboBox_card[i]:Append("/dev/spi_sda")
+                ui.ComboBox_card[i]:Append("/dev/spi_sdb")
+                ui.FlexGridSizer_card:Add(ui.ComboBox_card[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.FlexGridSizerPanel1:Add(ui.Panel_card, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText_card_timeout = wx.wxStaticText(ui.Panel_card[i], wx.wxID_ANY, "Card timeout [ms]", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_card:Add(ui.StaticText_card_timeout, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.SpinCtrl_card[i] = wx.wxSpinCtrl(ui.Panel_card[i], ID.SPINCTRL_CARD[i], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 100, 2000)
+                ui.FlexGridSizer_card:Add(ui.SpinCtrl_card[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.StaticBoxSizer_card:Add(ui.FlexGridSizer_card, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Panel_card[i]:SetSizer(ui.StaticBoxSizer_card)
+
+                ui.FlexGridSizerPanel1:Add(ui.Panel_card[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                this:Connect(ID.COMBOBOX_CARD[i], wx.wxEVT_COMMAND_COMBOBOX_SELECTED, event_value_updated)
+                this:Connect(ID.COMBOBOX_CARD[i], wx.wxEVT_COMMAND_TEXT_UPDATED,      event_value_updated)
+                this:Connect(ID.SPINCTRL_CARD[i], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  event_value_updated)
+        end
+
+        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
+        ui.FlexGridSizerPanel1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizerPanel1:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -169,10 +214,7 @@ function sdspi:create_window(parent)
         ui.Panel1:SetSizer(ui.FlexGridSizerPanel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
---         ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
---         ui.FlexGridSizer1:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
+        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -185,6 +227,7 @@ function sdspi:create_window(parent)
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
         this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.CHOICE_CARD_COUNT,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_number_of_cards_changed       )
 
         --
         load_controls()
