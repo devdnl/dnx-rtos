@@ -55,7 +55,7 @@ enum {
         #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         _SPI3,
         #endif
-        _SPI_NUMBER
+        _NUMBER_OF_SPI_PERIPHERALS
 };
 
 /** minor number */
