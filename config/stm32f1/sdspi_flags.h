@@ -27,12 +27,12 @@
 #ifndef _SDSPI_FLAGS_H_
 #define _SDSPI_FLAGS_H_
 
-#define __SDSPI_TIMEOUT__ 500
-#define __SDSPI_SPI_PORT__ 3
-#define __SDSPI_SPI_CLK_DIV__ 4
-#define __SDSPI_SD_CS_PIN__ SD_CS
-#define __SDSPI_ENABLE_DMA__ __YES__
-#define __SDSPI_DMA_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
+#define __SDSPI_NUMBER_OF_CARDS__ 1
+#define __SDSPI_CARD0_TIMEOUT__ 500
+#define __SDSPI_CARD1_TIMEOUT__ 500
+#define __SDSPI_CARD0_FILE__ "/dev/spi_sda"
+#define __SDSPI_CARD1_FILE__ "/dev/spi_sdb"
+
 
 #endif /* _SDSPI_FLAGS_H_ */
 /*==============================================================================

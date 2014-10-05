@@ -69,7 +69,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(cp, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 {
         if (argc != 3) {
                 printf("Usage: %s <source file> <destination file>\n", argv[0]);

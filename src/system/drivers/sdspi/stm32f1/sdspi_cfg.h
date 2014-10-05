@@ -40,23 +40,11 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** card waiting timeout [ms] */
-#define SDSPI_TIMEOUT                           __SDSPI_TIMEOUT__
-
-/** supported SPI peripheral (1-3) */
-#define SDSPI_PORT                              __SDSPI_SPI_PORT__
-
-/** SPI peripheral divider (2-256) */
-#define SDSPI_SPI_CLOCK_DIVIDER                 __SDSPI_SPI_CLK_DIV__
-
-/** card select pin operation */
-#define SDSPI_SD_CS_PIN                         __SDSPI_SD_CS_PIN__
-
-/** enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA                        __SDSPI_ENABLE_DMA__
-
-/** DMA IRQ priority */
-#define SDSPI_DMA_IRQ_PRIORITY                  __SDSPI_DMA_IRQ_PRIORITY__
+#define SDSPI_NUMBER_OF_CARDS                   __SDSPI_NUMBER_OF_CARDS__
+#define SDSPI_CARD0_TIMEOUT                     __SDSPI_CARD0_TIMEOUT__
+#define SDSPI_CARD1_TIMEOUT                     __SDSPI_CARD1_TIMEOUT__
+#define SDSPI_CARD0_FILE                        __SDSPI_CARD0_FILE__
+#define SDSPI_CARD1_FILE                        __SDSPI_CARD1_FILE__
 
 /*==============================================================================
   Exported types, enums definitions

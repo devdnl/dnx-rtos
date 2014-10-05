@@ -144,14 +144,15 @@ static int run_level_0(void)
         driver_init("tty1", "/dev/tty1");
         driver_init("tty2", "/dev/tty2");
         driver_init("tty3", "/dev/tty3");
-        driver_init("sdspi", "/dev/sda");
-        driver_init("sdspi1", "/dev/sda1");
-        driver_init("sdspi2", "/dev/sda2");
-        driver_init("sdspi3", "/dev/sda3");
-        driver_init("sdspi4", "/dev/sda4");
+        driver_init("spi3-0", "/dev/spi_sda");
         driver_init("ethmac", "/dev/eth0");
         driver_init("crc", "/dev/crc");
         driver_init("irq", "/dev/irq");
+        driver_init("sdspia", "/dev/sda");
+        driver_init("sdspia1", "/dev/sda1");
+        driver_init("sdspia2", "/dev/sda2");
+        driver_init("sdspia3", "/dev/sda3");
+        driver_init("sdspia4", "/dev/sda4");
         driver_init("i2c1-0", "/dev/ds1307");
         driver_init("loop0", "/dev/loop0");
 
@@ -178,22 +179,34 @@ static int run_level_1(void)
 
         /* initializing SD card and detecting partitions */
         printk("Detecting SD card... ");
-
         FILE *sd = fopen("/dev/sda", "r+");
         if (sd) {
-                bool status;
-                ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD, &status);
+                switch (ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD)) {
+                case 1:
+                        switch (ioctl(sd, IOCTL_SDSPI__READ_MBR)) {
+                        case 1:
+                                mount("fatfs", "/dev/sda1", "/mnt");
+                                printk("initialized\n");
+                                break;
 
-                if (status == true) {
-                        printk("initialized\n");
-                        mount("fatfs", "/dev/sda1", "/mnt");
-                } else {
+                        case 0:
+                                printk(FONT_COLOR_YELLOW"no partitions"RESET_ATTRIBUTES"\n");
+                                break;
+
+                        case -1:
+                                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                                break;
+                        }
+                        break;
+
+                default:
                         printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                        break;
                 }
 
                 fclose(sd);
         } else {
-                printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
         }
 
         /* network up */

@@ -35,22 +35,29 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/sdspi_ioctl.h"
+#include "stm32f1/sdspi_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 /* major device number */
 enum {
-        _SDSPI_CARD_0 = 0,
+        #if SDSPI_NUMBER_OF_CARDS >= 1
+        _SDSPI_CARD_0,
+        #endif
+        #if SDSPI_NUMBER_OF_CARDS >= 2
+        _SDSPI_CARD_1,
+        #endif
+        _NUMBER_OF_SDSPI_CARDS
 };
 
 /* minor numbers */
 enum {
-        _SDSPI_FULL_VOLUME = 0,
-        _SDSPI_PARTITION_1 = 1,
-        _SDSPI_PARTITION_2 = 2,
-        _SDSPI_PARTITION_3 = 3,
-        _SDSPI_PARTITION_4 = 4
+        _SDSPI_FULL_VOLUME,
+        _SDSPI_PARTITION_1,
+        _SDSPI_PARTITION_2,
+        _SDSPI_PARTITION_3,
+        _SDSPI_PARTITION_4
 };
 
 /*==============================================================================
