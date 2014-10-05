@@ -178,7 +178,7 @@ static int run_level_1(void)
         }
 
         /* initializing SD card and detecting partitions */
-        printk("Detecting SD card... ");
+        printk("Starting SD card... ");
         FILE *sd = fopen("/dev/sda", "r+");
         if (sd) {
                 switch (ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD)) {
