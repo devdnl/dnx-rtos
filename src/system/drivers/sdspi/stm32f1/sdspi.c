@@ -462,6 +462,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                         if (card_initialize(part) == STD_RET_OK) {
                                 status = 1;
                         } else {
+                                errno  = ENOMEDIUM;
                                 status = 0;
                         }
                         mutex_unlock(SDSPI->card[part->major]->protect_mtx);
@@ -478,7 +479,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                                         status = 1;
                                 }
                         } else {
-                                errno  = ENOMEDIUM;
+                                errno  = EMEDIUMTYPE;
                                 status = 0;
                         }
                         mutex_unlock(SDSPI->card[part->major]->protect_mtx);
