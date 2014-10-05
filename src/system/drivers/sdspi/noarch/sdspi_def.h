@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    sdspi_cfg.h
+@file    sdspi_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support configuration for SD in SPI mode
+@brief   This file support statuses and requests for SD card in SPI mode
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _SDSPI_CFG_H_
-#define _SDSPI_CFG_H_
+#ifndef _SDSPI_DEF_H_
+#define _SDSPI_DEF_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,29 +34,31 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/stm32f10x.h"
-#include "stm32f1/gpio_cfg.h"
+#include "noarch/sdspi_ioctl.h"
+#include "noarch/sdspi_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** card waiting timeout [ms] */
-#define SDSPI_TIMEOUT                           __SDSPI_TIMEOUT__
+/* major device number */
+enum {
+        #if SDSPI_NUMBER_OF_CARDS >= 1
+        _SDSPI_CARD_0,
+        #endif
+        #if SDSPI_NUMBER_OF_CARDS >= 2
+        _SDSPI_CARD_1,
+        #endif
+        _NUMBER_OF_SDSPI_CARDS
+};
 
-/** supported SPI peripheral (1-3) */
-#define SDSPI_PORT                              __SDSPI_SPI_PORT__
-
-/** SPI peripheral divider (2-256) */
-#define SDSPI_SPI_CLOCK_DIVIDER                 __SDSPI_SPI_CLK_DIV__
-
-/** card select pin operation */
-#define SDSPI_SD_CS_PIN                         __SDSPI_SD_CS_PIN__
-
-/** enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA                        __SDSPI_ENABLE_DMA__
-
-/** DMA IRQ priority */
-#define SDSPI_DMA_IRQ_PRIORITY                  __SDSPI_DMA_IRQ_PRIORITY__
+/* minor numbers */
+enum {
+        _SDSPI_FULL_VOLUME,
+        _SDSPI_PARTITION_1,
+        _SDSPI_PARTITION_2,
+        _SDSPI_PARTITION_3,
+        _SDSPI_PARTITION_4
+};
 
 /*==============================================================================
   Exported types, enums definitions
@@ -67,14 +69,14 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+ Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _SDSPI_CFG_H_ */
+#endif /* _SDSPI_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

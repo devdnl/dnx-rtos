@@ -45,6 +45,7 @@
 #if (__CPU_ARCH__ == noarch)
 #       include "../noarch/loop_flags.h"
 #       include "../noarch/tty_flags.h"
+#       include "../noarch/sdspi_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
 #       include "../stm32f1/cpu.h"
@@ -53,7 +54,6 @@
 #       include "../stm32f1/afio_flags.h"
 #       include "../stm32f1/eth_flags.h"
 #       include "../stm32f1/pll_flags.h"
-#       include "../stm32f1/sdspi_flags.h"
 #       include "../stm32f1/spi_flags.h"
 #       include "../stm32f1/wdg_flags.h"
 #       include "../stm32f1/uart_flags.h"
@@ -131,7 +131,7 @@
 #define __ENABLE_ETH__ __YES__
 #define __ENABLE_PLL__ __YES__
 #define __ENABLE_SDSPI__ __YES__
-#define __ENABLE_SPI__ __NO__
+#define __ENABLE_SPI__ __YES__
 #define __ENABLE_TTY__ __YES__
 #define __ENABLE_UART__ __YES__
 #define __ENABLE_WDG__ __YES__

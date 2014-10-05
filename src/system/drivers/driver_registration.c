@@ -61,8 +61,8 @@
 #       endif
 #endif
 #if (__ENABLE_SDSPI__)
-#       ifdef ARCH_stm32f1
-#               include "stm32f1/sdspi_def.h"
+#       ifdef ARCH_noarch
+#               include "noarch/sdspi_def.h"
 #       endif
 #endif
 #if (__ENABLE_ETH__)
@@ -275,12 +275,19 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* SDSPI =============================================================*/
-        #if (__ENABLE_SDSPI__)
-        _DRIVER_INTERFACE(SDSPI, "sdspi" , _SDSPI_CARD_0, _SDSPI_FULL_VOLUME),
-        _DRIVER_INTERFACE(SDSPI, "sdspi1", _SDSPI_CARD_0, _SDSPI_PARTITION_1),
-        _DRIVER_INTERFACE(SDSPI, "sdspi2", _SDSPI_CARD_0, _SDSPI_PARTITION_2),
-        _DRIVER_INTERFACE(SDSPI, "sdspi3", _SDSPI_CARD_0, _SDSPI_PARTITION_3),
-        _DRIVER_INTERFACE(SDSPI, "sdspi4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
+        #if (__ENABLE_SDSPI__) && (SDSPI_NUMBER_OF_CARDS >= 1)
+        _DRIVER_INTERFACE(SDSPI, "sdspia" , _SDSPI_CARD_0, _SDSPI_FULL_VOLUME),
+        _DRIVER_INTERFACE(SDSPI, "sdspia1", _SDSPI_CARD_0, _SDSPI_PARTITION_1),
+        _DRIVER_INTERFACE(SDSPI, "sdspia2", _SDSPI_CARD_0, _SDSPI_PARTITION_2),
+        _DRIVER_INTERFACE(SDSPI, "sdspia3", _SDSPI_CARD_0, _SDSPI_PARTITION_3),
+        _DRIVER_INTERFACE(SDSPI, "sdspia4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
+        #endif
+        #if (__ENABLE_SDSPI__) && (SDSPI_NUMBER_OF_CARDS >= 2)
+        _DRIVER_INTERFACE(SDSPI, "sdspib" , _SDSPI_CARD_1, _SDSPI_FULL_VOLUME),
+        _DRIVER_INTERFACE(SDSPI, "sdspib1", _SDSPI_CARD_1, _SDSPI_PARTITION_1),
+        _DRIVER_INTERFACE(SDSPI, "sdspib2", _SDSPI_CARD_1, _SDSPI_PARTITION_2),
+        _DRIVER_INTERFACE(SDSPI, "sdspib3", _SDSPI_CARD_1, _SDSPI_PARTITION_3),
+        _DRIVER_INTERFACE(SDSPI, "sdspib4", _SDSPI_CARD_1, _SDSPI_PARTITION_4),
         #endif
 
         /* ETH ===============================================================*/

@@ -33,9 +33,9 @@
 #include <dnx/timer.h>
 #include <dnx/misc.h>
 #include <unistd.h>
-#include "stm32f1/sdspi_cfg.h"
-#include "stm32f1/sdspi_def.h"
-#include "stm32f1/stm32f10x.h"
+#include <sys/ioctl.h>
+#include "noarch/sdspi_cfg.h"
+#include "noarch/sdspi_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -43,53 +43,6 @@
 #define MTX_BLOCK_TIME                                  0
 #define MTX_BLOCK_TIME_LONG                             200
 #define RELEASE_TIMEOUT_MS                              1000
-
-/* DMA and SPI automatic configuration */
-#if (SDSPI_PORT == 1)
-#define SPI_PORT                                        SPI1
-#define SDSPI_DMA                                       DMA1
-#define SDSPI_DMA_TX_CHANNEL                            DMA1_Channel3
-#define SDSPI_DMA_TX_CHANNEL_NO                         3
-#define SDSPI_DMA_RX_CHANNEL                            DMA1_Channel2
-#define SDSPI_DMA_RX_CHANNEL_NO                         2
-#define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel2_IRQHandler
-#define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel2_IRQn
-#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
-#define RCC_APBxRSTR                                    RCC->APB2RSTR
-#define RCC_APBxENR                                     RCC->APB2ENR
-#define RCC_APBxRSTR_SPIxRST                            RCC_APB2RSTR_SPI1RST
-#define RCC_APBxENR_SPIxEN                              RCC_APB2ENR_SPI1EN
-#elif (SDSPI_PORT == 2)
-#define SPI_PORT                                        SPI2
-#define SDSPI_DMA                                       DMA1
-#define SDSPI_DMA_TX_CHANNEL                            DMA1_Channel5
-#define SDSPI_DMA_TX_CHANNEL_NO                         5
-#define SDSPI_DMA_RX_CHANNEL                            DMA1_Channel4
-#define SDSPI_DMA_RX_CHANNEL_NO                         4
-#define SDSPI_DMA_IRQ_ROUTINE                           DMA1_Channel4_IRQHandler
-#define SDSPI_DMA_IRQ_NUMBER                            DMA1_Channel4_IRQn
-#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA1EN
-#define RCC_APBxRSTR                                    RCC->APB1RSTR
-#define RCC_APBxENR                                     RCC->APB1ENR
-#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI2RST
-#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI2EN
-#elif (SDSPI_PORT == 3)
-#define SPI_PORT                                        SPI3
-#define SDSPI_DMA                                       DMA2
-#define SDSPI_DMA_TX_CHANNEL                            DMA2_Channel2
-#define SDSPI_DMA_TX_CHANNEL_NO                         2
-#define SDSPI_DMA_RX_CHANNEL                            DMA2_Channel1
-#define SDSPI_DMA_RX_CHANNEL_NO                         1
-#define SDSPI_DMA_IRQ_ROUTINE                           DMA2_Channel1_IRQHandler
-#define SDSPI_DMA_IRQ_NUMBER                            DMA2_Channel1_IRQn
-#define SDSPI_DMA_ENABLE                                RCC_AHBENR_DMA2EN
-#define RCC_APBxRSTR                                    RCC->APB1RSTR
-#define RCC_APBxENR                                     RCC->APB1ENR
-#define RCC_APBxRSTR_SPIxRST                            RCC_APB1RSTR_SPI3RST
-#define RCC_APBxENR_SPIxEN                              RCC_APB1ENR_SPI3EN
-#else
-#error Wrong SPI port!
-#endif
 
 /* MBR definitions */
 #define MBR_BOOTSTRAP_CODE_OFFSET                       0x000
@@ -111,94 +64,109 @@
 ==============================================================================*/
 /** card command definitions */
 typedef enum {
-        CMD0            = (0x40+0 ),    /* GO_IDLE_STATE */
-        CMD1            = (0x40+1 ),    /* SEND_OP_COND (MMC) */
-        ACMD41          = (0xC0+41),    /* SEND_OP_COND (SDC) */
-        CMD8            = (0x40+8 ),    /* SEND_IF_COND */
-        CMD9            = (0x40+9 ),    /* SEND_CSD */
-        CMD10           = (0x40+10),    /* SEND_CID */
-        CMD12           = (0x40+12),    /* STOP_TRANSMISSION */
-        ACMD13          = (0xC0+13),    /* SD_STATUS (SDC) */
-        CMD16           = (0x40+16),    /* SET_BLOCKLEN */
-        CMD17           = (0x40+17),    /* READ_SINGLE_BLOCK */
-        CMD18           = (0x40+18),    /* READ_MULTIPLE_BLOCK */
-        CMD23           = (0x40+23),    /* SET_BLOCK_COUNT (MMC) */
-        ACMD23          = (0xC0+23),    /* SET_WR_BLK_ERASE_COUNT (SDC) */
-        CMD24           = (0x40+24),    /* WRITE_BLOCK */
-        CMD25           = (0x40+25),    /* WRITE_MULTIPLE_BLOCK */
-        CMD55           = (0x40+55),    /* APP_CMD */
-        CMD58           = (0x40+58)     /* READ_OCR */
+        CMD0   = (0x40+0 ),     /* GO_IDLE_STATE */
+        CMD1   = (0x40+1 ),     /* SEND_OP_COND (MMC) */
+        ACMD41 = (0xC0+41),     /* SEND_OP_COND (SDC) */
+        CMD8   = (0x40+8 ),     /* SEND_IF_COND */
+        CMD9   = (0x40+9 ),     /* SEND_CSD */
+        CMD10  = (0x40+10),     /* SEND_CID */
+        CMD12  = (0x40+12),     /* STOP_TRANSMISSION */
+        ACMD13 = (0xC0+13),     /* SD_STATUS (SDC) */
+        CMD16  = (0x40+16),     /* SET_BLOCKLEN */
+        CMD17  = (0x40+17),     /* READ_SINGLE_BLOCK */
+        CMD18  = (0x40+18),     /* READ_MULTIPLE_BLOCK */
+        CMD23  = (0x40+23),     /* SET_BLOCK_COUNT (MMC) */
+        ACMD23 = (0xC0+23),     /* SET_WR_BLK_ERASE_COUNT (SDC) */
+        CMD24  = (0x40+24),     /* WRITE_BLOCK */
+        CMD25  = (0x40+25),     /* WRITE_MULTIPLE_BLOCK */
+        CMD55  = (0x40+55),     /* APP_CMD */
+        CMD58  = (0x40+58)      /* READ_OCR */
 } card_cmd_t;
 
 /** card types */
 typedef struct {
         enum {
-                        CT_UNKNOWN,
-                        CT_MMC,
-                        CT_SD1,
-                        CT_SD2
-        }               type  : 2;
-        bool            block : 1;
+                CT_UNKNOWN,
+                CT_MMC,
+                CT_SD1,
+                CT_SD2
+        } type : 2;
+        bool block : 1;
 } card_type;
+
+/** card configuartion structure */
+typedef struct {
+        const char *filepath;
+        int         timeout;
+} card_cfg_t;
 
 /** device structure */
 typedef struct {
-        u32_t           first_sector;   /* sector number              */
-        u32_t           size;           /* in sectors                 */
-        bool            used;           /* true if part used          */
-        u8_t            major;          /* device major number        */
-        u8_t            minor;          /* device minor number        */
+        u32_t first_sector;     /* sector number              */
+        u32_t size;             /* in sectors                 */
+        bool  used;             /* true if part used          */
+        u8_t  major;            /* device major number        */
+        u8_t  minor;            /* device minor number        */
 } sdpart_t;
 
 /** main control structure */
 typedef struct {
-        mutex_t        *card_protect_mtx;
-        sdpart_t       *part[5];
-        card_type       card_type;
-        bool            card_initialized;
-#if (SDSPI_ENABLE_DMA != 0)
-        volatile bool   DMA_tansaction_finished;
-#endif
+        struct card {
+                FILE      *SPI_file;
+                mutex_t   *protect_mtx;
+                sdpart_t  *part[5];
+                card_type  type;
+                bool       initialized;
+        } *card[_NUMBER_OF_SDSPI_CARDS];
 } sdctrl_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void             spi_turn_on_clock                       (void);
-static void             spi_turn_off_clock                      (void);
-static void             spi_configure                           (void);
-static void             spi_select_card                         (void);
-static void             spi_deselect_card                       (void);
-static void             spi_configure_DMA                       (bool enable);
-static void             spi_enable_Tx_Rx_DMA                    (void);
-static void             spi_disable_Tx_Rx_DMA                   (void);
-static bool             spi_is_rx_buffer_not_empty              (void);
-static void             spi_send_data                           (u8_t data);
-static u8_t             spi_get_data                            (void);
-static u8_t             spi_transmit                            (u8_t out);
-static u8_t             card_send_cmd                           (sdpart_t *hdl, card_cmd_t cmd, u32_t arg);
-static u8_t             card_wait_ready                         (void);
-static bool             card_receive_data_block                 (u8_t *buff);
-static bool             card_transmit_data_block                (const u8_t *buff, u8_t token);
-static ssize_t          card_read_whole_sectors                 (sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek);
-static ssize_t          card_read_partial_sectors               (sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek);
-static ssize_t          card_write_whole_sectors                (sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek);
-static ssize_t          card_write_partial_sectors              (sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek);
-static stdret_t         card_initialize                         (sdpart_t *hdl);
-static ssize_t          card_read                               (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek);
-static ssize_t          card_write                              (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek);
-static u16_t            mbr_get_boot_signature                  (u8_t *sector);
-static u32_t            mbr_get_partition_first_LBA_sector      (int partition, u8_t *sector);
-static u32_t            mbr_get_partition_number_of_sectors     (int partition, u8_t *sector);
-static stdret_t         mbr_detect_partitions                   (sdpart_t *hdl);
+static void     SPI_select_card                    (sdpart_t *hdl);
+static void     SPI_deselect_card                  (sdpart_t *hdl);
+static u8_t     SPI_transive                       (sdpart_t *hdl, u8_t out);
+static void     SPI_transmit_block                 (sdpart_t *hdl, const u8_t *block, size_t count);
+static void     SPI_receive_block                  (sdpart_t *hdl, u8_t *block, size_t count);
+static u8_t     card_send_cmd                      (sdpart_t *hdl, card_cmd_t cmd, u32_t arg);
+static u8_t     card_wait_ready                    (sdpart_t *hdl);
+static bool     card_receive_data_block            (sdpart_t *hdl, u8_t *buff);
+static bool     card_transmit_data_block           (sdpart_t *hdl, const u8_t *buff, u8_t token);
+static ssize_t  card_read_entire_sectors           (sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek);
+static ssize_t  card_read_partial_sectors          (sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek);
+static ssize_t  card_write_entire_sectors          (sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek);
+static ssize_t  card_write_partial_sectors         (sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek);
+static stdret_t card_initialize                    (sdpart_t *hdl);
+static ssize_t  card_read                          (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek);
+static ssize_t  card_write                         (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek);
+static u16_t    MBR_get_boot_signature             (u8_t *sector);
+static u32_t    MBR_get_partition_first_LBA_sector (int partition, u8_t *sector);
+static u32_t    MBR_get_partition_number_of_sectors(int partition, u8_t *sector);
+static stdret_t MBR_detect_partitions              (sdpart_t *hdl);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 MODULE_NAME(SDSPI);
 
-static sdctrl_t   *sdspi_ctrl;
+static sdctrl_t *SDSPI;
+
 static const u16_t sector_size = 512;
+
+static const card_cfg_t card_cfg[SDSPI_NUMBER_OF_CARDS] = {
+        #if SDSPI_NUMBER_OF_CARDS >= 1
+        {
+                .filepath = SDSPI_CARD0_FILE,
+                .timeout  = SDSPI_CARD0_TIMEOUT
+        },
+        #endif
+        #if SDSPI_NUMBER_OF_CARDS >= 2
+        {
+                .filepath = SDSPI_CARD1_FILE,
+                .timeout  = SDSPI_CARD1_TIMEOUT
+        }
+        #endif
+};
 
 /*==============================================================================
   Function definitions
@@ -218,50 +186,62 @@ static const u16_t sector_size = 512;
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major != _SDSPI_CARD_0 || minor > _SDSPI_PARTITION_4) {
+        if (major >= _NUMBER_OF_SDSPI_CARDS || minor > _SDSPI_PARTITION_4) {
                 errno = EINVAL;
                 return STD_RET_ERROR;
         }
 
-        if (sdspi_ctrl == NULL) {
-                if (RCC_APBxENR & RCC_APBxENR_SPIxEN) {
-                        errno = EADDRINUSE;
+        if (SDSPI == NULL) {
+                SDSPI = calloc(1, sizeof(sdctrl_t));
+
+                if (SDSPI == NULL) {
                         return STD_RET_ERROR;
                 }
+        }
 
-                sdctrl_t *sdspi = calloc(1, sizeof(sdctrl_t));
-                mutex_t  *mtx   = mutex_new(MUTEX_NORMAL);
+        if (SDSPI->card[major] == NULL) {
 
-                if (sdspi && mtx) {
-                        spi_turn_on_clock();
-                        spi_configure();
-                        spi_configure_DMA(true);
+                struct card *hdl  = calloc(1, sizeof(struct card));
+                mutex_t     *mtx  = mutex_new(MUTEX_NORMAL);
+                FILE        *fspi = vfs_fopen(card_cfg[major].filepath, "r+");
 
-                        sdspi->card_protect_mtx = mtx;
-                        sdspi_ctrl              = sdspi;
+                if (hdl && mtx && fspi) {
+                        hdl->SPI_file      = fspi;
+                        hdl->protect_mtx   = mtx;
+                        SDSPI->card[major] = hdl;
+
+                        struct SPI_config cfg;
+                        vfs_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        cfg.dummy_byte = 0xFF;
+                        cfg.mode       = SPI_MODE_0;
+                        cfg.msb_first  = true;
+                        vfs_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
                 } else {
-                        if (sdspi)
-                                free(sdspi);
+                        if (fspi)
+                                vfs_fclose(fspi);
 
                         if (mtx)
                                 mutex_delete(mtx);
+
+                        if (hdl)
+                                free(hdl);
 
                         return STD_RET_ERROR;
                 }
         }
 
-        if (sdspi_ctrl) {
+        if (SDSPI->card[major]) {
                 sdpart_t *part = calloc(1, sizeof(sdpart_t));
                 if (part) {
-                        part->first_sector      = 0;
-                        part->size              = 0;
-                        part->major             = major;
-                        part->minor             = minor;
+                        part->first_sector = 0;
+                        part->size         = 0;
+                        part->major        = major;
+                        part->minor        = minor;
 
-                        sdspi_ctrl->part[minor] = part;
+                        SDSPI->card[major]->part[minor] = part;
 
-                        *device_handle          = part;
+                        *device_handle = part;
 
                         return STD_RET_OK;
                 }
@@ -295,7 +275,9 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         }
 
         critical_section_begin();
-        sdspi_ctrl->part[part->minor] = NULL;
+
+        // release allocated memory by partition
+        SDSPI->card[part->major]->part[part->minor] = NULL;
 
         part->first_sector = 0;
         part->size         = 0;
@@ -304,19 +286,31 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 
         free(part);
 
-        if (  sdspi_ctrl->part[_SDSPI_FULL_VOLUME] == NULL
-           && sdspi_ctrl->part[_SDSPI_PARTITION_1] == NULL
-           && sdspi_ctrl->part[_SDSPI_PARTITION_2] == NULL
-           && sdspi_ctrl->part[_SDSPI_PARTITION_3] == NULL
-           && sdspi_ctrl->part[_SDSPI_PARTITION_4] == NULL  ) {
+        // release allocated memory of selected card if all partitions are released
+        if (  SDSPI->card[part->major]->part[_SDSPI_FULL_VOLUME] == NULL
+           && SDSPI->card[part->major]->part[_SDSPI_PARTITION_1] == NULL
+           && SDSPI->card[part->major]->part[_SDSPI_PARTITION_2] == NULL
+           && SDSPI->card[part->major]->part[_SDSPI_PARTITION_3] == NULL
+           && SDSPI->card[part->major]->part[_SDSPI_PARTITION_4] == NULL  ) {
 
-                mutex_delete(sdspi_ctrl->card_protect_mtx);
-                sdspi_ctrl->card_initialized = false;
-                sdspi_ctrl->card_protect_mtx = NULL;
-                free(sdspi_ctrl);
+                vfs_fclose(SDSPI->card[part->major]->SPI_file);
+                mutex_delete(SDSPI->card[part->major]->protect_mtx);
+                SDSPI->card[part->major]->initialized = false;
+                SDSPI->card[part->major]->protect_mtx = NULL;
+                free(SDSPI->card[part->major]);
+                SDSPI->card[part->major] = NULL;
+        }
 
-                spi_turn_off_clock();
-                spi_configure_DMA(false);
+        // release module memory if all card are released
+        bool released = false;
+        for (int i = 0; i < _NUMBER_OF_SDSPI_CARDS; i++) {
+                if (SDSPI->card[i])
+                        break;
+        }
+
+        if (released) {
+                free(SDSPI);
+                SDSPI = NULL;
         }
 
         critical_section_end();
@@ -392,9 +386,10 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, fpos_t 
 
         ssize_t n = -1;
         if (part->size > 0) {
-                if (mutex_lock(sdspi_ctrl->card_protect_mtx, MAX_DELAY_MS)) {
-                        n = card_write(part, src, count, *fpos + ((u64_t)part->first_sector * sector_size));
-                        mutex_unlock(sdspi_ctrl->card_protect_mtx);
+                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                        n = card_write(part, src, count, lseek);
+                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno = EBUSY;
                 }
@@ -426,9 +421,10 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
 
         ssize_t n = -1;
         if (part->size > 0) {
-                if (mutex_lock(sdspi_ctrl->card_protect_mtx, MAX_DELAY_MS)) {
-                        n = card_read(part, dst, count, *fpos + ((u64_t)part->first_sector * sector_size));
-                        mutex_unlock(sdspi_ctrl->card_protect_mtx);
+                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                        n = card_read(part, dst, count, lseek);
+                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno = EBUSY;
                 }
@@ -453,32 +449,39 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
+        UNUSED_ARG(arg);
+
         sdpart_t *part = device_handle;
 
-        stdret_t status = STD_RET_OK;
+        stdret_t status = -1;
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
-                if (mutex_lock(sdspi_ctrl->card_protect_mtx, MTX_BLOCK_TIME)) {
-                        bool *result = arg;
-
-                        if (result) {
-                                *result = false;
-                        }
-
+                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
                         if (card_initialize(part) == STD_RET_OK) {
-                                /*
-                                 * This function set Card Initialization Success
-                                 * even if in the card there are not any partitions
-                                 */
-                                if (result) {
-                                        *result = true;
-                                }
-
-                                mbr_detect_partitions(part);
+                                status = 1;
+                        } else {
+                                errno  = ENOMEDIUM;
+                                status = 0;
                         }
+                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                } else {
+                        errno  = EBUSY;
+                        status = STD_RET_ERROR;
+                }
+                break;
 
-                        mutex_unlock(sdspi_ctrl->card_protect_mtx);
+        case IOCTL_SDSPI__READ_MBR:
+                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
+                        if (SDSPI->card[part->major]->initialized) {
+                                if (MBR_detect_partitions(part) == STD_RET_OK) {
+                                        status = 1;
+                                }
+                        } else {
+                                errno  = EMEDIUMTYPE;
+                                status = 0;
+                        }
+                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno  = EBUSY;
                         status = STD_RET_ERROR;
@@ -487,7 +490,6 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         default:
                 errno = EBADRQC;
-                status = STD_RET_ERROR;
                 break;
         }
 
@@ -526,10 +528,10 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         sdpart_t *part = device_handle;
 
-        if (sdspi_ctrl->card_initialized) {
+        if (SDSPI->card[part->major]->initialized) {
                 device_stat->st_major = part->major;
                 device_stat->st_minor = part->minor;
-                device_stat->st_size  = (u64_t)part->size * sector_size;
+                device_stat->st_size  = static_cast(u64_t, part->size) * sector_size;
 
                 return STD_RET_OK;
         } else {
@@ -539,194 +541,104 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
- * @brief Function turn on SPI clock
- */
-//==============================================================================
-static void spi_turn_on_clock(void)
-{
-        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
-        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
-        SET_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
-}
-
-//==============================================================================
-/**
- * @brief Function turn off SPI clock
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-static void spi_turn_off_clock(void)
-{
-        SET_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
-        CLEAR_BIT(RCC_APBxRSTR, RCC_APBxRSTR_SPIxRST);
-        CLEAR_BIT(RCC_APBxENR, RCC_APBxENR_SPIxEN);
-}
-
-//==============================================================================
-/**
- * @brief Function configure SPI interface
- *
- * SPI configuration (Mode 0):
- * - MSB First
- * - sample on rising edge
- * - SCLK L on idle state
- * - 8-bit data
- */
-//==============================================================================
-static void spi_configure(void)
-{
-        /* enable_SS_output_in_master_mode */
-        SET_BIT(SPI_PORT->CR2, SPI_CR2_SSOE);
-
-        /* enable_software_slave_management */
-        /* enable_master_mode */
-        SET_BIT(SPI_PORT->CR1, SPI_CR1_SSM | SPI_CR1_MSTR);
-
-        /* set clock divider */
-        CLEAR_BIT(SPI_PORT->CR1, SPI_CR1_BR);
-        if (SDSPI_SPI_CLOCK_DIVIDER <= 2)
-                SET_BIT(SPI_PORT->CR1, 0);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 4)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_0);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 8)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_1);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 16)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_1 | SPI_CR1_BR_0);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 32)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 64)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_0);
-        else if (SDSPI_SPI_CLOCK_DIVIDER <= 128)
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1);
-        else
-                SET_BIT(SPI_PORT->CR1, SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0);
-
-        SET_BIT(SPI_PORT->CR1, SPI_CR1_SPE);
-}
-
-//==============================================================================
-/**
  * @brief Function select card
+ *
+ * @param[in] hdl       partition handler
+ *
+ * @return None
  */
 //==============================================================================
-static void spi_select_card(void)
+static void SPI_select_card(sdpart_t *hdl)
 {
-        GPIO_CLEAR_PIN(SDSPI_SD_CS_PIN);
+        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
 }
 
 //==============================================================================
 /**
  * @brief Function deselect card
- */
-//==============================================================================
-static void spi_deselect_card(void)
-{
-        GPIO_SET_PIN(SDSPI_SD_CS_PIN);
-}
-
-//==============================================================================
-/**
- * @brief Configure DMA
- */
-//==============================================================================
-static void spi_configure_DMA(bool enable)
-{
-#if (SDSPI_ENABLE_DMA != 0)
-        if (enable) {
-                SET_BIT(RCC->AHBENR, SDSPI_DMA_ENABLE);
-                NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
-        } else {
-                CLEAR_BIT(RCC->AHBENR, SDSPI_DMA_ENABLE);
-        }
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Function enable Tx and Rx DMA transaction
- */
-//==============================================================================
-static void spi_enable_Tx_Rx_DMA(void)
-{
-        SET_BIT(SPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
-}
-
-//==============================================================================
-/**
- * @brief Function disable Tx and Rx DMA transaction
- */
-//==============================================================================
-static void spi_disable_Tx_Rx_DMA(void)
-{
-        CLEAR_BIT(SPI_PORT->CR2,SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
-}
-
-//==============================================================================
-/**
- * @brief Function check if RX buffer is empty
- */
-//==============================================================================
-static bool spi_is_rx_buffer_not_empty(void)
-{
-        return (SPI_PORT->SR & SPI_SR_RXNE);
-}
-
-//==============================================================================
-/**
- * @brief Function send data using SPI register
  *
- * @param data
- */
-//==============================================================================
-static void spi_send_data(u8_t data)
-{
-        SPI_PORT->DR = data;
-}
-
-//==============================================================================
-/**
- * @brief Function gets data from SPI register
+ * @param[in] hdl       partition handler
  *
- * @return received byte
+ * @return None
  */
 //==============================================================================
-static u8_t spi_get_data(void)
+static void SPI_deselect_card(sdpart_t *hdl)
 {
-        return SPI_PORT->DR & 0xFF;
+        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
 }
 
 //==============================================================================
 /**
  * @brief Function send byte by SPI peripheral
  *
+ * @param[in] hdl       partition handler
  * @param[in] out       data to send
  *
  * @return received byte
  */
 //==============================================================================
-static u8_t spi_transmit(u8_t out)
+static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 {
-        spi_send_data(out);
-        while (!spi_is_rx_buffer_not_empty());
-        return spi_get_data();
+        struct SPI_transceive desc;
+        desc.count     = 1;
+        desc.rx_buffer = &out;
+        desc.tx_buffer = &out;
+
+        if (vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
+                return out;
+        } else {
+                return 0x00;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Transmit block by using SPI
+ *
+ * @param[in]  hdl      partition handler
+ * @param[in]  block    block address
+ * @param[in]  count    block size
+ *
+ * @return None
+ */
+//==============================================================================
+static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
+{
+        vfs_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+}
+
+//==============================================================================
+/**
+ * @brief Receive block by usig SPI
+ *
+ * @param[in]  hdl      partition handler
+ * @param[out] block    block address
+ * @param[in]  count    block size
+ *
+ * @return None
+ */
+//==============================================================================
+static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
+{
+        vfs_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
 /**
  * @brief Function wait for card ready
  *
+ * @param[in] hdl       partition handler
+ *
  * @return card response
  */
 //==============================================================================
-static u8_t card_wait_ready(void)
+static u8_t card_wait_ready(sdpart_t *hdl)
 {
-        spi_transmit(0xFF);
-
         u8_t    response;
         timer_t timer = timer_reset();
-        while ((response = spi_transmit(0xFF)) != 0xFF && timer_is_not_expired(timer, SDSPI_TIMEOUT));
+
+        while ((response = SPI_transive(hdl, 0xFF)) != 0xFF
+              && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
 
         return response;
 }
@@ -748,41 +660,44 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
         if (cmd & 0x80) {
                 cmd &= 0x7F;
                 response = card_send_cmd(hdl, CMD55, 0);
-                if (response > 1)
+                if (response > 1) {
                         return response;
+                }
         }
 
         /* select the card and wait for ready */
-        spi_deselect_card();
-        spi_select_card();
+        SPI_deselect_card(hdl);
+        SPI_select_card(hdl);
 
-        if (card_wait_ready() != 0xFF) {
+        if (card_wait_ready(hdl) != 0xFF) {
                 errno = EIO;
                 return 0xFF;
         }
 
         /* send command packet */
-        spi_transmit(cmd);                    /* Start + Command index */
-        spi_transmit(arg >> 24);              /* Argument[31..24]      */
-        spi_transmit(arg >> 16);              /* Argument[23..16]      */
-        spi_transmit(arg >> 8);               /* Argument[15..8]       */
-        spi_transmit(arg);
+        u8_t buf[8], len = 0;
+        buf[len++] = cmd;
+        buf[len++] = arg >> 24;
+        buf[len++] = arg >> 16;
+        buf[len++] = arg >> 8;
+        buf[len++] = arg;
 
-        if (cmd == CMD0)
-                spi_transmit(0x95);           /* Valid CRC for CMD0(0) */
-        else if (cmd == CMD8)
-                spi_transmit(0x87);           /* Valid CRC for CMD8(0x1AA) */
-        else
-                spi_transmit(0x01);           /* Dummy CRC + Stop */
+        switch (cmd) {
+        case CMD0: buf[len++] = 0x95; break;
+        case CMD8: buf[len++] = 0x87; break;
+        default  : buf[len++] = 0x01; break;
+        }
 
-        /* receive command response */
         if (cmd == CMD12)
-                spi_transmit(0xFF);           /* Skip a stuff byte when stop reading */
+                buf[len++] = 0xFF;           /* Skip a stuff byte when stop reading */
+
+        SPI_transmit_block(hdl, buf, len);
 
         /* wait for a valid response in timeout of 10 attempts */
         int n = 10;
         do {
-                response = spi_transmit(0xFF);
+                response = SPI_transive(hdl, 0xFF);
+
         } while ((response & 0x80) && --n);
 
         return response;
@@ -792,56 +707,31 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
 /**
  * @brief Function receive data block
  *
- * @param[out] *buff            data buffer (sector size)
+ * @param[in]   hdl             partition handler
+ * @param[out]  buff            data buffer (sector size)
  *
  * @retval true if success
  * @retval false if error
  */
 //==============================================================================
-static bool card_receive_data_block(u8_t *buff)
+static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
 {
         u8_t    token;
         timer_t timer = timer_reset();
-        while ((token = spi_transmit(0xFF)) == 0xFF && timer_is_not_expired(timer, SDSPI_TIMEOUT));
+        while ((token = SPI_transive(hdl, 0xFF)) == 0xFF
+              && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
 
         if (token != 0xFE) {
                 errno = EIO;
                 return false;
         }
 
-#if (SDSPI_ENABLE_DMA != 0)
-        SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
-        SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)buff;
-        SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
-        SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
-        NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
-
-        u16_t dummy = 0xFFFF;
-        SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
-        SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&dummy;
-        SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
-        SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
-
-        sdspi_ctrl->DMA_tansaction_finished = false;
-
-        spi_enable_Tx_Rx_DMA();
-
-        while (sdspi_ctrl->DMA_tansaction_finished == false);
-
-#else
-        /* memory alignment */
-        int size = sector_size;
-        do {
-                *buff++ = spi_transmit(0xFF);
-                *buff++ = spi_transmit(0xFF);
-                *buff++ = spi_transmit(0xFF);
-                *buff++ = spi_transmit(0xFF);
-        } while (size -= 4);
-#endif
+        /* block send */
+        SPI_receive_block(hdl, buff, sector_size);
 
         /* discard CRC */
-        spi_transmit(0xFF);
-        spi_transmit(0xFF);
+        u8_t crc[2];
+        SPI_receive_block(hdl, crc, 2);
 
         return true;
 }
@@ -850,58 +740,30 @@ static bool card_receive_data_block(u8_t *buff)
 /**
  * @brief Function transmit data block
  *
- * @param[in] *buff             source buffer (sector size)
+ * @param[in]  hdl              partition handler
+ * @param[in]  buff             source buffer (sector size)
  * @param[in]  toke             token to send
  *
  * @retval true if success
  * @retval false if error
  */
 //==============================================================================
-static bool card_transmit_data_block(const u8_t *buff, u8_t token)
+static bool card_transmit_data_block(sdpart_t *hdl, const u8_t *buff, u8_t token)
 {
-        if (card_wait_ready() != 0xFF) {
+        if (card_wait_ready(hdl) != 0xFF) {
                 errno = EIO;
                 return false;
         }
 
-        spi_transmit(token);
+        SPI_transive(hdl, token);
 
         if (token != 0xFD) {
-#if (SDSPI_ENABLE_DMA != 0)
-                u16_t dummy;
-                SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&dummy;
-                SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
-                SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
-                SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
-                NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
+                u8_t dummy_crc_and_response[3];
 
-                SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
-                SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SPI_PORT->DR;
-                SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
-                SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
+                SPI_transmit_block(hdl, buff, sector_size);
+                SPI_receive_block(hdl, dummy_crc_and_response, 3);
 
-                sdspi_ctrl->DMA_tansaction_finished = false;
-
-                spi_enable_Tx_Rx_DMA();
-
-                while (sdspi_ctrl->DMA_tansaction_finished == false);
-
-#else
-                int size = sector_size;
-                do {
-                        spi_transmit(*buff++);
-                        spi_transmit(*buff++);
-                        spi_transmit(*buff++);
-                        spi_transmit(*buff++);
-                } while (size -= 4);
-#endif
-
-                /* CRC dummy */
-                spi_transmit(0xFF);
-                spi_transmit(0xFF);
-
-                /* receive data response */
-                if ((spi_transmit(0xFF) & 0x1F) != 0x05) {
+                if ((dummy_crc_and_response[2] & 0x1F) != 0x05) {
                         errno = EIO;
                         return false;
                 }
@@ -914,37 +776,38 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
 /**
  * @brief Function read whole sectors
  *
- * @param[in]  *hdl             driver's memory handle
- * @param[out] *dst             destination
+ * @param[in]   hdl             driver's memory handle
+ * @param[out]  dst             destination
  * @param[in]   nsectors        sectors to read
  * @param[in]   lseek           file index
  *
  * @retval number of read sectors
  */
 //==============================================================================
-static ssize_t card_read_whole_sectors(sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek)
+static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsectors, u64_t lseek)
 {
-        if (sdspi_ctrl->card_type.block) {
+        if (SDSPI->card[hdl->major]->type.block) {
                 lseek >>= 9;    /* divide by 512 */
         }
 
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
-                        if (card_receive_data_block(dst)) {
+                if (card_send_cmd(hdl, CMD17, static_cast(u32_t, lseek)) == 0) {
+                        if (card_receive_data_block(hdl, dst)) {
                                 n = 1;
                         }
                 }
         } else {
-                if (card_send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
+                if (card_send_cmd(hdl, CMD18, static_cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
-                                if (!card_receive_data_block(dst)) {
+                                if (!card_receive_data_block(hdl, dst)) {
                                         break;
                                 }
 
                                 dst += sector_size;
+
                         } while (++n < (ssize_t)nsectors);
 
                         /* stop transmission */
@@ -959,8 +822,8 @@ static ssize_t card_read_whole_sectors(sdpart_t *hdl, u8_t *dst, size_t nsectors
 /**
  * @brief Function read only selected data from sectors
  *
- * @param[in]  *hdl             driver's memory handle
- * @param[out] *dst             destination
+ * @param[in]   hdl             driver's memory handle
+ * @param[out]  dst             destination
  * @param[in]   size            number of bytes to read
  * @param[in]   lseek           file index
  *
@@ -976,11 +839,12 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
         u32_t recv_data = 0;
         while (recv_data < size) {
                 if (lseek % sector_size == 0 && (size - recv_data) / sector_size > 0) {
-                        ssize_t n = card_read_whole_sectors(hdl, dst, size / sector_size, lseek);
+                        ssize_t n = card_read_entire_sectors(hdl, dst, size / sector_size, lseek);
                         if (n == -1) {
                                 recv_data = -1;
                                 goto exit;
-                        } else if (n != (ssize_t)size / sector_size) {
+
+                        } else if (n != static_cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -988,10 +852,11 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
                         lseek     += n * sector_size;
                         recv_data += n * sector_size;
                 } else {
-                        ssize_t n = card_read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
+                        ssize_t n = card_read_entire_sectors(hdl, buffer, 1, lseek & ~(sector_size - 1));
                         if (n == -1) {
                                 recv_data = -1;
                                 goto exit;
+
                         } else if (n != 1) {
                                 break;
                         }
@@ -1009,7 +874,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
                 }
         }
 
-exit:
+        exit:
         free(buffer);
 
         return recv_data;
@@ -1019,45 +884,47 @@ exit:
 /**
  * @brief Function write whole sectors
  *
- * @param[in]  *hdl             driver's memory handle
- * @param[out] *src             source
+ * @param[in]   hdl             driver's memory handle
+ * @param[out]  src             source
  * @param[in]   nsectors        sectors to read
  * @param[in]   lseek           file index
  *
  * @retval number of written sectors
  */
 //==============================================================================
-static ssize_t card_write_whole_sectors(sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek)
+static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek)
 {
-        if (sdspi_ctrl->card_type.block) {
+        if (SDSPI->card[hdl->major]->type.block) {
                 lseek >>= 9;    /* divide by 512 */
         }
 
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD24, (u32_t)lseek) == 0) {
-                        if (card_transmit_data_block(src, 0xFE)) {
+                if (card_send_cmd(hdl, CMD24, static_cast(u32_t, lseek)) == 0) {
+                        if (card_transmit_data_block(hdl, src, 0xFE)) {
                                 n = 1;
                         }
                 }
         } else {
-                if (sdspi_ctrl->card_type.type == CT_SD1 || sdspi_ctrl->card_type.type == CT_SD2) {
+                if (  SDSPI->card[hdl->major]->type.type == CT_SD1
+                   || SDSPI->card[hdl->major]->type.type == CT_SD2) {
+
                         card_send_cmd(hdl, ACMD23, nsectors);
                 }
 
-                if (card_send_cmd(hdl, CMD25, (u32_t)lseek) == 0) {
+                if (card_send_cmd(hdl, CMD25, static_cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
-                                if (!card_transmit_data_block(src, 0xFC)) {
+                                if (!card_transmit_data_block(hdl, src, 0xFC)) {
                                         break;
                                 }
 
                                 src += sector_size;
-                        } while (++n < (ssize_t)nsectors);
+                        } while (++n < static_cast(ssize_t, nsectors));
 
                         /* stop transmission */
-                        if (!card_transmit_data_block(NULL, 0xFD)) {
+                        if (!card_transmit_data_block(hdl, NULL, 0xFD)) {
                                 n = 0;
                         }
                 }
@@ -1070,8 +937,8 @@ static ssize_t card_write_whole_sectors(sdpart_t *hdl, const u8_t *src, size_t n
 /**
  * @brief Function write only selected data to sectors
  *
- * @param[in]  *hdl             driver's memory handle
- * @param[out] *src             source
+ * @param[in]   hdl             driver's memory handle
+ * @param[out]  src             source
  * @param[in]   size            number of bytes to read
  * @param[in]   lseek           file index
  *
@@ -1087,11 +954,12 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
         u32_t transmit_data = 0;
         while (transmit_data < size) {
                 if (lseek % sector_size == 0 && (size - transmit_data) / sector_size > 0) {
-                        ssize_t n = card_write_whole_sectors(hdl, src, size / sector_size, lseek);
+                        ssize_t n = card_write_entire_sectors(hdl, src, size / sector_size, lseek);
                         if (n == -1) {
                                 transmit_data = -1;
                                 goto exit;
-                        } else if (n != (ssize_t)size / sector_size) {
+
+                        } else if (n != static_cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -1099,10 +967,11 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
                         lseek         += n * sector_size;
                         transmit_data += n * sector_size;
                 } else {
-                        ssize_t n = card_read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
+                        ssize_t n = card_read_entire_sectors(hdl, buffer, 1, lseek & ~(sector_size - 1));
                         if (n == -1) {
                                 transmit_data = -1;
                                 goto exit;
+
                         } else if (n != 1) {
                                 break;
                         }
@@ -1115,10 +984,11 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
 
                         memcpy(buffer + (lseek % sector_size), src, rest);
 
-                        n = card_write_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
+                        n = card_write_entire_sectors(hdl, buffer, 1, lseek & ~(sector_size - 1));
                         if (n == -1) {
                                 transmit_data = -1;
                                 goto exit;
+
                         } else if (n != 1) {
                                 break;
                         }
@@ -1129,7 +999,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
                 }
         }
 
-exit:
+        exit:
         free(buffer);
 
         return transmit_data;
@@ -1139,7 +1009,7 @@ exit:
 /**
  * @brief Function initialize card
  *
- * @param[in] *hdl      SD module data
+ * @param[in]  hdl      SD module data
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -1147,76 +1017,73 @@ exit:
 //==============================================================================
 static stdret_t card_initialize(sdpart_t *hdl)
 {
-        spi_deselect_card();
+        SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                spi_transmit(0xFF);
+                vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
         }
 
-        sdspi_ctrl->card_type.type   = CT_UNKNOWN;
-        sdspi_ctrl->card_type.block  = false;
-        sdspi_ctrl->card_initialized = false;
+        SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
+        SDSPI->card[hdl->major]->type.block  = false;
+        SDSPI->card[hdl->major]->initialized = false;
 
         timer_t timer = timer_reset();
 
         if (card_send_cmd(hdl, CMD0, 0) == 0x01) {
                 if (card_send_cmd(hdl, CMD8, 0x1AA) == 0x01) { /* check SDHC card */
-                        u8_t OCR[4];
 
-                        for (int n = 0; n < 4; n++) {
-                                OCR[n] = spi_transmit(0xFF);
-                        }
+                        u8_t OCR[4];
+                        SPI_receive_block(hdl, OCR, sizeof(OCR));
 
                         if (OCR[2] == 0x01 && OCR[3] == 0xAA) {
-                                while ( timer_is_not_expired(timer, SDSPI_TIMEOUT)
+                                while ( timer_is_not_expired(timer, card_cfg[hdl->major].timeout)
                                       && card_send_cmd(hdl, ACMD41, 1UL << 30) ) {
 
                                         sleep_ms(1);
                                 }
 
-                                if ( !timer_is_expired(timer, SDSPI_TIMEOUT)
+                                if ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
                                    && card_send_cmd(hdl, CMD58, 0) == 0 ) {
 
-                                        for (int n = 0; n < 4; n++) {
-                                                OCR[n] = spi_transmit(0xFF);
-                                        }
+                                        SPI_receive_block(hdl, OCR, sizeof(OCR));
 
-                                        sdspi_ctrl->card_type.type   = CT_SD2;
-                                        sdspi_ctrl->card_type.block  = (OCR[0] & 0x40) ? true : false;
-
-                                        sdspi_ctrl->card_initialized = true;
+                                        SDSPI->card[hdl->major]->type.type   = CT_SD2;
+                                        SDSPI->card[hdl->major]->type.block  = (OCR[0] & 0x40) ? true : false;
+                                        SDSPI->card[hdl->major]->initialized = true;
                                 }
                         }
                 } else { /* SDSC or MMC */
                         u8_t cmd;
                         if (card_send_cmd(hdl, ACMD41, 0) <= 0x01)   {
-                                sdspi_ctrl->card_type.type = CT_SD1;
+                                SDSPI->card[hdl->major]->type.type = CT_SD1;
                                 cmd = ACMD41;   /* SDSC */
                         } else {
-                                sdspi_ctrl->card_type.type = CT_MMC;
+                                SDSPI->card[hdl->major]->type.type = CT_MMC;
                                 cmd = CMD1;     /* MMC */
                         }
 
                         /* Wait for leaving idle state */
-                        while (!timer_is_expired(timer, SDSPI_TIMEOUT) && card_send_cmd(hdl, cmd, 0)) {
+                        while ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
+                              && card_send_cmd(hdl, cmd, 0)) {
+
                                 sleep_ms(1);
                         }
 
                         /* set R/W block length to 512 */
-                        if ( !timer_is_expired(timer, SDSPI_TIMEOUT)
+                        if ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
                            || card_send_cmd(hdl, CMD16, sector_size) != 0) {
 
-                                sdspi_ctrl->card_type.type   = CT_UNKNOWN;
-                                sdspi_ctrl->card_type.block  = false;
+                                SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
+                                SDSPI->card[hdl->major]->type.block  = false;
                         } else {
-                                sdspi_ctrl->card_initialized = true;
+                                SDSPI->card[hdl->major]->initialized = true;
                         }
                 }
         }
 
         /* size info */
         for (int i = _SDSPI_FULL_VOLUME; i <= _SDSPI_PARTITION_4; i++) {
-                if (sdspi_ctrl->part[i]) {
-                        sdspi_ctrl->part[i]->size = 0;
+                if (SDSPI->card[hdl->major]->part[i]) {
+                        SDSPI->card[hdl->major]->part[i]->size = 0;
                 }
         }
 
@@ -1225,18 +1092,13 @@ static stdret_t card_initialize(sdpart_t *hdl)
                 u8_t token;
 
                 timer_t timer = timer_reset();
-                while ((token = spi_transmit(0xFF)) == 0xFF && timer_is_not_expired(timer, SDSPI_TIMEOUT));
+                while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
+                      && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
 
                 if (token == 0xFE) {
-                        u8_t *ptr = &csd[0];
-                        for (int i = 0; i < 4; i++) {
-                                *ptr++ = spi_transmit(0xFF);
-                                *ptr++ = spi_transmit(0xFF);
-                                *ptr++ = spi_transmit(0xFF);
-                                *ptr++ = spi_transmit(0xFF);
-                        }
-                        spi_transmit(0xFF);
-                        spi_transmit(0xFF);
+                        SPI_receive_block(hdl, csd, sizeof(csd));
+                        SPI_transive(hdl, 0xFF);
+                        SPI_transive(hdl, 0xFF);
 
                         /* SDC version 2.00 */
                         u32_t size;
@@ -1249,28 +1111,23 @@ static stdret_t card_initialize(sdpart_t *hdl)
                                 size        = csize << (n - 9);
                         }
 
-                        if (sdspi_ctrl->part[_SDSPI_FULL_VOLUME]) {
-                                sdspi_ctrl->part[_SDSPI_FULL_VOLUME]->size = size;
+                        if (SDSPI->card[hdl->major]->part[_SDSPI_FULL_VOLUME]) {
+                                SDSPI->card[hdl->major]->part[_SDSPI_FULL_VOLUME]->size = size;
                         }
                 }
         }
 
-        spi_deselect_card();
-        spi_transmit(0xFF);
+        SPI_deselect_card(hdl);
 
-        if (sdspi_ctrl->card_initialized == false) {
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+        return SDSPI->card[hdl->major]->initialized ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Read data from card
  *
- * @param[in]  *hdl             driver's memory handle
- * @param[out] *dst             destination
+ * @param[in]   hdl             driver's memory handle
+ * @param[out]  dst             destination
  * @param[in]   count           bytes to read
  * @param[in]   lseek           file index
  *
@@ -1279,24 +1136,23 @@ static stdret_t card_initialize(sdpart_t *hdl)
 //==============================================================================
 static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
 {
-        if (sdspi_ctrl->card_initialized == false) {
-                errno = EIO;
-                return -1;
-        }
-
-        /* whole sector(s) read */
         ssize_t n = 0;
-        if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-                n  = card_read_whole_sectors(hdl, dst, count / sector_size, lseek);
-                n *= sector_size;
-
+        if (SDSPI->card[hdl->major]->initialized == false) {
+                errno = EIO;
+                n = -1;
         } else {
-                n  = card_read_partial_sectors(hdl, dst, count, lseek);
-        }
+                if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-        spi_deselect_card();
-        spi_transmit(0xFF);
+                        n  = card_read_entire_sectors(hdl, dst, count / sector_size, lseek);
+                        n *= sector_size;
+
+                } else {
+                        n  = card_read_partial_sectors(hdl, dst, count, lseek);
+                }
+
+                SPI_deselect_card(hdl);
+        }
 
         return n;
 }
@@ -1305,8 +1161,8 @@ static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
 /**
  * @brief Write data to card
  *
- * @param[in] *hdl              driver's memory handle
- * @param[in] *src              source
+ * @param[in]  hdl              driver's memory handle
+ * @param[in]  src              source
  * @param[in]  count            bytes to write
  * @param[in]  lseek            file index
  *
@@ -1315,24 +1171,23 @@ static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
 //==============================================================================
 static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek)
 {
-        if (sdspi_ctrl->card_initialized == false) {
-                errno = EIO;
-                return -1;
-        }
-
-        /* whole sector(s) read */
         ssize_t n = 0;
-        if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-                n  = card_write_whole_sectors(hdl, src, count / sector_size, lseek);
-                n *= sector_size;
-
+        if (SDSPI->card[hdl->major]->initialized == false) {
+                errno = EIO;
+                n = -1;
         } else {
-                n  = card_write_partial_sectors(hdl, src, count, lseek);
-        }
+                if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-        spi_deselect_card();
-        spi_transmit(0xFF);
+                        n  = card_write_entire_sectors(hdl, src, count / sector_size, lseek);
+                        n *= sector_size;
+
+                } else {
+                        n  = card_write_partial_sectors(hdl, src, count, lseek);
+                }
+
+                SPI_deselect_card(hdl);
+        }
 
         return n;
 }
@@ -1349,10 +1204,10 @@ static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t ls
 //==============================================================================
 static u32_t load_u32(u8_t *buff, u16_t offset)
 {
-        return (u32_t)( ((u32_t)buff[offset + 0] <<  0)
-                      | ((u32_t)buff[offset + 1] <<  8)
-                      | ((u32_t)buff[offset + 2] << 16)
-                      | ((u32_t)buff[offset + 3] << 24) );
+        return static_cast(u32_t, ( (reinterpret_cast(u32_t, buff[offset + 0] <<  0))
+                                  | (reinterpret_cast(u32_t, buff[offset + 1] <<  8))
+                                  | (reinterpret_cast(u32_t, buff[offset + 2] << 16))
+                                  | (reinterpret_cast(u32_t, buff[offset + 3] << 24)) ) );
 }
 
 //==============================================================================
@@ -1367,7 +1222,8 @@ static u32_t load_u32(u8_t *buff, u16_t offset)
 //==============================================================================
 static u16_t load_u16(u8_t *buff, u16_t offset)
 {
-        return (u16_t)(((u16_t)buff[offset + 0]) | ((u16_t)buff[offset + 1] << 8));
+        return static_cast(u16_t, ( (reinterpret_cast(u16_t, buff[offset + 0] << 0))
+                                  | (reinterpret_cast(u16_t, buff[offset + 1] << 8)) ) );
 }
 
 //==============================================================================
@@ -1379,7 +1235,7 @@ static u16_t load_u16(u8_t *buff, u16_t offset)
  * @return boot signature
  */
 //==============================================================================
-static u16_t mbr_get_boot_signature(u8_t *sector)
+static u16_t MBR_get_boot_signature(u8_t *sector)
 {
      return load_u16(sector, MBR_BOOT_SIGNATURE_OFFSET);
 }
@@ -1394,7 +1250,7 @@ static u16_t mbr_get_boot_signature(u8_t *sector)
  * @return first LBA sector number
  */
 //==============================================================================
-static u32_t mbr_get_partition_first_LBA_sector(int partition, u8_t *sector)
+static u32_t MBR_get_partition_first_LBA_sector(int partition, u8_t *sector)
 {
         switch (partition) {
         case 1 : return load_u32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
@@ -1415,7 +1271,7 @@ static u32_t mbr_get_partition_first_LBA_sector(int partition, u8_t *sector)
  * @return number of partition sectors
  */
 //==============================================================================
-static u32_t mbr_get_partition_number_of_sectors(int partition, u8_t *sector)
+static u32_t MBR_get_partition_number_of_sectors(int partition, u8_t *sector)
 {
         switch (partition) {
         case 1 : return load_u32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET);
@@ -1432,13 +1288,13 @@ static u32_t mbr_get_partition_number_of_sectors(int partition, u8_t *sector)
 /**
  * @brief Function detect partitions
  *
- * @param[in] *hdl      SD module data
+ * @param[in]  hdl      SD module data
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t mbr_detect_partitions(sdpart_t *hdl)
+static stdret_t MBR_detect_partitions(sdpart_t *hdl)
 {
         stdret_t status = STD_RET_ERROR;
 
@@ -1448,46 +1304,27 @@ static stdret_t mbr_detect_partitions(sdpart_t *hdl)
                         goto error;
                 }
 
-                if (mbr_get_boot_signature(MBR) != 0xAA55) {
+                if (MBR_get_boot_signature(MBR) != 0xAA55) {
                         errno = EMEDIUMTYPE;
                         goto error;
                 }
 
                 for (int i = _SDSPI_PARTITION_1; i <= _SDSPI_PARTITION_4; i++) {
-                        u32_t size = mbr_get_partition_number_of_sectors(i, MBR);
-                        if (size > 0 && sdspi_ctrl->part[i]) {
-                                sdspi_ctrl->part[i]->size         = size;
-                                sdspi_ctrl->part[i]->first_sector = mbr_get_partition_first_LBA_sector(i, MBR);
+                        u32_t size = MBR_get_partition_number_of_sectors(i, MBR);
+                        if (size > 0 && SDSPI->card[hdl->major]->part[i]) {
+                                SDSPI->card[hdl->major]->part[i]->size         = size;
+                                SDSPI->card[hdl->major]->part[i]->first_sector = MBR_get_partition_first_LBA_sector(i, MBR);
                         }
                 }
 
                 status = STD_RET_OK;
-error:
+
+                error:
                 free(MBR);
         }
 
         return status;
 }
-
-//==============================================================================
-/**
- * @brief DMA operation finish interrupt
- */
-//==============================================================================
-#if (SDSPI_ENABLE_DMA != 0)
-void SDSPI_DMA_IRQ_ROUTINE(void)
-{
-        spi_disable_Tx_Rx_DMA();
-        SDSPI_DMA_RX_CHANNEL->CCR = 0x00;
-        SDSPI_DMA_TX_CHANNEL->CCR = 0x00;
-
-        NVIC_DisableIRQ(SDSPI_DMA_IRQ_NUMBER);
-
-        SDSPI_DMA->IFCR = DMA_IFCR_CTCIF1 << (4 * (SDSPI_DMA_RX_CHANNEL_NO - 1));
-
-        sdspi_ctrl->DMA_tansaction_finished = true;
-}
-#endif
 
 /*==============================================================================
   End of file

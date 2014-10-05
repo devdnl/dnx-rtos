@@ -109,7 +109,7 @@
             <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
             <module noarch="false"><name>ETH</name><description>This module handles Ethernet interface.</description></module>
             <module noarch="false"><name>PLL</name><description>This module handles PLL peripheral.</description></module>
-            <module noarch="false"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
+            <module noarch="true"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
             <module noarch="false"><name>SPI</name><description>This module handles SPI peripherals.</description></module>
             <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
             <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
@@ -170,7 +170,14 @@
             <TTY_ENABLE_TERM_SIZE_CHECK><path>../../config/noarch/tty_flags.h</path><key>__TTY_ENABLE_TERM_SIZE_CHECK__</key></TTY_ENABLE_TERM_SIZE_CHECK>
             <TTY_TERM_IN_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_IN_FILE__</key></TTY_TERM_IN_FILE>
             <TTY_TERM_OUT_FILE><path>../../config/noarch/tty_flags.h</path><key>__TTY_TERM_OUT_FILE__</key></TTY_TERM_OUT_FILE>
+
             <LOOP_DEVCOUNT><path>../../config/noarch/loop_flags.h</path><key>__LOOP_CFG_NUMBER_OF_DEVICES__</key></LOOP_DEVCOUNT>
+
+            <SDSPI_NUMBER_OF_CARDS><path>../../config/noarch/sdspi_flags.h</path><key>__SDSPI_NUMBER_OF_CARDS__</key></SDSPI_NUMBER_OF_CARDS>
+            <SDSPI_CARD0_TIMEOUT><path>../../config/noarch/sdspi_flags.h</path><key>__SDSPI_CARD0_TIMEOUT__</key></SDSPI_CARD0_TIMEOUT>
+            <SDSPI_CARD1_TIMEOUT><path>../../config/noarch/sdspi_flags.h</path><key>__SDSPI_CARD1_TIMEOUT__</key></SDSPI_CARD1_TIMEOUT>
+            <SDSPI_CARD0_FILE><path>../../config/noarch/sdspi_flags.h</path><key>__SDSPI_CARD0_FILE__</key></SDSPI_CARD0_FILE>
+            <SDSPI_CARD1_FILE><path>../../config/noarch/sdspi_flags.h</path><key>__SDSPI_CARD1_FILE__</key></SDSPI_CARD1_FILE>
         </key>
     </noarch>
 
@@ -244,13 +251,6 @@
                 <SPI_SPI3_CS5_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS5_PIN_NAME__</key></SPI_SPI3_CS5_PIN_NAME>
                 <SPI_SPI3_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS6_PIN_NAME__</key></SPI_SPI3_CS6_PIN_NAME>
                 <SPI_SPI3_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS7_PIN_NAME__</key></SPI_SPI3_CS7_PIN_NAME>
-
-                <SDSPI_TIMEOUT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_TIMEOUT__</key></SDSPI_TIMEOUT>
-                <SDSPI_SPI_PORT><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_PORT__</key></SDSPI_SPI_PORT>
-                <SDSPI_SPI_CLK_DIV><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SPI_CLK_DIV__</key></SDSPI_SPI_CLK_DIV>
-                <SDSPI_SD_CS_PIN><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_SD_CS_PIN__</key></SDSPI_SD_CS_PIN>
-                <SDSPI_ENABLE_DMA><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_ENABLE_DMA__</key></SDSPI_ENABLE_DMA>
-                <SDSPI_DMA_IRQ_PRIORITY><path>../../config/stm32f1/sdspi_flags.h</path><key>__SDSPI_DMA_IRQ_PRIORITY__</key></SDSPI_DMA_IRQ_PRIORITY>
 
                 <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
                 <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>

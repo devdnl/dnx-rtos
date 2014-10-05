@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    sdspi_def.h
+@file    sdspi_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This file support statuses and requests for SD card in SPI mode
+@brief   This file support configuration for SD in SPI mode
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _SDSPI_DEF_H_
-#define _SDSPI_DEF_H_
+#ifndef _SDSPI_CFG_H_
+#define _SDSPI_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,24 +34,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/sdspi_ioctl.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* major device number */
-enum {
-        _SDSPI_CARD_0 = 0,
-};
-
-/* minor numbers */
-enum {
-        _SDSPI_FULL_VOLUME = 0,
-        _SDSPI_PARTITION_1 = 1,
-        _SDSPI_PARTITION_2 = 2,
-        _SDSPI_PARTITION_3 = 3,
-        _SDSPI_PARTITION_4 = 4
-};
+#define SDSPI_NUMBER_OF_CARDS                   __SDSPI_NUMBER_OF_CARDS__
+#define SDSPI_CARD0_TIMEOUT                     __SDSPI_CARD0_TIMEOUT__
+#define SDSPI_CARD1_TIMEOUT                     __SDSPI_CARD1_TIMEOUT__
+#define SDSPI_CARD0_FILE                        __SDSPI_CARD0_FILE__
+#define SDSPI_CARD1_FILE                        __SDSPI_CARD1_FILE__
 
 /*==============================================================================
   Exported types, enums definitions
@@ -62,14 +53,14 @@ enum {
 ==============================================================================*/
 
 /*==============================================================================
- Exported function prototypes
+  Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _SDSPI_DEF_H_ */
+#endif /* _SDSPI_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
