@@ -232,8 +232,8 @@ static int run_level_1(void)
         }
 
         ifconfig_t ifcfg;
-        net_get_ifconfig(&ifcfg);
-        if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+        int stat = net_get_ifconfig(&ifcfg);
+        if (stat == 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
                        "  IP Address: %d.%d.%d.%d\n"
