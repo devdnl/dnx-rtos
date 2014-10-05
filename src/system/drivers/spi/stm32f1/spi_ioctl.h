@@ -39,35 +39,47 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set SPI configuration
+/**
+ *  @brief  Set SPI configuration
  *  @param  struct SPI_config *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, struct SPI_config*)
 
-/** @brief  Gets SPI configuration
+/**
+ *  @brief  Gets SPI configuration
  *  @param  struct SPI_config *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, struct SPI_config*)
 
-/** @brief  Select specified slave (CS = 0) [RAW mode]
+/**
+ *  @brief  Select specified slave (CS = 0) [RAW mode]
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_SPI__SELECT               _IO(SPI, 0x02)
 
-/** @brief  Deselect specified slave (CS = 1) [RAW mode]
+/**
+ *  @brief  Deselect specified slave (CS = 1) [RAW mode]
  *  @param  None
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_SPI__DESELECT             _IO(SPI, 0x03)
 
-/** @brief  Transmit and receive specified buffer
+/**
+ *  @brief  Transmit and receive specified buffer
  *  @param  struct SPI_transive *
  *  @return STD_RET_OK, STD_RET_ERROR
  */
 #define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, struct SPI_transive*)
+
+/**
+ *  @brief  Transmit without selection
+ *  @param  int         byte to transfer
+ *  @return STD_RET_OK, STD_RET_ERROR
+ */
+#define IOCTL_SPI__TRANSMIT_NO_SELECT   _IOW(SPI, 0x05, int)
 
 /*==============================================================================
   Exported object types

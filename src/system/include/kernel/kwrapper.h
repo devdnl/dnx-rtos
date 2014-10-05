@@ -232,6 +232,8 @@ static inline void _task_yield_from_ISR(void)
 {
 #ifdef portYIELD_FROM_ISR
         portYIELD_FROM_ISR();
+#else
+        taskYIELD();
 #endif
 }
 

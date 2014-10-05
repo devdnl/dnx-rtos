@@ -42,39 +42,21 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /*----------------------------------------------------------------------------*/
-#define _SPI1_CS_CFG(no, name)  enum _SPI1_CS_##no {_SPI1_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI1_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
-#define _SPI2_CS_CFG(no, name)  enum _SPI2_CS_##no {_SPI2_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI2_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
-#define _SPI3_CS_CFG(no, name)  enum _SPI3_CS_##no {_SPI3_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI3_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
+#define _SPI_CS_CFG(SPI, no, name)  enum _##SPI##_CS_##no {_##SPI##_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _##SPI##_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
 /*----------------------------------------------------------------------------*/
 
 /*
- * enable (1) or disable (0) SPI1 peripheral
+ * enable (1) or disable (0) SPI peripheral
  */
 #define _SPI1_ENABLE                            __SPI_SPI1_ENABLE__
-
-/*
- * enable (1) or disable (0) SPI2 peripheral
- */
 #define _SPI2_ENABLE                            __SPI_SPI2_ENABLE__
-
-/*
- * enable (1) or disable (0) SPI3 peripheral
- */
 #define _SPI3_ENABLE                            __SPI_SPI3_ENABLE__
 
 /*
- * IRQ priority for SPI1
+ * IRQ priority
  */
 #define _SPI1_IRQ_PRIORITY                      __SPI_SPI1_PRIORITY__
-
-/*
- * IRQ priority for SPI2
- */
 #define _SPI2_IRQ_PRIORITY                      __SPI_SPI2_PRIORITY__
-
-/*
- * IRQ priority for SPI3
- */
 #define _SPI3_IRQ_PRIORITY                      __SPI_SPI3_PRIORITY__
 
 /*
@@ -86,97 +68,55 @@ extern "C" {
 #define _SPI_DEFAULT_CFG_MSB_FIRST              __SPI_DEFAULT_MSB_FIRST__
 
 /*
+ * NUMBER OF DEVICES CONNECTED TO THE SPI PERIPHERAL
+ */
+#define _SPI1_NUMBER_OF_SLAVES                  __SPI_SPI1_NUMBER_OF_CS__
+#define _SPI2_NUMBER_OF_SLAVES                  __SPI_SPI2_NUMBER_OF_CS__
+#define _SPI3_NUMBER_OF_SLAVES                  __SPI_SPI3_NUMBER_OF_CS__
+
+/*
+ * DMA enable (1) or disable (0)
+ */
+#define _SPI1_USE_DMA                           __SPI_SPI1_USE_DMA__
+#define _SPI2_USE_DMA                           __SPI_SPI2_USE_DMA__
+#define _SPI3_USE_DMA                           __SPI_SPI3_USE_DMA__
+
+/*
  *  CS configurations for SPI1 (_SPI1)
  */
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-#define _SPI1_NUMBER_OF_SLAVES                  __SPI_SPI1_NUMBER_OF_CS__
-#if _SPI1_NUMBER_OF_SLAVES >= 1
-_SPI1_CS_CFG(0, __SPI_SPI1_CS0_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 2
-_SPI1_CS_CFG(1, __SPI_SPI1_CS1_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 3
-_SPI1_CS_CFG(2, __SPI_SPI1_CS2_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 4
-_SPI1_CS_CFG(3, __SPI_SPI1_CS3_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 5
-_SPI1_CS_CFG(4, __SPI_SPI1_CS4_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 6
-_SPI1_CS_CFG(5, __SPI_SPI1_CS5_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 7
-_SPI1_CS_CFG(6, __SPI_SPI1_CS6_PIN_NAME__);
-#endif
-#if _SPI1_NUMBER_OF_SLAVES >= 8
-_SPI1_CS_CFG(7, __SPI_SPI1_CS7_PIN_NAME__);
-#endif
-#endif
+_SPI_CS_CFG(SPI1, 0, __SPI_SPI1_CS0_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 1, __SPI_SPI1_CS1_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 2, __SPI_SPI1_CS2_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 3, __SPI_SPI1_CS3_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 4, __SPI_SPI1_CS4_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 5, __SPI_SPI1_CS5_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 6, __SPI_SPI1_CS6_PIN_NAME__);
+_SPI_CS_CFG(SPI1, 7, __SPI_SPI1_CS7_PIN_NAME__);
 
 /*
  * CS configurations for SPI2 (_SPI2)
  */
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-#define _SPI2_NUMBER_OF_SLAVES                  __SPI_SPI2_NUMBER_OF_CS__
-#if _SPI2_NUMBER_OF_SLAVES >= 1
-_SPI2_CS_CFG(0, __SPI_SPI2_CS0_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 2
-_SPI2_CS_CFG(1, __SPI_SPI2_CS1_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 3
-_SPI2_CS_CFG(2, __SPI_SPI2_CS2_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 4
-_SPI2_CS_CFG(3, __SPI_SPI2_CS3_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 5
-_SPI2_CS_CFG(4, __SPI_SPI2_CS4_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 6
-_SPI2_CS_CFG(5, __SPI_SPI2_CS5_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 7
-_SPI2_CS_CFG(6, __SPI_SPI2_CS6_PIN_NAME__);
-#endif
-#if _SPI2_NUMBER_OF_SLAVES >= 8
-_SPI2_CS_CFG(7, __SPI_SPI2_CS7_PIN_NAME__);
-#endif
-#endif
+_SPI_CS_CFG(SPI2, 0, __SPI_SPI2_CS0_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 1, __SPI_SPI2_CS1_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 2, __SPI_SPI2_CS2_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 3, __SPI_SPI2_CS3_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 4, __SPI_SPI2_CS4_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 5, __SPI_SPI2_CS5_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 6, __SPI_SPI2_CS6_PIN_NAME__);
+_SPI_CS_CFG(SPI2, 7, __SPI_SPI2_CS7_PIN_NAME__);
 
 /*
  * CS configurations for SPI3 (_SPI3)
  */
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-#define _SPI3_NUMBER_OF_SLAVES                  __SPI_SPI3_NUMBER_OF_CS__
-#if _SPI3_NUMBER_OF_SLAVES >= 1
-_SPI3_CS_CFG(0, __SPI_SPI3_CS0_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 2
-_SPI3_CS_CFG(1, __SPI_SPI3_CS1_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 3
-_SPI3_CS_CFG(2, __SPI_SPI3_CS2_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 4
-_SPI3_CS_CFG(3, __SPI_SPI3_CS3_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 5
-_SPI3_CS_CFG(4, __SPI_SPI3_CS4_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 6
-_SPI3_CS_CFG(5, __SPI_SPI3_CS5_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 7
-_SPI3_CS_CFG(6, __SPI_SPI3_CS6_PIN_NAME__);
-#endif
-#if _SPI3_NUMBER_OF_SLAVES >= 8
-_SPI3_CS_CFG(7, __SPI_SPI3_CS7_PIN_NAME__);
-#endif
-#endif
+_SPI_CS_CFG(SPI3, 0, __SPI_SPI3_CS0_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 1, __SPI_SPI3_CS1_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 2, __SPI_SPI3_CS2_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 3, __SPI_SPI3_CS3_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 4, __SPI_SPI3_CS4_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 5, __SPI_SPI3_CS5_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 6, __SPI_SPI3_CS6_PIN_NAME__);
+_SPI_CS_CFG(SPI3, 7, __SPI_SPI3_CS7_PIN_NAME__);
+
 
 /*==============================================================================
   Exported object types
