@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    program.c
+@file    <!program_name!>.<!file_extension!>
 
-@author  Daniel Zorychta
+@author  <!author!>
 
-@brief   Program template
+@brief   <!program_description!>
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ GLOBAL_VARIABLES {
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(program, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(<!program_name!>, <!STACK_SIZE!>, int argc, char *argv[])
 {
         return 0;
 }

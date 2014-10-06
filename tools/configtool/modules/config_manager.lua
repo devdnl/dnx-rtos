@@ -28,7 +28,6 @@
 -- EXTERNAL MODULES
 --==============================================================================
 require("modules/ctcore")
-xml = require("modules/xmlSimple").newParser()
 
 --==============================================================================
 -- PUBLIC OBJECTS
@@ -38,8 +37,9 @@ cm = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local DIR_CONFIG = config.project.path.config_dir:GetValue()
-local FILE_ID    = "87f472ea728616a4127b47dc08e5f2d2"
+local DIR_CONFIG   = config.project.path.config_dir:GetValue()
+local FILE_ID      = "87f472ea728616a4127b47dc08e5f2d2"
+local FILE_VERSION = "1"
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -63,7 +63,7 @@ function cm:save_project_configuration(file)
         local cpu_arch = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
 
         cfg_table.ID      = FILE_ID
-        cfg_table.version = "1.0.0"
+        cfg_table.version = FILE_VERSION
 
         -- load configuration of modules of selected architecture
         cfg_table.file = {}
