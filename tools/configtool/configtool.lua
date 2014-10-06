@@ -41,6 +41,7 @@ require("modules/modules")
 require("modules/about")
 require("modules/creators")
 require("modules/new_module")
+require("modules/config_manager")
 
 
 --==============================================================================
@@ -130,8 +131,10 @@ end
 local function event_import_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Import configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                print("import: "..dialog:GetPath())
-                ui.treebook:SetSelection(0)
+                if cm:apply_project_configuration(dialog:GetPath()) then
+                        ui.treebook:SetSelection(0)
+                else
+                end
         end
 end
 
@@ -144,7 +147,9 @@ end
 local function event_export_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Export configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                print("export: "..dialog:GetPath())
+                if cm:save_project_configuration(dialog:GetPath()) then
+                else
+                end
         end
 end
 
@@ -158,15 +163,15 @@ local function main()
         --ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
         --ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
-        
+
         cfg_menu = wx.wxMenu()
         cfg_menu:Append(ID.IMPORT_CFG, "&Import", "Import configuration from file")
         cfg_menu:Append(ID.EXPORT_CFG, "&Export", "Export configuration to file")
-        
+
         menubar = wx.wxMenuBar()
         menubar:Append(cfg_menu, "&Configuration")
         ui.frame:SetMenuBar(menubar)
-        
+
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
 
         for i, page in ipairs(page) do
@@ -183,7 +188,7 @@ local function main()
 
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
-        
+
         ui.frame:Connect(ID.IMPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.EXPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
 

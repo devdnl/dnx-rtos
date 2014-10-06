@@ -775,3 +775,90 @@ function ct.fs:remove(name)
         os.execute("bash -c '/bin/rm -rf "..name.."'")
         return true
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Save selected table to file
+-- @param  table        table to convert
+-- @param  file         file to dump
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:save_table(table, file)
+        local savedTables = {} -- used to record tables that have been saved, so that we do not go into an infinite recursion
+        local outFuncs = {
+                ['string']  = function(value) return string.format("%q",value) end;
+                ['boolean'] = function(value) if (value) then return 'true' else return 'false' end end;
+                ['number']  = function(value) return string.format('%f',value) end;
+        }
+
+        local outFuncsMeta = {
+                __index = function(t,k) print('Invalid Type For ct:save_table(): '..k) os.exit() end
+        }
+
+        local indent = ""
+
+        setmetatable(outFuncs,outFuncsMeta)
+        local tableOut = function(value)
+                indent = indent.."\t"
+
+                if (savedTables[value]) then
+                        print('There is a cyclical reference (table value referencing another table value) in this set.')
+                        os.exit()
+                end
+
+                local outValue = function(value)
+                        return outFuncs[type(value)](value)
+                end
+
+                local out = '{\n'
+
+                for i,v in pairs(value) do
+                        out = out..indent..'['..outValue(i)..']='..outValue(v)..';\n'
+                end
+
+                savedTables[value] = true; --record that it has already been saved
+
+                indent = indent:sub(1, -2)
+
+                return out..indent..'}'
+        end
+
+        outFuncs['table'] = tableOut;
+
+        if type(table) == "table" and type(file) == "string" then
+                local f = io.open(file, "w")
+                if f then
+                        f:write("-- dnx RTOS configuration file\n")
+                        f:write(tableOut(table))
+                        f:close()
+                        return true
+                end
+        end
+
+        return false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Load table from file
+-- @param  file         file to read from
+-- @return On success table is returned, otherwise nil
+--------------------------------------------------------------------------------
+function ct:load_table(file)
+        if type(file) == "string" then
+                local f = io.open(file, "r")
+                if f then
+                        local input = f:read("*all")
+                        f:close()
+
+                        if pcall(loadstring('return '..input)) then
+                                local table = loadstring('return '..input)()
+                                if type(table) == "table" then
+                                        return table
+                                end
+                        end
+                end
+        end
+
+        return nil
+end
