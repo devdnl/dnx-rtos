@@ -145,7 +145,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_export_configuration()
-        dialog = wx.wxFileDialog(ui.frame, "Export configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE))
+        dialog = wx.wxFileDialog(ui.frame, "Export configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_CANCEL) then
                 return
         else
@@ -159,18 +159,18 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function main()
-        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
-        ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
+        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
+        --ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
+        --ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
-        ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
         
-        menubar  = wx.wxMenuBar()
         cfg_menu = wx.wxMenu()
         cfg_menu:Append(ID.IMPORT_CFG, "&Import", "Import configuration from file")
         cfg_menu:Append(ID.EXPORT_CFG, "&Export", "Export configuration to file")
-        menubar:Append(cfg_menu, "&Configuration")
         
-        ui.frame:SetMenuBar(menubar)       
+        menubar = wx.wxMenuBar()
+        menubar:Append(cfg_menu, "&Configuration")
+        ui.frame:SetMenuBar(menubar)
         
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
 
