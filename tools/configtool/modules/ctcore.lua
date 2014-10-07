@@ -898,9 +898,10 @@ end
 --------------------------------------------------------------------------------
 -- @brief  Save project configuration to the file
 -- @param  file         file where configuration is write
+-- @param  parent       parent window (optional)
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
-function ct:save_project_configuration(file)
+function ct:save_project_configuration(file, parent)
         local cfg_table   = {}
         local cpu_arch    = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
         local CONFIG_DIR  = config.project.path.config_dir:GetValue()
@@ -909,7 +910,14 @@ function ct:save_project_configuration(file)
 
         cfg_table.ID      = CFG_FILE_ID
         cfg_table.version = CFG_FILE_VERSION
-
+        
+        -- progress dialog       
+        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+        p = 0 local function pulse() p = p + 1 return p end
+        progress:SetMinSize(wx.wxSize(300, 150))
+        progress:Update(0, "Preparing to write...")
+        progress:Centre()
+        
         -- load configuration of modules of selected architecture
         cfg_table.file = {}
 
@@ -918,6 +926,8 @@ function ct:save_project_configuration(file)
                 local noarch      = module["@noarch"]
                 local cfgfile
 
+                progress:Update(pulse(), "Loading configuration of "..module_name:upper().."...")
+                
                 if noarch == "true" then
                         cfgfile = CONFIG_DIR.."/noarch/"..module_name.."_flags.h"
                 else
@@ -940,6 +950,7 @@ function ct:save_project_configuration(file)
         end
 
         -- load project configuration
+        progress:Update(pulse(), "Loading configuration of project.h...")
         cfg_table.file[PROJECT_HDR] = {}
         local f = io.open(PROJECT_HDR, "r")
         if f then
@@ -953,6 +964,7 @@ function ct:save_project_configuration(file)
                 f:close()
         end
         
+        progress:Update(pulse(), "Loading configuration of project's Makefile...")
         cfg_table.file[PROJECT_MK] = {}
         local f = io.open(PROJECT_MK, "r")
         if f then
@@ -970,6 +982,7 @@ function ct:save_project_configuration(file)
         local cpu_header   = CONFIG_DIR.."/"..cpu_arch.."/cpu.h"
         local cpu_makefile = CONFIG_DIR.."/"..cpu_arch.."/Makefile"
         
+        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/cpu.h...")
         cfg_table.file[cpu_header] = {}
         local f = io.open(cpu_header, "r")
         if f then
@@ -983,6 +996,7 @@ function ct:save_project_configuration(file)
                 f:close()
         end
         
+        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/Makefile...")
         cfg_table.file[cpu_makefile] = {}
         local f = io.open(cpu_makefile, "r")
         if f then
@@ -996,17 +1010,26 @@ function ct:save_project_configuration(file)
                 f:close()
         end
 
-        return ct:save_table(cfg_table, file)
+        progress:Update(pulse(), "Save configuration to the file...")
+        local status = ct:save_table(cfg_table, file)
+        
+        progress:Destroy()
+        
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration exported.", parent)
+        
+        return status
 end
 
 
 --------------------------------------------------------------------------------
 -- @brief  Load project configuration for the file
--- @param  file
+-- @param  file         file which configuration is loaded
+-- @param  parent       parent window (optional)
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
-function ct:apply_project_configuration(file)
+function ct:apply_project_configuration(file, parent)
         local cfg_table = ct:load_table(file)
+        local window    = ifs (parent, parent, wx.NULL)
 
         if cfg_table then
                 for name, path in pairs(cfg_table.file) do
