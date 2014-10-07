@@ -7,8 +7,8 @@ New Features, Improvements:
 - puts() family functions are disabled together with printf() family functions
 
 Fixed Bugs:
-- Fixed bugs in the system monitor (not compilable on minimal configuration)
-- Fixed bugs in several files, dnx/misc.h was not included directly
+- Fixed bugs in the system monitor (linking error occured when major of features are disabled)
+- Fixed bugs in several files, dnx/misc.h was not included directly what causes compiling errors
 
 dnx RTOS 1.4.0
 ==============
