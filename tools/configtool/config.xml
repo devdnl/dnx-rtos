@@ -118,6 +118,12 @@
             <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
             <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
+        <filesystems>
+            <filesystem><name>DEVFS</name></filesystem>
+            <filesystem><name>LFS</name></filesystem>
+            <filesystem><name>FATFS</name></filesystem>
+            <filesystem><name>PROCFS</name></filesystem>
+        </filesystems>
         <path>
             <config_dir>../../config</config_dir>
             <src_dir>../../src</src_dir>

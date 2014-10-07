@@ -1029,10 +1029,13 @@ end
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
 function ct:apply_project_configuration(file, parent)
-        local cfg_table = ct:load_table(file)
+        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
+        local cfg_table   = ct:load_table(file)
 
         -- check file ID and table
-        if cfg_table.ID ~= CFG_FILE_ID or cfg_table == nil then
+        if cfg_table == nil or cfg_table.ID ~= CFG_FILE_ID then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Courrupted configuration file!", parent)
                 return false
         end
@@ -1051,29 +1054,36 @@ function ct:apply_project_configuration(file, parent)
         end
 
         -- progress dialog
-        local progress = wx.wxProgressDialog("Configuration export", "", 4 + #cfg_table.file, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        local num_files = 0 for _, _ in pairs(cfg_table.file) do num_files = num_files + 1 end
+        local progress  = wx.wxProgressDialog("Configuration export", "", 4 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
-        progress:SetMinSize(wx.wxSize(300, 150))
+        progress:SetMinSize(wx.wxSize(450, 150))
         progress:Centre()
 
-        -- disable all modules
+        -- disable all modules (drivers and file systems)
         progress:Update(0, "Disabling all modules...")
-        for i, module in pairs(config.project.modules:Children()) do
+        for _, module in pairs(config.project.modules:Children()) do
                 ct:enable_module(module.name:GetValue(), false)
         end
 
+        for _, fs in pairs(config.project.filesystems:Children()) do
+                ct:enable_module(fs.name:GetValue(), false)
+        end
+
         -- load modules' configuration
-        for name, path in pairs(cfg_table.file) do
-                progress:Update(pulse(), "Applying configuration to "..name.." file...")
+        for filename, filecontent in pairs(cfg_table.file) do
+                progress:Update(pulse(), "Applying configuration to "..filename:gsub(CONFIG_DIR.."/", "").." file...")
 
-                print(name, path)
-
-                local f = io.open(path, "r+")
+                local f = io.open(filename, "r+")
                 if f then
-                        for _, cfg in pairs(path) do
-                                print(_, cfg.key, cfg.value)
+                        for _, cfg in pairs(filecontent) do
+                                local keypath = {}
+                                keypath.path  = {}
+                                keypath.key   = {}
+                                function keypath.path:GetValue() return filename end
+                                function keypath.key:GetValue()  return cfg.key end
 
-                                ct:key_write({path = path, key = cfg.key}, cfg.value, true)
+                                ct:key_write(keypath, cfg.value, true)
                         end
 
                         f:close()
