@@ -1,5 +1,10 @@
 # Makefile for GNU make
 
+# NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+#       and prefix) are exported to the single configuration file
+#       (by using Configtool) when entire project configuration is exported.
+#       All other flag definitions and statements are ignored.
+
 # project configuration
 __PROJECT_NAME__=dnx
 __PROJECT_CPU_ARCH__=stm32f1

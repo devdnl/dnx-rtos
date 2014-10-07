@@ -25,9 +25,10 @@
 *//*==========================================================================*/
 
 /*
- * NOTE: all flags defined as: __<!MODULE_NAME!>_FLAG_NAME__ are exported
- *       to the single configuration file (by using Configtool). All other flag
- *       definitions are ignored.
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
  */
 
 #ifndef _<!MODULE_NAME!>_FLAGS_H_
