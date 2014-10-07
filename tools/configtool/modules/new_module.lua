@@ -224,11 +224,11 @@ function event_button_create_clicked(event)
         end
 
         -- add module to the system for selected architectures
-        local progress = wx.wxProgressDialog("Adding module", "Create module's folders and basic files...", 14 + #selected_cpu, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+        local progress = wx.wxProgressDialog("Adding module", "Create module's folders and basic files...", 14 + #selected_cpu, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 100))
-        progress:Update(0)
         progress:Centre()
+        progress:Update(0)
 
         for _, arch in pairs(selected_arch) do
                 tags[1] = {tag = "<!cpu_arch!>", to = arch}

@@ -910,14 +910,15 @@ function ct:save_project_configuration(file, parent)
 
         cfg_table.ID      = CFG_FILE_ID
         cfg_table.version = CFG_FILE_VERSION
-        
-        -- progress dialog       
-        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+
+        -- progress dialog
+        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 150))
-        progress:Update(0, "Preparing to write...")
         progress:Centre()
-        
+        progress:Update(0, "Preparing to write...")
+
+
         -- load configuration of modules of selected architecture
         cfg_table.file = {}
 
@@ -927,7 +928,7 @@ function ct:save_project_configuration(file, parent)
                 local cfgfile
 
                 progress:Update(pulse(), "Loading configuration of "..module_name:upper().."...")
-                
+
                 if noarch == "true" then
                         cfgfile = CONFIG_DIR.."/noarch/"..module_name.."_flags.h"
                 else
@@ -960,10 +961,10 @@ function ct:save_project_configuration(file, parent)
                                 table.insert(cfg_table.file[PROJECT_HDR], {key = k, value = v})
                         end
                 end
-                
+
                 f:close()
         end
-        
+
         progress:Update(pulse(), "Loading configuration of project's Makefile...")
         cfg_table.file[PROJECT_MK] = {}
         local f = io.open(PROJECT_MK, "r")
@@ -974,14 +975,14 @@ function ct:save_project_configuration(file, parent)
                                 table.insert(cfg_table.file[PROJECT_MK], {key = k, value = v})
                         end
                 end
-                
+
                 f:close()
         end
 
         -- load CPU specific configuration
         local cpu_header   = CONFIG_DIR.."/"..cpu_arch.."/cpu.h"
         local cpu_makefile = CONFIG_DIR.."/"..cpu_arch.."/Makefile"
-        
+
         progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/cpu.h...")
         cfg_table.file[cpu_header] = {}
         local f = io.open(cpu_header, "r")
@@ -992,10 +993,10 @@ function ct:save_project_configuration(file, parent)
                                 table.insert(cfg_table.file[cpu_header], {key = k, value = v})
                         end
                 end
-                
+
                 f:close()
         end
-        
+
         progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/Makefile...")
         cfg_table.file[cpu_makefile] = {}
         local f = io.open(cpu_makefile, "r")
@@ -1006,17 +1007,17 @@ function ct:save_project_configuration(file, parent)
                                 table.insert(cfg_table.file[cpu_makefile], {key = k, value = v})
                         end
                 end
-                
+
                 f:close()
         end
 
         progress:Update(pulse(), "Save configuration to the file...")
         local status = ct:save_table(cfg_table, file)
-        
+
         progress:Destroy()
-        
+
         ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration exported.", parent)
-        
+
         return status
 end
 
@@ -1029,19 +1030,59 @@ end
 --------------------------------------------------------------------------------
 function ct:apply_project_configuration(file, parent)
         local cfg_table = ct:load_table(file)
-        local window    = ifs (parent, parent, wx.NULL)
 
-        if cfg_table then
-                for name, path in pairs(cfg_table.file) do
-                        print(name)
-
-                        for i, cfg in pairs(path) do
-                                print(i, cfg.key, cfg.value)
-                        end
-                end
-                
-                return true
+        -- check file ID and table
+        if cfg_table.ID ~= CFG_FILE_ID or cfg_table == nil then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Courrupted configuration file!", parent)
+                return false
         end
 
-        return false
+        -- check file version
+        if cfg_table.version ~= CFG_FILE_VERSION then
+                local ans = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
+                                                 "The importing configuration file is in the different version than expected. "..
+                                                 "For this reason, the configuration may be incomplete or invalid. "..
+                                                 "Do you want continue?",
+                                                 wx.wxYES_NO, parent)
+
+                if ans == wx.wxID_NO then
+                        return false
+                end
+        end
+
+        -- progress dialog
+        local progress = wx.wxProgressDialog("Configuration export", "", 4 + #cfg_table.file, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        p = 0 local function pulse() p = p + 1 return p end
+        progress:SetMinSize(wx.wxSize(300, 150))
+        progress:Centre()
+
+        -- disable all modules
+        progress:Update(0, "Disabling all modules...")
+        for i, module in pairs(config.project.modules:Children()) do
+                ct:enable_module(module.name:GetValue(), false)
+        end
+
+        -- load modules' configuration
+        for name, path in pairs(cfg_table.file) do
+                progress:Update(pulse(), "Applying configuration to "..name.." file...")
+
+                print(name, path)
+
+                local f = io.open(path, "r+")
+                if f then
+                        for _, cfg in pairs(path) do
+                                print(_, cfg.key, cfg.value)
+
+                                ct:key_write({path = path, key = cfg.key}, cfg.value, true)
+                        end
+
+                        f:close()
+                end
+        end
+
+        progress:Destroy()
+
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration applied successfully.", parent)
+
+        return true
 end
