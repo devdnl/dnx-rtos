@@ -32,6 +32,7 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include <dnx/misc.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -846,7 +847,7 @@ void sys_perror(const char *str)
                 sys_fprintf(stderr, "%s\n", sys_strerror(errno));
         }
 #else
-        (void) str
+        (void) str;
 #endif
 }
 
