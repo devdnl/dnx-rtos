@@ -30,11 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
 #define INIT_REQUEST                    IOCTL_SDSPI__INITIALIZE_CARD
+#define MBR_READ_REQUEST                IOCTL_SDSPI__READ_MBR
 
 /*==============================================================================
   Local types, enums definitions
@@ -62,7 +64,7 @@ GLOBAL_VARIABLES {
  * @brief Main function
  */
 //==============================================================================
-PROGRAM_MAIN(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_FAILURE;
 
@@ -71,18 +73,31 @@ PROGRAM_MAIN(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
+        errno = 0;
         FILE *sd = fopen(argv[1], "r");
         if (sd) {
-                bool status = false;
-                if (ioctl(sd, INIT_REQUEST, &status) != 0) {
-                        perror(argv[1]);
-                }
+                switch (ioctl(sd, INIT_REQUEST)) {
+                case 1:
+                        switch (ioctl(sd, MBR_READ_REQUEST)) {
+                        case 1:
+                                puts("Card initialized.");
+                                status = EXIT_SUCCESS;
+                                break;
 
-                if (status == true) {
-                        puts("Card initialized.");
-                        status = EXIT_SUCCESS;
-                } else {
-                        puts("Card not detected.");
+                        case 0:
+                                puts("Card initialized. MBR not exist.");
+                                status = EXIT_SUCCESS;
+                                break;
+
+                        case -1:
+                                perror(argv[1]);
+                                break;
+                        }
+                        break;
+
+                default:
+                        perror(argv[1]);
+                        break;
                 }
 
                 fclose(sd);

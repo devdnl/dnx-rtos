@@ -24,11 +24,18 @@
 
 *//*==========================================================================*/
 
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+
 #ifndef _ETH_FLAGS_H_
 #define _ETH_FLAGS_H_
 
 #define __ETH_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
-#define __ETH_CHECKSUM_BY_HARDWARE__ __YES__
+#define __ETH_CHECKSUM_BY_HARDWARE__ _YES_
 #define __ETH_SPEED__ ETH_Speed_100M
 #define __ETH_PHY_ADDRESS__ 0x01
 #define __ETH_PHY_RESET_DELAY__ 250

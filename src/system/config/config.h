@@ -33,7 +33,7 @@
 /**
  * CPU start frequency [Hz] (frequency after power up, before clock configuration)
  */
-#define CONFIG_CPU_START_FREQ                           (__CPU_START_FREQ__)
+#define CONFIG_CPU_START_FREQ                           (_CPU_START_FREQ_)
 
 /**
  * CPU base frequency [Hz] (internal RC, oscillator or crystal frequency connected to PLL)
@@ -44,7 +44,7 @@
 /**
  * Heap memory alignment
  */
-#define CONFIG_HEAP_ALIGN                               (__HEAP_ALIGN__)
+#define CONFIG_HEAP_ALIGN                               (_HEAP_ALIGN_)
 
 /**
  * Heap block size [bytes]
@@ -86,12 +86,12 @@
 /**
  * Kernel interrupt priority (CPU depend)
  */
-#define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (__IRQ_RTOS_KERNEL_PRIORITY__)
+#define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (_IRQ_RTOS_KERNEL_PRIORITY_)
 
 /**
  * System call interrupt priority (CPU depend)
  */
-#define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (__IRQ_RTOS_SYSCALL_PRIORITY__)
+#define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (_IRQ_RTOS_SYSCALL_PRIORITY_)
 
 /**
  * User programs interrupt priority (CPU depend)

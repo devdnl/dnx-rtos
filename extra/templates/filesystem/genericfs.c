@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    genericfs.c
+@file    <!fs_name!>.c
 
-@author  Author
+@author  <!author!>
 
-@brief   This file support generic file system
+@brief   <!fs_description!>
 
-@note    Copyright (C) year Author <email>
+@note    Copyright (C) <!year!> <!author!> <<!email!>>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by

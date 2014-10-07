@@ -1,3 +1,15 @@
+dnx RTOS 1.4.1
+==============
+New Features, Improvements:
+- Added DMA support to the SPI driver
+- SDSPI driver use SPI interface from SPI module instead of direct access
+- Configtool: added possibility to import/export configuration
+- puts() family functions are disabled together with printf() family functions
+
+Fixed Bugs:
+- Fixed bugs in the system monitor (linking error occured when major of features are disabled)
+- Fixed bugs in several files, dnx/misc.h was not included directly what causes compiling errors
+
 dnx RTOS 1.4.0
 ==============
 New Features, Improvements:

@@ -23,12 +23,21 @@
 
 
 *//*==========================================================================*/
+
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+
+
 #ifndef _FLAGS_H_
 #define _FLAGS_H_
 
 /* definition of answers for questions */
-#define __NO__  0
-#define __YES__ 1
+#define _NO_  0
+#define _YES_ 1
 
 /* fixed configuration */
 #define stm32f1 0
@@ -45,6 +54,7 @@
 #if (__CPU_ARCH__ == noarch)
 #       include "../noarch/loop_flags.h"
 #       include "../noarch/tty_flags.h"
+#       include "../noarch/sdspi_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
 #       include "../stm32f1/cpu.h"
@@ -53,7 +63,6 @@
 #       include "../stm32f1/afio_flags.h"
 #       include "../stm32f1/eth_flags.h"
 #       include "../stm32f1/pll_flags.h"
-#       include "../stm32f1/sdspi_flags.h"
 #       include "../stm32f1/spi_flags.h"
 #       include "../stm32f1/wdg_flags.h"
 #       include "../stm32f1/uart_flags.h"
@@ -69,14 +78,14 @@
 #endif
 
 /* CPU configuration */
-#define __CPU_START_FREQ__ __CPU_START_FREQUENCY__
+#define  _CPU_START_FREQ_ _CPU_START_FREQUENCY_
 #define __CPU_OSC_FREQ__ 8000000
-#define __IRQ_RTOS_KERNEL_PRIORITY__ __CPU_IRQ_RTOS_KERNEL_PRIORITY__
-#define __IRQ_RTOS_SYSCALL_PRIORITY__ __CPU_IRQ_RTOS_SYSCALL_PRIORITY__
+#define  _IRQ_RTOS_KERNEL_PRIORITY_ _CPU_IRQ_RTOS_KERNEL_PRIORITY_
+#define  _IRQ_RTOS_SYSCALL_PRIORITY_  _CPU_IRQ_RTOS_SYSCALL_PRIORITY_
 #define __IRQ_USER_PRIORITY__ 0xDF
 
 /* dynamic memory configuration */
-#define __HEAP_ALIGN__ __CPU_HEAP_ALIGN__
+#define  _HEAP_ALIGN_ _CPU_HEAP_ALIGN_
 #define __HEAP_BLOCK_SIZE__ 4
 
 /* os configuration */
@@ -86,27 +95,27 @@
 #define __OS_TASK_MAX_PRIORITIES__ 7
 #define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
-#define __OS_SLEEP_ON_IDLE__ __NO__
-#define __OS_PRINTF_ENABLE__ __YES__
-#define __OS_SCANF_ENABLE__ __YES__
-#define __OS_SYSTEM_MSG_ENABLE__ __YES__
-#define __OS_COLOR_TERMINAL_ENABLE__ __YES__
+#define __OS_SLEEP_ON_IDLE__ _NO_
+#define __OS_PRINTF_ENABLE__ _YES_
+#define __OS_SCANF_ENABLE__ _YES_
+#define __OS_SYSTEM_MSG_ENABLE__ _YES_
+#define __OS_COLOR_TERMINAL_ENABLE__ _YES_
 #define __OS_STREAM_BUFFER_LENGTH__ 100
 #define __OS_PIPE_LENGTH__ 128
 #define __OS_ERRNO_STRING_LEN__ 3
-#define __OS_MONITOR_TASK_MEMORY_USAGE__ __YES__
-#define __OS_MONITOR_TASK_FILE_USAGE__ __YES__
-#define __OS_MONITOR_KERNEL_MEMORY_USAGE__ __YES__
-#define __OS_MONITOR_MODULE_MEMORY_USAGE__ __YES__
-#define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ __YES__
-#define __OS_MONITOR_CPU_LOAD__ __YES__
-#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ __YES__
+#define __OS_MONITOR_TASK_MEMORY_USAGE__ _YES_
+#define __OS_MONITOR_TASK_FILE_USAGE__ _YES_
+#define __OS_MONITOR_KERNEL_MEMORY_USAGE__ _YES_
+#define __OS_MONITOR_MODULE_MEMORY_USAGE__ _YES_
+#define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ _YES_
+#define __OS_MONITOR_CPU_LOAD__ _YES_
+#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
-#define __OS_SYSTEM_STOP_MACRO__ __YES__
+#define __OS_SYSTEM_STOP_MACRO__ _YES_
 
 /* network configuration */
-#define __NETWORK_ENABLE__ __YES__
+#define __NETWORK_ENABLE__ _YES_
 #define __NETWORK_MAC_ADDR_0__ 0x50
 #define __NETWORK_MAC_ADDR_1__ 0xE5
 #define __NETWORK_MAC_ADDR_2__ 0x49
@@ -116,28 +125,28 @@
 #define __NETWORK_ETHIF_FILE__ "/dev/eth0"
 
 /* file systems */
-#define __ENABLE_DEVFS__ __YES__
-#define __ENABLE_LFS__ __YES__
-#define __ENABLE_FATFS__ __YES__
-#define __ENABLE_PROCFS__ __YES__
-#define __FATFS_LFN_ENABLE__ __YES__
+#define __ENABLE_DEVFS__ _YES_
+#define __ENABLE_LFS__ _YES_
+#define __ENABLE_FATFS__ _YES_
+#define __ENABLE_PROCFS__ _YES_
+#define __FATFS_LFN_ENABLE__ _YES_
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
-#define __ENABLE_LOOP__ __YES__
-#define __ENABLE_GPIO__ __YES__
-#define __ENABLE_AFIO__ __YES__
-#define __ENABLE_CRC__ __YES__
-#define __ENABLE_ETH__ __YES__
-#define __ENABLE_PLL__ __YES__
-#define __ENABLE_SDSPI__ __YES__
-#define __ENABLE_SPI__ __NO__
-#define __ENABLE_TTY__ __YES__
-#define __ENABLE_UART__ __YES__
-#define __ENABLE_WDG__ __YES__
-#define __ENABLE_USB__ __NO__
-#define __ENABLE_I2C__ __YES__
-#define __ENABLE_IRQ__ __YES__
+#define __ENABLE_LOOP__ _YES_
+#define __ENABLE_GPIO__ _YES_
+#define __ENABLE_AFIO__ _YES_
+#define __ENABLE_CRC__ _YES_
+#define __ENABLE_ETH__ _YES_
+#define __ENABLE_PLL__ _YES_
+#define __ENABLE_SDSPI__ _YES_
+#define __ENABLE_SPI__ _YES_
+#define __ENABLE_TTY__ _YES_
+#define __ENABLE_UART__ _YES_
+#define __ENABLE_WDG__ _YES_
+#define __ENABLE_USB__ _NO_
+#define __ENABLE_I2C__ _YES_
+#define __ENABLE_IRQ__ _YES_
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

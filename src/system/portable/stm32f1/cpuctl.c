@@ -49,7 +49,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
 static const u32_t timer_frequency = 1000000;
+#endif
 
 /*==============================================================================
   Function definitions
@@ -149,7 +151,9 @@ void _cpuctl_sleep(void)
 void _cpuctl_update_system_clocks(void)
 {
         /* update CPU load timer frequency */
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
         _cpuctl_init_CPU_load_counter();
+#endif
 
         /* update context switch counter frequency */
         _critical_section_begin();

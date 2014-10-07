@@ -56,7 +56,8 @@ ct.decvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
 --==============================================================================
 local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
-
+local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
+local CFG_FILE_VERSION  = "1"
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -116,6 +117,30 @@ local function get_line_value(line, filetype, key)
         end
 
         return ""
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Returns a key and a value from selected line (only keys that are
+--         defined to write/read: #define __FLAG_XX__ YY or __FLAG_XX__=YY)
+-- @param  line         line from value is getting
+-- @param  filetype     type of file from line comes
+-- @return On success return key, value. On error nil, nil is returned
+--------------------------------------------------------------------------------
+local function get_key_and_value_from_line(line, filetype)
+        if filetype == FILETYPE_HEADER then
+                if line:match("%s*#define%s+__.*__%s+.*") then
+                        local _, _, k, v = line:find("%s*#define%s+(__.*__)%s+(.*)")
+                        return k, v
+                end
+        elseif filetype == FILETYPE_MAKEFILE then
+                if line:match("%s*__.*__%s*=%s*.*") then
+                        local _, _, k, v = line:find("%s*(__.*__)%s*=%s*(.*)")
+                        return k, v
+                end
+        end
+
+        return nil, nil
 end
 
 
@@ -186,22 +211,25 @@ end
 -- @brief  Writes value of selected key
 -- @param  keypath      key and path from xml configuration (table)
 -- @param  value        value to write
+-- @param  nomsg        true disables error messages (optional)
 -- @return On success true is returned. On error false is returned.
 --------------------------------------------------------------------------------
-function ct:key_write(keypath, value)
+function ct:key_write(keypath, value, nomsg)
+        local showmsg = nomsg ~= true
+
         -- check keypath
         if type(keypath) ~= "table" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if keypath.path == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if keypath.key == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
@@ -210,24 +238,24 @@ function ct:key_write(keypath, value)
 
         -- type check
         if type(filename) ~= "string" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'filename <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if type(key) ~= "string" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key <"..type(key)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'key <"..type(key)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if type(value) ~= "string" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value <"..type(value)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): Invalid type of 'value <"..type(value)..">'\n"..debug.traceback()) end
                 return false
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback()) end
                 return false
         end
 
@@ -238,7 +266,7 @@ function ct:key_write(keypath, value)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback()) end
                 return false
         end
 
@@ -260,7 +288,7 @@ function ct:key_write(keypath, value)
         -- write the file.
         file = io.open(filename, "w")
         if file == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback()) end
                 return false
         end
 
@@ -276,22 +304,25 @@ end
 --------------------------------------------------------------------------------
 -- @brief  Reads value of selected key
 -- @param  keypath      key and path from xml configuration (table)
+-- @param  nomsg        true disables error messages (optional)
 -- @return On success a value with form of string, otherwise nil.
 --------------------------------------------------------------------------------
 function ct:key_read(keypath)
+        local showmsg = nomsg ~= true
+
         -- check keypath
         if type(keypath) ~= "table" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if keypath.path == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.path <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
         if keypath.key == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'keypath.key <"..type(filename)..">'\n"..debug.traceback()) end
                 return false
         end
 
@@ -300,19 +331,19 @@ function ct:key_read(keypath)
 
         -- type check
         if type(filename) ~= "string" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'filename'\n"..debug.traceback()) end
                 return nil
         end
 
         if type(key) ~= "string" then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Invalid type of 'key'\n"..debug.traceback()) end
                 return nil
         end
 
         -- read file
         local file = io.open(filename, "r")
         if file == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback()) end
                 return nil
         end
 
@@ -323,7 +354,7 @@ function ct:key_read(keypath)
         elseif filename:find(".mk") or filename:find(".mak") or filename:find(".makefile") or filename:find("Makefile") or filename:find("makefile") then
                 filetype = FILETYPE_MAKEFILE
         else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): Unknown file type\n"..debug.traceback()) end
                 return nil
         end
 
@@ -342,7 +373,7 @@ function ct:key_read(keypath)
         file:close()
 
         if value == nil then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): '"..key.."': key not found\n"..debug.traceback())
+                if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): '"..key.."': key not found\n"..debug.traceback()) end
         end
 
         return value
@@ -773,5 +804,295 @@ function ct.fs:remove(name)
         end
 
         os.execute("bash -c '/bin/rm -rf "..name.."'")
+        return true
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Save selected table to file
+-- @param  table        table to convert
+-- @param  file         file to dump
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:save_table(table, file)
+        local savedTables = {} -- used to record tables that have been saved, so that we do not go into an infinite recursion
+        local outFuncs = {
+                ['string']  = function(value) return string.format("%q",value) end;
+                ['boolean'] = function(value) if (value) then return 'true' else return 'false' end end;
+                ['number']  = function(value) return string.format('%f',value) end;
+        }
+
+        local outFuncsMeta = {
+                __index = function(t,k) print('Invalid Type For ct:save_table(): '..k) os.exit() end
+        }
+
+        local indent = ""
+
+        setmetatable(outFuncs,outFuncsMeta)
+        local tableOut = function(value)
+                indent = indent.."\t"
+
+                if (savedTables[value]) then
+                        print('There is a cyclical reference (table value referencing another table value) in this set.')
+                        os.exit()
+                end
+
+                local outValue = function(value)
+                        return outFuncs[type(value)](value)
+                end
+
+                local out = '{\n'
+
+                for i,v in pairs(value) do
+                        out = out..indent..'['..outValue(i)..']='..outValue(v)..';\n'
+                end
+
+                savedTables[value] = true; --record that it has already been saved
+
+                indent = indent:sub(1, -2)
+
+                return out..indent..'}'
+        end
+
+        outFuncs['table'] = tableOut;
+
+        if type(table) == "table" and type(file) == "string" then
+                local f = io.open(file, "w")
+                if f then
+                        f:write("-- dnx RTOS configuration file\n")
+                        f:write(tableOut(table))
+                        f:close()
+                        return true
+                end
+        end
+
+        return false
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Load table from file
+-- @param  file         file to read from
+-- @return On success table is returned, otherwise nil
+--------------------------------------------------------------------------------
+function ct:load_table(file)
+        if type(file) == "string" then
+                local f = io.open(file, "r")
+                if f then
+                        local input = f:read("*all")
+                        f:close()
+
+                        if pcall(loadstring('return '..input)) then
+                                local table = loadstring('return '..input)()
+                                if type(table) == "table" then
+                                        return table
+                                end
+                        end
+                end
+        end
+
+        return nil
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Save project configuration to the file
+-- @param  file         file where configuration is write
+-- @param  parent       parent window (optional)
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:save_project_configuration(file, parent)
+        local cfg_table   = {}
+        local cpu_arch    = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
+
+        cfg_table.ID      = CFG_FILE_ID
+        cfg_table.version = CFG_FILE_VERSION
+
+        -- progress dialog
+        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        p = 0 local function pulse() p = p + 1 return p end
+        progress:SetMinSize(wx.wxSize(300, 150))
+        progress:Centre()
+        progress:Update(0, "Preparing to write...")
+
+
+        -- load configuration of modules of selected architecture
+        cfg_table.file = {}
+
+        for i, module in pairs(config.project.modules:Children()) do
+                local module_name = module.name:GetValue():lower()
+                local noarch      = module["@noarch"]
+                local cfgfile
+
+                progress:Update(pulse(), "Loading configuration of "..module_name:upper().."...")
+
+                if noarch == "true" then
+                        cfgfile = CONFIG_DIR.."/noarch/"..module_name.."_flags.h"
+                else
+                        cfgfile = CONFIG_DIR.."/"..cpu_arch.."/"..module_name.."_flags.h"
+                end
+
+                cfg_table.file[cfgfile] = {}
+
+                local f = io.open(cfgfile, "r")
+                if f then
+                        for line in f:lines() do
+                                local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
+                                if k and v then
+                                        table.insert(cfg_table.file[cfgfile], {key = k, value = v})
+                                end
+                        end
+
+                        f:close()
+                end
+        end
+
+        -- load project configuration
+        progress:Update(pulse(), "Loading configuration of project.h...")
+        cfg_table.file[PROJECT_HDR] = {}
+        local f = io.open(PROJECT_HDR, "r")
+        if f then
+                for line in f:lines() do
+                        local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
+                        if k and v then
+                                table.insert(cfg_table.file[PROJECT_HDR], {key = k, value = v})
+                        end
+                end
+
+                f:close()
+        end
+
+        progress:Update(pulse(), "Loading configuration of project's Makefile...")
+        cfg_table.file[PROJECT_MK] = {}
+        local f = io.open(PROJECT_MK, "r")
+        if f then
+                for line in f:lines() do
+                        local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
+                        if k and v then
+                                table.insert(cfg_table.file[PROJECT_MK], {key = k, value = v})
+                        end
+                end
+
+                f:close()
+        end
+
+        -- load CPU specific configuration
+        local cpu_header   = CONFIG_DIR.."/"..cpu_arch.."/cpu.h"
+        local cpu_makefile = CONFIG_DIR.."/"..cpu_arch.."/Makefile"
+
+        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/cpu.h...")
+        cfg_table.file[cpu_header] = {}
+        local f = io.open(cpu_header, "r")
+        if f then
+                for line in f:lines() do
+                        local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
+                        if k and v then
+                                table.insert(cfg_table.file[cpu_header], {key = k, value = v})
+                        end
+                end
+
+                f:close()
+        end
+
+        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/Makefile...")
+        cfg_table.file[cpu_makefile] = {}
+        local f = io.open(cpu_makefile, "r")
+        if f then
+                for line in f:lines() do
+                        local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
+                        if k and v then
+                                table.insert(cfg_table.file[cpu_makefile], {key = k, value = v})
+                        end
+                end
+
+                f:close()
+        end
+
+        progress:Update(pulse(), "Save configuration to the file...")
+        local status = ct:save_table(cfg_table, file)
+
+        progress:Destroy()
+
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration exported.", parent)
+
+        return status
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Load project configuration for the file
+-- @param  file         file which configuration is loaded
+-- @param  parent       parent window (optional)
+-- @return On success true is returned, otherwise false
+--------------------------------------------------------------------------------
+function ct:apply_project_configuration(file, parent)
+        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
+        local cfg_table   = ct:load_table(file)
+
+        -- check file ID and table
+        if cfg_table == nil or cfg_table.ID ~= CFG_FILE_ID then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Courrupted configuration file!", parent)
+                return false
+        end
+
+        -- check file version
+        if cfg_table.version ~= CFG_FILE_VERSION then
+                local ans = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
+                                                 "The importing configuration file is in the different version than expected. "..
+                                                 "For this reason, the configuration may be incomplete or invalid. "..
+                                                 "Do you want continue?",
+                                                 wx.wxYES_NO, parent)
+
+                if ans == wx.wxID_NO then
+                        return false
+                end
+        end
+
+        -- progress dialog
+        local num_files = 0 for _, _ in pairs(cfg_table.file) do num_files = num_files + 1 end
+        local progress  = wx.wxProgressDialog("Configuration export", "", 4 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        p = 0 local function pulse() p = p + 1 return p end
+        progress:SetMinSize(wx.wxSize(450, 150))
+        progress:Centre()
+
+        -- disable all modules (drivers and file systems)
+        progress:Update(0, "Disabling all modules...")
+        for _, module in pairs(config.project.modules:Children()) do
+                ct:enable_module(module.name:GetValue(), false)
+        end
+
+        for _, fs in pairs(config.project.filesystems:Children()) do
+                ct:enable_module(fs.name:GetValue(), false)
+        end
+
+        -- load modules' configuration
+        for filename, filecontent in pairs(cfg_table.file) do
+                progress:Update(pulse(), "Applying configuration to "..filename:gsub(CONFIG_DIR.."/", "").." file...")
+
+                local f = io.open(filename, "r+")
+                if f then
+                        for _, cfg in pairs(filecontent) do
+                                local keypath = {}
+                                keypath.path  = {}
+                                keypath.key   = {}
+                                function keypath.path:GetValue() return filename end
+                                function keypath.key:GetValue()  return cfg.key end
+
+                                ct:key_write(keypath, cfg.value, true)
+                        end
+
+                        f:close()
+                end
+        end
+
+        progress:Destroy()
+
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration applied successfully.", parent)
+
         return true
 end

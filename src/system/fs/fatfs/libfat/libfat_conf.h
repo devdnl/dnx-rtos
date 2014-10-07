@@ -85,7 +85,7 @@
  * Unicode handling functions _libfat_convert() and _libfat_wtoupper() must be added
  * to the project. When enable to use heap, memory control functions
  * _libfat_malloc() and _libfat_free() must be added to the project. */
-#if __FATFS_LFN_ENABLE__ == __YES__
+#if __FATFS_LFN_ENABLE__ == _YES_
 #define _LIBFAT_USE_LFN         2       /* 0 to 2 */
 #else
 #define _LIBFAT_USE_LFN         0       /* 0 to 2 */

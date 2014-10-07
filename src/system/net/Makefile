@@ -1,5 +1,5 @@
 # Makefile for GNU make
-ifeq ($(ENABLE_NETWORK), __YES__)
+ifeq ($(__ENABLE_NETWORK__), _YES_)
    CSRC_CORE   += net/api/api_lib.c
    CSRC_CORE   += net/api/api_msg.c
    CSRC_CORE   += net/api/err.c

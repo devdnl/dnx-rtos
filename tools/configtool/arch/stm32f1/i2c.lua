@@ -92,6 +92,7 @@ local function load_controls(I2C)
         end
 
         ui.Panel_peripheral:Enable(I2C_enable)
+        ui.Panel_module:Enable(module_enabled)
 end
 
 

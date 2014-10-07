@@ -50,15 +50,15 @@ local cpu_idx          = nil    -- loaded when creating the window
 local cpu              = nil    -- loaded when creating the window
 local cpu_family       = {}
 cpu_family.value       = 0
-cpu_family.is_LD_VL    = function(self) return self.value == "__STM32F10X_LD_VL__" end
-cpu_family.is_MD_VL    = function(self) return self.value == "__STM32F10X_MD_VL__" end
-cpu_family.is_HD_VL    = function(self) return self.value == "__STM32F10X_HD_VL__" end
+cpu_family.is_LD_VL    = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_LD_VL:GetValue() end
+cpu_family.is_MD_VL    = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_MD_VL:GetValue() end
+cpu_family.is_HD_VL    = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_HD_VL:GetValue() end
 cpu_family.is_VL       = function(self) return self.value:match("_VL_") end
-cpu_family.is_LD       = function(self) return self.value == "__STM32F10X_LD__" end
-cpu_family.is_MD       = function(self) return self.value == "__STM32F10X_MD__" end
-cpu_family.is_HD       = function(self) return self.value == "__STM32F10X_HD__" end
-cpu_family.is_XL       = function(self) return self.value == "__STM32F10X_XL__" end
-cpu_family.is_CL       = function(self) return self.value == "__STM32F10X_CL__" end
+cpu_family.is_LD       = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_LD:GetValue() end
+cpu_family.is_MD       = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_MD:GetValue() end
+cpu_family.is_HD       = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_HD:GetValue() end
+cpu_family.is_XL       = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_XL:GetValue() end
+cpu_family.is_CL       = function(self) return self.value == config.arch.stm32f1.def.STM32F10X_CL:GetValue() end
 local LSI_FREQ         = 40e3
 local LSE_FREQ         = 32768
 local HSI_FREQ         = 8e6

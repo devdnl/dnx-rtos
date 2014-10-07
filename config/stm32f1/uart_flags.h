@@ -24,14 +24,21 @@
 
 *//*==========================================================================*/
 
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+
 #ifndef _UART_FLAGS_H_
 #define _UART_FLAGS_H_
 
-#define __UART_UART1_ENABLE__ __YES__
-#define __UART_UART2_ENABLE__ __NO__
-#define __UART_UART3_ENABLE__ __NO__
-#define __UART_UART4_ENABLE__ __NO__
-#define __UART_UART5_ENABLE__ __NO__
+#define __UART_UART1_ENABLE__ _YES_
+#define __UART_UART2_ENABLE__ _NO_
+#define __UART_UART3_ENABLE__ _NO_
+#define __UART_UART4_ENABLE__ _NO_
+#define __UART_UART5_ENABLE__ _NO_
 #define __UART_UART1_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
 #define __UART_UART2_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
 #define __UART_UART3_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
@@ -41,11 +48,11 @@
 #define __UART_DEFAULT_PARITY__ UART_PARITY_OFF
 #define __UART_DEFAULT_STOP_BITS__ UART_STOP_BIT_1
 #define __UART_DEFAULT_LIN_BREAK_LEN__ UART_LIN_BREAK_10_BITS
-#define __UART_DEFAULT_TX_ENABLE__ __YES__
-#define __UART_DEFAULT_RX_ENABLE__ __YES__
-#define __UART_DEFAULT_LIN_MODE_ENABLE__ __NO__
-#define __UART_DEFAULT_HW_FLOW_CTRL__ __NO__
-#define __UART_DEFAULT_SINGLE_WIRE_MODE__ __NO__
+#define __UART_DEFAULT_TX_ENABLE__ _YES_
+#define __UART_DEFAULT_RX_ENABLE__ _YES_
+#define __UART_DEFAULT_LIN_MODE_ENABLE__ _NO_
+#define __UART_DEFAULT_HW_FLOW_CTRL__ _NO_
+#define __UART_DEFAULT_SINGLE_WIRE_MODE__ _NO_
 #define __UART_DEFAULT_BAUD__ 115200
 
 #endif /* _UART_FLAGS_H_ */

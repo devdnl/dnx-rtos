@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <string.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/printx.h"
@@ -119,7 +120,9 @@ static i32_t sysm_network_memory_usage;
 /*==============================================================================
   External object definitions
 ==============================================================================*/
+#if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
 extern const uint _regdrv_number_of_modules;
+#endif
 
 /*==============================================================================
   Function definitions
@@ -132,10 +135,12 @@ extern const uint _regdrv_number_of_modules;
  * @param mtx           mutex
  */
 //==============================================================================
+#if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
 static inline void mutex_force_lock(mutex_t *mtx)
 {
         while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
+#endif
 
 //==============================================================================
 /**
@@ -147,7 +152,9 @@ static inline void mutex_force_lock(mutex_t *mtx)
 //==============================================================================
 stdret_t sysm_init(void)
 {
+#if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         sysm_system_memory_usage = (i32_t)_MEMMAN_RAM_SIZE - (i32_t)_MEMMAN_HEAP_SIZE;
+#endif
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         sysm_task_list    = list_new();
@@ -197,7 +204,9 @@ stdret_t sysm_init(void)
 //==============================================================================
 void sysm_lock_access(void)
 {
+#if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
+#endif
 }
 
 //==============================================================================
@@ -210,7 +219,9 @@ void sysm_lock_access(void)
 //==============================================================================
 void sysm_unlock_access(void)
 {
+#if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_unlock(sysm_resource_mtx);
+#endif
 }
 
 //==============================================================================
@@ -913,6 +924,7 @@ exit:
         mutex_unlock(sysm_resource_mtx);
         return mem;
 #else
+        UNUSED_ARG(taskhdl);
         return _memman_malloc(size, NULL);
 #endif
 }

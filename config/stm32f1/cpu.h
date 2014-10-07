@@ -23,45 +23,53 @@
 
 
 *//*==========================================================================*/
+
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+
 #ifndef _CPU_H_
 #define _CPU_H_
 
 /* configuration to modify */
 #define __CPU_NAME__ STM32F107RCxx
-#define __CPU_FAMILY__ __STM32F10X_CL__
+#define __CPU_FAMILY__ _STM32F10X_CL_
 
 /* fixed configuration */
-#define __CPU_START_FREQUENCY__           (8000000UL)
-#define __CPU_HEAP_ALIGN__                (4)
-#define __CPU_IRQ_RTOS_KERNEL_PRIORITY__  (0xFF)
-#define __CPU_IRQ_RTOS_SYSCALL_PRIORITY__ (0xEF)
+#define _CPU_START_FREQUENCY_           (8000000UL)
+#define _CPU_HEAP_ALIGN_                (4)
+#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0xFF)
+#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (0xEF)
 #define ARCH_stm32f1
 
 /* current CPU family definitions */
-#define __STM32F10X_LD_VL__ 0
-#define __STM32F10X_MD_VL__ 1
-#define __STM32F10X_HD_VL__ 2
-#define __STM32F10X_LD__    3
-#define __STM32F10X_MD__    4
-#define __STM32F10X_HD__    5
-#define __STM32F10X_XL__    6
-#define __STM32F10X_CL__    7
+#define _STM32F10X_LD_VL_ 0
+#define _STM32F10X_MD_VL_ 1
+#define _STM32F10X_HD_VL_ 2
+#define _STM32F10X_LD_    3
+#define _STM32F10X_MD_    4
+#define _STM32F10X_HD_    5
+#define _STM32F10X_XL_    6
+#define _STM32F10X_CL_    7
 
-#if   (__CPU_FAMILY__ == __STM32F10X_LD_VL__)
+#if   (__CPU_FAMILY__ == _STM32F10X_LD_VL_)
 #define STM32F10X_LD_VL
-#elif (__CPU_FAMILY__ == __STM32F10X_MD_VL__)
+#elif (__CPU_FAMILY__ == _STM32F10X_MD_VL_)
 #define STM32F10X_MD_VL
-#elif (__CPU_FAMILY__ == __STM32F10X_HD_VL__)
+#elif (__CPU_FAMILY__ == _STM32F10X_HD_VL_)
 #define STM32F10X_HD_VL
-#elif (__CPU_FAMILY__ == __STM32F10X_LD__)
+#elif (__CPU_FAMILY__ == _STM32F10X_LD_)
 #define STM32F10X_LD
-#elif (__CPU_FAMILY__ == __STM32F10X_MD__)
+#elif (__CPU_FAMILY__ == _STM32F10X_MD_)
 #define STM32F10X_MD
-#elif (__CPU_FAMILY__ == __STM32F10X_HD__)
+#elif (__CPU_FAMILY__ == _STM32F10X_HD_)
 #define STM32F10X_HD
-#elif (__CPU_FAMILY__ == __STM32F10X_XL__)
+#elif (__CPU_FAMILY__ == _STM32F10X_XL_)
 #define STM32F10X_XL
-#elif (__CPU_FAMILY__ == __STM32F10X_CL__)
+#elif (__CPU_FAMILY__ == _STM32F10X_CL_)
 #define STM32F10X_CL
 #else
 #error Wrong CPU family
