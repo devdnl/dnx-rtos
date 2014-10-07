@@ -27,7 +27,7 @@
 #define _AFIO_FLAGS_H_
 
 // AFIO_EVCR
-#define __AFIO_EVENT_OUT_ENABLE__ __NO__
+#define __AFIO_EVENT_OUT_ENABLE__ _NO_
 #define __AFIO_EVENT_OUT_PORT__ 0
 #define __AFIO_EVENT_OUT_PIN__ 0
 

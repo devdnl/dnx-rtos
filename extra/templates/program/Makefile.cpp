@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
+CXXSRC_PROGRAMS += <!program_name!>/<!program_name!>.cpp
 CSRC_PROGRAMS   +=
-CXXSRC_PROGRAMS += <!program_name!>/<!program_name!>.c
 HDRLOC_PROGRAMS +=

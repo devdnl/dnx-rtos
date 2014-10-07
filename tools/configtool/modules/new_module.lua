@@ -301,7 +301,7 @@ function event_button_create_clicked(event)
         progress:Update(pulse())
         n = ct:find_line(FILE_XML_CONFIG, 1, "%s*<_DRV_MK_ENABLE_FLAGS_>%s*</_DRV_MK_ENABLE_FLAGS_>")
         if n then
-                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>ENABLE_"..module_name:upper().."</key></ENABLE_"..module_name:upper().."_MK>")
+                ct:insert_line(FILE_XML_CONFIG, n + 1, "            <ENABLE_"..module_name:upper().."_MK><path>"..FILE_PROJECT_MAKEFILE.."</path><key>__ENABLE_"..module_name:upper().."__</key></ENABLE_"..module_name:upper().."_MK>")
         else
                 progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_XML_CONFIG.."' file. Location of error: 5.", ui.window)
@@ -322,11 +322,11 @@ function event_button_create_clicked(event)
         end
 
 
-        -- adds enable flag in the flags.h file
+        -- adds enable flag in the project/flags.h file
         progress:Update(pulse(), "Update flags.h file to new module...")
         n = ct:find_line(FILE_PROJECT_FLAGS, 1, "/%* modules %*/")
         if n then
-                ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ __NO__")
+                ct:insert_line(FILE_PROJECT_FLAGS, n + 1, "#define __ENABLE_"..module_name:upper().."__ "..config.project.def.NO:GetValue())
         else
                 progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_FLAGS.."' file. Location of error: 7.", ui.window)
@@ -338,7 +338,7 @@ function event_button_create_clicked(event)
         progress:Update(pulse(), "Update project's Makefile to new module...")
         n = ct:find_line(FILE_PROJECT_MAKEFILE, 1, "# modules enable flags")
         if n then
-                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."=__NO__")
+                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."="..config.project.def.NO:GetValue())
         else
                 progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Location of error: 8.", ui.window)

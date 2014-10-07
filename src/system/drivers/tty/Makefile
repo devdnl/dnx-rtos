@@ -1,7 +1,7 @@
 # Makefile for GNU make
 HDRLOC_NOARCH += drivers/tty
 
-ifeq ($(ENABLE_TTY), __YES__)
+ifeq ($(__ENABLE_TTY__), _YES_)
    CSRC_NOARCH   += drivers/tty/noarch/tty.c
    CSRC_NOARCH   += drivers/tty/noarch/tty_bfr.c
    CSRC_NOARCH   += drivers/tty/noarch/tty_cmd.c

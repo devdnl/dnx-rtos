@@ -27,10 +27,10 @@
 #ifndef _WDG_FLAGS_H_
 #define _WDG_FLAGS_H_
 
-#define __WDG_DEVICE_LOCK_AT_OPEN__ __YES__
+#define __WDG_DEVICE_LOCK_AT_OPEN__ _YES_
 #define __WDG_CLK_DIVIDER__ 256
 #define __WDG_RELOAD_VALUE__ 1563
-#define __WDG_DISABLE_ON_DEBUG__ __YES__
+#define __WDG_DISABLE_ON_DEBUG__ _YES_
 
 #endif /* _WDG_FLAGS_H_ */
 /*==============================================================================

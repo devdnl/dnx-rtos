@@ -27,22 +27,22 @@
 #ifndef _SPI_FLAGS_H_
 #define _SPI_FLAGS_H_
 
-#define __SPI_SPI1_ENABLE__ __NO__
-#define __SPI_SPI2_ENABLE__ __NO__
-#define __SPI_SPI3_ENABLE__ __YES__
+#define __SPI_SPI1_ENABLE__ _NO_
+#define __SPI_SPI2_ENABLE__ _NO_
+#define __SPI_SPI3_ENABLE__ _YES_
 #define __SPI_SPI1_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
 #define __SPI_SPI2_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
 #define __SPI_SPI3_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
 #define __SPI_DEFAULT_DUMMY_BYTE__ 0xFF
 #define __SPI_DEFAULT_CLK_DIV__ SPI_CLK_DIV_4
 #define __SPI_DEFAULT_MODE__ SPI_MODE_0
-#define __SPI_DEFAULT_MSB_FIRST__ __YES__
+#define __SPI_DEFAULT_MSB_FIRST__ _YES_
 #define __SPI_SPI1_NUMBER_OF_CS__ 1
 #define __SPI_SPI2_NUMBER_OF_CS__ 1
 #define __SPI_SPI3_NUMBER_OF_CS__ 1
-#define __SPI_SPI1_USE_DMA__ __YES__
-#define __SPI_SPI2_USE_DMA__ __YES__
-#define __SPI_SPI3_USE_DMA__ __YES__
+#define __SPI_SPI1_USE_DMA__ _YES_
+#define __SPI_SPI2_USE_DMA__ _YES_
+#define __SPI_SPI3_USE_DMA__ _YES_
 #define __SPI_SPI1_CS0_PIN_NAME__ SD_CS
 #define __SPI_SPI1_CS1_PIN_NAME__ NC_GPIOD_15
 #define __SPI_SPI1_CS2_PIN_NAME__ NC_GPIOD_15

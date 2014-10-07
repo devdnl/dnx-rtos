@@ -1,7 +1,7 @@
 # Makefile for GNU make
 HDRLOC_NOARCH += drivers/<!module_name!>
 
-ifeq ($(ENABLE_<!MODULE_NAME!>), __YES__)
+ifeq ($(__ENABLE_<!MODULE_NAME!>__), _YES_)
    CSRC_NOARCH   += drivers/<!module_name!>/noarch/<!module_name!>.c
    CXXSRC_NOARCH += 
 endif

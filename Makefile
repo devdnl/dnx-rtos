@@ -26,18 +26,18 @@
 ####################################################################################################
 
 include ./config/project/Makefile
-include ./config/$(PROJECT_CPU_ARCH)/Makefile
+include ./config/$(__PROJECT_CPU_ARCH__)/Makefile
 
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-PROJECT = $(PROJECT_NAME)
+PROJECT = $(__PROJECT_NAME__)
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
-TOOLCHAIN = $(PROJECT_TOOLCHAIN)
+TOOLCHAIN = $(__PROJECT_TOOLCHAIN__)
 
 AFLAGS   = -c \
            -g \
@@ -144,8 +144,8 @@ ADDLIBS    = ./tools/libsearch.sh
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-__YES__ = 1
-__NO__  = 0
+_YES_ = 1
+_NO_  = 0
 EMPTY   =
 
 # defines this makefile name
@@ -158,7 +158,7 @@ THREAD = $(shell $(ECHO) $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(PROJECT_CPU_ARCH)
+TARGET = $(__PROJECT_CPU_ARCH__)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)

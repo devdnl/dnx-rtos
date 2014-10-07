@@ -1,7 +1,7 @@
 # Makefile for GNU make
 HDRLOC_ARCH += drivers/usb
 
-ifeq ($(ENABLE_USB), __YES__)
+ifeq ($(__ENABLE_USB__), _YES_)
    CSRC_ARCH   += drivers/usb/$(TARGET)/usb.c
    CXXSRC_ARCH += 
 endif

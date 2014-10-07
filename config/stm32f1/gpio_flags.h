@@ -26,13 +26,13 @@
 #ifndef _GPIO_FLAGS_H_
 #define _GPIO_FLAGS_H_
 
-#define __GPIO_PA_ENABLE__ __YES__
-#define __GPIO_PB_ENABLE__ __YES__
-#define __GPIO_PC_ENABLE__ __YES__
-#define __GPIO_PD_ENABLE__ __YES__
-#define __GPIO_PE_ENABLE__ __NO__
-#define __GPIO_PF_ENABLE__ __NO__
-#define __GPIO_PG_ENABLE__ __NO__
+#define __GPIO_PA_ENABLE__ _YES_
+#define __GPIO_PB_ENABLE__ _YES_
+#define __GPIO_PC_ENABLE__ _YES_
+#define __GPIO_PD_ENABLE__ _YES_
+#define __GPIO_PE_ENABLE__ _NO_
+#define __GPIO_PF_ENABLE__ _NO_
+#define __GPIO_PG_ENABLE__ _NO_
 
 #define __GPIO_PA_PIN_0_NAME__ ETH_MII_CRS_WKUP
 #define __GPIO_PA_PIN_0_MODE__ _GPIO_IN_FLOAT
