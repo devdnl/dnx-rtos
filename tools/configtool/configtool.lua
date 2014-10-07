@@ -128,7 +128,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_import_configuration()
-        dialog = wx.wxFileDialog(ui.frame, "Import configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
+        dialog = wx.wxFileDialog(ui.frame, "Import configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
         if (dialog:ShowModal() == wx.wxID_OK) then
                 if ct:apply_project_configuration(dialog:GetPath(), ui.frame) then
                         ui.treebook:SetSelection(0)
@@ -143,7 +143,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_export_configuration()
-        dialog = wx.wxFileDialog(ui.frame, "Export configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
+        dialog = wx.wxFileDialog(ui.frame, "Export configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_OK) then
                 ct:save_project_configuration(dialog:GetPath(), ui.frame)
         end

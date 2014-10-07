@@ -229,7 +229,7 @@ help :
 # project configuration wizard
 ####################################################################################################
 .PHONY : config
-config :
+config : clean
 	@$(ECHO) "Starting configtool..."
 	@$(CONFIGTOOL)
 
