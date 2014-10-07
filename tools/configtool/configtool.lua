@@ -41,7 +41,6 @@ require("modules/modules")
 require("modules/about")
 require("modules/creators")
 require("modules/new_module")
-require("modules/config_manager")
 
 
 --==============================================================================
@@ -131,7 +130,7 @@ end
 local function event_import_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Import configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                if cm:apply_project_configuration(dialog:GetPath()) then
+                if ct:apply_project_configuration(dialog:GetPath()) then
                         ui.treebook:SetSelection(0)
                 else
                 end
@@ -147,7 +146,7 @@ end
 local function event_export_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Export configuration file", "", "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                if cm:save_project_configuration(dialog:GetPath()) then
+                if ct:save_project_configuration(dialog:GetPath()) then
                 else
                 end
         end
