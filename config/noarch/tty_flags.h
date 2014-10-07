@@ -24,6 +24,13 @@
 
 *//*==========================================================================*/
 
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+
 #ifndef _TTY_FLAGS_H_
 #define _TTY_FLAGS_H_
 
@@ -31,7 +38,7 @@
 #define __TTY_TERM_ROWS__ 24
 #define __TTY_OUT_STREAM_LEN__ 80
 #define __TTY_NUMBER_OF_TERM__ 4
-#define __TTY_ENABLE_TERM_SIZE_CHECK__ __YES__
+#define __TTY_ENABLE_TERM_SIZE_CHECK__ _YES_
 #define __TTY_TERM_IN_FILE__ "/dev/ttyS0"
 #define __TTY_TERM_OUT_FILE__ "/dev/ttyS0"
 

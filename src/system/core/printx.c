@@ -32,6 +32,7 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include <dnx/misc.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -441,13 +442,17 @@ void printk(const char *format, ...)
 //==============================================================================
 int sys_fputc(int c, FILE *stream)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         if (stream) {
                 char ch = (char)c;
                 if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
         }
-
+#else
+        UNUSED_ARG(c);
+        UNUSED_ARG(stream);
+#endif
         return EOF;
 }
 
@@ -464,6 +469,7 @@ int sys_fputc(int c, FILE *stream)
 //==============================================================================
 int sys_f_puts(const char *s, FILE *file, bool puts)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         if (file) {
                 int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
 
@@ -474,7 +480,11 @@ int sys_f_puts(const char *s, FILE *file, bool puts)
                 if (n != 0)
                         return n;
         }
-
+#else
+        UNUSED_ARG(s);
+        UNUSED_ARG(file);
+        UNUSED_ARG(puts);
+#endif
         return EOF;
 }
 
@@ -489,6 +499,7 @@ int sys_f_puts(const char *s, FILE *file, bool puts)
 //==============================================================================
 int sys_getc(FILE *stream)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         if (!stream) {
                 return EOF;
         }
@@ -503,6 +514,10 @@ int sys_getc(FILE *stream)
         }
 
         return chr;
+#else
+        UNUSED_ARG(stream);
+        return EOF;
+#endif
 }
 
 //==============================================================================
@@ -518,6 +533,7 @@ int sys_getc(FILE *stream)
 //==============================================================================
 char *sys_fgets(char *str, int size, FILE *stream)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         if (!str || size < 2 || !stream) {
                 return NULL;
         }
@@ -582,7 +598,11 @@ char *sys_fgets(char *str, int size, FILE *stream)
                         return str;
                 }
         }
-
+#else
+        UNUSED_ARG(str);
+        UNUSED_ARG(size);
+        UNUSED_ARG(stream);
+#endif
         return NULL;
 }
 
@@ -846,7 +866,7 @@ void sys_perror(const char *str)
                 sys_fprintf(stderr, "%s\n", sys_strerror(errno));
         }
 #else
-        (void) str
+        (void) str;
 #endif
 }
 

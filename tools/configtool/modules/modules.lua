@@ -117,7 +117,7 @@ function modules:refresh()
         end
 
         -- create progress dialog
-        local dialog = wx.wxProgressDialog("Loading configuration", "Clearing old data...", periph_num + 1, ui.notebook, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE,wx.wxPD_SMOOTH))
+        local dialog = wx.wxProgressDialog("Loading configuration", "Clearing old data...", periph_num + 1, ui.window, bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         dialog:SetMinSize(wx.wxSize(300, 100))
         dialog:Centre()
 

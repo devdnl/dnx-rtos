@@ -10,36 +10,36 @@
 
     <project>
         <key>
-            <PROJECT_NAME><path>../../config/project/Makefile</path><key>PROJECT_NAME</key></PROJECT_NAME>
-            <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>PROJECT_CPU_ARCH</key></PROJECT_CPU_ARCH>
-            <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>PROJECT_TOOLCHAIN</key></PROJECT_TOOLCHAIN>
-            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>ENABLE_NETWORK</key></ENABLE_NETWORK_MK>
+            <PROJECT_NAME><path>../../config/project/Makefile</path><key>__PROJECT_NAME__</key></PROJECT_NAME>
+            <PROJECT_CPU_ARCH><path>../../config/project/Makefile</path><key>__PROJECT_CPU_ARCH__</key></PROJECT_CPU_ARCH>
+            <PROJECT_TOOLCHAIN><path>../../config/project/Makefile</path><key>__PROJECT_TOOLCHAIN__</key></PROJECT_TOOLCHAIN>
+            <ENABLE_NETWORK_MK><path>../../config/project/Makefile</path><key>__ENABLE_NETWORK__</key></ENABLE_NETWORK_MK>
             <_FS_MK_ENABLE_FLAGS_></_FS_MK_ENABLE_FLAGS_>
-            <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>ENABLE_LFS</key></ENABLE_LFS_MK>
-            <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>ENABLE_DEVFS</key></ENABLE_DEVFS_MK>
-            <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>ENABLE_PROCFS</key></ENABLE_PROCFS_MK>
-            <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>ENABLE_FATFS</key></ENABLE_FATFS_MK>
+            <ENABLE_LFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_LFS__</key></ENABLE_LFS_MK>
+            <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_MK>
+            <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_MK>
+            <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_MK>
             <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
-            <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>ENABLE_LOOP</key></ENABLE_LOOP_MK>
-            <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>ENABLE_GPIO</key></ENABLE_GPIO_MK>
-            <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>ENABLE_AFIO</key></ENABLE_AFIO_MK>
-            <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>ENABLE_CRC</key></ENABLE_CRC_MK>
-            <ENABLE_ETH_MK><path>../../config/project/Makefile</path><key>ENABLE_ETH</key></ENABLE_ETH_MK>
-            <ENABLE_PLL_MK><path>../../config/project/Makefile</path><key>ENABLE_PLL</key></ENABLE_PLL_MK>
-            <ENABLE_SDSPI_MK><path>../../config/project/Makefile</path><key>ENABLE_SDSPI</key></ENABLE_SDSPI_MK>
-            <ENABLE_SPI_MK><path>../../config/project/Makefile</path><key>ENABLE_SPI</key></ENABLE_SPI_MK>
-            <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>ENABLE_TTY</key></ENABLE_TTY_MK>
-            <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>ENABLE_UART</key></ENABLE_UART_MK>
-            <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>ENABLE_WDG</key></ENABLE_WDG_MK>
-            <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>ENABLE_USB</key></ENABLE_USB_MK>
-            <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>ENABLE_I2C</key></ENABLE_I2C_MK>
-            <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>ENABLE_IRQ</key></ENABLE_IRQ_MK>
+            <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_MK>
+            <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_MK>
+            <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_MK>
+            <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>__ENABLE_CRC__</key></ENABLE_CRC_MK>
+            <ENABLE_ETH_MK><path>../../config/project/Makefile</path><key>__ENABLE_ETH__</key></ENABLE_ETH_MK>
+            <ENABLE_PLL_MK><path>../../config/project/Makefile</path><key>__ENABLE_PLL__</key></ENABLE_PLL_MK>
+            <ENABLE_SDSPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_MK>
+            <ENABLE_SPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SPI__</key></ENABLE_SPI_MK>
+            <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>__ENABLE_TTY__</key></ENABLE_TTY_MK>
+            <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>__ENABLE_UART__</key></ENABLE_UART_MK>
+            <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>__ENABLE_WDG__</key></ENABLE_WDG_MK>
+            <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>__ENABLE_USB__</key></ENABLE_USB_MK>
+            <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>__ENABLE_I2C__</key></ENABLE_I2C_MK>
+            <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_MK>
 
             <CPU_ARCH><path>../../config/project/flags.h</path><key>__CPU_ARCH__</key></CPU_ARCH>
-            <CPU_START_FREQ><path>../../config/project/flags.h</path><key>__CPU_START_FREQ__</key></CPU_START_FREQ>
+            <CPU_START_FREQ><path>../../config/project/flags.h</path><key>_CPU_START_FREQ_</key></CPU_START_FREQ>
             <CPU_OSC_FREQ><path>../../config/project/flags.h</path><key>__CPU_OSC_FREQ__</key></CPU_OSC_FREQ>
-            <IRQ_RTOS_KERNEL_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_RTOS_KERNEL_PRIORITY__</key></IRQ_RTOS_KERNEL_PRIORITY>
-            <IRQ_RTOS_SYSCALL_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_RTOS_SYSCALL_PRIORITY__</key></IRQ_RTOS_SYSCALL_PRIORITY>
+            <IRQ_RTOS_KERNEL_PRIORITY><path>../../config/project/flags.h</path><key>_IRQ_RTOS_KERNEL_PRIORITY_</key></IRQ_RTOS_KERNEL_PRIORITY>
+            <IRQ_RTOS_SYSCALL_PRIORITY><path>../../config/project/flags.h</path><key>_IRQ_RTOS_SYSCALL_PRIORITY_</key></IRQ_RTOS_SYSCALL_PRIORITY>
             <IRQ_USER_PRIORITY><path>../../config/project/flags.h</path><key>__IRQ_USER_PRIORITY__</key></IRQ_USER_PRIORITY>
             <HEAP_BLOCK_SIZE><path>../../config/project/flags.h</path><key>__HEAP_BLOCK_SIZE__</key></HEAP_BLOCK_SIZE>
             <OS_TASK_MIN_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_TASK_MIN_STACK_DEPTH__</key></OS_TASK_MIN_STACK_DEPTH>
@@ -98,8 +98,8 @@
             <ENABLE_IRQ_H><path>../../config/project/flags.h</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_H>
         </key>
         <def>
-            <NO>__NO__</NO>
-            <YES>__YES__</YES>
+            <NO>_NO_</NO>
+            <YES>_YES_</YES>
             <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
@@ -118,6 +118,12 @@
             <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
             <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
+        <filesystems>
+            <filesystem><name>DEVFS</name></filesystem>
+            <filesystem><name>LFS</name></filesystem>
+            <filesystem><name>FATFS</name></filesystem>
+            <filesystem><name>PROCFS</name></filesystem>
+        </filesystems>
         <path>
             <config_dir>../../config</config_dir>
             <src_dir>../../src</src_dir>
@@ -138,6 +144,7 @@
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
+            <bsp_dir>../../BSP</bsp_dir>
         </path>
     </project>
 
@@ -200,10 +207,21 @@
                 <priority><name>Priority 13 (the lowest)</name><value>0xDF</value></priority>
             </priorities>
 
+            <def>
+                <STM32F10X_CL>_STM32F10X_CL_</STM32F10X_CL>
+                <STM32F10X_LD_VL>_STM32F10X_LD_VL_</STM32F10X_LD_VL>
+                <STM32F10X_MD_VL>_STM32F10X_MD_VL_</STM32F10X_MD_VL>
+                <STM32F10X_HD_VL>_STM32F10X_HD_VL_</STM32F10X_HD_VL>
+                <STM32F10X_LD>_STM32F10X_LD_</STM32F10X_LD>
+                <STM32F10X_MD>_STM32F10X_MD_</STM32F10X_MD>
+                <STM32F10X_HD>_STM32F10X_HD_</STM32F10X_HD>
+                <STM32F10X_XL>_STM32F10X_XL_</STM32F10X_XL>
+            </def>
+
             <key>
                 <CPU_NAME><path>../../config/stm32f1/cpu.h</path><key>__CPU_NAME__</key></CPU_NAME>
                 <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
-                <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>CPUCONFIG_CPUNAME</key></CPUCONFIG_CPUNAME>
+                <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>__CPUCONFIG_CPUNAME__</key></CPUCONFIG_CPUNAME>
                 <GPIO><path>../../config/stm32f1/gpio_flags.h</path><key></key></GPIO>
 
                 <WDG_DEVICE_LOCK_AT_OPEN><path>../../config/stm32f1/wdg_flags.h</path><key>__WDG_DEVICE_LOCK_AT_OPEN__</key></WDG_DEVICE_LOCK_AT_OPEN>
@@ -469,7 +487,7 @@
 
             <cpulist>
                 <cpu><name>STM32F100C8xx</name>
-                    <family>__STM32F10X_MD_VL__</family>
+                    <family>_STM32F10X_MD_VL_</family>
                     <ram>8192</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -503,7 +521,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
-                    <family>__STM32F10X_MD_VL__</family>
+                    <family>_STM32F10X_MD_VL_</family>
                     <ram>8192</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -537,7 +555,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
-                    <family>__STM32F10X_HD_VL__</family>
+                    <family>_STM32F10X_HD_VL_</family>
                     <ram>32768</ram>
                     <flash>524288</flash>
                     <peripherals>
@@ -574,7 +592,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
-                    <family>__STM32F10X_MD_VL__</family>
+                    <family>_STM32F10X_MD_VL_</family>
                     <ram>8192</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -609,7 +627,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
-                    <family>__STM32F10X_HD_VL__</family>
+                    <family>_STM32F10X_HD_VL_</family>
                     <ram>24576</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -649,7 +667,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>10240</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -683,7 +701,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>16384</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -717,7 +735,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>10240</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -751,7 +769,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>16384</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -785,7 +803,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>10240</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -820,7 +838,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>16384</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -855,7 +873,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
-                    <family>__STM32F10X_LD__</family>
+                    <family>_STM32F10X_LD_</family>
                     <ram>10240</ram>
                     <flash>32768</flash>
                     <peripherals>
@@ -887,7 +905,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -922,7 +940,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -957,7 +975,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
-                    <family>__STM32F10X_LD__</family>
+                    <family>_STM32F10X_LD_</family>
                     <ram>10240</ram>
                     <flash>32768</flash>
                     <peripherals>
@@ -989,7 +1007,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -1024,7 +1042,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -1059,7 +1077,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>49152</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1097,7 +1115,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>65536</ram>
                     <flash>393216</flash>
                     <peripherals>
@@ -1135,7 +1153,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>65536</ram>
                     <flash>524288</flash>
                     <peripherals>
@@ -1173,7 +1191,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
-                    <family>__STM32F10X_XL__</family>
+                    <family>_STM32F10X_XL_</family>
                     <ram>98304</ram>
                     <flash>1048576</flash>
                     <peripherals>
@@ -1211,7 +1229,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -1242,7 +1260,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>65536</flash>
                     <peripherals>
@@ -1278,7 +1296,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
-                    <family>__STM32F10X_MD__</family>
+                    <family>_STM32F10X_MD_</family>
                     <ram>20480</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -1314,7 +1332,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>49152</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1353,7 +1371,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>65536</ram>
                     <flash>393216</flash>
                     <peripherals>
@@ -1392,7 +1410,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>65536</ram>
                     <flash>524288</flash>
                     <peripherals>
@@ -1431,7 +1449,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
-                    <family>__STM32F10X_XL__</family>
+                    <family>_STM32F10X_XL_</family>
                     <ram>98304</ram>
                     <flash>1048576</flash>
                     <peripherals>
@@ -1470,7 +1488,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>49152</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1511,7 +1529,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
-                    <family>__STM32F10X_HD__</family>
+                    <family>_STM32F10X_HD_</family>
                     <ram>65536</ram>
                     <flash>524288</flash>
                     <peripherals>
@@ -1552,7 +1570,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
-                    <family>__STM32F10X_XL__</family>
+                    <family>_STM32F10X_XL_</family>
                     <ram>98304</ram>
                     <flash>1048576</flash>
                     <peripherals>
@@ -1593,7 +1611,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -1630,7 +1648,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1667,7 +1685,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -1705,7 +1723,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1743,7 +1761,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>262144</flash>
                     <peripherals>
@@ -1780,7 +1798,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>131072</flash>
                     <peripherals>
@@ -1818,7 +1836,7 @@
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
-                    <family>__STM32F10X_CL__</family>
+                    <family>_STM32F10X_CL_</family>
                     <ram>65536</ram>
                     <flash>262144</flash>
                     <peripherals>

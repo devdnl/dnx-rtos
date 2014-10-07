@@ -67,7 +67,9 @@ local page = {
 
 -- container for UI controls
 local ui = {}
-
+local ID = {}
+ID.IMPORT_CFG = wx.wxNewId()
+ID.EXPORT_CFG = wx.wxNewId()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -121,16 +123,50 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Signal is called when menu's import item is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_import_configuration()
+        dialog = wx.wxFileDialog(ui.frame, "Import configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
+        if (dialog:ShowModal() == wx.wxID_OK) then
+                if ct:apply_project_configuration(dialog:GetPath(), ui.frame) then
+                        ui.treebook:SetSelection(0)
+                end
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Signal is called when menu's export item is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_export_configuration()
+        dialog = wx.wxFileDialog(ui.frame, "Export configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
+        if (dialog:ShowModal() == wx.wxID_OK) then
+                ct:save_project_configuration(dialog:GetPath(), ui.frame)
+        end
+end
+
+--------------------------------------------------------------------------------
 -- @brief  Function create widgets
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
 local function main()
-
-        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()), bit.bor(wx.wxMINIMIZE_BOX,wx.wxSYSTEM_MENU,wx.wxCAPTION,wx.wxCLOSE_BOX))
-        ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
+        ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
+        --ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
+        --ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
-        ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
+
+        cfg_menu = wx.wxMenu()
+        cfg_menu:Append(ID.IMPORT_CFG, "&Import", "Import configuration from file")
+        cfg_menu:Append(ID.EXPORT_CFG, "&Export", "Export configuration to file")
+
+        menubar = wx.wxMenuBar()
+        menubar:Append(cfg_menu, "&Configuration")
+        ui.frame:SetMenuBar(menubar)
 
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
 
@@ -148,6 +184,9 @@ local function main()
 
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
+
+        ui.frame:Connect(ID.IMPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
+        ui.frame:Connect(ID.EXPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
 
         ui.frame:Show(true)
         wx.wxGetApp():MainLoop()

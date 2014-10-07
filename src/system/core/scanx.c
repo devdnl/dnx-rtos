@@ -33,6 +33,7 @@
 #include "core/printx.h"
 #include "core/sysmoni.h"
 #include "core/conv.h"
+#include <dnx/misc.h>
 #include <string.h>
 
 /*==============================================================================
