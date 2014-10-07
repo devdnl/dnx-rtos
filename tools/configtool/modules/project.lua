@@ -64,10 +64,13 @@ ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 -- @return None
 --------------------------------------------------------------------------------
 local function set_cpu_specific_controls(cpu_arch)
-        -- search CPU architecture
+        -- fill architecture list and select CPU architecture
         local cpu_found = false
+        ui.Choice_CPU_arch:Clear()
         for i = 1, config.arch:NumChildren() do
-                if config.arch:Children()[i]:GetName() == cpu_arch then
+                local arch_name = config.arch:Children()[i]:GetName()
+                ui.Choice_CPU_arch:Append(arch_name)
+                if arch_name == cpu_arch then
                         ui.Choice_CPU_arch:SetSelection(i - 1)
                         cpu_found = true
                 end
@@ -80,37 +83,34 @@ local function set_cpu_specific_controls(cpu_arch)
                 -- load list with CPU names
                 local micro = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
                 local micro_found = false
-                if ui.Choice_CPU_name:IsEmpty() then
-                        for i = 1, config.arch[cpu_arch].cpulist:NumChildren() do
-                                local name = config.arch[cpu_arch].cpulist.cpu[i].name:GetValue()
-                                ui.Choice_CPU_name:Append(name)
-                                if name:match(micro) then
-                                        ui.Choice_CPU_name:SetSelection(i - 1)
-                                        ui.Choice_CPU_name.OldSelection = i - 1
-                                        micro_found = true
-                                end
+                ui.Choice_CPU_name:Clear()
+                for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
+                        local name = cpu.name:GetValue()
+                        ui.Choice_CPU_name:Append(name)
+                        if name:match(micro) then
+                                ui.Choice_CPU_name:SetSelection(i - 1)
+                                ui.Choice_CPU_name.OldSelection = i - 1
+                                micro_found = true
                         end
+                end
 
-                        if not micro_found then
-                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
-                        end
+                if not micro_found then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
                 end
 
                 -- load list with CPU priorities
                 local prio = ct:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
-                if ui.Choice_default_irq_prio:IsEmpty() then
-                        for i, item in pairs(ct:get_priority_list(cpu_arch)) do
-                                ui.Choice_default_irq_prio:Append(item.name)
-                                if prio == item.value then
-                                        ui.Choice_default_irq_prio:SetSelection(i - 1)
-                                        prio_found = true
-                                end
+                for i, item in pairs(ct:get_priority_list(cpu_arch)) do
+                        ui.Choice_default_irq_prio:Append(item.name)
+                        if prio == item.value then
+                                ui.Choice_default_irq_prio:SetSelection(i - 1)
+                                prio_found = true
                         end
+                end
 
-                        if not prio_found then
-                                ct:show_error_msg(ct.MAIN_WINDOW_NAME, prio..": priority number not found!")
-                        end
+                if not prio_found then
+                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, prio..": priority number not found!")
                 end
         else
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_arch..": Unknown CPU architecture!")
@@ -291,7 +291,6 @@ function project:create_window(parent)
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture")
                 ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
                 ui.Choice_CPU_arch.Modified = false
-                for i = 1, config.arch:NumChildren() do ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName()) end
                 ui.StaticBoxSizer1:Add(ui.Choice_CPU_arch, 1, bit.bor(wx.wxALL, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
