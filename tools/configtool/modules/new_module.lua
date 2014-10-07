@@ -338,7 +338,7 @@ function event_button_create_clicked(event)
         progress:Update(pulse(), "Update project's Makefile to new module...")
         n = ct:find_line(FILE_PROJECT_MAKEFILE, 1, "# modules enable flags")
         if n then
-                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "ENABLE_"..module_name:upper().."="..config.project.def.NO:GetValue())
+                ct:insert_line(FILE_PROJECT_MAKEFILE, n + 1, "__ENABLE_"..module_name:upper().."__="..config.project.def.NO:GetValue())
         else
                 progress:Destroy()
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "Corrupted '"..FILE_PROJECT_MAKEFILE.."' file. Location of error: 8.", ui.window)

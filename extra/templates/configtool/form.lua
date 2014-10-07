@@ -3,7 +3,7 @@
 
 @author  <!author!>
 
-@brief   <!module_description!>   
+@brief   <!module_description!>
 
 @note    Copyright (C) <!year!> <!author!> <<!email!>>
 
