@@ -102,7 +102,7 @@ function newParser()
 
     function XmlParser:loadFile(xmlFilename)
 
-        local hFile, err = io.open(xmlFilename, "r");
+        local hFile, err = io.open(xmlFilename, "rb");
 
         if hFile and not err then
             local xmlText = hFile:read("*a"); -- read file content
