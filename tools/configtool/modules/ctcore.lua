@@ -253,7 +253,7 @@ function ct:key_write(keypath, value, nomsg)
         end
 
         -- read file
-        local file = io.open(filename, "r")
+        local file = io.open(filename, "rb")
         if file == nil then
                 if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): "..filename..": Cannot open file specified\n"..debug.traceback()) end
                 return false
@@ -286,7 +286,7 @@ function ct:key_write(keypath, value, nomsg)
         file:close()
 
         -- write the file.
-        file = io.open(filename, "w")
+        file = io.open(filename, "wb")
         if file == nil then
                 if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_write(): File write protected\n"..debug.traceback()) end
                 return false
@@ -341,7 +341,7 @@ function ct:key_read(keypath)
         end
 
         -- read file
-        local file = io.open(filename, "r")
+        local file = io.open(filename, "rb")
         if file == nil then
                 if showmsg then ct:show_error_msg(ct.MAIN_WINDOW_NAME, "key_read(): "..filename..": Cannot open specified file\n"..debug.traceback()) end
                 return nil
@@ -569,7 +569,7 @@ function ct:find_line(filename, startline, regex)
         assert(type(startline) == "number", "find_line(): startline is not the number type")
         assert(type(regex) == "string", "find_line(): regex is not the string type")
 
-        file = io.open(filename, "r")
+        file = io.open(filename, "rb")
         assert(file, "find_line(): file does not exist")
 
         file:seek("set", 0)
@@ -607,7 +607,7 @@ function ct:insert_line(filename, lineno, newline)
                 return false
         end
 
-        file = io.open(filename, "r+")
+        file = io.open(filename, "r+b")
         assert(file, "insert_line(): file does not exist")
 
         file:seek("set", 0)
@@ -644,7 +644,7 @@ function ct:remove_line(filename, lineno)
         assert(type(filename) == "string", "remove_line(): filename is not the string type")
         assert(type(lineno) == "number", "remove_line(): lineno is not the number type")
 
-        file = io.open(filename, "r")
+        file = io.open(filename, "rb")
         assert(file, "remove_line(): '"..filename.."' file does not exist")
 
         file:seek("set", 0)
@@ -662,7 +662,7 @@ function ct:remove_line(filename, lineno)
 
         file:close()
 
-        file = io.open(filename, "w")
+        file = io.open(filename, "wb")
         assert(file, "remove_line(): '"..filename.."' no permissions to write file")
 
         file:seek("set", 0)
@@ -690,13 +690,13 @@ function ct:apply_template(template_path, destination_path, replace_tags)
 
         local n = 0
 
-        template = io.open(template_path, "r")
+        template = io.open(template_path, "rb")
         if not template then
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..template_path.."' does not exist.\n"..debug.traceback())
                 return n
         end
 
-        dest = io.open(destination_path, "w")
+        dest = io.open(destination_path, "wb")
         if not dest then
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
                 template:close()
@@ -749,7 +749,7 @@ function ct.fs:is_file(name)
                 return false
         end
 
-        local f = io.open(name, "r")
+        local f = io.open(name, "rb")
         if f then
                 if f:read(1) then
                         f:close()
@@ -857,7 +857,7 @@ function ct:save_table(table, file)
         outFuncs['table'] = tableOut;
 
         if type(table) == "table" and type(file) == "string" then
-                local f = io.open(file, "w")
+                local f = io.open(file, "wb")
                 if f then
                         f:write("-- dnx RTOS configuration file\n")
                         f:write(tableOut(table))
@@ -877,7 +877,7 @@ end
 --------------------------------------------------------------------------------
 function ct:load_table(file)
         if type(file) == "string" then
-                local f = io.open(file, "r")
+                local f = io.open(file, "rb")
                 if f then
                         local input = f:read("*all")
                         f:close()
@@ -937,7 +937,7 @@ function ct:save_project_configuration(file, parent)
 
                 cfg_table.file[cfgfile] = {}
 
-                local f = io.open(cfgfile, "r")
+                local f = io.open(cfgfile, "rb")
                 if f then
                         for line in f:lines() do
                                 local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
@@ -953,7 +953,7 @@ function ct:save_project_configuration(file, parent)
         -- load project configuration
         progress:Update(pulse(), "Loading configuration of project.h...")
         cfg_table.file[PROJECT_HDR] = {}
-        local f = io.open(PROJECT_HDR, "r")
+        local f = io.open(PROJECT_HDR, "rb")
         if f then
                 for line in f:lines() do
                         local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
@@ -967,7 +967,7 @@ function ct:save_project_configuration(file, parent)
 
         progress:Update(pulse(), "Loading configuration of project's Makefile...")
         cfg_table.file[PROJECT_MK] = {}
-        local f = io.open(PROJECT_MK, "r")
+        local f = io.open(PROJECT_MK, "rb")
         if f then
                 for line in f:lines() do
                         local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
@@ -985,7 +985,7 @@ function ct:save_project_configuration(file, parent)
 
         progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/cpu.h...")
         cfg_table.file[cpu_header] = {}
-        local f = io.open(cpu_header, "r")
+        local f = io.open(cpu_header, "rb")
         if f then
                 for line in f:lines() do
                         local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
@@ -999,7 +999,7 @@ function ct:save_project_configuration(file, parent)
 
         progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/Makefile...")
         cfg_table.file[cpu_makefile] = {}
-        local f = io.open(cpu_makefile, "r")
+        local f = io.open(cpu_makefile, "rb")
         if f then
                 for line in f:lines() do
                         local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
@@ -1074,7 +1074,7 @@ function ct:apply_project_configuration(file, parent)
         for filename, filecontent in pairs(cfg_table.file) do
                 progress:Update(pulse(), "Applying configuration to "..filename:gsub(CONFIG_DIR.."/", "").." file...")
 
-                local f = io.open(filename, "r+")
+                local f = io.open(filename, "r+b")
                 if f then
                         for _, cfg in pairs(filecontent) do
                                 local keypath = {}
