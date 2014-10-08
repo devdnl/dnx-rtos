@@ -101,6 +101,7 @@ local function set_cpu_specific_controls(cpu_arch)
                 -- load list with CPU priorities
                 local prio = ct:key_read(config.project.key.IRQ_USER_PRIORITY)
                 local prio_found = false
+                ui.Choice_default_irq_prio:Clear()
                 for i, item in pairs(ct:get_priority_list(cpu_arch)) do
                         ui.Choice_default_irq_prio:Append(item.name)
                         if prio == item.value then
