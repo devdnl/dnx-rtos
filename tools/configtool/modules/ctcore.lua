@@ -388,7 +388,7 @@ end
 --------------------------------------------------------------------------------
 function ct:get_string_index(tab, str)
         for i, s in ipairs(tab) do
-                if s:match(str) then
+                if s == str then
                         return i
                 end
         end

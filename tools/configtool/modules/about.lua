@@ -140,3 +140,11 @@ end
 function about:is_modified()
         return false
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function about:save()
+end

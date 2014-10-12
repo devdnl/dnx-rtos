@@ -93,10 +93,23 @@ local function load_controls()
         local fatfs_en = ct:get_module_state("FATFS")
         ui.CheckBox_fatfs:SetValue(fatfs_en)
 
+        print(ct:key_read(config.project.key.FATFS_LFN_CODEPAGE), ct:get_string_index(codepage, ct:key_read(config.project.key.FATFS_LFN_CODEPAGE)) - 1)
+
+        local codepage_idx = 1
+        local codepage_val = ct:key_read(config.project.key.FATFS_LFN_CODEPAGE)
+        for i = 1, #codepage do
+                if codepage[i]:match(codepage_val) then
+                        codepage_idx = i
+                        break
+                end
+        end
+
+        print(codepage_idx, codepage_val, codepage[codepage_idx])
+
         local fatfs_lfn = ct:yes_no_to_bool(ct:key_read(config.project.key.FATFS_LFN_ENABLE))
         ui.CheckBox_fatfs_lfn:SetValue(fatfs_lfn)
         ui.CheckBox_fatfs_lfn:Enable(fatfs_en)
-        ui.Choice_fatfs_lfn_codepage:SetSelection(ct:get_string_index(codepage, ct:key_read(config.project.key.FATFS_LFN_CODEPAGE)) - 1)
+        ui.Choice_fatfs_lfn_codepage:SetSelection(codepage_idx - 1)
         ui.Choice_fatfs_lfn_codepage:Enable(fatfs_lfn and fatfs_en)
 end
 
@@ -147,6 +160,7 @@ end
 --------------------------------------------------------------------------------
 local function LFN_enable_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
+        ui.Button_save:Enable(true)
 end
 
 

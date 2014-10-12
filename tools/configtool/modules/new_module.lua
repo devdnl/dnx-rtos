@@ -589,3 +589,11 @@ end
 function new_module:is_modified()
         return false
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function new_module:save()
+end

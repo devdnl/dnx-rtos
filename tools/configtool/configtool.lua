@@ -68,6 +68,7 @@ local page = {
 -- container for UI controls
 local ui = {}
 local ID = {}
+ID.SAVE_CFG   = wx.wxNewId()
 ID.IMPORT_CFG = wx.wxNewId()
 ID.EXPORT_CFG = wx.wxNewId()
 
@@ -128,6 +129,20 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Signal is called when menu's save item is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_save_configuration()
+        local card = ui.treebook:GetSelection() + 1
+
+        if page[card].form:is_modified() then
+                page[card].form:save()
+        end
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Signal is called when menu's import item is clicked
 -- @param  None
 -- @return None
@@ -169,11 +184,10 @@ end
 --------------------------------------------------------------------------------
 local function main()
         ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
-        --ui.frame:SetMaxSize(wx.wxSize(ct:get_window_size()))
-        --ui.frame:SetMinSize(wx.wxSize(ct:get_window_size()))
         ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
 
         cfg_menu = wx.wxMenu()
+        cfg_menu:Append(ID.SAVE_CFG, "&Save", "Save currently selected configuration")
         cfg_menu:Append(ID.IMPORT_CFG, "&Import", "Import configuration from file")
         cfg_menu:Append(ID.EXPORT_CFG, "&Export", "Export configuration to file")
 
@@ -198,6 +212,7 @@ local function main()
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
         ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
 
+        ui.frame:Connect(ID.SAVE_CFG,   wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration  )
         ui.frame:Connect(ID.IMPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.EXPORT_CFG, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
 

@@ -55,17 +55,17 @@ local ID = {}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         ui.CheckBox_enable:SetValue(ct:get_module_state("<!module_name!>"))
 end
 
 
 --------------------------------------------------------------------------------
--- @brief  Event is called when Save button is clicked
+-- @brief  Function save configuration
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         ct:enable_module("<!module_name!>", ui.CheckBox_enable:GetValue())
         ui.Button_save:Enable(false)
 end
@@ -120,7 +120,7 @@ function <!module_name!>:create_window(parent)
         this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click)
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -161,7 +161,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function <!module_name!>:save()
-        event_on_button_save_click()
+        save_configuration()
 end
 
 

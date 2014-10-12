@@ -127,3 +127,11 @@ end
 function configinfo:is_modified()
         return false
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function configinfo:save()
+end

@@ -104,7 +104,6 @@
             <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
-            <module noarch="true"><name>A</name><description>a</description></module>
             <module noarch="true"><name>LOOP</name><description>Universal virtual device that allow to connect applications together</description></module>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
