@@ -58,41 +58,43 @@ local MAX_NUMBER_OF_DEVICES = 8
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration(I2C)
---         local module_enabled = ct:get_module_state("I2C")
---         ui.CheckBox_enable:SetValue(module_enabled)
---
---         local I2C        = ui.Choice_I2C:GetSelection() + 1
---         local I2C_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"]))
---         local use_DMA    = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_USE_DMA"]))
---         local IRQ_prio   = ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_IRQ_PRIO"])
---         local SCL_freq   = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_SCL_FREQ"]))/1000
---         local no_of_dev  = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"]))
---
---         ui.CheckBox_I2C_enable:SetValue(I2C_enable)
---         ui.CheckBox_use_DMA:SetValue(use_DMA)
---         ui.SpinCtrl_SCL_freq:SetValue(SCL_freq)
---         ui.Choice_dev_no:SetSelection(no_of_dev - 1)
---
---         if IRQ_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
---                 IRQ_prio = #prio_list
---         else
---                 IRQ_prio = math.floor(tonumber(IRQ_prio) / 16)
---         end
---         ui.Choice_IRQ_priority:SetSelection(IRQ_prio)
---
---         for dev = 0, MAX_NUMBER_OF_DEVICES - 1 do
---                 local address       = ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_ADDRESS"]):gsub("0x", "")
---                 local addr10bit     = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_10BIT_ADDR"]))
---                 local sub_addr_mode = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_SEND_SUB_ADDR"]))
---
---                 ui.Panel_device[dev]:Enable(dev < no_of_dev)
---                 ui.TextCtrl_address[dev]:SetValue(address)
---                 ui.Choice_addr_mode[dev]:SetSelection(ifs(addr10bit, 1, 0))
---                 ui.Choice_subaddr_mode[dev]:SetSelection(sub_addr_mode)
---         end
---
---         ui.Panel_peripheral:Enable(I2C_enable)
---         ui.Panel_module:Enable(module_enabled)
+        for I2C = 1, i2c_cfg:NumChildren() do
+                local I2C_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"]))
+                ui.CheckBox_enable_i2c[I2C]:SetValue(I2C_enable)
+
+                local use_DMA = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_USE_DMA"]))
+                ui.CheckBox_use_DMA[I2C]:SetValue(use_DMA)
+
+                local IRQ_prio = ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_IRQ_PRIO"])
+                if IRQ_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
+                        IRQ_prio = #prio_list
+                else
+                        IRQ_prio = math.floor(tonumber(IRQ_prio) / 16)
+                end
+                ui.Choice_IRQ_priority[I2C]:SetSelection(IRQ_prio)
+
+                local SCL_freq = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_SCL_FREQ"]))/1000
+                ui.SpinCtrl_SCL_frequency[I2C]:SetValue(SCL_freq)
+
+                local no_of_dev = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"]))
+                ui.Choice_number_of_devices[I2C]:SetSelection(no_of_dev)
+
+                for DEV = 0, MAX_NUMBER_OF_DEVICES - 1 do
+                        local address       = ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_ADDRESS"]):gsub("0x", "")
+                        local addr10bit     = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_10BIT_ADDR"]))
+                        local sub_addr_mode = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_SEND_SUB_ADDR"]))
+
+                        ui.TextCtrl_device_address[I2C][DEV]:SetValue(address)
+                        ui.Choice_address_mode[I2C][DEV]:SetSelection(ifs(addr10bit, 1, 0))
+                        ui.Choice_subaddress_mode[I2C][DEV]:SetSelection(sub_addr_mode)
+                        ui.Panel_I2C_device[I2C][DEV]:Enable(DEV < no_of_dev)
+                end
+
+                ui.Panel_I2C_settings[I2C]:Enable(I2C_enable)
+        end
+
+        local module_enabled = ct:get_module_state("I2C")
+        ui.CheckBox_module_enable:SetValue(module_enabled)
 end
 
 
@@ -351,7 +353,7 @@ function i2c:create_window(parent)
 
                         -- add device number and device address textctrl
                         ui.StaticText = wx.wxStaticText(ui.Panel_I2C_device[I2C][DEV], wx.wxID_ANY, "Device "..DEV..": 0x", wx.wxDefaultPosition, wx.wxDefaultSize, 0)
-                        ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                        ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                         ui.TextCtrl_device_address[I2C][DEV] = wx.wxTextCtrl(ui.Panel_I2C_device[I2C][DEV], ID.TEXTCTRL_DEVICE_ADDRESS[I2C][DEV], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
                         ui.TextCtrl_device_address[I2C][DEV]:SetMaxLength(3)
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.TextCtrl_device_address[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
