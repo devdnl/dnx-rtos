@@ -20,6 +20,7 @@
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_MK>
             <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_MK>
             <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
+            <ENABLE_A_MK><path>../../config/project/Makefile</path><key>__ENABLE_A__</key></ENABLE_A_MK>
             <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_MK>
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_MK>
             <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_MK>
@@ -82,6 +83,7 @@
             <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
             <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
             <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
+            <ENABLE_A_H><path>../../config/project/flags.h</path><key>__ENABLE_A__</key></ENABLE_A_H>
             <ENABLE_LOOP_H><path>../../config/project/flags.h</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_H>
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
             <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
@@ -103,6 +105,7 @@
             <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
+            <module noarch="true"><name>A</name><description>a</description></module>
             <module noarch="true"><name>LOOP</name><description>Universal virtual device that allow to connect applications together</description></module>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
@@ -137,7 +140,7 @@
             <module_template_src_file>../../extra/templates/module/module.c</module_template_src_file>
             <module_template_makefile_arch_file>../../extra/templates/module/Makefile_arch</module_template_makefile_arch_file>
             <module_template_makefile_noarch_file>../../extra/templates/module/Makefile_noarch</module_template_makefile_noarch_file>
-            <configtool_template_form_file>../../extra/templates/configtool/form.lua</configtool_template_form_file>
+            <configtool_template_form_file>../../extra/templates/configtool/module_form.lua</configtool_template_form_file>
             <configtool_arch_dir>./arch</configtool_arch_dir>
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
@@ -519,6 +522,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -553,6 +557,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -590,6 +595,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -625,6 +631,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -665,6 +672,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -699,6 +707,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -733,6 +742,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -767,6 +777,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -801,6 +812,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -836,6 +848,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -871,6 +884,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -903,6 +917,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -938,6 +953,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -973,6 +989,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -1005,6 +1022,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -1040,6 +1058,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -1075,6 +1094,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -1113,6 +1133,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -1151,6 +1172,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -1189,6 +1211,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -1227,6 +1250,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -1258,6 +1282,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -1294,6 +1319,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -1330,6 +1356,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -1369,6 +1396,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -1408,6 +1436,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -1447,6 +1476,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -1486,6 +1516,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -1527,6 +1558,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -1568,6 +1600,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -1609,6 +1642,7 @@
                         </I2C>
                         <USB></USB>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -1646,6 +1680,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -1683,6 +1718,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -1721,6 +1757,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -1759,6 +1796,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -1796,6 +1834,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -1834,6 +1873,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -1872,6 +1912,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <A></A>
                     </peripherals>
                 </cpu>
             </cpulist>
