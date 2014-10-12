@@ -4,6 +4,7 @@ New Features, Improvements:
 - Configtool: corrected project configuraiton script to be faster
 - Configtool: the import of the configuration with unknown CPU architecture is disabled
 - Configtool: release version is added to the title bar
+- Makefile: added flash and reset targets (targets are connected to the scripts)
 
 Fixed Bugs:
 -
