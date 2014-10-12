@@ -1,3 +1,12 @@
+dnx RTOS 1.4.2rc
+==============
+New Features, Improvements:
+- Configtool: corrected project configuraiton script to be faster
+- Configtool: the import of the configuration with unknown CPU architecture is disabled
+
+Fixed Bugs:
+-
+
 dnx RTOS 1.4.1
 ==============
 New Features, Improvements:
