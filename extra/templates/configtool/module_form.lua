@@ -65,7 +65,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function event_on_button_save_click()
         ct:enable_module("<!module_name!>", ui.CheckBox_enable:GetValue())
         ui.Button_save:Enable(false)
 end
@@ -116,8 +116,8 @@ function <!module_name!>:create_window(parent)
         this:SetScrollRate(25, 25)
 
         --
-        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
+        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated   )
+        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click)
 
         --
         load_controls()
@@ -161,7 +161,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function <!module_name!>:save()
-        on_button_save_click()
+        event_on_button_save_click()
 end
 
 
