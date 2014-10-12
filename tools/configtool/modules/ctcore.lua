@@ -591,6 +591,39 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Load text from selected line
+-- @param  filename     file where line will be search
+-- @param  linenumber   line to read
+-- @return Text of line or nil if line does not exist
+--------------------------------------------------------------------------------
+function ct:get_line(filename, linenumber)
+        assert(type(filename) == "string", "get_line(): filename is not the string type")
+        assert(type(linenumber) == "number", "get_line(): linenumber is not the number type")
+
+        file = io.open(filename, "rb")
+        assert(file, "get_line(): file does not exist")
+
+        file:seek("set", 0)
+
+        local l = nil
+        local n = 1
+
+        for line in file:lines() do
+                if n == linenumber then
+                        l = line
+                        break
+                else
+                        n = n + 1
+                end
+        end
+
+        file:close()
+
+        return l
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Insert new line at selected position. If position does not exist then
 --         line is not placed.
 -- @param  filename     file where line will be inserted
@@ -1114,3 +1147,9 @@ function ct:apply_project_configuration(file, parent)
 
         return true
 end
+
+-- update Configtool's window name (add release version)
+local line = ct:find_line(config.project.path.dnx_os_h:GetValue(), 1, "^%s*return%s+\"%d+%.%d+%.%d+\"%s*;")
+line = ct:get_line(config.project.path.dnx_os_h:GetValue(), line):match("^%s*return%s+\"(%d+%.%d+%.%d+)\"%s*;")
+ct.MAIN_WINDOW_NAME = ct.MAIN_WINDOW_NAME.." (Release "..line..")"
+

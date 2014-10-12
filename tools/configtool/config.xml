@@ -145,6 +145,7 @@
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
             <bsp_dir>../../BSP</bsp_dir>
+            <dnx_os_h>../../src/system/include/stdc/dnx/os.h</dnx_os_h>
         </path>
     </project>
 
