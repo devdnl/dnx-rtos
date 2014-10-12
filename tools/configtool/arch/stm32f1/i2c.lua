@@ -263,147 +263,300 @@ function i2c:create_window(parent)
         i2c_cfg  = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.I2C
 
         ui = {}
-        ui.Panel_device = {}
-        ui.TextCtrl_address = {}
-        ui.Choice_addr_mode = {}
-        ui.Choice_subaddr_mode = {}
+        ui.Panel_I2C = {}
+        ui.FlexGridSizer_I2C = {}
+        ui.CheckBox_enable_i2c = {}
+        ui.Panel_I2C_settings = {}
+        ui.FlexGridSizer_I2C_entire = {}
+        ui.FlexGridSizer_I2C_settings = {}
+        ui.CheckBox_use_DMA = {}
+        ui.Choice_IRQ_priority = {}
+        ui.SpinCtrl_SCL_frequency = {}
+        ui.Choice_number_of_devices = {}
+
+        ui.Panel_I2C_device = {}
+        ui.FlexGridSizer_I2C_device = {}
+        ui.TextCtrl_device_address = {}
+        ui.Choice_address_mode = {}
+        ui.Choice_subaddress_mode = {}
 
         ID = {}
-        ID.CHECKBOX_ENABLE = wx.wxNewId()
+        ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
         ID.PANEL_MODULE = wx.wxNewId()
-        ID.CHOICE_I2C = wx.wxNewId()
-        ID.CHECKBOX_I2C_ENABLE = wx.wxNewId()
-        ID.PANEL_PERIPHERAL = wx.wxNewId()
-        ID.CHECKBOX_USE_DMA = wx.wxNewId()
-        ID.CHOICE_IRQ_PRIORITY = wx.wxNewId()
-        ID.SPINCTRL_SCL_FREQ = wx.wxNewId()
-        ID.CHOICE_DEV_NO = wx.wxNewId()
-        ID.PANEL_DEVICE = {}
-        ID.TEXTCTRL_ADDRESS = {}
-        ID.CHOICE_ADDR_MODE = {}
-        ID.CHOICE_SUBADDR_MODE = {}
+        ID.NOTEBOOK1 = wx.wxNewId()
+
+        ID.PANEL_I2C = {}
+        ID.CHECKBOX_ENABLE_I2C = {}
+        ID.PANEL_I2C_SETTINGS = {}
+        ID.CHECKBOX_USE_DMA = {}
+        ID.CHOICE_IRQ_PRIORITY = {}
+        ID.SPINCTRL_SCL_FREQUENCY = {}
+        ID.CHOICE_NUMBER_OF_DEVICES = {}
+        ID.TEXTCTRL_DEVICE_ADDRESS = {}
+        ID.CHOICE_ADDRESS_MODE = {}
+        ID.CHOICE_SUBADDRESS_MODE = {}
+        ID.PANEL_I2C_DEVICE = {}
+
         ID.BUTTON_SAVE = wx.wxNewId()
 
+        -- main window
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
 
+        -- main sizer and module enable
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Module enable", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+        -- panel used to disable entire module
         ui.Panel_module = wx.wxPanel(this, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_module = wx.wxFlexGridSizer(0, 1, 0, 0)
 
-        ui.Choice_I2C = wx.wxChoice(ui.Panel_module, ID.CHOICE_I2C, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
+        -- peripheral notebook
+        ui.Notebook_peripheral = wx.wxNotebook(ui.Panel_module, ID.NOTEBOOK1, wx.wxDefaultPosition, wx.wxDefaultSize)
+
+        -- add devices to notebook
         for i = 1, i2c_cfg:NumChildren() do
-                ui.Choice_I2C:Append("I2C"..i2c_cfg:Children()[i].name:GetValue())
+                -- create new ID for controls
+                ID.PANEL_I2C[i]                = wx.wxNewId()
+                ID.CHECKBOX_ENABLE_I2C[i]      = wx.wxNewId()
+                ID.PANEL_I2C_SETTINGS[i]       = wx.wxNewId()
+                ID.CHECKBOX_USE_DMA[i]         = wx.wxNewId()
+                ID.CHOICE_IRQ_PRIORITY[i]      = wx.wxNewId()
+                ID.SPINCTRL_SCL_FREQUENCY[i]   = wx.wxNewId()
+                ID.CHOICE_NUMBER_OF_DEVICES[i] = wx.wxNewId()
+                ID.PANEL_I2C_DEVICE[i]         = wx.wxNewId()
+
+                ID.TEXTCTRL_DEVICE_ADDRESS[i]  = wx.wxNewId()
+                ID.CHOICE_ADDRESS_MODE[i]      = wx.wxNewId()
+                ID.CHOICE_SUBADDRESS_MODE[i]   = wx.wxNewId()
+
+                -- add peripheral's main panel
+                ui.Panel_I2C[i] = wx.wxPanel(ui.Notebook_peripheral, ID.PANEL_I2C[i], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+                ui.FlexGridSizer_I2C[i] = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+                -- add I2C enable checkbox
+                ui.CheckBox_enable_i2c[i] = wx.wxCheckBox(ui.Panel_I2C[i], ID.CHECKBOX_ENABLE_I2C[i], "Enable peripheral", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_I2C[i]:Add(ui.CheckBox_enable_i2c[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add I2C settings panel
+                ui.Panel_I2C_settings[i] = wx.wxPanel(ui.Panel_I2C[i], ID.PANEL_I2C_SETTINGS[i], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+
+                -- add flex sizer to entire I2C configuration
+                ui.FlexGridSizer_I2C_entire[i] = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+                -- add flex sizer to settings only
+                ui.FlexGridSizer_I2C_settings[i] = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+                -- add Use DMA checkbox
+                ui.CheckBox_use_DMA[i] = wx.wxCheckBox(ui.Panel_I2C_settings[i], ID.CHECKBOX_USE_DMA[i], "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.CheckBox_use_DMA[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_I2C_settings[i]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add IRQ priority label and choice
+                ui.StaticText = wx.wxStaticText(ui.Panel_I2C_settings[i], wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_IRQ_priority[i] = wx.wxChoice(ui.Panel_I2C_settings[i], ID.CHOICE_IRQ_PRIORITY[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                for _, priority in ipairs(prio_list) do
+                        ui.Choice_IRQ_priority[i]:Append(priority.name)
+                end
+                ui.Choice_IRQ_priority[i]:Append("System default")
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.Choice_IRQ_priority[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add SCL frequency label and spinbox
+                ui.StaticText = wx.wxStaticText(ui.Panel_I2C_settings[i], wx.wxID_ANY, "SCL frequency [kHz]", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.SpinCtrl_SCL_frequency[i] = wx.wxSpinCtrl(ui.Panel_I2C_settings[i], ID.SPINCTRL_SCL_FREQUENCY[i], "100", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 10, 400, 100)
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.SpinCtrl_SCL_frequency[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL,wx.wxEXPAND), 5)
+
+                -- add Number of devices label and choice
+                ui.StaticText = wx.wxStaticText(ui.Panel_I2C_settings[i], wx.wxID_ANY, "Number of devices", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_number_of_devices[i] = wx.wxChoice(ui.Panel_I2C_settings[i], ID.CHOICE_NUMBER_OF_DEVICES[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                for n = 1, MAX_NUMBER_OF_DEVICES do
+                        ui.Choice_number_of_devices[i]:Append(tostring(n))
+                end
+                ui.FlexGridSizer_I2C_settings[i]:Add(ui.Choice_number_of_devices[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add flex size to entire sizer
+                ui.FlexGridSizer_I2C_entire[i]:Add(ui.FlexGridSizer_I2C_settings[i], 0, bit.bor(wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
+
+
+                -- add I2C device panel
+                ui.Panel_I2C_device[i] = wx.wxPanel(ui.Panel_I2C_settings[i], ID.PANEL_I2C_DEVICE[i], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+                ui.FlexGridSizer_I2C_device[i] = wx.wxFlexGridSizer(0, 4, 0, 0)
+
+                    -- add device number and device address textctrl
+                    ui.StaticText = wx.wxStaticText(ui.Panel_I2C_device[i], wx.wxID_ANY, "Device 0: 0x", wx.wxDefaultPosition, wx.wxDefaultSize, 0)
+                    ui.FlexGridSizer_I2C_device[i]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                    ui.TextCtrl_device_address[i] = wx.wxTextCtrl(ui.Panel_I2C_device[i], ID.TEXTCTRL_DEVICE_ADDRESS[i], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
+                    ui.TextCtrl_device_address[i]:SetMaxLength(3)
+                    ui.FlexGridSizer_I2C_device[i]:Add(ui.TextCtrl_device_address[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                    -- add address mode
+                    ui.Choice_address_mode[i] = wx.wxChoice(ui.Panel_I2C_device[i], ID.CHOICE_ADDRESS_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                    ui.Choice_address_mode[i]:Append("7-bit address")
+                    ui.Choice_address_mode[i]:Append("10-bit address")
+                    ui.FlexGridSizer_I2C_device[i]:Add(ui.Choice_address_mode[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                    -- add sub address mode
+                    ui.Choice_subaddress_mode[i] = wx.wxChoice(ui.Panel_I2C_device[i], ID.CHOICE_SUBADDRESS_MODE[i], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                    ui.Choice_subaddress_mode[i]:Append("No sub-address")
+                    ui.Choice_subaddress_mode[i]:Append("1 byte sub-address")
+                    ui.Choice_subaddress_mode[i]:Append("2 bytes sub-address")
+                    ui.Choice_subaddress_mode[i]:Append("3 bytes sub-address")
+                    ui.FlexGridSizer_I2C_device[i]:Add(ui.Choice_subaddress_mode[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                    -- set controls sizer
+                    ui.Panel_I2C_device[i]:SetSizer(ui.FlexGridSizer_I2C_device[i])
+
+                    -- add device panel to main sizer
+                    ui.FlexGridSizer_I2C_entire[i]:Add(ui.Panel_I2C_device[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                    ui.Panel_I2C_settings[i]:SetSizer(ui.FlexGridSizer_I2C_entire[i])
+                    ui.FlexGridSizer_I2C[i]:Add(ui.Panel_I2C_settings[i], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                    ui.Panel_I2C[i]:SetSizer(ui.FlexGridSizer_I2C[i])
+
+                ui.Notebook_peripheral:AddPage(ui.Panel_I2C[i], "I2C"..i2c_cfg:Children()[i].name:GetValue(), false)
         end
-        ui.Choice_I2C:SetSelection(0)
-        ui.Choice_I2C.OldSelection = 0
-        ui.FlexGridSizer_module:Add(ui.Choice_I2C, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.CheckBox_I2C_enable = wx.wxCheckBox(ui.Panel_module, ID.CHECKBOX_I2C_ENABLE, "Enable peripheral", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_module:Add(ui.CheckBox_I2C_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.Panel_peripheral = wx.wxPanel(ui.Panel_module, ID.PANEL_PERIPHERAL, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
-        ui.FlexGridSizer_peripheral = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.FlexGridSizer_settings = wx.wxFlexGridSizer(0, 2, 0, 0)
-
-        ui.CheckBox_use_DMA = wx.wxCheckBox(ui.Panel_peripheral, ID.CHECKBOX_USE_DMA, "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_settings:Add(ui.CheckBox_use_DMA, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.StaticText5 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.StaticText5:Hide()
-        ui.FlexGridSizer_settings:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticText2 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_settings:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.Choice_IRQ_priority = wx.wxChoice(ui.Panel_peripheral, ID.CHOICE_IRQ_PRIORITY, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-        for i, item in ipairs(prio_list) do
-                ui.Choice_IRQ_priority:Append(item.name)
-        end
-        ui.Choice_IRQ_priority:Append("System default")
-        ui.FlexGridSizer_settings:Add(ui.Choice_IRQ_priority, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticText3 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "SCL frequency [kHz]", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_settings:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.SpinCtrl_SCL_freq = wx.wxSpinCtrl(ui.Panel_peripheral, ID.SPINCTRL_SCL_FREQ, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 10, 400, 0)
-        ui.FlexGridSizer_settings:Add(ui.SpinCtrl_SCL_freq, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticText1 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "Number of devices", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_settings:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.Choice_dev_no = wx.wxChoice(ui.Panel_peripheral, ID.CHOICE_DEV_NO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-        ui.Choice_dev_no:Append({"1", "2", "3", "4", "5", "6", "7", "8"})
-        ui.FlexGridSizer_settings:Add(ui.Choice_dev_no, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.FlexGridSizer_peripheral:Add(ui.FlexGridSizer_settings, 0, bit.bor(wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
-
-        for dev = 0, MAX_NUMBER_OF_DEVICES - 1 do
-                ID.PANEL_DEVICE[dev] = wx.wxNewId()
-                ui.Panel_device[dev] = wx.wxPanel(ui.Panel_peripheral, ID.PANEL_DEVICE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
-                ui.FlexGridSizer_device = wx.wxFlexGridSizer(0, 4, 0, 0)
-                ui.StaticText_device = wx.wxStaticText(ui.Panel_device[dev], wx.wxID_ANY, "Device "..dev..":  0x", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_device:Add(ui.StaticText_device, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ID.TEXTCTRL_ADDRESS[dev] = wx.wxNewId()
-                ui.TextCtrl_address[dev] = wx.wxTextCtrl(ui.Panel_device[dev], ID.TEXTCTRL_ADDRESS[dev], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
-                ui.TextCtrl_address[dev]:SetMinSize(wx.wxSize(50,-1))
-                ui.TextCtrl_address[dev]:SetMaxSize(wx.wxSize(50,-1))
-                ui.TextCtrl_address[dev]:SetMaxLength(3)
-                ui.FlexGridSizer_device:Add(ui.TextCtrl_address[dev], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ID.CHOICE_ADDR_MODE[dev] = wx.wxNewId()
-                ui.Choice_addr_mode[dev] = wx.wxChoice(ui.Panel_device[dev], ID.CHOICE_ADDR_MODE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-                ui.Choice_addr_mode[dev]:Append("7-bit address")
-                ui.Choice_addr_mode[dev]:Append("10-bit address")
-                ui.FlexGridSizer_device:Add(ui.Choice_addr_mode[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ID.CHOICE_SUBADDR_MODE[dev] = wx.wxNewId()
-                ui.Choice_subaddr_mode[dev] = wx.wxChoice(ui.Panel_device[dev], ID.CHOICE_SUBADDR_MODE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-                ui.Choice_subaddr_mode[dev]:Append("No sub-address")
-                ui.Choice_subaddr_mode[dev]:Append("1 byte sub-address")
-                ui.Choice_subaddr_mode[dev]:Append("2 bytes sub-address")
-                ui.Choice_subaddr_mode[dev]:Append("3 bytes sub-address")
-                ui.FlexGridSizer_device:Add(ui.Choice_subaddr_mode[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ui.Panel_device[dev]:SetSizer(ui.FlexGridSizer_device)
-                ui.FlexGridSizer_device:Fit(ui.Panel_device[dev])
-                ui.FlexGridSizer_device:SetSizeHints(ui.Panel_device[dev])
-                ui.FlexGridSizer_peripheral:Add(ui.Panel_device[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                this:Connect(ID.TEXTCTRL_ADDRESS[dev],    wx.wxEVT_COMMAND_TEXT_UPDATED,    event_value_updated)
-                this:Connect(ID.CHOICE_ADDR_MODE[dev],    wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-                this:Connect(ID.CHOICE_SUBADDR_MODE[dev], wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-        end
-
-
-        ui.Panel_peripheral:SetSizer(ui.FlexGridSizer_peripheral)
-        ui.FlexGridSizer_module:Add(ui.Panel_peripheral, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
+        ui.FlexGridSizer_module:Add(ui.Notebook_peripheral, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel_module:SetSizer(ui.FlexGridSizer_module)
+        ui.FlexGridSizer_module:Fit(ui.Panel_module)
+        ui.FlexGridSizer_module:SetSizeHints(ui.Panel_module)
         ui.FlexGridSizer1:Add(ui.Panel_module, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
         ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator)
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+
+
+
+
+
+
+
+
+
+
+
+--         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
+--         ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.Panel_module = wx.wxPanel(this, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+--         ui.FlexGridSizer_module = wx.wxFlexGridSizer(0, 1, 0, 0)
+--
+--         ui.Choice_I2C = wx.wxChoice(ui.Panel_module, ID.CHOICE_I2C, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
+--         for i = 1, i2c_cfg:NumChildren() do
+--                 ui.Choice_I2C:Append("I2C"..i2c_cfg:Children()[i].name:GetValue())
+--         end
+--         ui.Choice_I2C:SetSelection(0)
+--         ui.Choice_I2C.OldSelection = 0
+--         ui.FlexGridSizer_module:Add(ui.Choice_I2C, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.CheckBox_I2C_enable = wx.wxCheckBox(ui.Panel_module, ID.CHECKBOX_I2C_ENABLE, "Enable peripheral", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer_module:Add(ui.CheckBox_I2C_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.Panel_peripheral = wx.wxPanel(ui.Panel_module, ID.PANEL_PERIPHERAL, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+--         ui.FlexGridSizer_peripheral = wx.wxFlexGridSizer(0, 1, 0, 0)
+--         ui.FlexGridSizer_settings = wx.wxFlexGridSizer(0, 2, 0, 0)
+--
+--         ui.CheckBox_use_DMA = wx.wxCheckBox(ui.Panel_peripheral, ID.CHECKBOX_USE_DMA, "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer_settings:Add(ui.CheckBox_use_DMA, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         ui.StaticText5 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.StaticText5:Hide()
+--         ui.FlexGridSizer_settings:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.StaticText2 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer_settings:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         ui.Choice_IRQ_priority = wx.wxChoice(ui.Panel_peripheral, ID.CHOICE_IRQ_PRIORITY, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+--         for i, item in ipairs(prio_list) do
+--                 ui.Choice_IRQ_priority:Append(item.name)
+--         end
+--         ui.Choice_IRQ_priority:Append("System default")
+--         ui.FlexGridSizer_settings:Add(ui.Choice_IRQ_priority, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.StaticText3 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "SCL frequency [kHz]", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer_settings:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         ui.SpinCtrl_SCL_freq = wx.wxSpinCtrl(ui.Panel_peripheral, ID.SPINCTRL_SCL_FREQ, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 10, 400, 0)
+--         ui.FlexGridSizer_settings:Add(ui.SpinCtrl_SCL_freq, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.StaticText1 = wx.wxStaticText(ui.Panel_peripheral, wx.wxID_ANY, "Number of devices", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer_settings:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         ui.Choice_dev_no = wx.wxChoice(ui.Panel_peripheral, ID.CHOICE_DEV_NO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+--         ui.Choice_dev_no:Append({"1", "2", "3", "4", "5", "6", "7", "8"})
+--         ui.FlexGridSizer_settings:Add(ui.Choice_dev_no, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.FlexGridSizer_peripheral:Add(ui.FlexGridSizer_settings, 0, bit.bor(wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
+--
+--         for dev = 0, MAX_NUMBER_OF_DEVICES - 1 do
+--                 ID.PANEL_DEVICE[dev] = wx.wxNewId()
+--                 ui.Panel_device[dev] = wx.wxPanel(ui.Panel_peripheral, ID.PANEL_DEVICE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+--                 ui.FlexGridSizer_device = wx.wxFlexGridSizer(0, 4, 0, 0)
+--                 ui.StaticText_device = wx.wxStaticText(ui.Panel_device[dev], wx.wxID_ANY, "Device "..dev..":  0x", wx.wxDefaultPosition, wx.wxDefaultSize)
+--                 ui.FlexGridSizer_device:Add(ui.StaticText_device, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--
+--                 ID.TEXTCTRL_ADDRESS[dev] = wx.wxNewId()
+--                 ui.TextCtrl_address[dev] = wx.wxTextCtrl(ui.Panel_device[dev], ID.TEXTCTRL_ADDRESS[dev], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
+--                 ui.TextCtrl_address[dev]:SetMinSize(wx.wxSize(50,-1))
+--                 ui.TextCtrl_address[dev]:SetMaxSize(wx.wxSize(50,-1))
+--                 ui.TextCtrl_address[dev]:SetMaxLength(3)
+--                 ui.FlexGridSizer_device:Add(ui.TextCtrl_address[dev], 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 0)
+--
+--                 ID.CHOICE_ADDR_MODE[dev] = wx.wxNewId()
+--                 ui.Choice_addr_mode[dev] = wx.wxChoice(ui.Panel_device[dev], ID.CHOICE_ADDR_MODE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+--                 ui.Choice_addr_mode[dev]:Append("7-bit address")
+--                 ui.Choice_addr_mode[dev]:Append("10-bit address")
+--                 ui.FlexGridSizer_device:Add(ui.Choice_addr_mode[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--                 ID.CHOICE_SUBADDR_MODE[dev] = wx.wxNewId()
+--                 ui.Choice_subaddr_mode[dev] = wx.wxChoice(ui.Panel_device[dev], ID.CHOICE_SUBADDR_MODE[dev], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+--                 ui.Choice_subaddr_mode[dev]:Append("No sub-address")
+--                 ui.Choice_subaddr_mode[dev]:Append("1 byte sub-address")
+--                 ui.Choice_subaddr_mode[dev]:Append("2 bytes sub-address")
+--                 ui.Choice_subaddr_mode[dev]:Append("3 bytes sub-address")
+--                 ui.FlexGridSizer_device:Add(ui.Choice_subaddr_mode[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--                 ui.Panel_device[dev]:SetSizer(ui.FlexGridSizer_device)
+--                 ui.FlexGridSizer_device:Fit(ui.Panel_device[dev])
+--                 ui.FlexGridSizer_device:SetSizeHints(ui.Panel_device[dev])
+--                 ui.FlexGridSizer_peripheral:Add(ui.Panel_device[dev], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--
+--                 this:Connect(ID.TEXTCTRL_ADDRESS[dev],    wx.wxEVT_COMMAND_TEXT_UPDATED,    event_value_updated)
+--                 this:Connect(ID.CHOICE_ADDR_MODE[dev],    wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
+--                 this:Connect(ID.CHOICE_SUBADDR_MODE[dev], wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
+--         end
+--
+--
+--         ui.Panel_peripheral:SetSizer(ui.FlexGridSizer_peripheral)
+--         ui.FlexGridSizer_module:Add(ui.Panel_peripheral, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.Panel_module:SetSizer(ui.FlexGridSizer_module)
+--         ui.FlexGridSizer1:Add(ui.Panel_module, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
+--         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+--
+--         ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
+--         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
         this:SetScrollRate(12, 12)
 
         --
-        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
-        this:Connect(ID.CHECKBOX_I2C_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_I2C_enable)
-        this:Connect(ID.CHECKBOX_USE_DMA, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated)
-        this:Connect(ID.CHOICE_DEV_NO, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_number_of_devices_updated)
-        this:Connect(ID.CHOICE_IRQ_PRIORITY, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-        this:Connect(ID.SPINCTRL_SCL_FREQ, wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated)
-        this:Connect(ID.CHOICE_I2C, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_I2C_selected)
+--         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
+--         this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
+--         this:Connect(ID.CHECKBOX_I2C_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_I2C_enable)
+--         this:Connect(ID.CHECKBOX_USE_DMA, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated)
+--         this:Connect(ID.CHOICE_DEV_NO, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_number_of_devices_updated)
+--         this:Connect(ID.CHOICE_IRQ_PRIORITY, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
+--         this:Connect(ID.SPINCTRL_SCL_FREQ, wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated)
+--         this:Connect(ID.CHOICE_I2C, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_I2C_selected)
 
         --
-        load_controls()
+--         load_controls()
         ui.Button_save:Enable(false)
 
         return ui.window
