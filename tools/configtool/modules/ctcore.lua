@@ -1149,7 +1149,7 @@ function ct:apply_project_configuration(file, parent)
 end
 
 -- update Configtool's window name (add release version)
-local line = ct:find_line(config.project.path.dnx_os_h:GetValue(), 1, "^%s*return%s+\"%d+%.%d+%.%d+\"%s*;")
-line = ct:get_line(config.project.path.dnx_os_h:GetValue(), line):match("^%s*return%s+\"(%d+%.%d+%.%d+)\"%s*;")
+local line = ct:find_line(config.project.path.dnx_os_h:GetValue(), 1, "^%s*return%s+\"%d+%.%d+%.%d+.*\"%s*;")
+line = ct:get_line(config.project.path.dnx_os_h:GetValue(), line):match("^%s*return%s+\"(%d+%.%d+%.%d+.*)\"%s*;")
 ct.MAIN_WINDOW_NAME = ct.MAIN_WINDOW_NAME.." (Release "..line..")"
 
