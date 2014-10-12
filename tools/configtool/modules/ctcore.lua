@@ -918,6 +918,9 @@ function ct:save_project_configuration(file, parent)
         progress:Centre()
         progress:Update(0, "Preparing to write...")
 
+        -- save CPU architecture
+        cfg_table.cpu_arch = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+
 
         -- load configuration of modules of selected architecture
         cfg_table.file = {}
@@ -1039,6 +1042,21 @@ function ct:apply_project_configuration(file, parent)
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Courrupted configuration file!", parent)
                 return false
         end
+
+        -- check that CPU architecture exist
+        local CPU_arch_found = false
+        for i = 1, config.arch:NumChildren() do
+                if cfg_table.cpu_arch == config.arch:Children()[i]:GetName() then
+                        CPU_arch_found = true
+                        break
+                end
+        end
+
+        if not CPU_arch_found then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Configuration contains unknown CPU architecture and therefore cannot be applied.", parent)
+                return false
+        end
+
 
         -- check file version
         if cfg_table.version ~= CFG_FILE_VERSION then

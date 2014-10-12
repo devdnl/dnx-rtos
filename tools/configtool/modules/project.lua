@@ -70,8 +70,6 @@ local function load_cpu_list(cpu_arch)
         if cpu_arch ~= last_cpu_arch then
                 -- load CPU architecture list if not loaded
                 if ui.Choice_CPU_arch:GetCount() == 0 then
-                        print("CPU arch list load")
-
                         ui.Choice_CPU_arch:Clear()
                         for i = 1, config.arch:NumChildren() do
                                 ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName())
@@ -79,11 +77,11 @@ local function load_cpu_list(cpu_arch)
                 end
 
                 -- select CPU architecture from existing architectures
-                print("CPU arch select")
                 for i = 1, config.arch:NumChildren() do
                         local arch_name = config.arch:Children()[i]:GetName()
                         if arch_name == cpu_arch then
                                 ui.Choice_CPU_arch:SetSelection(i - 1)
+                                break
                         end
                 end
         end
@@ -98,8 +96,6 @@ end
 local function load_cpu_name_list(cpu_name, cpu_arch)
         -- load CPU name list if CPU architecture was changed
         if last_cpu_arch ~= cpu_arch then
-                print("CPU name list load")
-
                 ui.Choice_CPU_name:Clear()
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         ui.Choice_CPU_name:Append(cpu.name:GetValue())
@@ -110,8 +106,6 @@ local function load_cpu_name_list(cpu_name, cpu_arch)
 
         -- select specified CPU
         if last_cpu_name ~= cpu_name then
-                print("CPU name select")
-
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
 
@@ -132,8 +126,6 @@ end
 local function load_cpu_priorities(cpu_arch)
         -- load priority list
         if last_cpu_arch ~= cpu_arch then
-                print("Load pioriorty list")
-
                 ui.Choice_default_irq_prio:Clear()
                 for i, priority in pairs(ct:get_priority_list(cpu_arch)) do
                         ui.Choice_default_irq_prio:Append(priority.name)
@@ -162,8 +154,6 @@ local function load_controls()
         local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
         local cpu_osc_freq   = ct:key_read(config.project.key.CPU_OSC_FREQ)
         local cpu_name       = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
-
---         print("Arch "..cpu_arch, "name "..cpu_name)
 
         ui.TextCtrl_project_name:SetValue(project_name)
         ui.TextCtrl_toolchain_name:SetValue(toolchain_name)
