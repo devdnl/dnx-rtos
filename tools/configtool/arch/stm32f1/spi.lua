@@ -138,7 +138,7 @@ spimode_str.SPI_MODE_3 = 3
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
--- local function load_controls_of_defaults()
+-- local function load_configuration()
 --         local enable     = ct:get_module_state("SPI")
 --         local dummy_byte = ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_DUMMY_BYTE):gsub("0x", ""):upper()
 --         local clkdividx  = clkdiv_str[ct:key_read(config.arch.stm32f1.key.SPI_DEFAULT_CLK_DIV)]
@@ -387,6 +387,7 @@ function spi:create_window(parent)
         -- add module enable checkbox
         ui.CheckBox_enable_module = wx.wxCheckBox(ui.window, ID.CHECKBOX_ENABLE_MODULE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_enable_module, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.CHECKBOX_ENABLE_MODULE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) ui.Panel_module:Enable(event:IsChecked()) end)
 
         -- add main panel
         ui.Panel_module = wx.wxPanel(ui.window, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
@@ -398,13 +399,15 @@ function spi:create_window(parent)
 
         -- add dummy byte controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "Dummy byte   0x", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel_module, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 2)
+        ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel_module, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
+        ui.TextCtrl_dummy_byte:SetMaxLength(2)
         ui.FlexGridSizer_default_settings:Add(ui.TextCtrl_dummy_byte, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.TEXTCTRL_DUMMY_BYTE, wx.wxEVT_COMMAND_TEXT_UPDATED, function(event) ui.Button_save:Enable(true) end)
 
         -- add clock divider controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "Clock divider", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 2)
         ui.Choice_clock_divider = wx.wxChoice(ui.Panel_module, ID.CHOICE_CLOCK_DIVIDER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_clock_divider:Append("Peripheral clock / 2")
         ui.Choice_clock_divider:Append("Peripheral clock / 4")
@@ -415,24 +418,27 @@ function spi:create_window(parent)
         ui.Choice_clock_divider:Append("Peripheral clock / 128")
         ui.Choice_clock_divider:Append("Peripheral clock / 256")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_clock_divider, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.CHOICE_CLOCK_DIVIDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
 
         -- add SPI mode controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "SPI mode", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 2)
         ui.Choice_SPI_mode = wx.wxChoice(ui.Panel_module, ID.CHOICE_SPI_MODE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_SPI_mode:Append("Mode 0 (SCK Low at idle; capture on leading edge)")
         ui.Choice_SPI_mode:Append("Mode 1 (SCK Low at idle; capture on trailing edge)")
         ui.Choice_SPI_mode:Append("Mode 2 (SCK High at idle; capture on leading edge)")
         ui.Choice_SPI_mode:Append("Mode 3 (SCK High at idle; capture on trailing edge)")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_SPI_mode, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.CHOICE_SPI_MODE, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
 
         -- add bit order controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "Bit order", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.FlexGridSizer_default_settings:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 2)
         ui.Choice_bitorder = wx.wxChoice(ui.Panel_module, ID.CHOICE_BIT_ORDER, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator)
         ui.Choice_bitorder:Append("MSb first")
         ui.Choice_bitorder:Append("LSb first")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_bitorder, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.CHOICE_BIT_ORDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
 
         -- add default settings group to the main group sizer
         ui.StaticBoxSizer_default_settings:Add(ui.FlexGridSizer_default_settings, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -451,8 +457,6 @@ function spi:create_window(parent)
                 ID.CHECKBOX_USE_DMA[SPI]             = wx.wxNewId()
                 ID.CHOICE_IRQ_PRIORITY[SPI]          = wx.wxNewId()
                 ID.CHOICE_NUMBER_OF_CS[SPI]          = wx.wxNewId()
-                ID.PANEL_CS[SPI]                     = wx.wxNewId()
-                ID.CHOICE_CS_PIN[SPI]                = wx.wxNewId()
 
                 -- create a new panel for entire peripheral
                 ui.Panel_peripheral[SPI] = wx.wxPanel(ui.Notebook_peripheral, ID.PANEL_PERIPHERAL[SPI], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
@@ -461,6 +465,7 @@ function spi:create_window(parent)
                 -- add peripheral enable checkbox
                 ui.CheckBox_enable_peripheral[SPI] = wx.wxCheckBox(ui.Panel_peripheral[SPI], ID.CHECKBOX_ENABLE_PERIPHERAL[SPI], "Enable peripheral", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_peripheral[SPI]:Add(ui.CheckBox_enable_peripheral[SPI], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.window:Connect(ID.CHECKBOX_ENABLE_PERIPHERAL[SPI], wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) ui.Panel_settings[SPI]:Enable(event:IsChecked()) end)
 
                 -- create a new panel for peripheral settings
                 ui.Panel_settings[SPI] = wx.wxPanel(ui.Panel_peripheral[SPI], ID.PANEL_SETTINGS[SPI], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
@@ -470,12 +475,18 @@ function spi:create_window(parent)
                 ui.CheckBox_use_DMA[SPI] = wx.wxCheckBox(ui.Panel_settings[SPI], ID.CHECKBOX_USE_DMA[SPI], "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.CheckBox_use_DMA[SPI], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.window:Connect(ID.CHECKBOX_USE_DMA[SPI], wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) ui.Button_save:Enable(true) end)
 
                 -- add IRQ priority controls
                 ui.StaticText = wx.wxStaticText(ui.Panel_settings[SPI], wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_IRQ_priority[SPI] = wx.wxChoice(ui.Panel_settings[SPI], ID.CHOICE_IRQ_PRIORITY[SPI], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                for _, priority in ipairs(prio_list) do
+                        ui.Choice_IRQ_priority[SPI]:Append(priority.name)
+                end
+                ui.Choice_IRQ_priority[SPI]:Append("System default")
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.Choice_IRQ_priority[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.window:Connect(ID.CHOICE_IRQ_PRIORITY[SPI], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
 
                 -- add number of chip select controls
                 ui.StaticText = wx.wxStaticText(ui.Panel_settings[SPI], wx.wxID_ANY, "Number of Chip Selects", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -490,29 +501,51 @@ function spi:create_window(parent)
                 ui.Choice_number_of_CS[SPI]:Append("7 (CS0..6)")
                 ui.Choice_number_of_CS[SPI]:Append("8 (CS0..7)")
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.Choice_number_of_CS[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.window:Connect(ID.CHOICE_NUMBER_OF_CS[SPI], wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                        function(event)
+                                local number_of_cs = event:GetSelection() + 1
+                                for CS = 0, NUMBER_OF_CS - 1 do
+                                        ui.Panel_CS[SPI][CS]:Enable(CS < number_of_cs)
+                                end
+                                ui.Button_save:Enable(true)
+                        end
+                )
 
                 -- add peripheral settings sizer to general settings sizer
                 ui.FlexGridSizer_settings[SPI] = wx.wxFlexGridSizer(0, 1, 0, 0)
                 ui.FlexGridSizer_settings[SPI]:Add(ui.FlexGridSizer_peripheral_settings[SPI], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                -- create a new panel for specified chip select
-                ui.Panel_CS[SPI] = wx.wxPanel(ui.Panel_settings[SPI], ID.PANEL_CS[SPI], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
-                ui.FlexGridSizer_CS[SPI] = wx.wxFlexGridSizer(0, 3, 0, 0)
-
-                -- add Chip select pin controls
-                ui.StaticText = wx.wxStaticText(ui.Panel_CS[SPI], wx.wxID_ANY, "Pin for Chip Select 0", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_CS[SPI]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_CS[SPI]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.Choice_CS_pin[SPI] = wx.wxChoice(ui.Panel_CS[SPI], ID.CHOICE_CS_PIN[SPI], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-                ui.FlexGridSizer_CS[SPI]:Add(ui.Choice_CS_pin[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- set sizer of chip select panel
-                ui.Panel_CS[SPI]:SetSizer(ui.FlexGridSizer_CS[SPI])
-
-
-                -- add chip select configuration panel to then Chip select settings sizer
                 ui.FlexGridSizer_CS_settings[SPI] = wx.wxFlexGridSizer(0, 1, 0, 0)
-                ui.FlexGridSizer_CS_settings[SPI]:Add(ui.Panel_CS[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                -- add chip select controls
+                ui.Panel_CS[SPI]         = {}
+                ui.FlexGridSizer_CS[SPI] = {}
+                ui.Choice_CS_pin[SPI]    = {}
+                ID.PANEL_CS[SPI]         = {}
+                ID.CHOICE_CS_PIN[SPI]    = {}
+
+                for CS = 0, NUMBER_OF_CS - 1 do
+                        ID.PANEL_CS[SPI][CS]      = wx.wxNewId()
+                        ID.CHOICE_CS_PIN[SPI][CS] = wx.wxNewId()
+
+                        -- create a new panel for specified chip select
+                        ui.Panel_CS[SPI][CS] = wx.wxPanel(ui.Panel_settings[SPI], ID.PANEL_CS[SPI][CS], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+                        ui.FlexGridSizer_CS[SPI][CS] = wx.wxFlexGridSizer(0, 3, 0, 0)
+
+                        -- add Chip select pin controls
+                        ui.StaticText = wx.wxStaticText(ui.Panel_CS[SPI][CS], wx.wxID_ANY, "Pin for Chip Select "..CS, wx.wxDefaultPosition, wx.wxDefaultSize)
+                        ui.FlexGridSizer_CS[SPI][CS]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                        ui.FlexGridSizer_CS[SPI][CS]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                        ui.Choice_CS_pin[SPI][CS] = wx.wxChoice(ui.Panel_CS[SPI][CS], ID.CHOICE_CS_PIN[SPI][CS], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
+                        ui.Choice_CS_pin[SPI][CS]:Append(pin_list)
+                        ui.FlexGridSizer_CS[SPI][CS]:Add(ui.Choice_CS_pin[SPI][CS], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                        ui.window:Connect(ID.CHOICE_CS_PIN[SPI][CS], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+
+                        -- set sizer of chip select panel
+                        ui.Panel_CS[SPI][CS]:SetSizer(ui.FlexGridSizer_CS[SPI][CS])
+
+                        -- add chip select configuration panel to then Chip select settings sizer
+                        ui.FlexGridSizer_CS_settings[SPI]:Add(ui.Panel_CS[SPI][CS], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                end
 
                 -- add chip select settings sizer to settings sizer
                 ui.FlexGridSizer_settings[SPI]:Add(ui.FlexGridSizer_CS_settings[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -525,7 +558,7 @@ function spi:create_window(parent)
                 ui.Panel_peripheral[SPI]:SetSizer(ui.FlexGridSizer_peripheral[SPI])
 
                 -- add peripheral page to the notebook
-                ui.Notebook_peripheral:AddPage(ui.Panel_peripheral[SPI], "SPI"..spi_cfg:Children()[1].name:GetValue(), false)
+                ui.Notebook_peripheral:AddPage(ui.Panel_peripheral[SPI], "SPI"..spi_cfg:Children()[SPI].name:GetValue(), false)
         end
 
         -- add notebook to the modules's sizer
@@ -542,6 +575,7 @@ function spi:create_window(parent)
         -- add save button
         ui.Button_save = wx.wxButton(ui.window, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.window:Connect(ID.BUTTON_SAVE, wx.wxEVT_COMMAND_BUTTON_CLICKED, save_configuration)
 
 
 
@@ -700,6 +734,13 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function spi:selected()
+        for SPI = 1, spi_cfg:NumChildren() do
+                for CS = 0, NUMBER_OF_CS - 1 do
+                        ui.Choice_CS_pin[SPI][CS]:Clear()
+                        ui.Choice_CS_pin[SPI][CS]:Append(pin_list)
+                end
+        end
+
 --         -- refreshes pin list
 --         pin_list = gpio:get_pin_list(true)
 --
@@ -729,7 +770,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function spi:save()
-        on_button_save_click()
+        save_configuration()
 end
 
 
