@@ -11,7 +11,7 @@
 			</provider>
 		</extension>
 	</configuration>
-	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474" name="Static code analyze">
+	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474" name="Static Code Analyze">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
@@ -22,7 +22,7 @@
 			</provider>
 		</extension>
 	</configuration>
-	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572" name="Quick static code analyze">
+	<configuration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572" name="Quick Static Code Analyze">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
