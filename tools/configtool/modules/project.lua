@@ -105,9 +105,6 @@ local function load_cpu_name_list(cpu_name, cpu_arch)
         end
 
         -- select specified CPU
-
-        print(last_cpu_name, cpu_name)
-
         if last_cpu_name ~= cpu_name then
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
@@ -407,7 +404,6 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function project:save()
-        print("Project save")
         on_button_save_click()
 end
 

@@ -440,6 +440,15 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function i2c:save()
+        on_button_save_click()
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Function returns module handler
 -- @param  None
 -- @return Module handler
