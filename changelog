@@ -5,9 +5,10 @@ New Features, Improvements:
 - Configtool: the import of the configuration with unknown CPU architecture is disabled
 - Configtool: release version is added to the title bar
 - Makefile: added flash and reset targets (targets are connected to the scripts)
+- Eclipse: added Configtool to the External tools
 
 Fixed Bugs:
--
+- LOOP: module uses not C99-standard union construction
 
 dnx RTOS 1.4.1
 ==============
