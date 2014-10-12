@@ -105,6 +105,9 @@ local function load_cpu_name_list(cpu_name, cpu_arch)
         end
 
         -- select specified CPU
+
+        print(last_cpu_name, cpu_name)
+
         if last_cpu_name ~= cpu_name then
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
@@ -383,6 +386,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function project:refresh()
+        last_cpu_arch = ""
+        last_cpu_name = ""
         load_controls()
         ui.Button_save:Enable(false)
 end
@@ -395,3 +400,14 @@ end
 function project:is_modified()
         return ui.Button_save:IsEnabled()
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function project:save()
+        print("Project save")
+        on_button_save_click()
+end
+

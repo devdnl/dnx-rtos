@@ -282,3 +282,12 @@ end
 function file_systems:is_modified()
         return ui.Button_save:IsEnabled()
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function file_systems:save()
+        on_button_save_click()
+end

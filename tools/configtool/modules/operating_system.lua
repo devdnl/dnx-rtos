@@ -451,3 +451,12 @@ end
 function operating_system:is_modified()
         return ui.Button_save:IsEnabled()
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function operating_system:save()
+        on_button_save_click()
+end

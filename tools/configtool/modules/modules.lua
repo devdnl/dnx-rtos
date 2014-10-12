@@ -194,3 +194,16 @@ function modules:is_modified()
 
         return false
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function modules:save()
+        for i, module in ipairs(page) do
+                if module:is_modified() then
+                        module:save()
+                end
+        end
+end

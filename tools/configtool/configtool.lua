@@ -88,16 +88,18 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Signal is called when page is changing
--- @param  this          treebook object
+-- @param  event          treebook event
 -- @return None
 --------------------------------------------------------------------------------
-local function treebook_page_changing(this)
-        local card = this:GetOldSelection() + 1
+local function treebook_page_changing(event)
+        local card = event:GetOldSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\nDo you want to discard changes?", wx.wxYES_NO, ui.frame)
-                if answer == wx.wxID_NO then
-                        this:Veto()
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\n\nDo you want to save the changes?", bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
+                if answer == wx.wxID_CANCEL then
+                        event:Veto()
+                elseif answer == wx.wxID_YES then
+                        page[card].form:save()
                 end
         end
 end
@@ -105,20 +107,23 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Signal is called when main window is closing
--- @param  None
+-- @param  event
 -- @return None
 --------------------------------------------------------------------------------
-local function window_close()
+local function window_close(event)
         local card = ui.treebook:GetSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to quit and discard changes?", wx.wxYES_NO, ui.frame)
-                if answer == wx.wxID_YES then
-                        ui.frame:Destroy()
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "The configuration has changed.\n\nDo you want to save the changes?", bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
+                if answer == wx.wxID_CANCEL then
+                        event:Veto()
+                        return
+                elseif answer == wx.wxID_YES then
+                        page[card].form:save()
                 end
-        else
-                ui.frame:Destroy()
         end
+
+        ui.frame:Destroy()
 end
 
 
@@ -128,10 +133,18 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_import_configuration()
-        dialog = wx.wxFileDialog(ui.frame, "Import configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
-        if (dialog:ShowModal() == wx.wxID_OK) then
-                if ct:apply_project_configuration(dialog:GetPath(), ui.frame) then
-                        ui.treebook:SetSelection(0)
+        ui.treebook:SetSelection(0)
+        if ui.treebook:GetSelection() == 0 then
+
+                dialog = wx.wxFileDialog(ui.frame,
+                                         "Import configuration file",
+                                         config.project.path.bsp_dir:GetValue(),
+                                         "",
+                                         "dnx RTOS configuration files (*.dnxc)|*.dnxc",
+                                         bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
+
+                if (dialog:ShowModal() == wx.wxID_OK) then
+                        ct:apply_project_configuration(dialog:GetPath(), ui.frame)
                 end
         end
 end
