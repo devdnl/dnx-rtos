@@ -76,7 +76,7 @@ local function load_configuration(I2C)
                 local SCL_freq = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_SCL_FREQ"]))/1000
                 ui.SpinCtrl_SCL_frequency[I2C]:SetValue(SCL_freq)
 
-                local no_of_dev = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"]))
+                local no_of_dev = tonumber(ct:key_read(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"])) - 1
                 ui.Choice_number_of_devices[I2C]:SetSelection(no_of_dev)
 
                 for DEV = 0, MAX_NUMBER_OF_DEVICES - 1 do
@@ -87,7 +87,7 @@ local function load_configuration(I2C)
                         ui.TextCtrl_device_address[I2C][DEV]:SetValue(address)
                         ui.Choice_address_mode[I2C][DEV]:SetSelection(ifs(addr10bit, 1, 0))
                         ui.Choice_subaddress_mode[I2C][DEV]:SetSelection(sub_addr_mode)
-                        ui.Panel_I2C_device[I2C][DEV]:Enable(DEV < no_of_dev)
+                        ui.Panel_I2C_device[I2C][DEV]:Enable(DEV <= no_of_dev)
                 end
 
                 ui.Panel_I2C_settings[I2C]:Enable(I2C_enable)
@@ -104,62 +104,46 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function save_configuration()
---         local I2C = ui.Choice_I2C:GetSelection() + 1
---
---
---         ct:enable_module("I2C", ui.CheckBox_enable:GetValue())
---
---
---         -- enable existing I2C port and disable all not existing in this microcontroller
---         for i = 1, MAX_NUMBER_OF_PERIPHERALS do
---                 local exist = false
---                 for j = 1, i2c_cfg:NumChildren() do
---                         if tostring(i) == i2c_cfg:Children()[j].name:GetValue() then
---                                 exist = true
---                                 break
---                         end
---                 end
---
---                 if not exist then
---                         ct:key_write(config.arch.stm32f1.key["I2C"..i.."_ENABLE"], config.project.def.NO:GetValue())
---                 else
---                         local I2C_enable = ct:bool_to_yes_no(ui.CheckBox_I2C_enable:IsChecked())
---                         ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"], I2C_enable)
---                 end
---         end
---
---
---         local use_DMA = ct:bool_to_yes_no(ui.CheckBox_use_DMA:IsChecked())
---         ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_USE_DMA"], use_DMA)
---
---
---         local IRQ_prio = ui.Choice_IRQ_priority:GetSelection() + 1
---         if IRQ_prio > #prio_list then
---                 IRQ_prio = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
---         else
---                 IRQ_prio = prio_list[IRQ_prio].value
---         end
---         ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_IRQ_PRIO"], IRQ_prio)
---
---
---         local SCL_freq = tostring(ui.SpinCtrl_SCL_freq:GetValue() * 1000)
---         ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_SCL_FREQ"], SCL_freq)
---
---
---         local no_of_dev = tostring(ui.Choice_dev_no:GetSelection() + 1)
---         ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"], no_of_dev)
---
---
---         for dev = 0, MAX_NUMBER_OF_DEVICES - 1 do
---                 local address       = "0x"..ui.TextCtrl_address[dev]:GetValue()
---                 local addr10bit     = ct:bool_to_yes_no(ui.Choice_addr_mode[dev]:GetSelection() > 0)
---                 local sub_addr_mode = tostring(ui.Choice_subaddr_mode[dev]:GetSelection())
---
---                 ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_ADDRESS"], address)
---                 ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_10BIT_ADDR"], addr10bit)
---                 ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..dev.."_SEND_SUB_ADDR"], sub_addr_mode)
---         end
+        -- save module state
+        ct:enable_module("I2C", ui.CheckBox_module_enable:GetValue())
 
+        -- disable all peripherals (will enabled later)
+        for I2C = 1, MAX_NUMBER_OF_PERIPHERALS do
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"], config.project.def.NO:GetValue())
+        end
+
+        -- save peripheral configuration
+        for I2C = 1, i2c_cfg:NumChildren() do
+                local I2C_enable = ct:bool_to_yes_no(ui.CheckBox_enable_i2c[I2C]:IsChecked())
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_ENABLE"], I2C_enable)
+
+                local use_DMA = ct:bool_to_yes_no(ui.CheckBox_use_DMA[I2C]:IsChecked())
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_USE_DMA"], use_DMA)
+
+                local IRQ_priority = ui.Choice_IRQ_priority[I2C]:GetSelection() + 1
+                if IRQ_priority > #prio_list then
+                        IRQ_priority = config.project.def.DEFAULT_IRQ_PRIORITY:GetValue()
+                else
+                        IRQ_priority = prio_list[IRQ_priority].value
+                end
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_IRQ_PRIO"], IRQ_priority)
+
+                local SCL_frequency = tostring(ui.SpinCtrl_SCL_frequency[I2C]:GetValue() * 1000)
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_SCL_FREQ"], SCL_frequency)
+
+                local number_of_dev = tostring(ui.Choice_number_of_devices[I2C]:GetSelection() + 1)
+                ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_NUMBER_OF_DEVICES"], number_of_dev)
+
+                for DEV = 0, MAX_NUMBER_OF_DEVICES - 1 do
+                        local address       = "0x"..ui.TextCtrl_device_address[I2C][DEV]:GetValue()
+                        local addr10bit     = ct:bool_to_yes_no(ui.Choice_address_mode[I2C][DEV]:GetSelection() > 0)
+                        local sub_addr_mode = tostring(ui.Choice_subaddress_mode[I2C][DEV]:GetSelection())
+
+                        ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_ADDRESS"], address)
+                        ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_10BIT_ADDR"], addr10bit)
+                        ct:key_write(config.arch.stm32f1.key["I2C"..I2C.."_DEV_"..DEV.."_SEND_SUB_ADDR"], sub_addr_mode)
+                end
+        end
 
         ui.Button_save:Enable(false)
 end
@@ -214,13 +198,12 @@ function i2c:create_window(parent)
 
         -- main window
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
-        local this = ui.window
 
         -- main sizer and module enable
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Module enable", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_module_enable = wx.wxCheckBox(ui.window, ID.CHECKBOX_MODULE_ENABLE, "Module enable", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+        ui.window:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                 function(event)
                         ui.Panel_module:Enable(event:IsChecked())
                         ui.Button_save:Enable(true)
@@ -228,7 +211,7 @@ function i2c:create_window(parent)
         )
 
         -- panel used to disable entire module
-        ui.Panel_module = wx.wxPanel(this, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        ui.Panel_module = wx.wxPanel(ui.window, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_module = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         -- peripheral notebook
@@ -253,7 +236,7 @@ function i2c:create_window(parent)
                 -- add I2C enable checkbox
                 ui.CheckBox_enable_i2c[I2C] = wx.wxCheckBox(ui.Panel_I2C[I2C], ID.CHECKBOX_ENABLE_I2C[I2C], "Enable peripheral", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_I2C[I2C]:Add(ui.CheckBox_enable_i2c[I2C], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                this:Connect(ID.CHECKBOX_ENABLE_I2C[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                ui.window:Connect(ID.CHECKBOX_ENABLE_I2C[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                         function(event)
                                 ui.Panel_I2C_settings[I2C]:Enable(event:IsChecked())
                                 ui.Button_save:Enable(true)
@@ -273,7 +256,7 @@ function i2c:create_window(parent)
                 ui.CheckBox_use_DMA[I2C] = wx.wxCheckBox(ui.Panel_I2C_settings[I2C], ID.CHECKBOX_USE_DMA[I2C], "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.CheckBox_use_DMA[I2C], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                this:Connect(ID.CHECKBOX_USE_DMA[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                ui.window:Connect(ID.CHECKBOX_USE_DMA[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                         function(event)
                                 ui.Button_save:Enable(true)
                         end
@@ -288,7 +271,7 @@ function i2c:create_window(parent)
                 end
                 ui.Choice_IRQ_priority[I2C]:Append("System default")
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.Choice_IRQ_priority[I2C], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                this:Connect(ID.CHOICE_IRQ_PRIORITY[I2C], wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                ui.window:Connect(ID.CHOICE_IRQ_PRIORITY[I2C], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                         function(event)
                                 ui.Button_save:Enable(true)
                         end
@@ -299,7 +282,7 @@ function i2c:create_window(parent)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.SpinCtrl_SCL_frequency[I2C] = wx.wxSpinCtrl(ui.Panel_I2C_settings[I2C], ID.SPINCTRL_SCL_FREQUENCY[I2C], "100", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 10, 400, 100)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.SpinCtrl_SCL_frequency[I2C], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL,wx.wxEXPAND), 5)
-                this:Connect(ID.SPINCTRL_SCL_FREQUENCY[I2C], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,
+                ui.window:Connect(ID.SPINCTRL_SCL_FREQUENCY[I2C], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,
                         function(event)
                                 ui.Button_save:Enable(true)
                         end
@@ -313,7 +296,7 @@ function i2c:create_window(parent)
                         ui.Choice_number_of_devices[I2C]:Append(tostring(n))
                 end
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.Choice_number_of_devices[I2C], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                this:Connect(ID.CHOICE_NUMBER_OF_DEVICES[I2C], wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                ui.window:Connect(ID.CHOICE_NUMBER_OF_DEVICES[I2C], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                         function(event)
                                 local dev_number = event:GetSelection()
 
@@ -357,7 +340,7 @@ function i2c:create_window(parent)
                         ui.TextCtrl_device_address[I2C][DEV] = wx.wxTextCtrl(ui.Panel_I2C_device[I2C][DEV], ID.TEXTCTRL_DEVICE_ADDRESS[I2C][DEV], "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
                         ui.TextCtrl_device_address[I2C][DEV]:SetMaxLength(3)
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.TextCtrl_device_address[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-                        this:Connect(ID.TEXTCTRL_DEVICE_ADDRESS[I2C][DEV], wx.wxEVT_COMMAND_TEXT_UPDATED,
+                        ui.window:Connect(ID.TEXTCTRL_DEVICE_ADDRESS[I2C][DEV], wx.wxEVT_COMMAND_TEXT_UPDATED,
                                 function(event)
                                         ui.Button_save:Enable(true)
                                 end
@@ -368,7 +351,7 @@ function i2c:create_window(parent)
                         ui.Choice_address_mode[I2C][DEV]:Append("7-bit address")
                         ui.Choice_address_mode[I2C][DEV]:Append("10-bit address")
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.Choice_address_mode[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                        this:Connect(ID.CHOICE_ADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                        ui.window:Connect(ID.CHOICE_ADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                                 function(event)
                                         ui.Button_save:Enable(true)
                                 end
@@ -381,7 +364,7 @@ function i2c:create_window(parent)
                         ui.Choice_subaddress_mode[I2C][DEV]:Append("2 bytes sub-address")
                         ui.Choice_subaddress_mode[I2C][DEV]:Append("3 bytes sub-address")
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.Choice_subaddress_mode[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                        this:Connect(ID.CHOICE_SUBADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                        ui.window:Connect(ID.CHOICE_SUBADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                                 function(event)
                                         ui.Button_save:Enable(true)
                                 end
@@ -411,17 +394,17 @@ function i2c:create_window(parent)
         ui.FlexGridSizer1:Add(ui.Panel_module, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- add line
-        ui.StaticLine = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
+        ui.StaticLine = wx.wxStaticLine(ui.window, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
         ui.FlexGridSizer1:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- add save button
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator)
+        ui.Button_save = wx.wxButton(ui.window, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator)
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        this:Connect(ID.BUTTON_SAVE, wx.wxEVT_COMMAND_BUTTON_CLICKED, function(event) save_configuration() end)
+        ui.window:Connect(ID.BUTTON_SAVE, wx.wxEVT_COMMAND_BUTTON_CLICKED, function(event) save_configuration() end)
 
         --
-        this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(10, 10)
+        ui.window:SetSizer(ui.FlexGridSizer1)
+        ui.window:SetScrollRate(10, 10)
 
         --
         load_configuration()
