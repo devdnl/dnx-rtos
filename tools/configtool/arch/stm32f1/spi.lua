@@ -98,7 +98,6 @@ local function load_configuration()
                 local number_of_CS = tonumber(ct:key_read(config.arch.stm32f1.key["SPI_SPI"..SPI.."_NUMBER_OF_CS"])) - 1
 
                 ui.CheckBox_enable_peripheral[SPI]:SetValue(SPI_enable)
-                ui.Panel_settings[SPI]:Enable(SPI_enable)
                 ui.CheckBox_use_DMA[SPI]:SetValue(use_DMA)
                 ui.Choice_number_of_CS[SPI]:SetSelection(number_of_CS)
 
@@ -114,6 +113,8 @@ local function load_configuration()
                         ui.Choice_CS_pin[SPI][CS]:SetSelection(ct:get_string_index(pin_list, pin_name) - 1)
                         ui.Panel_CS[SPI][CS]:Enable(CS <= number_of_CS)
                 end
+                
+                ui.Panel_settings[SPI]:Enable(SPI_enable)
         end
 
         ui.CheckBox_enable_module:SetValue(module_enable)
@@ -235,7 +236,12 @@ function spi:create_window(parent)
         -- add module enable checkbox
         ui.CheckBox_enable_module = wx.wxCheckBox(ui.window, ID.CHECKBOX_ENABLE_MODULE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_enable_module, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.CHECKBOX_ENABLE_MODULE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) ui.Panel_module:Enable(event:IsChecked()) end)
+        ui.window:Connect(ID.CHECKBOX_ENABLE_MODULE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                function(event)
+                        ui.Panel_module:Enable(event:IsChecked())
+                        ui.Button_save:Enable(true)
+                end
+        )
 
         -- add main panel
         ui.Panel_module = wx.wxPanel(ui.window, ID.PANEL_MODULE, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)

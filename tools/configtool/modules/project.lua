@@ -56,6 +56,7 @@ ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 
 local last_cpu_arch
 local last_cpu_name
+local last_priority
 
 
 --==============================================================================
@@ -100,12 +101,10 @@ local function load_cpu_name_list(cpu_name, cpu_arch)
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         ui.Choice_CPU_name:Append(cpu.name:GetValue())
                 end
-
-                last_cpu_name = ""
         end
 
         -- select specified CPU
-        if last_cpu_name ~= cpu_name then
+        if last_cpu_name ~= cpu_name or last_cpu_arch ~= cpu_arch then
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
 
@@ -383,8 +382,6 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function project:refresh()
-        last_cpu_arch = ""
-        last_cpu_name = ""
         load_controls()
         ui.Button_save:Enable(false)
 end
