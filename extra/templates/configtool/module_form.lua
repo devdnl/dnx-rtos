@@ -94,32 +94,34 @@ function <!module_name!>:create_window(parent)
 
         ID = {}
         ID.CHECKBOX_ENABLE = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
+        ID.STATICLINE1     = wx.wxNewId()
+        ID.BUTTON_SAVE     = wx.wxNewId()
 
+        -- create new scrolled window
+        ui.window = wx.wxScrolledWindow(parent, wx.wxID_ANY)
 
-        ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
-        local this = ui.window
-
+        -- add main sizer and module enable checkbox
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
+        ui.CheckBox_enable = wx.wxCheckBox(ui.window, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
+        -- add horizontal line
+        ui.StaticLine1 = wx.wxStaticLine(ui.window, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
+        -- add save button
+        ui.Button_save = wx.wxButton(ui.window, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        --
-        this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(25, 25)
+        -- set main sizer and scroll rate
+        ui.window:SetSizer(ui.FlexGridSizer1)
+        ui.window:SetScrollRate(10, 10)
 
-        --
-        this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated   )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click)
+        -- connect signals
+        ui.window:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated   )
+        ui.window:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click)
 
-        --
+        -- load configuration
         load_configuration()
         ui.Button_save:Enable(false)
 
@@ -162,6 +164,16 @@ end
 --------------------------------------------------------------------------------
 function <!module_name!>:save()
         save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function <!module_name!>:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

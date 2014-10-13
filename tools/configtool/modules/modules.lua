@@ -43,19 +43,42 @@ modules = {}
 local ui   = {}
 local page = {}
 
-
 --==============================================================================
 -- LOCAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
 -- @brief  Event is called when notebook page is changed
--- @param  this         event object
+-- @param  event        event object
 -- @return None
 --------------------------------------------------------------------------------
-local function notebook_page_changed(this)
-        local card = this:GetSelection() + 1
-        if page[card] then page[card]:selected() end
-        this:Skip()
+local function notebook_page_changing(event)
+        local old_card = event:GetOldSelection() + 1
+
+        if page[old_card] and page[old_card]:is_modified() then
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "The configuration has changed.\n\nDo you want to save the changes?", bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
+                if answer == wx.wxID_CANCEL then
+                        event:Veto()
+                elseif answer == wx.wxID_YES then
+                        page[old_card]:save()
+                else
+                        page[old_card]:discard()
+                end
+        end
+end
+
+--------------------------------------------------------------------------------
+-- @brief  Event is called when notebook page is changed
+-- @param  event        event object
+-- @return None
+--------------------------------------------------------------------------------
+local function notebook_page_changed(event)
+        local card = event:GetSelection() + 1
+
+        if page[card] then
+                page[card]:selected()
+        end
+
+        event:Skip()
 end
 
 
@@ -98,6 +121,10 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function modules:refresh()
+        -- disconnect noteobok events
+        ui.notebook:Disconnect(wx.wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGING)
+
+        -- load CPU architecture and name
         local cpu_arch   = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
         local cpu_name   = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
         local cpu_idx    = ct:get_cpu_index(cpu_arch, cpu_name)
@@ -176,6 +203,8 @@ function modules:refresh()
                 page[i] = module
                 dialog:Update(i+1)
         end
+
+        ui.notebook:Connect(wx.wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGING, notebook_page_changing)
 
         ui.notebook:Show()
 end

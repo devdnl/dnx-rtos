@@ -56,8 +56,10 @@ local ID = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
-        ui.CheckBox_enable:SetValue(ct:get_module_state("loop"))
+        local module_enable = ct:get_module_state("loop")
+        ui.CheckBox_enable:SetValue(module_enable)
         ui.Choice_devcount:SetSelection(tonumber(ct:key_read(config.noarch.key.LOOP_DEVCOUNT)) - 1)
+        ui.Panel1:Enable(module_enable)
 end
 
 
@@ -193,6 +195,16 @@ end
 --------------------------------------------------------------------------------
 function loop:save()
         on_button_save_click()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function loop:discard()
+        load_controls()
+        ui.Button_save:Enable(false)
 end
 
 
