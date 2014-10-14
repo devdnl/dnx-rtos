@@ -176,34 +176,34 @@ function usb:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_MODULE_ENABLE")
+        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
+        ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 2, 0, 0)
-        ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Endpoint 0 size", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+        ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Endpoint 0 size", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Choice_EP0_size = wx.wxChoice(ui.Panel1, ID.CHOICE_EP0_SIZE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_EP0_SIZE")
+        ui.Choice_EP0_size = wx.wxChoice(ui.Panel1, ID.CHOICE_EP0_SIZE, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_EP0_size:Append("8 bytes")
         ui.Choice_EP0_size:Append("16 bytes")
         ui.Choice_EP0_size:Append("32 bytes")
         ui.Choice_EP0_size:Append("64 bytes")
         ui.FlexGridSizer2:Add(ui.Choice_EP0_size, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "D+ pullup pin", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+        ui.StaticText2 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "D+ pullup pin", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer2:Add(ui.StaticText2, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Choice_pullup_pin = wx.wxChoice(ui.Panel1, ID.CHOICE_PULLUP_PIN, wx.wxDefaultPosition, wx.wxDefaultSize, {"*UNDEFINED*"}, 0, wx.wxDefaultValidator, "ID.CHOICE_PULLUP_PIN")
+        ui.Choice_pullup_pin = wx.wxChoice(ui.Panel1, ID.CHOICE_PULLUP_PIN, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_pullup_pin:Append(pin_list)
         ui.FlexGridSizer2:Add(ui.Choice_pullup_pin, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticText3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Interrupt priority", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
+        ui.StaticText3 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Interrupt priority", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer2:Add(ui.StaticText3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Choice_irq_prio = wx.wxChoice(ui.Panel1, ID.CHOICE_IRQ_PRIO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_IRQ_PRIO")
+        ui.Choice_irq_prio = wx.wxChoice(ui.Panel1, ID.CHOICE_IRQ_PRIO, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         for i, item in ipairs(prio_list) do ui.Choice_irq_prio:Append(item.name) end
         ui.Choice_irq_prio:Append("System default")
         ui.FlexGridSizer2:Add(ui.Choice_irq_prio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
+        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
         ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
+        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
@@ -241,12 +241,22 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function usb:selected()
-        -- refreshes pin list
-        pin_list = gpio:get_pin_list(true)
-        ui.Choice_pullup_pin:Clear()
-        ui.Choice_pullup_pin:Append("*UNDEFINED*")
-        ui.Choice_pullup_pin:Append(pin_list)
-        load_configuration()
+        local new_pin_list = gpio:get_pin_list(true)
+
+        local equal = true
+        for i = 1, #new_pin_list do
+                if pin_list[i] ~= new_pin_list[i] then
+                        equal = false
+                        break
+                end
+        end
+
+        if not equal then
+                pin_list = new_pin_list
+                ui.Choice_pullup_pin:Clear()
+                ui.Choice_pullup_pin:Append(pin_list)
+                load_configuration()
+        end
 end
 
 
