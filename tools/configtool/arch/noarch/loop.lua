@@ -43,7 +43,7 @@ loop = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -72,7 +72,7 @@ end
 local function on_button_save_click()
         ct:enable_module("loop", ui.CheckBox_enable:GetValue())
         ct:key_write(config.noarch.key.LOOP_DEVCOUNT, tostring(ui.Choice_devcount:GetSelection() + 1))
-        modified = false
+        modified:no()
 end
 
 
@@ -84,7 +84,7 @@ end
 local function checkbox_enable_updated(this)
         local checkbox = this:GetEventObject():DynamicCast("wxCheckBox")
         ui.Panel1:Enable(checkbox:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -94,7 +94,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_general_updated(this)
-        modified = true
+        modified:yes()
 end
 
 
@@ -146,7 +146,7 @@ function loop:create_window(parent)
 
         --
         load_controls()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -177,7 +177,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function loop:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -196,7 +196,7 @@ end
 --------------------------------------------------------------------------------
 function loop:discard()
         load_controls()
-        modified = false
+        modified:no()
 end
 
 

@@ -40,7 +40,7 @@ network = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -80,7 +80,7 @@ local function save_configuration()
 
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
-        modified = false
+        modified:no()
 end
 
 
@@ -91,7 +91,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_clicked(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -101,7 +101,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -191,7 +191,7 @@ end
 --------------------------------------------------------------------------------
 function network:refresh()
         load_controls()
-        modified = false
+        modified:no()
 end
 
 
@@ -201,7 +201,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function network:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 

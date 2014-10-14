@@ -40,7 +40,7 @@ operating_system = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 ID.CHECKBOX1_SYS_MEMMON = wx.wxNewId()
@@ -163,7 +163,7 @@ local function save_configuration()
         ct:key_write(config.project.key.OS_ERRNO_STRING_LEN, tostring(ui.Choice_errno_size:GetSelection()))
         ct:key_write(config.project.key.OS_HOSTNAME, '"'..ui.TextCtrl_hostname:GetValue()..'"')
 
-        modified = false
+        modified:no()
 end
 
 
@@ -174,7 +174,7 @@ end
 --------------------------------------------------------------------------------
 local function stack_value_changed()
         ui.StaticText_total_stack_size:SetLabel(get_total_stack_size_string())
-        modified = true
+        modified:yes()
 end
 
 
@@ -184,7 +184,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_changed()
-        modified = true
+        modified:yes()
 end
 
 
@@ -195,7 +195,7 @@ end
 --------------------------------------------------------------------------------
 local function net_memmon_changed(this)
         ui.SpinCtrl_net_mem_limit:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -429,7 +429,7 @@ end
 --------------------------------------------------------------------------------
 function operating_system:refresh()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 
@@ -438,7 +438,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function operating_system:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 

@@ -40,16 +40,15 @@ file_systems = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
-
-local ui = {}
-local ID = {}
-ID.CHECKBOX_DEVFS = wx.wxNewId()
-ID.CHECKBOX_FATFS = wx.wxNewId()
-ID.CHECKBOX_FATFS_LFN = wx.wxNewId()
-ID.CHECKBOX_LFS = wx.wxNewId()
-ID.CHECKBOX_PROCFS = wx.wxNewId()
-ID.CHOICE_FATFS_LFN_CODEPAGE = wx.wxNewId()
+local modified                  = ct:new_modify_indicator()
+local ui                        = {}
+local ID                        = {}
+ID.CHECKBOX_DEVFS               = wx.wxNewId()
+ID.CHECKBOX_FATFS               = wx.wxNewId()
+ID.CHECKBOX_FATFS_LFN           = wx.wxNewId()
+ID.CHECKBOX_LFS                 = wx.wxNewId()
+ID.CHECKBOX_PROCFS              = wx.wxNewId()
+ID.CHOICE_FATFS_LFN_CODEPAGE    = wx.wxNewId()
 
 local codepage = {"437 - U.S.",
                   "720 - Arabic",
@@ -124,7 +123,7 @@ local function save_configuration()
         ct:key_write(config.project.key.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         ct:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
 
-        modified = false
+        modified:no()
 end
 
 
@@ -134,7 +133,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_changed()
-        modified = true
+        modified:yes()
 end
 
 
@@ -146,7 +145,7 @@ end
 local function FATFS_state_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
         ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -157,7 +156,7 @@ end
 --------------------------------------------------------------------------------
 local function LFN_enable_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -274,7 +273,7 @@ end
 --------------------------------------------------------------------------------
 function file_systems:refresh()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 
@@ -283,7 +282,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function file_systems:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 

@@ -43,7 +43,7 @@ afio = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified         = false
+local modified         = ct:new_modify_indicator()
 local ui               = {}
 local ID               = {}
 local cpu_name         = nil    -- loaded when creating the window
@@ -217,7 +217,7 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["AFIO_EXTI"..i.."_PORT"], tostring(ui.Choice_EXTI[i]:GetSelection()))
         end
 
-        modified = false
+        modified:no()
 end
 
 
@@ -228,7 +228,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -239,7 +239,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_CEO_enable_updated(this)
         ui.Panel_CEO:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -249,7 +249,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -740,7 +740,7 @@ function afio:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -771,7 +771,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function afio:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -790,7 +790,7 @@ end
 --------------------------------------------------------------------------------
 function afio:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

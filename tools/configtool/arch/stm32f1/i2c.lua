@@ -43,7 +43,7 @@ i2c = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 local prio_list = ct:get_priority_list("stm32f1")
@@ -147,7 +147,7 @@ local function save_configuration()
                 end
         end
 
-        modified = false
+        modified:no()
 end
 
 
@@ -207,7 +207,7 @@ function i2c:create_window(parent)
         ui.window:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                 function(event)
                         ui.Panel_module:Enable(event:IsChecked())
-                        modified = true
+                        modified:yes()
                 end
         )
 
@@ -240,7 +240,7 @@ function i2c:create_window(parent)
                 ui.window:Connect(ID.CHECKBOX_ENABLE_I2C[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                         function(event)
                                 ui.Panel_I2C_settings[I2C]:Enable(event:IsChecked())
-                                modified = true
+                                modified:yes()
                         end
                 )
 
@@ -259,7 +259,7 @@ function i2c:create_window(parent)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.window:Connect(ID.CHECKBOX_USE_DMA[I2C], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                         function(event)
-                                modified = true
+                                modified:yes()
                         end
                 )
 
@@ -274,7 +274,7 @@ function i2c:create_window(parent)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.Choice_IRQ_priority[I2C], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.window:Connect(ID.CHOICE_IRQ_PRIORITY[I2C], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                         function(event)
-                                modified = true
+                                modified:yes()
                         end
                 )
 
@@ -285,7 +285,7 @@ function i2c:create_window(parent)
                 ui.FlexGridSizer_I2C_settings[I2C]:Add(ui.SpinCtrl_SCL_frequency[I2C], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL,wx.wxEXPAND), 5)
                 ui.window:Connect(ID.SPINCTRL_SCL_FREQUENCY[I2C], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,
                         function(event)
-                                modified = true
+                                modified:yes()
                         end
                 )
 
@@ -305,7 +305,7 @@ function i2c:create_window(parent)
                                         ui.Panel_I2C_device[I2C][i]:Enable(i <= dev_number)
                                 end
 
-                                modified = true
+                                modified:yes()
                         end
                 )
 
@@ -343,7 +343,7 @@ function i2c:create_window(parent)
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.TextCtrl_device_address[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
                         ui.window:Connect(ID.TEXTCTRL_DEVICE_ADDRESS[I2C][DEV], wx.wxEVT_COMMAND_TEXT_UPDATED,
                                 function(event)
-                                        modified = true
+                                        modified:yes()
                                 end
                         )
 
@@ -354,7 +354,7 @@ function i2c:create_window(parent)
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.Choice_address_mode[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                         ui.window:Connect(ID.CHOICE_ADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                                 function(event)
-                                        modified = true
+                                        modified:yes()
                                 end
                         )
 
@@ -367,7 +367,7 @@ function i2c:create_window(parent)
                         ui.FlexGridSizer_I2C_device[I2C][DEV]:Add(ui.Choice_subaddress_mode[I2C][DEV], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                         ui.window:Connect(ID.CHOICE_SUBADDRESS_MODE[I2C][DEV], wx.wxEVT_COMMAND_CHOICE_SELECTED,
                                 function(event)
-                                        modified = true
+                                        modified:yes()
                                 end
                         )
 
@@ -400,7 +400,7 @@ function i2c:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -431,7 +431,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function i2c:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -450,7 +450,7 @@ end
 --------------------------------------------------------------------------------
 function i2c:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

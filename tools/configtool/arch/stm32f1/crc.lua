@@ -43,7 +43,7 @@ crc = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -68,7 +68,7 @@ end
 --------------------------------------------------------------------------------
 local function save_configuration()
         ct:enable_module("CRC", ui.CheckBox_enable:GetValue())
-        modified = false
+        modified:no()
 end
 
 
@@ -78,7 +78,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
-        modified = true
+        modified:yes()
 end
 
 
@@ -112,7 +112,7 @@ function crc:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -143,7 +143,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function crc:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -162,7 +162,7 @@ end
 --------------------------------------------------------------------------------
 function crc:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

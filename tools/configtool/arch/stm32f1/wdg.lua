@@ -43,7 +43,7 @@ wdg = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -111,7 +111,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.WDG_CLK_DIVIDER, clkdiv)
         ct:key_write(config.arch.stm32f1.key.WDG_RELOAD_VALUE, reload)
 
-        modified = false
+        modified:no()
 end
 
 
@@ -121,7 +121,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_checkbox_enable_updated(this)
-        modified = true
+        modified:yes()
         ui.Panel1:Enable(this:IsChecked())
 end
 
@@ -132,7 +132,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -202,7 +202,7 @@ function wdg:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -233,7 +233,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function wdg:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -252,7 +252,7 @@ end
 --------------------------------------------------------------------------------
 function wdg:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

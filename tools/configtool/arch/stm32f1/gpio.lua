@@ -43,7 +43,7 @@ gpio = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 local periph
@@ -279,7 +279,7 @@ local function save_configuration()
         -- module enable
         ct:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
 
-        modified = false
+        modified:no()
 end
 
 
@@ -291,7 +291,7 @@ end
 local function checkbox_changed(this)
         ui.Choice_port:Enable(this:IsChecked())
         enable_controls(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -325,7 +325,7 @@ local function port_number_changed(this)
         ui.window:Thaw()
 
         if answer == wx.wxID_YES or answer == wx.wxID_NO then
-                modified = false
+                modified:no()
         end
 end
 
@@ -336,7 +336,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function pin_name_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -346,7 +346,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function pin_state_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -356,7 +356,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local port_mode_changed = {}
-for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) modified = true end end
+for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) modified:yes() end end
 
 
 --==============================================================================
@@ -454,7 +454,7 @@ function gpio:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -485,7 +485,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function gpio:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -504,7 +504,7 @@ end
 --------------------------------------------------------------------------------
 function gpio:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

@@ -42,7 +42,7 @@ usb = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified  = false
+local modified  = ct:new_modify_indicator()
 local ui        = {}
 local ID        = {}
 local gpio      = require("arch/stm32f1/gpio").get_handler()
@@ -98,12 +98,10 @@ local function save_configuration()
         -- save pullup pin name
         local pullup_pin = ui.Choice_pullup_pin:GetSelection()
         if pullup_pin == 0 then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Selected pin is not defined!\n\nSelect correct pin and try again.")
-                return
-        else
-                ct:key_write(config.arch.stm32f1.key.USB_PULLUP_PIN, pin_list[pullup_pin])
+                pullup_pin = 1
         end
-
+        ct:key_write(config.arch.stm32f1.key.USB_PULLUP_PIN, pin_list[pullup_pin])
+        
         -- save module enable settings
         ct:enable_module("USB", ui.CheckBox_module_enable:GetValue())
 
@@ -128,7 +126,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.USB_IRQ_PRIORITY, irq_prio)
 
         --
-        modified = false
+        modified:no()
 end
 
 
@@ -139,7 +137,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -149,7 +147,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 --==============================================================================
@@ -213,7 +211,7 @@ function usb:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -260,7 +258,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function usb:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -279,7 +277,7 @@ end
 --------------------------------------------------------------------------------
 function usb:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

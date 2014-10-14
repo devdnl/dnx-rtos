@@ -43,6 +43,7 @@ require("modules/ctcore")
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -67,7 +68,7 @@ end
 --------------------------------------------------------------------------------
 local function save_configuration()
         ct:enable_module("<!module_name!>", ui.CheckBox_enable:GetValue())
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -77,7 +78,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -94,8 +95,6 @@ function <!module_name!>:create_window(parent)
 
         ID = {}
         ID.CHECKBOX_ENABLE = wx.wxNewId()
-        ID.STATICLINE1     = wx.wxNewId()
-        ID.BUTTON_SAVE     = wx.wxNewId()
 
         -- create new scrolled window
         ui.window = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -105,25 +104,16 @@ function <!module_name!>:create_window(parent)
         ui.CheckBox_enable = wx.wxCheckBox(ui.window, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        -- add horizontal line
-        ui.StaticLine1 = wx.wxStaticLine(ui.window, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        -- add save button
-        ui.Button_save = wx.wxButton(ui.window, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
         -- set main sizer and scroll rate
         ui.window:SetSizer(ui.FlexGridSizer1)
         ui.window:SetScrollRate(10, 10)
 
         -- connect signals
-        ui.window:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated   )
-        ui.window:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click)
+        ui.window:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
 
         -- load configuration
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified:no()
 
         return ui.window
 end
@@ -154,7 +144,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function <!module_name!>:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
 end
 
 
@@ -173,7 +163,7 @@ end
 --------------------------------------------------------------------------------
 function <!module_name!>:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 

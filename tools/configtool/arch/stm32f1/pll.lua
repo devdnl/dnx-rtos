@@ -43,7 +43,7 @@ pll = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified         = false
+local modified         = ct:new_modify_indicator()
 local ui               = {}
 local ID               = {}
 local cpu_name         = nil    -- loaded when creating the window
@@ -603,7 +603,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.PLL_ADC_PRE, ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].key)
         ct:key_write(config.arch.stm32f1.key.PLL_FLASH_LATENCY, tostring(calculate_frequencies().flash_latency))
 
-        modified = false
+        modified:no()
 end
 
 
@@ -614,7 +614,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -651,7 +651,7 @@ local function event_value_updated()
         ui.StaticText_APB2_prescaler:SetLabel(freqlabel(freq.PCLK2, "%s (PCLK2)"))
         ui.StaticText_ADC_prescaler:SetLabel(freqlabel(freq.ADCCLK, "%s (ADCCLK)"))
 
-        modified = true
+        modified:yes()
 end
 
 
@@ -909,7 +909,7 @@ function pll:create_window(parent)
         --
         load_configuration()
         event_value_updated()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -940,7 +940,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function pll:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -960,7 +960,7 @@ end
 function pll:discard()
         load_configuration()
         event_value_updated()
-        modified = false
+        modified:no()
 end
 
 

@@ -43,7 +43,7 @@ sdspi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 local NUMBER_OF_CARDS = 2
@@ -91,7 +91,7 @@ local function save_configuration()
         end
 
         --
-        modified = false
+        modified:no()
 
         return true
 end
@@ -104,7 +104,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -114,7 +114,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -130,7 +130,7 @@ local function event_number_of_cards_changed(event)
                 ui.Panel_card[i]:Enable(i <= card_count)
         end
 
-        modified = true
+        modified:yes()
 end
 
 
@@ -224,7 +224,7 @@ function sdspi:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -255,7 +255,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function sdspi:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -274,7 +274,7 @@ end
 --------------------------------------------------------------------------------
 function sdspi:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

@@ -43,7 +43,7 @@ uart = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified  = false
+local modified  = ct:new_modify_indicator()
 local ui        = {}
 local ID        = {}
 local cpu_name  = nil    -- loaded when creating the window
@@ -193,7 +193,7 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"], irq_prio)
         end
 
-        modified = false
+        modified:no()
 end
 
 
@@ -204,7 +204,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -214,7 +214,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -226,7 +226,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_UART_enable_updated(this, i)
         ui.UART[i].Panel:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -342,7 +342,7 @@ function uart:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -373,7 +373,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function uart:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -392,7 +392,7 @@ end
 --------------------------------------------------------------------------------
 function uart:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

@@ -43,7 +43,7 @@ irq = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified         = false
+local modified         = ct:new_modify_indicator()
 local ui               = {}
 local ID               = {}
 local NUMBER_OF_IRQ    = 16
@@ -96,7 +96,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -129,7 +129,7 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["IRQ_"..i.."_PRIO"], prio)
         end
 
-        modified = false
+        modified:no()
 end
 
 
@@ -139,7 +139,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -155,7 +155,7 @@ local function event_value_updated_IRQ9_5(this)
                 ui.Choice_EXTI_prio[i]:SetSelection(selection)
         end
 
-        modified = true
+        modified:yes()
 end
 
 
@@ -171,7 +171,7 @@ local function event_value_updated_IRQ10_15(this)
                 ui.Choice_EXTI_prio[i]:SetSelection(selection)
         end
 
-        modified = true
+        modified:yes()
 end
 
 
@@ -261,7 +261,7 @@ function irq:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -292,7 +292,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function irq:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -311,7 +311,7 @@ end
 --------------------------------------------------------------------------------
 function irq:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

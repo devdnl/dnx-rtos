@@ -141,6 +141,8 @@ local function event_save_configuration()
 
         if page[card].form:is_modified() then
                 page[card].form:save()
+                toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
+                ui.frame:SetStatusText("Configuration saved")
         end
 end
 
@@ -180,6 +182,22 @@ local function event_export_configuration()
         end
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Signal is called when menu's export item is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_configuration_modified(modified)
+        toolBar:EnableTool(ID.TOOLBAR_SAVE, modified)
+
+        if modified then
+                ui.frame:SetStatusText("Configuration is modified")
+        else
+                ui.frame:SetStatusText("")
+        end
+end
+
 --------------------------------------------------------------------------------
 -- @brief  Function create widgets
 -- @param  None
@@ -206,9 +224,15 @@ local function main()
         toolBar:SetToolBitmapSize(wx.wxSize(22, 22))
         local toolBmpSize = toolBar:GetToolBitmapSize()
         toolBar:AddTool(ID.TOOLBAR_SAVE, "Save", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_SAVE, wx.wxART_MENU, toolBmpSize), "Save configuration")
+        toolBar:AddSeparator()
         toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_OPEN, wx.wxART_MENU, toolBmpSize), "Import configuration from the file")
         toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_SAVE_AS, wx.wxART_MENU, toolBmpSize), "Export configuration to the file")
         toolBar:Realize()
+        toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
+
+        statusBar = ui.frame:CreateStatusBar(1)
+        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool")
+
 
         -- create treebook view
         ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
@@ -237,6 +261,9 @@ local function main()
         ui.frame:Connect(ID.TOOLBAR_SAVE, wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
         ui.frame:Connect(ID.TOOLBAR_IMPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.TOOLBAR_EXPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
+
+        -- set modification function event
+        ct:set_modify_event_function(event_configuration_modified)
 
         -- show created window
         ui.frame:Show(true)

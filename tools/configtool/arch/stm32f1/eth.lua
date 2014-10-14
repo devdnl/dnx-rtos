@@ -43,7 +43,7 @@ eth = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified   = false
+local modified   = ct:new_modify_indicator()
 local ui         = {}
 local ID         = {}
 local prio_list  = ct:get_priority_list("stm32f1")
@@ -150,7 +150,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.ETH_PHY_SPEED_STATUS_BM, PHY[PHY_index].speed_status_mask:GetValue())
         ct:key_write(config.arch.stm32f1.key.ETH_PHY_DUPLEX_STATUS_BM, PHY[PHY_index].duplex_status_mask:GetValue())
 
-        modified = false
+        modified:no()
 
         return true
 end
@@ -163,7 +163,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -173,7 +173,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -270,7 +270,7 @@ function eth:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -301,7 +301,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function eth:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -320,7 +320,7 @@ end
 --------------------------------------------------------------------------------
 function eth:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 

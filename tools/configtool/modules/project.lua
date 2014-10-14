@@ -40,7 +40,7 @@ project  = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 ID.WINDOW                  = wx.wxNewId()
@@ -163,7 +163,7 @@ local function load_configuration()
         last_cpu_arch = cpu_arch
         last_cpu_name = cpu_name
 
-        modified = true
+        modified:no()
 end
 
 
@@ -213,7 +213,7 @@ local function save_configuration()
                 end
         end
 
-        modified = false
+        modified:no()
 
         -- info about changed configuration
         ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.", ui.window)
@@ -226,7 +226,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function textctrl_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -246,7 +246,7 @@ local function choice_cpu_arch_selected(event)
         last_cpu_arch = cpu_arch
         last_cpu_name = cpu_name
 
-        modified = true
+        modified:yes()
 end
 
 
@@ -256,7 +256,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_name_selected(this)
-        modified = true
+        modified:yes()
 end
 
 
@@ -266,7 +266,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_prio_selected(this)
-        modified = true
+        modified:yes()
 end
 
 
@@ -276,7 +276,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function spinctrl_osc_freq_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -372,7 +372,6 @@ end
 --------------------------------------------------------------------------------
 function project:refresh()
         load_configuration()
-        modified = false
 end
 
 
@@ -381,7 +380,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function project:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 

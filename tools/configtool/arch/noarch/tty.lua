@@ -43,7 +43,7 @@ tty = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local modified = false
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -102,7 +102,7 @@ local function save_configuration()
         ct:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
         ct:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
 
-        modified = false
+        modified:no()
 end
 
 
@@ -113,7 +113,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        modified = true
+        modified:yes()
 end
 
 
@@ -123,7 +123,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_updated()
-        modified = true
+        modified:yes()
 end
 
 
@@ -236,7 +236,7 @@ function tty:create_window(parent)
 
         --
         load_configuration()
-        modified = false
+        modified:no()
 
         return ui.window
 end
@@ -263,7 +263,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function tty:is_modified()
-        return modified
+        return modified:get_value()
 end
 
 
@@ -282,7 +282,7 @@ end
 --------------------------------------------------------------------------------
 function tty:discard()
         load_configuration()
-        modified = false
+        modified:no()
 end
 
 
