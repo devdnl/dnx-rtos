@@ -205,7 +205,7 @@ function sdspi:create_window(parent)
                 this:Connect(ID.SPINCTRL_CARD[i], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  event_value_updated)
         end
 
-        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
+        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL)
         ui.FlexGridSizerPanel1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)

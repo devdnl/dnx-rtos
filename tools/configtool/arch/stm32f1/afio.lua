@@ -58,7 +58,7 @@ local CPU_FAMILY_LD    = config.arch.stm32f1.def.STM32F10X_LD:GetValue()
 local CPU_FAMILY_MD    = config.arch.stm32f1.def.STM32F10X_MD:GetValue()
 local CPU_FAMILY_HD    = config.arch.stm32f1.def.STM32F10X_HD:GetValue()
 local CPU_FAMILY_XL    = config.arch.stm32f1.def.STM32F10X_XL:GetValue()
-local UI_CHOICE_SIZE   = wx.wxSize(350, -1)
+local UI_CHOICE_SIZE   = wx.wxSize(400, -1)
 local PORT_LIST        = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
 
 
@@ -266,6 +266,7 @@ function afio:create_window(parent)
         cpu_idx    = ct:get_cpu_index("stm32f1", cpu_name)
         cpu        = config.arch.stm32f1.cpulist:Children()[cpu_idx]
         cpu_family = cpu.family:GetValue()
+        local ts   = {}
 
         ui = {}
         ui.StaticText_EXTI = {}
@@ -361,6 +362,7 @@ function afio:create_window(parent)
         ui.Choice_remap_SPI1:Append("Yes (NSS/PA15, SCK/PB3, MISO/PB4, MOSI/PB5)")
         ui.Choice_remap_SPI1:SetMinSize(UI_CHOICE_SIZE)
         ui.Choice_remap_SPI1:SetMaxSize(UI_CHOICE_SIZE)
+        ui.Choice_remap_SPI1:SetToolTip("No (NSS/PA4, SCK/PA5, MISO/PA6, MOSI/PA7)\nYes (NSS/PA15, SCK/PB3, MISO/PB4, MOSI/PB5)")
         ui.FlexGridSizer6:Add(ui.Choice_remap_SPI1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText9 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Remap I2C1", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText9, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -401,25 +403,39 @@ function afio:create_window(parent)
         ui.FlexGridSizer6:Add(ui.Choice_remap_USART3, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Remap TIM1", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.Choice_remap_TIM1 = wx.wxChoice(ui.Panel1, ID.CHOICE_REMAP_TIM1, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_REMAP_TIM1")
         this:Connect(ID.CHOICE_REMAP_TIM1, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-        ui.Choice_remap_TIM1:Append("No (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PB12, CH1N/PB13, CH2N/PB14, CH3N/PB15)")
-        ui.Choice_remap_TIM1:Append("Partial (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PA6, CH1N/PA7, CH2N/PB0, CH3N/PB1)")
-        ui.Choice_remap_TIM1:Append("Full (ETR/PE7, CH1/PE9, CH2/PE11, CH3/PE13, CH4/PE14, BKIN/PE15, CH1N/PE8, CH2N/PE10, CH3N/PE12)")
+        ts = {"No (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PB12, CH1N/PB13, CH2N/PB14, CH3N/PB15)",
+              "Partial (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PA6, CH1N/PA7, CH2N/PB0, CH3N/PB1)",
+              "Full (ETR/PE7, CH1/PE9, CH2/PE11, CH3/PE13, CH4/PE14, BKIN/PE15, CH1N/PE8, CH2N/PE10, CH3N/PE12)"}
+        ui.Choice_remap_TIM1:Append(ts)
+--         ui.Choice_remap_TIM1:Append("No (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PB12, CH1N/PB13, CH2N/PB14, CH3N/PB15)")
+--         ui.Choice_remap_TIM1:Append("Partial (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PA6, CH1N/PA7, CH2N/PB0, CH3N/PB1)")
+--         ui.Choice_remap_TIM1:Append("Full (ETR/PE7, CH1/PE9, CH2/PE11, CH3/PE13, CH4/PE14, BKIN/PE15, CH1N/PE8, CH2N/PE10, CH3N/PE12)")
         ui.Choice_remap_TIM1:SetMinSize(UI_CHOICE_SIZE)
         ui.Choice_remap_TIM1:SetMaxSize(UI_CHOICE_SIZE)
+        ui.Choice_remap_TIM1:SetToolTip(ts[1].."\n"..ts[2].."\n"..ts[3])
         ui.FlexGridSizer6:Add(ui.Choice_remap_TIM1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.StaticText5 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Remap TIM2", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_remap_TIM2 = wx.wxChoice(ui.Panel1, ID.CHOICE_REMAP_TIM2, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_REMAP_TIM2")
         this:Connect(ID.CHOICE_REMAP_TIM2, wx.wxEVT_COMMAND_CHOICE_SELECTED, event_value_updated)
-        ui.Choice_remap_TIM2:Append("No (CH1/ETR/PA0, CH2/PA1, CH3/PA2, CH4/PA3)")
-        ui.Choice_remap_TIM2:Append("Partial (CH1/ETR/PA15, CH2/PB3, CH3/PA2, CH4/PA3)")
-        ui.Choice_remap_TIM2:Append("Partial (CH1/ETR/PA0, CH2/PA1, CH3/PB10, CH4/PB11)")
-        ui.Choice_remap_TIM2:Append("Full (CH1/ETR/PA15, CH2/PB3, CH3/PB10, CH4/PB11)")
+        ts = {"No (CH1/ETR/PA0, CH2/PA1, CH3/PA2, CH4/PA3)",
+              "Partial (CH1/ETR/PA15, CH2/PB3, CH3/PA2, CH4/PA3)",
+              "Partial (CH1/ETR/PA0, CH2/PA1, CH3/PB10, CH4/PB11)",
+              "Full (CH1/ETR/PA15, CH2/PB3, CH3/PB10, CH4/PB11)"}
+        ui.Choice_remap_TIM2:Append(ts)
+--         ui.Choice_remap_TIM2:Append("No (CH1/ETR/PA0, CH2/PA1, CH3/PA2, CH4/PA3)")
+--         ui.Choice_remap_TIM2:Append("Partial (CH1/ETR/PA15, CH2/PB3, CH3/PA2, CH4/PA3)")
+--         ui.Choice_remap_TIM2:Append("Partial (CH1/ETR/PA0, CH2/PA1, CH3/PB10, CH4/PB11)")
+--         ui.Choice_remap_TIM2:Append("Full (CH1/ETR/PA15, CH2/PB3, CH3/PB10, CH4/PB11)")
         ui.Choice_remap_TIM2:SetMinSize(UI_CHOICE_SIZE)
         ui.Choice_remap_TIM2:SetMaxSize(UI_CHOICE_SIZE)
+        ui.Choice_remap_TIM2:SetToolTip(ts[1].."\n"..ts[2].."\n"..ts[3].."\n"..ts[4])
         ui.FlexGridSizer6:Add(ui.Choice_remap_TIM2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
         ui.StaticText6 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Remap TIM3", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer6:Add(ui.StaticText6, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_remap_TIM3 = wx.wxChoice(ui.Panel1, ID.CHOICE_REMAP_TIM3, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_REMAP_TIM3")
