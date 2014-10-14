@@ -4,6 +4,9 @@ New Features, Improvements:
 - Configtool: corrected project configuraiton script to be faster
 - Configtool: the import of the configuration with unknown CPU architecture is disabled
 - Configtool: release version is added to the title bar
+- Configtool: tool uses save questions instead of discard
+- Configtool: added status and tool bar, removed Save buttons from configuration forms
+- Configtool: added tooltips to the AFIO configuration
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
 
