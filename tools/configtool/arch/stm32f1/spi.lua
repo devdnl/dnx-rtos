@@ -166,11 +166,12 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_ENABLE"], SPI_enable)
 
                 for CS = 0, NUMBER_OF_CS - 1 do
-                        local pin_name = pin_list[ui.Choice_CS_pin[SPI][CS]:GetSelection() + 1]
-
-                        if pin_name then
-                                ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_CS"..CS.."_PIN_NAME"], pin_name)
+                        local pin_number = ui.Choice_CS_pin[SPI][CS]:GetSelection() + 1
+                        if pin_number < 1 then
+                                pin_number = 1
                         end
+
+                        ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_CS"..CS.."_PIN_NAME"], pin_list[pin_number])
                 end
         end
 
