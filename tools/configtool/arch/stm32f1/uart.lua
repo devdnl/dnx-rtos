@@ -43,6 +43,7 @@ uart = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified  = false
 local ui        = {}
 local ID        = {}
 local cpu_name  = nil    -- loaded when creating the window
@@ -192,7 +193,7 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["UART_UART"..uart_num.."_PRIORITY"], irq_prio)
         end
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -203,7 +204,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -213,7 +214,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -225,7 +226,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_UART_enable_updated(this, i)
         ui.UART[i].Panel:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -256,7 +257,6 @@ function uart:create_window(parent)
         ID.CHOICE_UART_IRQ_PRIO = {}
         ID.PANEL_UART = {}
         ID.PANEL1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -327,10 +327,6 @@ function uart:create_window(parent)
         --
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -343,11 +339,10 @@ function uart:create_window(parent)
         this:Connect(ID.CHOICE_PARITY,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.SPINCTRL_RX_BUF_SIZE,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )
         this:Connect(ID.SPINCTRL_RX_BUF_SIZE,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -378,7 +373,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function uart:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -397,7 +392,7 @@ end
 --------------------------------------------------------------------------------
 function uart:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

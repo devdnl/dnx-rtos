@@ -43,7 +43,7 @@ tty = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
--- local objects
+local modified = false
 local ui = {}
 local ID = {}
 
@@ -102,7 +102,7 @@ local function save_configuration()
         ct:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
         ct:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -113,7 +113,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -123,7 +123,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -153,8 +153,6 @@ function tty:create_window(parent)
         ID.COMBOBOX_INSTREAMPATH = wx.wxNewId()
         ID.STATICTEXT5 = wx.wxNewId()
         ID.COMBOBOX_OUTSTREAMPATH = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -217,16 +215,12 @@ function tty:create_window(parent)
         ui.FlexGridSizer5:Add(ui.ComboBox_outstreampath, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer4:Add(ui.FlexGridSizer5, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer2:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(25, 25)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_updated)
@@ -239,11 +233,10 @@ function tty:create_window(parent)
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,    save_configuration   )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -270,7 +263,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function tty:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -289,7 +282,7 @@ end
 --------------------------------------------------------------------------------
 function tty:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

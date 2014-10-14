@@ -40,9 +40,10 @@ file_systems = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = false
+
 local ui = {}
 local ID = {}
-ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX_DEVFS = wx.wxNewId()
 ID.CHECKBOX_FATFS = wx.wxNewId()
 ID.CHECKBOX_FATFS_LFN = wx.wxNewId()
@@ -85,7 +86,7 @@ local codepage = {"437 - U.S.",
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         ui.CheckBox_devfs:SetValue(ct:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(ct:get_module_state("LFS"))
         ui.CheckBox_procfs:SetValue(ct:get_module_state("PROCFS"))
@@ -115,7 +116,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         ct:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
         ct:enable_module("LFS", ui.CheckBox_lfs:GetValue())
         ct:enable_module("FATFS", ui.CheckBox_fatfs:GetValue())
@@ -123,7 +124,7 @@ local function on_button_save_click()
         ct:key_write(config.project.key.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         ct:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -133,7 +134,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_changed()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -145,7 +146,7 @@ end
 local function FATFS_state_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
         ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -156,7 +157,7 @@ end
 --------------------------------------------------------------------------------
 local function LFN_enable_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -241,13 +242,6 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticLine2 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-                ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(50, 50)
 
@@ -258,7 +252,6 @@ function file_systems:create_window(parent)
                 this:Connect(ID.CHECKBOX_FATFS_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
                 this:Connect(ID.CHOICE_FATFS_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
                 this:Connect(ID.CHECKBOX_PROCFS,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.BUTTON_SAVE,               wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
@@ -280,8 +273,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function file_systems:refresh()
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified = false
 end
 
 
@@ -290,7 +283,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function file_systems:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -299,5 +292,5 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function file_systems:save()
-        on_button_save_click()
+        save_configuration()
 end

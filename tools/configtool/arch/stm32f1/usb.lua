@@ -42,6 +42,7 @@ usb = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified  = false
 local ui        = {}
 local ID        = {}
 local gpio      = require("arch/stm32f1/gpio").get_handler()
@@ -127,7 +128,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.USB_IRQ_PRIORITY, irq_prio)
 
         --
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -138,7 +139,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -148,7 +149,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 --==============================================================================
@@ -169,8 +170,6 @@ function usb:create_window(parent)
         ID.CHOICE_PULLUP_PIN = wx.wxNewId()
         ID.CHOICE_IRQ_PRIO = wx.wxNewId()
         ID.PANEL1 = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -201,10 +200,6 @@ function usb:create_window(parent)
         ui.FlexGridSizer2:Add(ui.Choice_irq_prio, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -215,11 +210,10 @@ function usb:create_window(parent)
         this:Connect(ID.CHOICE_EP0_SIZE,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_IRQ_PRIO,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_PULLUP_PIN,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -266,7 +260,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function usb:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -285,7 +279,7 @@ end
 --------------------------------------------------------------------------------
 function usb:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

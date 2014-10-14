@@ -43,6 +43,7 @@ wdg = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = false
 local ui = {}
 local ID = {}
 
@@ -110,7 +111,7 @@ local function save_configuration()
         ct:key_write(config.arch.stm32f1.key.WDG_CLK_DIVIDER, clkdiv)
         ct:key_write(config.arch.stm32f1.key.WDG_RELOAD_VALUE, reload)
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -120,7 +121,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_checkbox_enable_updated(this)
-        ui.Button_save:Enable(true)
+        modified = true
         ui.Panel1:Enable(this:IsChecked())
 end
 
@@ -131,7 +132,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -152,9 +153,6 @@ function wdg:create_window(parent)
         ID.CHECKBOX_LOCK = wx.wxNewId()
         ID.CHECKBOX_DEBUG = wx.wxNewId()
         ID.CHOICE_TIMEOUT = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
-
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -191,10 +189,6 @@ function wdg:create_window(parent)
         ui.FlexGridSizer2:Fit(ui.Panel1)
         ui.FlexGridSizer2:SetSizeHints(ui.Panel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -205,11 +199,10 @@ function wdg:create_window(parent)
         this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated          )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration   )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -240,7 +233,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function wdg:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -259,7 +252,7 @@ end
 --------------------------------------------------------------------------------
 function wdg:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

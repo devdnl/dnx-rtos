@@ -43,6 +43,7 @@ sdspi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = false
 local ui = {}
 local ID = {}
 local NUMBER_OF_CARDS = 2
@@ -90,7 +91,7 @@ local function save_configuration()
         end
 
         --
-        ui.Button_save:Enable(false)
+        modified = false
 
         return true
 end
@@ -103,7 +104,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -113,7 +114,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -129,7 +130,7 @@ local function event_number_of_cards_changed(event)
                 ui.Panel_card[i]:Enable(i <= card_count)
         end
 
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -153,7 +154,6 @@ function sdspi:create_window(parent)
         ID.CHOICE_CARD_COUNT = wx.wxNewId()
         ID.COMBOBOX_CARD = {}
         ID.SPINCTRL_CARD = {}
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -214,24 +214,17 @@ function sdspi:create_window(parent)
         ui.Panel1:SetSizer(ui.FlexGridSizerPanel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
         --
         this:SetSizer(ui.FlexGridSizer1)
         this:SetScrollRate(50, 50)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
         this:Connect(ID.CHOICE_CARD_COUNT,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_number_of_cards_changed       )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -262,7 +255,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function sdspi:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -281,7 +274,7 @@ end
 --------------------------------------------------------------------------------
 function sdspi:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

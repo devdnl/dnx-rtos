@@ -43,6 +43,7 @@ gpio = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = false
 local ui = {}
 local ID = {}
 local periph
@@ -278,7 +279,7 @@ local function save_configuration()
         -- module enable
         ct:enable_module("GPIO", ui.CheckBox_enable:IsChecked())
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -290,7 +291,7 @@ end
 local function checkbox_changed(this)
         ui.Choice_port:Enable(this:IsChecked())
         enable_controls(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -305,7 +306,7 @@ local function port_number_changed(this)
         end
 
         local answer = wx.wxID_NO
-        if ui.Button_save:IsEnabled() then
+        if modified then
                 answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "Do you want to save changes?", bit.bor(wx.wxYES_NO, wx.wxCANCEL))
         end
 
@@ -324,7 +325,7 @@ local function port_number_changed(this)
         ui.window:Thaw()
 
         if answer == wx.wxID_YES or answer == wx.wxID_NO then
-                ui.Button_save:Enable(false)
+                modified = false
         end
 end
 
@@ -335,7 +336,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function pin_name_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -345,7 +346,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function pin_state_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -355,7 +356,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local port_mode_changed = {}
-for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) ui.Button_save:Enable(true) end end
+for i = 1, number_of_pins do port_mode_changed[i] = function() set_pin_state_by_pin_mode(i - 1) modified = true end end
 
 
 --==============================================================================
@@ -376,7 +377,6 @@ function gpio:create_window(parent)
         ID = {}
         ID.CHECKBOX_ENABLE   = wx.wxNewId()
         ID.CHOICE_PORT       = wx.wxNewId()
-        ID.BUTTON_SAVE       = wx.wxNewId()
         ID.TEXTCTRL_PIN_NAME = {}
         ID.CHOICE_MODE       = {}
         ID.CHOICE_STATE      = {}
@@ -445,24 +445,16 @@ function gpio:create_window(parent)
         ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
-        ui.StaticLine2 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
-
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        --
         this:SetSizer(ui.FlexGridSizer1)
         this:SetScrollRate(50, 50)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed    )
         this:Connect(ID.CHOICE_PORT,     wx.wxEVT_COMMAND_CHOICE_SELECTED,  port_number_changed )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration)
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -493,7 +485,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function gpio:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -512,7 +504,7 @@ end
 --------------------------------------------------------------------------------
 function gpio:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

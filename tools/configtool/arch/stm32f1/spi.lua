@@ -43,6 +43,7 @@ spi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified              = false
 local ui                    = {}
 local ID                    = {}
 local NUMBER_OF_CS          = 8
@@ -175,7 +176,7 @@ local function save_configuration()
 
         ct:enable_module("SPI", module_enable)
 
-        ui.Button_save:Enable(false)
+        modified = false
         return true
 end
 
@@ -217,7 +218,6 @@ function spi:create_window(parent)
         ID.CHOICE_SPI_MODE              = wx.wxNewId()
         ID.CHOICE_BIT_ORDER             = wx.wxNewId()
         ID.NOTEBOOK_PERIPHERAL          = wx.wxNewId()
-        ID.BUTTON_SAVE                  = wx.wxNewId()
         ID.PANEL_PERIPHERAL             = {}
         ID.CHECKBOX_ENABLE_PERIPHERAL   = {}
         ID.PANEL_SETTINGS               = {}
@@ -239,7 +239,7 @@ function spi:create_window(parent)
         ui.window:Connect(ID.CHECKBOX_ENABLE_MODULE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                 function(event)
                         ui.Panel_module:Enable(event:IsChecked())
-                        ui.Button_save:Enable(true)
+                        modified = true
                 end
         )
 
@@ -257,7 +257,7 @@ function spi:create_window(parent)
         ui.TextCtrl_dummy_byte = wx.wxTextCtrl(ui.Panel_module, ID.TEXTCTRL_DUMMY_BYTE, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, ct.hexvalidator)
         ui.TextCtrl_dummy_byte:SetMaxLength(2)
         ui.FlexGridSizer_default_settings:Add(ui.TextCtrl_dummy_byte, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.TEXTCTRL_DUMMY_BYTE, wx.wxEVT_COMMAND_TEXT_UPDATED, function(event) ui.Button_save:Enable(true) end)
+        ui.window:Connect(ID.TEXTCTRL_DUMMY_BYTE, wx.wxEVT_COMMAND_TEXT_UPDATED, function(event) modified = true end)
 
         -- add clock divider controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "Clock divider", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -272,7 +272,7 @@ function spi:create_window(parent)
         ui.Choice_clock_divider:Append("Peripheral clock / 128")
         ui.Choice_clock_divider:Append("Peripheral clock / 256")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_clock_divider, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.CHOICE_CLOCK_DIVIDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+        ui.window:Connect(ID.CHOICE_CLOCK_DIVIDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) modified = true end)
 
         -- add SPI mode controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "SPI mode", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -283,7 +283,7 @@ function spi:create_window(parent)
         ui.Choice_SPI_mode:Append("Mode 2 (SCK High at idle; capture on leading edge)")
         ui.Choice_SPI_mode:Append("Mode 3 (SCK High at idle; capture on trailing edge)")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_SPI_mode, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.CHOICE_SPI_MODE, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+        ui.window:Connect(ID.CHOICE_SPI_MODE, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) modified = true end)
 
         -- add bit order controls
         ui.StaticText = wx.wxStaticText(ui.Panel_module, wx.wxID_ANY, "Bit order", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -292,7 +292,7 @@ function spi:create_window(parent)
         ui.Choice_bitorder:Append("MSb first")
         ui.Choice_bitorder:Append("LSb first")
         ui.FlexGridSizer_default_settings:Add(ui.Choice_bitorder, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.CHOICE_BIT_ORDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+        ui.window:Connect(ID.CHOICE_BIT_ORDER, wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) modified = true end)
 
         -- add default settings group to the main group sizer
         ui.StaticBoxSizer_default_settings:Add(ui.FlexGridSizer_default_settings, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -322,7 +322,7 @@ function spi:create_window(parent)
                 ui.window:Connect(ID.CHECKBOX_ENABLE_PERIPHERAL[SPI], wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                         function(event)
                                 ui.Panel_settings[SPI]:Enable(event:IsChecked())
-                                ui.Button_save:Enable(true)
+                                modified = true
                         end
                 )
 
@@ -334,7 +334,7 @@ function spi:create_window(parent)
                 ui.CheckBox_use_DMA[SPI] = wx.wxCheckBox(ui.Panel_settings[SPI], ID.CHECKBOX_USE_DMA[SPI], "Use DMA", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.CheckBox_use_DMA[SPI], 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.window:Connect(ID.CHECKBOX_USE_DMA[SPI], wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) ui.Button_save:Enable(true) end)
+                ui.window:Connect(ID.CHECKBOX_USE_DMA[SPI], wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) modified = true end)
 
                 -- add IRQ priority controls
                 ui.StaticText = wx.wxStaticText(ui.Panel_settings[SPI], wx.wxID_ANY, "IRQ priority", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -345,7 +345,7 @@ function spi:create_window(parent)
                 end
                 ui.Choice_IRQ_priority[SPI]:Append("System default")
                 ui.FlexGridSizer_peripheral_settings[SPI]:Add(ui.Choice_IRQ_priority[SPI], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.window:Connect(ID.CHOICE_IRQ_PRIORITY[SPI], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+                ui.window:Connect(ID.CHOICE_IRQ_PRIORITY[SPI], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) modified = true end)
 
                 -- add number of chip select controls
                 ui.StaticText = wx.wxStaticText(ui.Panel_settings[SPI], wx.wxID_ANY, "Number of Chip Selects", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -366,7 +366,7 @@ function spi:create_window(parent)
                                 for CS = 0, NUMBER_OF_CS - 1 do
                                         ui.Panel_CS[SPI][CS]:Enable(CS < number_of_cs)
                                 end
-                                ui.Button_save:Enable(true)
+                                modified = true
                         end
                 )
 
@@ -397,7 +397,7 @@ function spi:create_window(parent)
                         ui.Choice_CS_pin[SPI][CS] = wx.wxChoice(ui.Panel_CS[SPI][CS], ID.CHOICE_CS_PIN[SPI][CS], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
                         ui.Choice_CS_pin[SPI][CS]:Append(pin_list)
                         ui.FlexGridSizer_CS[SPI][CS]:Add(ui.Choice_CS_pin[SPI][CS], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                        ui.window:Connect(ID.CHOICE_CS_PIN[SPI][CS], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) ui.Button_save:Enable(true) end)
+                        ui.window:Connect(ID.CHOICE_CS_PIN[SPI][CS], wx.wxEVT_COMMAND_CHOICE_SELECTED, function(event) modified = true end)
 
                         -- set sizer of chip select panel
                         ui.Panel_CS[SPI][CS]:SetSizer(ui.FlexGridSizer_CS[SPI][CS])
@@ -427,22 +427,13 @@ function spi:create_window(parent)
         ui.Panel_module:SetSizer(ui.FlexGridSizer_module)
         ui.FlexGridSizer1:Add(ui.Panel_module, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        -- add horizontal line
-        ui.StaticLine = wx.wxStaticLine(ui.window, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        -- add save button
-        ui.Button_save = wx.wxButton(ui.window, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.window:Connect(ID.BUTTON_SAVE, wx.wxEVT_COMMAND_BUTTON_CLICKED, save_configuration)
-
         -- set main sizer
         ui.window:SetSizer(ui.FlexGridSizer1)
         ui.window:SetScrollRate(15, 15)
 
         -- load configuration
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -495,7 +486,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function spi:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -514,7 +505,7 @@ end
 --------------------------------------------------------------------------------
 function spi:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

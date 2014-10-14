@@ -43,6 +43,7 @@ afio = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified         = false
 local ui               = {}
 local ID               = {}
 local cpu_name         = nil    -- loaded when creating the window
@@ -216,7 +217,7 @@ local function save_configuration()
                 ct:key_write(config.arch.stm32f1.key["AFIO_EXTI"..i.."_PORT"], tostring(ui.Choice_EXTI[i]:GetSelection()))
         end
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -227,7 +228,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -238,7 +239,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_CEO_enable_updated(this)
         ui.Panel_CEO:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -248,7 +249,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -315,8 +316,6 @@ function afio:create_window(parent)
         ID.CHOICE_REMAP_MISC = wx.wxNewId()
         ID.CHOICE_EXTI = {}
         ID.PANEL1 = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
@@ -730,10 +729,6 @@ function afio:create_window(parent)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -742,11 +737,10 @@ function afio:create_window(parent)
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
         this:Connect(ID.CHECKBOX_CEO_ENABLE,    wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_CEO_enable_updated   )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 
         return ui.window
 end
@@ -777,7 +771,7 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function afio:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -796,7 +790,7 @@ end
 --------------------------------------------------------------------------------
 function afio:discard()
         load_configuration()
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 

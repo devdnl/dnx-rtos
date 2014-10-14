@@ -40,9 +40,9 @@ operating_system = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = false
 local ui = {}
 local ID = {}
-ID.BUTTON_SAVE = wx.wxNewId()
 ID.CHECKBOX1_SYS_MEMMON = wx.wxNewId()
 ID.CHECKBOX_COLOR_TERM = wx.wxNewId()
 ID.CHECKBOX_CPU_LOADMON = wx.wxNewId()
@@ -67,8 +67,6 @@ ID.SPINCTRL_STREAM_LEN = wx.wxNewId()
 ID.SPINCTRL_SWITCH_FREQ = wx.wxNewId()
 ID.SPINCTRL_TASK_NAME_LEN = wx.wxNewId()
 ID.SPINCTRL_TASK_STACK_SIZE = wx.wxNewId()
-ID.STATICLINE1 = wx.wxNewId()
-ID.STATICLINE2 = wx.wxNewId()
 ID.STATICTEXT2 = wx.wxNewId()
 ID.STATICTEXT3 = wx.wxNewId()
 ID.STATICTEXT4 = wx.wxNewId()
@@ -102,7 +100,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         ui.SpinCtrl_task_stack_size:SetValue(tonumber(ct:key_read(config.project.key.OS_TASK_MIN_STACK_DEPTH)))
         ui.SpinCtrl_fs_stack_size:SetValue(tonumber(ct:key_read(config.project.key.OS_FILE_SYSTEM_STACK_DEPTH)))
         ui.SpinCtrl_irq_stack_size:SetValue(tonumber(ct:key_read(config.project.key.OS_IRQ_STACK_DEPTH)))
@@ -138,7 +136,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         ct:key_write(config.project.key.OS_TASK_MIN_STACK_DEPTH, tostring(ui.SpinCtrl_task_stack_size:GetValue()))
         ct:key_write(config.project.key.OS_FILE_SYSTEM_STACK_DEPTH, tostring(ui.SpinCtrl_fs_stack_size:GetValue()))
         ct:key_write(config.project.key.OS_IRQ_STACK_DEPTH, tostring(ui.SpinCtrl_irq_stack_size:GetValue()))
@@ -165,7 +163,7 @@ local function on_button_save_click()
         ct:key_write(config.project.key.OS_ERRNO_STRING_LEN, tostring(ui.Choice_errno_size:GetSelection()))
         ct:key_write(config.project.key.OS_HOSTNAME, '"'..ui.TextCtrl_hostname:GetValue()..'"')
 
-        ui.Button_save:Enable(false)
+        modified = false
 end
 
 
@@ -176,7 +174,7 @@ end
 --------------------------------------------------------------------------------
 local function stack_value_changed()
         ui.StaticText_total_stack_size:SetLabel(get_total_stack_size_string())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -186,7 +184,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_changed()
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -197,7 +195,7 @@ end
 --------------------------------------------------------------------------------
 local function net_memmon_changed(this)
         ui.SpinCtrl_net_mem_limit:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified = true
 end
 
 
@@ -379,14 +377,6 @@ function operating_system:create_window(parent)
                 ui.StaticBoxSizer7:Add(ui.TextCtrl_hostname, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer7, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                -- line
-                ui.StaticLine2 = wx.wxStaticLine(this, ID.STATICLINE2, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE2")
-                ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- Save button
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
                 -- layout configuration
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(50, 50)
@@ -417,7 +407,6 @@ function operating_system:create_window(parent)
                 this:Connect(ID.SPINCTRL_MEM_BLOCK,            wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
                 this:Connect(ID.CHOICE_ERRNO_SIZE,             wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
                 this:Connect(ID.TEXTCTRL_HOSTNAME,             wx.wxEVT_COMMAND_TEXT_UPDATED,     value_changed       )
-                this:Connect(ID.BUTTON_SAVE,                   wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
@@ -439,8 +428,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function operating_system:refresh()
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified = false
 end
 
 
@@ -449,7 +438,7 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function operating_system:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified
 end
 
 
@@ -458,5 +447,5 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function operating_system:save()
-        on_button_save_click()
+        save_configuration()
 end
