@@ -40,6 +40,7 @@ network = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -70,7 +71,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         ct:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
 
         for i = 0, 5 do
@@ -79,7 +80,7 @@ local function on_button_save_click()
 
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -90,7 +91,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_clicked(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -100,7 +101,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -120,7 +121,6 @@ function network:create_window(parent)
                 ID.CHECKBOX_ENABLE = wx.wxNewId()
                 ID.PANEL1 = wx.wxNewId()
                 ID.COMBOBOX_PATH = wx.wxNewId()
-                ID.BUTTON_SAVE = wx.wxNewId()
 
                 ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
                 local this = ui.window
@@ -161,12 +161,6 @@ function network:create_window(parent)
                 ui.Panel1:SetSizer(ui.BoxSizer1)
                 ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-                ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
@@ -174,7 +168,6 @@ function network:create_window(parent)
                 this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_clicked)
                 this:Connect(ID.COMBOBOX_PATH,   wx.wxEVT_COMMAND_COMBOBOX_SELECTED, event_value_updated    )
                 this:Connect(ID.COMBOBOX_PATH,   wx.wxEVT_COMMAND_TEXT_UPDATED,      event_value_updated    )
-                this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,    on_button_save_click   )
         end
 
         return ui.window
@@ -198,7 +191,7 @@ end
 --------------------------------------------------------------------------------
 function network:refresh()
         load_controls()
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -208,5 +201,14 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function network:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function network:save()
+        save_configuration()
 end

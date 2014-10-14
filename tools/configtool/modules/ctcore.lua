@@ -58,6 +58,7 @@ local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
 local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
 local CFG_FILE_VERSION  = "1"
+local modify_event_func = nil
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -388,7 +389,7 @@ end
 --------------------------------------------------------------------------------
 function ct:get_string_index(tab, str)
         for i, s in ipairs(tab) do
-                if s:match(str) then
+                if s == str then
                         return i
                 end
         end
@@ -1148,8 +1149,56 @@ function ct:apply_project_configuration(file, parent)
         return true
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Function is used to set event of conifuguration modification
+-- @param  eventfunc    event function
+-- @return None
+--------------------------------------------------------------------------------
+function ct:set_modify_event_function(eventfunc)
+        if type(eventfunc) == "function" then
+                modify_event_func = eventfunc
+        else
+                modify_event_func = nil
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Class is used to indicate modification status
+-- @param  eventfunc    event function
+-- @return Always return true
+--------------------------------------------------------------------------------
+function ct:new_modify_indicator()
+        local m     = {}
+        m._modified = false
+
+        function m.yes(self)
+                if type(modify_event_func) == "function" then
+                        modify_event_func(true)
+                end
+
+                self._modified = true
+        end
+
+        function m.no(self)
+                if type(modify_event_func) == "function" then
+                        modify_event_func(false)
+                end
+
+                self._modified = false
+        end
+
+        function m.get_value(self)
+                return self._modified
+        end
+
+        return m
+end
+
+
 -- update Configtool's window name (add release version)
 local line = ct:find_line(config.project.path.dnx_os_h:GetValue(), 1, "^%s*return%s+\"%d+%.%d+%.%d+.*\"%s*;")
 line = ct:get_line(config.project.path.dnx_os_h:GetValue(), line):match("^%s*return%s+\"(%d+%.%d+%.%d+.*)\"%s*;")
-ct.MAIN_WINDOW_NAME = ct.MAIN_WINDOW_NAME.." (Release "..line..")"
+ct.MAIN_WINDOW_NAME = ct.MAIN_WINDOW_NAME.." (version "..line..")"
 

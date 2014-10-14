@@ -40,15 +40,13 @@ project  = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 ID.WINDOW                  = wx.wxNewId()
-ID.STATICLINE1             = wx.wxNewId()
 ID.STATICTEXT2             = wx.wxNewId()
 ID.TEXTCTRL_PROJECT_NAME   = wx.wxNewId()
 ID.TEXTCTRL_TOOLCHAIN_NAME = wx.wxNewId()
-ID.STATICLINE2             = wx.wxNewId()
-ID.BUTTON_SAVE             = wx.wxNewId()
 ID.CHOICE_CPU_ARCH         = wx.wxNewId()
 ID.CHOICE_CPU_NAME         = wx.wxNewId()
 ID.CHOICE_DEFAULT_IRQ_PRIO = wx.wxNewId()
@@ -56,6 +54,7 @@ ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
 
 local last_cpu_arch
 local last_cpu_name
+local last_priority
 
 
 --==============================================================================
@@ -100,12 +99,10 @@ local function load_cpu_name_list(cpu_name, cpu_arch)
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         ui.Choice_CPU_name:Append(cpu.name:GetValue())
                 end
-
-                last_cpu_name = ""
         end
 
         -- select specified CPU
-        if last_cpu_name ~= cpu_name then
+        if last_cpu_name ~= cpu_name or last_cpu_arch ~= cpu_arch then
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
 
@@ -148,7 +145,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local project_name   = ct:key_read(config.project.key.PROJECT_NAME)
         local toolchain_name = ct:key_read(config.project.key.PROJECT_TOOLCHAIN)
         local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
@@ -166,7 +163,7 @@ local function load_controls()
         last_cpu_arch = cpu_arch
         last_cpu_name = cpu_name
 
-        ui.Button_save:Enable(true)
+        modified:no()
 end
 
 
@@ -175,7 +172,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local cpu_arch     = config.arch:Children()[ui.Choice_CPU_arch:GetSelection() + 1]:GetName()
         local cpu_name     = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].name:GetValue()
         local cpu_family   = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].family:GetValue()
@@ -216,10 +213,10 @@ local function on_button_save_click()
                 end
         end
 
-        ui.Button_save:Enable(false)
-
         -- info about changed configuration
         ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.", ui.window)
+
+        modified:no()
 end
 
 
@@ -229,7 +226,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function textctrl_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -249,7 +246,7 @@ local function choice_cpu_arch_selected(event)
         last_cpu_arch = cpu_arch
         last_cpu_name = cpu_name
 
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -259,7 +256,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_name_selected(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -269,7 +266,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_prio_selected(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -279,7 +276,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function spinctrl_osc_freq_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -342,19 +339,10 @@ function project:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticLine2 = wx.wxStaticLine(this, ID.STATICLINE2, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-                ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                --
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
                 -- event connections
-                this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click     )
                 this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.CHOICE_CPU_ARCH,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_arch_selected )
@@ -362,7 +350,7 @@ function project:create_window(parent)
                 this:Connect(ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_prio_selected )
                 this:Connect(ID.SPINCTRL_OSC_FREQ,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED, spinctrl_osc_freq_updated)
 
-                load_controls()
+                load_configuration()
         end
 
         return ui.window
@@ -383,8 +371,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function project:refresh()
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
 end
 
 
@@ -393,5 +380,15 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function project:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function project:save()
+        save_configuration()
+end
+

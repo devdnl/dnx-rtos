@@ -43,7 +43,7 @@ tty = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
--- local objects
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -56,7 +56,7 @@ local ID = {}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local enable          = ct:get_module_state("TTY")
         local term_cols       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_COLS))
         local term_rows       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_ROWS))
@@ -83,7 +83,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local enable          = ui.CheckBox_enable:GetValue()
         local term_cols       = tostring(ui.SpinCtrl_columns:GetValue())
         local term_rows       = tostring(ui.SpinCtrl_rows:GetValue())
@@ -102,7 +102,7 @@ local function on_button_save_click()
         ct:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
         ct:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -113,7 +113,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -123,7 +123,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -153,8 +153,6 @@ function tty:create_window(parent)
         ID.COMBOBOX_INSTREAMPATH = wx.wxNewId()
         ID.STATICTEXT5 = wx.wxNewId()
         ID.COMBOBOX_OUTSTREAMPATH = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -194,7 +192,7 @@ function tty:create_window(parent)
         ui.StaticBoxSizer2:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Number of virtual terminals")
-        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
+        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
         ui.Choice_termcount:Append("1 terminal")
         ui.Choice_termcount:Append("2 terminals")
         ui.Choice_termcount:Append("3 terminals")
@@ -217,16 +215,12 @@ function tty:create_window(parent)
         ui.FlexGridSizer5:Add(ui.ComboBox_outstreampath, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer4:Add(ui.FlexGridSizer5, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer2:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(25, 25)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_updated)
@@ -239,11 +233,10 @@ function tty:create_window(parent)
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,    on_button_save_click   )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -270,7 +263,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function tty:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function tty:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function tty:discard()
+        load_configuration()
+        modified:no()
 end
 
 

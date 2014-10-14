@@ -43,6 +43,7 @@ eth = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified   = ct:new_modify_indicator()
 local ui         = {}
 local ID         = {}
 local prio_list  = ct:get_priority_list("stm32f1")
@@ -60,7 +61,7 @@ link_speed_idx.ETH_Speed_100M = 1
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load configuration from files
         local module_enable = ct:get_module_state("ETH")
         local hw_chsum_cal  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.ETH_CHECKSUM_BY_HARDWARE))
@@ -110,14 +111,14 @@ end
 -- @param  None
 -- @return On success true, otherwise false
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- load configuration from controls
         local module_enable = ui.CheckBox_module_enable:GetValue()
         local hw_chsum_cal  = ct:bool_to_yes_no(ui.CheckBox_hw_chsum_cal:GetValue())
         local irq_prio      = ui.Choice_IRQ_prio:GetSelection() + 1
         local link_speed    = ui.Choice_link_speed:GetSelection()
         local PHY_index     = ui.Choice_device:GetSelection() + 1
-        local PHY_address   = "0x"..ui.TextCtrl_PHY_addr:GetValue()
+        local PHY_address   = "0x"..ui.TextCtrl_PHY_addr:GetValue():upper()
         local reset_delay   = tostring(ui.SpinCtrl_reset_delay:GetValue())
         local setup_delay   = tostring(ui.SpinCtrl_setup_delay:GetValue())
 
@@ -149,7 +150,7 @@ local function event_on_button_save_click()
         ct:key_write(config.arch.stm32f1.key.ETH_PHY_SPEED_STATUS_BM, PHY[PHY_index].speed_status_mask:GetValue())
         ct:key_write(config.arch.stm32f1.key.ETH_PHY_DUPLEX_STATUS_BM, PHY[PHY_index].duplex_status_mask:GetValue())
 
-        ui.Button_save:Enable(false)
+        modified:no()
 
         return true
 end
@@ -162,7 +163,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -172,7 +173,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -197,8 +198,6 @@ function eth:create_window(parent)
         ID.SPINCTRL_RESET_DELAY = wx.wxNewId()
         ID.SPINCTRL_SETUP_DELAY = wx.wxNewId()
         ID.PANEL1 = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -252,11 +251,6 @@ function eth:create_window(parent)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -273,11 +267,10 @@ function eth:create_window(parent)
         this:Connect(ID.SPINCTRL_RESET_DELAY,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
         this:Connect(ID.SPINCTRL_SETUP_DELAY,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )
         this:Connect(ID.SPINCTRL_SETUP_DELAY,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -308,7 +301,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function eth:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function eth:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function eth:discard()
+        load_configuration()
+        modified:no()
 end
 
 

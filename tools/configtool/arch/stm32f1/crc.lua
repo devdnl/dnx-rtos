@@ -43,6 +43,7 @@ crc = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -55,7 +56,7 @@ local ID = {}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         ui.CheckBox_enable:SetValue(ct:get_module_state("CRC"))
 end
 
@@ -65,9 +66,9 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         ct:enable_module("CRC", ui.CheckBox_enable:GetValue())
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -77,7 +78,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -94,22 +95,13 @@ function crc:create_window(parent)
 
         ID = {}
         ID.CHECKBOX_ENABLE = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
-
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -117,11 +109,10 @@ function crc:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click   )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -152,7 +143,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function crc:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function crc:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function crc:discard()
+        load_configuration()
+        modified:no()
 end
 
 

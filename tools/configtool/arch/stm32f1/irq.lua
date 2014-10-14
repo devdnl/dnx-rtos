@@ -43,6 +43,7 @@ irq = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified         = ct:new_modify_indicator()
 local ui               = {}
 local ID               = {}
 local NUMBER_OF_IRQ    = 16
@@ -64,12 +65,7 @@ irq_mode._IRQ_MODE_FALLING_AND_RISING_EDGE = 3
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
-        -- load module state
-        local module_enable = ct:get_module_state("IRQ")
-        ui.CheckBox_module_enable:SetValue(module_enable)
-        ui.Panel1:Enable(module_enable)
-
+local function load_configuration()
         -- load IRQ mode and priorty
         for i = 0, NUMBER_OF_IRQ - 1 do
                 local mode = irq_mode[ct:key_read(config.arch.stm32f1.key["IRQ_"..i.."_MODE"])]
@@ -85,6 +81,11 @@ local function load_controls()
                 ui.Choice_EXTI_mode[i]:SetSelection(mode)
                 ui.Choice_EXTI_prio[i]:SetSelection(prio)
         end
+
+        -- load module state
+        local module_enable = ct:get_module_state("IRQ")
+        ui.CheckBox_module_enable:SetValue(module_enable)
+        ui.Panel1:Enable(module_enable)
 end
 
 
@@ -95,7 +96,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -104,7 +105,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("IRQ", ui.CheckBox_module_enable:GetValue())
 
@@ -128,7 +129,7 @@ local function event_on_button_save_click()
                 ct:key_write(config.arch.stm32f1.key["IRQ_"..i.."_PRIO"], prio)
         end
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -138,7 +139,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -154,7 +155,7 @@ local function event_value_updated_IRQ9_5(this)
                 ui.Choice_EXTI_prio[i]:SetSelection(selection)
         end
 
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -170,7 +171,7 @@ local function event_value_updated_IRQ10_15(this)
                 ui.Choice_EXTI_prio[i]:SetSelection(selection)
         end
 
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -192,8 +193,6 @@ function irq:create_window(parent)
         ID.CHOICE_EXTI_PRIO = {}
         ID.PANEL1 = wx.wxNewId()
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -252,10 +251,6 @@ function irq:create_window(parent)
 
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -263,11 +258,10 @@ function irq:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -298,7 +292,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function irq:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function irq:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function irq:discard()
+        load_configuration()
+        modified:no()
 end
 
 

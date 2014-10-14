@@ -43,6 +43,7 @@ wdg = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -71,7 +72,7 @@ local timeout2reg = {{0.004, 4,   40  },
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local enable = ct:get_module_state("WDG")
         local lock   = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN))
         local debug  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG))
@@ -97,7 +98,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         local enable = ui.CheckBox_enable:GetValue()
         local lock   = ct:bool_to_yes_no(ui.CheckBox_lock:GetValue())
         local debug  = ct:bool_to_yes_no(ui.CheckBox_debug:GetValue())
@@ -110,7 +111,7 @@ local function event_on_button_save_click()
         ct:key_write(config.arch.stm32f1.key.WDG_CLK_DIVIDER, clkdiv)
         ct:key_write(config.arch.stm32f1.key.WDG_RELOAD_VALUE, reload)
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -120,7 +121,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_checkbox_enable_updated(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
         ui.Panel1:Enable(this:IsChecked())
 end
 
@@ -131,7 +132,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -152,15 +153,12 @@ function wdg:create_window(parent)
         ID.CHECKBOX_LOCK = wx.wxNewId()
         ID.CHECKBOX_DEBUG = wx.wxNewId()
         ID.CHOICE_TIMEOUT = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
-
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
+        ui.CheckBox_enable = wx.wxCheckBox(this, ID.CHECKBOX_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_ENABLE")
         ui.FlexGridSizer1:Add(ui.CheckBox_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 1, 0, 0)
@@ -170,7 +168,7 @@ function wdg:create_window(parent)
         ui.CheckBox_debug = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_DEBUG, "Disable watchdog on debug", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_DEBUG")
         ui.FlexGridSizer2:Add(ui.CheckBox_debug, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Watchdog timeout")
-        ui.Choice_timeout = wx.wxChoice(ui.Panel1, ID.CHOICE_TIMEOUT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
+        ui.Choice_timeout = wx.wxChoice(ui.Panel1, ID.CHOICE_TIMEOUT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TIMEOUT")
         ui.Choice_timeout:Append("4 ms")
         ui.Choice_timeout:Append("8 ms")
         ui.Choice_timeout:Append("16 ms")
@@ -191,10 +189,6 @@ function wdg:create_window(parent)
         ui.FlexGridSizer2:Fit(ui.Panel1)
         ui.FlexGridSizer2:SetSizeHints(ui.Panel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.StaticLine1 = wx.wxStaticLine(this, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -205,11 +199,10 @@ function wdg:create_window(parent)
         this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated          )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click   )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -240,7 +233,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function wdg:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function wdg:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function wdg:discard()
+        load_configuration()
+        modified:no()
 end
 
 

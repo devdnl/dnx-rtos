@@ -43,6 +43,7 @@ pll = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified         = ct:new_modify_indicator()
 local ui               = {}
 local ID               = {}
 local cpu_name         = nil    -- loaded when creating the window
@@ -466,7 +467,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load module enable status
         local module_enable = ct:get_module_state("PLL")
         ui.CheckBox_module_enable:SetValue(module_enable)
@@ -536,7 +537,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("PLL", ui.CheckBox_module_enable:GetValue())
 
@@ -602,7 +603,7 @@ local function event_on_button_save_click()
         ct:key_write(config.arch.stm32f1.key.PLL_ADC_PRE, ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].key)
         ct:key_write(config.arch.stm32f1.key.PLL_FLASH_LATENCY, tostring(calculate_frequencies().flash_latency))
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -613,7 +614,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -650,7 +651,7 @@ local function event_value_updated()
         ui.StaticText_APB2_prescaler:SetLabel(freqlabel(freq.PCLK2, "%s (PCLK2)"))
         ui.StaticText_ADC_prescaler:SetLabel(freqlabel(freq.ADCCLK, "%s (ADCCLK)"))
 
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -695,7 +696,6 @@ function pll:create_window(parent)
         ID.CHOICE_APB2_PRESCALER = wx.wxNewId()
         ID.CHOICE_ADC_PRESCALER = wx.wxNewId()
         ID.PANEL1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -878,10 +878,6 @@ function pll:create_window(parent)
         ui.FlexGridSizer2:Add(ui.FlexGridSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -909,12 +905,11 @@ function pll:create_window(parent)
         this:Connect(ID.CHOICE_APB1_PRESCALER,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_APB2_PRESCALER,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_ADC_PRESCALER,   wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
 
         --
-        load_controls()
+        load_configuration()
         event_value_updated()
-        ui.Button_save:Enable(false)
+        modified:no()
 
         return ui.window
 end
@@ -945,7 +940,27 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function pll:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function pll:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function pll:discard()
+        load_configuration()
+        event_value_updated()
+        modified:no()
 end
 
 
