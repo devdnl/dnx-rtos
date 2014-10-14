@@ -64,12 +64,7 @@ irq_mode._IRQ_MODE_FALLING_AND_RISING_EDGE = 3
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
-        -- load module state
-        local module_enable = ct:get_module_state("IRQ")
-        ui.CheckBox_module_enable:SetValue(module_enable)
-        ui.Panel1:Enable(module_enable)
-
+local function load_configuration()
         -- load IRQ mode and priorty
         for i = 0, NUMBER_OF_IRQ - 1 do
                 local mode = irq_mode[ct:key_read(config.arch.stm32f1.key["IRQ_"..i.."_MODE"])]
@@ -85,6 +80,11 @@ local function load_controls()
                 ui.Choice_EXTI_mode[i]:SetSelection(mode)
                 ui.Choice_EXTI_prio[i]:SetSelection(prio)
         end
+
+        -- load module state
+        local module_enable = ct:get_module_state("IRQ")
+        ui.CheckBox_module_enable:SetValue(module_enable)
+        ui.Panel1:Enable(module_enable)
 end
 
 
@@ -104,7 +104,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("IRQ", ui.CheckBox_module_enable:GetValue())
 
@@ -263,10 +263,10 @@ function irq:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -307,7 +307,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function irq:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function irq:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

@@ -166,7 +166,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local port     = ui.Choice_port:GetSelection() + 1
         local pin_mask = periph:Children()[port].pinmask:GetValue()
 
@@ -214,7 +214,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local port_to_save = periph:Children()[ui.Choice_port:GetSelection() + 1].name:GetValue()
         local pin_mask     = periph:Children()[ui.Choice_port:GetSelection() + 1].pinmask:GetValue()
         local key          = config.arch.stm32f1.key.GPIO
@@ -310,7 +310,7 @@ local function port_number_changed(this)
         end
 
         if answer == wx.wxID_YES then
-                on_button_save_click()
+                save_configuration()
                 ui.Choice_port.OldSelection = ui.Choice_port:GetSelection()
         elseif answer == wx.wxID_NO then
                 ui.Choice_port.OldSelection = ui.Choice_port:GetSelection()
@@ -320,7 +320,7 @@ local function port_number_changed(this)
         end
 
         ui.window:Freeze()
-        load_controls()
+        load_configuration()
         ui.window:Thaw()
 
         if answer == wx.wxID_YES or answer == wx.wxID_NO then
@@ -458,10 +458,10 @@ function gpio:create_window(parent)
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_changed    )
         this:Connect(ID.CHOICE_PORT,     wx.wxEVT_COMMAND_CHOICE_SELECTED,  port_number_changed )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
+        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration)
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -502,7 +502,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function gpio:save()
-        on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function gpio:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

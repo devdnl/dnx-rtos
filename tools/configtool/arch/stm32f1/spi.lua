@@ -113,7 +113,7 @@ local function load_configuration()
                         ui.Choice_CS_pin[SPI][CS]:SetSelection(ct:get_string_index(pin_list, pin_name) - 1)
                         ui.Panel_CS[SPI][CS]:Enable(CS <= number_of_CS)
                 end
-                
+
                 ui.Panel_settings[SPI]:Enable(SPI_enable)
         end
 
@@ -505,6 +505,16 @@ end
 --------------------------------------------------------------------------------
 function spi:save()
         save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function spi:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

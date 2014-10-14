@@ -69,7 +69,7 @@ local PORT_LIST        = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load module state
         local module_enable = ct:get_module_state("AFIO")
         ui.CheckBox_module_enable:SetValue(module_enable)
@@ -148,7 +148,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("AFIO", ui.CheckBox_module_enable:GetValue())
 
@@ -742,10 +742,10 @@ function afio:create_window(parent)
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
         this:Connect(ID.CHECKBOX_CEO_ENABLE,    wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_CEO_enable_updated   )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -786,7 +786,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function afio:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function afio:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

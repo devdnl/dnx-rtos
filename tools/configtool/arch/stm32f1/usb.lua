@@ -62,7 +62,7 @@ ep0_size_idx["64"] = 3
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load module enable controls
         local module_enable = ct:get_module_state("USB")
         ui.CheckBox_module_enable:SetValue(module_enable)
@@ -93,7 +93,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save pullup pin name
         local pullup_pin = ui.Choice_pullup_pin:GetSelection()
         if pullup_pin == 0 then
@@ -215,10 +215,10 @@ function usb:create_window(parent)
         this:Connect(ID.CHOICE_EP0_SIZE,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_IRQ_PRIO,        wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_PULLUP_PIN,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -246,7 +246,7 @@ function usb:selected()
         ui.Choice_pullup_pin:Clear()
         ui.Choice_pullup_pin:Append("*UNDEFINED*")
         ui.Choice_pullup_pin:Append(pin_list)
-        load_controls()
+        load_configuration()
 end
 
 
@@ -265,7 +265,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function usb:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function usb:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

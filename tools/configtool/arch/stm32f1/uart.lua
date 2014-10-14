@@ -91,7 +91,7 @@ parity_idx.UART_PARITY_EVEN = 2
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load module enable status
         local module_enable = ct:get_module_state("UART")
         ui.CheckBox_module_enable:SetValue(module_enable)
@@ -136,7 +136,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("UART", ui.CheckBox_module_enable:GetValue())
 
@@ -343,10 +343,10 @@ function uart:create_window(parent)
         this:Connect(ID.CHOICE_PARITY,          wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.SPINCTRL_RX_BUF_SIZE,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )
         this:Connect(ID.SPINCTRL_RX_BUF_SIZE,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -387,7 +387,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function uart:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function uart:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

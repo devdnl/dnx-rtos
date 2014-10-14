@@ -71,7 +71,7 @@ local timeout2reg = {{0.004, 4,   40  },
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local enable = ct:get_module_state("WDG")
         local lock   = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DEVICE_LOCK_AT_OPEN))
         local debug  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.WDG_DISABLE_ON_DEBUG))
@@ -97,7 +97,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         local enable = ui.CheckBox_enable:GetValue()
         local lock   = ct:bool_to_yes_no(ui.CheckBox_lock:GetValue())
         local debug  = ct:bool_to_yes_no(ui.CheckBox_debug:GetValue())
@@ -205,10 +205,10 @@ function wdg:create_window(parent)
         this:Connect(ID.CHECKBOX_LOCK,   wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHECKBOX_DEBUG,  wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_value_updated          )
         this:Connect(ID.CHOICE_TIMEOUT,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated          )
-        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click   )
+        this:Connect(ID.BUTTON_SAVE,     wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration   )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -249,7 +249,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function wdg:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function wdg:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

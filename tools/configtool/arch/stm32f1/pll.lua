@@ -466,7 +466,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load module enable status
         local module_enable = ct:get_module_state("PLL")
         ui.CheckBox_module_enable:SetValue(module_enable)
@@ -536,7 +536,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- save module state
         ct:enable_module("PLL", ui.CheckBox_module_enable:GetValue())
 
@@ -909,10 +909,10 @@ function pll:create_window(parent)
         this:Connect(ID.CHOICE_APB1_PRESCALER,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_APB2_PRESCALER,  wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
         this:Connect(ID.CHOICE_ADC_PRESCALER,   wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration                  )
 
         --
-        load_controls()
+        load_configuration()
         event_value_updated()
         ui.Button_save:Enable(false)
 
@@ -954,7 +954,18 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function pll:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function pll:discard()
+        load_configuration()
+        event_value_updated()
+        ui.Button_save:Enable(false)
 end
 
 

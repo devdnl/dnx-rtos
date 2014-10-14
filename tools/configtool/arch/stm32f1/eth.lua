@@ -60,7 +60,7 @@ link_speed_idx.ETH_Speed_100M = 1
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         -- load configuration from files
         local module_enable = ct:get_module_state("ETH")
         local hw_chsum_cal  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.ETH_CHECKSUM_BY_HARDWARE))
@@ -110,14 +110,14 @@ end
 -- @param  None
 -- @return On success true, otherwise false
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         -- load configuration from controls
         local module_enable = ui.CheckBox_module_enable:GetValue()
         local hw_chsum_cal  = ct:bool_to_yes_no(ui.CheckBox_hw_chsum_cal:GetValue())
         local irq_prio      = ui.Choice_IRQ_prio:GetSelection() + 1
         local link_speed    = ui.Choice_link_speed:GetSelection()
         local PHY_index     = ui.Choice_device:GetSelection() + 1
-        local PHY_address   = "0x"..ui.TextCtrl_PHY_addr:GetValue()
+        local PHY_address   = "0x"..ui.TextCtrl_PHY_addr:GetValue():upper()
         local reset_delay   = tostring(ui.SpinCtrl_reset_delay:GetValue())
         local setup_delay   = tostring(ui.SpinCtrl_setup_delay:GetValue())
 
@@ -273,10 +273,10 @@ function eth:create_window(parent)
         this:Connect(ID.SPINCTRL_RESET_DELAY,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
         this:Connect(ID.SPINCTRL_SETUP_DELAY,   wx.wxEVT_COMMAND_SPINCTRL_UPDATED, event_value_updated                 )
         this:Connect(ID.SPINCTRL_SETUP_DELAY,   wx.wxEVT_COMMAND_TEXT_UPDATED,     event_value_updated                 )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -317,7 +317,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function eth:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function eth:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

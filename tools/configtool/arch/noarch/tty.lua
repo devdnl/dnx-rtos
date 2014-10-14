@@ -56,7 +56,7 @@ local ID = {}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local enable          = ct:get_module_state("TTY")
         local term_cols       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_COLS))
         local term_rows       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_ROWS))
@@ -83,7 +83,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local enable          = ui.CheckBox_enable:GetValue()
         local term_cols       = tostring(ui.SpinCtrl_columns:GetValue())
         local term_rows       = tostring(ui.SpinCtrl_rows:GetValue())
@@ -239,10 +239,10 @@ function tty:create_window(parent)
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,    on_button_save_click   )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,    save_configuration   )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -279,7 +279,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function tty:save()
-        on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function tty:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

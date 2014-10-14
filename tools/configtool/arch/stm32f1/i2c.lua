@@ -95,6 +95,7 @@ local function load_configuration(I2C)
 
         local module_enabled = ct:get_module_state("I2C")
         ui.CheckBox_module_enable:SetValue(module_enabled)
+        ui.Panel_module:Enable(module_enabled)
 end
 
 
@@ -449,6 +450,16 @@ end
 --------------------------------------------------------------------------------
 function i2c:save()
         save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function i2c:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 

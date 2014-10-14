@@ -55,7 +55,7 @@ local NUMBER_OF_CARDS = 2
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local module_enable   = ct:get_module_state("SDSPI")
         local number_of_cards = tonumber(ct:key_read(config.noarch.key.SDSPI_NUMBER_OF_CARDS))
 
@@ -80,7 +80,7 @@ end
 -- @param  None
 -- @return On success true, otherwise false
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         ct:enable_module("SDSPI", ui.CheckBox_module_enable:GetValue())
         ct:key_write(config.noarch.key.SDSPI_NUMBER_OF_CARDS, tostring(ui.Choice_card_count:GetSelection() + 1))
 
@@ -226,11 +226,11 @@ function sdspi:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
+        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   save_configuration          )
         this:Connect(ID.CHOICE_CARD_COUNT,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_number_of_cards_changed       )
 
         --
-        load_controls()
+        load_configuration()
         ui.Button_save:Enable(false)
 
         return ui.window
@@ -271,7 +271,17 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function sdspi:save()
-        event_on_button_save_click()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function sdspi:discard()
+        load_configuration()
+        ui.Button_save:Enable(false)
 end
 
 
