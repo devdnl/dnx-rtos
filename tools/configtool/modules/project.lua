@@ -213,10 +213,10 @@ local function save_configuration()
                 end
         end
 
-        modified:no()
-
         -- info about changed configuration
         ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.", ui.window)
+
+        modified:no()
 end
 
 
