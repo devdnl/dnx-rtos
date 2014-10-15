@@ -44,6 +44,7 @@ ct.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
 ct.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
 ct.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
 ct.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
+ct.SAVE_QUESTION    = "The configuration has changed.\n\nDo you want to save the changes?"
 
 ct.hexvalidator = wx.wxTextValidator(wx.wxFILTER_INCLUDE_CHAR_LIST)
 ct.hexvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "a", "b", "c", "d", "e", "f"})
