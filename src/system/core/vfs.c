@@ -336,7 +336,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
  * @brief Function create node for driver file
  *
  * @param[in] path              path when driver-file shall be created
- * @param[in] dev               pointer to description of driver
+ * @param[in] dev               device number
  *
  * @return zero on success. On error, -1 is returned
  */

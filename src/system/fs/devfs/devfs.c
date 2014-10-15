@@ -533,7 +533,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]           dev                    driver interface
+ * @param[in ]           dev                    driver number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
