@@ -155,10 +155,10 @@ function modules:refresh()
         ui.notebook:Hide()
         ui.notebook:DeleteAllPages()
         dialog:Update(1)
-        
+
         -- start time to measure loading of all modules
         local starttime = os.time()
-        
+
         -- load specified modules required by configuration for specified microcontroller
         for i = 1, periph_num do
                 local peripheral  = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:Children()[i]
@@ -210,9 +210,10 @@ function modules:refresh()
         end
 
         ui.window:Connect(ID.NOTEBOOK, wx.wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGING, notebook_page_changing)
-        
+
         -- show load time in the status bar
-        ct:set_status("Configuration of modules loaded (elapsed "..os.difftime(os.time(), starttime).." seconds)")
+        local td = os.difftime(os.time(), starttime)
+        ct:set_status("Configuration of modules loaded (elapsed "..td.." second"..ifs(td == 1, "", "s")..")")
 
         ui.notebook:Show()
 end
