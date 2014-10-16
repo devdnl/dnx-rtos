@@ -673,7 +673,7 @@ exit:
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chmod(const char *path, int mode)
+int vfs_chmod(const char *path, mode_t mode)
 {
         if (!path) {
                 errno = EINVAL;
@@ -715,7 +715,7 @@ int vfs_chmod(const char *path, int mode)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chown(const char *path, int owner, int group)
+int vfs_chown(const char *path, uid_t owner, gid_t group)
 {
         if (!path) {
                 errno = EINVAL;

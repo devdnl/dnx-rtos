@@ -266,7 +266,7 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
- * @brief int chown(const char *pathname, int owner, int group)
+ * @brief int chown(const char *pathname, uid_t owner, gid_t group)
  * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
  * This function is not supported by dnx RTOS, because users and groups are
@@ -289,7 +289,7 @@ static inline char *getcwd(char *buf, size_t size)
  * // ...
  */
 //==============================================================================
-static inline int chown(const char *pathname, int owner, int group)
+static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
         return vfs_chown(pathname, owner, group);
 }
