@@ -121,7 +121,7 @@ local function load_configuration()
                                 local pin_mode  = ct:key_read(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_MODE"])
                                 local pin_state = ct:key_read(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_STATE"])
 
-                                ui.TextCtrl_pin_name[GPIO][PIN]:SetValue(pin_name)
+                                ui.ComboBox_pin_name[GPIO][PIN]:SetValue(pin_name)
                                 ui.Choice_pin_mode[GPIO][PIN]:SetSelection(port_mode_index[pin_mode])
                                 ui.Notebook_ports:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_CHOICE_SELECTED, ID.CHOICE_PIN_MODE[GPIO][PIN]))
                                 ui.Choice_pin_state[GPIO][PIN]:SetSelection(ifs(pin_state:match("_HIGH"), 1, 0))
@@ -162,7 +162,7 @@ local function save_configuration()
 
                 for PIN = 0, MAX_NUMBER_OF_PINS - 1 do
                         if PIN_mask % 2 == 1 then
-                                local pin_name  = ui.TextCtrl_pin_name[GPIO][PIN]:GetValue()
+                                local pin_name  = ui.ComboBox_pin_name[GPIO][PIN]:GetValue()
                                 local pin_mode  = port_mode_index:get_mode(ui.Choice_pin_mode[GPIO][PIN]:GetSelection())
                                 local pin_state = ui.Choice_pin_state[GPIO][PIN]:GetSelection()
 
@@ -206,7 +206,7 @@ function gpio:create_window(parent)
         ui = {}
         ui.Panel_GPIO         = {}
         ui.FlexGridSizer_GPIO = {}
-        ui.TextCtrl_pin_name  = {}
+        ui.ComboBox_pin_name  = {}
         ui.Choice_pin_mode    = {}
         ui.Choice_pin_state   = {}
 
@@ -214,7 +214,7 @@ function gpio:create_window(parent)
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
         ID.PANEL_MODULE           = wx.wxNewId()
         ID.NOTEBOOK_PORTS         = wx.wxNewId()
-        ID.TEXTCTRL_PIN_NAME      = {}
+        ID.COMBOBOX_PIN_NAME      = {}
         ID.CHOICE_PIN_MODE        = {}
         ID.CHOICE_PIN_STATE       = {}
 
@@ -262,15 +262,15 @@ function gpio:create_window(parent)
                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add pins
-                ui.TextCtrl_pin_name[GPIO] = {}
+                ui.ComboBox_pin_name[GPIO] = {}
                 ui.Choice_pin_mode[GPIO]   = {}
                 ui.Choice_pin_state[GPIO]  = {}
-                ID.TEXTCTRL_PIN_NAME[GPIO] = {}
+                ID.COMBOBOX_PIN_NAME[GPIO] = {}
                 ID.CHOICE_PIN_MODE[GPIO]   = {}
                 ID.CHOICE_PIN_STATE[GPIO]  = {}
                 for PIN = 0, MAX_NUMBER_OF_PINS - 1 do
                         if PIN_mask % 2 == 1 then
-                                ID.TEXTCTRL_PIN_NAME[GPIO][PIN] = wx.wxNewId()
+                                ID.COMBOBOX_PIN_NAME[GPIO][PIN] = wx.wxNewId()
                                 ID.CHOICE_PIN_MODE[GPIO][PIN]   = wx.wxNewId()
                                 ID.CHOICE_PIN_STATE[GPIO][PIN]  = wx.wxNewId()
 
@@ -279,11 +279,30 @@ function gpio:create_window(parent)
                                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 1)
 
                                 -- add pin name field
-                                ui.TextCtrl_pin_name[GPIO][PIN] = wx.wxTextCtrl(ui.Panel_GPIO[GPIO], ID.TEXTCTRL_PIN_NAME[GPIO][PIN], "", wx.wxDefaultPosition, wx.wxDefaultSize)
-                                ui.TextCtrl_pin_name[GPIO][PIN]:SetMinSize(wx.wxSize(150, -1))
-                                ui.FlexGridSizer_GPIO[GPIO]:Add(ui.TextCtrl_pin_name[GPIO][PIN], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
-                                ui.window:Connect(ID.TEXTCTRL_PIN_NAME[GPIO][PIN], wx.wxEVT_COMMAND_TEXT_UPDATED,
+                                ui.ComboBox_pin_name[GPIO][PIN] = wx.wxComboBox(ui.Panel_GPIO[GPIO], ID.COMBOBOX_PIN_NAME[GPIO][PIN], "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                                ui.ComboBox_pin_name[GPIO][PIN]:SetMinSize(wx.wxSize(180, -1))
+                                ui.FlexGridSizer_GPIO[GPIO]:Add(ui.ComboBox_pin_name[GPIO][PIN], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
+
+                                local alt = config.arch.stm32f1.footprint[gpio_cfg.footprint:GetValue()]["P"..GPIO_name..PIN]
+                                if alt ~= nil then
+                                        for i = 1, alt:NumChildren() do
+                                                ui.ComboBox_pin_name[GPIO][PIN]:Append(alt:Children()[i].name:GetValue())
+                                        end
+                                end
+
+                                ui.window:Connect(ID.COMBOBOX_PIN_NAME[GPIO][PIN], wx.wxEVT_COMMAND_TEXT_UPDATED,
                                         function()
+                                                modified:yes()
+                                        end
+                                )
+
+                                ui.window:Connect(ID.COMBOBOX_PIN_NAME[GPIO][PIN], wx.wxEVT_COMMAND_COMBOBOX_SELECTED,
+                                        function(event)
+                                                local preset = alt:Children()[event:GetSelection() + 1]
+                                                ui.ComboBox_pin_name[GPIO][PIN]:SetValue(preset.name:GetValue())
+                                                ui.Choice_pin_mode[GPIO][PIN]:SetSelection(port_mode_index[preset.mode:GetValue()])
+                                                ui.Notebook_ports:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_CHOICE_SELECTED, ID.CHOICE_PIN_MODE[GPIO][PIN]))
+                                                ui.Choice_pin_state[GPIO][PIN]:SetSelection(ifs(preset.state:GetValue():match("_HIGH"), 1, 0))
                                                 modified:yes()
                                         end
                                 )
@@ -347,7 +366,7 @@ function gpio:create_window(parent)
 
         -- set main sizer and set scroll rate
         ui.window:SetSizer(ui.FlexGridSizer1)
-        ui.window:SetScrollRate(25, 25)
+        ui.window:SetScrollRate(10, 10)
 
         load_configuration()
         modified:no()

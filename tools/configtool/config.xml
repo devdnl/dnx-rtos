@@ -835,12 +835,12 @@
             <footprint>
                 <LQFP64>
                     <PA0>
-                        <alternative><name>WKUP</name><mode>IP</mode><state>high</state></alternative>
-                        <alternative><name>USART2_CTS</name><mode>IP</mode><state>high</state></alternative>
-                        <alternative><name>ADC1_IN0</name><mode>AI</mode><state>float</state></alternative>
-                        <alternative><name>TIM2_CH1_ETR</name><mode>IF</mode><state>float</state></alternative>
-                        <alternative><name>TIM5_CH1</name><mode>AOPP10</mode><state>float</state></alternative>
-                        <alternative><name>ETH_MII_CRS_WKUP</name><mode>IF</mode><state>float</state></alternative>
+                        <alternative><name>WKUP</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></alternative>
+                        <alternative><name>USART2_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></alternative>
+                        <alternative><name>ADC1_IN0</name><mode>_GPIO_IN_ANALOG</mode><state>_FLOAT</state></alternative>
+                        <alternative><name>TIM2_CH1_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></alternative>
+                        <alternative><name>TIM5_CH1</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></alternative>
+                        <alternative><name>ETH_MII_CRS_WKUP</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></alternative>
                     </PA0>
                 </LQFP64>
             </footprint>
