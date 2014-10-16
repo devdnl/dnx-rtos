@@ -79,8 +79,8 @@ local port_mode_index = {["_GPIO_OUT_PUSH_PULL_2MHZ"]       = 0,
                          ["_GPIO_IN_FLOAT"]                 = 13,
                          ["_GPIO_IN_PULLED"]                = 14}
 
-local port_state_in_pulled     = {"Down", "Up"}
-local port_state_out_push_pull = {"Low", "High"}
+local port_state_pulled        = {"Down", "Up"}
+local port_state_out_pp_od     = {"Low", "High"}
 local port_state_float         = {"Hi-Z"}
 
 local MAX_NUMBER_OF_PINS       = config.arch.stm32f1.def.GPIO_max_number_of_pins:GetValue()
@@ -143,11 +143,11 @@ local MAX_NUMBER_OF_PORTS      = config.arch.stm32f1.def.GPIO_max_number_of_port
 --         ui.Choice_state[pin + 1]:Enable(true)
 --         ui.Choice_state[pin + 1].Inactive = false
 --         if pin_mode:match("_GPIO_IN_PULLED") then
---                 ui.Choice_state[pin + 1]:Append(port_state_in_pulled)
+--                 ui.Choice_state[pin + 1]:Append(port_state_pulled)
 --         elseif pin_mode:match("_OUT_OPEN_DRAIN_") then
---                 ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
+--                 ui.Choice_state[pin + 1]:Append(port_state_out_pp_od)
 --         elseif pin_mode:match("_OUT_PUSH_PULL_") then
---                 ui.Choice_state[pin + 1]:Append(port_state_out_push_pull)
+--                 ui.Choice_state[pin + 1]:Append(port_state_out_pp_od)
 --         else
 --                 ui.Choice_state[pin + 1]:Append(port_state_float)
 --                 ui.Choice_state[pin + 1]:Enable(false)
@@ -481,10 +481,10 @@ function gpio:create_window(parent)
                                                 ui.Choice_state[GPIO][PIN]:Enable(true)
 
                                                 local mode = ui.Choice_mode[GPIO][PIN]:GetString(ui.Choice_mode[GPIO][PIN]:GetSelection())
-                                                if mode:match("Push%-Pull") then
-                                                        ui.Choice_state[GPIO][PIN]:Append(port_state_out_push_pull)
-                                                elseif mode:match("Open drain") or mode:match("pulled") then
-                                                        ui.Choice_state[GPIO][PIN]:Append(port_state_in_pulled)
+                                                if mode:match("Open drain") or mode:match("Push%-Pull") then
+                                                        ui.Choice_state[GPIO][PIN]:Append(port_state_out_pp_od)
+                                                elseif mode:match("pulled") then
+                                                        ui.Choice_state[GPIO][PIN]:Append(port_state_pulled)
                                                 else
                                                         ui.Choice_state[GPIO][PIN]:Append(port_state_float)
                                                         ui.Choice_state[GPIO][PIN]:Enable(false)
