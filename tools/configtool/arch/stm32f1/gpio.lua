@@ -206,7 +206,6 @@ function gpio:create_window(parent)
         ui = {}
         ui.Panel_GPIO         = {}
         ui.FlexGridSizer_GPIO = {}
-        ui.Choice_preset      = {}
         ui.TextCtrl_pin_name  = {}
         ui.Choice_pin_mode    = {}
         ui.Choice_pin_state   = {}
@@ -216,7 +215,6 @@ function gpio:create_window(parent)
         ID.PANEL_MODULE           = wx.wxNewId()
         ID.NOTEBOOK_PORTS         = wx.wxNewId()
         ID.TEXTCTRL_PIN_NAME      = {}
-        ID.CHOICE_PRESET          = {}
         ID.CHOICE_PIN_MODE        = {}
         ID.CHOICE_PIN_STATE       = {}
 
@@ -225,7 +223,7 @@ function gpio:create_window(parent)
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         -- create module enable checkbox
-        ui.CheckBox_module_enable = wx.wxCheckBox(ui.window, ID.CHECKBOX_MODULE_ENABLE, "Module enable", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_module_enable = wx.wxCheckBox(ui.window, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.window:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
                 function(event)
@@ -251,12 +249,10 @@ function gpio:create_window(parent)
 
                 -- create a new panel
                 ui.Panel_GPIO[GPIO] = wx.wxPanel(ui.Notebook_ports, ID.PANEL_PORT[GPIO], wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
-                ui.FlexGridSizer_GPIO[GPIO] = wx.wxFlexGridSizer(0, 5, 0, 0)
+                ui.FlexGridSizer_GPIO[GPIO] = wx.wxFlexGridSizer(0, 4, 0, 0)
 
                 -- create configuration header
                 ui.StaticText = wx.wxStaticText(ui.Panel_GPIO[GPIO], wx.wxID_ANY, "Pin", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.StaticText = wx.wxStaticText(ui.Panel_GPIO[GPIO], wx.wxID_ANY, "Preset", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.StaticText = wx.wxStaticText(ui.Panel_GPIO[GPIO], wx.wxID_ANY, "Name", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -266,34 +262,26 @@ function gpio:create_window(parent)
                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add pins
-                ui.Choice_preset[GPIO]     = {}
                 ui.TextCtrl_pin_name[GPIO] = {}
                 ui.Choice_pin_mode[GPIO]   = {}
                 ui.Choice_pin_state[GPIO]  = {}
                 ID.TEXTCTRL_PIN_NAME[GPIO] = {}
-                ID.CHOICE_PRESET[GPIO]     = {}
                 ID.CHOICE_PIN_MODE[GPIO]   = {}
                 ID.CHOICE_PIN_STATE[GPIO]  = {}
                 for PIN = 0, MAX_NUMBER_OF_PINS - 1 do
                         if PIN_mask % 2 == 1 then
                                 ID.TEXTCTRL_PIN_NAME[GPIO][PIN] = wx.wxNewId()
-                                ID.CHOICE_PRESET[GPIO][PIN]     = wx.wxNewId()
-                                ID.CHOICE_PIN_MODE[GPIO][PIN]       = wx.wxNewId()
-                                ID.CHOICE_PIN_STATE[GPIO][PIN]      = wx.wxNewId()
+                                ID.CHOICE_PIN_MODE[GPIO][PIN]   = wx.wxNewId()
+                                ID.CHOICE_PIN_STATE[GPIO][PIN]  = wx.wxNewId()
 
                                 -- add pin number
                                 ui.StaticText = wx.wxStaticText(ui.Panel_GPIO[GPIO], wx.wxID_ANY, "P"..GPIO_name..PIN..":", wx.wxDefaultPosition, wx.wxDefaultSize)
                                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 1)
 
-                                -- add preset options
-                                ui.Choice_preset[GPIO][PIN] = wx.wxChoice(ui.Panel_GPIO[GPIO], ID.CHOICE_PRESET[GPIO][PIN], wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
-                                ui.Choice_preset[GPIO][PIN]:Append("")
-                                ui.FlexGridSizer_GPIO[GPIO]:Add(ui.Choice_preset[GPIO][PIN], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
-
                                 -- add pin name field
                                 ui.TextCtrl_pin_name[GPIO][PIN] = wx.wxTextCtrl(ui.Panel_GPIO[GPIO], ID.TEXTCTRL_PIN_NAME[GPIO][PIN], "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                                ui.TextCtrl_pin_name[GPIO][PIN]:SetMinSize(wx.wxSize(150, -1))
                                 ui.FlexGridSizer_GPIO[GPIO]:Add(ui.TextCtrl_pin_name[GPIO][PIN], 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 1)
-
                                 ui.window:Connect(ID.TEXTCTRL_PIN_NAME[GPIO][PIN], wx.wxEVT_COMMAND_TEXT_UPDATED,
                                         function()
                                                 modified:yes()
