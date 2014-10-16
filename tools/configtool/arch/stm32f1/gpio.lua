@@ -111,22 +111,22 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration()
-        for GPIO = 1, gpio_cfg:NumChildren() do
-                local GPIO_name = gpio_cfg:Children()[GPIO].name:GetValue()
-                local PIN_mask  = tonumber(gpio_cfg:Children()[GPIO].pinmask:GetValue())
-        
+        for GPIO = 1, gpio_cfg.layout:NumChildren() do
+                local GPIO_name = gpio_cfg.layout:Children()[GPIO].name:GetValue()
+                local PIN_mask  = tonumber(gpio_cfg.layout:Children()[GPIO].pinmask:GetValue())
+
                 for PIN = 0, MAX_NUMBER_OF_PINS - 1 do
                         if PIN_mask % 2 == 1 then
                                 local pin_name  = ct:key_read(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_NAME"])
                                 local pin_mode  = ct:key_read(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_MODE"])
                                 local pin_state = ct:key_read(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_STATE"])
-                                
+
                                 ui.TextCtrl_pin_name[GPIO][PIN]:SetValue(pin_name)
                                 ui.Choice_pin_mode[GPIO][PIN]:SetSelection(port_mode_index[pin_mode])
                                 ui.Notebook_ports:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_CHOICE_SELECTED, ID.CHOICE_PIN_MODE[GPIO][PIN]))
                                 ui.Choice_pin_state[GPIO][PIN]:SetSelection(ifs(pin_state:match("_HIGH"), 1, 0))
                         end
-                        
+
                         PIN_mask = math.floor(PIN_mask / 2)
 
                         if PIN_mask == 0 then
@@ -134,7 +134,7 @@ local function load_configuration()
                         end
                 end
         end
-        
+
         local module_enable = ct:get_module_state("GPIO")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel_module:Enable(module_enable)
@@ -154,29 +154,29 @@ local function save_configuration()
         end
 
         -- save pin configuration and enable ports
-        for GPIO = 1, gpio_cfg:NumChildren() do
-                local GPIO_name = gpio_cfg:Children()[GPIO].name:GetValue()
-                local PIN_mask  = tonumber(gpio_cfg:Children()[GPIO].pinmask:GetValue())
-                
+        for GPIO = 1, gpio_cfg.layout:NumChildren() do
+                local GPIO_name = gpio_cfg.layout:Children()[GPIO].name:GetValue()
+                local PIN_mask  = tonumber(gpio_cfg.layout:Children()[GPIO].pinmask:GetValue())
+
                 ct:key_write(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_ENABLE"], config.project.def.YES:GetValue())
-        
+
                 for PIN = 0, MAX_NUMBER_OF_PINS - 1 do
                         if PIN_mask % 2 == 1 then
                                 local pin_name  = ui.TextCtrl_pin_name[GPIO][PIN]:GetValue()
                                 local pin_mode  = port_mode_index:get_mode(ui.Choice_pin_mode[GPIO][PIN]:GetSelection())
                                 local pin_state = ui.Choice_pin_state[GPIO][PIN]:GetSelection()
-                                
+
                                 if pin_mode:match("FLOAT") or pin_mode:match("ANALOG") then
                                         pin_state = "_FLOAT"
                                 else
                                         pin_state = ifs(pin_state > 0, "_HIGH", "_LOW")
                                 end
-                                
+
                                 ct:key_write(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_NAME"], pin_name)
                                 ct:key_write(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_MODE"], pin_mode)
                                 ct:key_write(config.arch.stm32f1.key["GPIO_P"..GPIO_name.."_PIN_"..PIN.."_STATE"], pin_state)
                         end
-                        
+
                         PIN_mask = math.floor(PIN_mask / 2)
 
                         if PIN_mask == 0 then
@@ -186,7 +186,7 @@ local function save_configuration()
         end
 
         ct:enable_module("GPIO", ui.CheckBox_module_enable:IsChecked())
-        
+
         modified:no()
 end
 
@@ -243,9 +243,9 @@ function gpio:create_window(parent)
 
         -- add GPIO cards
         ID.PANEL_PORT = {}
-        for GPIO = 1, gpio_cfg:NumChildren() do
-                local GPIO_name = gpio_cfg:Children()[GPIO].name:GetValue()
-                local PIN_mask  = tonumber(gpio_cfg:Children()[GPIO].pinmask:GetValue())
+        for GPIO = 1, gpio_cfg.layout:NumChildren() do
+                local GPIO_name = gpio_cfg.layout:Children()[GPIO].name:GetValue()
+                local PIN_mask  = tonumber(gpio_cfg.layout:Children()[GPIO].pinmask:GetValue())
 
                 ID.PANEL_PORT[GPIO] = wx.wxNewId()
 
@@ -437,12 +437,12 @@ end
 function gpio:get_pin_list(sort_list)
         local cpu_name = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
         local cpu_idx  = ct:get_cpu_index("stm32f1", cpu_name)
-        local periph   = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
+        local gpio_cfg = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
         local list     = {}
 
-        for i = 1, periph:NumChildren() do
-                local port_name = periph:Children()[i].name:GetValue()
-                local pin_mask  = periph:Children()[i].pinmask:GetValue()
+        for i = 1, gpio_cfg.layout:NumChildren() do
+                local port_name = gpio_cfg.layout:Children()[i].name:GetValue()
+                local pin_mask  = gpio_cfg.layout:Children()[i].pinmask:GetValue()
 
                 for pin = 0, MAX_NUMBER_OF_PINS - 1 do
                         if bit.band(pin_mask, 1) == 1 then

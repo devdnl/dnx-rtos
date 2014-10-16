@@ -839,10 +839,13 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -873,10 +876,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -907,10 +913,13 @@
                     <flash>524288</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -944,11 +953,14 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -979,13 +991,16 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1019,10 +1034,13 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1053,10 +1071,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1087,10 +1108,13 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1121,10 +1145,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1155,11 +1182,14 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1190,11 +1220,14 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1225,10 +1258,13 @@
                     <flash>32768</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1257,10 +1293,13 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1292,10 +1331,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xE000</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xE000</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1327,10 +1369,13 @@
                     <flash>32768</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1359,10 +1404,13 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1394,10 +1442,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1429,10 +1480,13 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1467,10 +1521,13 @@
                     <flash>393216</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1505,10 +1562,13 @@
                     <flash>524288</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1543,10 +1603,13 @@
                     <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1581,9 +1644,12 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0x00FF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0x00FF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0003</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1612,11 +1678,14 @@
                     <flash>65536</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1648,11 +1717,14 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1684,11 +1756,14 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1723,11 +1798,14 @@
                     <flash>393216</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1762,11 +1840,14 @@
                     <flash>524288</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1801,11 +1882,14 @@
                     <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1840,13 +1924,16 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1881,13 +1968,16 @@
                     <flash>524288</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1922,13 +2012,16 @@
                     <flash>1048576</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>F</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>F</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>G</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -1963,10 +2056,13 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2000,10 +2096,13 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2037,11 +2136,14 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2075,11 +2177,14 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2113,10 +2218,13 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0x0007</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2150,11 +2258,14 @@
                     <flash>131072</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2188,11 +2299,14 @@
                     <flash>262144</flash>
                     <peripherals>
                         <GPIO>
-                            <port><name>A</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>B</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>C</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>D</name><pinmask>0xFFFF</pinmask></port>
-                            <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            <layout>
+                                <port><name>A</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>B</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>C</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>D</name><pinmask>0xFFFF</pinmask></port>
+                                <port><name>E</name><pinmask>0xFFFF</pinmask></port>
+                            </layout>
+                            <footprint></footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
