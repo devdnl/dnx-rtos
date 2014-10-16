@@ -59,7 +59,7 @@ local port_mode_string = {"Output Push-Pull 2MHz",
                           "Alternative output Open drain 2MHz",
                           "Alternative output Open drain 10MHz",
                           "Alternative output Open drain 50MHz",
-                          "Analog input",
+                          "Analog",
                           "Float input",
                           "Input pulled"}
 
@@ -75,7 +75,7 @@ local port_mode_index = {["_GPIO_OUT_PUSH_PULL_2MHZ"]       = 0,
                          ["_GPIO_ALT_OUT_OPEN_DRAIN_2MHZ"]  = 9,
                          ["_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ"] = 10,
                          ["_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ"] = 11,
-                         ["_GPIO_IN_ANALOG"]                = 12,
+                         ["_GPIO_ANALOG"]                   = 12,
                          ["_GPIO_IN_FLOAT"]                 = 13,
                          ["_GPIO_IN_PULLED"]                = 14}
 
