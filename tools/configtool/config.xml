@@ -833,7 +833,7 @@
             </key>
 
             <footprint>
-                <STM32F107>
+                <STM32F107xx>
                     <PE2>
                         <proposition><name>TRACECK</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
                     </PE2>
@@ -1249,7 +1249,392 @@
                     <PE0>
                         <proposition><name>TIM3_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
                     </PE0>
-                </STM32F107>
+                </STM32F107xx>
+
+                <STM32F105xx>
+                    <PE2>
+                        <proposition><name>TRACECK</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE2>
+                    <PE3>
+                        <proposition><name>TRACED0</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE3>
+                    <PE4>
+                        <proposition><name>TRACED1</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE4>
+                    <PE5>
+                        <proposition><name>TRACED2</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE5>
+                    <PE6>
+                        <proposition><name>TRACED3</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE6>
+                    <PC13>
+                        <proposition><name>TAMPER_RTC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PC13>
+                    <PC14>
+                        <proposition><name>OSC32_IN</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PC14>
+                    <PC15>
+                        <proposition><name>OSC32_OUT</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PC15>
+                    <PC0>
+                        <proposition><name>ADC12_IN10</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC0>
+                    <PC1>
+                        <proposition><name>ADC12_IN11</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC1>
+                    <PC2>
+                        <proposition><name>ADC12_IN12</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC2>
+                    <PC3>
+                        <proposition><name>ADC12_IN13</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC3>
+                    <PA0>
+                        <proposition><name>WKUP</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART2_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>ADC12_IN0</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH1_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PA0>
+                    <PA1>
+                        <proposition><name>USART2_RTS</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>ADC12_IN1</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PA1>
+                    <PA2>
+                        <proposition><name>USART2_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM5_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>ADC12_IN2</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PA2>
+                    <PA3>
+                        <proposition><name>USART2_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM5_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM5_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>ADC12_IN3</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PA3>
+                    <PA4>
+                        <proposition><name>SPI1_NSS</name><mode>_GPIO_OUT_PUSH_PULL_2MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>DAC_OUT1</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>USART2_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>ADC12_IN4</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>SPI3_NSS</name><mode>_GPIO_OUT_PUSH_PULL_2MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>I2S3_WS_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_WS_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA4>
+                    <PA5>
+                        <proposition><name>SPI1_SCK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>DAC_OUT2</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>ADC12_IN5</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PA5>
+                    <PA6>
+                        <proposition><name>SPI1_MISO</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>ADC12_IN6</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_BKIN</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA6>
+                    <PA7>
+                        <proposition><name>SPI1_MOSI</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>ADC12_IN7</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH1N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PA7>
+                    <PC4>
+                        <proposition><name>ADC12_IN14</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC4>
+                    <PC5>
+                        <proposition><name>ADC12_IN15</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                    </PC5>
+                    <PB0>
+                        <proposition><name>ADC12_IN8</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH2N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB0>
+                    <PB1>
+                        <proposition><name>ADC12_IN9</name><mode>_GPIO_ANALOG</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH3N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB1>
+                    <PB2>
+                        <proposition><name>BOOT1</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PB2>
+                    <PE7>
+                        <proposition><name>TIM1_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE7>
+                    <PE8>
+                        <proposition><name>TIM1_CH1N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PE8>
+                    <PE9>
+                        <proposition><name>TIM1_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PE9>
+                    <PE10>
+                        <proposition><name>TIM1_CH2N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PE10>
+                    <PE11>
+                        <proposition><name>TIM1_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PE11>
+                    <PE12>
+                        <proposition><name>TIM1_CH3N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PE12>
+                    <PE13>
+                        <proposition><name>TIM1_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PE13>
+                    <PE14>
+                        <proposition><name>TIM1_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PE14>
+                    <PE15>
+                        <proposition><name>TIM1_BKIN</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE15>
+                    <PB10>
+                        <proposition><name>I2C2_SCL</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM2_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PB10>
+                    <PB11>
+                        <proposition><name>I2C2_SDA</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM2_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PB11>
+                    <PB12>
+                        <proposition><name>SPI2_NSS</name><mode>_GPIO_OUT_PUSH_PULL_2MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>I2S2_WS_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S2_WS_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>I2C2_SMBA</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM1_BKIN</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>CAN2_RX</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PB12>
+                    <PB13>
+                        <proposition><name>SPI2_SCK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S2_CK_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S2_CK_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>USART3_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM1_CH1N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>CAN2_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB13>
+                    <PB14>
+                        <proposition><name>SPI2_MISO</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM1_CH2N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>USART3_RTS</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB14>
+                    <PB15>
+                        <proposition><name>SPI2_MOSI</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S2_SD_T</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S2_SD_R</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM1_CH3N</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB15>
+                    <PD8>
+                        <proposition><name>USART3_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                    </PD8>
+                    <PD9>
+                        <proposition><name>USART3_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PD9>
+                    <PD10>
+                        <proposition><name>USART3_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                    </PD10>
+                    <PD11>
+                        <proposition><name>USART3_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PD11>
+                    <PD12>
+                        <proposition><name>TIM4_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>USART3_RTS</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PD12>
+                    <PD13>
+                        <proposition><name>TIM4_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PD13>
+                    <PD14>
+                        <proposition><name>TIM4_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PD14>
+                    <PD15>
+                        <proposition><name>TIM4_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PD15>
+                    <PC6>
+                        <proposition><name>I2S2_MCK_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM3_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PC6>
+                    <PC7>
+                        <proposition><name>I2S3_MCK_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM3_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PC7>
+                    <PC8>
+                        <proposition><name>TIM3_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PC8>
+                    <PC9>
+                        <proposition><name>TIM3_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PC9>
+                    <PA8>
+                        <proposition><name>USART1_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>OTG_FS_SOF</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM1_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>MCO</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                    </PA8>
+                    <PA9>
+                        <proposition><name>USART1_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM1_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>OTG_FS_VBUS</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA9>
+                    <PA10>
+                        <proposition><name>USART1_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM1_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>OTG_FS_ID</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PA10>
+                    <PA11>
+                        <proposition><name>USART1_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>CAN2_RX</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM1_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>OTG_FS_DM</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA11>
+                    <PA12>
+                        <proposition><name>USART1_RTS</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>OTG_FS_DP</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>CAN2_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM1_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA12>
+                    <PA13>
+                        <proposition><name>JTMS_SWDIO</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA13>
+                    <PA14>
+                        <proposition><name>JTCK_SWCLK</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA14>
+                    <PA15>
+                        <proposition><name>JTDI</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>SPI3_NSS</name><mode>_GPIO_OUT_PUSH_PULL_2MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>SPI1_NSS</name><mode>_GPIO_OUT_PUSH_PULL_2MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>I2S3_WS_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_WS_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH1_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PA15>
+                    <PC10>
+                        <proposition><name>UART4_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>SPI3_SCK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_CK_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_CK_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PC10>
+                    <PC11>
+                        <proposition><name>UART4_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                        <proposition><name>SPI3_MISO</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                    </PC11>
+                    <PC12>
+                        <proposition><name>UART5_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>USART3_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>SPI3_MOSI</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_SD_T</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_SD_R</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                    </PC12>
+                    <PD0>
+                        <proposition><name>OSC_IN</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>CAN1_RX</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PD0>
+                    <PD1>
+                        <proposition><name>OSC_OUT</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>CAN1_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PD1>
+                    <PD2>
+                        <proposition><name>TIM3_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>UART5_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PD2>
+                    <PD3>
+                        <proposition><name>USART2_CTS</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PD3>
+                    <PD4>
+                        <proposition><name>USART2_RTS</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PD4>
+                    <PD5>
+                        <proposition><name>USART2_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                    </PD5>
+                    <PD6>
+                        <proposition><name>USART2_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PD6>
+                    <PD7>
+                        <proposition><name>USART2_CK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                    </PD7>
+                    <PB3>
+                        <proposition><name>JTDO</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>SPI3_SCK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_CK_M</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_CK_S</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TRACESWO</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>SPI1_SCK</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                    </PB3>
+                    <PB4>
+                        <proposition><name>NJTRST</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>SPI3_MISO</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>SPI1_MISO</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM3_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM3_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                    </PB4>
+                    <PB5>
+                        <proposition><name>I2C1_SMBA</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>SPI3_MOSI</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>SPI1_MOSI</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_SD_T</name><mode>_GPIO_ALT_OUT_PUSH_PULL_50MHZ</mode><state>_LOW</state></proposition>
+                        <proposition><name>I2S3_SD_R</name><mode>_GPIO_IN_PULLED</mode><state>_LOW</state></proposition>
+                        <proposition><name>TIM2_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM2_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>CAN2_RX</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PB5>
+                    <PB6>
+                        <proposition><name>I2C1_SCL</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM4_CH1_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH1_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>USART1_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>CAN2_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB6>
+                    <PB7>
+                        <proposition><name>I2C1_SDA</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>TIM4_CH2_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH2_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>USART1_RX</name><mode>_GPIO_IN_PULLED</mode><state>_HIGH</state></proposition>
+                    </PB7>
+                    <PB8>
+                        <proposition><name>TIM4_CH3_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH3_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>I2C1_SCL</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>CAN1_RX</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PB8>
+                    <PB9>
+                        <proposition><name>TIM4_CH4_IC</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>TIM4_CH4_OC</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_FLOAT</state></proposition>
+                        <proposition><name>I2C1_SDA</name><mode>_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ</mode><state>_HIGH</state></proposition>
+                        <proposition><name>CAN1_TX</name><mode>_GPIO_ALT_OUT_PUSH_PULL_10MHZ</mode><state>_LOW</state></proposition>
+                    </PB9>
+                    <PE0>
+                        <proposition><name>TIM3_ETR</name><mode>_GPIO_IN_FLOAT</mode><state>_FLOAT</state></proposition>
+                    </PE0>
+                </STM32F105xx>
             </footprint>
 
             <cpulist>
@@ -2482,7 +2867,7 @@
                                 <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>D</name><pinmask>0x0007</pinmask></port>
                             </layout>
-                            <footprint></footprint>
+                            <footprint>STM32F105xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2522,7 +2907,7 @@
                                 <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>D</name><pinmask>0x0007</pinmask></port>
                             </layout>
-                            <footprint></footprint>
+                            <footprint>STM32F105xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2563,7 +2948,7 @@
                                 <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                             </layout>
-                            <footprint></footprint>
+                            <footprint>STM32F105xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2604,7 +2989,7 @@
                                 <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                             </layout>
-                            <footprint></footprint>
+                            <footprint>STM32F105xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2644,7 +3029,7 @@
                                 <port><name>C</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>D</name><pinmask>0x0007</pinmask></port>
                             </layout>
-                            <footprint>STM32F107</footprint>
+                            <footprint>STM32F107xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2685,7 +3070,7 @@
                                 <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                             </layout>
-                            <footprint>STM32F107</footprint>
+                            <footprint>STM32F107xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
@@ -2726,7 +3111,7 @@
                                 <port><name>D</name><pinmask>0xFFFF</pinmask></port>
                                 <port><name>E</name><pinmask>0xFFFF</pinmask></port>
                             </layout>
-                            <footprint>STM32F107</footprint>
+                            <footprint>STM32F107xx</footprint>
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
