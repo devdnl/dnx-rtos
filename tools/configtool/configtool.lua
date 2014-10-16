@@ -265,6 +265,7 @@ local function main()
 
         -- set modification function event
         ct:set_modify_event_function(event_configuration_modified)
+        ct:set_status_function(function(text) ui.frame:SetStatusText(text) end)
 
         -- show created window
         ui.frame:Show(true)

@@ -227,6 +227,13 @@
                 <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
                 <CPUCONFIG_CPUNAME><path>../../config/stm32f1/Makefile</path><key>__CPUCONFIG_CPUNAME__</key></CPUCONFIG_CPUNAME>
 
+                <GPIO_PA_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PA_ENABLE__</key></GPIO_PA_ENABLE>
+                <GPIO_PB_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PB_ENABLE__</key></GPIO_PB_ENABLE>
+                <GPIO_PC_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PC_ENABLE__</key></GPIO_PC_ENABLE>
+                <GPIO_PD_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PD_ENABLE__</key></GPIO_PD_ENABLE>
+                <GPIO_PE_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PE_ENABLE__</key></GPIO_PE_ENABLE>
+                <GPIO_PF_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PF_ENABLE__</key></GPIO_PF_ENABLE>
+                <GPIO_PG_ENABLE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PG_ENABLE__</key></GPIO_PG_ENABLE>
                 <GPIO_PA_PIN_0_NAME><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PA_PIN_0_NAME__</key></GPIO_PA_PIN_0_NAME>
                 <GPIO_PA_PIN_0_MODE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PA_PIN_0_MODE__</key></GPIO_PA_PIN_0_MODE>
                 <GPIO_PA_PIN_0_STATE><path>../../config/stm32f1/gpio_flags.h</path><key>__GPIO_PA_PIN_0_STATE__</key></GPIO_PA_PIN_0_STATE>
