@@ -8,6 +8,7 @@ New Features, Improvements:
 - Configtool: added status and tool bar, removed Save buttons from configuration forms
 - Configtool: added tooltips to the AFIO configuration
 - Configtool: added pin configuration propositions in the GPIO configuration script
+- Configtool: added clock tree window to the PLL configuration
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
 
