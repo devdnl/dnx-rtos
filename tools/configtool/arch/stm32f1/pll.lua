@@ -671,10 +671,12 @@ function pll:create_window(parent)
         HSE_FREQ         = tonumber(ct:key_read(config.project.key.CPU_OSC_FREQ))
         HSE_on[2].value  = HSE_FREQ
         HSE_on[3].value  = HSE_FREQ
+        clock_tree       = false
 
         ui = {}
         ID = {}
         ID.CHECKBOX_MODULE_ENABLE = wx.wxNewId()
+        ID.HYPERLINK_CLOCK_TREE = wx.wxNewId()
         ID.CHOICE_LSI = wx.wxNewId()
         ID.CHOICE_LSE = wx.wxNewId()
         ID.CHOICE_HSE = wx.wxNewId()
@@ -701,11 +703,43 @@ function pll:create_window(parent)
         local this = ui.window
 
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_MODULE_ENABLE")
+        ui.CheckBox_module_enable = wx.wxCheckBox(this, ID.CHECKBOX_MODULE_ENABLE, "Enable module", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1:Add(ui.CheckBox_module_enable, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1 = wx.wxPanel(this, ID.PANEL1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL1")
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 1, 0, 0)
         ui.FlexGridSizer3 = wx.wxFlexGridSizer(0, 3, 0, 0)
+
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer3:Add(ui.StaticText, 1, wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.FlexGridSizer3:Add(ui.StaticText, 1, wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.hyperlink_clock_tree = wx.wxHyperlinkCtrl(ui.Panel1, ID.HYPERLINK_CLOCK_TREE, "Show clock tree", "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer3:Add(ui.hyperlink_clock_tree, 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.window:Connect(ID.HYPERLINK_CLOCK_TREE, wx.wxEVT_COMMAND_HYPERLINK,
+                function()
+                        if not clock_tree then
+
+                                local dialog = wx.wxFrame(parent, wx.wxID_ANY, ct.MAIN_WINDOW_NAME.." - PLL Clock tree", wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
+                                local treewindow = wx.wxScrolledWindow(dialog, wx.wxID_ANY)
+                                local BoxSizer1 = wx.wxBoxSizer(wx.wxVERTICAL)
+
+                                local imgpath = config.arch.stm32f1.path.pll_clock_tree_low_med_hi_xl:GetValue()
+                                if cpu_family:is_CL() then
+                                        imgpath = config.arch.stm32f1.path.pll_clock_tree_cl:GetValue()
+                                elseif cpu_family:is_VL() then
+                                        imgpath = config.arch.stm32f1.path.pll_clock_tree_vl:GetValue()
+                                end
+
+                                local StaticBitmap1 = wx.wxStaticBitmap(treewindow, wx.wxID_ANY, wx.wxBitmap(wx.wxImage(imgpath)), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxSIMPLE_BORDER)
+                                BoxSizer1:Add(StaticBitmap1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                                treewindow:SetSizer(BoxSizer1)
+                                treewindow:SetScrollRate(5, 5)
+                                dialog:Connect(wx.wxEVT_CLOSE_WINDOW, function() clock_tree = false dialog:Destroy() end)
+                                dialog:Show()
+
+                                clock_tree = true
+                        end
+                end
+        )
 
         ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "LSI oscillator", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
