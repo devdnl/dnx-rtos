@@ -732,7 +732,7 @@ function pll:create_window(parent)
                                 local StaticBitmap1 = wx.wxStaticBitmap(treewindow, wx.wxID_ANY, wx.wxBitmap(wx.wxImage(imgpath)), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxSIMPLE_BORDER)
                                 BoxSizer1:Add(StaticBitmap1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                                 treewindow:SetSizer(BoxSizer1)
-                                treewindow:SetScrollRate(5, 5)
+                                treewindow:SetScrollRate(10, 10)
                                 dialog:Connect(wx.wxEVT_CLOSE_WINDOW, function() clock_tree = false dialog:Destroy() end)
                                 dialog:Show()
 
