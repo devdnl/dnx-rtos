@@ -222,6 +222,12 @@
                 <GPIO_max_number_of_pins>16</GPIO_max_number_of_pins>
             </def>
 
+            <path>
+                <pll_clock_tree_cl>./arch/stm32f1/pll_clock_tree_cl.png</pll_clock_tree_cl>
+                <pll_clock_tree_low_med_hi_xl>./arch/stm32f1/pll_clock_tree_low_med_hi_xl.png</pll_clock_tree_low_med_hi_xl>
+                <pll_clock_tree_vl>./arch/stm32f1/pll_clock_tree_vl.png</pll_clock_tree_vl>
+            </path>
+
             <key>
                 <CPU_NAME><path>../../config/stm32f1/cpu.h</path><key>__CPU_NAME__</key></CPU_NAME>
                 <CPU_FAMILY><path>../../config/stm32f1/cpu.h</path><key>__CPU_FAMILY__</key></CPU_FAMILY>
