@@ -53,28 +53,29 @@ require("modules/new_module")
 --==============================================================================
 -- configuration pages
 local page = {
-    {form = welcome,            subpage = false},
-    {form = configinfo,         subpage = false};
-    {form = project,            subpage = true },
-    {form = operating_system,   subpage = true },
-    {form = file_systems,       subpage = true },
-    {form = network,            subpage = true },
-    {form = modules,            subpage = true },
-    {form = creators,           subpage = false},
-    {form = new_module,         subpage = true },
-    {form = about,              subpage = false},
+        {form = welcome,            subpage = false},
+        {form = configinfo,         subpage = false};
+        {form = project,            subpage = true },
+        {form = operating_system,   subpage = true },
+        {form = file_systems,       subpage = true },
+        {form = network,            subpage = true },
+        {form = modules,            subpage = true },
+        {form = creators,           subpage = false},
+        {form = new_module,         subpage = true }
 }
 
 -- container for UI controls
 local ui = {}
 local ID = {}
-ID.TREEBOOK       = wx.wxNewId()
-ID.MENU_SAVE      = wx.wxID_SAVE
-ID.MENU_IMPORT    = wx.wxID_OPEN
-ID.MENU_EXPORT    = wx.wxID_SAVEAS
-ID.TOOLBAR_SAVE   = wx.wxNewId()
-ID.TOOLBAR_IMPORT = wx.wxNewId()
-ID.TOOLBAR_EXPORT = wx.wxNewId()
+ID.TREEBOOK        = wx.wxNewId()
+ID.MENU_SAVE       = wx.wxID_SAVE
+ID.MENU_IMPORT     = wx.wxID_OPEN
+ID.MENU_EXPORT     = wx.wxID_SAVEAS
+ID.MENU_EXIT       = wx.wxID_EXIT
+ID.MENU_HELP_ABOUT = wx.wxID_ABOUT
+ID.TOOLBAR_SAVE    = wx.wxNewId()
+ID.TOOLBAR_IMPORT  = wx.wxNewId()
+ID.TOOLBAR_EXPORT  = wx.wxNewId()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -207,17 +208,22 @@ end
 local function main()
         -- create main frame
         ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
-        ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
 
         -- create Configuration menu
         cfg_menu = wx.wxMenu()
         cfg_menu:Append(ID.MENU_SAVE, "&Save", "Save currently selected configuration")
         cfg_menu:Append(ID.MENU_IMPORT, "&Import", "Import configuration from file")
         cfg_menu:Append(ID.MENU_EXPORT, "&Export", "Export configuration to file")
+        cfg_menu:Append(ID.MENU_EXIT, "&Quit", "Quit from Configtool")
+
+        -- create help menu
+        help_menu = wx.wxMenu()
+        help_menu:Append(ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
 
         -- create menubar and add menus
         menubar = wx.wxMenuBar()
         menubar:Append(cfg_menu, "&Configuration")
+        menubar:Append(help_menu, "&Help")
         ui.frame:SetMenuBar(menubar)
 
         -- create toolbar with options
@@ -253,15 +259,18 @@ local function main()
         end
 
         -- connect signals
+        ui.frame:Connect(wx.wxEVT_CLOSE_WINDOW, window_close)
         ui.frame:Connect(ID.TREEBOOK, wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
         ui.frame:Connect(ID.TREEBOOK, wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
 
-        ui.frame:Connect(ID.MENU_SAVE,   wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
+        ui.frame:Connect(ID.MENU_SAVE,wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
         ui.frame:Connect(ID.MENU_IMPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.MENU_EXPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
+        ui.frame:Connect(ID.MENU_EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, window_close)
+        ui.frame:Connect(ID.MENU_HELP_ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, function() about:show(ui.frame) end)
         ui.frame:Connect(ID.TOOLBAR_SAVE, wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
-        ui.frame:Connect(ID.TOOLBAR_IMPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
-        ui.frame:Connect(ID.TOOLBAR_EXPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
+        ui.frame:Connect(ID.TOOLBAR_IMPORT,wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
+        ui.frame:Connect(ID.TOOLBAR_EXPORT,wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
 
         -- set modification function event
         ct:set_modify_event_function(event_configuration_modified)
