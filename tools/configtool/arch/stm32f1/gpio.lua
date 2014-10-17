@@ -111,6 +111,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration()
+        ui.Panel_module:Freeze()
+
         for GPIO = 1, gpio_cfg.layout:NumChildren() do
                 local GPIO_name = gpio_cfg.layout:Children()[GPIO].name:GetValue()
                 local PIN_mask  = tonumber(gpio_cfg.layout:Children()[GPIO].pinmask:GetValue())
@@ -138,6 +140,8 @@ local function load_configuration()
         local module_enable = ct:get_module_state("GPIO")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel_module:Enable(module_enable)
+        
+        ui.Panel_module:Thaw()
 end
 
 
