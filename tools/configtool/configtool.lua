@@ -68,6 +68,7 @@ local page = {
 -- container for UI controls
 local ui = {}
 local ID = {}
+ID.TREEBOOK       = wx.wxNewId()
 ID.MENU_SAVE      = wx.wxID_SAVE
 ID.MENU_IMPORT    = wx.wxID_OPEN
 ID.MENU_EXPORT    = wx.wxID_SAVEAS
@@ -99,7 +100,7 @@ local function treebook_page_changing(event)
         local card = event:GetOldSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "There are modified not saved settings.\n\nDo you want to save the changes?", bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, ct.SAVE_QUESTION, bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
                 if answer == wx.wxID_CANCEL then
                         event:Veto()
                 elseif answer == wx.wxID_YES then
@@ -118,7 +119,7 @@ local function window_close(event)
         local card = ui.treebook:GetSelection() + 1
 
         if page[card].form:is_modified() then
-                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, "The configuration has changed.\n\nDo you want to save the changes?", bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
+                local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME, ct.SAVE_QUESTION, bit.bor(wx.wxYES_NO,wx.wxCANCEL), ui.frame)
                 if answer == wx.wxID_CANCEL then
                         event:Veto()
                         return
@@ -235,7 +236,7 @@ local function main()
 
 
         -- create treebook view
-        ui.treebook = wx.wxTreebook(ui.frame, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
+        ui.treebook = wx.wxTreebook(ui.frame, ID.TREEBOOK, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLB_LEFT)
 
         -- add configuration pages
         for i, page in ipairs(page) do
@@ -252,8 +253,8 @@ local function main()
         end
 
         -- connect signals
-        ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
-        ui.treebook:Connect(wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
+        ui.frame:Connect(ID.TREEBOOK, wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED, treebook_page_changed)
+        ui.frame:Connect(ID.TREEBOOK, wx.wxEVT_COMMAND_TREEBOOK_PAGE_CHANGING, treebook_page_changing)
 
         ui.frame:Connect(ID.MENU_SAVE,   wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
         ui.frame:Connect(ID.MENU_IMPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
@@ -264,6 +265,7 @@ local function main()
 
         -- set modification function event
         ct:set_modify_event_function(event_configuration_modified)
+        ct:set_status_function(function(text) ui.frame:SetStatusText(text) end)
 
         -- show created window
         ui.frame:Show(true)

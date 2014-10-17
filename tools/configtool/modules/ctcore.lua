@@ -44,6 +44,7 @@ ct.MAIN_WINDOW_NAME = config.tool.window.name:GetValue()
 ct.WINDOW_X_SIZE    = tonumber(config.tool.window.xsize:GetValue())
 ct.WINDOW_Y_SIZE    = tonumber(config.tool.window.ysize:GetValue())
 ct.CONTROL_X_SIZE   = tonumber(config.tool.window.csize:GetValue())
+ct.SAVE_QUESTION    = "The configuration has changed.\n\nDo you want to save the changes?"
 
 ct.hexvalidator = wx.wxTextValidator(wx.wxFILTER_INCLUDE_CHAR_LIST)
 ct.hexvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "a", "b", "c", "d", "e", "f"})
@@ -59,6 +60,7 @@ local FILETYPE_MAKEFILE = 1
 local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
 local CFG_FILE_VERSION  = "1"
 local modify_event_func = nil
+local set_status_func   = nil
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -1167,7 +1169,7 @@ end
 --------------------------------------------------------------------------------
 -- @brief  Class is used to indicate modification status
 -- @param  eventfunc    event function
--- @return Always return true
+-- @return Object
 --------------------------------------------------------------------------------
 function ct:new_modify_indicator()
         local m     = {}
@@ -1196,6 +1198,31 @@ function ct:new_modify_indicator()
         return m
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Function set reference to the function that set text in the status bar
+-- @param  func     function that set statusbar
+-- @return None
+--------------------------------------------------------------------------------
+function ct:set_status_function(func)
+        if type(func) == "function" then
+                set_status_func = func
+        else
+                set_status_func = nil
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function set the status bar text
+-- @param  text     text to print in the status bar
+-- @return None
+--------------------------------------------------------------------------------
+function ct:set_status(text)
+        if type(set_status_func) == "function" and type(text) == "string" then
+                set_status_func(text)
+        end
+end
 
 -- update Configtool's window name (add release version)
 local line = ct:find_line(config.project.path.dnx_os_h:GetValue(), 1, "^%s*return%s+\"%d+%.%d+%.%d+.*\"%s*;")
