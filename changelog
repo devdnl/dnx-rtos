@@ -7,11 +7,13 @@ New Features, Improvements:
 - Configtool: tool uses save questions instead of discard
 - Configtool: added status and tool bar, removed Save buttons from configuration forms
 - Configtool: added tooltips to the AFIO configuration
+- Configtool: added pin configuration propositions in the GPIO configuration script
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
+- Configtool: fixed bug in the GPIO configuration script (issue #124)
 
 dnx RTOS 1.4.1
 ==============
