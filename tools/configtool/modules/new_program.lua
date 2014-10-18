@@ -240,6 +240,7 @@ function new_program:create_window(parent)
 
                         -- add radio button C
                         ui.RadioButton_lang_C = wx.wxRadioButton(ui.Panel_creator, ID.RADIOBUTTON_LANG_C, "C", wx.wxDefaultPosition, wx.wxDefaultSize)
+                        ui.RadioButton_lang_C:SetValue(true)
                         ui.FlexGridSizer_lang:Add(ui.RadioButton_lang_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                         -- add radio button C++
