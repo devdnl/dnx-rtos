@@ -71,7 +71,7 @@ name_validator:SetExcludes({',', '.', '/', '\\', ';', '~', '`', '!', '@', '#', '
 -- @return None
 --------------------------------------------------------------------------------
 function create_program()
-        local name        = ui.TextCtrl_name:GetValue():match("^%d*(.*)$")
+        local name        = ui.TextCtrl_name:GetValue()
         local description = ui.TextCtrl_description:GetValue()
         local author      = ui.TextCtrl_author:GetValue()
         local email       = ui.TextCtrl_email:GetValue()
@@ -80,7 +80,6 @@ function create_program()
         local header      = ui.CheckBox_create_header:GetValue()
 
         -- check if program's name is set
-        print(name)
         if name == "" then
                 ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The program name field is empty. Please, put program's name and try again.", ui.window)
                 return
@@ -105,12 +104,13 @@ function create_program()
                 {tag = "<!path_program_name_c!>", to = ifs(C_lang, name.."/"..name..".c", "")},
                 {tag = "<!path_program_name_cpp!>", to = ifs(not C_lang, name.."/"..name..".cpp", "")},
                 {tag = "<!program_name!>", to = name},
+                {tag = "<!PROGRAM_NAME!>", to = name:upper()},
                 {tag = "<!file_extension!>", to = ifs(C_lang, "c", "cpp")},
                 {tag = "<!author!>", to = author},
                 {tag = "<!program_description!>", to = description},
                 {tag = "<!year!>", to = os.date("%Y")},
                 {tag = "<!email!>", to = email},
-                {tag = "<!program_header!>", to = name..".h"},
+                {tag = "<!program_header!>", to = ifs(header, "#include \""..name..".h\"", "")},
                 {tag = "<!global_variables_in_src!>", to = ifs(not header, "GLOBAL_VARIABLES {\n};", "")},
                 {tag = "<!stack_size!>", to = stack},
         }
@@ -121,23 +121,18 @@ function create_program()
         -- create program's Makefile
         ct:apply_template(FILE_TEMPLATE_MAKEFILE, DIR_PROGRAMS.."/"..name.."/Makefile", tags)
 
---                 local FILE_TEMPLATE_MODULE_SRC       = config.project.path.module_template_src_file:GetValue()
---                 local FILE_TEMPLATE_MODULE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
---
---                 local tags = {
---                         {tag = "<!cpu_arch!>", to = ""},
---                         {tag = "<!author!>", to = "author"},
---                         {tag = "<!module_description!>", to = "descr"},
---                         {tag = "<!year!>", to = os.date("%Y")},
---                         {tag = "<!email!>", to = "xxx@x"},
---                         {tag = "<!MODULE_NAME!>", to = "TEST"},
---                         {tag = "<!module_name!>", to = "test"},
---                 }
---
---
---                                 ct:apply_template(FILE_TEMPLATE_MODULE_SRC, "/tmp/test", tags)
---                                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, "/tmp/test", tags, 43)
---                                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, "/tmp/test", tags, 233)
+        -- create program's source file
+        local filename = DIR_PROGRAMS.."/"..name.."/"..name.."."..ifs(C_lang, "c", "cpp")
+        ct:apply_template(FILE_TEMPLATE_SRC, filename, tags)
+
+        -- create program's header file
+        if header then
+                local filename = DIR_PROGRAMS.."/"..name.."/"..name..".h"
+                ct:apply_template(FILE_TEMPLATE_HDR, filename, tags)
+        end
+
+        -- finished
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Module added successfully.", ui.window)
 end
 
 
@@ -180,24 +175,28 @@ function new_program:create_window(parent)
                     ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Program name", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_basis_opt:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                     ui.TextCtrl_name = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE * 0.8, -1), 0, name_validator)
+                    ui.TextCtrl_name:SetToolTip("This is the name of a new program. The name of program must be unique.")
                     ui.FlexGridSizer_basis_opt:Add(ui.TextCtrl_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- create program description controls
                     ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Description", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_basis_opt:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                     ui.TextCtrl_description = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_DESCRIPTION, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.TextCtrl_description:SetToolTip("Enter here a short description of program's purpose.")
                     ui.FlexGridSizer_basis_opt:Add(ui.TextCtrl_description, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- create author name controls
                     ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Author name", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_basis_opt:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                     ui.TextCtrl_author = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_AUTHOR, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.TextCtrl_author:SetToolTip("Enter here your name.")
                     ui.FlexGridSizer_basis_opt:Add(ui.TextCtrl_author, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- create author's email controls
-                    ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Email", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "E-mail", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_basis_opt:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                     ui.TextCtrl_email = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_EMAIL, "", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.TextCtrl_email:SetToolTip("Enter here your e-mail address.")
                     ui.FlexGridSizer_basis_opt:Add(ui.TextCtrl_email, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- add basis options to the basis sizer
@@ -227,6 +226,7 @@ function new_program:create_window(parent)
                         ui.Choice_stack:Append("Huge")
                         ui.Choice_stack:Append("Very huge")
                         ui.Choice_stack:SetSelection(2)
+                        ui.Choice_stack:SetToolTip("Select the stack size of your program. This value can be changed later in the program's main function.")
                         ui.FlexGridSizer_stack:Add(ui.Choice_stack, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                         -- add stack size sizer to the details sizer
@@ -252,6 +252,9 @@ function new_program:create_window(parent)
 
                     -- add create header checkbox
                     ui.CheckBox_create_header = wx.wxCheckBox(ui.Panel_creator, ID.CHECKBOX_CREATE_HEADER, "Create program's header", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.CheckBox_create_header:SetToolTip("If option is selected the program's header is created. "..
+                                                         "In the header there is the structure that describes program's global variables. "..
+                                                         "The main purpose of this header is to provides program's global variables to all source files.")
                     ui.FlexGridSizer_details_opt:Add(ui.CheckBox_create_header, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- add the details options sizer to the details sizer

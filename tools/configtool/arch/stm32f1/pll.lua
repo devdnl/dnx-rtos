@@ -712,7 +712,7 @@ function pll:create_window(parent)
         ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer3:Add(ui.StaticText, 1, wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL, 5)
         ui.FlexGridSizer3:Add(ui.StaticText, 1, wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL, 5)
-        ui.hyperlink_clock_tree = wx.wxHyperlinkCtrl(ui.Panel1, ID.HYPERLINK_CLOCK_TREE, "Show clock tree", "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.hyperlink_clock_tree = wx.wxHyperlinkCtrl(ui.Panel1, ID.HYPERLINK_CLOCK_TREE, "Show clock tree", "", wx.wxDefaultPosition, wx.wxDefaultSize, 0)
         ui.FlexGridSizer3:Add(ui.hyperlink_clock_tree, 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
         ui.window:Connect(ID.HYPERLINK_CLOCK_TREE, wx.wxEVT_COMMAND_HYPERLINK,
                 function()
