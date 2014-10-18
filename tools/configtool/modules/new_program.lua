@@ -43,36 +43,101 @@ new_program = {}
 local ui = {}
 local ID = {}
 
-local FILE_TEMPLATE_MODULE_CFG       = config.project.path.module_template_cfg_file:GetValue()
-local FILE_TEMPLATE_MODULE_DEF       = config.project.path.module_template_def_file:GetValue()
-local FILE_TEMPLATE_MODULE_FLAGS     = config.project.path.module_template_flags_file:GetValue()
-local FILE_TEMPLATE_MODULE_IOCTL     = config.project.path.module_template_ioctl_file:GetValue()
-local FILE_TEMPLATE_MODULE_SRC       = config.project.path.module_template_src_file:GetValue()
-local FILE_TEMPLATE_MODULE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
-local FILE_TEMPLATE_MODULE_MK_NOARCH = config.project.path.module_template_makefile_noarch_file:GetValue()
-local FILE_TEMPLATE_CONFIGTOOL_FORM  = config.project.path.configtool_template_form_file:GetValue()
-local FILE_PROJECT_FLAGS             = config.project.path.project_flags_file:GetValue()
-local FILE_PROJECT_MAKEFILE          = config.project.path.project_makefile:GetValue()
-local FILE_DRIVERS_MAIN_MAKEFILE     = config.project.path.drivers_main_makefile:GetValue()
-local FILE_SYS_IOCTL                 = config.project.path.sys_ioctl_file:GetValue()
-local FILE_IOCTL_MACROS              = config.project.path.ioctl_macros_file:GetValue()
-local FILE_XML_CONFIG                = config.project.path.xml_config_file:GetValue()
-local FILE_DRIVER_REGISTARTION       = config.project.path.drivers_reg_file:GetValue()
+local FILE_TEMPLATE_SRC      = config.project.path.program_template_src_file:GetValue()
+local FILE_TEMPLATE_HDR      = config.project.path.program_template_hdr_file:GetValue()
+local FILE_TEMPLATE_MAKEFILE = config.project.path.program_template_makefile:GetValue()
+local DIR_PROGRAMS           = config.project.path.programs_dir:GetValue()
 
-local DIR_CONFIG          = config.project.path.config_dir:GetValue()
-local DIR_DRIVERS         = config.project.path.drivers_dir:GetValue()
-local DIR_CONFIGTOOL_ARCH = config.project.path.configtool_arch_dir:GetValue()
+local stack_size = {};
+stack_size[0] = "STACK_DEPTH_MINIMAL"
+stack_size[1] = "STACK_DEPTH_VERY_LOW"
+stack_size[2] = "STACK_DEPTH_LOW"
+stack_size[3] = "STACK_DEPTH_MEDIUM"
+stack_size[4] = "STACK_DEPTH_LARGE"
+stack_size[5] = "STACK_DEPTH_VERY_LARGE"
+stack_size[6] = "STACK_DEPTH_HUGE"
+stack_size[7] = "STACK_DEPTH_VERY_HUGE"
+
+local name_validator = wx.wxTextValidator(wx.wxFILTER_EXCLUDE_CHAR_LIST)
+name_validator:SetExcludes({',', '.', '/', '\\', ';', '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '=', '+', '[', ']', '{', '}', ':', '\'', '"', '?', '<', '>'})
+
 
 --==============================================================================
 -- LOCAL FUNCTIONS
 --==============================================================================
-
 --------------------------------------------------------------------------------
--- @brief
+-- @brief  Function create a new program
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-function a(event)
+function create_program()
+        local name        = ui.TextCtrl_name:GetValue():match("^%d*(.*)$")
+        local description = ui.TextCtrl_description:GetValue()
+        local author      = ui.TextCtrl_author:GetValue()
+        local email       = ui.TextCtrl_email:GetValue()
+        local stack       = stack_size[ui.Choice_stack:GetSelection()]
+        local C_lang      = ui.RadioButton_lang_C:GetValue()
+        local header      = ui.CheckBox_create_header:GetValue()
+
+        -- check if program's name is set
+        print(name)
+        if name == "" then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The program name field is empty. Please, put program's name and try again.", ui.window)
+                return
+        end
+
+        -- check if program exists
+        if ct.fs:exists(DIR_PROGRAMS.."/"..name) then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The program named '"..name.."' already exists. Please, change the program name.", ui.window)
+                return
+        end
+
+        -- checks if project is not read only
+        if not ct.fs:mkdir("_test_") then
+                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "Project seems to be a read only.", ui.window)
+                return
+        else
+                ct.fs:remove("_test_")
+        end
+
+        -- create tags
+        local tags = {
+                {tag = "<!path_program_name_c!>", to = ifs(C_lang, name.."/"..name..".c", "")},
+                {tag = "<!path_program_name_cpp!>", to = ifs(not C_lang, name.."/"..name..".cpp", "")},
+                {tag = "<!program_name!>", to = name},
+                {tag = "<!file_extension!>", to = ifs(C_lang, "c", "cpp")},
+                {tag = "<!author!>", to = author},
+                {tag = "<!program_description!>", to = description},
+                {tag = "<!year!>", to = os.date("%Y")},
+                {tag = "<!email!>", to = email},
+                {tag = "<!program_header!>", to = name..".h"},
+                {tag = "<!global_variables_in_src!>", to = ifs(not header, "GLOBAL_VARIABLES {\n};", "")},
+                {tag = "<!stack_size!>", to = stack},
+        }
+
+        -- create program's directory
+        ct.fs:mkdir(DIR_PROGRAMS.."/"..name)
+
+        -- create program's Makefile
+        ct:apply_template(FILE_TEMPLATE_MAKEFILE, DIR_PROGRAMS.."/"..name.."/Makefile", tags)
+
+--                 local FILE_TEMPLATE_MODULE_SRC       = config.project.path.module_template_src_file:GetValue()
+--                 local FILE_TEMPLATE_MODULE_MK_ARCH   = config.project.path.module_template_makefile_arch_file:GetValue()
+--
+--                 local tags = {
+--                         {tag = "<!cpu_arch!>", to = ""},
+--                         {tag = "<!author!>", to = "author"},
+--                         {tag = "<!module_description!>", to = "descr"},
+--                         {tag = "<!year!>", to = os.date("%Y")},
+--                         {tag = "<!email!>", to = "xxx@x"},
+--                         {tag = "<!MODULE_NAME!>", to = "TEST"},
+--                         {tag = "<!module_name!>", to = "test"},
+--                 }
+--
+--
+--                                 ct:apply_template(FILE_TEMPLATE_MODULE_SRC, "/tmp/test", tags)
+--                                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, "/tmp/test", tags, 43)
+--                                 ct:apply_template(FILE_TEMPLATE_MODULE_MK_ARCH, "/tmp/test", tags, 233)
 end
 
 
@@ -93,6 +158,7 @@ function new_program:create_window(parent)
                 ID.TEXTCTRL_DESCRIPTION = wx.wxNewId()
                 ID.TEXTCTRL_AUTHOR = wx.wxNewId()
                 ID.TEXTCTRL_EMAIL = wx.wxNewId()
+                ID.CHOICE_STACK = wx.wxNewId()
                 ID.RADIOBUTTON_LANG_C = wx.wxNewId()
                 ID.RADIOBUTTON_LANG_CPP = wx.wxNewId()
                 ID.CHECKBOX_CREATE_HEADER = wx.wxNewId()
@@ -113,7 +179,7 @@ function new_program:create_window(parent)
                     -- create program name controls
                     ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Program name", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_basis_opt:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                    ui.TextCtrl_name = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE * 0.8, -1), 0, wx.wxDefaultValidator)
+                    ui.TextCtrl_name = wx.wxTextCtrl(ui.Panel_creator, ID.TEXTCTRL_NAME, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE * 0.8, -1), 0, name_validator)
                     ui.FlexGridSizer_basis_opt:Add(ui.TextCtrl_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                     -- create program description controls
@@ -140,25 +206,49 @@ function new_program:create_window(parent)
                     -- add basis group to the panel's sizer
                     ui.FlexGridSizer_panel:Add(ui.StaticBoxSizer_basis, 0, wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_TOP, 0)
 
+
                 -- create details group
                 ui.StaticBoxSizer_details = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_creator, "Details")
                 ui.FlexGridSizer_details_opt = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+                    -- create stack size sizer
+                    ui.FlexGridSizer_stack = wx.wxFlexGridSizer(0, 2, 0, 0)
+                    ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Stack size:", wx.wxDefaultPosition, wx.wxDefaultSize)
+                    ui.FlexGridSizer_stack:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                        -- add stack size choice
+                        ui.Choice_stack = wx.wxChoice(ui.Panel_creator, ID.CHOICE_STACK, wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                        ui.Choice_stack:Append("Minimal")
+                        ui.Choice_stack:Append("Very low")
+                        ui.Choice_stack:Append("Low")
+                        ui.Choice_stack:Append("Medium")
+                        ui.Choice_stack:Append("Large")
+                        ui.Choice_stack:Append("Very large")
+                        ui.Choice_stack:Append("Huge")
+                        ui.Choice_stack:Append("Very huge")
+                        ui.Choice_stack:SetSelection(2)
+                        ui.FlexGridSizer_stack:Add(ui.Choice_stack, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                        -- add stack size sizer to the details sizer
+                        ui.FlexGridSizer_details_opt:Add(ui.FlexGridSizer_stack, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
 
                     -- create language sizer
                     ui.FlexGridSizer_lang = wx.wxFlexGridSizer(0, 3, 0, 0)
                     ui.StaticText = wx.wxStaticText(ui.Panel_creator, wx.wxID_ANY, "Language:", wx.wxDefaultPosition, wx.wxDefaultSize)
                     ui.FlexGridSizer_lang:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                    -- add radio button C
-                    ui.RadioButton_lang_C = wx.wxRadioButton(ui.Panel_creator, ID.RADIOBUTTON_LANG_C, "C", wx.wxDefaultPosition, wx.wxDefaultSize)
-                    ui.FlexGridSizer_lang:Add(ui.RadioButton_lang_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                        -- add radio button C
+                        ui.RadioButton_lang_C = wx.wxRadioButton(ui.Panel_creator, ID.RADIOBUTTON_LANG_C, "C", wx.wxDefaultPosition, wx.wxDefaultSize)
+                        ui.FlexGridSizer_lang:Add(ui.RadioButton_lang_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                    -- add radio button C++
-                    ui.RadioButton_lang_CPP = wx.wxRadioButton(ui.Panel_creator, ID.RADIOBUTTON_LANG_CPP, "C++", wx.wxDefaultPosition, wx.wxDefaultSize)
-                    ui.FlexGridSizer_lang:Add(ui.RadioButton_lang_CPP, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                        -- add radio button C++
+                        ui.RadioButton_lang_CPP = wx.wxRadioButton(ui.Panel_creator, ID.RADIOBUTTON_LANG_CPP, "C++", wx.wxDefaultPosition, wx.wxDefaultSize)
+                        ui.FlexGridSizer_lang:Add(ui.RadioButton_lang_CPP, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                    -- add lang sizer to the details sizer
-                    ui.FlexGridSizer_details_opt:Add(ui.FlexGridSizer_lang, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                        -- add lang sizer to the details sizer
+                        ui.FlexGridSizer_details_opt:Add(ui.FlexGridSizer_lang, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
 
                     -- add create header checkbox
                     ui.CheckBox_create_header = wx.wxCheckBox(ui.Panel_creator, ID.CHECKBOX_CREATE_HEADER, "Create program's header", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -170,13 +260,16 @@ function new_program:create_window(parent)
                     -- add details group to the panel's sizer
                     ui.FlexGridSizer_panel:Add(ui.StaticBoxSizer_details, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+
                 -- create horizontal line
                 ui.StaticLine = wx.wxStaticLine(ui.Panel_creator, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
                 ui.FlexGridSizer_panel:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+
                 -- add button
                 ui.Button_create = wx.wxButton(ui.Panel_creator, ID.BUTTON_CREATE, "Create program", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_panel:Add(ui.Button_create, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.window:Connect(ID.BUTTON_CREATE, wx.wxEVT_COMMAND_BUTTON_CLICKED, create_program)
 
                 -- set panel's sizer
                 ui.Panel_creator:SetSizer(ui.FlexGridSizer_panel)

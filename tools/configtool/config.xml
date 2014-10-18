@@ -131,6 +131,7 @@
             <drivers_dir>../../src/system/drivers</drivers_dir>
             <drivers_reg_file>../../src/system/drivers/driver_registration.c</drivers_reg_file>
             <drivers_main_makefile>../../src/system/drivers/Makefile</drivers_main_makefile>
+            <programs_dir>../../src/programs</programs_dir>
             <module_template_cfg_file>../../extra/templates/module/module_cfg.h</module_template_cfg_file>
             <module_template_def_file>../../extra/templates/module/module_def.h</module_template_def_file>
             <module_template_flags_file>../../extra/templates/module/module_flags.h</module_template_flags_file>
@@ -147,6 +148,9 @@
             <xml_config_file>./config.xml</xml_config_file>
             <bsp_dir>../../BSP</bsp_dir>
             <dnx_os_h>../../src/system/include/stdc/dnx/os.h</dnx_os_h>
+            <program_template_src_file>../../extra/templates/program/program.c</program_template_src_file>
+            <program_template_hdr_file>../../extra/templates/program/program.h</program_template_hdr_file>
+            <program_template_makefile>../../extra/templates/program/Makefile</program_template_makefile>
         </path>
     </project>
 

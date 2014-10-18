@@ -54,6 +54,8 @@ ct.decvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
 
 ct.alphavalidator = wx.wxTextValidator(wx.wxFILTER_ALPHA)
 
+ct.alphanumericvalidator = wx.wxTextValidator(wx.wxFILTER_ALPHANUMERIC)
+
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
@@ -728,43 +730,39 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
         assert(type(startline) == "number" or type(startline) == "nil", "apply_template(): startline is not number or nil")
         assert(type(replace_tags) == "table", "apply_template(): replace_tags is not the table type")
 
-        -- open template file
+        local template_bfr = {}
+        local dest_bfr     = {}
+
+        -- open template file and load to the buffer and replace tags
         template = io.open(template_path, "rb")
         if not template then
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..template_path.."' does not exist.\n"..debug.traceback())
                 return 0
-        end
+        else
+                for line in template:lines() do
+                        for _, t in pairs(replace_tags) do
+                                line = line:gsub(t.tag, t.to)
+                        end
 
-        -- open destination file
-        dest = io.open(destination_path, "rb")
-        if not dest then
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
-                template:close()
-                return 0
-        end
-
-        -- load template file to the buffer and replace tags
-        local template_bfr = {}
-        for line in template:lines() do
-                for _, t in pairs(replace_tags) do
-                        line = line:gsub(t.tag, t.to)
+                        table.insert(template_bfr, line.."\n")
                 end
-
-                table.insert(template_bfr, line.."\n")
+                template:close()
         end
-        template:close()
 
-        -- load destination file to the buffer
-        local dest_bfr = {}
-        if startline ~= nil then
+        -- open destination file and load to the buffer
+        dest = io.open(destination_path, "rb")
+        if startline ~= nil and dest then
                 for line in dest:lines() do
                         table.insert(dest_bfr, line.."\n")
                 end
+
+                dest:close()
+        else
+                startline = 0
         end
-        dest:close()
 
         -- check if start line is given
-        if startline == nil then
+        if startline == nil or startline <= 0 then
                 startline = 0
         else
                 startline = startline - 1
@@ -782,10 +780,17 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
 
         -- save buffer to the destination file
         dest = io.open(destination_path, "wb")
-        for _, line in pairs(dest_bfr) do
-                dest:write(line)
+        if not dest then
+                ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
+                template:close()
+                return 0
+        else
+                for _, line in pairs(dest_bfr) do
+                        dest:write(line)
+                end
+
+                dest:close()
         end
-        dest:close()
 
         return 1
 end

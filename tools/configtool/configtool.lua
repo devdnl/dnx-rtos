@@ -62,8 +62,8 @@ local page = {
         {form = network,            subpage = true },
         {form = modules,            subpage = true },
         {form = creators,           subpage = false},
+        {form = new_program,        subpage = true },
         {form = new_module,         subpage = true },
-        {form = new_program,        subpage = true }
 }
 
 -- container for UI controls
