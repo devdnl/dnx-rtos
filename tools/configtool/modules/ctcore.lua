@@ -49,8 +49,10 @@ ct.SAVE_QUESTION    = "The configuration has changed.\n\nDo you want to save the
 ct.hexvalidator = wx.wxTextValidator(wx.wxFILTER_INCLUDE_CHAR_LIST)
 ct.hexvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "a", "b", "c", "d", "e", "f"})
 
-ct.decvalidator = wx.wxTextValidator(wx.wxFILTER_INCLUDE_CHAR_LIST)
+ct.decvalidator = wx.wxTextValidator(wx.wxFILTER_NUMERIC)
 ct.decvalidator:SetIncludes({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
+
+ct.alphavalidator = wx.wxTextValidator(wx.wxFILTER_ALPHA)
 
 --==============================================================================
 -- LOCAL OBJECTS
@@ -717,43 +719,75 @@ end
 -- @param  template_path        path to the template file
 -- @param  destination_path     path where modified template will be saved
 -- @param  replace_tags         tag translation table {{.tag = "", .to = ""}, ...}
--- @return Number of repleaced tags
+-- @param  {startline}          start line where template is inserted
+-- @return On success 1 is returned, otherwise false
 --------------------------------------------------------------------------------
-function ct:apply_template(template_path, destination_path, replace_tags)
+function ct:apply_template(template_path, destination_path, replace_tags, startline)
         assert(type(template_path) == "string", "apply_template(): template_path is not the string type")
         assert(type(destination_path) == "string", "apply_template(): destination_path is not the string type")
+        assert(type(startline) == "number" or type(startline) == "nil", "apply_template(): startline is not number or nil")
         assert(type(replace_tags) == "table", "apply_template(): replace_tags is not the table type")
 
-        local n = 0
-
+        -- open template file
         template = io.open(template_path, "rb")
         if not template then
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..template_path.."' does not exist.\n"..debug.traceback())
-                return n
+                return 0
         end
 
-        dest = io.open(destination_path, "wb")
+        -- open destination file
+        dest = io.open(destination_path, "rb")
         if not dest then
                 ct:show_error_msg(ct.MAIN_WINDOW_NAME, "apply_template(): file '"..destination_path.."' does not exist.\n"..debug.traceback())
                 template:close()
-                return n
+                return 0
         end
 
-        template:seek("set", 0)
-        dest:seek("set", 0)
-
+        -- load template file to the buffer and replace tags
+        local template_bfr = {}
         for line in template:lines() do
                 for _, t in pairs(replace_tags) do
                         line = line:gsub(t.tag, t.to)
                 end
 
-                dest:write(line, "\n")
+                table.insert(template_bfr, line.."\n")
         end
-
         template:close()
+
+        -- load destination file to the buffer
+        local dest_bfr = {}
+        if startline ~= nil then
+                for line in dest:lines() do
+                        table.insert(dest_bfr, line.."\n")
+                end
+        end
         dest:close()
 
-        return n
+        -- check if start line is given
+        if startline == nil then
+                startline = 0
+        else
+                startline = startline - 1
+        end
+
+        if startline > #dest_bfr then
+                print("apply_template(): start line out of bounds")
+                return 0
+        end
+
+        -- append template buffer with destination buffer
+        for n, line in pairs(template_bfr) do
+                table.insert(dest_bfr, n + startline, line)
+        end
+
+        -- save buffer to the destination file
+        dest = io.open(destination_path, "wb")
+        for _, line in pairs(dest_bfr) do
+                dest:write(line)
+        end
+        dest:close()
+
+        return 1
 end
 
 
