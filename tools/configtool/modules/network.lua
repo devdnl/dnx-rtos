@@ -54,15 +54,18 @@ local modified = ct:new_modify_indicator()
 -- @return None
 --------------------------------------------------------------------------------
 local function load_controls()
---         local module_enabled = ct:get_module_state("NETWORK")
---         ui.CheckBox_enable:SetValue(module_enabled)
---         ui.Panel1:Enable(module_enabled)
---
---         for i = 0, 5 do
---                 ui.TextCtrl_MAC[i]:SetValue(ct:key_read(config.project.key["NETWORK_MAC_ADDR_"..i]):gsub("0x", ""))
---         end
---
---         ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
+        -- load module state
+        local module_enabled = ct:get_module_state("NETWORK")
+        ui.CheckBox_enable:SetValue(module_enabled)
+
+        -- load basic options
+        for i = 0, 5 do ui.TextCtrl_MAC[i]:SetValue(ct:key_read(config.project.key["NETWORK_MAC_ADDR_"..i]):gsub("0x", "")) end
+        ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
+
+        -- load advanced options
+
+        -- set notebook enable status
+        ui.Notebook_options:Enable(module_enabled)
 end
 
 
@@ -72,14 +75,16 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function save_configuration()
---         ct:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
---
---         for i = 0, 5 do
---                 ct:key_write(config.project.key["NETWORK_MAC_ADDR_"..i], "0x"..ui.TextCtrl_MAC[i]:GetValue())
---         end
---
---         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
+        -- save module state
+        ct:enable_module("NETWORK", ui.CheckBox_enable:GetValue())
 
+        -- save basic options
+        for i = 0, 5 do ct:key_write(config.project.key["NETWORK_MAC_ADDR_"..i], "0x"..ui.TextCtrl_MAC[i]:GetValue()) end
+        ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
+
+        -- save advanced options
+
+        -- set that nothing is modified
         modified:no()
 end
 
