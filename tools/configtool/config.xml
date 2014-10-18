@@ -68,13 +68,13 @@
             <OS_HOSTNAME><path>../../config/project/flags.h</path><key>__OS_HOSTNAME__</key></OS_HOSTNAME>
             <OS_SYSTEM_STOP_MACRO><path>../../config/project/flags.h</path><key>__OS_SYSTEM_STOP_MACRO__</key></OS_SYSTEM_STOP_MACRO>
             <ENABLE_NETWORK_H><path>../../config/project/flags.h</path><key>__NETWORK_ENABLE__</key></ENABLE_NETWORK_H>
-            <NETWORK_MAC_ADDR_0><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_0__</key></NETWORK_MAC_ADDR_0>
-            <NETWORK_MAC_ADDR_1><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_1__</key></NETWORK_MAC_ADDR_1>
-            <NETWORK_MAC_ADDR_2><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_2__</key></NETWORK_MAC_ADDR_2>
-            <NETWORK_MAC_ADDR_3><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_3__</key></NETWORK_MAC_ADDR_3>
-            <NETWORK_MAC_ADDR_4><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
-            <NETWORK_MAC_ADDR_5><path>../../config/project/flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
-            <NETWORK_ETHIF_FILE><path>../../config/project/flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+            <NETWORK_MAC_ADDR_0><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_0__</key></NETWORK_MAC_ADDR_0>
+            <NETWORK_MAC_ADDR_1><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_1__</key></NETWORK_MAC_ADDR_1>
+            <NETWORK_MAC_ADDR_2><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_2__</key></NETWORK_MAC_ADDR_2>
+            <NETWORK_MAC_ADDR_3><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_3__</key></NETWORK_MAC_ADDR_3>
+            <NETWORK_MAC_ADDR_4><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
+            <NETWORK_MAC_ADDR_5><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
+            <NETWORK_ETHIF_FILE><path>../../config/project/network_flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
             <_FS_ENABLE_FLAGS_></_FS_ENABLE_FLAGS_>
             <ENABLE_DEVFS_H><path>../../config/project/flags.h</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_H>
             <ENABLE_LFS_H><path>../../config/project/flags.h</path><key>__ENABLE_LFS__</key></ENABLE_LFS_H>
@@ -143,6 +143,7 @@
             <configtool_arch_dir>./arch</configtool_arch_dir>
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
+            <network_flags_file>../../config/project/network_flags.h</network_flags_file>
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>

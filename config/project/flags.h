@@ -116,13 +116,7 @@
 
 /* network configuration */
 #define __NETWORK_ENABLE__ _YES_
-#define __NETWORK_MAC_ADDR_0__ 0x50
-#define __NETWORK_MAC_ADDR_1__ 0xE5
-#define __NETWORK_MAC_ADDR_2__ 0x49
-#define __NETWORK_MAC_ADDR_3__ 0x37
-#define __NETWORK_MAC_ADDR_4__ 0xB5
-#define __NETWORK_MAC_ADDR_5__ 0xBD
-#define __NETWORK_ETHIF_FILE__ "/dev/eth0"
+#include "network_flags.h"
 
 /* file systems */
 #define __ENABLE_DEVFS__ _YES_

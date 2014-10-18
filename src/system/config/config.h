@@ -29,6 +29,7 @@
 
 #include "../../../config/project/flags.h"
 
+
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
  * CPU start frequency [Hz] (frequency after power up, before clock configuration)
@@ -39,6 +40,7 @@
  * CPU base frequency [Hz] (internal RC, oscillator or crystal frequency connected to PLL)
  */
 #define CONFIG_CPU_OSC_FREQ                             (__CPU_OSC_FREQ__)
+
 
 /**=== DYNAMIC MEMORY CONFIGURATION ==========================================*/
 /**
@@ -144,6 +146,7 @@
  * 3: full names
  */
 #define CONFIG_ERRNO_STRING_LEN                         (__OS_ERRNO_STRING_LEN__)
+
 
 /**=== NETWORK CONFIGURATION =================================================*/
 /**
