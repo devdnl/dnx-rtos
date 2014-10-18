@@ -41,6 +41,7 @@ require("modules/modules")
 require("modules/about")
 require("modules/creators")
 require("modules/new_module")
+require("modules/new_program")
 
 
 --==============================================================================
@@ -61,7 +62,8 @@ local page = {
         {form = network,            subpage = true },
         {form = modules,            subpage = true },
         {form = creators,           subpage = false},
-        {form = new_module,         subpage = true }
+        {form = new_program,        subpage = true },
+        {form = new_module,         subpage = true },
 }
 
 -- container for UI controls
