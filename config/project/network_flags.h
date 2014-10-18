@@ -34,6 +34,7 @@
 #ifndef _NETWORK_FLAGS_H_
 #define _NETWORK_FLAGS_H_
 
+/* basic options */
 #define __NETWORK_MAC_ADDR_0__ 0x50
 #define __NETWORK_MAC_ADDR_1__ 0xE5
 #define __NETWORK_MAC_ADDR_2__ 0x49
@@ -237,10 +238,6 @@
 #define __NETWORK___ LWIP_DBG_OFF
 #define __NETWORK___ LWIP_DBG_OFF
 #define __NETWORK___ LWIP_DBG_OFF
-
-
-
-
 
 #endif /* _NETWORK_FLAGS_H_ */
 /*==============================================================================
