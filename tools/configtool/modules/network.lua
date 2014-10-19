@@ -43,6 +43,13 @@ local ID = {}
 -- LOCAL OBJECTS
 --==============================================================================
 local modified = ct:new_modify_indicator()
+local TCP_OVERSIZE = {}
+TCP_OVERSIZE["0"]         = 0
+TCP_OVERSIZE["1"]         = 1
+TCP_OVERSIZE["128"]       = 2
+TCP_OVERSIZE["TCP_MSS"]   = 3
+TCP_OVERSIZE["TCP_MSS/4"] = 4
+TCP_OVERSIZE.get_value    = function(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
 
 
 --==============================================================================
@@ -146,6 +153,21 @@ local function load_controls()
         ui.SpinCtrl_adv_UDP_TTL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_UDP_TTL)))
         ui.Choice_adv_LWIP_NETBUF_RECVINFO:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_NETBUF_RECVINFO)))
 
+        -- load adv TCP options
+        ui.Choice_adv_LWIP_TCP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCP)))
+        ui.SpinCtrl_adv_TCP_TTL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_TTL)))
+        ui.SpinCtrl_adv_TCP_MAXRTX:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_MAXRTX)))
+        ui.SpinCtrl_adv_TCP_SYNMAXRTX:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_SYNMAXRTX)))
+        ui.Choice_adv_TCP_QUEUE_OOSEQ:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_TCP_QUEUE_OOSEQ)))
+        ui.SpinCtrl_adv_TCP_MSS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_MSS)))
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_TCP_CALCULATE_EFF_SEND_MSS)))
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_OOSEQ_MAX_BYTES)))
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_OOSEQ_MAX_PBUFS)))
+        ui.Choice_adv_TCP_LISTEN_BACKLOG:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_TCP_LISTEN_BACKLOG)))
+        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCP_DEFAULT_LISTEN_BACKLOG)))
+        ui.Choice_adv_TCP_OVERSIZE:SetSelection(TCP_OVERSIZE[ct:key_read(config.project.key.NETWORK_TCP_OVERSIZE)])
+        ui.Choice_adv_LWIP_TCP_TIMESTAMPS:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCP_TIMESTAMPS)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -247,6 +269,21 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_LWIP_UDP, tostring(ui.Choice_adv_LWIP_UDP:GetSelection()))
         ct:key_write(config.project.key.NETWORK_UDP_TTL, tostring(ui.SpinCtrl_adv_UDP_TTL:GetValue()))
         ct:key_write(config.project.key.NETWORK_LWIP_NETBUF_RECVINFO, tostring(ui.Choice_adv_LWIP_NETBUF_RECVINFO:GetSelection()))
+
+        -- save adv TCP options
+        ct:key_write(config.project.key.NETWORK_LWIP_TCP, tostring(ui.Choice_adv_LWIP_TCP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_TCP_TTL, tostring(ui.SpinCtrl_adv_TCP_TTL:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_MAXRTX, tostring(ui.SpinCtrl_adv_TCP_MAXRTX:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_SYNMAXRTX, tostring(ui.SpinCtrl_adv_TCP_SYNMAXRTX:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_QUEUE_OOSEQ, tostring(ui.Choice_adv_TCP_QUEUE_OOSEQ:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_TCP_MSS, tostring(ui.SpinCtrl_adv_TCP_MSS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_CALCULATE_EFF_SEND_MSS, tostring(ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_TCP_OOSEQ_MAX_BYTES, tostring(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_OOSEQ_MAX_PBUFS, tostring(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_LISTEN_BACKLOG, tostring(ui.Choice_adv_TCP_LISTEN_BACKLOG:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_TCP_DEFAULT_LISTEN_BACKLOG, tostring(ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_OVERSIZE, TCP_OVERSIZE:get_value(ui.Choice_adv_TCP_OVERSIZE:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_TCP_TIMESTAMPS, tostring(ui.Choice_adv_LWIP_TCP_TIMESTAMPS:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -1030,22 +1067,120 @@ local function create_TCP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_TCP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_TCP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_TCP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_TCP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_TCP
+        ui.FlexGridSizer_adv_TCP:AddStaticText("LWIP_TCP")
+        ui.Choice_adv_LWIP_TCP = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_TCP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_TCP:SetToolTip("LWIP_TCP==1: Turn on TCP.")
+        ui.Choice_adv_LWIP_TCP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_LWIP_TCP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_TTL
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_TTL")
+        ui.SpinCtrl_adv_TCP_TTL = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
+        ui.SpinCtrl_adv_TCP_TTL:SetToolTip("TCP_TTL: Default Time-To-Live value.")
+        ui.SpinCtrl_adv_TCP_TTL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_TTL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_MAXRTX
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_MAXRTX")
+        ui.SpinCtrl_adv_TCP_MAXRTX = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 50)
+        ui.SpinCtrl_adv_TCP_MAXRTX:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.")
+        ui.SpinCtrl_adv_TCP_MAXRTX:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_MAXRTX, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_SYNMAXRTX
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_SYNMAXRTX")
+        ui.SpinCtrl_adv_TCP_SYNMAXRTX = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 50)
+        ui.SpinCtrl_adv_TCP_SYNMAXRTX:SetToolTip("TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.")
+        ui.SpinCtrl_adv_TCP_SYNMAXRTX:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_SYNMAXRTX, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_QUEUE_OOSEQ
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_QUEUE_OOSEQ")
+        ui.Choice_adv_TCP_QUEUE_OOSEQ = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_TCP_QUEUE_OOSEQ:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_TCP_QUEUE_OOSEQ:SetToolTip("Controls if TCP should queue segments that arrive out of order. Define to 0 if your device is low on memory.")
+        ui.Choice_adv_TCP_QUEUE_OOSEQ:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_QUEUE_OOSEQ, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_MSS
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_MSS")
+        ui.SpinCtrl_adv_TCP_MSS = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 65536)
+        ui.SpinCtrl_adv_TCP_MSS:SetToolTip("TCP Maximum segment size.")
+        ui.SpinCtrl_adv_TCP_MSS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_MSS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_CALCULATE_EFF_SEND_MSS
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_CALCULATE_EFF_SEND_MSS")
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:SetToolTip("TCP_CALCULATE_EFF_SEND_MSS: \"The maximum size of a segment that TCP really "..
+                                                            "sends, the 'effective send MSS,' MUST be the smaller of the send MSS (which "..
+                                                            "reflects the available reassembly buffer size at the remote host) and the "..
+                                                            "largest size permitted by the IP layer\" (RFC 1122)\n"..
+                                                            "Setting this to 1 enables code that checks TCP_MSS against the MTU of the "..
+                                                            "netif used for a connection and limits the MSS if it would be too big otherwise.")
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_OOSEQ_MAX_BYTES
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OOSEQ_MAX_BYTES")
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 65536)
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:SetToolTip("TCP_OOSEQ_MAX_BYTES: The maximum number of bytes queued on ooseq per pcb. "..
+                                                       "Default is 0 (no limit). Only valid for TCP_QUEUE_OOSEQ==0.")
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_OOSEQ_MAX_PBUFS
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OOSEQ_MAX_PBUFS")
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 65536)
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:SetToolTip("TCP_OOSEQ_MAX_PBUFS: The maximum number of pbufs queued on ooseq per pcb. "..
+                                                       "Default is 0 (no limit). Only valid for TCP_QUEUE_OOSEQ==0.")
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_LISTEN_BACKLOG
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_LISTEN_BACKLOG")
+        ui.Choice_adv_TCP_LISTEN_BACKLOG = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_TCP_LISTEN_BACKLOG:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_TCP_LISTEN_BACKLOG:SetToolTip("TCP_LISTEN_BACKLOG==1: Enable the backlog option for tcp listen pcb.")
+        ui.Choice_adv_TCP_LISTEN_BACKLOG:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_LISTEN_BACKLOG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_DEFAULT_LISTEN_BACKLOG
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_DEFAULT_LISTEN_BACKLOG")
+        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
+        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:SetToolTip("The maximum allowed backlog for TCP listen netconns. "..
+                                                              "This backlog is used unless another is explicitly specified. 255 is the maximum (u8_t).")
+        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_OVERSIZE
+        ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OVERSIZE")
+        ui.Choice_adv_TCP_OVERSIZE = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_TCP_OVERSIZE:Append({"0", "1", "128", "TCP_MSS", "TCP_MSS/4"})
+        ui.Choice_adv_TCP_OVERSIZE:SetToolTip("TCP_OVERSIZE: The maximum number of bytes that tcp_write may "..
+                                              "allocate ahead of time in an attempt to create shorter pbuf chains "..
+                                              "for transmission. The meaningful range is 0 to TCP_MSS. Some "..
+                                              "suggested values are:\n"..
+                                              "0:         Disable oversized allocation. Each tcp_write() allocates a new pbuf (old behaviour).\n"..
+                                              "1:         Allocate size-aligned pbufs with minimal excess. Use this if your scatter-gather DMA requires aligned fragments.\n"..
+                                              "128:       Limit the pbuf/memory overhead to 20%.\n"..
+                                              "TCP_MSS:   Try to create unfragmented TCP packets.\n"..
+                                              "TCP_MSS/4: Try to create 4 fragments or less per TCP packet.")
+        ui.Choice_adv_TCP_OVERSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_OVERSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_TCP_TIMESTAMPS
+        ui.FlexGridSizer_adv_TCP:AddStaticText("LWIP_TCP_TIMESTAMPS")
+        ui.Choice_adv_LWIP_TCP_TIMESTAMPS = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_TCP_TIMESTAMPS:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_TCP_TIMESTAMPS:SetToolTip("LWIP_TCP_TIMESTAMPS==1: support the TCP timestamp option.")
+        ui.Choice_adv_LWIP_TCP_TIMESTAMPS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_LWIP_TCP_TIMESTAMPS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_TCP:SetSizer(ui.FlexGridSizer_adv_TCP)
