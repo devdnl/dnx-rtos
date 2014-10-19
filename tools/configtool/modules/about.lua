@@ -44,7 +44,8 @@ local ui = {}
 
 local programmers = "Daniel Zorychta <daniel.zorychta@gmail.com>"
 
-local testers = "Paweł Radecki"
+local testers = "Paweł Radecki\n"..
+                "Artur Bałut"
 
 
 --==============================================================================
