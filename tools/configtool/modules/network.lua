@@ -115,6 +115,9 @@ local function load_controls()
         ui.Choice_adv_LWIP_BROADCAST_PING:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_BROADCAST_PING)))
         ui.Choice_adv_LWIP_MULTICAST_PING:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_MULTICAST_PING)))
 
+        -- load adv DHCP options
+        ui.Choice_adv_LWIP_DHCP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -185,6 +188,9 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_ICMP_TTL, tostring(ui.SpinCtrl_adv_ICMP_TTL:GetValue()))
         ct:key_write(config.project.key.NETWORK_LWIP_BROADCAST_PING, tostring(ui.Choice_adv_LWIP_BROADCAST_PING:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_MULTICAST_PING, tostring(ui.Choice_adv_LWIP_MULTICAST_PING:GetSelection()))
+
+        -- save adv DHCP options
+        ct:key_write(config.project.key.NETWORK_LWIP_DHCP, tostring(ui.Choice_adv_LWIP_DHCP:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -715,23 +721,15 @@ local function create_DHCP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DHCP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DHCP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_DHCP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_DHCP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
-
+        -- LWIP_DHCP
+        ui.FlexGridSizer_adv_DHCP:AddStaticText("LWIP_DHCP")
+        ui.Choice_adv_LWIP_DHCP = wx.wxChoice(ui.Panel_adv_DHCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_DHCP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_DHCP:SetToolTip("LWIP_DHCP==1: Enable DHCP module.")
+        ui.Choice_adv_LWIP_DHCP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DHCP:Add(ui.Choice_adv_LWIP_DHCP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_DHCP:SetSizer(ui.FlexGridSizer_adv_DHCP)
