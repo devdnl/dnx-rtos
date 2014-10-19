@@ -765,7 +765,7 @@
  * Setting this to 1 enables code that checks TCP_MSS against the MTU of the
  * netif used for a connection and limits the MSS if it would be too big otherwise.
  */
-#define TCP_CALCULATE_EFF_SEND_MSS              1
+#define TCP_CALCULATE_EFF_SEND_MSS              __NETWORK_TCP_CALCULATE_EFF_SEND_MSS__
 
 /**
  * TCP sender buffer space (bytes).
