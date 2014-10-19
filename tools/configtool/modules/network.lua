@@ -29,20 +29,24 @@
 --==============================================================================
 require("wx")
 require("modules/ctcore")
+require("modules/operating_system")
 
 
 --==============================================================================
 -- GLOBAL OBJECTS
 --==============================================================================
 network  = {}
-local ui = {}
-local ID = {}
 
 
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local ui = {}
+local ID = {}
 local modified = ct:new_modify_indicator()
+local priority_min = 0
+local priority_max = 0
+
 local TCP_OVERSIZE = {}
 TCP_OVERSIZE["0"]         = 0
 TCP_OVERSIZE["1"]         = 1
@@ -50,6 +54,18 @@ TCP_OVERSIZE["128"]       = 2
 TCP_OVERSIZE["TCP_MSS"]   = 3
 TCP_OVERSIZE["TCP_MSS/4"] = 4
 TCP_OVERSIZE.get_value    = function(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
+
+local stack_size = {};
+stack_size["STACK_DEPTH_MINIMAL"]    = 0
+stack_size["STACK_DEPTH_VERY_LOW"]   = 1
+stack_size["STACK_DEPTH_LOW"]        = 2
+stack_size["STACK_DEPTH_MEDIUM"]     = 3
+stack_size["STACK_DEPTH_LARGE"]      = 4
+stack_size["STACK_DEPTH_VERY_LARGE"] = 5
+stack_size["STACK_DEPTH_HUGE"]       = 6
+stack_size["STACK_DEPTH_VERY_HUGE"]  = 7
+stack_size.count                     = function(self) local n = 0 for i, v in pairs(self) do if type(v) == "number" then n = n + 1 end end return n end
+stack_size.get_value                 = function(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
 
 
 --==============================================================================
@@ -180,6 +196,25 @@ local function load_controls()
         -- load adv LOOPIF options
         ui.Choice_adv_LWIP_HAVE_SLIPIF:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_HAVE_SLIPIF)))
 
+        -- load adv thread options
+        ui.TextCtrl_adv_TCPIP_THREAD_NAME:SetValue(ct:key_read(config.project.key.NETWORK_TCPIP_THREAD_NAME):gsub('"', ""))
+        ui.Choice_adv_TCPIP_THREAD_STACKSIZE:SetSelection(stack_size[ct:key_read(config.project.key.NETWORK_TCPIP_THREAD_STACKSIZE)])
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCPIP_THREAD_PRIO)))
+        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_TCPIP_MBOX_SIZE)))
+        ui.TextCtrl_adv_SLIPIF_THREAD_NAME:SetValue(ct:key_read(config.project.key.NETWORK_SLIPIF_THREAD_NAME):gsub('"', ""))
+        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:SetSelection(stack_size[ct:key_read(config.project.key.NETWORK_SLIPIF_THREAD_STACKSIZE)])
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SLIPIF_THREAD_PRIO)))
+        ui.TextCtrl_adv_PPP_THREAD_NAME:SetValue(ct:key_read(config.project.key.NETWORK_PPP_THREAD_NAME):gsub('"', ""))
+        ui.Choice_adv_PPP_THREAD_STACKSIZE:SetSelection(stack_size[ct:key_read(config.project.key.NETWORK_PPP_THREAD_STACKSIZE)])
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_PPP_THREAD_PRIO)))
+        ui.TextCtrl_adv_DEFAULT_THREAD_NAME:SetValue(ct:key_read(config.project.key.NETWORK_DEFAULT_THREAD_NAME):gsub('"', ""))
+        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:SetSelection(stack_size[ct:key_read(config.project.key.NETWORK_DEFAULT_THREAD_STACKSIZE)])
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_THREAD_PRIO)))
+        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_RAW_RECVMBOX_SIZE)))
+        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_UDP_RECVMBOX_SIZE)))
+        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE)))
+        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -303,11 +338,31 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_LWIP_NETIF_LOOPBACK, tostring(ui.Choice_adv_LWIP_NETIF_LOOPBACK:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_LOOPBACK_MAX_PBUFS, tostring(ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:GetValue()))
 
-        -- load adv LOOPIF options
+        -- save adv LOOPIF options
         ct:key_write(config.project.key.NETWORK_LWIP_HAVE_LOOPIF, tostring(ui.Choice_adv_LWIP_HAVE_LOOPIF:GetSelection()))
 
-        -- load adv SLIPIF options
+        -- save adv SLIPIF options
         ct:key_write(config.project.key.NETWORK_LWIP_HAVE_SLIPIF, tostring(ui.Choice_adv_LWIP_HAVE_SLIPIF:GetSelection()))
+
+        -- save adv thread options
+        ct:key_write(config.project.key.NETWORK_TCPIP_THREAD_NAME, '"'..ui.TextCtrl_adv_TCPIP_THREAD_NAME:GetValue()..'"')
+        ct:key_write(config.project.key.NETWORK_TCPIP_THREAD_STACKSIZE, stack_size:get_value(ui.Choice_adv_TCPIP_THREAD_STACKSIZE:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_TCPIP_THREAD_PRIO, tostring(ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCPIP_MBOX_SIZE, tostring(ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SLIPIF_THREAD_NAME, '"'..ui.TextCtrl_adv_SLIPIF_THREAD_NAME:GetValue()..'"')
+        ct:key_write(config.project.key.NETWORK_SLIPIF_THREAD_STACKSIZE, stack_size:get_value(ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_SLIPIF_THREAD_PRIO, tostring(ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PPP_THREAD_NAME, '"'..ui.TextCtrl_adv_PPP_THREAD_NAME:GetValue()..'"')
+        ct:key_write(config.project.key.NETWORK_PPP_THREAD_STACKSIZE, stack_size:get_value(ui.Choice_adv_PPP_THREAD_STACKSIZE:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_PPP_THREAD_PRIO, tostring(ui.SpinCtrl_adv_PPP_THREAD_PRIO:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_THREAD_NAME, '"'..ui.TextCtrl_adv_DEFAULT_THREAD_NAME:GetValue()..'"')
+        ct:key_write(config.project.key.NETWORK_DEFAULT_THREAD_STACKSIZE, stack_size:get_value(ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_THREAD_PRIO, tostring(ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_RAW_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_UDP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:GetValue()))
+
 
         -- set that nothing is modified
         modified:no()
@@ -1328,22 +1383,155 @@ local function create_THREAD_options_widgets(parent)
         -- create panel
         ui.Panel_adv_THREAD = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_THREAD = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_THREAD.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_THREAD, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- TCPIP_THREAD_NAME
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_NAME")
+        ui.TextCtrl_adv_TCPIP_THREAD_NAME = wx.wxTextCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.TextCtrl_adv_TCPIP_THREAD_NAME:SetToolTip("TCPIP_THREAD_NAME: The name assigned to the main tcpip thread.")
+        ui.TextCtrl_adv_TCPIP_THREAD_NAME:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.TextCtrl_adv_TCPIP_THREAD_NAME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCPIP_THREAD_STACKSIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_STACKSIZE")
+        ui.Choice_adv_TCPIP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        ui.Choice_adv_TCPIP_THREAD_STACKSIZE:SetToolTip("TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
+                                                        "The stack size value itself is platform-dependent, but is passed to "..
+                                                        "sys_thread_new() when the thread is created.")
+        ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_TCPIP_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCPIP_THREAD_PRIO
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_PRIO")
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:SetToolTip("TCPIP_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
+                                                     "The priority value itself is platform-dependent, but is passed to "..
+                                                     "sys_thread_new() when the thread is created.")
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_TCPIP_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCPIP_MBOX_SIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_MBOX_SIZE")
+        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
+        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:SetToolTip("TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages "..
+                                                   "The queue size value itself is platform-dependent, but is passed to sys_mbox_new() when tcpip_init is called.")
+        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_TCPIP_MBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SLIPIF_THREAD_NAME
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_NAME")
+        ui.TextCtrl_adv_SLIPIF_THREAD_NAME = wx.wxTextCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.TextCtrl_adv_SLIPIF_THREAD_NAME:SetToolTip("SLIPIF_THREAD_NAME: The name assigned to the slipif_loop thread.")
+        ui.TextCtrl_adv_SLIPIF_THREAD_NAME:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.TextCtrl_adv_SLIPIF_THREAD_NAME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SLIPIF_THREAD_STACKSIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_STACKSIZE")
+        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:SetToolTip("SLIPIF_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
+                                                         "The stack size value itself is platform-dependent, but is passed to "..
+                                                         "sys_thread_new() when the thread is created.")
+        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_SLIPIF_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SLIPIF_THREAD_PRIO
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_PRIO")
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:SetToolTip("SLIPIF_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
+                                                      "The priority value itself is platform-dependent, but is passed to "..
+                                                      "sys_thread_new() when the thread is created.")
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPP_THREAD_NAME
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_NAME")
+        ui.TextCtrl_adv_PPP_THREAD_NAME = wx.wxTextCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.TextCtrl_adv_PPP_THREAD_NAME:SetToolTip("PPP_THREAD_NAME: The name assigned to the pppInputThread.")
+        ui.TextCtrl_adv_PPP_THREAD_NAME:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.TextCtrl_adv_PPP_THREAD_NAME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPP_THREAD_STACKSIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_STACKSIZE")
+        ui.Choice_adv_PPP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_PPP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        ui.Choice_adv_PPP_THREAD_STACKSIZE:SetToolTip("PPP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
+                                                      "The stack size value itself is platform-dependent, but is passed to "..
+                                                      "sys_thread_new() when the thread is created.")
+        ui.Choice_adv_PPP_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_PPP_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPP_THREAD_PRIO
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_PRIO")
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO:SetToolTip("PPP_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
+                                                   "The priority value itself is platform-dependent, but is passed to "..
+                                                   "sys_thread_new() when the thread is created.")
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_PPP_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_THREAD_NAME
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_NAME")
+        ui.TextCtrl_adv_DEFAULT_THREAD_NAME = wx.wxTextCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.TextCtrl_adv_DEFAULT_THREAD_NAME:SetToolTip("DEFAULT_THREAD_NAME: The name assigned to any other lwIP thread.")
+        ui.TextCtrl_adv_DEFAULT_THREAD_NAME:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.TextCtrl_adv_DEFAULT_THREAD_NAME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_THREAD_STACKSIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_STACKSIZE")
+        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:SetToolTip("DEFAULT_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
+                                                          "The stack size value itself is platform-dependent, but is passed to "..
+                                                          "sys_thread_new() when the thread is created.")
+        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_DEFAULT_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_THREAD_PRIO
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_PRIO")
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetToolTip("DEFAULT_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
+                                                       "The priority value itself is platform-dependent, but is passed to "..
+                                                       "sys_thread_new() when the thread is created.")
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_RAW_RECVMBOX_SIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_RAW_RECVMBOX_SIZE")
+        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
+        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:SetToolTip("DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
+                                                             "NETCONN_RAW. The queue size value itself is platform-dependent, but is passed "..
+                                                             "to sys_mbox_new() when the recvmbox is created.")
+        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_UDP_RECVMBOX_SIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_UDP_RECVMBOX_SIZE")
+        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
+        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:SetToolTip("DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
+                                                             "NETCONN_UDP. The queue size value itself is platform-dependent, but is passed "..
+                                                             "to sys_mbox_new() when the recvmbox is created.")
+        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_TCP_RECVMBOX_SIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_TCP_RECVMBOX_SIZE")
+        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
+        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetToolTip("DEFAULT_TCP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
+                                                             "NETCONN_TCP. The queue size value itself is platform-dependent, but is passed "..
+                                                             "to sys_mbox_new() when the recvmbox is created.")
+        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DEFAULT_ACCEPTMBOX_SIZE
+        ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_ACCEPTMBOX_SIZE")
+        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
+        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetToolTip("DEFAULT_ACCEPTMBOX_SIZE: The mailbox size for the incoming connections. "..
+                                                           "The queue size value itself is platform-dependent, but is passed to "..
+                                                           "sys_mbox_new() when the acceptmbox is created.")
+        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_THREAD:SetSizer(ui.FlexGridSizer_adv_THREAD)
@@ -1542,6 +1730,8 @@ function network:create_window(parent)
                 ID.CHECKBOX_ENABLE  = wx.wxNewId()
                 ID.NOTEBOOK_OPTIONS = wx.wxNewId()
 
+                priority_min, priority_max = operating_system:get_priority_range()
+
                 -- create main window
                 ui.window = wx.wxScrolledWindow(parent, wx.wxID_ANY)
                 ui.FlexGridSizer_main = wx.wxFlexGridSizer(0, 1, 0, 0)
@@ -1589,6 +1779,16 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function network:refresh()
+        -- refresh priority range
+        priority_min, priority_max = operating_system:get_priority_range()
+
+        -- update range of priority controls
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:SetRange(priority_min, priority_max)
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:SetRange(priority_min, priority_max)
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO:SetRange(priority_min, priority_max)
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetRange(priority_min, priority_max)
+
+        -- load configuration
         load_controls()
         modified:no()
 end
