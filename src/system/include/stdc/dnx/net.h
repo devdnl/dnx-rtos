@@ -1923,7 +1923,7 @@ static inline net_err_t net_shutdown(net_conn_t *conn, bool shut_rx, bool shut_t
  *
  * net_ip_t ip;
  * if (net_get_host_by_name("dnx-rtos.org", &ip) == NET_ERR_OK) {
- *         printf("dnx-rtos.org IP: %d.%d.%d.%d",
+ *         printf("dnx-rtos.org IP: %d.%d.%d.%d\n",
  *                net_get_ip_part_a(&ip),
  *                net_get_ip_part_b(&ip),
  *                net_get_ip_part_c(&ip),
