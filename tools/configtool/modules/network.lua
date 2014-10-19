@@ -583,9 +583,10 @@ local function create_memory_options_widgets(parent)
         ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_SEPARATE_POOLS")
         ui.Choice_adv_MEMP_SEPARATE_POOLS = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_MEMP_SEPARATE_POOLS:Append({"No (0)", "Yes (1)"})
-        ui.Choice_adv_MEMP_SEPARATE_POOLS:SetToolTip("MEMP_SEPARATE_POOLS: If selected yes, each pool is placed in its own array. "..
-                                                "This can be used to individually change the location of each pool. "..
-                                                "Default is one big array for all pools.")
+        ui.Choice_adv_MEMP_SEPARATE_POOLS:SetToolTip("MEMP_SEPARATE_POOLS: If selected yes, each pool is placed\n"..
+                                                     "in its own array. This can be used to individually change\n"..
+                                                     "the location of each pool.\n"..
+                                                     "Default is one big array for all pools.")
         ui.Choice_adv_MEMP_SEPARATE_POOLS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_SEPARATE_POOLS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -593,11 +594,13 @@ local function create_memory_options_widgets(parent)
         ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_OVERFLOW_CHECK")
         ui.Choice_adv_MEMP_OVERFLOW_CHECK = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_MEMP_OVERFLOW_CHECK:Append({"Disable (0)", "Each element when it is freed (1)", "Each element in every pool every time (2)"})
-        ui.Choice_adv_MEMP_OVERFLOW_CHECK:SetToolTip("MEMP_OVERFLOW_CHECK: memp overflow protection reserves a configurable amount of bytes before and after each "..
-                                                "memp element in every pool and fills it with a prominent default value.\n"..
-                                                "- 0: no checking\n"..
-                                                "- 1: checks each element when it is freed\n"..
-                                                "- 2: checks each element in every pool every time memp_malloc() or memp_free() is called (useful but slow!).")
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK:SetToolTip("MEMP_OVERFLOW_CHECK: memp overflow protection\n"..
+                                                     "reserves a configurable amount of bytes before\n"..
+                                                     "and after each memp element in every pool and\n"..
+                                                     "fills it with a prominent default value.\n"..
+                                                     "- 0: no checking\n"..
+                                                     "- 1: checks each element when it is freed\n"..
+                                                     "- 2: checks each element in every pool every time memp_malloc() or memp_free() is called (useful but slow!).")
         ui.Choice_adv_MEMP_OVERFLOW_CHECK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_OVERFLOW_CHECK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -605,7 +608,8 @@ local function create_memory_options_widgets(parent)
         ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_SANITY_CHECK")
         ui.Choice_adv_MEMP_SANITY_CHECK = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_MEMP_SANITY_CHECK:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_MEMP_SANITY_CHECK:SetToolTip("MEMP_SANITY_CHECK = 1: run a sanity check after each memp_free() to make sure that there are no cycles in the linked lists.")
+        ui.Choice_adv_MEMP_SANITY_CHECK:SetToolTip("MEMP_SANITY_CHECK = 1: run a sanity check after each memp_free()\n"..
+                                                   "to make sure that there are no cycles in the linked lists.")
         ui.Choice_adv_MEMP_SANITY_CHECK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_SANITY_CHECK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -630,8 +634,8 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- MEMP_NUM_PBUF
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_PBUF")
         ui.SpinCtrl_adv_MEMP_NUM_PBUF = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_PBUF:SetToolTip("MEMP_NUM_PBUF: the number of memp struct pbufs. If the application "..
-                                                 "sends a lot of data out of ROM (or other static memory), this "..
+        ui.SpinCtrl_adv_MEMP_NUM_PBUF:SetToolTip("MEMP_NUM_PBUF: the number of memp struct pbufs. If the application\n"..
+                                                 "sends a lot of data out of ROM (or other static memory), this\n"..
                                                   "should be set high.")
         ui.SpinCtrl_adv_MEMP_NUM_PBUF:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_PBUF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -646,7 +650,7 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- MEMP_NUM_UDP_PCB
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_UDP_PCB")
         ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:SetToolTip("MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One per active UDP \"connection\".")
+        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:SetToolTip("MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks.\nOne per active UDP \"connection\".")
         ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -674,33 +678,33 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- MEMP_NUM_REASSDATA
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_REASSDATA")
         ui.SpinCtrl_adv_MEMP_NUM_REASSDATA = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:SetToolTip("MEMP_NUM_REASSDATA: the number of IP packets simultaneously queued for reassembly (whole packets, not fragments!)")
+        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:SetToolTip("MEMP_NUM_REASSDATA: the number of IP packets simultaneously\nqueued for reassembly (whole packets, not fragments!)")
         ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_REASSDATA, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_FRAG_PBUF
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_FRAG_PBUF")
         ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:SetToolTip("MEMP_NUM_FRAG_PBUF: the number of IP fragments simultaneously sent (fragments, not whole packets!). "..
-                                            "This is only used with IP_FRAG_USES_STATIC_BUF==0 and LWIP_NETIF_TX_SINGLE_PBUF==0 and only has to be > 1 with DMA-enabled MACs "..
-                                            "where the packet is not yet sent when netif->output returns.")
+        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:SetToolTip("MEMP_NUM_FRAG_PBUF: the number of IP fragments\nsimultaneously sent (fragments, not whole packets!).\n"..
+                                                      "This is only used with IP_FRAG_USES_STATIC_BUF==0\nand LWIP_NETIF_TX_SINGLE_PBUF==0 and only has\nto be > 1 with DMA-enabled MACs "..
+                                                      "where the packet is not yet sent when\nnetif->output returns.")
         ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_ARP_QUEUE
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_ARP_QUEUE")
         ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:SetToolTip("MEMP_NUM_ARP_QUEUE: the number of simulateously queued outgoing packets (pbufs) that are waiting "..
-                                                           "for an ARP request (to resolve their destination address) to finish. (requires the ARP_QUEUEING option)")
+        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:SetToolTip("MEMP_NUM_ARP_QUEUE: the number of simulateously\nqueued outgoing packets (pbufs) that are waiting\n"..
+                                                      "for an ARP request (to resolve their destination\naddress) to finish. (requires the ARP_QUEUEING option)")
         ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_IGMP_GROUP
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_IGMP_GROUP")
         ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:SetToolTip("MEMP_NUM_IGMP_GROUP: The number of multicast groups whose network interfaces "..
-                                                            "can be members at the same time (one per netif - allsystems group -, plus one "..
-                                                            "per netif membership). (requires the LWIP_IGMP option)")
+        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:SetToolTip("MEMP_NUM_IGMP_GROUP: The number of multicast\ngroups whose network interfaces\n"..
+                                                       "can be members at the same time (one per\nnetif - allsystems group -, plus one\n"..
+                                                       "per netif membership). (requires the LWIP_IGMP option)")
         ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -721,14 +725,14 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- MEMP_NUM_TCPIP_MSG_API
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCPIP_MSG_API")
         ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:SetToolTip("MEMP_NUM_TCPIP_MSG_API: the number of struct tcpip_msg, which are used for callback/timeout API communication.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:SetToolTip("MEMP_NUM_TCPIP_MSG_API: the number of struct\ntcpip_msg, which are used for callback/timeout API communication.")
         ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_TCPIP_MSG_INPKT
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCPIP_MSG_INPKT")
         ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:SetToolTip("MEMP_NUM_TCPIP_MSG_INPKT: the number of struct tcpip_msg, which are used for incoming packets.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:SetToolTip("MEMP_NUM_TCPIP_MSG_INPKT: the number of struct\ntcpip_msg, which are used for incoming packets.")
         ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -742,22 +746,22 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- MEMP_NUM_SNMP_ROOTNODE
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_SNMP_ROOTNODE")
         ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:SetToolTip("MEMP_NUM_SNMP_ROOTNODE: the number of branches in the SNMP tree. "..
-                                                               "Every branch has one leaf (MEMP_NUM_SNMP_NODE) at least!")
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:SetToolTip("MEMP_NUM_SNMP_ROOTNODE: the number of branches\nin the SNMP tree. "..
+                                                          "Every branch has one leaf (MEMP_NUM_SNMP_NODE) at least!")
         ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_LOCALHOSTLIST
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_LOCALHOSTLIST")
         ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:SetToolTip("MEMP_NUM_LOCALHOSTLIST: the number of host entries in the local host list if DNS_LOCAL_HOSTLIST_IS_DYNAMIC==1.")
+        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:SetToolTip("MEMP_NUM_LOCALHOSTLIST: the number of host\nentries in the local host list if DNS_LOCAL_HOSTLIST_IS_DYNAMIC==1.")
         ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_NUM_PPPOE_INTERFACES
         ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_PPPOE_INTERFACES")
         ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:SetToolTip("MEMP_NUM_PPPOE_INTERFACES: the number of concurrently active PPPoE interfaces (only used with PPPOE_SUPPORT==1)")
+        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:SetToolTip("MEMP_NUM_PPPOE_INTERFACES: the number of concurrently\nactive PPPoE interfaces (only used with PPPOE_SUPPORT==1)")
         ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -805,11 +809,11 @@ local function create_ARP_options_widgets(parent)
         ui.FlexGridSizer_adv_ARP:AddStaticText("ARP_QUEUEING")
         ui.Choice_adv_ARP_QUEUEING = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_ARP_QUEUEING:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_ARP_QUEUEING:SetToolTip("ARP_QUEUEING==1: Multiple outgoing packets are queued during hardware address "..
-                                              "resolution. By default, only the most recent packet is queued per IP address. "..
-                                              "This is sufficient for most protocols and mainly reduces TCP connection "..
-                                              "startup time. Set this to 1 if you know your application sends more than one "..
-                                              "packet in a row to an IP address that is not in the ARP cache.")
+        ui.Choice_adv_ARP_QUEUEING:SetToolTip("ARP_QUEUEING==1: Multiple outgoing packets are\nqueued during hardware address\n"..
+                                              "resolution. By default, only the most recent\npacket is queued per IP address.\n"..
+                                              "This is sufficient for most protocols and\nmainly reduces TCP connection\n"..
+                                              "startup time. Set this to 1 if you know\nyour application sends more than one\n"..
+                                              "packet in a row to an IP address that\nis not in the ARP cache.")
         ui.Choice_adv_ARP_QUEUEING:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ARP_QUEUEING, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -817,14 +821,14 @@ local function create_ARP_options_widgets(parent)
         ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_TRUST_IP_MAC")
         ui.Choice_adv_ETHARP_TRUST_IP_MAC = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_ETHARP_TRUST_IP_MAC:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_ETHARP_TRUST_IP_MAC:SetToolTip("ETHARP_TRUST_IP_MAC==1: Incoming IP packets cause the ARP table to be "..
-                                                       "updated with the source MAC and IP addresses supplied in the packet. "..
-                                                       "You may want to disable this if you do not trust LAN peers to have the "..
-                                                       "correct addresses, or as a limited approach to attempt to handle "..
-                                                       "spoofing. If disabled, lwIP will need to make a new ARP request if "..
-                                                       "the peer is not already in the ARP table, adding a little latency. "..
-                                                       "The peer *is* in the ARP table if it requested our address before. "..
-                                                       "Also notice that this slows down input processing of every IP packet!")
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC:SetToolTip("ETHARP_TRUST_IP_MAC==1: Incoming IP\npackets cause the ARP table to be\n"..
+                                                     "updated with the source MAC and IP\naddresses supplied in the packet.\n"..
+                                                     "You may want to disable this if you\ndo not trust LAN peers to have the\n"..
+                                                     "correct addresses, or as a limited\napproach to attempt to handle\n"..
+                                                     "spoofing. If disabled, lwIP will\nneed to make a new ARP request if\n"..
+                                                     "the peer is not already in the ARP\ntable, adding a little latency.\n"..
+                                                     "The peer *is* in the ARP table if\nit requested our address before.\n"..
+                                                     "Also notice that this slows down\ninput processing of every IP packet!")
         ui.Choice_adv_ETHARP_TRUST_IP_MAC:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_TRUST_IP_MAC, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -832,22 +836,22 @@ local function create_ARP_options_widgets(parent)
         ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_SUPPORT_VLAN")
         ui.Choice_adv_ETHARP_SUPPORT_VLAN = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_ETHARP_SUPPORT_VLAN:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_ETHARP_SUPPORT_VLAN:SetToolTip("ETHARP_SUPPORT_VLAN==1: support receiving ethernet packets with VLAN header. "..
-                                                     "Additionally, you can define ETHARP_VLAN_CHECK to an u16_t VLAN ID to check. "..
-                                                     "If ETHARP_VLAN_CHECK is defined, only VLAN-traffic for this VLAN is accepted. "..
-                                                     "If ETHARP_VLAN_CHECK is not defined, all traffic is accepted. "..
-                                                     "Alternatively, define a function/define ETHARP_VLAN_CHECK_FN(eth_hdr, vlan) "..
-                                                     "that returns 1 to accept a packet or 0 to drop a packet.")
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN:SetToolTip("ETHARP_SUPPORT_VLAN==1: support receiving\nethernet packets with VLAN header.\n"..
+                                                     "Additionally, you can define ETHARP_VLAN_CHECK\nto an u16_t VLAN ID to check.\n"..
+                                                     "If ETHARP_VLAN_CHECK is defined, only\nVLAN-traffic for this VLAN is accepted.\n"..
+                                                     "If ETHARP_VLAN_CHECK is not defined,\nall traffic is accepted.\n"..
+                                                     "Alternatively, define a function/define\nETHARP_VLAN_CHECK_FN(eth_hdr, vlan)\n"..
+                                                     "that returns 1 to accept a packet or\n0 to drop a packet.")
         ui.Choice_adv_ETHARP_SUPPORT_VLAN:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_SUPPORT_VLAN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- ETH_PAD_SIZE
         ui.FlexGridSizer_adv_ARP:AddStaticText("ETH_PAD_SIZE")
         ui.SpinCtrl_adv_ETH_PAD_SIZE = wx.wxSpinCtrl(ui.Panel_adv_ARP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
-        ui.SpinCtrl_adv_ETH_PAD_SIZE:SetToolTip("ETH_PAD_SIZE: number of bytes added before the ethernet header to ensure "..
-                                                "alignment of payload after that header. Since the header is 14 bytes long, "..
-                                                "without this padding e.g. addresses in the IP header will not be aligned "..
-                                                "on a 32-bit boundary, so setting this to 2 can speed up 32-bit-platforms.")
+        ui.SpinCtrl_adv_ETH_PAD_SIZE:SetToolTip("ETH_PAD_SIZE: number of bytes added before\nthe ethernet header to ensure\n"..
+                                                "alignment of payload after that header.\nSince the header is 14 bytes long,\n"..
+                                                "without this padding e.g. addresses in\nthe IP header will not be aligned\n"..
+                                                "on a 32-bit boundary, so setting this to\n2 can speed up 32-bit-platforms.")
         ui.SpinCtrl_adv_ETH_PAD_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ARP:Add(ui.SpinCtrl_adv_ETH_PAD_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -855,8 +859,8 @@ local function create_ARP_options_widgets(parent)
         ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_SUPPORT_STATIC_ENTRIES")
         ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:SetToolTip("ETHARP_SUPPORT_STATIC_ENTRIES==1: enable code to support static ARP table "..
-                                                               "entries (using etharp_add_static_entry/etharp_remove_static_entry).")
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:SetToolTip("ETHARP_SUPPORT_STATIC_ENTRIES==1: enable\ncode to support static ARP table\n"..
+                                                               "entries (using etharp_add_static_entry/\netharp_remove_static_entry).")
         ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -882,8 +886,8 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_FORWARD")
         ui.Choice_adv_IP_FORWARD = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_FORWARD:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_FORWARD:SetToolTip("IP_FORWARD==1: Enables the ability to forward IP packets across network "..
-                                            "interfaces. If you are going to run lwIP on a device with only one network nterface, define this to 0.")
+        ui.Choice_adv_IP_FORWARD:SetToolTip("IP_FORWARD==1: Enables the ability to\nforward IP packets across network\n"..
+                                            "interfaces. If you are going to run\nlwIP on a device with only one network nterface,\ndefine this to 0.")
         ui.Choice_adv_IP_FORWARD:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FORWARD, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -901,8 +905,8 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASSEMBLY")
         ui.Choice_adv_IP_REASSEMBLY = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_REASSEMBLY:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_REASSEMBLY:SetToolTip("IP_REASSEMBLY==1: Reassemble incoming fragmented IP packets. Note that "..
-                                               "this option does not affect outgoing packet sizes, which can be controlled via IP_FRAG.")
+        ui.Choice_adv_IP_REASSEMBLY:SetToolTip("IP_REASSEMBLY==1: Reassemble incoming\nfragmented IP packets. Note that\n"..
+                                               "this option does not affect outgoing\npacket sizes, which can be controlled via IP_FRAG.")
         ui.Choice_adv_IP_REASSEMBLY:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_REASSEMBLY, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -910,16 +914,16 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_FRAG")
         ui.Choice_adv_IP_FRAG = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_FRAG:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_FRAG:SetToolTip("IP_FRAG==1: Fragment outgoing IP packets if their size exceeds MTU. Note "..
-                                         "that this option does not affect incoming packet sizes, which can be controlled via IP_REASSEMBLY.")
+        ui.Choice_adv_IP_FRAG:SetToolTip("IP_FRAG==1: Fragment outgoing IP packets\nif their size exceeds MTU. Note\n"..
+                                         "that this option does not affect incoming\npacket sizes, which can be controlled via IP_REASSEMBLY.")
         ui.Choice_adv_IP_FRAG:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FRAG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- IP_REASS_MAXAGE
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASS_MAXAGE")
         ui.SpinCtrl_adv_IP_REASS_MAXAGE = wx.wxSpinCtrl(ui.Panel_adv_IP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 60)
-        ui.SpinCtrl_adv_IP_REASS_MAXAGE:SetToolTip("IP_REASS_MAXAGE: Maximum time (in multiples of IP_TMR_INTERVAL - so seconds, normally) "..
-                                                   "a fragmented IP packet waits for all fragments to arrive. If not all fragments arrived "..
+        ui.SpinCtrl_adv_IP_REASS_MAXAGE:SetToolTip("IP_REASS_MAXAGE: Maximum time (in\nmultiples of IP_TMR_INTERVAL - so seconds, normally)\n"..
+                                                   "a fragmented IP packet waits for all\nfragments to arrive. If not all fragments arrived\n"..
                                                    "in this time, the whole packet is discarded.")
         ui.SpinCtrl_adv_IP_REASS_MAXAGE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.SpinCtrl_adv_IP_REASS_MAXAGE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -927,10 +931,10 @@ local function create_IP_options_widgets(parent)
         -- IP_REASS_MAX_PBUFS
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASS_MAX_PBUFS")
         ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_IP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:SetToolTip("IP_REASS_MAX_PBUFS: Total maximum amount of pbufs waiting to be reassembled. "..
-                                                      "Since the received pbufs are enqueued, be sure to configure "..
-                                                      "PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS so that the stack is still able to receive "..
-                                                      "packets even if the maximum amount of fragments is enqueued for reassembly!")
+        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:SetToolTip("IP_REASS_MAX_PBUFS: Total maximum\namount of pbufs waiting to be reassembled.\n"..
+                                                      "Since the received pbufs are enqueued,\nbe sure to configure\n"..
+                                                      "PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS\nso that the stack is still able to receive\n"..
+                                                      "packets even if the maximum amount\nof fragments is enqueued for reassembly!")
         ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -945,9 +949,9 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_SOF_BROADCAST")
         ui.Choice_adv_IP_SOF_BROADCAST = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_SOF_BROADCAST:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_SOF_BROADCAST:SetToolTip("IP_SOF_BROADCAST=1: Use the SOF_BROADCAST field to enable broadcast "..
-                                                  "filter per pcb on udp and raw send operations. To enable broadcast filter "..
-                                                  "on recv operations, you also have to set IP_SOF_BROADCAST_RECV=1.")
+        ui.Choice_adv_IP_SOF_BROADCAST:SetToolTip("IP_SOF_BROADCAST=1: Use the SOF_BROADCAST\nfield to enable broadcast\n"..
+                                                  "filter per pcb on udp and raw send\noperations. To enable broadcast filter\n"..
+                                                  "on recv operations, you also have\nto set IP_SOF_BROADCAST_RECV=1.")
         ui.Choice_adv_IP_SOF_BROADCAST:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_SOF_BROADCAST, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -955,7 +959,7 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_SOF_BROADCAST_RECV")
         ui.Choice_adv_IP_SOF_BROADCAST_RECV = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_SOF_BROADCAST_RECV:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_SOF_BROADCAST_RECV:SetToolTip("IP_SOF_BROADCAST_RECV (requires IP_SOF_BROADCAST=1) enable the broadcast filter on recv operations.")
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV:SetToolTip("IP_SOF_BROADCAST_RECV (requires IP_SOF_BROADCAST=1)\nenable the broadcast filter on recv operations.")
         ui.Choice_adv_IP_SOF_BROADCAST_RECV:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_SOF_BROADCAST_RECV, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -963,10 +967,10 @@ local function create_IP_options_widgets(parent)
         ui.FlexGridSizer_adv_IP:AddStaticText("IP_FORWARD_ALLOW_TX_ON_RX_NETIF")
         ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:SetToolTip("IP_FORWARD_ALLOW_TX_ON_RX_NETIF==1: allow ip_forward() to send packets back "..
-                                                                 "out on the netif where it was received. This should only be used for wireless networks.\n"..
-                                                                 "ATTENTION: When this is 1, make sure your netif driver correctly marks incoming "..
-                                                                 "link-layer-broadcast/multicast packets as such using the corresponding pbuf flags!")
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:SetToolTip("IP_FORWARD_ALLOW_TX_ON_RX_NETIF==1: allow\nip_forward() to send packets back\n"..
+                                                                 "out on the netif where it was received.\nThis should only be used for wireless networks.\n"..
+                                                                 "ATTENTION: When this is 1, make sure your\nnetif driver correctly marks incoming\n"..
+                                                                 "link-layer-broadcast/multicast packets\nas such using the corresponding pbuf flags!")
         ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -992,7 +996,7 @@ local function create_ICMP_options_widgets(parent)
         ui.FlexGridSizer_adv_ICMP:AddStaticText("LWIP_ICMP")
         ui.Choice_adv_LWIP_ICMP = wx.wxChoice(ui.Panel_adv_ICMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_ICMP:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_ICMP:SetToolTip("LWIP_ICMP==1: Enable ICMP module inside the IP stack. Be careful, disable that make your product non-compliant to RFC1122.")
+        ui.Choice_adv_LWIP_ICMP:SetToolTip("LWIP_ICMP==1: Enable ICMP module inside the IP stack.\nBe careful, disable that make your product non-compliant to RFC1122.")
         ui.Choice_adv_LWIP_ICMP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_ICMP:Add(ui.Choice_adv_LWIP_ICMP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1075,7 +1079,7 @@ local function create_AUTOIP_options_widgets(parent)
         ui.FlexGridSizer_adv_AUTOIP:AddStaticText("LWIP_DHCP_AUTOIP_COOP")
         ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP = wx.wxChoice(ui.Panel_adv_AUTOIP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:SetToolTip("LWIP_DHCP_AUTOIP_COOP==1: Allow DHCP and AUTOIP to be both enabled on the same interface at the same time.")
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:SetToolTip("LWIP_DHCP_AUTOIP_COOP==1: Allow DHCP and AUTOIP\nto be both enabled on the same interface at the same time.")
         ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_AUTOIP:Add(ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1115,29 +1119,29 @@ local function create_SNMP_options_widgets(parent)
         -- SNMP_CONCURRENT_REQUESTS
         ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_CONCURRENT_REQUESTS")
         ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
-        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:SetToolTip("SNMP_CONCURRENT_REQUESTS: Number of concurrent requests the module will allow. At least one request buffer is required. "..
-                                                            "Does not have to be changed unless external MIBs answer request asynchronously")
+        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:SetToolTip("SNMP_CONCURRENT_REQUESTS: Number of concurrent\nrequests the module will allow.\nAt least one request buffer is required.\n"..
+                                                            "Does not have to be changed unless external\nMIBs answer request asynchronously.")
         ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- SNMP_TRAP_DESTINATIONS
         ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_TRAP_DESTINATIONS")
         ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:SetToolTip("SNMP_TRAP_DESTINATIONS: Number of trap destinations. At least one trap destination is required")
+        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:SetToolTip("SNMP_TRAP_DESTINATIONS: Number of trap destinations.\nAt least one trap destination is required.")
         ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- SNMP_MAX_OCTET_STRING_LEN
         ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_MAX_OCTET_STRING_LEN")
         ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 256)
-        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:SetToolTip("The maximum length of strings used. This affects the size of MEMP_SNMP_VALUE elements.")
+        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:SetToolTip("The maximum length of strings used.\nThis affects the size of MEMP_SNMP_VALUE elements.")
         ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- SNMP_MAX_TREE_DEPTH
         ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_MAX_TREE_DEPTH")
         ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
-        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:SetToolTip("The maximum depth of the SNMP tree. With private MIBs enabled, this depends on your MIB! "..
+        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:SetToolTip("The maximum depth of the SNMP tree.\nWith private MIBs enabled, this depends on your MIB!\n"..
                                                        "This affects the size of MEMP_SNMP_VALUE elements.")
         ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1190,7 +1194,7 @@ local function create_DNS_options_widgets(parent)
         ui.FlexGridSizer_adv_DNS:AddStaticText("LWIP_DNS")
         ui.Choice_adv_LWIP_DNS = wx.wxChoice(ui.Panel_adv_DNS, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_DNS:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_DNS:SetToolTip("LWIP_DNS==1: Turn on DNS module. UDP must be available for DNS transport.")
+        ui.Choice_adv_LWIP_DNS:SetToolTip("LWIP_DNS==1: Turn on DNS module.\nUDP must be available for DNS transport.")
         ui.Choice_adv_LWIP_DNS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_DNS:Add(ui.Choice_adv_LWIP_DNS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1211,7 +1215,7 @@ local function create_DNS_options_widgets(parent)
         -- DNS_MAX_SERVERS
         ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_MAX_SERVERS")
         ui.SpinCtrl_adv_DNS_MAX_SERVERS = wx.wxSpinCtrl(ui.Panel_adv_DNS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 8)
-        ui.SpinCtrl_adv_DNS_MAX_SERVERS:SetToolTip("The maximum of DNS servers")
+        ui.SpinCtrl_adv_DNS_MAX_SERVERS:SetToolTip("The maximum of DNS servers.")
         ui.SpinCtrl_adv_DNS_MAX_SERVERS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_DNS:Add(ui.SpinCtrl_adv_DNS_MAX_SERVERS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1227,7 +1231,7 @@ local function create_DNS_options_widgets(parent)
         ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_LOCAL_HOSTLIST_IS_DYNAMIC")
         ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC = wx.wxChoice(ui.Panel_adv_DNS, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:SetToolTip("If this is turned on, the local host-list can be dynamically changed at runtime.")
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:SetToolTip("If this is turned on, the local host-list\ncan be dynamically changed at runtime.")
         ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_DNS:Add(ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1268,7 +1272,7 @@ local function create_UDP_options_widgets(parent)
         ui.FlexGridSizer_adv_UDP:AddStaticText("LWIP_NETBUF_RECVINFO")
         ui.Choice_adv_LWIP_NETBUF_RECVINFO = wx.wxChoice(ui.Panel_adv_UDP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_NETBUF_RECVINFO:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_NETBUF_RECVINFO:SetToolTip("LWIP_NETBUF_RECVINFO==1: append destination addr and port to every netbuf.")
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO:SetToolTip("LWIP_NETBUF_RECVINFO==1: append destination\naddr and port to every netbuf.")
         ui.Choice_adv_LWIP_NETBUF_RECVINFO:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_UDP:Add(ui.Choice_adv_LWIP_NETBUF_RECVINFO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1323,7 +1327,7 @@ local function create_TCP_options_widgets(parent)
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_QUEUE_OOSEQ")
         ui.Choice_adv_TCP_QUEUE_OOSEQ = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_TCP_QUEUE_OOSEQ:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_TCP_QUEUE_OOSEQ:SetToolTip("Controls if TCP should queue segments that arrive out of order. Define to 0 if your device is low on memory.")
+        ui.Choice_adv_TCP_QUEUE_OOSEQ:SetToolTip("Controls if TCP should queue segments that\narrive out of order. Define to 0 if your device is low on memory.")
         ui.Choice_adv_TCP_QUEUE_OOSEQ:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_QUEUE_OOSEQ, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1338,11 +1342,11 @@ local function create_TCP_options_widgets(parent)
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_CALCULATE_EFF_SEND_MSS")
         ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:SetToolTip("TCP_CALCULATE_EFF_SEND_MSS: \"The maximum size of a segment that TCP really "..
-                                                            "sends, the 'effective send MSS,' MUST be the smaller of the send MSS (which "..
-                                                            "reflects the available reassembly buffer size at the remote host) and the "..
+        ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:SetToolTip("TCP_CALCULATE_EFF_SEND_MSS: \"The maximum size of a segment that TCP really\n"..
+                                                            "sends, the 'effective send MSS,' MUST be the smaller of the send MSS (which\n"..
+                                                            "reflects the available reassembly buffer size at the remote host) and the\n"..
                                                             "largest size permitted by the IP layer\" (RFC 1122)\n"..
-                                                            "Setting this to 1 enables code that checks TCP_MSS against the MTU of the "..
+                                                            "Setting this to 1 enables code that checks TCP_MSS against the MTU of the\n"..
                                                             "netif used for a connection and limits the MSS if it would be too big otherwise.")
         ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_TCP:Add(ui.Choice_adv_TCP_CALCULATE_EFF_SEND_MSS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1350,7 +1354,7 @@ local function create_TCP_options_widgets(parent)
         -- TCP_OOSEQ_MAX_BYTES
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OOSEQ_MAX_BYTES")
         ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 65536)
-        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:SetToolTip("TCP_OOSEQ_MAX_BYTES: The maximum number of bytes queued on ooseq per pcb. "..
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:SetToolTip("TCP_OOSEQ_MAX_BYTES: The maximum number of bytes queued on ooseq per pcb.\n"..
                                                        "Default is 0 (no limit). Only valid for TCP_QUEUE_OOSEQ==0.")
         ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_BYTES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1358,7 +1362,7 @@ local function create_TCP_options_widgets(parent)
         -- TCP_OOSEQ_MAX_PBUFS
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OOSEQ_MAX_PBUFS")
         ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 65536)
-        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:SetToolTip("TCP_OOSEQ_MAX_PBUFS: The maximum number of pbufs queued on ooseq per pcb. "..
+        ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:SetToolTip("TCP_OOSEQ_MAX_PBUFS: The maximum number of pbufs queued on ooseq per pcb.\n"..
                                                        "Default is 0 (no limit). Only valid for TCP_QUEUE_OOSEQ==0.")
         ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_OOSEQ_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1374,7 +1378,7 @@ local function create_TCP_options_widgets(parent)
         -- TCP_DEFAULT_LISTEN_BACKLOG
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_DEFAULT_LISTEN_BACKLOG")
         ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG = wx.wxSpinCtrl(ui.Panel_adv_TCP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
-        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:SetToolTip("The maximum allowed backlog for TCP listen netconns. "..
+        ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:SetToolTip("The maximum allowed backlog for TCP listen netconns.\n"..
                                                               "This backlog is used unless another is explicitly specified. 255 is the maximum (u8_t).")
         ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_TCP:Add(ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1383,9 +1387,9 @@ local function create_TCP_options_widgets(parent)
         ui.FlexGridSizer_adv_TCP:AddStaticText("TCP_OVERSIZE")
         ui.Choice_adv_TCP_OVERSIZE = wx.wxChoice(ui.Panel_adv_TCP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_TCP_OVERSIZE:Append({"0", "1", "128", "TCP_MSS", "TCP_MSS/4"})
-        ui.Choice_adv_TCP_OVERSIZE:SetToolTip("TCP_OVERSIZE: The maximum number of bytes that tcp_write may "..
-                                              "allocate ahead of time in an attempt to create shorter pbuf chains "..
-                                              "for transmission. The meaningful range is 0 to TCP_MSS. Some "..
+        ui.Choice_adv_TCP_OVERSIZE:SetToolTip("TCP_OVERSIZE: The maximum number of bytes that tcp_write may\n"..
+                                              "allocate ahead of time in an attempt to create shorter pbuf chains\n"..
+                                              "for transmission. The meaningful range is 0 to TCP_MSS. Some\n"..
                                               "suggested values are:\n"..
                                               "0:         Disable oversized allocation. Each tcp_write() allocates a new pbuf (old behaviour).\n"..
                                               "1:         Allocate size-aligned pbufs with minimal excess. Use this if your scatter-gather DMA requires aligned fragments.\n"..
@@ -1433,10 +1437,10 @@ local function create_NETIF_options_widgets(parent)
         ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_NETIF_HWADDRHINT")
         ui.Choice_adv_LWIP_NETIF_HWADDRHINT = wx.wxChoice(ui.Panel_adv_NETIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_NETIF_HWADDRHINT:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:SetToolTip("LWIP_NETIF_HWADDRHINT==1: Cache link-layer-address hints (e.g. table "..
-                                                       "indices) in struct netif. TCP and UDP can make use of this to prevent "..
-                                                       "scanning the ARP table for every sent packet. While this is faster for big "..
-                                                       "ARP tables or many concurrent connections, it might be counterproductive "..
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:SetToolTip("LWIP_NETIF_HWADDRHINT==1: Cache link-layer-address hints (e.g. table\n"..
+                                                       "indices) in struct netif. TCP and UDP can make use of this to prevent\n"..
+                                                       "scanning the ARP table for every sent packet. While this is faster for big\n"..
+                                                       "ARP tables or many concurrent connections, it might be counterproductive\n"..
                                                        "if you have a tiny ARP table or if there never are concurrent connections.")
         ui.Choice_adv_LWIP_NETIF_HWADDRHINT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_NETIF:Add(ui.Choice_adv_LWIP_NETIF_HWADDRHINT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1445,7 +1449,7 @@ local function create_NETIF_options_widgets(parent)
         ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_NETIF_LOOPBACK")
         ui.Choice_adv_LWIP_NETIF_LOOPBACK = wx.wxChoice(ui.Panel_adv_NETIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_NETIF_LOOPBACK:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_NETIF_LOOPBACK:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destination IP "..
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destination IP\n"..
                                                      "address equal to the netif IP address, looping them back up the stack.")
         ui.Choice_adv_LWIP_NETIF_LOOPBACK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_NETIF:Add(ui.Choice_adv_LWIP_NETIF_LOOPBACK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1453,7 +1457,7 @@ local function create_NETIF_options_widgets(parent)
         -- LWIP_LOOPBACK_MAX_PBUFS
         ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_LOOPBACK_MAX_PBUFS")
         ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_NETIF, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 100)
-        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs on queue for loopback sending for each netif (0 = disabled).")
+        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs\non queue for loopback sending for each netif (0 = disabled).")
         ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_NETIF:Add(ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1538,8 +1542,8 @@ local function create_THREAD_options_widgets(parent)
         ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_STACKSIZE")
         ui.Choice_adv_TCPIP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         for i = 0, stack_size:count() - 1 do ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
-        ui.Choice_adv_TCPIP_THREAD_STACKSIZE:SetToolTip("TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
-                                                        "The stack size value itself is platform-dependent, but is passed to "..
+        ui.Choice_adv_TCPIP_THREAD_STACKSIZE:SetToolTip("TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread.\n"..
+                                                        "The stack size value itself is platform-dependent, but is passed to\n"..
                                                         "sys_thread_new() when the thread is created.")
         ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_TCPIP_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1547,8 +1551,8 @@ local function create_THREAD_options_widgets(parent)
         -- TCPIP_THREAD_PRIO
         ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_PRIO")
         ui.SpinCtrl_adv_TCPIP_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
-        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:SetToolTip("TCPIP_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
-                                                     "The priority value itself is platform-dependent, but is passed to "..
+        ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:SetToolTip("TCPIP_THREAD_PRIO: The priority assigned to the main tcpip thread.\n"..
+                                                     "The priority value itself is platform-dependent, but is passed to\n"..
                                                      "sys_thread_new() when the thread is created.")
         ui.SpinCtrl_adv_TCPIP_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_TCPIP_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1556,8 +1560,8 @@ local function create_THREAD_options_widgets(parent)
         -- TCPIP_MBOX_SIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_MBOX_SIZE")
         ui.SpinCtrl_adv_TCPIP_MBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
-        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:SetToolTip("TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages "..
-                                                   "The queue size value itself is platform-dependent, but is passed to sys_mbox_new() when tcpip_init is called.")
+        ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:SetToolTip("TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages\n"..
+                                                   "The queue size value itself is platform-dependent, but is passed\nto sys_mbox_new() when tcpip_init is called.")
         ui.SpinCtrl_adv_TCPIP_MBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_TCPIP_MBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1572,8 +1576,8 @@ local function create_THREAD_options_widgets(parent)
         ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_STACKSIZE")
         ui.Choice_adv_SLIPIF_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         for i = 0, stack_size:count() - 1 do ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
-        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:SetToolTip("SLIPIF_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
-                                                         "The stack size value itself is platform-dependent, but is passed to "..
+        ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:SetToolTip("SLIPIF_THREAD_STACKSIZE: The stack size used by the main tcpip thread.\n"..
+                                                         "The stack size value itself is platform-dependent, but is passed to\n"..
                                                          "sys_thread_new() when the thread is created.")
         ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_SLIPIF_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1581,8 +1585,8 @@ local function create_THREAD_options_widgets(parent)
         -- SLIPIF_THREAD_PRIO
         ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_PRIO")
         ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
-        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:SetToolTip("SLIPIF_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
-                                                      "The priority value itself is platform-dependent, but is passed to "..
+        ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:SetToolTip("SLIPIF_THREAD_PRIO: The priority assigned to the main tcpip thread.\n"..
+                                                      "The priority value itself is platform-dependent, but is passed to\n"..
                                                       "sys_thread_new() when the thread is created.")
         ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_SLIPIF_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1598,8 +1602,8 @@ local function create_THREAD_options_widgets(parent)
         ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_STACKSIZE")
         ui.Choice_adv_PPP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         for i = 0, stack_size:count() - 1 do ui.Choice_adv_PPP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
-        ui.Choice_adv_PPP_THREAD_STACKSIZE:SetToolTip("PPP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
-                                                      "The stack size value itself is platform-dependent, but is passed to "..
+        ui.Choice_adv_PPP_THREAD_STACKSIZE:SetToolTip("PPP_THREAD_STACKSIZE: The stack size used by the main tcpip thread.\n"..
+                                                      "The stack size value itself is platform-dependent, but is passed to\n"..
                                                       "sys_thread_new() when the thread is created.")
         ui.Choice_adv_PPP_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_PPP_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1607,8 +1611,8 @@ local function create_THREAD_options_widgets(parent)
         -- PPP_THREAD_PRIO
         ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_PRIO")
         ui.SpinCtrl_adv_PPP_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
-        ui.SpinCtrl_adv_PPP_THREAD_PRIO:SetToolTip("PPP_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
-                                                   "The priority value itself is platform-dependent, but is passed to "..
+        ui.SpinCtrl_adv_PPP_THREAD_PRIO:SetToolTip("PPP_THREAD_PRIO: The priority assigned to the main tcpip thread.\n"..
+                                                   "The priority value itself is platform-dependent, but is passed to\n"..
                                                    "sys_thread_new() when the thread is created.")
         ui.SpinCtrl_adv_PPP_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_PPP_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1624,8 +1628,8 @@ local function create_THREAD_options_widgets(parent)
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_STACKSIZE")
         ui.Choice_adv_DEFAULT_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         for i = 0, stack_size:count() - 1 do ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
-        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:SetToolTip("DEFAULT_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
-                                                          "The stack size value itself is platform-dependent, but is passed to "..
+        ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:SetToolTip("DEFAULT_THREAD_STACKSIZE: The stack size used by the main tcpip thread.\n"..
+                                                          "The stack size value itself is platform-dependent, but is passed to\n"..
                                                           "sys_thread_new() when the thread is created.")
         ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.Choice_adv_DEFAULT_THREAD_STACKSIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1633,8 +1637,8 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_THREAD_PRIO
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_PRIO")
         ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, priority_min, priority_max)
-        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetToolTip("DEFAULT_THREAD_PRIO: The priority assigned to the main tcpip thread. "..
-                                                       "The priority value itself is platform-dependent, but is passed to "..
+        ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetToolTip("DEFAULT_THREAD_PRIO: The priority assigned to the main tcpip thread.\n"..
+                                                       "The priority value itself is platform-dependent, but is passed to\n"..
                                                        "sys_thread_new() when the thread is created.")
         ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1642,8 +1646,8 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_RAW_RECVMBOX_SIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_RAW_RECVMBOX_SIZE")
         ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
-        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:SetToolTip("DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
-                                                             "NETCONN_RAW. The queue size value itself is platform-dependent, but is passed "..
+        ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:SetToolTip("DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a\n"..
+                                                             "NETCONN_RAW. The queue size value itself is platform-dependent, but is passed\n"..
                                                              "to sys_mbox_new() when the recvmbox is created.")
         ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_RAW_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1651,8 +1655,8 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_UDP_RECVMBOX_SIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_UDP_RECVMBOX_SIZE")
         ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
-        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:SetToolTip("DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
-                                                             "NETCONN_UDP. The queue size value itself is platform-dependent, but is passed "..
+        ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:SetToolTip("DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a\n"..
+                                                             "NETCONN_UDP. The queue size value itself is platform-dependent, but is passed\n"..
                                                              "to sys_mbox_new() when the recvmbox is created.")
         ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1660,8 +1664,8 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_TCP_RECVMBOX_SIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_TCP_RECVMBOX_SIZE")
         ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
-        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetToolTip("DEFAULT_TCP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a "..
-                                                             "NETCONN_TCP. The queue size value itself is platform-dependent, but is passed "..
+        ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetToolTip("DEFAULT_TCP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a\n"..
+                                                             "NETCONN_TCP. The queue size value itself is platform-dependent, but is passed\n"..
                                                              "to sys_mbox_new() when the recvmbox is created.")
         ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1669,8 +1673,8 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_ACCEPTMBOX_SIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_ACCEPTMBOX_SIZE")
         ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE = wx.wxSpinCtrl(ui.Panel_adv_THREAD, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 128)
-        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetToolTip("DEFAULT_ACCEPTMBOX_SIZE: The mailbox size for the incoming connections. "..
-                                                           "The queue size value itself is platform-dependent, but is passed to "..
+        ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetToolTip("DEFAULT_ACCEPTMBOX_SIZE: The mailbox size for the incoming connections.\n"..
+                                                           "The queue size value itself is platform-dependent, but is passed to\n"..
                                                            "sys_mbox_new() when the acceptmbox is created.")
         ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
         ui.FlexGridSizer_adv_THREAD:Add(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1697,7 +1701,7 @@ local function create_SEQL_options_widgets(parent)
         ui.FlexGridSizer_adv_SEQL:AddStaticText("LWIP_TCPIP_TIMEOUT")
         ui.Choice_adv_LWIP_TCPIP_TIMEOUT = wx.wxChoice(ui.Panel_adv_SEQL, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_TCPIP_TIMEOUT:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetToolTip("LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout to create timers running in tcpip_thread from another thread.")
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetToolTip("LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout\nto create timers running in tcpip_thread from another thread.")
         ui.Choice_adv_LWIP_TCPIP_TIMEOUT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_SEQL:Add(ui.Choice_adv_LWIP_TCPIP_TIMEOUT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1865,7 +1869,7 @@ local function create_CHSUM_options_widgets(parent)
         ui.FlexGridSizer_adv_CHSUM:AddStaticText("LWIP_CHECKSUM_ON_COPY")
         ui.Choice_adv_LWIP_CHECKSUM_ON_COPY = wx.wxChoice(ui.Panel_adv_CHSUM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:SetToolTip("LWIP_CHECKSUM_ON_COPY==1: Calculate checksum when copying data from application buffers to pbufs.")
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:SetToolTip("LWIP_CHECKSUM_ON_COPY==1: Calculate checksum when\ncopying data from application buffers to pbufs.")
         ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_CHSUM:Add(ui.Choice_adv_LWIP_CHECKSUM_ON_COPY, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
@@ -1891,7 +1895,7 @@ local function create_DEBUG_options_widgets(parent)
         ui.FlexGridSizer_adv_DEBUG:AddStaticText("LWIP_DBG_MIN_LEVEL")
         ui.Choice_adv_LWIP_DBG_MIN_LEVEL = wx.wxChoice(ui.Panel_adv_DEBUG, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
         for i = 0, debug_level:count() -1 do ui.Choice_adv_LWIP_DBG_MIN_LEVEL:Append(debug_level:get_value(i):gsub("LWIP_DBG_LEVEL_", "")) end
-        ui.Choice_adv_LWIP_DBG_MIN_LEVEL:SetToolTip("LWIP_DBG_MIN_LEVEL: After masking, the value of the debug is "..
+        ui.Choice_adv_LWIP_DBG_MIN_LEVEL:SetToolTip("LWIP_DBG_MIN_LEVEL: After masking, the value of the debug is\n"..
                                                     "compared against this value. If it is smaller, then debugging messages are written.")
         ui.Choice_adv_LWIP_DBG_MIN_LEVEL:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
         ui.FlexGridSizer_adv_DEBUG:Add(ui.Choice_adv_LWIP_DBG_MIN_LEVEL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
