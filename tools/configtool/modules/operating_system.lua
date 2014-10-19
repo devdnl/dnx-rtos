@@ -449,3 +449,12 @@ end
 function operating_system:save()
         save_configuration()
 end
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return Priority range: min, max
+--------------------------------------------------------------------------------
+function operating_system:get_priority_range()
+        local number_of_priorities = tonumber(ct:key_read(config.project.key.OS_TASK_MAX_PRIORITIES))
+        return -math.floor(number_of_priorities / 2), math.floor(number_of_priorities / 2)
+end

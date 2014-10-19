@@ -62,7 +62,7 @@ ct.alphanumericvalidator = wx.wxTextValidator(wx.wxFILTER_ALPHANUMERIC)
 local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
 local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
-local CFG_FILE_VERSION  = "1"
+local CFG_FILE_VERSION  = "2"
 local modify_event_func = nil
 local set_status_func   = nil
 
@@ -982,24 +982,22 @@ function ct:save_project_configuration(file, parent)
         local CONFIG_DIR  = config.project.path.config_dir:GetValue()
         local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
         local PROJECT_MK  = config.project.path.project_makefile:GetValue()
+        local NETWORK_HDR = config.project.path.network_flags_file:GetValue()
 
-        cfg_table.ID      = CFG_FILE_ID
-        cfg_table.version = CFG_FILE_VERSION
+        -- basic file information
+        cfg_table.ID       = CFG_FILE_ID
+        cfg_table.version  = CFG_FILE_VERSION
+        cfg_table.cpu_arch = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        cfg_table.file     = {}
 
-        -- progress dialog
+        -- prepare progress dialog
         local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 150))
         progress:Centre()
         progress:Update(0, "Preparing to write...")
 
-        -- save CPU architecture
-        cfg_table.cpu_arch = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
-
-
         -- load configuration of modules of selected architecture
-        cfg_table.file = {}
-
         for i, module in pairs(config.project.modules:Children()) do
                 local module_name = module.name:GetValue():lower()
                 local noarch      = module["@noarch"]
@@ -1028,67 +1026,33 @@ function ct:save_project_configuration(file, parent)
                 end
         end
 
-        -- load project configuration
-        progress:Update(pulse(), "Loading configuration of project.h...")
-        cfg_table.file[PROJECT_HDR] = {}
-        local f = io.open(PROJECT_HDR, "rb")
-        if f then
-                for line in f:lines() do
-                        local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
-                        if k and v then
-                                table.insert(cfg_table.file[PROJECT_HDR], {key = k, value = v})
-                        end
-                end
+        -- load project's configuration files
+        local files_to_load = {}
+        table.insert(files_to_load, {file = PROJECT_HDR, filetype = FILETYPE_HEADER, msg = "Loading configuration of project.h..."})
+        table.insert(files_to_load, {file = PROJECT_MK, filetype = FILETYPE_MAKEFILE, msg = "Loading configuration of project's Makefile..."})
+        table.insert(files_to_load, {file = NETWORK_HDR, filetype = FILETYPE_HEADER, msg = "Loading configuration of network..."})
+        table.insert(files_to_load, {file = CONFIG_DIR.."/"..cpu_arch.."/cpu.h", filetype = FILETYPE_HEADER, msg = "Loading configuration of "..cpu_arch.."/cpu.h..."})
+        table.insert(files_to_load, {file = CONFIG_DIR.."/"..cpu_arch.."/Makefile", filetype = FILETYPE_MAKEFILE, msg = "Loading configuration of "..cpu_arch.."/Makefile..."})
 
-                f:close()
+        for _, cfg in pairs(files_to_load) do
+                progress:Update(pulse(), cfg.msg)
+
+                cfg_table.file[cfg.file] = {}
+
+                local f = io.open(cfg.file, "rb")
+                if f then
+                        for line in f:lines() do
+                                local k, v = get_key_and_value_from_line(line, cfg.filetype)
+                                if k and v then
+                                        table.insert(cfg_table.file[cfg.file], {key = k, value = v})
+                                end
+                        end
+
+                        f:close()
+                end
         end
 
-        progress:Update(pulse(), "Loading configuration of project's Makefile...")
-        cfg_table.file[PROJECT_MK] = {}
-        local f = io.open(PROJECT_MK, "rb")
-        if f then
-                for line in f:lines() do
-                        local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
-                        if k and v then
-                                table.insert(cfg_table.file[PROJECT_MK], {key = k, value = v})
-                        end
-                end
-
-                f:close()
-        end
-
-        -- load CPU specific configuration
-        local cpu_header   = CONFIG_DIR.."/"..cpu_arch.."/cpu.h"
-        local cpu_makefile = CONFIG_DIR.."/"..cpu_arch.."/Makefile"
-
-        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/cpu.h...")
-        cfg_table.file[cpu_header] = {}
-        local f = io.open(cpu_header, "rb")
-        if f then
-                for line in f:lines() do
-                        local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
-                        if k and v then
-                                table.insert(cfg_table.file[cpu_header], {key = k, value = v})
-                        end
-                end
-
-                f:close()
-        end
-
-        progress:Update(pulse(), "Loading configuration of "..cpu_arch.."/Makefile...")
-        cfg_table.file[cpu_makefile] = {}
-        local f = io.open(cpu_makefile, "rb")
-        if f then
-                for line in f:lines() do
-                        local k, v = get_key_and_value_from_line(line, FILETYPE_MAKEFILE)
-                        if k and v then
-                                table.insert(cfg_table.file[cpu_makefile], {key = k, value = v})
-                        end
-                end
-
-                f:close()
-        end
-
+        -- save configuration to the file
         progress:Update(pulse(), "Save configuration to the file...")
         local status = ct:save_table(cfg_table, file)
 
@@ -1163,7 +1127,7 @@ function ct:apply_project_configuration(file, parent)
                 ct:enable_module(fs.name:GetValue(), false)
         end
 
-        -- load modules' configuration
+        -- load configuration
         for filename, filecontent in pairs(cfg_table.file) do
                 progress:Update(pulse(), "Applying configuration to "..filename:gsub(CONFIG_DIR.."/", "").." file...")
 
