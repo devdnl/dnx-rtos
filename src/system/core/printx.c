@@ -916,6 +916,10 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
                                 chr = va_arg(arg, int);
+                                if (!(chr == 9 || chr == 10 || chr == 13 || chr >= ' ')) {
+                                        chr = 'c';
+                                        continue;
+                                }
                         }
 
                         put_character(chr);
