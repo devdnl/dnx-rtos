@@ -215,6 +215,9 @@ local function load_controls()
         ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE)))
         ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE)))
 
+        -- load adv Sequential layer options
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -363,6 +366,8 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:GetValue()))
         ct:key_write(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:GetValue()))
 
+        -- save adv Sequential layer options
+        ct:key_write(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT, tostring(ui.Choice_adv_LWIP_TCPIP_TIMEOUT:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -1549,22 +1554,15 @@ local function create_SEQL_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SEQL = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SEQL = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_SEQL.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_SEQL, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_TCPIP_TIMEOUT
+        ui.FlexGridSizer_adv_SEQL:AddStaticText("LWIP_TCPIP_TIMEOUT")
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT = wx.wxChoice(ui.Panel_adv_SEQL, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetToolTip("LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout to create timers running in tcpip_thread from another thread.")
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SEQL:Add(ui.Choice_adv_LWIP_TCPIP_TIMEOUT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SEQL:SetSizer(ui.FlexGridSizer_adv_SEQL)
