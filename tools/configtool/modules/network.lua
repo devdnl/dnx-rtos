@@ -62,7 +62,10 @@ local function load_controls()
         for i = 0, 5 do ui.TextCtrl_MAC[i]:SetValue(ct:key_read(config.project.key["NETWORK_MAC_ADDR_"..i]):gsub("0x", "")) end
         ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
 
-        -- load advanced options
+        -- load adv MEM options
+        ui.Choice_MEM_seperate_pools:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SEPARATE_POOLS)))
+        ui.Choice_MEM_overflow_check:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK)))
+        ui.Choice_MEM_sanity_check:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SANITY_CHECK)))
 
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
@@ -82,7 +85,10 @@ local function save_configuration()
         for i = 0, 5 do ct:key_write(config.project.key["NETWORK_MAC_ADDR_"..i], "0x"..ui.TextCtrl_MAC[i]:GetValue()) end
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
-        -- save advanced options
+        -- save adv MEM options
+        ct:key_write(config.project.key.NETWORK_MEMP_SEPARATE_POOLS, tostring(ui.Choice_MEM_seperate_pools:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK, tostring(ui.Choice_MEM_overflow_check:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MEMP_SANITY_CHECK, tostring(ui.Choice_MEM_sanity_check:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -155,9 +161,37 @@ local function create_memory_options_widgets(parent)
         -- create panel
         ui.Panel_adv_MEM = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_MEM = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_adv_MEM.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_MEM, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_MEM, wx.wxID_ANY, "Memory options", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_MEM:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+        -- MEMP_SEPARATE_POOLS
+        ui.FlexGridSizer_adv_MEM:AddStaticText("Seperate pools")
+        ui.Choice_MEM_seperate_pools = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_MEM_seperate_pools:Append({"No (0)", "Yes (1)"})
+        ui.Choice_MEM_seperate_pools:SetToolTip("MEMP_SEPARATE_POOLS: If selected yes, each pool is placed in its own array. "..
+                                                "This can be used to individually change the location of each pool. "..
+                                                "Default is one big array for all pools.")
+        ui.Choice_MEM_seperate_pools:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_seperate_pools, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_OVERFLOW_CHECK
+        ui.FlexGridSizer_adv_MEM:AddStaticText("Memp overflow check")
+        ui.Choice_MEM_overflow_check = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_MEM_overflow_check:Append({"Disable (0)", "Each element when it is freed (1)", "Each element in every pool every time (2)"})
+        ui.Choice_MEM_overflow_check:SetToolTip("MEMP_OVERFLOW_CHECK: memp overflow protection reserves a configurable amount of bytes before and after each "..
+                                                "memp element in every pool and fills it with a prominent default value.\n"..
+                                                "- 0: no checking\n"..
+                                                "- 1: checks each element when it is freed\n"..
+                                                "- 2: checks each element in every pool every time memp_malloc() or memp_free() is called (useful but slow!).")
+        ui.Choice_MEM_overflow_check:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_overflow_check, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_SANITY_CHECK
+        ui.FlexGridSizer_adv_MEM:AddStaticText("Sanity check")
+        ui.Choice_MEM_sanity_check = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_MEM_sanity_check:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_MEM_sanity_check:SetToolTip("MEMP_SANITY_CHECK = 1: run a sanity check after each memp_free() to make sure that there are no cycles in the linked lists.")
+        ui.Choice_MEM_sanity_check:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_sanity_check, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_MEM:SetSizer(ui.FlexGridSizer_adv_MEM)
@@ -177,6 +211,7 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         ui.FlexGridSizer_adv_IMPS = wx.wxFlexGridSizer(0, 2, 0, 0)
 
         ui.StaticText = wx.wxStaticText(ui.Panel_adv_IMPS, wx.wxID_ANY, "internal memory pool sizes", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.StaticText:SetToolTip("fsdfsdfd")
         ui.FlexGridSizer_adv_IMPS:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
 
         -- set panel's sizer
