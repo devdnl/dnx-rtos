@@ -1904,6 +1904,48 @@ static inline net_err_t net_shutdown(net_conn_t *conn, bool shut_rx, bool shut_t
 
 //==============================================================================
 /**
+ * @brief net_err_t net_get_host_by_name(const char *name, net_ip_t *ip)
+ * The function <b>net_get_host_by_name</b>() get an IP address pointed by
+ * <i>ip</i> of host name pointed by <i>name</i>. The funciton execute a DNS
+ * query, only one IP address is returned.
+ *
+ * @param name          a string representation of the DNS host name to query
+ * @param ip            a preallocated net_ip_t where to store the resolved IP address
+ *
+ * @errors None
+ *
+ * @return One of statuses defined in the <b>net_err_t</b> type.
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_ip_t ip;
+ * if (net_get_host_by_name("dnx-rtos.org", &ip) == NET_ERR_OK) {
+ *         printf("dnx-rtos.org IP: %d.%d.%d.%d",
+ *                net_get_ip_part_a(&ip),
+ *                net_get_ip_part_b(&ip),
+ *                net_get_ip_part_c(&ip),
+ *                net_get_ip_part_d(&ip));
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline net_err_t net_get_host_by_name(const char *name, net_ip_t *ip)
+{
+#if (CONFIG_NETWORK_ENABLE > 0) && (LWIP_DNS)
+        return netconn_gethostbyname(name, ip);
+#else
+        (void) name;
+        (void) ip;
+        return NET_ERR_INTERFACE_ERROR;
+#endif
+}
+
+//==============================================================================
+/**
  * @brief net_err_t net_get_last_conn_error(net_conn_t *conn)
  * The function <b>net_get_last_conn_error</b>() return last connection error
  * pointed by <i>conn</i>.
