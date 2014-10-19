@@ -1,0 +1,5 @@
+Please, take a look to the file:
+ 
+   https://www.kernel.org/doc/Documentation/CodingStyle
+   
+to obtain more information about coding style of the dnx RTOS.
