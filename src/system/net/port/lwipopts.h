@@ -688,7 +688,7 @@
 
 /** If this is turned on, the local host-list can be dynamically changed
  *  at runtime. */
-#define DNS_LOCAL_HOSTLIST_IS_DYNAMIC           0
+#define DNS_LOCAL_HOSTLIST_IS_DYNAMIC           __NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC__
 
 /*
    ---------------------------------

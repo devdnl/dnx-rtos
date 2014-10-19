@@ -132,6 +132,7 @@
             <NETWORK_DNS_MAX_NAME_LENGTH><path>../../config/project/network_flags.h</path><key>__NETWORK_DNS_MAX_NAME_LENGTH__</key></NETWORK_DNS_MAX_NAME_LENGTH>
             <NETWORK_DNS_MAX_SERVERS><path>../../config/project/network_flags.h</path><key>__NETWORK_DNS_MAX_SERVERS__</key></NETWORK_DNS_MAX_SERVERS>
             <NETWORK_DNS_DOES_NAME_CHECK><path>../../config/project/network_flags.h</path><key>__NETWORK_DNS_DOES_NAME_CHECK__</key></NETWORK_DNS_DOES_NAME_CHECK>
+            <NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC><path>../../config/project/network_flags.h</path><key>__NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC__</key></NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC>
             <NETWORK_LWIP_UDP><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_UDP__</key></NETWORK_LWIP_UDP>
             <NETWORK_UDP_TTL><path>../../config/project/network_flags.h</path><key>__NETWORK_UDP_TTL__</key></NETWORK_UDP_TTL>
             <NETWORK_LWIP_NETBUF_RECVINFO><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_NETBUF_RECVINFO__</key></NETWORK_LWIP_NETBUF_RECVINFO>
