@@ -92,6 +92,7 @@
 
 /* ICMP options */
 #define __NETWORK_LWIP_ICMP__ 1
+#define __NETWORK_ICMP_TTL__ 255
 #define __NETWORK_LWIP_BROADCAST_PING__ 1
 #define __NETWORK_LWIP_MULTICAST_PING__ 1
 

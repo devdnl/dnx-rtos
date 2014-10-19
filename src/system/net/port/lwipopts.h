@@ -510,7 +510,7 @@
 /**
  * ICMP_TTL: Default value for Time-To-Live used by ICMP packets.
  */
-#define ICMP_TTL                                (IP_DEFAULT_TTL)
+#define ICMP_TTL                                __NETWORK_ICMP_TTL__
 
 /**
  * LWIP_BROADCAST_PING==1: respond to broadcast pings (default is unicast only)

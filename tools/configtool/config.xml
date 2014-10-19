@@ -115,6 +115,7 @@
             <NETWORK_IP_SOF_BROADCAST_RECV><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_SOF_BROADCAST_RECV__</key></NETWORK_IP_SOF_BROADCAST_RECV>
             <NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF__</key></NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF>
             <NETWORK_LWIP_ICMP><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_ICMP__</key></NETWORK_LWIP_ICMP>
+            <NETWORK_ICMP_TTL><path>../../config/project/network_flags.h</path><key>__NETWORK_ICMP_TTL__</key></NETWORK_ICMP_TTL>
             <NETWORK_LWIP_BROADCAST_PING><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_BROADCAST_PING__</key></NETWORK_LWIP_BROADCAST_PING>
             <NETWORK_LWIP_MULTICAST_PING><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_MULTICAST_PING__</key></NETWORK_LWIP_MULTICAST_PING>
             <NETWORK_LWIP_DHCP><path>../../config/project/network_flags.h</path><key>__NETWORK_LWIP_DHCP__</key></NETWORK_LWIP_DHCP>
