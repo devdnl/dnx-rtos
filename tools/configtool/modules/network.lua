@@ -130,6 +130,9 @@ local function load_controls()
         ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_MAX_OCTET_STRING_LEN)))
         ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_MAX_TREE_DEPTH)))
 
+        -- load adv IGMP options
+        ui.Choice_adv_LWIP_IGMP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_IGMP)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -215,6 +218,9 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_SNMP_TRAP_DESTINATIONS, tostring(ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:GetValue()))
         ct:key_write(config.project.key.NETWORK_SNMP_MAX_OCTET_STRING_LEN, tostring(ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:GetValue()))
         ct:key_write(config.project.key.NETWORK_SNMP_MAX_TREE_DEPTH, tostring(ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:GetValue()))
+
+        -- load adv IGMP options
+        ct:key_write(config.project.key.NETWORK_LWIP_IGMP, tostring(ui.Choice_adv_LWIP_IGMP:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -868,22 +874,15 @@ local function create_IGMP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_IGMP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_IGMP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_IGMP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_IGMP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_IGMP
+        ui.FlexGridSizer_adv_IGMP:AddStaticText("LWIP_IGMP")
+        ui.Choice_adv_LWIP_IGMP = wx.wxChoice(ui.Panel_adv_IGMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_IGMP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_IGMP:SetToolTip("LWIP_IGMP==1: Turn on IGMP module.")
+        ui.Choice_adv_LWIP_IGMP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IGMP:Add(ui.Choice_adv_LWIP_IGMP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_IGMP:SetSizer(ui.FlexGridSizer_adv_IGMP)
