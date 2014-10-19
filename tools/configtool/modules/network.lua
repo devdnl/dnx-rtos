@@ -118,6 +118,11 @@ local function load_controls()
         -- load adv DHCP options
         ui.Choice_adv_LWIP_DHCP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP)))
 
+        -- load adv AUTOIP options
+        ui.Choice_adv_LWIP_AUTOIP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_AUTOIP)))
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP)))
+        ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -191,6 +196,12 @@ local function save_configuration()
 
         -- save adv DHCP options
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP, tostring(ui.Choice_adv_LWIP_DHCP:GetSelection()))
+
+        -- load adv AUTOIP options
+        ct:key_write(config.project.key.NETWORK_LWIP_AUTOIP, tostring(ui.Choice_adv_LWIP_AUTOIP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP, tostring(ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES, tostring(ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:GetValue()))
+
 
         -- set that nothing is modified
         modified:no()
@@ -747,22 +758,30 @@ local function create_AUTOIP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_AUTOIP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_AUTOIP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+       ui.FlexGridSizer_adv_AUTOIP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_AUTOIP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_AUTOIP
+        ui.FlexGridSizer_adv_AUTOIP:AddStaticText("LWIP_AUTOIP")
+        ui.Choice_adv_LWIP_AUTOIP = wx.wxChoice(ui.Panel_adv_AUTOIP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_AUTOIP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_AUTOIP:SetToolTip("LWIP_AUTOIP==1: Enable AUTOIP module.")
+        ui.Choice_adv_LWIP_AUTOIP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_AUTOIP:Add(ui.Choice_adv_LWIP_AUTOIP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_DHCP_AUTOIP_COOP
+        ui.FlexGridSizer_adv_AUTOIP:AddStaticText("LWIP_DHCP_AUTOIP_COOP")
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP = wx.wxChoice(ui.Panel_adv_AUTOIP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:SetToolTip("LWIP_DHCP_AUTOIP_COOP==1: Allow DHCP and AUTOIP to be both enabled on the same interface at the same time.")
+        ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_AUTOIP:Add(ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_DHCP_AUTOIP_COOP_TRIES
+        ui.FlexGridSizer_adv_AUTOIP:AddStaticText("LWIP_DHCP_AUTOIP_COOP_TRIES")
+        ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES = wx.wxSpinCtrl(ui.Panel_adv_AUTOIP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 25)
+        ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:SetToolTip("")
+        ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_AUTOIP:Add(ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_AUTOIP:SetSizer(ui.FlexGridSizer_adv_AUTOIP)
