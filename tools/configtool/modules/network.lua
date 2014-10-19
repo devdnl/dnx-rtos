@@ -123,6 +123,13 @@ local function load_controls()
         ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP)))
         ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES)))
 
+        -- load adv SNMP options
+        ui.Choice_adv_LWIP_SNMP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_SNMP)))
+        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_CONCURRENT_REQUESTS)))
+        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_TRAP_DESTINATIONS)))
+        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_MAX_OCTET_STRING_LEN)))
+        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_SNMP_MAX_TREE_DEPTH)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -202,6 +209,12 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP, tostring(ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES, tostring(ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:GetValue()))
 
+        -- load adv SNMP options
+        ct:key_write(config.project.key.NETWORK_LWIP_SNMP, tostring(ui.Choice_adv_LWIP_SNMP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_SNMP_CONCURRENT_REQUESTS, tostring(ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SNMP_TRAP_DESTINATIONS, tostring(ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SNMP_MAX_OCTET_STRING_LEN, tostring(ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SNMP_MAX_TREE_DEPTH, tostring(ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:GetValue()))
 
         -- set that nothing is modified
         modified:no()
@@ -799,22 +812,45 @@ local function create_SNMP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SNMP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SNMP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+       ui.FlexGridSizer_adv_SNMP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_SNMP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_SNMP
+        ui.FlexGridSizer_adv_SNMP:AddStaticText("LWIP_SNMP")
+        ui.Choice_adv_LWIP_SNMP = wx.wxChoice(ui.Panel_adv_SNMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_SNMP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_SNMP:SetToolTip("LWIP_SNMP==1: Turn on SNMP module. UDP must be available for SNMP transport.")
+        ui.Choice_adv_LWIP_SNMP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SNMP:Add(ui.Choice_adv_LWIP_SNMP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_CONCURRENT_REQUESTS
+        ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_CONCURRENT_REQUESTS")
+        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:SetToolTip("SNMP_CONCURRENT_REQUESTS: Number of concurrent requests the module will allow. At least one request buffer is required. "..
+                                                            "Does not have to be changed unless external MIBs answer request asynchronously")
+        ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_TRAP_DESTINATIONS
+        ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_TRAP_DESTINATIONS")
+        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:SetToolTip("SNMP_TRAP_DESTINATIONS: Number of trap destinations. At least one trap destination is required")
+        ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_MAX_OCTET_STRING_LEN
+        ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_MAX_OCTET_STRING_LEN")
+        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 256)
+        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:SetToolTip("The maximum length of strings used. This affects the size of MEMP_SNMP_VALUE elements.")
+        ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_MAX_TREE_DEPTH
+        ui.FlexGridSizer_adv_SNMP:AddStaticText("SNMP_MAX_TREE_DEPTH")
+        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH = wx.wxSpinCtrl(ui.Panel_adv_SNMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:SetToolTip("The maximum depth of the SNMP tree. With private MIBs enabled, this depends on your MIB! "..
+                                                       "This affects the size of MEMP_SNMP_VALUE elements.")
+        ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SNMP:Add(ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SNMP:SetSizer(ui.FlexGridSizer_adv_SNMP)
