@@ -215,6 +215,9 @@ local function load_controls()
         ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE)))
         ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE)))
 
+        -- load adv Sequential layer options
+        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT)))
+
         -- load adv PPP options
         ui.Choice_adv_PPP_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_PPP_SUPPORT)))
         ui.Choice_adv_PPPOE_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_PPPOE_SUPPORT)))
@@ -234,8 +237,8 @@ local function load_controls()
         ui.SpinCtrl_adv_LCP_MAXECHOFAILS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LCP_MAXECHOFAILS)))
         ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_PPP_MAXIDLEFLAG)))
 
-        -- load adv Sequential layer options
-        ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT)))
+        -- load adv checksum options
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_CHECKSUM_ON_COPY)))
 
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
@@ -385,6 +388,9 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:GetValue()))
         ct:key_write(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:GetValue()))
 
+        -- save adv Sequential layer options
+        ct:key_write(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT, tostring(ui.Choice_adv_LWIP_TCPIP_TIMEOUT:GetSelection()))
+
         -- save adv PPP options
         ct:key_write(config.project.key.NETWORK_PPP_SUPPORT, tostring(ui.Choice_adv_PPP_SUPPORT:GetSelection()))
         ct:key_write(config.project.key.NETWORK_PPPOE_SUPPORT, tostring(ui.Choice_adv_PPPOE_SUPPORT:GetSelection()))
@@ -404,8 +410,8 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_LCP_MAXECHOFAILS, tostring(ui.SpinCtrl_adv_LCP_MAXECHOFAILS:GetValue()))
         ct:key_write(config.project.key.NETWORK_PPP_MAXIDLEFLAG, tostring(ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:GetValue()))
 
-        -- save adv Sequential layer options
-        ct:key_write(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT, tostring(ui.Choice_adv_LWIP_TCPIP_TIMEOUT:GetSelection()))
+        -- load adv checksum options
+        ct:key_write(config.project.key.NETWORK_LWIP_CHECKSUM_ON_COPY, tostring(ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -1760,22 +1766,15 @@ local function create_CHSUM_options_widgets(parent)
         -- create panel
         ui.Panel_adv_CHSUM = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_CHSUM = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_CHSUM.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_CHSUM, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_CHECKSUM_ON_COPY
+        ui.FlexGridSizer_adv_CHSUM:AddStaticText("LWIP_CHECKSUM_ON_COPY")
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY = wx.wxChoice(ui.Panel_adv_CHSUM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:SetToolTip("LWIP_CHECKSUM_ON_COPY==1: Calculate checksum when copying data from application buffers to pbufs.")
+        ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_CHSUM:Add(ui.Choice_adv_LWIP_CHECKSUM_ON_COPY, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_CHSUM:SetSizer(ui.FlexGridSizer_adv_CHSUM)
