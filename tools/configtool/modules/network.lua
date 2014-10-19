@@ -215,6 +215,25 @@ local function load_controls()
         ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE)))
         ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE)))
 
+        -- load adv PPP options
+        ui.Choice_adv_PPP_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_PPP_SUPPORT)))
+        ui.Choice_adv_PPPOE_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_PPPOE_SUPPORT)))
+        ui.SpinCtrl_adv_NUM_PPP:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_NUM_PPP)))
+        ui.Choice_adv_PAP_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_PAP_SUPPORT)))
+        ui.Choice_adv_CHAP_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_CHAP_SUPPORT)))
+        ui.Choice_adv_MD5_SUPPORT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MD5_SUPPORT)))
+        ui.SpinCtrl_adv_FSM_DEFTIMEOUT:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_FSM_DEFTIMEOUT)))
+        ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_FSM_DEFMAXTERMREQS)))
+        ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_FSM_DEFMAXCONFREQS)))
+        ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_FSM_DEFMAXNAKLOOPS)))
+        ui.SpinCtrl_adv_UPAP_DEFTIMEOUT:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_UPAP_DEFTIMEOUT)))
+        ui.SpinCtrl_adv_UPAP_DEFREQTIME:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_UPAP_DEFREQTIME)))
+        ui.SpinCtrl_adv_CHAP_DEFTIMEOUT:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_CHAP_DEFTIMEOUT)))
+        ui.SpinCtrl_adv_CHAP_DEFTRANSMITS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_CHAP_DEFTRANSMITS)))
+        ui.SpinCtrl_adv_LCP_ECHOINTERVAL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LCP_ECHOINTERVAL)))
+        ui.SpinCtrl_adv_LCP_MAXECHOFAILS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LCP_MAXECHOFAILS)))
+        ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_PPP_MAXIDLEFLAG)))
+
         -- load adv Sequential layer options
         ui.Choice_adv_LWIP_TCPIP_TIMEOUT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT)))
 
@@ -365,6 +384,25 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_DEFAULT_UDP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_UDP_RECVMBOX_SIZE:GetValue()))
         ct:key_write(config.project.key.NETWORK_DEFAULT_TCP_RECVMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_TCP_RECVMBOX_SIZE:GetValue()))
         ct:key_write(config.project.key.NETWORK_DEFAULT_ACCEPTMBOX_SIZE, tostring(ui.SpinCtrl_adv_DEFAULT_ACCEPTMBOX_SIZE:GetValue()))
+
+        -- save adv PPP options
+        ct:key_write(config.project.key.NETWORK_PPP_SUPPORT, tostring(ui.Choice_adv_PPP_SUPPORT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_PPPOE_SUPPORT, tostring(ui.Choice_adv_PPPOE_SUPPORT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_NUM_PPP, tostring(ui.SpinCtrl_adv_NUM_PPP:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PAP_SUPPORT, tostring(ui.Choice_adv_PAP_SUPPORT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_CHAP_SUPPORT, tostring(ui.Choice_adv_CHAP_SUPPORT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MD5_SUPPORT, tostring(ui.Choice_adv_MD5_SUPPORT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_FSM_DEFTIMEOUT, tostring(ui.SpinCtrl_adv_FSM_DEFTIMEOUT:GetValue()))
+        ct:key_write(config.project.key.NETWORK_FSM_DEFMAXTERMREQS, tostring(ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_FSM_DEFMAXCONFREQS, tostring(ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_FSM_DEFMAXNAKLOOPS, tostring(ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_UPAP_DEFTIMEOUT, tostring(ui.SpinCtrl_adv_UPAP_DEFTIMEOUT:GetValue()))
+        ct:key_write(config.project.key.NETWORK_UPAP_DEFREQTIME, tostring(ui.SpinCtrl_adv_UPAP_DEFREQTIME:GetValue()))
+        ct:key_write(config.project.key.NETWORK_CHAP_DEFTIMEOUT, tostring(ui.SpinCtrl_adv_CHAP_DEFTIMEOUT:GetValue()))
+        ct:key_write(config.project.key.NETWORK_CHAP_DEFTRANSMITS, tostring(ui.SpinCtrl_adv_CHAP_DEFTRANSMITS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_LCP_ECHOINTERVAL, tostring(ui.SpinCtrl_adv_LCP_ECHOINTERVAL:GetValue()))
+        ct:key_write(config.project.key.NETWORK_LCP_MAXECHOFAILS, tostring(ui.SpinCtrl_adv_LCP_MAXECHOFAILS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PPP_MAXIDLEFLAG, tostring(ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:GetValue()))
 
         -- save adv Sequential layer options
         ct:key_write(config.project.key.NETWORK_LWIP_TCPIP_TIMEOUT, tostring(ui.Choice_adv_LWIP_TCPIP_TIMEOUT:GetSelection()))
@@ -1580,22 +1618,131 @@ local function create_PPP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_PPP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_PPP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_PPP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_PPP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- PPP_SUPPORT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("PPP_SUPPORT")
+        ui.Choice_adv_PPP_SUPPORT = wx.wxChoice(ui.Panel_adv_PPP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_PPP_SUPPORT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_PPP_SUPPORT:SetToolTip("PPP_SUPPORT==1: Enable PPP.")
+        ui.Choice_adv_PPP_SUPPORT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.Choice_adv_PPP_SUPPORT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPPOE_SUPPORT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("PPPOE_SUPPORT")
+        ui.Choice_adv_PPPOE_SUPPORT = wx.wxChoice(ui.Panel_adv_PPP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_PPPOE_SUPPORT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_PPPOE_SUPPORT:SetToolTip("PPPOE_SUPPORT==1: Enable PPP Over Ethernet.")
+        ui.Choice_adv_PPPOE_SUPPORT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.Choice_adv_PPPOE_SUPPORT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- NUM_PPP
+        ui.FlexGridSizer_adv_PPP:AddStaticText("NUM_PPP")
+        ui.SpinCtrl_adv_NUM_PPP = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 8)
+        ui.SpinCtrl_adv_NUM_PPP:SetToolTip("NUM_PPP: Max PPP sessions.")
+        ui.SpinCtrl_adv_NUM_PPP:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_NUM_PPP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PAP_SUPPORT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("PAP_SUPPORT")
+        ui.Choice_adv_PAP_SUPPORT = wx.wxChoice(ui.Panel_adv_PPP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_PAP_SUPPORT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_PAP_SUPPORT:SetToolTip("PAP_SUPPORT==1: Support PAP.")
+        ui.Choice_adv_PAP_SUPPORT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.Choice_adv_PAP_SUPPORT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- CHAP_SUPPORT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("CHAP_SUPPORT")
+        ui.Choice_adv_CHAP_SUPPORT = wx.wxChoice(ui.Panel_adv_PPP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_CHAP_SUPPORT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_CHAP_SUPPORT:SetToolTip("CHAP_SUPPORT==1: Support CHAP.")
+        ui.Choice_adv_CHAP_SUPPORT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.Choice_adv_CHAP_SUPPORT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MD5_SUPPORT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("MD5_SUPPORT")
+        ui.Choice_adv_MD5_SUPPORT = wx.wxChoice(ui.Panel_adv_PPP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_MD5_SUPPORT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_MD5_SUPPORT:SetToolTip("MD5_SUPPORT==1: Support MD5 (see also CHAP).")
+        ui.Choice_adv_MD5_SUPPORT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.Choice_adv_MD5_SUPPORT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- FSM_DEFTIMEOUT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("FSM_DEFTIMEOUT")
+        ui.SpinCtrl_adv_FSM_DEFTIMEOUT = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_FSM_DEFTIMEOUT:SetToolTip("Default timeout value. Timeout time in seconds.")
+        ui.SpinCtrl_adv_FSM_DEFTIMEOUT:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_FSM_DEFTIMEOUT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- FSM_DEFMAXTERMREQS
+        ui.FlexGridSizer_adv_PPP:AddStaticText("FSM_DEFMAXTERMREQS")
+        ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS:SetToolTip("Maximum Terminate-Request transmissions.")
+        ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_FSM_DEFMAXTERMREQS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- FSM_DEFMAXCONFREQS
+        ui.FlexGridSizer_adv_PPP:AddStaticText("FSM_DEFMAXCONFREQS")
+        ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS:SetToolTip("Maximum Configure-Request transmissions.")
+        ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_FSM_DEFMAXCONFREQS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- FSM_DEFMAXNAKLOOPS
+        ui.FlexGridSizer_adv_PPP:AddStaticText("FSM_DEFMAXNAKLOOPS")
+        ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS:SetToolTip("Maximum number of NAK loops.")
+        ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_FSM_DEFMAXNAKLOOPS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- UPAP_DEFTIMEOUT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("UPAP_DEFTIMEOUT")
+        ui.SpinCtrl_adv_UPAP_DEFTIMEOUT = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_UPAP_DEFTIMEOUT:SetToolTip("Timeout (seconds) for retransmitting request.")
+        ui.SpinCtrl_adv_UPAP_DEFTIMEOUT:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_UPAP_DEFTIMEOUT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- UPAP_DEFREQTIME
+        ui.FlexGridSizer_adv_PPP:AddStaticText("UPAP_DEFREQTIME")
+        ui.SpinCtrl_adv_UPAP_DEFREQTIME = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_UPAP_DEFREQTIME:SetToolTip("Time to wait for authenticate-request from peer.")
+        ui.SpinCtrl_adv_UPAP_DEFREQTIME:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_UPAP_DEFREQTIME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- CHAP_DEFTIMEOUT
+        ui.FlexGridSizer_adv_PPP:AddStaticText("CHAP_DEFTIMEOUT")
+        ui.SpinCtrl_adv_CHAP_DEFTIMEOUT = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_CHAP_DEFTIMEOUT:SetToolTip("CHAP Timeout time in seconds.")
+        ui.SpinCtrl_adv_CHAP_DEFTIMEOUT:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_CHAP_DEFTIMEOUT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- CHAP_DEFTRANSMITS
+        ui.FlexGridSizer_adv_PPP:AddStaticText("CHAP_DEFTRANSMITS")
+        ui.SpinCtrl_adv_CHAP_DEFTRANSMITS = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_CHAP_DEFTRANSMITS:SetToolTip("Max # times to send challenge.")
+        ui.SpinCtrl_adv_CHAP_DEFTRANSMITS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_CHAP_DEFTRANSMITS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LCP_ECHOINTERVAL
+        ui.FlexGridSizer_adv_PPP:AddStaticText("LCP_ECHOINTERVAL")
+        ui.SpinCtrl_adv_LCP_ECHOINTERVAL = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 300)
+        ui.SpinCtrl_adv_LCP_ECHOINTERVAL:SetToolTip("Interval in seconds between keepalive echo requests, 0 to disable.")
+        ui.SpinCtrl_adv_LCP_ECHOINTERVAL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_LCP_ECHOINTERVAL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LCP_MAXECHOFAILS
+        ui.FlexGridSizer_adv_PPP:AddStaticText("LCP_MAXECHOFAILS")
+        ui.SpinCtrl_adv_LCP_MAXECHOFAILS = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 100)
+        ui.SpinCtrl_adv_LCP_MAXECHOFAILS:SetToolTip("Number of unanswered echo requests before failure.")
+        ui.SpinCtrl_adv_LCP_MAXECHOFAILS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_LCP_MAXECHOFAILS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPP_MAXIDLEFLAG
+        ui.FlexGridSizer_adv_PPP:AddStaticText("PPP_MAXIDLEFLAG")
+        ui.SpinCtrl_adv_PPP_MAXIDLEFLAG = wx.wxSpinCtrl(ui.Panel_adv_PPP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 300)
+        ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:SetToolTip("Max Xmit idle time (in jiffies) before resend flag char.")
+        ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_PPP:Add(ui.SpinCtrl_adv_PPP_MAXIDLEFLAG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_PPP:SetSizer(ui.FlexGridSizer_adv_PPP)
