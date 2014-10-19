@@ -179,7 +179,6 @@
             <NETWORK_NUM_PPP><path>../../config/project/network_flags.h</path><key>__NETWORK_NUM_PPP__</key></NETWORK_NUM_PPP>
             <NETWORK_PAP_SUPPORT><path>../../config/project/network_flags.h</path><key>__NETWORK_PAP_SUPPORT__</key></NETWORK_PAP_SUPPORT>
             <NETWORK_CHAP_SUPPORT><path>../../config/project/network_flags.h</path><key>__NETWORK_CHAP_SUPPORT__</key></NETWORK_CHAP_SUPPORT>
-            <NETWORK_VJ_SUPPORT><path>../../config/project/network_flags.h</path><key>__NETWORK_VJ_SUPPORT__</key></NETWORK_VJ_SUPPORT>
             <NETWORK_MD5_SUPPORT><path>../../config/project/network_flags.h</path><key>__NETWORK_MD5_SUPPORT__</key></NETWORK_MD5_SUPPORT>
             <NETWORK_FSM_DEFTIMEOUT><path>../../config/project/network_flags.h</path><key>__NETWORK_FSM_DEFTIMEOUT__</key></NETWORK_FSM_DEFTIMEOUT>
             <NETWORK_FSM_DEFMAXTERMREQS><path>../../config/project/network_flags.h</path><key>__NETWORK_FSM_DEFMAXTERMREQS__</key></NETWORK_FSM_DEFMAXTERMREQS>
