@@ -234,10 +234,6 @@
 #define __NETWORK_SNMP_MSG_DEBUG__ LWIP_DBG_OFF
 #define __NETWORK_SNMP_MIB_DEBUG__ LWIP_DBG_OFF
 #define __NETWORK_DNS_DEBUG__ LWIP_DBG_OFF
-#define __NETWORK___ LWIP_DBG_OFF
-#define __NETWORK___ LWIP_DBG_OFF
-#define __NETWORK___ LWIP_DBG_OFF
-#define __NETWORK___ LWIP_DBG_OFF
 
 #endif /* _NETWORK_FLAGS_H_ */
 /*==============================================================================
