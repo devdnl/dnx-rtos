@@ -63,9 +63,30 @@ local function load_controls()
         ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
 
         -- load adv MEM options
-        ui.Choice_MEM_seperate_pools:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SEPARATE_POOLS)))
-        ui.Choice_MEM_overflow_check:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK)))
-        ui.Choice_MEM_sanity_check:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SANITY_CHECK)))
+        ui.Choice_adv_MEMP_SEPARATE_POOLS:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SEPARATE_POOLS)))
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK)))
+        ui.Choice_adv_MEMP_SANITY_CHECK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SANITY_CHECK)))
+
+        -- load adv Network Interfaces options
+        ui.SpinCtrl_adv_MEMP_NUM_PBUF:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_PBUF)))
+        ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_RAW_PCB)))
+        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_UDP_PCB)))
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_TCP_PCB)))
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_TCP_PCB_LISTEN)))
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_TCP_SEG)))
+        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_REASSDATA)))
+        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_FRAG_PBUF)))
+        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_ARP_QUEUE)))
+        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_IGMP_GROUP)))
+        ui.SpinCtrl_adv_MEMP_NUM_NETBUF:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_NETBUF)))
+        ui.SpinCtrl_adv_MEMP_NUM_NETCONN:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_NETCONN)))
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_TCPIP_MSG_API)))
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_TCPIP_MSG_INPKT)))
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_SNMP_NODE)))
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_SNMP_ROOTNODE)))
+        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_LOCALHOSTLIST)))
+        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_PPPOE_INTERFACES)))
+        ui.SpinCtrl_adv_PBUF_POOL_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_PBUF_POOL_SIZE)))
 
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
@@ -86,9 +107,30 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
         -- save adv MEM options
-        ct:key_write(config.project.key.NETWORK_MEMP_SEPARATE_POOLS, tostring(ui.Choice_MEM_seperate_pools:GetSelection()))
-        ct:key_write(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK, tostring(ui.Choice_MEM_overflow_check:GetSelection()))
-        ct:key_write(config.project.key.NETWORK_MEMP_SANITY_CHECK, tostring(ui.Choice_MEM_sanity_check:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MEMP_SEPARATE_POOLS, tostring(ui.Choice_adv_MEMP_SEPARATE_POOLS:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK, tostring(ui.Choice_adv_MEMP_OVERFLOW_CHECK:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_MEMP_SANITY_CHECK, tostring(ui.Choice_adv_MEMP_SANITY_CHECK:GetSelection()))
+
+        -- save adv Network Interfaces options
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_PBUF, tostring(ui.SpinCtrl_adv_MEMP_NUM_PBUF:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_RAW_PCB, tostring(ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_UDP_PCB, tostring(ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_TCP_PCB, tostring(ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_TCP_PCB_LISTEN, tostring(ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_TCP_SEG, tostring(ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_REASSDATA, tostring(ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_FRAG_PBUF, tostring(ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_ARP_QUEUE, tostring(ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_IGMP_GROUP, tostring(ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_NETBUF, tostring(ui.SpinCtrl_adv_MEMP_NUM_NETBUF:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_NETCONN, tostring(ui.SpinCtrl_adv_MEMP_NUM_NETCONN:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_TCPIP_MSG_API, tostring(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_TCPIP_MSG_INPKT, tostring(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_SNMP_NODE, tostring(ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_SNMP_ROOTNODE, tostring(ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_LOCALHOSTLIST, tostring(ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_NUM_PPPOE_INTERFACES, tostring(ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PBUF_POOL_SIZE, tostring(ui.SpinCtrl_adv_PBUF_POOL_SIZE:GetValue()))
 
         -- set that nothing is modified
         modified:no()
@@ -164,34 +206,34 @@ local function create_memory_options_widgets(parent)
         ui.FlexGridSizer_adv_MEM.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_MEM, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
         -- MEMP_SEPARATE_POOLS
-        ui.FlexGridSizer_adv_MEM:AddStaticText("Seperate pools")
-        ui.Choice_MEM_seperate_pools = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        ui.Choice_MEM_seperate_pools:Append({"No (0)", "Yes (1)"})
-        ui.Choice_MEM_seperate_pools:SetToolTip("MEMP_SEPARATE_POOLS: If selected yes, each pool is placed in its own array. "..
+        ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_SEPARATE_POOLS")
+        ui.Choice_adv_MEMP_SEPARATE_POOLS = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_MEMP_SEPARATE_POOLS:Append({"No (0)", "Yes (1)"})
+        ui.Choice_adv_MEMP_SEPARATE_POOLS:SetToolTip("MEMP_SEPARATE_POOLS: If selected yes, each pool is placed in its own array. "..
                                                 "This can be used to individually change the location of each pool. "..
                                                 "Default is one big array for all pools.")
-        ui.Choice_MEM_seperate_pools:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
-        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_seperate_pools, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.Choice_adv_MEMP_SEPARATE_POOLS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_SEPARATE_POOLS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_OVERFLOW_CHECK
-        ui.FlexGridSizer_adv_MEM:AddStaticText("Memp overflow check")
-        ui.Choice_MEM_overflow_check = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        ui.Choice_MEM_overflow_check:Append({"Disable (0)", "Each element when it is freed (1)", "Each element in every pool every time (2)"})
-        ui.Choice_MEM_overflow_check:SetToolTip("MEMP_OVERFLOW_CHECK: memp overflow protection reserves a configurable amount of bytes before and after each "..
+        ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_OVERFLOW_CHECK")
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK:Append({"Disable (0)", "Each element when it is freed (1)", "Each element in every pool every time (2)"})
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK:SetToolTip("MEMP_OVERFLOW_CHECK: memp overflow protection reserves a configurable amount of bytes before and after each "..
                                                 "memp element in every pool and fills it with a prominent default value.\n"..
                                                 "- 0: no checking\n"..
                                                 "- 1: checks each element when it is freed\n"..
                                                 "- 2: checks each element in every pool every time memp_malloc() or memp_free() is called (useful but slow!).")
-        ui.Choice_MEM_overflow_check:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
-        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_overflow_check, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.Choice_adv_MEMP_OVERFLOW_CHECK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_OVERFLOW_CHECK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- MEMP_SANITY_CHECK
-        ui.FlexGridSizer_adv_MEM:AddStaticText("Sanity check")
-        ui.Choice_MEM_sanity_check = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        ui.Choice_MEM_sanity_check:Append({"Disable (0)", "Enable (1)"})
-        ui.Choice_MEM_sanity_check:SetToolTip("MEMP_SANITY_CHECK = 1: run a sanity check after each memp_free() to make sure that there are no cycles in the linked lists.")
-        ui.Choice_MEM_sanity_check:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
-        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_MEM_sanity_check, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        ui.FlexGridSizer_adv_MEM:AddStaticText("MEMP_SANITY_CHECK")
+        ui.Choice_adv_MEMP_SANITY_CHECK = wx.wxChoice(ui.Panel_adv_MEM, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_MEMP_SANITY_CHECK:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_MEMP_SANITY_CHECK:SetToolTip("MEMP_SANITY_CHECK = 1: run a sanity check after each memp_free() to make sure that there are no cycles in the linked lists.")
+        ui.Choice_adv_MEMP_SANITY_CHECK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_MEM:Add(ui.Choice_adv_MEMP_SANITY_CHECK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_MEM:SetSizer(ui.FlexGridSizer_adv_MEM)
@@ -209,10 +251,148 @@ local function create_internal_memory_pool_sizes_options_widgets(parent)
         -- create panel
         ui.Panel_adv_IMPS = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_IMPS = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_adv_IMPS.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_IMPS, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_IMPS, wx.wxID_ANY, "internal memory pool sizes", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.StaticText:SetToolTip("fsdfsdfd")
-        ui.FlexGridSizer_adv_IMPS:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+        -- MEMP_NUM_PBUF
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_PBUF")
+        ui.SpinCtrl_adv_MEMP_NUM_PBUF = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_PBUF:SetToolTip("MEMP_NUM_PBUF: the number of memp struct pbufs. If the application "..
+                                                 "sends a lot of data out of ROM (or other static memory), this "..
+                                                  "should be set high.")
+        ui.SpinCtrl_adv_MEMP_NUM_PBUF:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_PBUF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_RAW_PCB
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_RAW_PCB")
+        ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:SetToolTip("MEMP_NUM_RAW_PCB: Number of raw connection PCBs")
+        ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_UDP_PCB
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_UDP_PCB")
+        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:SetToolTip("MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One per active UDP \"connection\".")
+        ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_TCP_PCB
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCP_PCB")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB:SetToolTip("MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_TCP_PCB_LISTEN
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCP_PCB_LISTEN")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN:SetToolTip("MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP connections.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCP_PCB_LISTEN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_TCP_SEG
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCP_SEG")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG:SetToolTip("MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCP_SEG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_REASSDATA
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_REASSDATA")
+        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:SetToolTip("MEMP_NUM_REASSDATA: the number of IP packets simultaneously queued for reassembly (whole packets, not fragments!)")
+        ui.SpinCtrl_adv_MEMP_NUM_REASSDATA:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_REASSDATA, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_FRAG_PBUF
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_FRAG_PBUF")
+        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:SetToolTip("MEMP_NUM_FRAG_PBUF: the number of IP fragments simultaneously sent (fragments, not whole packets!). "..
+                                            "This is only used with IP_FRAG_USES_STATIC_BUF==0 and LWIP_NETIF_TX_SINGLE_PBUF==0 and only has to be > 1 with DMA-enabled MACs "..
+                                            "where the packet is not yet sent when netif->output returns.")
+        ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_FRAG_PBUF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_ARP_QUEUE
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_ARP_QUEUE")
+        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:SetToolTip("MEMP_NUM_ARP_QUEUE: the number of simulateously queued outgoing packets (pbufs) that are waiting "..
+                                                           "for an ARP request (to resolve their destination address) to finish. (requires the ARP_QUEUEING option)")
+        ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_ARP_QUEUE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_IGMP_GROUP
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_IGMP_GROUP")
+        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:SetToolTip("MEMP_NUM_IGMP_GROUP: The number of multicast groups whose network interfaces "..
+                                                            "can be members at the same time (one per netif - allsystems group -, plus one "..
+                                                            "per netif membership). (requires the LWIP_IGMP option)")
+        ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_IGMP_GROUP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_NETBUF
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_NETBUF")
+        ui.SpinCtrl_adv_MEMP_NUM_NETBUF = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_NETBUF:SetToolTip("MEMP_NUM_NETBUF: the number of struct netbufs.")
+        ui.SpinCtrl_adv_MEMP_NUM_NETBUF:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_NETBUF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_NETCONN
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_NETCONN")
+        ui.SpinCtrl_adv_MEMP_NUM_NETCONN = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_NETCONN:SetToolTip("MEMP_NUM_NETCONN: the number of struct netconns.")
+        ui.SpinCtrl_adv_MEMP_NUM_NETCONN:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_NETCONN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_TCPIP_MSG_API
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCPIP_MSG_API")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:SetToolTip("MEMP_NUM_TCPIP_MSG_API: the number of struct tcpip_msg, which are used for callback/timeout API communication.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_API, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_TCPIP_MSG_INPKT
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_TCPIP_MSG_INPKT")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:SetToolTip("MEMP_NUM_TCPIP_MSG_INPKT: the number of struct tcpip_msg, which are used for incoming packets.")
+        ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_TCPIP_MSG_INPKT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_SNMP_NODE
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_SNMP_NODE")
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE:SetToolTip("MEMP_NUM_SNMP_NODE: the number of leafs in the SNMP tree.")
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_SNMP_NODE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_SNMP_ROOTNODE
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_SNMP_ROOTNODE")
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:SetToolTip("MEMP_NUM_SNMP_ROOTNODE: the number of branches in the SNMP tree. "..
+                                                               "Every branch has one leaf (MEMP_NUM_SNMP_NODE) at least!")
+        ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_SNMP_ROOTNODE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_LOCALHOSTLIST
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_LOCALHOSTLIST")
+        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:SetToolTip("MEMP_NUM_LOCALHOSTLIST: the number of host entries in the local host list if DNS_LOCAL_HOSTLIST_IS_DYNAMIC==1.")
+        ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_NUM_PPPOE_INTERFACES
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("MEMP_NUM_PPPOE_INTERFACES")
+        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:SetToolTip("MEMP_NUM_PPPOE_INTERFACES: the number of concurrently active PPPoE interfaces (only used with PPPOE_SUPPORT==1)")
+        ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PBUF_POOL_SIZE
+        ui.FlexGridSizer_adv_IMPS:AddStaticText("PBUF_POOL_SIZE")
+        ui.SpinCtrl_adv_PBUF_POOL_SIZE = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_PBUF_POOL_SIZE:SetToolTip("PBUF_POOL_SIZE: the number of buffers in the pbuf pool.")
+        ui.SpinCtrl_adv_PBUF_POOL_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IMPS:Add(ui.SpinCtrl_adv_PBUF_POOL_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_IMPS:SetSizer(ui.FlexGridSizer_adv_IMPS)
@@ -231,8 +411,12 @@ local function create_ARP_options_widgets(parent)
         ui.Panel_adv_ARP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_ARP = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_ARP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_ARP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- XXX
+--         ui.FlexGridSizer_adv_IMPS:AddStaticText("XXX")
+--         ui.TextCtrl_adv_IMPS_XXX = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+--         ui.TextCtrl_adv_IMPS_XXX:SetToolTip("")
+--         ui.TextCtrl_adv_IMPS_XXX:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_IMPS:Add(ui.TextCtrl_adv_IMPS_XXX, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_ARP:SetSizer(ui.FlexGridSizer_adv_ARP)
