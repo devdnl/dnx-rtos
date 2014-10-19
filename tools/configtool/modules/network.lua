@@ -46,6 +46,8 @@ local ID = {}
 local modified = ct:new_modify_indicator()
 local priority_min = 0
 local priority_max = 0
+local function _get_value(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
+local function _count(self) local n = 0 for i, v in pairs(self) do if type(v) == "number" then n = n + 1 end end return n end
 
 local TCP_OVERSIZE = {}
 TCP_OVERSIZE["0"]         = 0
@@ -53,7 +55,7 @@ TCP_OVERSIZE["1"]         = 1
 TCP_OVERSIZE["128"]       = 2
 TCP_OVERSIZE["TCP_MSS"]   = 3
 TCP_OVERSIZE["TCP_MSS/4"] = 4
-TCP_OVERSIZE.get_value    = function(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
+TCP_OVERSIZE.get_value    = _get_value
 
 local stack_size = {};
 stack_size["STACK_DEPTH_MINIMAL"]    = 0
@@ -64,9 +66,22 @@ stack_size["STACK_DEPTH_LARGE"]      = 4
 stack_size["STACK_DEPTH_VERY_LARGE"] = 5
 stack_size["STACK_DEPTH_HUGE"]       = 6
 stack_size["STACK_DEPTH_VERY_HUGE"]  = 7
-stack_size.count                     = function(self) local n = 0 for i, v in pairs(self) do if type(v) == "number" then n = n + 1 end end return n end
-stack_size.get_value                 = function(self, idx) for i, v in pairs(self) do if v == idx then return i end end end
+stack_size.count                     = _count
+stack_size.get_value                 = _get_value
 
+
+local debug_level = {}
+debug_level["LWIP_DBG_LEVEL_ALL"]     = 0
+debug_level["LWIP_DBG_LEVEL_WARNING"] = 1
+debug_level["LWIP_DBG_LEVEL_SERIOUS"] = 2
+debug_level["LWIP_DBG_LEVEL_SEVERE"]  = 3
+debug_level.count                     = _count
+debug_level.get_value                 = _get_value
+
+local debug_switch = {}
+debug_switch["LWIP_DBG_OFF"] = false
+debug_switch["LWIP_DBG_ON"]  = true
+debug_switch.get_value       = _get_value
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -240,6 +255,45 @@ local function load_controls()
         -- load adv checksum options
         ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_CHECKSUM_ON_COPY)))
 
+        -- load adv debug options
+        ui.Choice_adv_LWIP_DBG_MIN_LEVEL:SetSelection(debug_level[ct:key_read(config.project.key.NETWORK_LWIP_DBG_MIN_LEVEL)])
+        ui.CheckBox_adv_LWIP_DBG_TYPES_ON:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_LWIP_DBG_TYPES_ON)])
+        ui.CheckBox_adv_LOW_LEVEL_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_LOW_LEVEL_DEBUG)])
+        ui.CheckBox_adv_ETHARP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_ETHARP_DEBUG)])
+        ui.CheckBox_adv_NETIF_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_NETIF_DEBUG)])
+        ui.CheckBox_adv_PBUF_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_PBUF_DEBUG)])
+        ui.CheckBox_adv_API_LIB_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_API_LIB_DEBUG)])
+        ui.CheckBox_adv_API_MSG_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_API_MSG_DEBUG)])
+        ui.CheckBox_adv_SOCKETS_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_SOCKETS_DEBUG)])
+        ui.CheckBox_adv_ICMP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_ICMP_DEBUG)])
+        ui.CheckBox_adv_IGMP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_IGMP_DEBUG)])
+        ui.CheckBox_adv_INET_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_INET_DEBUG)])
+        ui.CheckBox_adv_IP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_IP_DEBUG)])
+        ui.CheckBox_adv_IP_REASS_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_IP_REASS_DEBUG)])
+        ui.CheckBox_adv_RAW_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_RAW_DEBUG)])
+        ui.CheckBox_adv_MEM_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_MEM_DEBUG)])
+        ui.CheckBox_adv_MEMP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_MEMP_DEBUG)])
+        ui.CheckBox_adv_SYS_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_SYS_DEBUG)])
+        ui.CheckBox_adv_TIMERS_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TIMERS_DEBUG)])
+        ui.CheckBox_adv_TCP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_DEBUG)])
+        ui.CheckBox_adv_TCP_INPUT_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_INPUT_DEBUG)])
+        ui.CheckBox_adv_TCP_FR_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_FR_DEBUG)])
+        ui.CheckBox_adv_TCP_RTO_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_RTO_DEBUG)])
+        ui.CheckBox_adv_TCP_CWND_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_CWND_DEBUG)])
+        ui.CheckBox_adv_TCP_WND_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_WND_DEBUG)])
+        ui.CheckBox_adv_TCP_OUTPUT_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_OUTPUT_DEBUG)])
+        ui.CheckBox_adv_TCP_RST_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_RST_DEBUG)])
+        ui.CheckBox_adv_TCP_QLEN_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCP_QLEN_DEBUG)])
+        ui.CheckBox_adv_UDP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_UDP_DEBUG)])
+        ui.CheckBox_adv_TCPIP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_TCPIP_DEBUG)])
+        ui.CheckBox_adv_PPP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_PPP_DEBUG)])
+        ui.CheckBox_adv_SLIP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_SLIP_DEBUG)])
+        ui.CheckBox_adv_DHCP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_DHCP_DEBUG)])
+        ui.CheckBox_adv_AUTOIP_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_AUTOIP_DEBUG)])
+        ui.CheckBox_adv_SNMP_MSG_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_SNMP_MSG_DEBUG)])
+        ui.CheckBox_adv_SNMP_MIB_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_SNMP_MIB_DEBUG)])
+        ui.CheckBox_adv_DNS_DEBUG:SetValue(debug_switch[ct:key_read(config.project.key.NETWORK_DNS_DEBUG)])
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -410,8 +464,47 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_LCP_MAXECHOFAILS, tostring(ui.SpinCtrl_adv_LCP_MAXECHOFAILS:GetValue()))
         ct:key_write(config.project.key.NETWORK_PPP_MAXIDLEFLAG, tostring(ui.SpinCtrl_adv_PPP_MAXIDLEFLAG:GetValue()))
 
-        -- load adv checksum options
+        -- save adv checksum options
         ct:key_write(config.project.key.NETWORK_LWIP_CHECKSUM_ON_COPY, tostring(ui.Choice_adv_LWIP_CHECKSUM_ON_COPY:GetSelection()))
+
+        -- save adv debug options
+        ct:key_write(config.project.key.NETWORK_LWIP_DBG_MIN_LEVEL, debug_level:get_value(ui.Choice_adv_LWIP_DBG_MIN_LEVEL:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_DBG_TYPES_ON, debug_switch:get_value(ui.CheckBox_adv_LWIP_DBG_TYPES_ON:GetValue()))
+        ct:key_write(config.project.key.NETWORK_LOW_LEVEL_DEBUG, debug_switch:get_value(ui.CheckBox_adv_LOW_LEVEL_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_ETHARP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_ETHARP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_NETIF_DEBUG, debug_switch:get_value(ui.CheckBox_adv_NETIF_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PBUF_DEBUG, debug_switch:get_value(ui.CheckBox_adv_PBUF_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_API_LIB_DEBUG, debug_switch:get_value(ui.CheckBox_adv_API_LIB_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_API_MSG_DEBUG, debug_switch:get_value(ui.CheckBox_adv_API_MSG_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SOCKETS_DEBUG, debug_switch:get_value(ui.CheckBox_adv_SOCKETS_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_ICMP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_ICMP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IGMP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_IGMP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_INET_DEBUG, debug_switch:get_value(ui.CheckBox_adv_INET_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_IP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IP_REASS_DEBUG, debug_switch:get_value(ui.CheckBox_adv_IP_REASS_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_RAW_DEBUG, debug_switch:get_value(ui.CheckBox_adv_RAW_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEM_DEBUG, debug_switch:get_value(ui.CheckBox_adv_MEM_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_MEMP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_MEMP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SYS_DEBUG, debug_switch:get_value(ui.CheckBox_adv_SYS_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TIMERS_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TIMERS_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_INPUT_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_INPUT_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_FR_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_FR_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_RTO_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_RTO_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_CWND_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_CWND_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_WND_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_WND_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_OUTPUT_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_OUTPUT_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_RST_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_RST_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCP_QLEN_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCP_QLEN_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_UDP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_UDP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_TCPIP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_TCPIP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_PPP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_PPP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SLIP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_SLIP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DHCP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_DHCP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_AUTOIP_DEBUG, debug_switch:get_value(ui.CheckBox_adv_AUTOIP_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SNMP_MSG_DEBUG, debug_switch:get_value(ui.CheckBox_adv_SNMP_MSG_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_SNMP_MIB_DEBUG, debug_switch:get_value(ui.CheckBox_adv_SNMP_MIB_DEBUG:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DNS_DEBUG, debug_switch:get_value(ui.CheckBox_adv_DNS_DEBUG:GetValue()))
 
         -- set that nothing is modified
         modified:no()
@@ -1444,7 +1537,7 @@ local function create_THREAD_options_widgets(parent)
         -- TCPIP_THREAD_STACKSIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("TCPIP_THREAD_STACKSIZE")
         ui.Choice_adv_TCPIP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        for i = 0, stack_size:count() - 1 do ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_TCPIP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
         ui.Choice_adv_TCPIP_THREAD_STACKSIZE:SetToolTip("TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
                                                         "The stack size value itself is platform-dependent, but is passed to "..
                                                         "sys_thread_new() when the thread is created.")
@@ -1478,7 +1571,7 @@ local function create_THREAD_options_widgets(parent)
         -- SLIPIF_THREAD_STACKSIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("SLIPIF_THREAD_STACKSIZE")
         ui.Choice_adv_SLIPIF_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        for i = 0, stack_size:count() - 1 do ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
         ui.Choice_adv_SLIPIF_THREAD_STACKSIZE:SetToolTip("SLIPIF_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
                                                          "The stack size value itself is platform-dependent, but is passed to "..
                                                          "sys_thread_new() when the thread is created.")
@@ -1504,7 +1597,7 @@ local function create_THREAD_options_widgets(parent)
         -- PPP_THREAD_STACKSIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("PPP_THREAD_STACKSIZE")
         ui.Choice_adv_PPP_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        for i = 0, stack_size:count() - 1 do ui.Choice_adv_PPP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_PPP_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
         ui.Choice_adv_PPP_THREAD_STACKSIZE:SetToolTip("PPP_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
                                                       "The stack size value itself is platform-dependent, but is passed to "..
                                                       "sys_thread_new() when the thread is created.")
@@ -1530,7 +1623,7 @@ local function create_THREAD_options_widgets(parent)
         -- DEFAULT_THREAD_STACKSIZE
         ui.FlexGridSizer_adv_THREAD:AddStaticText("DEFAULT_THREAD_STACKSIZE")
         ui.Choice_adv_DEFAULT_THREAD_STACKSIZE = wx.wxChoice(ui.Panel_adv_THREAD, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
-        for i = 0, stack_size:count() - 1 do ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("_", " ")) end
+        for i = 0, stack_size:count() - 1 do ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:Append(stack_size:get_value(i):gsub("STACK_DEPTH_", "")) end
         ui.Choice_adv_DEFAULT_THREAD_STACKSIZE:SetToolTip("DEFAULT_THREAD_STACKSIZE: The stack size used by the main tcpip thread. "..
                                                           "The stack size value itself is platform-dependent, but is passed to "..
                                                           "sys_thread_new() when the thread is created.")
@@ -1792,22 +1885,196 @@ local function create_DEBUG_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DEBUG = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DEBUG = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_DEBUG.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_DEBUG, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_DBG_MIN_LEVEL
+        ui.FlexGridSizer_adv_DEBUG:AddStaticText("LWIP_DBG_MIN_LEVEL")
+        ui.Choice_adv_LWIP_DBG_MIN_LEVEL = wx.wxChoice(ui.Panel_adv_DEBUG, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        for i = 0, debug_level:count() -1 do ui.Choice_adv_LWIP_DBG_MIN_LEVEL:Append(debug_level:get_value(i):gsub("LWIP_DBG_LEVEL_", "")) end
+        ui.Choice_adv_LWIP_DBG_MIN_LEVEL:SetToolTip("LWIP_DBG_MIN_LEVEL: After masking, the value of the debug is "..
+                                                    "compared against this value. If it is smaller, then debugging messages are written.")
+        ui.Choice_adv_LWIP_DBG_MIN_LEVEL:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.Choice_adv_LWIP_DBG_MIN_LEVEL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_DBG_TYPES_ON
+        ui.CheckBox_adv_LWIP_DBG_TYPES_ON = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "LWIP_DBG_TYPES_ON", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_LWIP_DBG_TYPES_ON:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_LWIP_DBG_TYPES_ON, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LOW_LEVEL_DEBUG
+        ui.CheckBox_adv_LOW_LEVEL_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "LOW_LEVEL_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_LOW_LEVEL_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_LOW_LEVEL_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ETHARP_DEBUG
+        ui.CheckBox_adv_ETHARP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "ETHARP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_ETHARP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_ETHARP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- NETIF_DEBUG
+        ui.CheckBox_adv_NETIF_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "NETIF_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_NETIF_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_NETIF_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PBUF_DEBUG
+        ui.CheckBox_adv_PBUF_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "PBUF_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_PBUF_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_PBUF_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- API_LIB_DEBUG
+        ui.CheckBox_adv_API_LIB_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "API_LIB_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_API_LIB_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_API_LIB_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- API_MSG_DEBUG
+        ui.CheckBox_adv_API_MSG_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "API_MSG_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_API_MSG_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_API_MSG_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SOCKETS_DEBUG
+        ui.CheckBox_adv_SOCKETS_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "SOCKETS_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_SOCKETS_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_SOCKETS_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ICMP_DEBUG
+        ui.CheckBox_adv_ICMP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "ICMP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_ICMP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_ICMP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IGMP_DEBUG
+        ui.CheckBox_adv_IGMP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "IGMP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_IGMP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_IGMP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- INET_DEBUG
+        ui.CheckBox_adv_INET_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "INET_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_INET_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_INET_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_DEBUG
+        ui.CheckBox_adv_IP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "IP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_IP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_IP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_REASS_DEBUG
+        ui.CheckBox_adv_IP_REASS_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "IP_REASS_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_IP_REASS_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_IP_REASS_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- RAW_DEBUG
+        ui.CheckBox_adv_RAW_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "RAW_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_RAW_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_RAW_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEM_DEBUG
+        ui.CheckBox_adv_MEM_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "MEM_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_MEM_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_MEM_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- MEMP_DEBUG
+        ui.CheckBox_adv_MEMP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "MEMP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_MEMP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_MEMP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SYS_DEBUG
+        ui.CheckBox_adv_SYS_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "SYS_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_SYS_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_SYS_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TIMERS_DEBUG
+        ui.CheckBox_adv_TIMERS_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TIMERS_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TIMERS_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TIMERS_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_DEBUG
+        ui.CheckBox_adv_TCP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_INPUT_DEBUG
+        ui.CheckBox_adv_TCP_INPUT_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_INPUT_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_INPUT_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_INPUT_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_FR_DEBUG
+        ui.CheckBox_adv_TCP_FR_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_FR_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_FR_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_FR_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_RTO_DEBUG
+        ui.CheckBox_adv_TCP_RTO_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_RTO_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_RTO_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_RTO_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_CWND_DEBUG
+        ui.CheckBox_adv_TCP_CWND_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_CWND_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_CWND_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_CWND_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_WND_DEBUG
+        ui.CheckBox_adv_TCP_WND_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_WND_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_WND_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_WND_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_OUTPUT_DEBUG
+        ui.CheckBox_adv_TCP_OUTPUT_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_OUTPUT_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_OUTPUT_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_OUTPUT_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_RST_DEBUG
+        ui.CheckBox_adv_TCP_RST_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_RST_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_RST_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_RST_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCP_QLEN_DEBUG
+        ui.CheckBox_adv_TCP_QLEN_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCP_QLEN_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCP_QLEN_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCP_QLEN_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- UDP_DEBUG
+        ui.CheckBox_adv_UDP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "UDP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_UDP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_UDP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- TCPIP_DEBUG
+        ui.CheckBox_adv_TCPIP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "TCPIP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_TCPIP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_TCPIP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- PPP_DEBUG
+        ui.CheckBox_adv_PPP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "PPP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_PPP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_PPP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SLIP_DEBUG
+        ui.CheckBox_adv_SLIP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "SLIP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_SLIP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_SLIP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DHCP_DEBUG
+        ui.CheckBox_adv_DHCP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "DHCP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_DHCP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_DHCP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- AUTOIP_DEBUG
+        ui.CheckBox_adv_AUTOIP_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "AUTOIP_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_AUTOIP_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_AUTOIP_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_MSG_DEBUG
+        ui.CheckBox_adv_SNMP_MSG_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "SNMP_MSG_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_SNMP_MSG_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_SNMP_MSG_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- SNMP_MIB_DEBUG
+        ui.CheckBox_adv_SNMP_MIB_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "SNMP_MIB_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_SNMP_MIB_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_SNMP_MIB_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_DEBUG
+        ui.CheckBox_adv_DNS_DEBUG = wx.wxCheckBox(ui.Panel_adv_DEBUG, wx.wxNewId(), "DNS_DEBUG", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.CheckBox_adv_DNS_DEBUG:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DEBUG:Add(ui.CheckBox_adv_DNS_DEBUG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_DEBUG:SetSizer(ui.FlexGridSizer_adv_DEBUG)
