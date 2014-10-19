@@ -133,6 +133,19 @@ local function load_controls()
         -- load adv IGMP options
         ui.Choice_adv_LWIP_IGMP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_IGMP)))
 
+        -- load adv DNS options
+        ui.Choice_adv_LWIP_DNS:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_DNS)))
+        ui.SpinCtrl_adv_DNS_TABLE_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DNS_TABLE_SIZE)))
+        ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DNS_MAX_NAME_LENGTH)))
+        ui.SpinCtrl_adv_DNS_MAX_SERVERS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_DNS_MAX_SERVERS)))
+        ui.Choice_adv_DNS_DOES_NAME_CHECK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_DNS_DOES_NAME_CHECK)))
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC)))
+
+        -- load adv UDP options
+        ui.Choice_adv_LWIP_UDP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_UDP)))
+        ui.SpinCtrl_adv_UDP_TTL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_UDP_TTL)))
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_NETBUF_RECVINFO)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -207,20 +220,33 @@ local function save_configuration()
         -- save adv DHCP options
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP, tostring(ui.Choice_adv_LWIP_DHCP:GetSelection()))
 
-        -- load adv AUTOIP options
+        -- save adv AUTOIP options
         ct:key_write(config.project.key.NETWORK_LWIP_AUTOIP, tostring(ui.Choice_adv_LWIP_AUTOIP:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP, tostring(ui.Choice_adv_LWIP_DHCP_AUTOIP_COOP:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES, tostring(ui.SpinCtrl_adv_LWIP_DHCP_AUTOIP_COOP_TRIES:GetValue()))
 
-        -- load adv SNMP options
+        -- save adv SNMP options
         ct:key_write(config.project.key.NETWORK_LWIP_SNMP, tostring(ui.Choice_adv_LWIP_SNMP:GetSelection()))
         ct:key_write(config.project.key.NETWORK_SNMP_CONCURRENT_REQUESTS, tostring(ui.SpinCtrl_adv_SNMP_CONCURRENT_REQUESTS:GetValue()))
         ct:key_write(config.project.key.NETWORK_SNMP_TRAP_DESTINATIONS, tostring(ui.SpinCtrl_adv_SNMP_TRAP_DESTINATIONS:GetValue()))
         ct:key_write(config.project.key.NETWORK_SNMP_MAX_OCTET_STRING_LEN, tostring(ui.SpinCtrl_adv_SNMP_MAX_OCTET_STRING_LEN:GetValue()))
         ct:key_write(config.project.key.NETWORK_SNMP_MAX_TREE_DEPTH, tostring(ui.SpinCtrl_adv_SNMP_MAX_TREE_DEPTH:GetValue()))
 
-        -- load adv IGMP options
+        -- save adv DNS options
+        ct:key_write(config.project.key.NETWORK_LWIP_DNS, tostring(ui.Choice_adv_LWIP_DNS:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_DNS_TABLE_SIZE, tostring(ui.SpinCtrl_adv_DNS_TABLE_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DNS_MAX_NAME_LENGTH, tostring(ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DNS_MAX_SERVERS, tostring(ui.SpinCtrl_adv_DNS_MAX_SERVERS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_DNS_DOES_NAME_CHECK, tostring(ui.Choice_adv_DNS_DOES_NAME_CHECK:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC, tostring(ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:GetSelection()))
+
+        -- save adv IGMP options
         ct:key_write(config.project.key.NETWORK_LWIP_IGMP, tostring(ui.Choice_adv_LWIP_IGMP:GetSelection()))
+
+        -- save adv UDP options
+        ct:key_write(config.project.key.NETWORK_LWIP_UDP, tostring(ui.Choice_adv_LWIP_UDP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_UDP_TTL, tostring(ui.SpinCtrl_adv_UDP_TTL:GetValue()))
+        ct:key_write(config.project.key.NETWORK_LWIP_NETBUF_RECVINFO, tostring(ui.Choice_adv_LWIP_NETBUF_RECVINFO:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -900,22 +926,52 @@ local function create_DNS_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DNS = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DNS = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_DNS.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_DNS, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_DNS
+        ui.FlexGridSizer_adv_DNS:AddStaticText("LWIP_DNS")
+        ui.Choice_adv_LWIP_DNS = wx.wxChoice(ui.Panel_adv_DNS, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_DNS:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_DNS:SetToolTip("LWIP_DNS==1: Turn on DNS module. UDP must be available for DNS transport.")
+        ui.Choice_adv_LWIP_DNS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.Choice_adv_LWIP_DNS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_TABLE_SIZE
+        ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_TABLE_SIZE")
+        ui.SpinCtrl_adv_DNS_TABLE_SIZE = wx.wxSpinCtrl(ui.Panel_adv_DNS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 16)
+        ui.SpinCtrl_adv_DNS_TABLE_SIZE:SetToolTip("DNS maximum number of entries to maintain locally.")
+        ui.SpinCtrl_adv_DNS_TABLE_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.SpinCtrl_adv_DNS_TABLE_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_MAX_NAME_LENGTH
+        ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_MAX_NAME_LENGTH")
+        ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH = wx.wxSpinCtrl(ui.Panel_adv_DNS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 16, 256)
+        ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH:SetToolTip("DNS maximum host name length supported in the name table.")
+        ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.SpinCtrl_adv_DNS_MAX_NAME_LENGTH, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_MAX_SERVERS
+        ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_MAX_SERVERS")
+        ui.SpinCtrl_adv_DNS_MAX_SERVERS = wx.wxSpinCtrl(ui.Panel_adv_DNS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 8)
+        ui.SpinCtrl_adv_DNS_MAX_SERVERS:SetToolTip("The maximum of DNS servers")
+        ui.SpinCtrl_adv_DNS_MAX_SERVERS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.SpinCtrl_adv_DNS_MAX_SERVERS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_DOES_NAME_CHECK
+        ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_DOES_NAME_CHECK")
+        ui.Choice_adv_DNS_DOES_NAME_CHECK = wx.wxChoice(ui.Panel_adv_DNS, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_DNS_DOES_NAME_CHECK:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_DNS_DOES_NAME_CHECK:SetToolTip("DNS do a name checking between the query and the response.")
+        ui.Choice_adv_DNS_DOES_NAME_CHECK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.Choice_adv_DNS_DOES_NAME_CHECK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- DNS_LOCAL_HOSTLIST_IS_DYNAMIC
+        ui.FlexGridSizer_adv_DNS:AddStaticText("DNS_LOCAL_HOSTLIST_IS_DYNAMIC")
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC = wx.wxChoice(ui.Panel_adv_DNS, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:SetToolTip("If this is turned on, the local host-list can be dynamically changed at runtime.")
+        ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_DNS:Add(ui.Choice_adv_DNS_LOCAL_HOSTLIST_IS_DYNAMIC, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_DNS:SetSizer(ui.FlexGridSizer_adv_DNS)
@@ -933,22 +989,30 @@ local function create_UDP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_UDP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_UDP = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_UDP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_UDP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_UDP
+        ui.FlexGridSizer_adv_UDP:AddStaticText("LWIP_UDP")
+        ui.Choice_adv_LWIP_UDP = wx.wxChoice(ui.Panel_adv_UDP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_UDP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_UDP:SetToolTip("LWIP_UDP==1: Turn on UDP.")
+        ui.Choice_adv_LWIP_UDP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_UDP:Add(ui.Choice_adv_LWIP_UDP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- UDP_TTL
+        ui.FlexGridSizer_adv_UDP:AddStaticText("UDP_TTL")
+        ui.SpinCtrl_adv_UDP_TTL = wx.wxSpinCtrl(ui.Panel_adv_UDP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
+        ui.SpinCtrl_adv_UDP_TTL:SetToolTip("UDP_TTL: Default Time-To-Live value.")
+        ui.SpinCtrl_adv_UDP_TTL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_UDP:Add(ui.SpinCtrl_adv_UDP_TTL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_NETBUF_RECVINFO
+        ui.FlexGridSizer_adv_UDP:AddStaticText("LWIP_NETBUF_RECVINFO")
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO = wx.wxChoice(ui.Panel_adv_UDP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO:SetToolTip("LWIP_NETBUF_RECVINFO==1: append destination addr and port to every netbuf.")
+        ui.Choice_adv_LWIP_NETBUF_RECVINFO:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_UDP:Add(ui.Choice_adv_LWIP_NETBUF_RECVINFO, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_UDP:SetSizer(ui.FlexGridSizer_adv_UDP)
@@ -978,7 +1042,7 @@ local function create_TCP_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1011,7 +1075,7 @@ local function create_NETIF_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1044,7 +1108,7 @@ local function create_LOOPIF_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1077,7 +1141,7 @@ local function create_SLIPIF_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1110,7 +1174,7 @@ local function create_THREAD_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1143,7 +1207,7 @@ local function create_SEQL_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1176,7 +1240,7 @@ local function create_PPP_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1209,7 +1273,7 @@ local function create_CHSUM_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
@@ -1242,7 +1306,7 @@ local function create_DEBUG_options_widgets(parent)
 --
 --         -- SPINCTRL
 --         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
 --         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
 --         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 --         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
