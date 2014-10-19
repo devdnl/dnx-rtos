@@ -67,7 +67,7 @@ local function load_controls()
         ui.Choice_adv_MEMP_OVERFLOW_CHECK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK)))
         ui.Choice_adv_MEMP_SANITY_CHECK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_SANITY_CHECK)))
 
-        -- load adv Network Interfaces options
+        -- load adv internal memory pool sizes
         ui.SpinCtrl_adv_MEMP_NUM_PBUF:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_PBUF)))
         ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_RAW_PCB)))
         ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_UDP_PCB)))
@@ -87,6 +87,33 @@ local function load_controls()
         ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_LOCALHOSTLIST)))
         ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_MEMP_NUM_PPPOE_INTERFACES)))
         ui.SpinCtrl_adv_PBUF_POOL_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_PBUF_POOL_SIZE)))
+
+        -- load adv ARP options
+        ui.Choice_adv_LWIP_ARP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_ARP)))
+        ui.SpinCtrl_adv_ARP_TABLE_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_ARP_TABLE_SIZE)))
+        ui.Choice_adv_ARP_QUEUEING:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_ARP_QUEUEING)))
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_ETHARP_TRUST_IP_MAC)))
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_ETHARP_SUPPORT_VLAN)))
+        ui.SpinCtrl_adv_ETH_PAD_SIZE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_ETH_PAD_SIZE)))
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_ETHARP_SUPPORT_STATIC_ENTRIES)))
+
+        -- load adv IP options
+        ui.Choice_adv_IP_FORWARD:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_FORWARD)))
+        ui.Choice_adv_IP_OPTIONS_ALLOWED:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_OPTIONS_ALLOWED)))
+        ui.Choice_adv_IP_REASSEMBLY:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_REASSEMBLY)))
+        ui.Choice_adv_IP_FRAG:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_FRAG)))
+        ui.SpinCtrl_adv_IP_REASS_MAXAGE:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_IP_REASS_MAXAGE)))
+        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_IP_REASS_MAX_PBUFS)))
+        ui.SpinCtrl_adv_IP_DEFAULT_TTL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_IP_DEFAULT_TTL)))
+        ui.Choice_adv_IP_SOF_BROADCAST:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_SOF_BROADCAST)))
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_SOF_BROADCAST_RECV)))
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF)))
+
+        -- load adv ICMP options
+        ui.Choice_adv_LWIP_ICMP:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_ICMP)))
+        ui.SpinCtrl_adv_ICMP_TTL:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_ICMP_TTL)))
+        ui.Choice_adv_LWIP_BROADCAST_PING:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_BROADCAST_PING)))
+        ui.Choice_adv_LWIP_MULTICAST_PING:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_MULTICAST_PING)))
 
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
@@ -111,7 +138,7 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_MEMP_OVERFLOW_CHECK, tostring(ui.Choice_adv_MEMP_OVERFLOW_CHECK:GetSelection()))
         ct:key_write(config.project.key.NETWORK_MEMP_SANITY_CHECK, tostring(ui.Choice_adv_MEMP_SANITY_CHECK:GetSelection()))
 
-        -- save adv Network Interfaces options
+        -- save adv internal memory pool sizes
         ct:key_write(config.project.key.NETWORK_MEMP_NUM_PBUF, tostring(ui.SpinCtrl_adv_MEMP_NUM_PBUF:GetValue()))
         ct:key_write(config.project.key.NETWORK_MEMP_NUM_RAW_PCB, tostring(ui.SpinCtrl_adv_MEMP_NUM_RAW_PCB:GetValue()))
         ct:key_write(config.project.key.NETWORK_MEMP_NUM_UDP_PCB, tostring(ui.SpinCtrl_adv_MEMP_NUM_UDP_PCB:GetValue()))
@@ -131,6 +158,33 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_MEMP_NUM_LOCALHOSTLIST, tostring(ui.SpinCtrl_adv_MEMP_NUM_LOCALHOSTLIST:GetValue()))
         ct:key_write(config.project.key.NETWORK_MEMP_NUM_PPPOE_INTERFACES, tostring(ui.SpinCtrl_adv_MEMP_NUM_PPPOE_INTERFACES:GetValue()))
         ct:key_write(config.project.key.NETWORK_PBUF_POOL_SIZE, tostring(ui.SpinCtrl_adv_PBUF_POOL_SIZE:GetValue()))
+
+        -- save adv ARP options
+        ct:key_write(config.project.key.NETWORK_LWIP_ARP, tostring(ui.Choice_adv_LWIP_ARP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_ARP_TABLE_SIZE, tostring(ui.SpinCtrl_adv_ARP_TABLE_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_ARP_QUEUEING, tostring(ui.Choice_adv_ARP_QUEUEING:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_ETHARP_TRUST_IP_MAC, tostring(ui.Choice_adv_ETHARP_TRUST_IP_MAC:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_ETHARP_SUPPORT_VLAN, tostring(ui.Choice_adv_ETHARP_SUPPORT_VLAN:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_ETH_PAD_SIZE, tostring(ui.SpinCtrl_adv_ETH_PAD_SIZE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_ETHARP_SUPPORT_STATIC_ENTRIES, tostring(ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:GetSelection()))
+
+        -- save adv IP options
+        ct:key_write(config.project.key.NETWORK_IP_FORWARD, tostring(ui.Choice_adv_IP_FORWARD:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_OPTIONS_ALLOWED, tostring(ui.Choice_adv_IP_OPTIONS_ALLOWED:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_REASSEMBLY, tostring(ui.Choice_adv_IP_REASSEMBLY:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_FRAG, tostring(ui.Choice_adv_IP_FRAG:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_REASS_MAXAGE, tostring(ui.SpinCtrl_adv_IP_REASS_MAXAGE:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IP_REASS_MAX_PBUFS, tostring(ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IP_DEFAULT_TTL, tostring(ui.SpinCtrl_adv_IP_DEFAULT_TTL:GetValue()))
+        ct:key_write(config.project.key.NETWORK_IP_SOF_BROADCAST, tostring(ui.Choice_adv_IP_SOF_BROADCAST:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_SOF_BROADCAST_RECV, tostring(ui.Choice_adv_IP_SOF_BROADCAST_RECV:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF, tostring(ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:GetSelection()))
+
+        -- save adv ICMP options
+        ct:key_write(config.project.key.NETWORK_LWIP_ICMP, tostring(ui.Choice_adv_LWIP_ICMP:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_ICMP_TTL, tostring(ui.SpinCtrl_adv_ICMP_TTL:GetValue()))
+        ct:key_write(config.project.key.NETWORK_LWIP_BROADCAST_PING, tostring(ui.Choice_adv_LWIP_BROADCAST_PING:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_MULTICAST_PING, tostring(ui.Choice_adv_LWIP_MULTICAST_PING:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -410,13 +464,81 @@ local function create_ARP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_ARP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_ARP = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_adv_ARP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_ARP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- XXX
---         ui.FlexGridSizer_adv_IMPS:AddStaticText("XXX")
---         ui.TextCtrl_adv_IMPS_XXX = wx.wxSpinCtrl(ui.Panel_adv_IMPS, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
---         ui.TextCtrl_adv_IMPS_XXX:SetToolTip("")
---         ui.TextCtrl_adv_IMPS_XXX:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_IMPS:Add(ui.TextCtrl_adv_IMPS_XXX, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_ARP
+        ui.FlexGridSizer_adv_ARP:AddStaticText("LWIP_ARP")
+        ui.Choice_adv_LWIP_ARP = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_ARP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_ARP:SetToolTip("LWIP_ARP==1: Enable ARP functionality.")
+        ui.Choice_adv_LWIP_ARP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_LWIP_ARP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ARP_TABLE_SIZE
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ARP_TABLE_SIZE")
+        ui.SpinCtrl_adv_ARP_TABLE_SIZE = wx.wxSpinCtrl(ui.Panel_adv_ARP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_ARP_TABLE_SIZE:SetToolTip("ARP_TABLE_SIZE: Number of active MAC-IP address pairs cached.")
+        ui.SpinCtrl_adv_ARP_TABLE_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.SpinCtrl_adv_ARP_TABLE_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ARP_QUEUEING
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ARP_QUEUEING")
+        ui.Choice_adv_ARP_QUEUEING = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_ARP_QUEUEING:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_ARP_QUEUEING:SetToolTip("ARP_QUEUEING==1: Multiple outgoing packets are queued during hardware address "..
+                                              "resolution. By default, only the most recent packet is queued per IP address. "..
+                                              "This is sufficient for most protocols and mainly reduces TCP connection "..
+                                              "startup time. Set this to 1 if you know your application sends more than one "..
+                                              "packet in a row to an IP address that is not in the ARP cache.")
+        ui.Choice_adv_ARP_QUEUEING:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ARP_QUEUEING, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ETHARP_TRUST_IP_MAC
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_TRUST_IP_MAC")
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC:SetToolTip("ETHARP_TRUST_IP_MAC==1: Incoming IP packets cause the ARP table to be "..
+                                                       "updated with the source MAC and IP addresses supplied in the packet. "..
+                                                       "You may want to disable this if you do not trust LAN peers to have the "..
+                                                       "correct addresses, or as a limited approach to attempt to handle "..
+                                                       "spoofing. If disabled, lwIP will need to make a new ARP request if "..
+                                                       "the peer is not already in the ARP table, adding a little latency. "..
+                                                       "The peer *is* in the ARP table if it requested our address before. "..
+                                                       "Also notice that this slows down input processing of every IP packet!")
+        ui.Choice_adv_ETHARP_TRUST_IP_MAC:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_TRUST_IP_MAC, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ETHARP_SUPPORT_VLAN
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_SUPPORT_VLAN")
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN:SetToolTip("ETHARP_SUPPORT_VLAN==1: support receiving ethernet packets with VLAN header. "..
+                                                     "Additionally, you can define ETHARP_VLAN_CHECK to an u16_t VLAN ID to check. "..
+                                                     "If ETHARP_VLAN_CHECK is defined, only VLAN-traffic for this VLAN is accepted. "..
+                                                     "If ETHARP_VLAN_CHECK is not defined, all traffic is accepted. "..
+                                                     "Alternatively, define a function/define ETHARP_VLAN_CHECK_FN(eth_hdr, vlan) "..
+                                                     "that returns 1 to accept a packet or 0 to drop a packet.")
+        ui.Choice_adv_ETHARP_SUPPORT_VLAN:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_SUPPORT_VLAN, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ETH_PAD_SIZE
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ETH_PAD_SIZE")
+        ui.SpinCtrl_adv_ETH_PAD_SIZE = wx.wxSpinCtrl(ui.Panel_adv_ARP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+        ui.SpinCtrl_adv_ETH_PAD_SIZE:SetToolTip("ETH_PAD_SIZE: number of bytes added before the ethernet header to ensure "..
+                                                "alignment of payload after that header. Since the header is 14 bytes long, "..
+                                                "without this padding e.g. addresses in the IP header will not be aligned "..
+                                                "on a 32-bit boundary, so setting this to 2 can speed up 32-bit-platforms.")
+        ui.SpinCtrl_adv_ETH_PAD_SIZE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.SpinCtrl_adv_ETH_PAD_SIZE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ETHARP_SUPPORT_STATIC_ENTRIES
+        ui.FlexGridSizer_adv_ARP:AddStaticText("ETHARP_SUPPORT_STATIC_ENTRIES")
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES = wx.wxChoice(ui.Panel_adv_ARP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:SetToolTip("ETHARP_SUPPORT_STATIC_ENTRIES==1: enable code to support static ARP table "..
+                                                               "entries (using etharp_add_static_entry/etharp_remove_static_entry).")
+        ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ARP:Add(ui.Choice_adv_ETHARP_SUPPORT_STATIC_ENTRIES, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_ARP:SetSizer(ui.FlexGridSizer_adv_ARP)
@@ -434,9 +556,99 @@ local function create_IP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_IP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_IP = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_adv_IP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_IP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_IP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_IP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+        -- IP_FORWARD
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_FORWARD")
+        ui.Choice_adv_IP_FORWARD = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_FORWARD:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_FORWARD:SetToolTip("IP_FORWARD==1: Enables the ability to forward IP packets across network "..
+                                            "interfaces. If you are going to run lwIP on a device with only one network nterface, define this to 0.")
+        ui.Choice_adv_IP_FORWARD:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FORWARD, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_OPTIONS_ALLOWED
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_OPTIONS_ALLOWED")
+        ui.Choice_adv_IP_OPTIONS_ALLOWED = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_OPTIONS_ALLOWED:Append({"No (0)", "Yes (1)"})
+        ui.Choice_adv_IP_OPTIONS_ALLOWED:SetToolTip("IP_OPTIONS_ALLOWED: Defines the behavior for IP options.\n"..
+                                                    "IP_OPTIONS_ALLOWED==0: All packets with IP options are dropped.\n"..
+                                                    "IP_OPTIONS_ALLOWED==1: IP options are allowed (but not parsed).")
+        ui.Choice_adv_IP_OPTIONS_ALLOWED:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_OPTIONS_ALLOWED, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_REASSEMBLY
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASSEMBLY")
+        ui.Choice_adv_IP_REASSEMBLY = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_REASSEMBLY:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_REASSEMBLY:SetToolTip("IP_REASSEMBLY==1: Reassemble incoming fragmented IP packets. Note that "..
+                                               "this option does not affect outgoing packet sizes, which can be controlled via IP_FRAG.")
+        ui.Choice_adv_IP_REASSEMBLY:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_REASSEMBLY, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_FRAG
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_FRAG")
+        ui.Choice_adv_IP_FRAG = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_FRAG:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_FRAG:SetToolTip("IP_FRAG==1: Fragment outgoing IP packets if their size exceeds MTU. Note "..
+                                         "that this option does not affect incoming packet sizes, which can be controlled via IP_REASSEMBLY.")
+        ui.Choice_adv_IP_FRAG:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FRAG, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_REASS_MAXAGE
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASS_MAXAGE")
+        ui.SpinCtrl_adv_IP_REASS_MAXAGE = wx.wxSpinCtrl(ui.Panel_adv_IP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 60)
+        ui.SpinCtrl_adv_IP_REASS_MAXAGE:SetToolTip("IP_REASS_MAXAGE: Maximum time (in multiples of IP_TMR_INTERVAL - so seconds, normally) "..
+                                                   "a fragmented IP packet waits for all fragments to arrive. If not all fragments arrived "..
+                                                   "in this time, the whole packet is discarded.")
+        ui.SpinCtrl_adv_IP_REASS_MAXAGE:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.SpinCtrl_adv_IP_REASS_MAXAGE, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_REASS_MAX_PBUFS
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_REASS_MAX_PBUFS")
+        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_IP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 100)
+        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:SetToolTip("IP_REASS_MAX_PBUFS: Total maximum amount of pbufs waiting to be reassembled. "..
+                                                      "Since the received pbufs are enqueued, be sure to configure "..
+                                                      "PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS so that the stack is still able to receive "..
+                                                      "packets even if the maximum amount of fragments is enqueued for reassembly!")
+        ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.SpinCtrl_adv_IP_REASS_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_DEFAULT_TTL
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_DEFAULT_TTL")
+        ui.SpinCtrl_adv_IP_DEFAULT_TTL = wx.wxSpinCtrl(ui.Panel_adv_IP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
+        ui.SpinCtrl_adv_IP_DEFAULT_TTL:SetToolTip("IP_DEFAULT_TTL: Default value for Time-To-Live used by transport layers.")
+        ui.SpinCtrl_adv_IP_DEFAULT_TTL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.SpinCtrl_adv_IP_DEFAULT_TTL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_SOF_BROADCAST
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_SOF_BROADCAST")
+        ui.Choice_adv_IP_SOF_BROADCAST = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_SOF_BROADCAST:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_SOF_BROADCAST:SetToolTip("IP_SOF_BROADCAST=1: Use the SOF_BROADCAST field to enable broadcast "..
+                                                  "filter per pcb on udp and raw send operations. To enable broadcast filter "..
+                                                  "on recv operations, you also have to set IP_SOF_BROADCAST_RECV=1.")
+        ui.Choice_adv_IP_SOF_BROADCAST:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_SOF_BROADCAST, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_SOF_BROADCAST_RECV
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_SOF_BROADCAST_RECV")
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV:SetToolTip("IP_SOF_BROADCAST_RECV (requires IP_SOF_BROADCAST=1) enable the broadcast filter on recv operations.")
+        ui.Choice_adv_IP_SOF_BROADCAST_RECV:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_SOF_BROADCAST_RECV, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- IP_FORWARD_ALLOW_TX_ON_RX_NETIF
+        ui.FlexGridSizer_adv_IP:AddStaticText("IP_FORWARD_ALLOW_TX_ON_RX_NETIF")
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF = wx.wxChoice(ui.Panel_adv_IP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:SetToolTip("IP_FORWARD_ALLOW_TX_ON_RX_NETIF==1: allow ip_forward() to send packets back "..
+                                                                 "out on the netif where it was received. This should only be used for wireless networks.\n"..
+                                                                 "ATTENTION: When this is 1, make sure your netif driver correctly marks incoming "..
+                                                                 "link-layer-broadcast/multicast packets as such using the corresponding pbuf flags!")
+        ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_IP:Add(ui.Choice_adv_IP_FORWARD_ALLOW_TX_ON_RX_NETIF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_IP:SetSizer(ui.FlexGridSizer_adv_IP)
@@ -454,9 +666,38 @@ local function create_ICMP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_ICMP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_ICMP = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_adv_ICMP.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_ICMP, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_ICMP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_ICMP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+        -- LWIP_ICMP
+        ui.FlexGridSizer_adv_ICMP:AddStaticText("LWIP_ICMP")
+        ui.Choice_adv_LWIP_ICMP = wx.wxChoice(ui.Panel_adv_ICMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_ICMP:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_ICMP:SetToolTip("LWIP_ICMP==1: Enable ICMP module inside the IP stack. Be careful, disable that make your product non-compliant to RFC1122.")
+        ui.Choice_adv_LWIP_ICMP:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ICMP:Add(ui.Choice_adv_LWIP_ICMP, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- ICMP_TTL
+        ui.FlexGridSizer_adv_ICMP:AddStaticText("ICMP_TTL")
+        ui.SpinCtrl_adv_ICMP_TTL = wx.wxSpinCtrl(ui.Panel_adv_ICMP, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 1, 255)
+        ui.SpinCtrl_adv_ICMP_TTL:SetToolTip("ICMP_TTL: Default value for Time-To-Live used by ICMP packets.")
+        ui.SpinCtrl_adv_ICMP_TTL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ICMP:Add(ui.SpinCtrl_adv_ICMP_TTL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_BROADCAST_PING
+        ui.FlexGridSizer_adv_ICMP:AddStaticText("LWIP_BROADCAST_PING")
+        ui.Choice_adv_LWIP_BROADCAST_PING = wx.wxChoice(ui.Panel_adv_ICMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_BROADCAST_PING:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_BROADCAST_PING:SetToolTip("LWIP_BROADCAST_PING==1: respond to broadcast pings (default is unicast only).")
+        ui.Choice_adv_LWIP_BROADCAST_PING:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ICMP:Add(ui.Choice_adv_LWIP_BROADCAST_PING, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_MULTICAST_PING
+        ui.FlexGridSizer_adv_ICMP:AddStaticText("LWIP_MULTICAST_PING")
+        ui.Choice_adv_LWIP_MULTICAST_PING = wx.wxChoice(ui.Panel_adv_ICMP, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_MULTICAST_PING:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_MULTICAST_PING:SetToolTip("LWIP_MULTICAST_PING==1: respond to multicast pings (default is unicast only)")
+        ui.Choice_adv_LWIP_MULTICAST_PING:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_ICMP:Add(ui.Choice_adv_LWIP_MULTICAST_PING, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_ICMP:SetSizer(ui.FlexGridSizer_adv_ICMP)
@@ -474,9 +715,23 @@ local function create_DHCP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DHCP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DHCP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_DHCP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_DHCP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
 
         -- set panel's sizer
         ui.Panel_adv_DHCP:SetSizer(ui.FlexGridSizer_adv_DHCP)
@@ -494,9 +749,22 @@ local function create_AUTOIP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_AUTOIP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_AUTOIP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_AUTOIP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_AUTOIP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_AUTOIP:SetSizer(ui.FlexGridSizer_adv_AUTOIP)
@@ -514,9 +782,22 @@ local function create_SNMP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SNMP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SNMP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_SNMP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_SNMP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SNMP:SetSizer(ui.FlexGridSizer_adv_SNMP)
@@ -534,9 +815,22 @@ local function create_IGMP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_IGMP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_IGMP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_IGMP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_IGMP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_IGMP:SetSizer(ui.FlexGridSizer_adv_IGMP)
@@ -554,9 +848,22 @@ local function create_DNS_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DNS = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DNS = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_DNS, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_DNS:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_DNS:SetSizer(ui.FlexGridSizer_adv_DNS)
@@ -574,9 +881,22 @@ local function create_UDP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_UDP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_UDP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_UDP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_UDP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_UDP:SetSizer(ui.FlexGridSizer_adv_UDP)
@@ -594,9 +914,22 @@ local function create_TCP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_TCP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_TCP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_TCP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_TCP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_TCP:SetSizer(ui.FlexGridSizer_adv_TCP)
@@ -614,9 +947,22 @@ local function create_NETIF_options_widgets(parent)
         -- create panel
         ui.Panel_adv_NETIF = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_NETIF = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_NETIF, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_NETIF:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_NETIF:SetSizer(ui.FlexGridSizer_adv_NETIF)
@@ -634,9 +980,22 @@ local function create_LOOPIF_options_widgets(parent)
         -- create panel
         ui.Panel_adv_LOOPIF = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_LOOPIF = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_LOOPIF, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_LOOPIF:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_LOOPIF:SetSizer(ui.FlexGridSizer_adv_LOOPIF)
@@ -654,9 +1013,22 @@ local function create_SLIPIF_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SLIPIF = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SLIPIF = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_SLIPIF, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_SLIPIF:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SLIPIF:SetSizer(ui.FlexGridSizer_adv_SLIPIF)
@@ -674,9 +1046,22 @@ local function create_THREAD_options_widgets(parent)
         -- create panel
         ui.Panel_adv_THREAD = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_THREAD = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_THREAD, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_THREAD:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_THREAD:SetSizer(ui.FlexGridSizer_adv_THREAD)
@@ -694,9 +1079,22 @@ local function create_SEQL_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SEQL = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SEQL = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_SEQL, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_SEQL:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SEQL:SetSizer(ui.FlexGridSizer_adv_SEQL)
@@ -714,9 +1112,22 @@ local function create_PPP_options_widgets(parent)
         -- create panel
         ui.Panel_adv_PPP = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_PPP = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_PPP, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_PPP:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_PPP:SetSizer(ui.FlexGridSizer_adv_PPP)
@@ -734,9 +1145,22 @@ local function create_CHSUM_options_widgets(parent)
         -- create panel
         ui.Panel_adv_CHSUM = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_CHSUM = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_CHSUM, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_CHSUM:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_CHSUM:SetSizer(ui.FlexGridSizer_adv_CHSUM)
@@ -754,9 +1178,22 @@ local function create_DEBUG_options_widgets(parent)
         -- create panel
         ui.Panel_adv_DEBUG = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_DEBUG = wx.wxFlexGridSizer(0, 2, 0, 0)
+--        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
-        ui.StaticText = wx.wxStaticText(ui.Panel_adv_DEBUG, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer_adv_DEBUG:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+--         -- !CH!
+--         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
+--         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+--         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
+--         ui.Choice_adv_!CH!:SetToolTip("")
+--         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+--
+--         -- SPINCTRL
+--         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
+--         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 4)
+--         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
+--         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+--         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_DEBUG:SetSizer(ui.FlexGridSizer_adv_DEBUG)
