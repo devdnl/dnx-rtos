@@ -177,6 +177,9 @@ local function load_controls()
         -- load adv LOOPIF options
         ui.Choice_adv_LWIP_HAVE_LOOPIF:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_HAVE_LOOPIF)))
 
+        -- load adv LOOPIF options
+        ui.Choice_adv_LWIP_HAVE_SLIPIF:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_HAVE_SLIPIF)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -302,6 +305,9 @@ local function save_configuration()
 
         -- load adv LOOPIF options
         ct:key_write(config.project.key.NETWORK_LWIP_HAVE_LOOPIF, tostring(ui.Choice_adv_LWIP_HAVE_LOOPIF:GetSelection()))
+
+        -- load adv SLIPIF options
+        ct:key_write(config.project.key.NETWORK_LWIP_HAVE_SLIPIF, tostring(ui.Choice_adv_LWIP_HAVE_SLIPIF:GetSelection()))
 
         -- set that nothing is modified
         modified:no()
@@ -1296,22 +1302,15 @@ local function create_SLIPIF_options_widgets(parent)
         -- create panel
         ui.Panel_adv_SLIPIF = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_SLIPIF = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_SLIPIF.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_SLIPIF, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_HAVE_SLIPIF
+        ui.FlexGridSizer_adv_SLIPIF:AddStaticText("LWIP_HAVE_SLIPIF")
+        ui.Choice_adv_LWIP_HAVE_SLIPIF = wx.wxChoice(ui.Panel_adv_SLIPIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_HAVE_SLIPIF:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_HAVE_SLIPIF:SetToolTip("LWIP_HAVE_SLIPIF==1: Support slip interface")
+        ui.Choice_adv_LWIP_HAVE_SLIPIF:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_SLIPIF:Add(ui.Choice_adv_LWIP_HAVE_SLIPIF, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_SLIPIF:SetSizer(ui.FlexGridSizer_adv_SLIPIF)
