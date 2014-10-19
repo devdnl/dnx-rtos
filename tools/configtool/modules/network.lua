@@ -168,6 +168,12 @@ local function load_controls()
         ui.Choice_adv_TCP_OVERSIZE:SetSelection(TCP_OVERSIZE[ct:key_read(config.project.key.NETWORK_TCP_OVERSIZE)])
         ui.Choice_adv_LWIP_TCP_TIMESTAMPS:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_TCP_TIMESTAMPS)))
 
+        -- load adv NETIF options
+        ui.Choice_adv_LWIP_NETIF_HOSTNAME:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_NETIF_HOSTNAME)))
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_NETIF_HWADDRHINT)))
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK:SetSelection(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_NETIF_LOOPBACK)))
+        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:SetValue(tonumber(ct:key_read(config.project.key.NETWORK_LWIP_LOOPBACK_MAX_PBUFS)))
+
         -- set notebook enable status
         ui.Notebook_options:Enable(module_enabled)
 end
@@ -284,6 +290,13 @@ local function save_configuration()
         ct:key_write(config.project.key.NETWORK_TCP_DEFAULT_LISTEN_BACKLOG, tostring(ui.SpinCtrl_adv_TCP_DEFAULT_LISTEN_BACKLOG:GetValue()))
         ct:key_write(config.project.key.NETWORK_TCP_OVERSIZE, TCP_OVERSIZE:get_value(ui.Choice_adv_TCP_OVERSIZE:GetSelection()))
         ct:key_write(config.project.key.NETWORK_LWIP_TCP_TIMESTAMPS, tostring(ui.Choice_adv_LWIP_TCP_TIMESTAMPS:GetSelection()))
+
+        -- save adv NETIF options
+        ct:key_write(config.project.key.NETWORK_LWIP_NETIF_HOSTNAME, tostring(ui.Choice_adv_LWIP_NETIF_HOSTNAME:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_NETIF_HWADDRHINT, tostring(ui.Choice_adv_LWIP_NETIF_HWADDRHINT:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_NETIF_LOOPBACK, tostring(ui.Choice_adv_LWIP_NETIF_LOOPBACK:GetSelection()))
+        ct:key_write(config.project.key.NETWORK_LWIP_LOOPBACK_MAX_PBUFS, tostring(ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:GetValue()))
+
 
         -- set that nothing is modified
         modified:no()
@@ -1198,22 +1211,43 @@ local function create_NETIF_options_widgets(parent)
         -- create panel
         ui.Panel_adv_NETIF = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_adv_NETIF = wx.wxFlexGridSizer(0, 2, 0, 0)
---        ui.FlexGridSizer_adv_.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
+        ui.FlexGridSizer_adv_NETIF.AddStaticText = function(self, s) self:Add(wx.wxStaticText(ui.Panel_adv_NETIF, wx.wxID_ANY, s), 1, wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5) end
 
---         -- !CH!
---         ui.FlexGridSizer_adv_:AddStaticText("!CH!")
---         ui.Choice_adv_!CH! = wx.wxChoice(ui.Panel_adv_, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
---         ui.Choice_adv_!CH!:Append({"Disable (0)", "Enable (1)"})
---         ui.Choice_adv_!CH!:SetToolTip("")
---         ui.Choice_adv_!CH!:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.Choice_adv_!CH!, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
---
---         -- SPINCTRL
---         ui.FlexGridSizer_adv_:AddStaticText("SPINCTRL")
---         ui.SpinCtrl_adv_SPINCTRL = wx.wxSpinCtrl(ui.Panel_adv_, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, -1, -1)
---         ui.SpinCtrl_adv_SPINCTRL:SetToolTip("")
---         ui.SpinCtrl_adv_SPINCTRL:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
---         ui.FlexGridSizer_adv_:Add(ui.SpinCtrl_adv_SPINCTRL, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+        -- LWIP_NETIF_HOSTNAME
+        ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_NETIF_HOSTNAME")
+        ui.Choice_adv_LWIP_NETIF_HOSTNAME = wx.wxChoice(ui.Panel_adv_NETIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_NETIF_HOSTNAME:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_NETIF_HOSTNAME:SetToolTip("LWIP_NETIF_HOSTNAME==1: use DHCP_OPTION_HOSTNAME with netif's hostname field.")
+        ui.Choice_adv_LWIP_NETIF_HOSTNAME:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_NETIF:Add(ui.Choice_adv_LWIP_NETIF_HOSTNAME, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_NETIF_HWADDRHINT
+        ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_NETIF_HWADDRHINT")
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT = wx.wxChoice(ui.Panel_adv_NETIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:SetToolTip("LWIP_NETIF_HWADDRHINT==1: Cache link-layer-address hints (e.g. table "..
+                                                       "indices) in struct netif. TCP and UDP can make use of this to prevent "..
+                                                       "scanning the ARP table for every sent packet. While this is faster for big "..
+                                                       "ARP tables or many concurrent connections, it might be counterproductive "..
+                                                       "if you have a tiny ARP table or if there never are concurrent connections.")
+        ui.Choice_adv_LWIP_NETIF_HWADDRHINT:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_NETIF:Add(ui.Choice_adv_LWIP_NETIF_HWADDRHINT, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_NETIF_LOOPBACK
+        ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_NETIF_LOOPBACK")
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK = wx.wxChoice(ui.Panel_adv_NETIF, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK:Append({"Disable (0)", "Enable (1)"})
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK:SetToolTip("LWIP_NETIF_LOOPBACK==1: Support sending packets with a destination IP "..
+                                                     "address equal to the netif IP address, looping them back up the stack.")
+        ui.Choice_adv_LWIP_NETIF_LOOPBACK:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_NETIF:Add(ui.Choice_adv_LWIP_NETIF_LOOPBACK, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
+
+        -- LWIP_LOOPBACK_MAX_PBUFS
+        ui.FlexGridSizer_adv_NETIF:AddStaticText("LWIP_LOOPBACK_MAX_PBUFS")
+        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS = wx.wxSpinCtrl(ui.Panel_adv_NETIF, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 0, 100)
+        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:SetToolTip("LWIP_LOOPBACK_MAX_PBUFS: Maximum number of pbufs on queue for loopback sending for each netif (0 = disabled).")
+        ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+        ui.FlexGridSizer_adv_NETIF:Add(ui.SpinCtrl_adv_LWIP_LOOPBACK_MAX_PBUFS, 1, wx.wxALL+wx.wxEXPAND+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL, 5)
 
         -- set panel's sizer
         ui.Panel_adv_NETIF:SetSizer(ui.FlexGridSizer_adv_NETIF)
