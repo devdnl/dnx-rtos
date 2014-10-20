@@ -2774,6 +2774,88 @@ static inline u16_t net_get_buf_port(net_buf_t *buf)
 #endif
 }
 
+//==============================================================================
+// REMOVE lwIP's macros and functions to be impossible to use it directly
+//==============================================================================
+/* remove all macros from lwIP used by net.h library */
+#undef ip_addr_t
+#undef ERR_OK
+#undef ERR_MEM
+#undef ERR_BUF
+#undef ERR_TIMEOUT
+#undef ERR_RTE
+#undef ERR_INPROGRESS
+#undef ERR_VAL
+#undef ERR_WOULDBLOCK
+#undef ERR_USE
+#undef ERR_ISCONN
+#undef ERR_ABRT
+#undef ERR_RST
+#undef ERR_CLSD
+#undef ERR_CONN
+#undef ERR_ARG
+#undef ERR_IF
+#undef NETCONN_NOCOPY
+#undef NETCONN_COPY
+#undef NETCONN_MORE
+#undef NETCONN_DONTBLOCK
+#undef IP4_ADDR
+#undef ip4_addr1
+#undef ip4_addr2
+#undef ip4_addr3
+#undef ip4_addr4
+#undef ip_addr_set_loopback
+#undef netconn_new
+#undef netconn_type
+#undef netconn_type
+#undef ERR_IS_FATAL
+#undef netconn_listen
+#undef netconn_write
+#undef netconn_err
+#undef netbuf_copy_partial
+#undef netbuf_copy
+#undef netbuf_take
+#undef netbuf_len
+#undef netbuf_fromaddr
+#undef netbuf_fromport
+
+/* define macros to alias functions that cannot by used directly from lwIP */
+#define netconn_delete _netconn_delete
+#define netconn_getaddr() _netconn_getaddr
+#define netconn_bind() _netconn_bind
+#define netconn_connect() _netconn_connect
+#define netconn_disconnect() _netconn_disconnect
+#define netconn_accept() _netconn_accept
+#define netconn_recv() _netconn_recv
+#define netconn_sendto() _netconn_sendto
+#define netconn_send() _netconn_send
+#define netconn_write_partly() _netconn_write_partly
+#define netconn_close() _netconn_close
+#define netconn_shutdown() _netconn_shutdown
+#define netconn_gethostbyname() _netconn_gethostbyname
+#define netbuf_new() _netbuf_new
+#define netbuf_delete() _netbuf_delete
+#define netbuf_alloc() _netbuf_alloc
+#define netbuf_free() _netbuf_free
+#define netbuf_ref() _netbuf_ref
+#define netbuf_chain() _netbuf_chain
+#define netbuf_data() _netbuf_data
+#define netbuf_next() _netbuf_next
+#define netbuf_first() _netbuf_first
+
+/* define macros to alias enumerators */
+#define NETCONN_INVALID
+#define NETCONN_TCP
+#define NETCONN_UDP
+#define NETCONN_UDPLITE
+#define NETCONN_UDPNOCHKSUM
+#define NETCONN_RAW
+#define NETCONN_NONE
+#define NETCONN_WRITE
+#define NETCONN_LISTEN
+#define NETCONN_CONNECT
+#define NETCONN_CLOSE
+
 #ifdef __cplusplus
 }
 #endif
