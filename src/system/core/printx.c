@@ -51,7 +51,6 @@
 ==============================================================================*/
 #if (CONFIG_PRINTF_ENABLE > 0)
 static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req);
-static int   calc_format_size(const char *format, va_list arg);
 #endif
 
 /*==============================================================================
@@ -301,62 +300,6 @@ static int dtoa(double value, char* str, int prec, int n)
 
 //==============================================================================
 /**
- * @brief Function convert arguments to stream
- *
- * @param[in] *format        message format
- * @param[in]  arg           argument list
- *
- * @return size of snprintf result
- */
-//==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
-static int calc_format_size(const char *format, va_list arg)
-{
-        char chr;
-        int size = 1;
-
-        while ((chr = *format++) != '\0') {
-                if (chr != '%') {
-                        if (chr == '\n') {
-                                size += 2;
-                        } else {
-                                size++;
-                        }
-                } else {
-                        chr = *format++;
-
-                        while (chr >= '0' && chr <= '9') {
-                                chr = *format++;
-                        }
-
-                        if (chr == '%' || chr == 'c') {
-                                if (chr == 'c') {
-                                        chr = va_arg(arg, i32_t);
-                                }
-
-                                size++;
-                                continue;
-                        }
-
-                        if (chr == 's') {
-                                size += strlen(va_arg(arg, char*));
-                                continue;
-                        }
-
-                        if (chr == 'd' || chr == 'x' || chr == 'u' || chr == 'i' || chr == 'X') {
-                                chr = va_arg(arg, i32_t);
-                                size += 11;
-                                continue;
-                        }
-                }
-        }
-
-        return size;
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Enable printk functionality
  *
  * @param filename      path to file used to write kernel log
@@ -410,11 +353,10 @@ void printk(const char *format, ...)
 
         if (sys_printk_file) {
                 va_start(args, format);
-                int size = calc_format_size(format, args);
+                int size = sys_vsnprintf(NULL, 0, format, args) + 1;
                 va_end(args);
 
                 char *buffer = sysm_syscalloc(size, sizeof(char));
-
                 if (buffer) {
                         va_start(args, format);
                         int n = sys_vsnprintf(buffer, size, format, args);
@@ -687,7 +629,9 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
         int n = 0;
 
         if (file && format) {
-                u32_t size = calc_format_size(format, arg);
+                va_list carg;
+                va_copy(carg, arg);
+                u32_t size = sys_vsnprintf(NULL, 0, format, carg) + 1;
 
                 char *str = sysm_syscalloc(1, size);
                 if (str) {
@@ -885,22 +829,31 @@ void sys_perror(const char *str)
 int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        #define put_character(character) {      \
-                if ((size_t)slen < size)  {     \
-                        *buf++ = character;     \
-                        slen++;                 \
-                }  else {                       \
-                        goto vsnprint_end;      \
-                }                               \
-        }
-
         char chr;
         int  slen = 1;
         int  arg_size;
 
+        bool put_chr(const char c)
+        {
+                if (buf == NULL) {
+                        slen++;
+                        return true;
+                } else {
+                        if ((size_t)slen < size) {
+                                *buf++ = c;
+                                slen++;
+                                return true;
+                        } else {
+                                return false;
+                        }
+                }
+        }
+
         while ((chr = *format++) != '\0') {
                 if (chr != '%') {
-                        put_character(chr);
+                        if (!put_chr(chr))
+                                goto vsnprint_end;
+
                         continue;
                 }
 
@@ -922,7 +875,9 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
                         }
 
-                        put_character(chr);
+                        if (!put_chr(chr))
+                                goto vsnprint_end;
+
                         continue;
                 }
 
@@ -944,28 +899,38 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
                                 bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
 
-                                resultPtr = itoa(va_arg(arg, i32_t), result,
+                                resultPtr = itoa(va_arg(arg, int), result,
                                                  base, uint_en, arg_size);
                         }
 
                         while ((chr = *resultPtr++)) {
-                                put_character(chr);
+                                if (!put_chr(chr))
+                                        goto vsnprint_end;
                         }
 
                         continue;
                 }
 
                 if (chr == 'f') {
-                        slen += dtoa(va_arg(arg, double), buf, 6, size - slen);
-                        buf  += slen;
+                        char result[12];
+                        memset(result, 0, sizeof(result));
+                        int len = dtoa(va_arg(arg, double), result, 6, 12);
+
+                        for (int i = 0; i < len; i++) {
+                                if (!put_chr(result[i]))
+                                        goto vsnprint_end;
+                        }
+
                         continue;
                 }
         }
 
-vsnprint_end:
-        *buf = 0;
+        vsnprint_end:
+        if (buf) {
+                *buf = 0;
+        }
+
         return (slen - 1);
-        #undef put_character
 #else
         UNUSED_ARG(buf);
         UNUSED_ARG(size);
