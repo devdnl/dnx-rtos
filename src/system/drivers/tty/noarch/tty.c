@@ -316,7 +316,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, fpos_t *f
         ssize_t n = -1;
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                ttybfr_add_line(tty->screen, (const char *)src, count);
+                ttybfr_put(tty->screen, (const char *)src, count);
                 mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
 
@@ -482,7 +482,9 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(TTY, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        tty_t *tty = device_handle;
+
+        ttybfr_flush(tty->screen);
 
         return STD_RET_OK;
 }
@@ -692,8 +694,8 @@ static void vt100_analyze(const char c)
                         const char *str  = ttyedit_get(tty->editline);
                         const char *lf   = "\n";
 
-                        ttybfr_add_line(tty->screen, str, strlen(str));
-                        ttybfr_add_line(tty->screen, lf, strlen(lf));
+                        ttybfr_put(tty->screen, str, strlen(str));
+                        ttybfr_put(tty->screen, lf, strlen(lf));
                         ttybfr_clear_fresh_line_counter(tty->screen);
 
                         if (ttyedit_is_echo_enabled(tty->editline)) {
