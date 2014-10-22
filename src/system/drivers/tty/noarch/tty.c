@@ -484,7 +484,11 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         tty_t *tty = device_handle;
 
-        ttybfr_flush(tty->screen);
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                ttybfr_flush(tty->screen);
+                send_cmd(CMD_REFRESH_LAST_LINE, tty_module->current_tty);
+                mutex_unlock(tty->secure_mtx);
+        }
 
         return STD_RET_OK;
 }
@@ -584,13 +588,10 @@ static void service_out(void *arg)
 
                                         if (mutex_lock(tty->secure_mtx, 100)) {
                                                 const char *str;
-                                                do {
-                                                        str = ttybfr_get_fresh_line(tty->screen);
-                                                        if (str) {
-                                                                vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
-                                                                vfs_fwrite(str, 1, strlen(str), tty_module->outfile);
-                                                        }
-                                                } while (str);
+                                                while ((str = ttybfr_get_fresh_line(tty->screen))) {
+                                                        vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
+                                                        vfs_fwrite(str, 1, strlen(str), tty_module->outfile);
+                                                }
 
                                                 mutex_unlock(tty->secure_mtx);
                                         }
@@ -602,10 +603,10 @@ static void service_out(void *arg)
                                 tty_t *tty = tty_module->tty[rq.arg];
 
                                 if (rq.arg == tty_module->current_tty && mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                                        const char *cmd = ERASE_LINE VT100_SHIFT_CURSOR_LEFT(999);
+                                        const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) ERASE_LINE;
                                         vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
 
-                                        const char *last_line = ttybfr_get_line(tty->screen, 1);
+                                        const char *last_line = ttybfr_get_line(tty->screen, 0);
                                         vfs_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
 
                                         const char *editline = ttyedit_get(tty->editline);
@@ -810,11 +811,11 @@ static void switch_terminal(int term_no)
                                 if (tty_module->vt100_row < _TTY_DEFAULT_TERMINAL_ROWS) {
                                         rows = tty_module->vt100_row;
                                 } else {
-                                        rows = _TTY_DEFAULT_TERMINAL_ROWS;
+                                        rows = _TTY_DEFAULT_TERMINAL_ROWS - 1;
                                 }
 
                                 const char *str;
-                                for (int i = rows; i > 0; i--) {
+                                for (int i = rows; i >= 0; i--) {
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {

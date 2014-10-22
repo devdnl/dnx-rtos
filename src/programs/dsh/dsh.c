@@ -113,6 +113,7 @@ static void print_prompt(void)
         if (global->prompt_enable && global->input == stdin) {
                 printf(FONT_COLOR_GREEN"%s@%s:%s"RESET_ATTRIBUTES"\n", get_user_name(), get_host_name(), global->cwd);
                 printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
+                fflush(stdout);
         }
 }
 
