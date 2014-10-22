@@ -62,7 +62,7 @@ local function show_credits_dialog(parent)
         ID.BUTTON_CLOSE = wx.wxNewId()
 
         -- create license dialog
-        ui.window = wx.wxDialog(parent, wx.wxID_ANY, "License", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.window = wx.wxDialog(parent, wx.wxID_ANY, "Credits", wx.wxDefaultPosition, wx.wxDefaultSize)
         ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         -- create notebook to pages
