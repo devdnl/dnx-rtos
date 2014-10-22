@@ -28,7 +28,7 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/misc.h>
+#include "dnx/misc.h"
 #include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
@@ -46,6 +46,7 @@ struct ttybfr {
         void  *self;
         char  *line[_TTY_DEFAULT_TERMINAL_ROWS];
         char   new_line_bfr[_TTY_DEFAULT_TERMINAL_COLUMNS + CR_LF_NUL_LEN];
+        size_t new_line_bfr_idx;
         int    carriage;
         u16_t  write_index;
         bool   fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
@@ -151,6 +152,19 @@ static void replace_last_line(ttybfr_t *this, char *line)
 
 //==============================================================================
 /**
+ * @brief  Clear the new line buffer
+ * @param  this         buffer object
+ * @return None
+ */
+//==============================================================================
+static void clear_new_line_buffer(ttybfr_t *this)
+{
+        memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
+        this->new_line_bfr_idx = 0;
+}
+
+//==============================================================================
+/**
  * @brief  Put the new line buffer to the main buffer
  * @param  this         buffer object
  * @return None
@@ -174,55 +188,27 @@ static void put_new_line_buffer(ttybfr_t *this)
         }
 
         /* add line to the buffer */
-        size_t bfr_size = strlen(this->new_line_bfr);
-        char *last_line = this->line[get_line_index(this, 0)];
+        size_t new_line_len = strlen(this->new_line_bfr);
+        char *last_line     = this->line[get_line_index(this, 0)];
         if (last_line) {
                 if (LAST_CHARACTER(last_line) == '\n') {
-                        link_new_line(this->new_line_bfr, bfr_size);
+                        link_new_line(this->new_line_bfr, new_line_len);
                 } else {
-                        size_t last_line_size = strlen(last_line);
-                        size_t total_size     = last_line_size + bfr_size;
-                        char   offset         = 0;
-
-                        if (total_size >= _TTY_DEFAULT_TERMINAL_COLUMNS) {
-                                char *line = malloc(_TTY_DEFAULT_TERMINAL_COLUMNS + CR_LF_LEN);
-                                if (line) {
-                                        strcpy(line, last_line);
-                                        total_size -= _TTY_DEFAULT_TERMINAL_COLUMNS;
-
-                                        size_t len = _TTY_DEFAULT_TERMINAL_COLUMNS - last_line_size;
-                                        if (len) {
-                                                strncat(line, this->new_line_bfr, len);
-                                        }
-
-                                        strcat(line, CR_LF);
-                                        replace_last_line(this, line);
-
-                                        offset = bfr_size - total_size;
-                                }
-                        }
-
-                        if (total_size > 0) {
-                                link_new_line(this->new_line_bfr + offset, total_size + CR_LF_LEN);
+                        size_t last_line_len = strlen(last_line);
+                        char *line = malloc(last_line_len + new_line_len + 1);
+                        if (line) {
+                                strcpy(line, last_line);
+                                strcat(line, this->new_line_bfr);
+                                replace_last_line(this, line);
                         }
                 }
         } else {
-                link_new_line(this->new_line_bfr, bfr_size);
+                link_new_line(this->new_line_bfr, new_line_len);
         }
+
+        clear_new_line_buffer(this);
 }
 
-//==============================================================================
-/**
- * @brief  Clear the new line buffer
- * @param  this         buffer object
- * @return None
- */
-//==============================================================================
-static void clear_new_line_buffer(ttybfr_t *this)
-{
-        memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
-        this->carriage = 0;
-}
 
 /*------------------------------------------------------------------------------
  * INTERFACES
@@ -271,31 +257,53 @@ void ttybfr_delete(ttybfr_t *this)
 //==============================================================================
 void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
 {
+        void put_char(const char chr)
+        {
+                this->new_line_bfr[this->new_line_bfr_idx++] = chr;
+
+                if (this->new_line_bfr_idx > _TTY_DEFAULT_TERMINAL_COLUMNS) {
+                        put_new_line_buffer(this);
+                }
+        }
+
         if (is_valid(this)) {
-                for (size_t i = 0; i < len; i++) {
-                        char chr = src[i];
+                bool VT100_cmd = false;
+
+                while (len--) {
+                        char chr = *src++;
 
                         if (chr == '\r') {
                                 this->carriage = 0;
+                                this->new_line_bfr_idx = 0;
 
                         } else if (chr == '\n') {
                                 strcat(this->new_line_bfr, CR_LF);
                                 put_new_line_buffer(this);
-                                clear_new_line_buffer(this);
+                                this->carriage = 0;
+
+                        } else if (chr == '\e') {
+                                VT100_cmd = true;
+                                put_char(chr);
+
+                        } else if (VT100_cmd) {
+                                put_char(chr);
+
+                                if (strchr("hlHKCDm", chr)) {
+                                        VT100_cmd = false;
+                                }
+
+                        } else if (this->carriage >= _TTY_DEFAULT_TERMINAL_COLUMNS) {
+                                strcat(this->new_line_bfr, "\r\n");
+                                put_new_line_buffer(this);
+                                this->carriage = 0;
 
                         } else {
-                                if (!(chr == '\t' || chr == '\e' || chr >= ' ')) {
+                                if (!(chr == '\t' || chr >= ' ')) {
                                         chr = 0xFF;
                                 }
 
-                                if (this->carriage < _TTY_DEFAULT_TERMINAL_COLUMNS) {
-                                        this->new_line_bfr[this->carriage++] = chr;
-                                } else {
-                                        strcat(this->new_line_bfr, "\r\n");
-                                        put_new_line_buffer(this);
-                                        clear_new_line_buffer(this);
-                                        i--;
-                                }
+                                put_char(chr);
+                                this->carriage++;
                         }
                 }
         }
@@ -351,7 +359,7 @@ const char *ttybfr_get_line(ttybfr_t *this, int n)
 const char *ttybfr_get_fresh_line(ttybfr_t *this)
 {
         if (is_valid(this)) {
-                for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
+                for (int i = _TTY_DEFAULT_TERMINAL_ROWS - 1; i >= 0; i--) {
                         uint idx = get_line_index(this, i);
                         if (this->fresh_line[idx]) {
                                 this->fresh_line[idx] = false;
