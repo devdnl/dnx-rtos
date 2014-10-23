@@ -136,13 +136,14 @@ static void link_line(ttybfr_t *this, char *line)
 //==============================================================================
 static void replace_last_line(ttybfr_t *this, char *line)
 {
+    // TODO probably link_line can be used
         uint last_line_idx = get_line_index(this, 0);
 
         if (this->line[last_line_idx]) {
                 free(this->line[last_line_idx]);
         }
 
-        this->line[last_line_idx] = line;
+        this->line[last_line_idx]           = line;
         this->fresh_line[this->write_index] = true;
 
         if (LAST_CHARACTER(line) == '\n') {
@@ -342,7 +343,7 @@ void ttybfr_clear(ttybfr_t *this)
 //==============================================================================
 const char *ttybfr_get_line(ttybfr_t *this, int n)
 {
-        if (is_valid(this) && n >= 0 && n <= _TTY_DEFAULT_TERMINAL_ROWS) {
+        if (is_valid(this) && n >= 0 && n < _TTY_DEFAULT_TERMINAL_ROWS) {
                 return this->line[get_line_index(this, n)];
         }
 
@@ -397,8 +398,10 @@ void ttybfr_clear_fresh_line_counter(ttybfr_t *this)
 void ttybfr_flush(ttybfr_t *this)
 {
         if (is_valid(this)) {
-                put_new_line_buffer(this);
-                clear_new_line_buffer(this);
+                if (strlen(this->new_line_bfr)) {
+                        put_new_line_buffer(this);
+                        clear_new_line_buffer(this);
+                }
         }
 }
 

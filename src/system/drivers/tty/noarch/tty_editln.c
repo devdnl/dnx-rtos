@@ -35,14 +35,14 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define EDITLINE_LEN                            _TTY_DEFAULT_TERMINAL_COLUMNS
+#define EDITLINE_LEN _TTY_DEFAULT_TERMINAL_COLUMNS
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttyedit {
         FILE           *out_file;
-        u32_t           valid;
+        void           *self;
         char            buffer[EDITLINE_LEN + 1];
         u16_t           length;
         u16_t           cursor_position;
@@ -58,8 +58,6 @@ struct ttyedit {
 ==============================================================================*/
 MODULE_NAME(TTY);
 
-static const u32_t validation_token = 0x6921363E;
-
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -71,6 +69,17 @@ static const u32_t validation_token = 0x6921363E;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Check if object is valid
+ * @param  this         edit line object
+ * @return If valid then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool is_valid(ttyedit_t *this)
+{
+    return this && this->self == this;
+}
 
 //==============================================================================
 /**
@@ -85,7 +94,7 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 {
         ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
         if (edit) {
-                edit->valid        = validation_token;
+                edit->self         = edit;
                 edit->out_file     = out_file;
                 edit->echo_enabled = true;
         }
@@ -102,11 +111,9 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 //==============================================================================
 void ttyedit_delete(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        this->valid = 0;
-                        free(this);
-                }
+        if (is_valid(this)) {
+                this->self = NULL;
+                free(this);
         }
 }
 
@@ -119,10 +126,8 @@ void ttyedit_delete(ttyedit_t *this)
 //==============================================================================
 void ttyedit_echo_enable(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        this->echo_enabled = true;
-                }
+        if (is_valid(this)) {
+                this->echo_enabled = true;
         }
 }
 
@@ -135,10 +140,8 @@ void ttyedit_echo_enable(ttyedit_t *this)
 //==============================================================================
 void ttyedit_echo_disable(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        this->echo_enabled = false;
-                }
+        if (is_valid(this)) {
+                this->echo_enabled = false;
         }
 }
 
@@ -153,10 +156,8 @@ void ttyedit_echo_disable(ttyedit_t *this)
 //==============================================================================
 bool ttyedit_is_echo_enabled(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        return this->echo_enabled;
-                }
+        if (is_valid(this)) {
+                return this->echo_enabled;
         }
 
         return false;
@@ -173,10 +174,8 @@ bool ttyedit_is_echo_enabled(ttyedit_t *this)
 //==============================================================================
 char *ttyedit_get(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        return this->buffer;
-                }
+        if (is_valid(this)) {
+                return this->buffer;
         }
 
         return NULL;
@@ -193,24 +192,22 @@ char *ttyedit_get(ttyedit_t *this)
 //==============================================================================
 void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (strlen(str) <= EDITLINE_LEN) {
-                                if (show) {
-                                        ttyedit_move_cursor_home(this);
-                                }
+        if (is_valid(this) && str) {
+                if (strlen(str) <= EDITLINE_LEN) {
+                        if (show) {
+                                ttyedit_move_cursor_home(this);
+                        }
 
-                                ttyedit_clear(this);
-                                strcpy(this->buffer, str);
-                                this->length          = strlen(str);
-                                this->cursor_position = this->length;
+                        ttyedit_clear(this);
+                        strcpy(this->buffer, str);
+                        this->length          = strlen(str);
+                        this->cursor_position = this->length;
 
-                                if (show) {
-                                        vfs_fwrite(str, sizeof(char), strlen(str), this->out_file);
+                        if (show) {
+                                vfs_fwrite(str, sizeof(char), strlen(str), this->out_file);
 
-                                        static const char *erase_line_end = ERASE_LINE_END;
-                                        vfs_fwrite(erase_line_end, sizeof(char), strlen(erase_line_end), this->out_file);
-                                }
+                                static const char *erase_line_end = ERASE_LINE_END;
+                                vfs_fwrite(erase_line_end, sizeof(char), strlen(erase_line_end), this->out_file);
                         }
                 }
         }
@@ -225,12 +222,10 @@ void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 //==============================================================================
 void ttyedit_clear(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        memset(this->buffer, 0, EDITLINE_LEN + 1);
-                        this->cursor_position = 0;
-                        this->length          = 0;
-                }
+        if (is_valid(this)) {
+                memset(this->buffer, 0, EDITLINE_LEN + 1);
+                this->cursor_position = 0;
+                this->length          = 0;
         }
 }
 
@@ -244,37 +239,35 @@ void ttyedit_clear(ttyedit_t *this)
 //==============================================================================
 void ttyedit_insert_char(ttyedit_t *this, const char c)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (this->length >= EDITLINE_LEN - 1) {
-                                return;
+        if (is_valid(this)) {
+                if (this->length >= EDITLINE_LEN - 1) {
+                        return;
+                }
+
+                if (this->cursor_position < this->length) {
+                        for (uint i = this->length; i > this->cursor_position; i--) {
+                                this->buffer[i] = this->buffer[i - 1];
                         }
 
-                        if (this->cursor_position < this->length) {
-                                for (uint i = this->length; i > this->cursor_position; i--) {
-                                        this->buffer[i] = this->buffer[i - 1];
-                                }
+                        this->buffer[this->cursor_position++] = c;
+                        this->length++;
 
-                                this->buffer[this->cursor_position++] = c;
-                                this->length++;
+                        if (this->echo_enabled) {
+                                const char *cmd = VT100_SAVE_CURSOR_POSITION;
+                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
-                                if (this->echo_enabled) {
-                                        const char *cmd = VT100_SAVE_CURSOR_POSITION;
-                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                cmd = &this->buffer[this->cursor_position - 1];
+                                vfs_fwrite(cmd, sizeof(char), this->length - (this->cursor_position - 1), this->out_file);
 
-                                        cmd = &this->buffer[this->cursor_position - 1];
-                                        vfs_fwrite(cmd, sizeof(char), this->length - (this->cursor_position - 1), this->out_file);
+                                cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
+                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                        }
+                } else {
+                        this->buffer[this->cursor_position++] = c;
+                        this->length++;
 
-                                        cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
-                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
-                                }
-                        } else {
-                                this->buffer[this->cursor_position++] = c;
-                                this->length++;
-
-                                if (this->echo_enabled) {
-                                        vfs_fwrite(&c, sizeof(char), 1, this->out_file);
-                                }
+                        if (this->echo_enabled) {
+                                vfs_fwrite(&c, sizeof(char), 1, this->out_file);
                         }
                 }
         }
@@ -289,29 +282,27 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
 //==============================================================================
 void ttyedit_remove_char(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (this->cursor_position == 0 || this->length == 0) {
-                                return;
-                        }
-
-                        this->cursor_position--;
-
-                        for (uint i = this->cursor_position; i < this->length; i++) {
-                                this->buffer[i] = this->buffer[i + 1];
-                        }
-
-                        this->length--;
-
-                        const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
-
-                        cmd = &this->buffer[this->cursor_position];
-                        vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
-
-                        cmd = VT100_RESTORE_CURSOR_POSITION;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+        if (is_valid(this)) {
+                if (this->cursor_position == 0 || this->length == 0) {
+                        return;
                 }
+
+                this->cursor_position--;
+
+                for (uint i = this->cursor_position; i < this->length; i++) {
+                        this->buffer[i] = this->buffer[i + 1];
+                }
+
+                this->length--;
+
+                const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                cmd = &this->buffer[this->cursor_position];
+                vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+
+                cmd = VT100_RESTORE_CURSOR_POSITION;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -324,27 +315,25 @@ void ttyedit_remove_char(ttyedit_t *this)
 //==============================================================================
 void ttyedit_delete_char(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (this->length == 0 || this->cursor_position == this->length) {
-                                return;
-                        }
-
-                        for (uint i = this->cursor_position; i <= this->length; i++) {
-                                this->buffer[i] = this->buffer[i + 1];
-                        }
-
-                        this->length--;
-
-                        const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
-
-                        cmd = &this->buffer[this->cursor_position];
-                        vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
-
-                        cmd = VT100_RESTORE_CURSOR_POSITION;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+        if (is_valid(this)) {
+                if (this->length == 0 || this->cursor_position == this->length) {
+                        return;
                 }
+
+                for (uint i = this->cursor_position; i <= this->length; i++) {
+                        this->buffer[i] = this->buffer[i + 1];
+                }
+
+                this->length--;
+
+                const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                cmd = &this->buffer[this->cursor_position];
+                vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+
+                cmd = VT100_RESTORE_CURSOR_POSITION;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -357,12 +346,10 @@ void ttyedit_delete_char(ttyedit_t *this)
 //==============================================================================
 void ttyedit_move_cursor_left(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (this->cursor_position > 0) {
-                                vfs_fwrite("\b", sizeof(char), 1, this->out_file);
-                                this->cursor_position--;
-                        }
+        if (is_valid(this)) {
+                if (this->cursor_position > 0) {
+                        vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                        this->cursor_position--;
                 }
         }
 }
@@ -376,13 +363,11 @@ void ttyedit_move_cursor_left(ttyedit_t *this)
 //==============================================================================
 void ttyedit_move_cursor_right(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (this->cursor_position < this->length) {
-                                const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
-                                this->cursor_position++;
-                        }
+        if (is_valid(this)) {
+                if (this->cursor_position < this->length) {
+                        const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                        this->cursor_position++;
                 }
         }
 }
@@ -396,19 +381,17 @@ void ttyedit_move_cursor_right(ttyedit_t *this)
 //==============================================================================
 void ttyedit_move_cursor_home(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        const char *cmd = VT100_CURSOR_OFF;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+        if (is_valid(this)) {
+                const char *cmd = VT100_CURSOR_OFF;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
-                        while (this->cursor_position > 0) {
-                                vfs_fwrite("\b", sizeof(char), 1, this->out_file);
-                                this->cursor_position--;
-                        }
-
-                        cmd = VT100_CURSOR_ON;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                while (this->cursor_position > 0) {
+                        vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                        this->cursor_position--;
                 }
+
+                cmd = VT100_CURSOR_ON;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -421,20 +404,18 @@ void ttyedit_move_cursor_home(ttyedit_t *this)
 //==============================================================================
 void ttyedit_move_cursor_end(ttyedit_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        const char *cmd = VT100_CURSOR_OFF;
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+        if (is_valid(this)) {
+                const char *cmd = VT100_CURSOR_OFF;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
-                        while (this->cursor_position < this->length) {
-                                char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
-                                this->cursor_position++;
-                        }
-
-                        cmd = VT100_CURSOR_ON;
+                while (this->cursor_position < this->length) {
+                        char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
                         vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                        this->cursor_position++;
                 }
+
+                cmd = VT100_CURSOR_ON;
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 

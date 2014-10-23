@@ -68,7 +68,7 @@
   Local object types
 ==============================================================================*/
 struct ttycmd {
-        u32_t           valid;
+        void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
         u16_t           colums;
@@ -85,8 +85,6 @@ struct ttycmd {
 ==============================================================================*/
 MODULE_NAME(TTY);
 
-static const u32_t validation_token = 0x7D8498F1;
-
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -101,6 +99,18 @@ static const u32_t validation_token = 0x7D8498F1;
 
 //==============================================================================
 /**
+ * @brief  Check if object is valid
+ * @param  this         command object
+ * @return If valid then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool is_valid(ttycmd_t *this)
+{
+    return this && this->self == this;
+}
+
+//==============================================================================
+/**
  * @brief Initialize command object
  *
  * @return pointer to object if success, NULL on error
@@ -110,7 +120,7 @@ ttycmd_t *ttycmd_new()
 {
         ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
         if (ttycmd) {
-                ttycmd->valid = validation_token;
+                ttycmd->self = ttycmd;
         }
 
         return ttycmd;
@@ -125,11 +135,9 @@ ttycmd_t *ttycmd_new()
 //==============================================================================
 void ttycmd_delete(ttycmd_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        this->valid = 0;
-                        free(this);
-                }
+        if (is_valid(this)) {
+                this->self = NULL;
+                free(this);
         }
 }
 
@@ -145,87 +153,85 @@ void ttycmd_delete(ttycmd_t *this)
 //==============================================================================
 ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (strchr("\r\n", c)) {
-                                return TTYCMD_KEY_ENTER;
-                        }
+        if (is_valid(this)) {
+                if (strchr("\r\n", c)) {
+                        return TTYCMD_KEY_ENTER;
+                }
 
-                        if (c == '\b') {
-                                return TTYCMD_KEY_BACKSPACE;
-                        }
+                if (c == '\b') {
+                        return TTYCMD_KEY_BACKSPACE;
+                }
 
-                        if (c == '\t') {
-                                return TTYCMD_KEY_TAB;
-                        }
+                if (c == '\t') {
+                        return TTYCMD_KEY_TAB;
+                }
 
-                        if (c == '\033') {
-                                memset(this->token, 0, VT100_TOKEN_LEN);
-                                this->token[0]  = c;
-                                this->token_cnt = 1;
-                                this->timer     = timer_reset();
-                                return TTYCMD_BUSY;
+                if (c == '\033') {
+                        memset(this->token, 0, VT100_TOKEN_LEN);
+                        this->token[0]  = c;
+                        this->token_cnt = 1;
+                        this->timer     = timer_reset();
+                        return TTYCMD_BUSY;
 
-                        } else if (this->token_cnt) {
-                                if (strchr("~ABCDFPQRS", c)) {
-                                        if (this->token_cnt < VT100_TOKEN_LEN) {
-                                                this->token[this->token_cnt++] = c;
-                                        }
+                } else if (this->token_cnt) {
+                        if (strchr("~ABCDFPQRS", c)) {
+                                if (this->token_cnt < VT100_TOKEN_LEN) {
+                                        this->token[this->token_cnt++] = c;
+                                }
 
-                                        ttycmd_resp_t resp;
-                                        if      (strcmp(VT100_DEL        , this->token) == 0) resp = TTYCMD_KEY_DELETE;
-                                        else if (strcmp(VT100_ARROW_LEFT , this->token) == 0) resp = TTYCMD_KEY_ARROW_LEFT;
-                                        else if (strcmp(VT100_ARROW_RIGHT, this->token) == 0) resp = TTYCMD_KEY_ARROW_RIGHT;
-                                        else if (strcmp(VT100_ARROW_UP   , this->token) == 0) resp = TTYCMD_KEY_ARROW_UP;
-                                        else if (strcmp(VT100_ARROW_DOWN , this->token) == 0) resp = TTYCMD_KEY_ARROW_DOWN;
-                                        else if (strcmp(VT100_HOME       , this->token) == 0) resp = TTYCMD_KEY_HOME;
-                                        else if (strcmp(VT100_END_1      , this->token) == 0) resp = TTYCMD_KEY_END;
-                                        else if (strcmp(VT100_END_2      , this->token) == 0) resp = TTYCMD_KEY_END;
-                                        else if (strcmp(VT100_F1         , this->token) == 0) resp = TTYCMD_KEY_F1;
-                                        else if (strcmp(VT100_F2         , this->token) == 0) resp = TTYCMD_KEY_F2;
-                                        else if (strcmp(VT100_F3         , this->token) == 0) resp = TTYCMD_KEY_F3;
-                                        else if (strcmp(VT100_F4         , this->token) == 0) resp = TTYCMD_KEY_F4;
-                                        else if (strcmp(VT100_F5         , this->token) == 0) resp = TTYCMD_KEY_F5;
-                                        else if (strcmp(VT100_F6         , this->token) == 0) resp = TTYCMD_KEY_F6;
-                                        else if (strcmp(VT100_F7         , this->token) == 0) resp = TTYCMD_KEY_F7;
-                                        else if (strcmp(VT100_F8         , this->token) == 0) resp = TTYCMD_KEY_F8;
-                                        else if (strcmp(VT100_F9         , this->token) == 0) resp = TTYCMD_KEY_F9;
-                                        else if (strcmp(VT100_F10        , this->token) == 0) resp = TTYCMD_KEY_F10;
-                                        else if (strcmp(VT100_F11        , this->token) == 0) resp = TTYCMD_KEY_F11;
-                                        else if (strcmp(VT100_F12        , this->token) == 0) resp = TTYCMD_KEY_F12;
-                                        else {
-                                                int col = 0;
-                                                int row = 0;
-                                                if (sys_sscanf(this->token, "\033[%d;%dR", &row, &col) == 2) {
-                                                        if (col >= 32 && row >= 10) {
-                                                                this->colums = col;
-                                                                this->rows   = row;
-                                                                resp = TTYCMD_SIZE_CAPTURED;
-                                                        } else {
-                                                                resp = TTYCMD_BUSY;
-                                                        }
+                                ttycmd_resp_t resp;
+                                if      (strcmp(VT100_DEL        , this->token) == 0) resp = TTYCMD_KEY_DELETE;
+                                else if (strcmp(VT100_ARROW_LEFT , this->token) == 0) resp = TTYCMD_KEY_ARROW_LEFT;
+                                else if (strcmp(VT100_ARROW_RIGHT, this->token) == 0) resp = TTYCMD_KEY_ARROW_RIGHT;
+                                else if (strcmp(VT100_ARROW_UP   , this->token) == 0) resp = TTYCMD_KEY_ARROW_UP;
+                                else if (strcmp(VT100_ARROW_DOWN , this->token) == 0) resp = TTYCMD_KEY_ARROW_DOWN;
+                                else if (strcmp(VT100_HOME       , this->token) == 0) resp = TTYCMD_KEY_HOME;
+                                else if (strcmp(VT100_END_1      , this->token) == 0) resp = TTYCMD_KEY_END;
+                                else if (strcmp(VT100_END_2      , this->token) == 0) resp = TTYCMD_KEY_END;
+                                else if (strcmp(VT100_F1         , this->token) == 0) resp = TTYCMD_KEY_F1;
+                                else if (strcmp(VT100_F2         , this->token) == 0) resp = TTYCMD_KEY_F2;
+                                else if (strcmp(VT100_F3         , this->token) == 0) resp = TTYCMD_KEY_F3;
+                                else if (strcmp(VT100_F4         , this->token) == 0) resp = TTYCMD_KEY_F4;
+                                else if (strcmp(VT100_F5         , this->token) == 0) resp = TTYCMD_KEY_F5;
+                                else if (strcmp(VT100_F6         , this->token) == 0) resp = TTYCMD_KEY_F6;
+                                else if (strcmp(VT100_F7         , this->token) == 0) resp = TTYCMD_KEY_F7;
+                                else if (strcmp(VT100_F8         , this->token) == 0) resp = TTYCMD_KEY_F8;
+                                else if (strcmp(VT100_F9         , this->token) == 0) resp = TTYCMD_KEY_F9;
+                                else if (strcmp(VT100_F10        , this->token) == 0) resp = TTYCMD_KEY_F10;
+                                else if (strcmp(VT100_F11        , this->token) == 0) resp = TTYCMD_KEY_F11;
+                                else if (strcmp(VT100_F12        , this->token) == 0) resp = TTYCMD_KEY_F12;
+                                else {
+                                        int col = 0;
+                                        int row = 0;
+                                        if (sys_sscanf(this->token, "\033[%d;%dR", &row, &col) == 2) {
+                                                if (col >= 32 && row >= 10) {
+                                                        this->colums = col;
+                                                        this->rows   = row;
+                                                        resp = TTYCMD_SIZE_CAPTURED;
                                                 } else {
                                                         resp = TTYCMD_BUSY;
                                                 }
+                                        } else {
+                                                resp = TTYCMD_BUSY;
                                         }
+                                }
+
+                                this->token_cnt = 0;
+
+                                return resp;
+                        } else {
+                                if (  timer_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                   || this->token_cnt >= VT100_TOKEN_LEN ) {
 
                                         this->token_cnt = 0;
-
-                                        return resp;
                                 } else {
-                                        if (  timer_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
-                                           || this->token_cnt >= VT100_TOKEN_LEN ) {
-
-                                                this->token_cnt = 0;
-                                        } else {
-                                                this->token[this->token_cnt++] = c;
-                                        }
-
-                                        return TTYCMD_BUSY;
+                                        this->token[this->token_cnt++] = c;
                                 }
-                        } else {
-                                return TTYCMD_KEY_CHAR;
+
+                                return TTYCMD_BUSY;
                         }
+                } else {
+                        return TTYCMD_KEY_CHAR;
                 }
         }
 
@@ -243,10 +249,8 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 //==============================================================================
 bool ttycmd_is_idle(ttycmd_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        return this->token_cnt == 0 ? true : false;
-                }
+        if (is_valid(this)) {
+                return this->token_cnt == 0 ? true : false;
         }
 
         return false;
@@ -263,14 +267,12 @@ bool ttycmd_is_idle(ttycmd_t *this)
 //==============================================================================
 void ttycmd_get_size(ttycmd_t *this, u16_t *col, u16_t *row)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        if (col)
-                                *col = this->colums;
+        if (is_valid(this)) {
+                if (col)
+                        *col = this->colums;
 
-                        if (row)
-                                *row = this->rows;
-                }
+                if (row)
+                        *row = this->rows;
         }
 }
 
