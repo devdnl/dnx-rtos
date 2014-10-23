@@ -19,6 +19,7 @@ New Features, Improvements:
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
 - Configtool: fixed bug in the GPIO configuration script (issue #124)
+- TTY: problems with printing single characters (issue #139)
 
 dnx RTOS 1.4.1
 ==============
