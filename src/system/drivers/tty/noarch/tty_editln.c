@@ -124,7 +124,7 @@ void ttyedit_delete(ttyedit_t *this)
  * @param this          editline object
  */
 //==============================================================================
-void ttyedit_echo_enable(ttyedit_t *this)
+void ttyedit_enable_echo(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 this->echo_enabled = true;
@@ -138,7 +138,7 @@ void ttyedit_echo_enable(ttyedit_t *this)
  * @param this          editline object
  */
 //==============================================================================
-void ttyedit_echo_disable(ttyedit_t *this)
+void ttyedit_disable_echo(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 this->echo_enabled = false;
@@ -172,7 +172,7 @@ bool ttyedit_is_echo_enabled(ttyedit_t *this)
  * @return edit line string, NULL on error
  */
 //==============================================================================
-char *ttyedit_get(ttyedit_t *this)
+char *ttyedit_get_value(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 return this->buffer;
@@ -190,7 +190,7 @@ char *ttyedit_get(ttyedit_t *this)
  * @param show          true: new buffer is show
  */
 //==============================================================================
-void ttyedit_set(ttyedit_t *this, const char *str, bool show)
+void ttyedit_set_value(ttyedit_t *this, const char *str, bool show)
 {
         if (is_valid(this) && str) {
                 if (strlen(str) <= EDITLINE_LEN) {

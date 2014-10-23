@@ -352,7 +352,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
         while (count--) {
                 if (fattr.non_blocking_rd) {
                         if (mutex_lock(tty->secure_mtx, 100)) {
-                                const char *str = ttyedit_get(tty->editline);
+                                const char *str = ttyedit_get_value(tty->editline);
                                 copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
                                 ttyedit_clear(tty->editline);
                                 mutex_unlock(tty->secure_mtx);
@@ -421,7 +421,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
         case IOCTL_TTY__SET_EDITLINE:
                 if (arg) {
                         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                                ttyedit_set(tty->editline, arg, tty_module->current_tty == tty->major);
+                                ttyedit_set_value(tty->editline, arg, tty_module->current_tty == tty->major);
                                 mutex_unlock(tty->secure_mtx);
                         } else {
                                 errno = ETIME;
@@ -442,11 +442,11 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__ECHO_ON:
-                ttyedit_echo_enable(tty->editline);
+                ttyedit_enable_echo(tty->editline);
                 break;
 
         case IOCTL_TTY__ECHO_OFF:
-                ttyedit_echo_disable(tty->editline);
+                ttyedit_disable_echo(tty->editline);
                 break;
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
@@ -609,7 +609,7 @@ static void service_out(void *arg)
                                         const char *last_line = ttybfr_get_line(tty->screen, 0);
                                         vfs_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
 
-                                        const char *editline = ttyedit_get(tty->editline);
+                                        const char *editline = ttyedit_get_value(tty->editline);
                                         vfs_fwrite(editline, sizeof(char), strlen(editline), tty_module->outfile);
 
                                         mutex_unlock(tty->secure_mtx);
@@ -692,7 +692,7 @@ static void vt100_analyze(const char c)
         switch (resp) {
         case TTYCMD_KEY_ENTER:
                 if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                        const char *str  = ttyedit_get(tty->editline);
+                        const char *str  = ttyedit_get_value(tty->editline);
                         const char *lf   = "\n";
 
                         ttybfr_put(tty->screen, str, strlen(str));
@@ -740,7 +740,7 @@ static void vt100_analyze(const char c)
                 break;
 
         case TTYCMD_KEY_TAB:
-                copy_string_to_queue(ttyedit_get(tty->editline), tty->queue_out, false, 0);
+                copy_string_to_queue(ttyedit_get_value(tty->editline), tty->queue_out, false, 0);
                 copy_string_to_queue("\033^[T", tty->queue_out, true, 0);
                 break;
 
@@ -823,7 +823,7 @@ static void switch_terminal(int term_no)
                                         }
                                 }
 
-                                str = ttyedit_get(tty->editline);
+                                str = ttyedit_get_value(tty->editline);
                                 vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
                                 ttybfr_clear_fresh_line_counter(tty->screen);
 

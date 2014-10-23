@@ -109,11 +109,11 @@ extern void             ttybfr_clear_fresh_line_counter (ttybfr_t*);
 /* editline support --------------------------------------------------------- */
 extern ttyedit_t       *ttyedit_new                     (FILE*);
 extern void             ttyedit_delete                  (ttyedit_t*);
-extern void             ttyedit_echo_enable             (ttyedit_t*);
-extern void             ttyedit_echo_disable            (ttyedit_t*);
+extern void             ttyedit_enable_echo             (ttyedit_t*);
+extern void             ttyedit_disable_echo            (ttyedit_t*);
 extern bool             ttyedit_is_echo_enabled         (ttyedit_t*);
-extern char            *ttyedit_get                     (ttyedit_t*);
-extern void             ttyedit_set                     (ttyedit_t*, const char*, bool);
+extern char            *ttyedit_get_value               (ttyedit_t*);
+extern void             ttyedit_set_value               (ttyedit_t*, const char*, bool);
 extern void             ttyedit_clear                   (ttyedit_t*);
 extern void             ttyedit_insert_char             (ttyedit_t*, const char);
 extern void             ttyedit_remove_char             (ttyedit_t*);
