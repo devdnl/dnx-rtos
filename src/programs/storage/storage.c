@@ -255,8 +255,8 @@ static const scsi_format_capacity_data_t format_capacity = {
         .block_length           = REVERSE_UINT16(LB_SIZE)
 };
 
-static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__TP210);
-static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__TP211);
+static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions

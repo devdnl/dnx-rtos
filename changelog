@@ -14,10 +14,12 @@ New Features, Improvements:
 - net: added a new interface: net_get_host_by_name() that resolves IP address by host name (by using DNS)
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
+- GPIO: defined pin that is not connected to any input/output (pin NONE)
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
 - Configtool: fixed bug in the GPIO configuration script (issue #124)
+- TTY: problems with printing single characters (issue #139)
 
 dnx RTOS 1.4.1
 ==============

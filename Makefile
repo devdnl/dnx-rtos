@@ -141,6 +141,7 @@ ADDPROGS   = ./tools/progsearch.sh
 ADDLIBS    = ./tools/libsearch.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
+GIT_HOOKS  = ./tools/apply_git_hooks.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -205,7 +206,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : add_programs
+all : add_programs apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -233,7 +234,7 @@ help :
 # project configuration wizard
 ####################################################################################################
 .PHONY : config
-config : clean
+config : clean apply_git_hooks
 	@$(ECHO) "Starting configtool..."
 	@$(CONFIGTOOL)
 
@@ -291,6 +292,13 @@ add_programs :
 	@$(ECHO) "Adding user's programs and libraries to the project..."
 	@$(ADDPROGS) ./src/programs
 	@$(ADDLIBS) ./src/lib
+
+####################################################################################################
+# Copy git hooks to git repository
+####################################################################################################
+.PHONY : apply_git_hooks
+apply_git_hooks :
+	@$(GIT_HOOKS)
 
 ####################################################################################################
 # makes dependences

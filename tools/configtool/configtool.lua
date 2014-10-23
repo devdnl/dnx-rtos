@@ -213,10 +213,10 @@ local function main()
 
         -- create Configuration menu
         cfg_menu = wx.wxMenu()
-        cfg_menu:Append(ID.MENU_SAVE, "&Save", "Save currently selected configuration")
-        cfg_menu:Append(ID.MENU_IMPORT, "&Import", "Import configuration from file")
-        cfg_menu:Append(ID.MENU_EXPORT, "&Export", "Export configuration to file")
-        cfg_menu:Append(ID.MENU_EXIT, "&Quit", "Quit from Configtool")
+        cfg_menu:Append(ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
+        cfg_menu:Append(ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
+        cfg_menu:Append(ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
+        cfg_menu:Append(ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
 
         -- create help menu
         help_menu = wx.wxMenu()

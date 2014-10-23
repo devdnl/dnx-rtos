@@ -218,9 +218,9 @@ static const usb_max_string_descriptor_t *string[] = {
         reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
-static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__TP210);
-static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__TP211);
-static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__TP212);
+static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions

@@ -113,6 +113,7 @@ static void print_prompt(void)
         if (global->prompt_enable && global->input == stdin) {
                 printf(FONT_COLOR_GREEN"%s@%s:%s"RESET_ATTRIBUTES"\n", get_user_name(), get_host_name(), global->cwd);
                 printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
+                fflush(stdout);
         }
 }
 
@@ -640,7 +641,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-PROGRAM_MAIN(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
