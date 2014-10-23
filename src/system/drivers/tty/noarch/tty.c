@@ -5,7 +5,7 @@
 
 @brief   This file support virtual terminal.
 
-@note    Copyright (C) 2012 - 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -231,22 +231,22 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 tty_module->tty[tty->major] = NULL;
                 free(tty);
 
-                /* initialize whole module if all TTYs released */
-                for (int i = 0; i < _TTY_NUMBER; i++) {
-                        if (tty_module->tty[i]) {
-                                critical_section_end();
-                                return STD_RET_OK;
-                        }
+                /* de-initialize entire module if all TTYs are released */
+                bool release_TTY = true;
+                for (int i = 0; i < _TTY_NUMBER && release_TTY; i++) {
+                        release_TTY = !tty_module->tty[i];
                 }
 
-                task_delete(tty_module->service_in);
-                task_delete(tty_module->service_out);
-                vfs_fclose(tty_module->infile);
-                vfs_fclose(tty_module->outfile);
-                queue_delete(tty_module->queue_cmd);
+                if (release_TTY) {
+                        task_delete(tty_module->service_in);
+                        task_delete(tty_module->service_out);
+                        vfs_fclose(tty_module->infile);
+                        vfs_fclose(tty_module->outfile);
+                        queue_delete(tty_module->queue_cmd);
 
-                free(tty_module);
-                tty_module = NULL;
+                        free(tty_module);
+                        tty_module = NULL;
+                }
 
                 critical_section_end();
                 return STD_RET_OK;
@@ -316,7 +316,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, fpos_t *f
         ssize_t n = -1;
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                ttybfr_put(tty->screen, (const char *)src, count);
+                ttybfr_put(tty->screen, reinterpret_cast(const char *, src), count);
                 mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
 
@@ -393,7 +393,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
-                        *(int *)arg = tty_module->current_tty;
+                        *reinterpret_cast(int*, arg) = tty_module->current_tty;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -402,7 +402,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_COL:
                 if (arg) {
-                        *(int *)arg = tty_module->vt100_col;
+                        *reinterpret_cast(int*, arg) = tty_module->vt100_col;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -411,7 +411,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_ROW:
                 if (arg) {
-                        *(int *)arg = tty_module->vt100_row;
+                        *reinterpret_cast(int*, arg) = tty_module->vt100_row;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -434,7 +434,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__SWITCH_TTY_TO:
-                send_cmd(CMD_SWITCH_TTY, (int)arg);
+                send_cmd(CMD_SWITCH_TTY, reinterpret_cast(int, arg));
                 break;
 
         case IOCTL_TTY__CLEAR_SCR:
@@ -451,7 +451,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
-                        *(int *)arg = _TTY_NUMBER;
+                        *reinterpret_cast(int*, arg) = _TTY_NUMBER;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
