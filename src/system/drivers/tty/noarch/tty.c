@@ -73,8 +73,6 @@ struct module {
         queue_t        *queue_cmd;
         tty_t          *tty[_TTY_NUMBER];
         int             current_tty;
-        u16_t           vt100_col;
-        u16_t           vt100_row;
 };
 
 /*==============================================================================
@@ -84,7 +82,6 @@ static void     service_out             (void *arg);
 static void     service_in              (void *arg);
 static void     send_cmd                (enum cmd cmd, u8_t arg);
 static void     vt100_init              ();
-static void     vt100_request_size      ();
 static void     vt100_analyze           (const char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend, uint timeout);
 static void     switch_terminal         (int term_no);
@@ -101,7 +98,7 @@ static const uint     service_in_stack_depth    = STACK_DEPTH_VERY_LOW - 60;
 static const uint     service_out_stack_depth   = STACK_DEPTH_VERY_LOW - 45;
 static const int      service_in_priority       = NORMAL_PRIORITY;
 static const int      service_out_priority      = NORMAL_PRIORITY;
-static const uint     queue_cmd_len             = _TTY_DEFAULT_TERMINAL_ROWS;
+static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
 
 /*==============================================================================
   Function definitions
@@ -162,9 +159,6 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         tty_module = NULL;
 
                         return STD_RET_ERROR;
-                } else {
-                        tty_module->vt100_col = _TTY_DEFAULT_TERMINAL_COLUMNS;
-                        tty_module->vt100_row = _TTY_DEFAULT_TERMINAL_ROWS;
                 }
         }
 
@@ -402,7 +396,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_COL:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = tty_module->vt100_col;
+                        *reinterpret_cast(int*, arg) = _TTY_TERMINAL_COLUMNS;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -411,7 +405,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_ROW:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = tty_module->vt100_row;
+                        *reinterpret_cast(int*, arg) = _TTY_TERMINAL_ROWS;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -548,7 +542,6 @@ static void service_out(void *arg)
         task_set_priority(service_out_priority);
 
         vt100_init();
-        vt100_request_size();
 
         for (;;) {
                 tty_cmd_t rq;
@@ -658,25 +651,6 @@ static void vt100_init()
 
 //==============================================================================
 /**
- * @brief Send request to VT100 to gets size
- */
-//==============================================================================
-static void vt100_request_size()
-{
-        if (_TTY_TERM_SIZE_CHECK != 0) {
-                const char *data = VT100_SAVE_CURSOR_POSITION
-                                   VT100_CURSOR_OFF
-                                   VT100_SET_CURSOR_POSITION(999, 999)
-                                   VT100_QUERY_CURSOR_POSITION
-                                   VT100_RESTORE_CURSOR_POSITION
-                                   VT100_CURSOR_ON;
-
-                vfs_fwrite(data, 1, strlen(data), tty_module->outfile);
-        }
-}
-
-//==============================================================================
-/**
  * @brief Control analyzis of VT100 input stream
  *
  * @param c             input character
@@ -756,10 +730,6 @@ static void vt100_analyze(const char c)
                 switch_terminal(resp - TTYCMD_KEY_F1);
                 break;
 
-        case TTYCMD_SIZE_CAPTURED:
-                ttycmd_get_size(tty->vtcmd, &tty_module->vt100_col, &tty_module->vt100_row);
-                break;
-
         default:
                 break;
         }
@@ -807,15 +777,8 @@ static void switch_terminal(int term_no)
                         vt100_init();
 
                         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                                int rows;
-                                if (tty_module->vt100_row < _TTY_DEFAULT_TERMINAL_ROWS) {
-                                        rows = tty_module->vt100_row;
-                                } else {
-                                        rows = _TTY_DEFAULT_TERMINAL_ROWS - 1;
-                                }
-
                                 const char *str;
-                                for (int i = rows; i >= 0; i--) {
+                                for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {

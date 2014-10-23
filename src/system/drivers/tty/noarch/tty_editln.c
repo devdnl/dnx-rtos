@@ -35,18 +35,18 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define EDITLINE_LEN _TTY_DEFAULT_TERMINAL_COLUMNS
+#define EDITLINE_LEN    _TTY_TERMINAL_COLUMNS
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttyedit {
-        FILE           *out_file;
-        void           *self;
-        char            buffer[EDITLINE_LEN + 1];
-        u16_t           length;
-        u16_t           cursor_position;
-        bool            echo_enabled;
+        FILE  *out_file;
+        void  *self;
+        char   buffer[EDITLINE_LEN + 1];
+        u16_t  length;
+        u16_t  cursor_position;
+        bool   echo_enabled;
 };
 
 /*==============================================================================

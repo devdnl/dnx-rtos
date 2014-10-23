@@ -109,7 +109,6 @@ typedef enum ttycmd_resp {
         TTYCMD_KEY_F11,
         TTYCMD_KEY_F12,
         TTYCMD_KEY_CHAR,
-        TTYCMD_SIZE_CAPTURED,
         TTYCMD_NUMBER_OF_CMDS
 } ttycmd_resp_t;
 
@@ -152,7 +151,6 @@ extern ttycmd_t        *ttycmd_new                      ();
 extern void             ttycmd_delete                   (ttycmd_t*);
 extern ttycmd_resp_t    ttycmd_analyze                  (ttycmd_t*, const char);
 extern bool             ttycmd_is_idle                  (ttycmd_t*);
-extern void             ttycmd_get_size                 (ttycmd_t*, u16_t*, u16_t*);
 
 /*==============================================================================
   Exported inline functions

@@ -44,12 +44,12 @@
 ==============================================================================*/
 struct ttybfr {
         void  *self;
-        char  *line[_TTY_DEFAULT_TERMINAL_ROWS];
-        char   new_line_bfr[_TTY_DEFAULT_TERMINAL_COLUMNS + CR_LF_NUL_LEN];
+        char  *line[_TTY_TERMINAL_ROWS];
+        char   new_line_bfr[_TTY_TERMINAL_COLUMNS + CR_LF_NUL_LEN];
         size_t new_line_bfr_idx;
         int    carriage;
         u16_t  write_index;
-        bool   fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
+        bool   fresh_line[_TTY_TERMINAL_ROWS];
 };
 
 /*==============================================================================
@@ -98,7 +98,7 @@ static bool is_valid(ttybfr_t *this)
 static uint get_line_index(ttybfr_t *this, uint go_back)
 {
         if (this->write_index < go_back) {
-                return _TTY_DEFAULT_TERMINAL_ROWS - (go_back - this->write_index);
+                return _TTY_TERMINAL_ROWS - (go_back - this->write_index);
         } else {
                 return this->write_index - go_back;
         }
@@ -122,7 +122,7 @@ static void link_line(ttybfr_t *this, char *line)
         this->fresh_line[this->write_index] = true;
 
         if (LAST_CHARACTER(line) == '\n') {
-                this->write_index = (this->write_index + 1) % _TTY_DEFAULT_TERMINAL_ROWS;
+                this->write_index = (this->write_index + 1) % _TTY_TERMINAL_ROWS;
         }
 }
 
@@ -147,7 +147,7 @@ static void replace_last_line(ttybfr_t *this, char *line)
         this->fresh_line[this->write_index] = true;
 
         if (LAST_CHARACTER(line) == '\n') {
-                this->write_index = (this->write_index + 1) % _TTY_DEFAULT_TERMINAL_ROWS;
+                this->write_index = (this->write_index + 1) % _TTY_TERMINAL_ROWS;
         }
 }
 
@@ -262,7 +262,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
         {
                 this->new_line_bfr[this->new_line_bfr_idx++] = chr;
 
-                if (this->new_line_bfr_idx > _TTY_DEFAULT_TERMINAL_COLUMNS) {
+                if (this->new_line_bfr_idx > _TTY_TERMINAL_COLUMNS) {
                         put_new_line_buffer(this);
                 }
         }
@@ -293,7 +293,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                                         VT100_cmd = false;
                                 }
 
-                        } else if (this->carriage >= _TTY_DEFAULT_TERMINAL_COLUMNS) {
+                        } else if (this->carriage >= _TTY_TERMINAL_COLUMNS) {
                                 strcat(this->new_line_bfr, "\r\n");
                                 put_new_line_buffer(this);
                                 this->carriage = 0;
@@ -320,7 +320,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
 void ttybfr_clear(ttybfr_t *this)
 {
         if (is_valid(this)) {
-                for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
+                for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
                         if (this->line[i]) {
                                 free(this->line[i]);
                                 this->line[i] = NULL;
@@ -343,7 +343,7 @@ void ttybfr_clear(ttybfr_t *this)
 //==============================================================================
 const char *ttybfr_get_line(ttybfr_t *this, int n)
 {
-        if (is_valid(this) && n >= 0 && n < _TTY_DEFAULT_TERMINAL_ROWS) {
+        if (is_valid(this) && n >= 0 && n < _TTY_TERMINAL_ROWS) {
                 return this->line[get_line_index(this, n)];
         }
 
@@ -360,7 +360,7 @@ const char *ttybfr_get_line(ttybfr_t *this, int n)
 const char *ttybfr_get_fresh_line(ttybfr_t *this)
 {
         if (is_valid(this)) {
-                for (int i = _TTY_DEFAULT_TERMINAL_ROWS - 1; i >= 0; i--) {
+                for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
                         uint idx = get_line_index(this, i);
                         if (this->fresh_line[idx]) {
                                 this->fresh_line[idx] = false;
@@ -382,7 +382,7 @@ const char *ttybfr_get_fresh_line(ttybfr_t *this)
 void ttybfr_clear_fresh_line_counter(ttybfr_t *this)
 {
         if (is_valid(this)) {
-                for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
+                for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
                         this->fresh_line[i] = false;
                 }
         }
