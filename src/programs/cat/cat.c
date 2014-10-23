@@ -49,9 +49,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-bool rm_ctrl_chars;
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES {
+        u8_t buffer[512];
+};
 
 /*==============================================================================
   Exported object definitions
@@ -63,50 +63,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 //==============================================================================
 /**
- * @brief Function remove control characters
- *
- * @param str           string to modify
- */
-//==============================================================================
-static void remove_control_characters(char *str)
-{
-        for (uint i = 0; i < strlen(str); i++) {
-                if (str[i] < ' ' && str[i] != '\n') {
-                        str[i] = 0xFF;
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief Read file
- *
- * @param file          file to read
- * @param str           line buffer
- * @param len           line buffer legth
- *
- */
-//==============================================================================
-static void print_file(FILE *file, char *str, int len)
-{
-        int eof = 0;
-        while (!eof && fgets(str, len, file)) {
-                eof = feof(file);
-
-                if (global->rm_ctrl_chars) {
-                        remove_control_characters(str);
-                }
-
-                if (LAST_CHARACTER(str) != '\n') {
-                        strcat(str, "\n");
-                }
-
-                fputs(str, stdout);
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function show help screen
  *
  * @param name          program name
@@ -115,7 +71,6 @@ static void print_file(FILE *file, char *str, int len)
 static void print_help(char *name)
 {
         printf("Usage: %s [OPTION] [FILE]\n", name);
-        puts("  -n              remove control characters");
         puts("  -h, --help      show this help");
 }
 
@@ -124,17 +79,12 @@ static void print_help(char *name)
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(cat, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
 
         int i = 1;
         for (; i < argc; i++) {
-                if (strcmp(argv[i], "-n") == 0) {
-                        global->rm_ctrl_chars = true;
-                        continue;
-                }
-
                 if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
                         print_help(argv[0]);
                         return 0;
@@ -163,7 +113,11 @@ PROGRAM_MAIN(cat, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
                         }
 
-                        print_file(file, str, col);
+                        int n;
+                        do {
+                                n = fread(global->buffer, 1, sizeof(global->buffer), file);
+                                fwrite(global->buffer, 1, n, stdout);
+                        } while (n == sizeof(global->buffer));
 
                         if (file != stdin) {
                                 fclose(file);
