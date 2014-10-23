@@ -5,7 +5,7 @@
 
 @brief   Basic print functions
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013, 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
-#include <dnx/misc.h>
+#include "dnx/misc.h"
 #include <unistd.h>
 #include <errno.h>
 
@@ -864,10 +864,19 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 chr = *format++;
 
                 arg_size = 0;
-                while (chr >= '0' && chr <= '9') {
-                        arg_size *= 10;
-                        arg_size += chr - '0';
-                        chr       = *format++;
+
+                if (chr == '.') {
+                        chr = *format++;
+                        if (chr == '*') {
+                                arg_size = va_arg(arg, int);
+                                chr = *format++;
+                        }
+                } else {
+                        while (chr >= '0' && chr <= '9') {
+                                arg_size *= 10;
+                                arg_size += chr - '0';
+                                chr       = *format++;
+                        }
                 }
 
                 if (chr == '%' || chr == 'c') {
@@ -894,6 +903,10 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 if (!resultPtr) {
                                         resultPtr = "(null)";
                                 }
+
+                                if (arg_size == 0) {
+                                        arg_size = UINT16_MAX;
+                                }
                         } else {
                                 if (arg_size > 9) {
                                         arg_size = 9;
@@ -902,11 +915,12 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
                                 bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
 
-                                resultPtr = itoa(va_arg(arg, int), result,
-                                                 base, uint_en, arg_size);
+                                resultPtr = itoa(va_arg(arg, int), result, base, uint_en, arg_size);
+
+                                arg_size = strlen(result);
                         }
 
-                        while ((chr = *resultPtr++)) {
+                        while ((chr = *resultPtr++) && arg_size--) {
                                 if (!put_chr(chr))
                                         goto vsnprint_end;
                         }
