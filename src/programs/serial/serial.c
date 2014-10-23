@@ -260,9 +260,9 @@ static const usb_serial_state_notification_t serial_state = {
 };
 
 
-static const GPIO_pin_t pin_led_white = GPIO_PIN(GPIO_PIN__TP210);
-static const GPIO_pin_t pin_led_green = GPIO_PIN(GPIO_PIN__TP211);
-static const GPIO_pin_t pin_led_red   = GPIO_PIN(GPIO_PIN__TP212);
+static const GPIO_pin_t pin_led_white = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t pin_led_green = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t pin_led_red   = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions
