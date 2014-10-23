@@ -706,11 +706,11 @@ static void vt100_analyze(const char c)
                 break;
 
         case TTYCMD_KEY_ARROW_UP:
-                copy_string_to_queue(VT100_ARROW_UP, tty->queue_out, true, 0);
+                copy_string_to_queue(VT100_ARROW_UP_STDOUT, tty->queue_out, true, 0);
                 break;
 
         case TTYCMD_KEY_ARROW_DOWN:
-                copy_string_to_queue(VT100_ARROW_DOWN, tty->queue_out, true, 0);
+                copy_string_to_queue(VT100_ARROW_DOWN_STDOUT, tty->queue_out, true, 0);
                 break;
 
         case TTYCMD_KEY_TAB:

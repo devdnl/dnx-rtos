@@ -153,34 +153,29 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                         this->token[this->token_cnt++] = c;
                                 }
 
-                                ttycmd_resp_t resp;
-                                if      (strcmp(VT100_DEL        , this->token) == 0) resp = TTYCMD_KEY_DELETE;
-                                else if (strcmp(VT100_ARROW_LEFT , this->token) == 0) resp = TTYCMD_KEY_ARROW_LEFT;
-                                else if (strcmp(VT100_ARROW_RIGHT, this->token) == 0) resp = TTYCMD_KEY_ARROW_RIGHT;
-                                else if (strcmp(VT100_ARROW_UP   , this->token) == 0) resp = TTYCMD_KEY_ARROW_UP;
-                                else if (strcmp(VT100_ARROW_DOWN , this->token) == 0) resp = TTYCMD_KEY_ARROW_DOWN;
-                                else if (strcmp(VT100_HOME       , this->token) == 0) resp = TTYCMD_KEY_HOME;
-                                else if (strcmp(VT100_END_1      , this->token) == 0) resp = TTYCMD_KEY_END;
-                                else if (strcmp(VT100_END_2      , this->token) == 0) resp = TTYCMD_KEY_END;
-                                else if (strcmp(VT100_F1         , this->token) == 0) resp = TTYCMD_KEY_F1;
-                                else if (strcmp(VT100_F2         , this->token) == 0) resp = TTYCMD_KEY_F2;
-                                else if (strcmp(VT100_F3         , this->token) == 0) resp = TTYCMD_KEY_F3;
-                                else if (strcmp(VT100_F4         , this->token) == 0) resp = TTYCMD_KEY_F4;
-                                else if (strcmp(VT100_F5         , this->token) == 0) resp = TTYCMD_KEY_F5;
-                                else if (strcmp(VT100_F6         , this->token) == 0) resp = TTYCMD_KEY_F6;
-                                else if (strcmp(VT100_F7         , this->token) == 0) resp = TTYCMD_KEY_F7;
-                                else if (strcmp(VT100_F8         , this->token) == 0) resp = TTYCMD_KEY_F8;
-                                else if (strcmp(VT100_F9         , this->token) == 0) resp = TTYCMD_KEY_F9;
-                                else if (strcmp(VT100_F10        , this->token) == 0) resp = TTYCMD_KEY_F10;
-                                else if (strcmp(VT100_F11        , this->token) == 0) resp = TTYCMD_KEY_F11;
-                                else if (strcmp(VT100_F12        , this->token) == 0) resp = TTYCMD_KEY_F12;
-                                else {
-                                        // TODO
-                                }
-
                                 this->token_cnt = 0;
 
-                                return resp;
+                                if      (strcmp(VT100_DEL        , this->token) == 0) return TTYCMD_KEY_DELETE;
+                                else if (strcmp(VT100_ARROW_LEFT , this->token) == 0) return TTYCMD_KEY_ARROW_LEFT;
+                                else if (strcmp(VT100_ARROW_RIGHT, this->token) == 0) return TTYCMD_KEY_ARROW_RIGHT;
+                                else if (strcmp(VT100_ARROW_UP   , this->token) == 0) return TTYCMD_KEY_ARROW_UP;
+                                else if (strcmp(VT100_ARROW_DOWN , this->token) == 0) return TTYCMD_KEY_ARROW_DOWN;
+                                else if (strcmp(VT100_HOME       , this->token) == 0) return TTYCMD_KEY_HOME;
+                                else if (strcmp(VT100_END_1      , this->token) == 0) return TTYCMD_KEY_END;
+                                else if (strcmp(VT100_END_2      , this->token) == 0) return TTYCMD_KEY_END;
+                                else if (strcmp(VT100_F1         , this->token) == 0) return TTYCMD_KEY_F1;
+                                else if (strcmp(VT100_F2         , this->token) == 0) return TTYCMD_KEY_F2;
+                                else if (strcmp(VT100_F3         , this->token) == 0) return TTYCMD_KEY_F3;
+                                else if (strcmp(VT100_F4         , this->token) == 0) return TTYCMD_KEY_F4;
+                                else if (strcmp(VT100_F5         , this->token) == 0) return TTYCMD_KEY_F5;
+                                else if (strcmp(VT100_F6         , this->token) == 0) return TTYCMD_KEY_F6;
+                                else if (strcmp(VT100_F7         , this->token) == 0) return TTYCMD_KEY_F7;
+                                else if (strcmp(VT100_F8         , this->token) == 0) return TTYCMD_KEY_F8;
+                                else if (strcmp(VT100_F9         , this->token) == 0) return TTYCMD_KEY_F9;
+                                else if (strcmp(VT100_F10        , this->token) == 0) return TTYCMD_KEY_F10;
+                                else if (strcmp(VT100_F11        , this->token) == 0) return TTYCMD_KEY_F11;
+                                else if (strcmp(VT100_F12        , this->token) == 0) return TTYCMD_KEY_F12;
+                                else return TTYCMD_BUSY;
                         } else {
                                 if (  timer_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
                                    || this->token_cnt >= VT100_TOKEN_LEN ) {
@@ -212,7 +207,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 bool ttycmd_is_idle(ttycmd_t *this)
 {
         if (is_valid(this)) {
-                return this->token_cnt == 0 ? true : false;
+                return this->token_cnt == 0;
         }
 
         return false;
