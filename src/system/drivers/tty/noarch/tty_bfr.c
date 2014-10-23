@@ -128,31 +128,6 @@ static void link_line(ttybfr_t *this, char *line)
 
 //==============================================================================
 /**
- * @brief  Replace the last line by given one
- * @param  this         buffer object
- * @param  line         line that replaces the last line
- * @return None
- */
-//==============================================================================
-static void replace_last_line(ttybfr_t *this, char *line)
-{
-    // TODO probably link_line can be used
-        uint last_line_idx = get_line_index(this, 0);
-
-        if (this->line[last_line_idx]) {
-                free(this->line[last_line_idx]);
-        }
-
-        this->line[last_line_idx]           = line;
-        this->fresh_line[this->write_index] = true;
-
-        if (LAST_CHARACTER(line) == '\n') {
-                this->write_index = (this->write_index + 1) % _TTY_TERMINAL_ROWS;
-        }
-}
-
-//==============================================================================
-/**
  * @brief  Clear the new line buffer
  * @param  this         buffer object
  * @return None
@@ -162,6 +137,21 @@ static void clear_new_line_buffer(ttybfr_t *this)
 {
         memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
         this->new_line_bfr_idx = 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Clear last line
+ * @param  this          buffer object
+ * @return None
+ */
+//==============================================================================
+static void clear_last_line(ttybfr_t *this)
+{
+        if (this->line[this->write_index]) {
+                free(this->line[this->write_index]);
+                this->line[this->write_index] = NULL;
+        }
 }
 
 //==============================================================================
@@ -200,7 +190,7 @@ static void put_new_line_buffer(ttybfr_t *this)
                         if (line) {
                                 strcpy(line, last_line);
                                 strcat(line, this->new_line_bfr);
-                                replace_last_line(this, line);
+                                link_line(this, line);
                         }
                 }
         } else {
@@ -276,6 +266,10 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                         if (chr == '\r') {
                                 this->carriage = 0;
                                 this->new_line_bfr_idx = 0;
+
+                                if (LAST_CHARACTER(this->line[this->write_index]) != '\n') {
+                                        clear_last_line(this);
+                                }
 
                         } else if (chr == '\n') {
                                 strcat(this->new_line_bfr, CR_LF);

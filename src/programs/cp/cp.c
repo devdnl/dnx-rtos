@@ -128,6 +128,8 @@ PROGRAM_MAIN(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         printf("\r%d.%2d%% copied...",
                                ((copy_size*100)/file_size),
                                ((copy_size*10000)/file_size) % 100);
+
+                        fflush(stdout);
                 }
 
                 fwrite(buffer, sizeof(char), n, dst_file);
