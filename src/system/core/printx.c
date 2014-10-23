@@ -422,6 +422,10 @@ void printk(const char *format, ...)
 
                         vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
 
+                        if (LAST_CHARACTER(buffer) != '\n') {
+                                vfs_fflush(sys_printk_file);
+                        }
+
                         sysm_sysfree(buffer);
                 }
         }
@@ -916,6 +920,9 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
                                 chr = va_arg(arg, int);
+                                if (chr == '\0') {
+                                        chr = 0xFF;
+                                }
                         }
 
                         put_character(chr);
