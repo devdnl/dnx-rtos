@@ -40,30 +40,6 @@
 #define VT100_TOKEN_LEN                         15
 #define VT100_TOKEN_READ_TIMEOUT                250
 
-#define VT100_ARROW_LEFT                        "\033[D"
-#define VT100_ARROW_RIGHT                       "\033[C"
-#define VT100_ARROW_UP                          "\033[A"
-#define VT100_ARROW_DOWN                        "\033[B"
-#define VT100_HOME                              "\033[1~"
-#define VT100_INS                               "\033[2~"
-#define VT100_DEL                               "\033[3~"
-#define VT100_END_1                             "\033[4~"
-#define VT100_END_2                             "\033OF"
-#define VT100_PGUP                              "\033[5~"
-#define VT100_PGDN                              "\033[6~"
-#define VT100_F1                                "\033OP"
-#define VT100_F2                                "\033OQ"
-#define VT100_F3                                "\033OR"
-#define VT100_F4                                "\033OS"
-#define VT100_F5                                "\033[16~"
-#define VT100_F6                                "\033[17~"
-#define VT100_F7                                "\033[18~"
-#define VT100_F8                                "\033[19~"
-#define VT100_F9                                "\033[20~"
-#define VT100_F10                               "\033[21~"
-#define VT100_F11                               "\033[23~"
-#define VT100_F12                               "\033[24~"
-
 /*==============================================================================
   Local object types
 ==============================================================================*/
