@@ -190,7 +190,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         } else if (task != task_get_handle()) {
                                 errno = 0;
                                 if (task_is_exist(task)) {
-                                        task_delete(task); /* TEST*/
+                                        task_delete(task);
                                 } else {
                                         perror(NULL);
                                         timer = timer_reset();
