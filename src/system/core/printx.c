@@ -984,47 +984,25 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
         }
 
-        /// @brief  Put decimal integer
+        /// @brief  Put integer
         /// @param  None
         /// @return If format was found then true is returned, otherwise false.
-        bool put_decimal()
+        bool put_integer()
         {
-                if (chr == 'd' || chr == 'u' || chr == 'i') {
-                        char result[12];
-                        memset(result, 0, sizeof(result));
-
-                        char *result_ptr = itoa(va_arg(arg, int), result, 10, chr == 'u', 0);
-
-                        while ((chr = *result_ptr++)) {
-                                if (!put_char(chr)) {
-                                        break;
-                                }
-                        }
-
-                        return true;
-                } else {
-                        return false;
-                }
-        }
-
-        /// @brief  Put hex integer
-        /// @param  None
-        /// @return If format was found then true is returned, otherwise false.
-        bool put_hex()
-        {
-                if (chr == 'x' || chr == 'X') {
+                if (chr == 'd' || chr == 'u' || chr == 'i' || chr == 'x' || chr == 'X') {
                         char result[16];
                         memset(result, 0, sizeof(result));
 
                         bool upper  = chr == 'X';
                         bool spaces = false;
                         bool expand = false;
+                        int  base   = chr == 'x' || chr == 'X' ? 16 : 10;
 
                         if (arg_size == -1 && leading_zero == false) {
                                 expand = false;
                                 spaces = false;
 
-                        } else if (arg_size == -1 && leading_zero == true ) {
+                        } else if (arg_size == -1 && leading_zero == true) {
                                 expand = false;
                                 spaces = false;
 
@@ -1032,7 +1010,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 expand = true;
                                 spaces = true;
 
-                        } else if (arg_size >= 0 && leading_zero == true ) {
+                        } else if (arg_size >= 0 && leading_zero == true) {
                                 expand = true;
                                 spaces = false;
                         }
@@ -1042,7 +1020,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                         }
 
-                        char *result_ptr = itoa(va_arg(arg, int), result, 16, true, expand ? arg_size : 0);
+                        char *result_ptr = itoa(va_arg(arg, int), result, base, true, expand ? arg_size : 0);
 
                         if (strlen(result_ptr) > arg_size) {
                                 arg_size = strlen(result_ptr);
@@ -1120,10 +1098,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         if (put_string())
                                 continue;
 
-                        if (put_decimal())
-                                continue;
-
-                        if (put_hex())
+                        if (put_integer())
                                 continue;
 
                         if (put_float())
