@@ -35,6 +35,7 @@
 #include "dnx/misc.h"
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 /*==============================================================================
   Local macros
@@ -151,6 +152,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
  * @param[in]   value           input value
  * @param[out] *str             string - result
  * @param[in]   prec            precision
+ * @param[in]   n               buffer size
  *
  * @return number of characters
  */
@@ -833,52 +835,108 @@ void sys_perror(const char *str)
 int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        char chr;
-        int  slen = 1;
-        int  arg_size;
+        char   chr;
+        int    arg_size;
+        size_t scan_len     = 1;
+        bool   leading_zero = false;
+        bool   loop_break   = false;
+        bool   long_long    = false;
 
-        bool put_chr(const char c)
+        /// @brief  Function break loop
+        /// @param  None
+        /// @return None
+        inline void break_loop()
         {
-                if (buf == NULL) {
-                        slen++;
-                        return true;
-                } else {
-                        if ((size_t)slen < size) {
+                loop_break = true;
+        }
+
+        /// @brief  Put character to the buffer
+        /// @param  c    character to put
+        /// @return On success true is returned, otherwise false and loop is break
+        bool put_char(const char c)
+        {
+                if (buf) {
+                        if (scan_len < size) {
                                 *buf++ = c;
-                                slen++;
-                                return true;
                         } else {
+                                break_loop();
                                 return false;
                         }
                 }
+
+                scan_len++;
+                return true;
         }
 
-        while ((chr = *format++) != '\0') {
-                if (chr != '%') {
-                        if (!put_chr(chr))
-                                goto vsnprint_end;
-
-                        continue;
-                }
-
+        /// @brief  Get char from format string
+        /// @param  None
+        /// @return Load next character from format string
+        bool get_format_char()
+        {
                 chr = *format++;
 
-                arg_size = 0;
+                if (chr == '\0') {
+                        break_loop();
+                        return false;
+                } else {
+                        return true;
+                }
+        }
 
+        /// @brief  Analyze modifiers (%0, %.*, %<num>)
+        /// @param  None
+        /// @return If modifiers are set or not then true is returned. On error false.
+        bool check_modifiers()
+        {
+                arg_size     = -1;
+                leading_zero = false;
+
+                // check leading zero enable
+                if (chr == '0') {
+                        leading_zero = true;
+                        if (!get_format_char()) {
+                                return false;
+                        }
+                }
+
+                // check argument size modifier
                 if (chr == '.') {
-                        chr = *format++;
+                        if (!get_format_char()) {
+                                return false;
+                        }
+
                         if (chr == '*') {
                                 arg_size = va_arg(arg, int);
-                                chr = *format++;
+
+                                if (!get_format_char()) {
+                                        return false;
+                                }
+                        } else {
+                                loop_break = true;
+                                return false;
                         }
+
+                // check numeric size modifier
                 } else {
+                        arg_size = 0;
                         while (chr >= '0' && chr <= '9') {
                                 arg_size *= 10;
                                 arg_size += chr - '0';
-                                chr       = *format++;
+
+                                if (!get_format_char()) {
+                                        return false;
+                                }
                         }
                 }
 
+                return true;
+        }
+
+        /// @brief  Put percent or character
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_percent_or_char()
+        {
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
                                 chr = va_arg(arg, int);
@@ -887,67 +945,196 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
                         }
 
-                        if (!put_chr(chr))
-                                goto vsnprint_end;
+                        put_char(chr);
 
-                        continue;
+                        return true;
                 }
 
-                if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u' || chr == 'X' || chr == 'i') {
+                return false;
+        }
+
+        /// @brief  Put string
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_string()
+        {
+                if (chr == 's') {
+                        char *str = va_arg(arg, char*);
+                        if (!str) {
+                                str = "";
+                        }
+
+                        if (arg_size <= 0) {
+                                arg_size = UINT16_MAX;
+                        }
+
+                        while ((chr = *str++) && arg_size--) {
+                                if (chr == '\0') {
+                                        break;
+                                }
+
+                                if (!put_char(chr)) {
+                                        break;
+                                }
+                        }
+
+                        return true;
+                } else {
+                        return false;
+                }
+        }
+
+        /// @brief  Put decimal integer
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_decimal()
+        {
+                if (chr == 'd' || chr == 'u' || chr == 'i') {
                         char result[12];
                         memset(result, 0, sizeof(result));
-                        char *resultPtr;
 
-                        if (chr == 's') {
-                                resultPtr = va_arg(arg, char*);
-                                if (!resultPtr) {
-                                        resultPtr = "(null)";
+                        char *result_ptr = itoa(va_arg(arg, int), result, 10, chr == 'u', 0);
+
+                        while ((chr = *result_ptr++)) {
+                                if (!put_char(chr)) {
+                                        break;
                                 }
-
-                                if (arg_size == 0) {
-                                        arg_size = UINT16_MAX;
-                                }
-                        } else {
-                                if (arg_size > 9) {
-                                        arg_size = 9;
-                                }
-
-                                u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
-                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
-
-                                resultPtr = itoa(va_arg(arg, int), result, base, uint_en, arg_size);
-
-                                arg_size = strlen(result);
                         }
 
-                        while ((chr = *resultPtr++) && arg_size--) {
-                                if (!put_chr(chr))
-                                        goto vsnprint_end;
-                        }
-
-                        continue;
+                        return true;
+                } else {
+                        return false;
                 }
+        }
 
+        /// @brief  Put hex integer
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_hex()
+        {
+                if (chr == 'x' || chr == 'X') {
+                        char result[16];
+                        memset(result, 0, sizeof(result));
+
+                        bool upper  = chr == 'X';
+                        bool spaces = false;
+                        bool expand = false;
+
+                        if (arg_size == -1 && leading_zero == false) {
+                                expand = false;
+                                spaces = false;
+
+                        } else if (arg_size == -1 && leading_zero == true ) {
+                                expand = false;
+                                spaces = false;
+
+                        } else if (arg_size >= 0 && leading_zero == false) {
+                                expand = true;
+                                spaces = true;
+
+                        } else if (arg_size >= 0 && leading_zero == true ) {
+                                expand = true;
+                                spaces = false;
+                        }
+
+                        if (arg_size > sizeof(result) - 1) {
+                                arg_size = sizeof(result) - 1;
+
+                        }
+
+                        char *result_ptr = itoa(va_arg(arg, int), result, 16, true, expand ? arg_size : 0);
+
+                        if (strlen(result_ptr) > arg_size) {
+                                arg_size = strlen(result_ptr);
+                        }
+
+                        while ((chr = *result_ptr++) && arg_size--) {
+                                if (spaces && chr == '0') {
+                                        chr = ' ';
+                                } else {
+                                        spaces = false;
+                                }
+
+                                if (upper) {
+                                        chr = toupper(chr);
+                                } else {
+                                        chr = tolower(chr);
+                                }
+
+                                if (!put_char(chr)) {
+                                        loop_break = true;
+                                        break;
+                                }
+                        }
+
+                        return true;
+                } else {
+                        return false;
+                }
+        }
+
+        /// @brief  Put float value
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_float()
+        {
                 if (chr == 'f') {
                         char result[12];
                         memset(result, 0, sizeof(result));
+
                         int len = dtoa(va_arg(arg, double), result, 6, 12);
 
                         for (int i = 0; i < len; i++) {
-                                if (!put_chr(result[i]))
-                                        goto vsnprint_end;
+                                if (!put_char(result[i])) {
+                                        loop_break = true;
+                                        break;
+                                }
                         }
 
-                        continue;
+                        return true;
+                } else {
+                        return false;
                 }
         }
 
-        vsnprint_end:
-        if (buf) {
-                *buf = 0;
+        // read characters from format string
+        while (loop_break == false) {
+
+                if (!get_format_char())
+                        continue;
+
+                if (chr != '%') {
+                        put_char(chr);
+                        continue;
+
+                } else {
+                        if (!get_format_char())
+                                continue;
+
+                        if (!check_modifiers())
+                                continue;
+
+                        if (put_percent_or_char())
+                                continue;
+
+                        if (put_string())
+                                continue;
+
+                        if (put_decimal())
+                                continue;
+
+                        if (put_hex())
+                                continue;
+
+                        if (put_float())
+                                continue;
+                }
         }
 
-        return (slen - 1);
+        if (buf)
+                *buf = 0;
+
+        return (scan_len - 1);
 #else
         UNUSED_ARG(buf);
         UNUSED_ARG(size);
