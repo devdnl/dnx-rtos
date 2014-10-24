@@ -166,8 +166,8 @@ function sdspi:create_window(parent)
         ui.FlexGridSizerPanel1 = wx.wxFlexGridSizer(0, 1, 0, 0)
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-        ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Number of cards", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Number of cards", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_card_count = wx.wxChoice(ui.Panel1, ID.CHOICE_CARD_COUNT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_card_count:Append("1 card")
         ui.Choice_card_count:Append("2 cards")
@@ -208,9 +208,12 @@ function sdspi:create_window(parent)
         ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL)
         ui.FlexGridSizerPanel1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizerPanel1:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizerPanel1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: make sure that the MISO pin is set to input pulled-up mode", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizerPanel1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        
         ui.Panel1:SetSizer(ui.FlexGridSizerPanel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
