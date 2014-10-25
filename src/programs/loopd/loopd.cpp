@@ -52,7 +52,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
+GLOBAL_VARIABLES_SECTION {
         FILE           *flo;
         FILE           *fsrc;
         u8_t            buffer[BUFSIZE];

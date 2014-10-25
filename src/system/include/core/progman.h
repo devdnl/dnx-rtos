@@ -40,8 +40,10 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GLOBAL_VARIABLES                struct __global_vars__
-#define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
+#define _GVAR_STRUCT_NAME               global_variables
+#define GLOBAL_VARIABLES                struct _GVAR_STRUCT_NAME  // compability with older versions
+#define GLOBAL_VARIABLES_SECTION        GLOBAL_VARIABLES
+#define GLOBAL_VARIABLES_SECTION_BEGIN  GLOBAL_VARIABLES {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
 #ifdef __cplusplus
@@ -57,23 +59,23 @@ extern "C" {
 #endif
 
 #define PROGRAM_MAIN(name, stack_depth, argc, argv) \
-        _PROGMAN_CXX const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
-        _PROGMAN_CXX const int __prog_##name##_ss__ = stack_depth;\
-        _PROGMAN_CXX int _program_##name##_main(argc, argv)
+        _PROGMAN_CXX const int __built_in_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const int __built_in_app_##name##_ss__ = stack_depth;\
+        _PROGMAN_CXX int __built_in_app_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
-        _PROGMAN_EXTERN_C const int __prog_##name##_gs__;\
-        _PROGMAN_EXTERN_C const int __prog_##name##_ss__;\
-        _PROGMAN_EXTERN_C int _program_##name##_main(int, char**)
+        _PROGMAN_EXTERN_C const int __built_in_app_##name##_gs__;\
+        _PROGMAN_EXTERN_C const int __built_in_app_##name##_ss__;\
+        _PROGMAN_EXTERN_C int __built_in_app_##name##_main(int, char**)
 
 #define int_main(name, stack_depth, argc, argv)\
         PROGRAM_MAIN(name, stack_depth, argc, argv)
 
 #define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
-         .main_function = _program_##name##_main,\
-         .globals_size  = &__prog_##name##_gs__,\
-         .stack_depth   = &__prog_##name##_ss__}
+         .main_function = __built_in_app_##name##_main,\
+         .globals_size  = &__built_in_app_##name##_gs__,\
+         .stack_depth   = &__built_in_app_##name##_ss__}
 
 /*==============================================================================
   Exported types, enums definitions
@@ -95,7 +97,7 @@ typedef struct prog prog_t;
 extern FILE                     *stdin;
 extern FILE                     *stdout;
 extern FILE                     *stderr;
-extern struct __global_vars__   *global;
+extern struct _GVAR_STRUCT_NAME *global;
 extern int                      _errno;
 
 /*==============================================================================

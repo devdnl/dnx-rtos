@@ -95,19 +95,19 @@ static const uint  mutex_wait_attempts = 10;
   Exported object definitions
 ==============================================================================*/
 /* standard input */
-FILE                    *stdin;
+FILE *stdin;
 
 /* standard output */
-FILE                    *stdout;
+FILE *stdout;
 
 /* standard error */
-FILE                    *stderr;
+FILE *stderr;
 
 /* global variables */
-struct __global_vars__  *global;
+struct _GVAR_STRUCT_NAME *global;
 
 /* error number */
-int                      _errno;
+int _errno;
 
 /*==============================================================================
   External object definitions

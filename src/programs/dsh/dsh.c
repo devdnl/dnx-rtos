@@ -74,7 +74,7 @@ static bool             analyze_line            (char *cmd);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
+GLOBAL_VARIABLES_SECTION {
         char  line[PROMPT_LINE_LEN];
         char  history[PROMPT_LINE_LEN];
         char  cwd[CWD_PATH_LEN];
@@ -641,7 +641,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-PROGRAM_MAIN(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int_main(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;

@@ -111,7 +111,7 @@ function create_program()
                 {tag = "<!year!>", to = os.date("%Y")},
                 {tag = "<!email!>", to = email},
                 {tag = "<!program_header!>", to = ifs(header, "#include \""..name..".h\"", "")},
-                {tag = "<!global_variables_in_src!>", to = ifs(not header, "GLOBAL_VARIABLES {\n};", "")},
+                {tag = "<!global_variables_in_src!>", to = ifs(not header, "GLOBAL_VARIABLES_SECTION {\n};", "")},
                 {tag = "<!stack_size!>", to = stack},
         }
 
