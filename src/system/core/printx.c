@@ -88,55 +88,49 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
         static const char digits[] = "0123456789ABCDEF";
 
         char  *buffer_copy = buf;
-        i32_t  sign     = 0;
-        u8_t   zero_cnt = 0;
-        i32_t  quot;
-        i32_t  rem;
+        i32_t  sign        = 0;
+        u8_t   zero_cnt    = 0;
 
-        if (base < 2 || base > 16) {
-                goto itoa_exit;
-        }
+        if (base >= 2 && base <= 16) {
 
-        if (usign_val) {
-                do {
-                        quot   = (u32_t) ((u32_t) val / (u32_t) base);
-                        rem    = (u32_t) ((u32_t) val % (u32_t) base);
-                        *buf++ = digits[rem];
-                        zero_cnt++;
-                } while ((val = quot));
-        } else {
-                if ((base == 10) && ((sign = val) < 0)) {
+                if ((base == 10) && ((sign = val) < 0) && !usign_val) {
                         val = -val;
                 }
 
+                i32_t quot;
+                i32_t rem;
                 do {
-                        quot   = val / base;
-                        rem    = val % base;
+                        if (usign_val) {
+                                quot = static_cast(u32_t, val) / base;
+                                rem  = static_cast(u32_t, val) % base;
+                        } else {
+                                quot = val / base;
+                                rem  = val % base;
+                        }
+
                         *buf++ = digits[rem];
                         zero_cnt++;
                 } while ((val = quot));
+
+                while (zeros_req > zero_cnt) {
+                        *buf++ = '0';
+                        zero_cnt++;
+                }
+
+                if (sign < 0 && !usign_val) {
+                        *buf++ = '-';
+                }
+
+                /* reverse buffer */
+                char *begin = buffer_copy;
+                char *end   = (buf - 1);
+                while (end > begin) {
+                        char temp = *end;
+                        *end--    = *begin;
+                        *begin++  = temp;
+                }
         }
 
-        while (zeros_req > zero_cnt) {
-                *buf++ = '0';
-                zero_cnt++;
-        }
-
-        if (sign < 0) {
-                *buf++ = '-';
-        }
-
-        /* reverse buffer */
-        char *begin = buffer_copy;
-        char *end   = (buf - 1);
-
-        while (end > begin) {
-                char temp = *end;
-                *end--    = *begin;
-                *begin++  = temp;
-        }
-
-        itoa_exit:
         *buf = '\0';
         return buffer_copy;
 }
@@ -883,7 +877,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
         }
 
-        /// @brief  Analyze modifiers (%0, %.*, %<num>)
+        /// @brief  Analyze modifiers (%0, %.*, %<num>, %xxlx)
         /// @param  None
         /// @return If modifiers are set or not then true is returned. On error false.
         bool check_modifiers()
@@ -926,6 +920,15 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 if (!get_format_char()) {
                                         return false;
                                 }
+                        }
+                }
+
+                // check long long values
+                if (chr == 'l') {
+                        long_long = true;
+
+                        if (!get_format_char()) {
+                                return false;
                         }
                 }
 
@@ -990,12 +993,13 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool put_integer()
         {
                 if (chr == 'd' || chr == 'u' || chr == 'i' || chr == 'x' || chr == 'X') {
-                        char result[16];
+                        char result[24];
                         memset(result, 0, sizeof(result));
 
                         bool upper  = chr == 'X';
                         bool spaces = false;
                         bool expand = false;
+                        bool unsign = chr == 'u';
                         int  base   = chr == 'x' || chr == 'X' ? 16 : 10;
 
                         if (arg_size == -1 && leading_zero == false) {
@@ -1015,14 +1019,22 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 spaces = false;
                         }
 
-                        if (arg_size > sizeof(result) - 1) {
+                        if (arg_size > static_cast(int, sizeof(result) - 1)) {
                                 arg_size = sizeof(result) - 1;
 
                         }
 
-                        char *result_ptr = itoa(va_arg(arg, int), result, base, true, expand ? arg_size : 0);
+                        /* NOTE: 64-bit integers are not supported */
+                        i32_t val;
+                        if (long_long) {
+                                val = va_arg(arg, i32_t);
+                        } else {
+                                val = va_arg(arg, i32_t);
+                        }
 
-                        if (strlen(result_ptr) > arg_size) {
+                        char *result_ptr = itoa(val, result, base, unsign, expand ? arg_size : 0);
+
+                        if (static_cast(int, strlen(result_ptr)) > arg_size) {
                                 arg_size = strlen(result_ptr);
                         }
 
@@ -1034,9 +1046,9 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
 
                                 if (upper) {
-                                        chr = toupper(chr);
+                                        chr = toupper(static_cast(int, chr));
                                 } else {
-                                        chr = tolower(chr);
+                                        chr = tolower(static_cast(int, chr));
                                 }
 
                                 if (!put_char(chr)) {
