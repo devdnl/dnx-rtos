@@ -50,9 +50,6 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-#if (CONFIG_PRINTF_ENABLE > 0)
-static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req);
-#endif
 
 /*==============================================================================
   Local objects
@@ -71,6 +68,25 @@ static FILE *sys_printk_file;
 
 //==============================================================================
 /**
+ * @brief  Reverse selected buffer
+ * @param  begin        beggining of the buffer
+ * @param  end          end of the buffer
+ * @return None
+ */
+//==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
+static void reverse_buffer(char *begin, char *end)
+{
+        while (end > begin) {
+                char tmp = *end;
+                *end--   = *begin;
+                *begin++ = tmp;
+        }
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Function convert value to the character
  *
  * @param  val          converted value
@@ -85,20 +101,18 @@ static FILE *sys_printk_file;
 #if (CONFIG_PRINTF_ENABLE > 0)
 static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
 {
-        static const char digits[] = "0123456789ABCDEF";
-
-        char  *buffer_copy = buf;
-        i32_t  sign        = 0;
-        u8_t   zero_cnt    = 0;
+        static const char digits[]  = "0123456789ABCDEF";
+        char             *buf_start = buf;
 
         if (base >= 2 && base <= 16) {
+                bool sign     = val < 0 && !usign_val;
+                u8_t zero_cnt = 0;
 
-                if ((base == 10) && ((sign = val) < 0) && !usign_val) {
+                if (base == 10 && sign) {
                         val = -val;
                 }
 
-                i32_t quot;
-                i32_t rem;
+                i32_t quot, rem;
                 do {
                         if (usign_val) {
                                 quot = static_cast(u32_t, val) / base;
@@ -110,6 +124,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 
                         *buf++ = digits[rem];
                         zero_cnt++;
+
                 } while ((val = quot));
 
                 while (zeros_req > zero_cnt) {
@@ -117,22 +132,15 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
                         zero_cnt++;
                 }
 
-                if (sign < 0 && !usign_val) {
+                if (sign) {
                         *buf++ = '-';
                 }
 
-                /* reverse buffer */
-                char *begin = buffer_copy;
-                char *end   = (buf - 1);
-                while (end > begin) {
-                        char temp = *end;
-                        *end--    = *begin;
-                        *begin++  = temp;
-                }
+                reverse_buffer(buf_start, buf - 1);
         }
 
         *buf = '\0';
-        return buffer_copy;
+        return buf_start;
 }
 #endif
 
@@ -154,21 +162,19 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 #if (CONFIG_PRINTF_ENABLE > 0)
 static int dtoa(double value, char* str, int prec, int n)
 {
-#define push_char(c) if (conv < n) {*wstr++ = c; conv++;}
-
         const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
                                 10000000, 100000000, 1000000000};
 
-        void strreverse(char* begin, char* end)
+        int   conv = 0;
+        char *wstr = str;
+
+        void push_char(const char c)
         {
-                char aux;
-                while (end > begin) {
-                        aux = *end, *end-- = *begin, *begin++ = aux;
+                if (conv < n) {
+                        *wstr++ = c;
+                        conv++;
                 }
         }
-
-        int  conv  = 0;
-        char *wstr = str;
 
         /*
          * Hacky test for NaN
@@ -184,7 +190,7 @@ static int dtoa(double value, char* str, int prec, int n)
         }
 
         /* if input is larger than thres_max, revert to exponential */
-        const double thres_max = (double) (0x7FFFFFFF);
+        const double thres_max = reinterpret_cast(double, 0x7FFFFFFF);
 
         double diff  = 0.0;
 
@@ -270,25 +276,7 @@ static int dtoa(double value, char* str, int prec, int n)
                 push_char('-');
         }
 
-        /* remove ending zeros */
-        int m   = n < conv ? n : conv;
-        int del = 0;
-
-        for (int i = 0; i < m; i++) {
-                if (str[i] == '0' && m > 1) {
-                        str[i] = ' ';
-                        del++;
-                } else if (str[i] == '.') {
-                        str[i] = ' ';
-                        del++;
-                        break;
-                } else {
-                        break;
-                }
-        }
-        conv -= del;
-
-        strreverse(str, wstr - 1);
+        reverse_buffer(str, wstr - 1);
 
         return conv;
 }
@@ -906,7 +894,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         return false;
                                 }
                         } else {
-                                loop_break = true;
+                                break_loop();
                                 return false;
                         }
 
@@ -993,13 +981,11 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool put_integer()
         {
                 if (chr == 'd' || chr == 'u' || chr == 'i' || chr == 'x' || chr == 'X') {
-                        char result[24];
-                        memset(result, 0, sizeof(result));
-
+                        char result[16];
                         bool upper  = chr == 'X';
                         bool spaces = false;
                         bool expand = false;
-                        bool unsign = chr == 'u';
+                        bool unsign = chr == 'u' || chr == 'x' || chr =='X';
                         int  base   = chr == 'x' || chr == 'X' ? 16 : 10;
 
                         if (arg_size == -1 && leading_zero == false) {
@@ -1039,7 +1025,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         }
 
                         while ((chr = *result_ptr++) && arg_size--) {
-                                if (spaces && chr == '0') {
+                                if (spaces && chr == '0' && arg_size > 1) {
                                         chr = ' ';
                                 } else {
                                         spaces = false;
@@ -1052,7 +1038,6 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
 
                                 if (!put_char(chr)) {
-                                        loop_break = true;
                                         break;
                                 }
                         }
@@ -1068,15 +1053,12 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         /// @return If format was found then true is returned, otherwise false.
         bool put_float()
         {
-                if (chr == 'f') {
-                        char result[12];
-                        memset(result, 0, sizeof(result));
-
-                        int len = dtoa(va_arg(arg, double), result, 6, 12);
+                if (chr == 'f' || chr == 'F') {
+                        char result[24];
+                        int  len = dtoa(va_arg(arg, double), result, 6, sizeof(result));
 
                         for (int i = 0; i < len; i++) {
                                 if (!put_char(result[i])) {
-                                        loop_break = true;
                                         break;
                                 }
                         }
