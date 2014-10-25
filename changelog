@@ -15,6 +15,7 @@ New Features, Improvements:
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
 - GPIO: defined pin that is not connected to any input/output (pin NONE)
+- Added SLRE library (regular expressions)
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
