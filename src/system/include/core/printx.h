@@ -68,6 +68,7 @@ extern "C" {
 #       define FONT_COLOR_YELLOW                "\033[1;33m"
 #       define FONT_COLOR_BROWN                 "\033[33m"
 #       define FONT_COLOR_BLUE                  "\033[34m"
+#       define FONT_COLOR_LIGHT_BLUE            "\033[1;34m"
 #       define FONT_COLOR_MAGENTA               "\033[35m"
 #       define FONT_COLOR_PINK                  "\033[1;35m"
 #       define FONT_COLOR_CYAN                  "\033[36m"
@@ -96,6 +97,7 @@ extern "C" {
 #       define FONT_COLOR_YELLOW
 #       define FONT_COLOR_BROWN
 #       define FONT_COLOR_BLUE
+#       define FONT_COLOR_LIGHT_BLUE
 #       define FONT_COLOR_MAGENTA
 #       define FONT_COLOR_PINK
 #       define FONT_COLOR_CYAN
