@@ -235,7 +235,7 @@ static int run_level_1(void)
         int stat = net_get_ifconfig(&ifcfg);
         if (stat == 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
-                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
+                       "  MAC       : %2X:%2X:%2X:%2X:%2X:%2X\n"
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
                        "  Gateway   : %d.%d.%d.%d\n",

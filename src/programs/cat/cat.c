@@ -71,6 +71,7 @@ GLOBAL_VARIABLES {
 static void print_help(char *name)
 {
         printf("Usage: %s [OPTION] [FILE]\n", name);
+        puts("  -n,             show only printable characters");
         puts("  -h, --help      show this help");
 }
 
@@ -82,9 +83,15 @@ static void print_help(char *name)
 int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
+        bool printable_only = false;
 
         int i = 1;
         for (; i < argc; i++) {
+                if (strcmp(argv[i], "-n") == 0) {
+                        printable_only = true;
+                        continue;
+                }
+
                 if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
                         print_help(argv[0]);
                         return 0;
@@ -101,23 +108,54 @@ int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
         char *str = calloc(col + 1, sizeof(char));
         if (str) {
                 FILE *file;
+                bool  stdio;
 
+                /* read each file */
                 do {
+                        /* check if file is stdin or regular file */
                         if (argc == i) {
-                                file = stdin;
+                                file  = stdin;
+                                stdio = true;
                         } else {
                                 file = fopen(argv[i], "r");
                                 if (!file) {
                                         perror(argv[i]);
                                         break;
                                 }
+
+                                stdio = false;
                         }
 
-                        int n;
-                        do {
-                                n = fread(global->buffer, 1, sizeof(global->buffer), file);
-                                fwrite(global->buffer, 1, n, stdout);
-                        } while (n == sizeof(global->buffer));
+
+                        /* read strings from stdin */
+                        if (stdio) {
+                                char *str = static_cast(char*, global->buffer);
+                                int   len = sizeof(global->buffer);
+                                int   eof = 0;
+
+                                while (!eof && fgets(str, len, file)) {
+                                        eof = feof(file);
+                                        fputs(str, stdout);
+                                }
+
+                        /* read RAW data for the file */
+                        } else {
+                                int n;
+                                do {
+                                        n = fread(global->buffer, 1, sizeof(global->buffer), file);
+
+                                        if (printable_only) {
+                                                for (size_t i = 0; i < sizeof(global->buffer); i++) {
+                                                        char chr = global->buffer[i];
+                                                        if (!(chr == '\n' || (chr >= ' ' && chr < 0x80))) {
+                                                                global->buffer[i] = '.';
+                                                        }
+                                                }
+                                        }
+
+                                        fwrite(global->buffer, 1, n, stdout);
+                                } while (n == sizeof(global->buffer));
+                        }
 
                         if (file != stdin) {
                                 fclose(file);

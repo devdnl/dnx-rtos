@@ -215,10 +215,10 @@ function tty:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_updated)
-        this:Connect(ID.SPINCTRL_COLUMNS,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
-        this:Connect(ID.SPINCTRL_ROWS,          wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
+        this:Connect(ID.SPINCTRL_COLUMNS,       wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
+        this:Connect(ID.SPINCTRL_ROWS,          wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.CHECKBOX_AUTOSIZE,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  value_updated          )
-        this:Connect(ID.SPINCTRL_OUTBUFSIZE,    wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
+        this:Connect(ID.SPINCTRL_OUTBUFSIZE,    wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.CHOICE_TERMCOUNT,       wx.wxEVT_COMMAND_CHOICE_SELECTED,   value_updated          )
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )

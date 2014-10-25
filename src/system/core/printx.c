@@ -5,7 +5,7 @@
 
 @brief   Basic print functions
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013, 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,9 +32,10 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
-#include <dnx/misc.h>
+#include "dnx/misc.h"
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 /*==============================================================================
   Local macros
@@ -49,10 +50,6 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-#if (CONFIG_PRINTF_ENABLE > 0)
-static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req);
-static int   calc_format_size(const char *format, va_list arg);
-#endif
 
 /*==============================================================================
   Local objects
@@ -71,6 +68,25 @@ static FILE *sys_printk_file;
 
 //==============================================================================
 /**
+ * @brief  Reverse selected buffer
+ * @param  begin        beggining of the buffer
+ * @param  end          end of the buffer
+ * @return None
+ */
+//==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
+static void reverse_buffer(char *begin, char *end)
+{
+        while (end > begin) {
+                char tmp = *end;
+                *end--   = *begin;
+                *begin++ = tmp;
+        }
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Function convert value to the character
  *
  * @param  val          converted value
@@ -85,60 +101,46 @@ static FILE *sys_printk_file;
 #if (CONFIG_PRINTF_ENABLE > 0)
 static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
 {
-        static const char digits[] = "0123456789ABCDEF";
+        static const char digits[]  = "0123456789ABCDEF";
+        char             *buf_start = buf;
 
-        char  *buffer_copy = buf;
-        i32_t  sign     = 0;
-        u8_t   zero_cnt = 0;
-        i32_t  quot;
-        i32_t  rem;
+        if (base >= 2 && base <= 16) {
+                bool sign     = val < 0 && !usign_val;
+                u8_t zero_cnt = 0;
 
-        if (base < 2 || base > 16) {
-                goto itoa_exit;
-        }
-
-        if (usign_val) {
-                do {
-                        quot   = (u32_t) ((u32_t) val / (u32_t) base);
-                        rem    = (u32_t) ((u32_t) val % (u32_t) base);
-                        *buf++ = digits[rem];
-                        zero_cnt++;
-                } while ((val = quot));
-        } else {
-                if ((base == 10) && ((sign = val) < 0)) {
+                if (base == 10 && sign) {
                         val = -val;
                 }
 
+                i32_t quot, rem;
                 do {
-                        quot   = val / base;
-                        rem    = val % base;
+                        if (usign_val) {
+                                quot = static_cast(u32_t, val) / base;
+                                rem  = static_cast(u32_t, val) % base;
+                        } else {
+                                quot = val / base;
+                                rem  = val % base;
+                        }
+
                         *buf++ = digits[rem];
                         zero_cnt++;
+
                 } while ((val = quot));
+
+                while (zeros_req > zero_cnt) {
+                        *buf++ = '0';
+                        zero_cnt++;
+                }
+
+                if (sign) {
+                        *buf++ = '-';
+                }
+
+                reverse_buffer(buf_start, buf - 1);
         }
 
-        while (zeros_req > zero_cnt) {
-                *buf++ = '0';
-                zero_cnt++;
-        }
-
-        if (sign < 0) {
-                *buf++ = '-';
-        }
-
-        /* reverse buffer */
-        char *begin = buffer_copy;
-        char *end   = (buf - 1);
-
-        while (end > begin) {
-                char temp = *end;
-                *end--    = *begin;
-                *begin++  = temp;
-        }
-
-        itoa_exit:
         *buf = '\0';
-        return buffer_copy;
+        return buf_start;
 }
 #endif
 
@@ -152,6 +154,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
  * @param[in]   value           input value
  * @param[out] *str             string - result
  * @param[in]   prec            precision
+ * @param[in]   n               buffer size
  *
  * @return number of characters
  */
@@ -159,21 +162,19 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 #if (CONFIG_PRINTF_ENABLE > 0)
 static int dtoa(double value, char* str, int prec, int n)
 {
-#define push_char(c) if (conv < n) {*wstr++ = c; conv++;}
-
         const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
                                 10000000, 100000000, 1000000000};
 
-        void strreverse(char* begin, char* end)
+        int   conv = 0;
+        char *wstr = str;
+
+        void push_char(const char c)
         {
-                char aux;
-                while (end > begin) {
-                        aux = *end, *end-- = *begin, *begin++ = aux;
+                if (conv < n) {
+                        *wstr++ = c;
+                        conv++;
                 }
         }
-
-        int  conv  = 0;
-        char *wstr = str;
 
         /*
          * Hacky test for NaN
@@ -189,7 +190,7 @@ static int dtoa(double value, char* str, int prec, int n)
         }
 
         /* if input is larger than thres_max, revert to exponential */
-        const double thres_max = (double) (0x7FFFFFFF);
+        const double thres_max = reinterpret_cast(double, 0x7FFFFFFF);
 
         double diff  = 0.0;
 
@@ -275,83 +276,9 @@ static int dtoa(double value, char* str, int prec, int n)
                 push_char('-');
         }
 
-        /* remove ending zeros */
-        int m   = n < conv ? n : conv;
-        int del = 0;
-
-        for (int i = 0; i < m; i++) {
-                if (str[i] == '0' && m > 1) {
-                        str[i] = ' ';
-                        del++;
-                } else if (str[i] == '.') {
-                        str[i] = ' ';
-                        del++;
-                        break;
-                } else {
-                        break;
-                }
-        }
-        conv -= del;
-
-        strreverse(str, wstr - 1);
+        reverse_buffer(str, wstr - 1);
 
         return conv;
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function convert arguments to stream
- *
- * @param[in] *format        message format
- * @param[in]  arg           argument list
- *
- * @return size of snprintf result
- */
-//==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
-static int calc_format_size(const char *format, va_list arg)
-{
-        char chr;
-        int size = 1;
-
-        while ((chr = *format++) != '\0') {
-                if (chr != '%') {
-                        if (chr == '\n') {
-                                size += 2;
-                        } else {
-                                size++;
-                        }
-                } else {
-                        chr = *format++;
-
-                        while (chr >= '0' && chr <= '9') {
-                                chr = *format++;
-                        }
-
-                        if (chr == '%' || chr == 'c') {
-                                if (chr == 'c') {
-                                        chr = va_arg(arg, i32_t);
-                                }
-
-                                size++;
-                                continue;
-                        }
-
-                        if (chr == 's') {
-                                size += strlen(va_arg(arg, char*));
-                                continue;
-                        }
-
-                        if (chr == 'd' || chr == 'x' || chr == 'u' || chr == 'i' || chr == 'X') {
-                                chr = va_arg(arg, i32_t);
-                                size += 11;
-                                continue;
-                        }
-                }
-        }
-
-        return size;
 }
 #endif
 
@@ -410,11 +337,10 @@ void printk(const char *format, ...)
 
         if (sys_printk_file) {
                 va_start(args, format);
-                int size = calc_format_size(format, args);
+                int size = sys_vsnprintf(NULL, 0, format, args) + 1;
                 va_end(args);
 
                 char *buffer = sysm_syscalloc(size, sizeof(char));
-
                 if (buffer) {
                         va_start(args, format);
                         int n = sys_vsnprintf(buffer, size, format, args);
@@ -691,7 +617,9 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
         int n = 0;
 
         if (file && format) {
-                u32_t size = calc_format_size(format, arg);
+                va_list carg;
+                va_copy(carg, arg);
+                u32_t size = sys_vsnprintf(NULL, 0, format, carg) + 1;
 
                 char *str = sysm_syscalloc(1, size);
                 if (str) {
@@ -884,91 +812,333 @@ void sys_perror(const char *str)
  * @param[in]  arg           argument list
  *
  * @return number of printed characters
+ *
+ * Supported flags:
+ *   %%         - print % character
+ *                printf("%%"); => %
+ *
+ *   %c         - print selected character (the \0 character is skipped)
+ *                printf("_%c_", 'x');  => _x_
+ *                printf("_%c_", '\0'); => __
+ *
+ *   %s         - print selected string
+ *                printf("%s", "Foobar"); => Foobar
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                printf("%.*s\n", 3, "Foobar"); => Foo
+ *
+ *   %d, %i     - print decimal integer values
+ *                printf("%d, %i", -5, 10); => -5, 10
+ *
+ *   %u         - print unsigned decimal integer values
+ *                printf("%d, %i", -1, 10); => 4294967295, 10
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                printf("0x%x, 0x%X", 0x5A, 0xfa); => 0x5a, 0xFA
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                printf("0x02X, 0x03X", 0x5, 0x1F43); => 0x05, 0x1F43
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                printf("Foobar: %f", 1.0); Foobar: 1.000000
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                NOTE: not supported
  */
-//===============================================================================
+//==============================================================================
 int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        #define put_character(character) {      \
-                if ((size_t)slen < size)  {     \
-                        *buf++ = character;     \
-                        slen++;                 \
-                }  else {                       \
-                        goto vsnprint_end;      \
-                }                               \
+        char   chr;
+        int    arg_size;
+        size_t scan_len     = 1;
+        bool   leading_zero = false;
+        bool   loop_break   = false;
+        bool   long_long    = false;
+        bool   arg_size_str = false;
+
+        /// @brief  Function break loop
+        /// @param  None
+        /// @return None
+        inline void break_loop()
+        {
+                loop_break = true;
         }
 
-        char chr;
-        int  slen = 1;
-        int  arg_size;
-
-        while ((chr = *format++) != '\0') {
-                if (chr != '%') {
-                        put_character(chr);
-                        continue;
+        /// @brief  Put character to the buffer
+        /// @param  c    character to put
+        /// @return On success true is returned, otherwise false and loop is break
+        bool put_char(const char c)
+        {
+                if (buf) {
+                        if (scan_len < size) {
+                                *buf++ = c;
+                        } else {
+                                break_loop();
+                                return false;
+                        }
                 }
 
+                scan_len++;
+                return true;
+        }
+
+        /// @brief  Get char from format string
+        /// @param  None
+        /// @return Load next character from format string
+        bool get_format_char()
+        {
                 chr = *format++;
 
-                arg_size = 0;
-                while (chr >= '0' && chr <= '9') {
-                        arg_size *= 10;
-                        arg_size += chr - '0';
-                        chr       = *format++;
+                if (chr == '\0') {
+                        break_loop();
+                        return false;
+                } else {
+                        return true;
+                }
+        }
+
+        /// @brief  Analyze modifiers (%0, %.*, %<num>, %xxlx)
+        /// @param  None
+        /// @return If modifiers are set or not then true is returned. On error false.
+        bool check_modifiers()
+        {
+                arg_size     = -1;
+                leading_zero = false;
+                arg_size_str = false;
+
+                // check leading zero enable
+                if (chr == '0') {
+                        leading_zero = true;
+                        if (!get_format_char()) {
+                                return false;
+                        }
                 }
 
+                // check argument size modifier
+                if (chr == '.') {
+                        if (!get_format_char()) {
+                                return false;
+                        }
+
+                        if (chr == '*') {
+                                arg_size     = va_arg(arg, int);
+                                arg_size_str = true;
+
+                                if (!get_format_char()) {
+                                        return false;
+                                }
+                        } else {
+                                break_loop();
+                                return false;
+                        }
+
+                // check numeric size modifier
+                } else {
+                        arg_size = 0;
+                        while (chr >= '0' && chr <= '9') {
+                                arg_size *= 10;
+                                arg_size += chr - '0';
+
+                                if (!get_format_char()) {
+                                        return false;
+                                }
+                        }
+                }
+
+                // check long long values
+                if (chr == 'l') {
+                        long_long = true;
+
+                        if (!get_format_char()) {
+                                return false;
+                        }
+                }
+
+                return true;
+        }
+
+        /// @brief  Put percent or character
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_percent_or_char()
+        {
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
                                 chr = va_arg(arg, int);
+                                if (chr != '\0') {
+                                        put_char(chr);
+                                }
+                        }
+
+                        return true;
+                }
+
+                return false;
+        }
+
+        /// @brief  Put string
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_string()
+        {
+                if (chr == 's') {
+                        char *str = va_arg(arg, char*);
+                        if (!str) {
+                                str = "";
+                        }
+
+                        if (arg_size <= 0 || arg_size_str == false) {
+                                arg_size = UINT16_MAX;
+                        }
+
+                        while ((chr = *str++) && arg_size--) {
                                 if (chr == '\0') {
-                                        chr = 0xFF;
+                                        break;
+                                }
+
+                                if (!put_char(chr)) {
+                                        break;
                                 }
                         }
 
-                        put_character(chr);
-                        continue;
-                }
-
-                if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u' || chr == 'X' || chr == 'i') {
-                        char result[12];
-                        memset(result, 0, sizeof(result));
-                        char *resultPtr;
-
-                        if (chr == 's') {
-                                resultPtr = va_arg(arg, char*);
-                                if (!resultPtr) {
-                                        resultPtr = "(null)";
-                                }
-                        } else {
-                                if (arg_size > 9) {
-                                        arg_size = 9;
-                                }
-
-                                u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
-                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
-
-                                resultPtr = itoa(va_arg(arg, i32_t), result,
-                                                 base, uint_en, arg_size);
-                        }
-
-                        while ((chr = *resultPtr++)) {
-                                put_character(chr);
-                        }
-
-                        continue;
-                }
-
-                if (chr == 'f') {
-                        slen += dtoa(va_arg(arg, double), buf, 6, size - slen);
-                        buf  += slen;
-                        continue;
+                        return true;
+                } else {
+                        return false;
                 }
         }
 
-vsnprint_end:
-        *buf = 0;
-        return (slen - 1);
-        #undef put_character
+        /// @brief  Put integer
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_integer()
+        {
+                if (chr == 'd' || chr == 'u' || chr == 'i' || chr == 'x' || chr == 'X') {
+                        char result[16];
+                        bool upper  = chr == 'X';
+                        bool spaces = false;
+                        bool expand = false;
+                        bool unsign = chr == 'u' || chr == 'x' || chr =='X';
+                        int  base   = chr == 'x' || chr == 'X' ? 16 : 10;
+
+                        if (arg_size == -1 && leading_zero == false) {
+                                expand = false;
+                                spaces = false;
+
+                        } else if (arg_size == -1 && leading_zero == true) {
+                                expand = false;
+                                spaces = false;
+
+                        } else if (arg_size >= 0 && leading_zero == false) {
+                                expand = true;
+                                spaces = true;
+
+                        } else if (arg_size >= 0 && leading_zero == true) {
+                                expand = true;
+                                spaces = false;
+                        }
+
+                        if (arg_size > static_cast(int, sizeof(result) - 1)) {
+                                arg_size = sizeof(result) - 1;
+
+                        }
+
+                        /* NOTE: 64-bit integers are not supported */
+                        i32_t val;
+                        if (long_long) {
+                                val = va_arg(arg, i32_t);
+                        } else {
+                                val = va_arg(arg, i32_t);
+                        }
+
+                        char *result_ptr = itoa(val, result, base, unsign, expand ? arg_size : 0);
+
+                        if (static_cast(int, strlen(result_ptr)) > arg_size) {
+                                arg_size = strlen(result_ptr);
+                        }
+
+                        while ((chr = *result_ptr++) && arg_size--) {
+                                if (spaces && chr == '0' && arg_size > 1) {
+                                        chr = ' ';
+                                } else {
+                                        spaces = false;
+                                }
+
+                                if (upper) {
+                                        chr = toupper(static_cast(int, chr));
+                                } else {
+                                        chr = tolower(static_cast(int, chr));
+                                }
+
+                                if (!put_char(chr)) {
+                                        break;
+                                }
+                        }
+
+                        return true;
+                } else {
+                        return false;
+                }
+        }
+
+        /// @brief  Put float value
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_float()
+        {
+                if (chr == 'f' || chr == 'F') {
+                        char result[24];
+                        int  len = dtoa(va_arg(arg, double), result, 6, sizeof(result));
+
+                        for (int i = 0; i < len; i++) {
+                                if (!put_char(result[i])) {
+                                        break;
+                                }
+                        }
+
+                        return true;
+                } else {
+                        return false;
+                }
+        }
+
+        // read characters from format string
+        while (loop_break == false) {
+
+                if (!get_format_char())
+                        continue;
+
+                if (chr != '%') {
+                        put_char(chr);
+                        continue;
+
+                } else {
+                        if (!get_format_char())
+                                continue;
+
+                        if (!check_modifiers())
+                                continue;
+
+                        if (put_percent_or_char())
+                                continue;
+
+                        if (put_string())
+                                continue;
+
+                        if (put_integer())
+                                continue;
+
+                        if (put_float())
+                                continue;
+                }
+        }
+
+        if (buf)
+                *buf = 0;
+
+        return (scan_len - 1);
 #else
         UNUSED_ARG(buf);
         UNUSED_ARG(size);
