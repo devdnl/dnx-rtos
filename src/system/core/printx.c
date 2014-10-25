@@ -971,6 +971,8 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 if (chr != '\0') {
                                         put_char(chr);
                                 }
+                        } else {
+                                put_char(chr);
                         }
 
                         return true;
