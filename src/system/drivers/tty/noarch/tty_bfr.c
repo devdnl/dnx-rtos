@@ -47,8 +47,8 @@ struct ttybfr {
         char  *line[_TTY_TERMINAL_ROWS];
         char   new_line_bfr[_TTY_TERMINAL_COLUMNS + CR_LF_NUL_LEN];
         size_t new_line_bfr_idx;
-        int    carriage;
-        u16_t  write_index;
+        u16_t  carriage;
+        u16_t  line_head;
         bool   fresh_line[_TTY_TERMINAL_ROWS];
 };
 
@@ -97,10 +97,10 @@ static bool is_valid(ttybfr_t *this)
 //==============================================================================
 static uint get_line_index(ttybfr_t *this, uint go_back)
 {
-        if (this->write_index < go_back) {
-                return _TTY_TERMINAL_ROWS - (go_back - this->write_index);
+        if (this->line_head < go_back) {
+                return _TTY_TERMINAL_ROWS - (go_back - this->line_head);
         } else {
-                return this->write_index - go_back;
+                return this->line_head - go_back;
         }
 }
 
@@ -114,15 +114,21 @@ static uint get_line_index(ttybfr_t *this, uint go_back)
 //==============================================================================
 static void link_line(ttybfr_t *this, char *line)
 {
-        if (this->line[this->write_index]) {
-                free(this->line[this->write_index]);
+        if (this->line[this->line_head]) {
+                free(this->line[this->line_head]);
+                this->line[this->line_head] = NULL;
         }
 
-        this->line[this->write_index]       = line;
-        this->fresh_line[this->write_index] = true;
+        this->line[this->line_head]       = line;
+        this->fresh_line[this->line_head] = true;
 
         if (LAST_CHARACTER(line) == '\n') {
-                this->write_index = (this->write_index + 1) % _TTY_TERMINAL_ROWS;
+                this->line_head = (this->line_head + 1) % _TTY_TERMINAL_ROWS;
+
+                if (this->line[this->line_head]) {
+                        free(this->line[this->line_head]);
+                        this->line[this->line_head] = NULL;
+                }
         }
 }
 
@@ -148,9 +154,9 @@ static void clear_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 static void clear_last_line(ttybfr_t *this)
 {
-        if (this->line[this->write_index]) {
-                free(this->line[this->write_index]);
-                this->line[this->write_index] = NULL;
+        if (this->line[this->line_head]) {
+                free(this->line[this->line_head]);
+                this->line[this->line_head] = NULL;
         }
 }
 
@@ -267,7 +273,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                                 this->carriage = 0;
                                 this->new_line_bfr_idx = 0;
 
-                                if (LAST_CHARACTER(this->line[this->write_index]) != '\n') {
+                                if (LAST_CHARACTER(this->line[this->line_head]) != '\n') {
                                         clear_last_line(this);
                                 }
 
@@ -322,7 +328,7 @@ void ttybfr_clear(ttybfr_t *this)
                         this->fresh_line[i] = false;
                 }
 
-                this->write_index = 0;
+                this->line_head = 0;
         }
 }
 
