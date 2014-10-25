@@ -79,6 +79,22 @@ ID.TOOLBAR_SAVE    = wx.wxNewId()
 ID.TOOLBAR_IMPORT  = wx.wxNewId()
 ID.TOOLBAR_EXPORT  = wx.wxNewId()
 
+local icon = {}
+icon.application_exit_16x16 = wx.wxBitmap("pixmaps/16x16/application-exit.png")
+icon.application_exit_22x22 = wx.wxBitmap("pixmaps/22x22/application-exit.png")
+icon.document_open_16x16 = wx.wxBitmap("pixmaps/16x16/document-open.png")
+icon.document_open_22x22 = wx.wxBitmap("pixmaps/22x22/document-open.png")
+icon.document_save_as_16x16 = wx.wxBitmap("pixmaps/16x16/document-save-as.png")
+icon.document_save_as_22x22 = wx.wxBitmap("pixmaps/22x22/document-save-as.png")
+icon.document_save_16x16 = wx.wxBitmap("pixmaps/16x16/document-save.png")
+icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
+icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
+icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
+icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
+icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
+icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
+icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
+
 --==============================================================================
 -- LOCAL FUNCTIONS
 --==============================================================================
@@ -213,14 +229,29 @@ local function main()
 
         -- create Configuration menu
         cfg_menu = wx.wxMenu()
-        cfg_menu:Append(ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
-        cfg_menu:Append(ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
-        cfg_menu:Append(ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
-        cfg_menu:Append(ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
+        menuitem:SetBitmap(icon.document_save_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
+        menuitem:SetBitmap(icon.document_open_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
+        menuitem:SetBitmap(icon.document_save_as_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
+        menuitem:SetBitmap(icon.application_exit_16x16)
+        cfg_menu:Append(menuitem)
 
         -- create help menu
         help_menu = wx.wxMenu()
-        help_menu:Append(ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
+
+        menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
+        menuitem:SetBitmap(icon.document_info_16x16)
+        help_menu:Append(menuitem)
 
         -- create menubar and add menus
         menubar = wx.wxMenuBar()
