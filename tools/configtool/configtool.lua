@@ -228,6 +228,7 @@ end
 local function main()
         -- create main frame
         ui.frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, ct.MAIN_WINDOW_NAME, wx.wxDefaultPosition, wx.wxSize(ct:get_window_size()))
+        ui.frame:SetIcon(wx.wxIcon("pixmaps/16x16/view-pim-tasks.png", wx.wxBITMAP_TYPE_PNG))
 
         -- create Configuration menu
         cfg_menu = wx.wxMenu()
