@@ -812,8 +812,42 @@ void sys_perror(const char *str)
  * @param[in]  arg           argument list
  *
  * @return number of printed characters
+ *
+ * Supported flags:
+ *   %%         - print % character
+ *                printf("%%"); => %
+ *
+ *   %c         - print selected character (the \0 character is skipped)
+ *                printf("_%c_", 'x');  => _x_
+ *                printf("_%c_", '\0'); => __
+ *
+ *   %s         - print selected string
+ *                printf("%s", "Foobar"); => Foobar
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                printf("%.*s\n", 3, "Foobar"); => Foo
+ *
+ *   %d, %i     - print decimal integer values
+ *                printf("%d, %i", -5, 10); => -5, 10
+ *
+ *   %u         - print unsigned decimal integer values
+ *                printf("%d, %i", -1, 10); => 4294967295, 10
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                printf("0x%x, 0x%X", 0x5A, 0xfa); => 0x5a, 0xFA
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                printf("0x02X, 0x03X", 0x5, 0x1F43); => 0x05, 0x1F43
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                printf("Foobar: %f", 1.0); Foobar: 1.000000
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                NOTE: not supported
  */
-//===============================================================================
+//==============================================================================
 int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
@@ -823,6 +857,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool   leading_zero = false;
         bool   loop_break   = false;
         bool   long_long    = false;
+        bool   arg_size_str = false;
 
         /// @brief  Function break loop
         /// @param  None
@@ -872,6 +907,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         {
                 arg_size     = -1;
                 leading_zero = false;
+                arg_size_str = false;
 
                 // check leading zero enable
                 if (chr == '0') {
@@ -888,7 +924,8 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         }
 
                         if (chr == '*') {
-                                arg_size = va_arg(arg, int);
+                                arg_size     = va_arg(arg, int);
+                                arg_size_str = true;
 
                                 if (!get_format_char()) {
                                         return false;
@@ -931,12 +968,10 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
                                 chr = va_arg(arg, int);
-                                if (chr == '\0') {
-                                        chr = 0xFF;
+                                if (chr != '\0') {
+                                        put_char(chr);
                                 }
                         }
-
-                        put_char(chr);
 
                         return true;
                 }
@@ -955,7 +990,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 str = "";
                         }
 
-                        if (arg_size <= 0) {
+                        if (arg_size <= 0 || arg_size_str == false) {
                                 arg_size = UINT16_MAX;
                         }
 
