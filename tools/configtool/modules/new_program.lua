@@ -48,6 +48,7 @@ local FILE_TEMPLATE_HDR      = config.project.path.program_template_hdr_file:Get
 local FILE_TEMPLATE_MAKEFILE = config.project.path.program_template_makefile:GetValue()
 local DIR_PROGRAMS           = config.project.path.programs_dir:GetValue()
 
+-- stack size class
 local stack_size = {};
 stack_size[0] = "STACK_DEPTH_MINIMAL"
 stack_size[1] = "STACK_DEPTH_VERY_LOW"
@@ -57,10 +58,26 @@ stack_size[4] = "STACK_DEPTH_LARGE"
 stack_size[5] = "STACK_DEPTH_VERY_LARGE"
 stack_size[6] = "STACK_DEPTH_HUGE"
 stack_size[7] = "STACK_DEPTH_VERY_HUGE"
+stack_size.task_stack_depth = nil
+stack_size.file_system_stack_depth = nil
+stack_size.irq_stack_depth = nil
+stack_size.get_list = function(self)
+                self.task_stack_depth = tonumber(ct:key_read(config.project.key.OS_TASK_MIN_STACK_DEPTH))
+                self.file_system_stack_depth = tonumber(ct:key_read(config.project.key.OS_FILE_SYSTEM_STACK_DEPTH))
+                self.irq_stack_depth = tonumber(ct:key_read(config.project.key.OS_IRQ_STACK_DEPTH))
+
+                local m = {[0] = 1, [1] = 2, [2] = 4, [3] = 8, [4] = 16, [5] = 32, [6] = 64, [7] = 128}
+                local t = {}
+                for i = 0, #self do
+                        local str = stack_size[i]:gsub("STACK_DEPTH_", ""):gsub("_", " ")
+                        str = str.." ("..(m[i] * self.task_stack_depth) + self.file_system_stack_depth + self.irq_stack_depth.." levels)"
+                        table.insert(t, str)
+                end
+                return t
+        end
 
 local name_validator = wx.wxTextValidator(wx.wxFILTER_EXCLUDE_CHAR_LIST)
 name_validator:SetExcludes({',', '.', '/', '\\', ';', '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '=', '+', '[', ']', '{', '}', ':', '\'', '"', '?', '<', '>'})
-
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -216,15 +233,7 @@ function new_program:create_window(parent)
                     ui.FlexGridSizer_stack:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                         -- add stack size choice
-                        ui.Choice_stack = wx.wxChoice(ui.Panel_creator, ID.CHOICE_STACK, wx.wxDefaultPosition, wx.wxDefaultSize, {})
-                        ui.Choice_stack:Append("Minimal")
-                        ui.Choice_stack:Append("Very low")
-                        ui.Choice_stack:Append("Low")
-                        ui.Choice_stack:Append("Medium")
-                        ui.Choice_stack:Append("Large")
-                        ui.Choice_stack:Append("Very large")
-                        ui.Choice_stack:Append("Huge")
-                        ui.Choice_stack:Append("Very huge")
+                        ui.Choice_stack = wx.wxChoice(ui.Panel_creator, ID.CHOICE_STACK, wx.wxDefaultPosition, wx.wxDefaultSize, stack_size:get_list())
                         ui.Choice_stack:SetSelection(2)
                         ui.Choice_stack:SetToolTip("Select the stack size of your program. This value can be changed later in the program's main function.")
                         ui.FlexGridSizer_stack:Add(ui.Choice_stack, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -313,6 +322,10 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function new_program:refresh()
+        local selection = ui.Choice_stack:GetSelection()
+        ui.Choice_stack:Clear()
+        ui.Choice_stack:Append(stack_size:get_list())
+        ui.Choice_stack:SetSelection(selection)
 end
 
 
