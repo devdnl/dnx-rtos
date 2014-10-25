@@ -1209,7 +1209,6 @@ function ct:new_modify_indicator()
 
         function m.enable(self, state)
                 if type(state) == "boolean" then
-                        print("X")
                         self._enable = state
                 end
         end
