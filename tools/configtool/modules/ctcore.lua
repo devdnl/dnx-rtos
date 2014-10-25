@@ -1177,8 +1177,13 @@ end
 function ct:new_modify_indicator()
         local m     = {}
         m._modified = false
+        m._enable   = true
 
         function m.yes(self)
+                if not self._enable then
+                        return
+                end
+
                 if type(modify_event_func) == "function" then
                         modify_event_func(true)
                 end
@@ -1187,6 +1192,10 @@ function ct:new_modify_indicator()
         end
 
         function m.no(self)
+                if not self._enable then
+                        return
+                end
+
                 if type(modify_event_func) == "function" then
                         modify_event_func(false)
                 end
@@ -1196,6 +1205,13 @@ function ct:new_modify_indicator()
 
         function m.get_value(self)
                 return self._modified
+        end
+
+        function m.enable(self, state)
+                if type(state) == "boolean" then
+                        print("X")
+                        self._enable = state
+                end
         end
 
         return m

@@ -2204,8 +2204,10 @@ function network:refresh()
         ui.SpinCtrl_adv_DEFAULT_THREAD_PRIO:SetRange(priority_min, priority_max)
 
         -- load configuration
-        load_controls()
         modified:no()
+        modified:enable(false)
+        load_controls()
+        modified:enable(true)
 end
 
 

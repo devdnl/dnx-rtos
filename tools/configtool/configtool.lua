@@ -105,6 +105,7 @@ icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
 -- @return None
 --------------------------------------------------------------------------------
 local function treebook_page_changed(this)
+        toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
         local card = this:GetSelection() + 1
         page[card].form:refresh()
         this:Skip()
