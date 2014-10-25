@@ -69,15 +69,32 @@ local page = {
 -- container for UI controls
 local ui = {}
 local ID = {}
-ID.TREEBOOK        = wx.wxNewId()
-ID.MENU_SAVE       = wx.wxID_SAVE
-ID.MENU_IMPORT     = wx.wxID_OPEN
-ID.MENU_EXPORT     = wx.wxID_SAVEAS
-ID.MENU_EXIT       = wx.wxID_EXIT
-ID.MENU_HELP_ABOUT = wx.wxID_ABOUT
-ID.TOOLBAR_SAVE    = wx.wxNewId()
-ID.TOOLBAR_IMPORT  = wx.wxNewId()
-ID.TOOLBAR_EXPORT  = wx.wxNewId()
+ID.TREEBOOK             = wx.wxNewId()
+ID.MENU_SAVE            = wx.wxID_SAVE
+ID.MENU_IMPORT          = wx.wxID_OPEN
+ID.MENU_EXPORT          = wx.wxID_SAVEAS
+ID.MENU_EXIT            = wx.wxID_EXIT
+ID.MENU_HELP_ABOUT      = wx.wxID_ABOUT
+ID.MENU_HELP_REPORT_BUG = wx.wxNewId()
+ID.TOOLBAR_SAVE         = wx.wxNewId()
+ID.TOOLBAR_IMPORT       = wx.wxNewId()
+ID.TOOLBAR_EXPORT       = wx.wxNewId()
+
+local icon = {}
+icon.application_exit_16x16 = wx.wxBitmap("pixmaps/16x16/application-exit.png")
+icon.application_exit_22x22 = wx.wxBitmap("pixmaps/22x22/application-exit.png")
+icon.document_open_16x16 = wx.wxBitmap("pixmaps/16x16/document-open.png")
+icon.document_open_22x22 = wx.wxBitmap("pixmaps/22x22/document-open.png")
+icon.document_save_as_16x16 = wx.wxBitmap("pixmaps/16x16/document-save-as.png")
+icon.document_save_as_22x22 = wx.wxBitmap("pixmaps/22x22/document-save-as.png")
+icon.document_save_16x16 = wx.wxBitmap("pixmaps/16x16/document-save.png")
+icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
+icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
+icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
+icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
+icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
+icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
+icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -88,6 +105,7 @@ ID.TOOLBAR_EXPORT  = wx.wxNewId()
 -- @return None
 --------------------------------------------------------------------------------
 local function treebook_page_changed(this)
+        toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
         local card = this:GetSelection() + 1
         page[card].form:refresh()
         this:Skip()
@@ -213,14 +231,33 @@ local function main()
 
         -- create Configuration menu
         cfg_menu = wx.wxMenu()
-        cfg_menu:Append(ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
-        cfg_menu:Append(ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
-        cfg_menu:Append(ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
-        cfg_menu:Append(ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
+        menuitem:SetBitmap(icon.document_save_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
+        menuitem:SetBitmap(icon.document_open_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
+        menuitem:SetBitmap(icon.document_save_as_16x16)
+        cfg_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
+        menuitem:SetBitmap(icon.application_exit_16x16)
+        cfg_menu:Append(menuitem)
 
         -- create help menu
         help_menu = wx.wxMenu()
-        help_menu:Append(ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
+
+        menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_REPORT_BUG, "&Report bug...", "Report a bug by using the dnx RTOS website...")
+        menuitem:SetBitmap(icon.tools_report_bug_16x16)
+        help_menu:Append(menuitem)
+
+        menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
+        menuitem:SetBitmap(icon.document_info_16x16)
+        help_menu:Append(menuitem)
 
         -- create menubar and add menus
         menubar = wx.wxMenuBar()
@@ -232,10 +269,10 @@ local function main()
         toolBar = ui.frame:CreateToolBar(wx.wxTB_TEXT)
         toolBar:SetToolBitmapSize(wx.wxSize(22, 22))
         local toolBmpSize = toolBar:GetToolBitmapSize()
-        toolBar:AddTool(ID.TOOLBAR_SAVE, "Save", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_SAVE, wx.wxART_MENU, toolBmpSize), "Save configuration")
+        toolBar:AddTool(ID.TOOLBAR_SAVE, "Save", icon.document_save_22x22, "Save configuration")
         toolBar:AddSeparator()
-        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_OPEN, wx.wxART_MENU, toolBmpSize), "Import configuration from the file")
-        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", wx.wxArtProvider.GetBitmap(wx.wxART_FILE_SAVE_AS, wx.wxART_MENU, toolBmpSize), "Export configuration to the file")
+        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", icon.document_open_22x22, "Import configuration from the file")
+        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", icon.document_save_as_22x22, "Export configuration to the file")
         toolBar:Realize()
         toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
 
@@ -270,6 +307,7 @@ local function main()
         ui.frame:Connect(ID.MENU_EXPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
         ui.frame:Connect(ID.MENU_EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, window_close)
         ui.frame:Connect(ID.MENU_HELP_ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, function() about:show(ui.frame) end)
+        ui.frame:Connect(ID.MENU_HELP_REPORT_BUG, wx.wxEVT_COMMAND_MENU_SELECTED, function() wx.wxLaunchDefaultBrowser("https://bitbucket.org/devdnl/dnx/issues") end)
         ui.frame:Connect(ID.TOOLBAR_SAVE, wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)
         ui.frame:Connect(ID.TOOLBAR_IMPORT,wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.TOOLBAR_EXPORT,wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
