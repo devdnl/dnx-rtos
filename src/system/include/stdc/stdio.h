@@ -1814,9 +1814,8 @@ static inline int ungetc(int c, FILE *stream)
  *
  * @errors EINVAL, ENOMEM, ...
  *
- * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
- * and always returns <b>EOF</b>.
+ * @return On success return the pointer to the buffer <i>str</i>, on error
+ * <b>NULL</b> is returned.
  *
  * @example
  * // ...
