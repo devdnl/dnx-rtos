@@ -250,7 +250,7 @@ local function main()
         -- create help menu
         help_menu = wx.wxMenu()
 
-        menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_REPORT_BUG, "&Report bug...", "Report a bug...")
+        menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_REPORT_BUG, "&Report bug...", "Report a bug by using the dnx RTOS website...")
         menuitem:SetBitmap(icon.tools_report_bug_16x16)
         help_menu:Append(menuitem)
 

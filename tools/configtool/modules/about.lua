@@ -176,7 +176,7 @@ function about:show(parent)
                 -- add copyright notice
                 ui.StaticText = wx.wxStaticText(ui.window, wx.wxID_ANY, "Copyright © 2014 Daniel Zorychta", wx.wxDefaultPosition, wx.wxDefaultSize)
                 font = ui.StaticText:GetFont()
-                font:SetPointSize(font:GetPointSize() - 2)
+                font:SetPointSize(font:GetPointSize() - 1)
                 ui.StaticText:SetFont(font)
                 ui.FlexGridSizer1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
