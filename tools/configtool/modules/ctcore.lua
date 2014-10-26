@@ -56,6 +56,24 @@ ct.alphavalidator = wx.wxTextValidator(wx.wxFILTER_ALPHA)
 
 ct.alphanumericvalidator = wx.wxTextValidator(wx.wxFILTER_ALPHANUMERIC)
 
+ct.icon = {}
+ct.icon.application_exit_16x16 = wx.wxBitmap("pixmaps/16x16/application-exit.png")
+ct.icon.application_exit_22x22 = wx.wxBitmap("pixmaps/22x22/application-exit.png")
+ct.icon.document_open_16x16 = wx.wxBitmap("pixmaps/16x16/document-open.png")
+ct.icon.document_open_22x22 = wx.wxBitmap("pixmaps/22x22/document-open.png")
+ct.icon.document_save_as_16x16 = wx.wxBitmap("pixmaps/16x16/document-save-as.png")
+ct.icon.document_save_as_22x22 = wx.wxBitmap("pixmaps/22x22/document-save-as.png")
+ct.icon.document_save_16x16 = wx.wxBitmap("pixmaps/16x16/document-save.png")
+ct.icon.document_save_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/document-save-dimmed.png")
+ct.icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
+ct.icon.document_save_22x22_dimmed = wx.wxBitmap("pixmaps/22x22/document-save-dimmed.png")
+ct.icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
+ct.icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
+ct.icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
+ct.icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
+ct.icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
+ct.icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
+
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================

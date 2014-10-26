@@ -80,24 +80,6 @@ ID.TOOLBAR_SAVE         = wx.wxNewId()
 ID.TOOLBAR_IMPORT       = wx.wxNewId()
 ID.TOOLBAR_EXPORT       = wx.wxNewId()
 
-local icon = {}
-icon.application_exit_16x16 = wx.wxBitmap("pixmaps/16x16/application-exit.png")
-icon.application_exit_22x22 = wx.wxBitmap("pixmaps/22x22/application-exit.png")
-icon.document_open_16x16 = wx.wxBitmap("pixmaps/16x16/document-open.png")
-icon.document_open_22x22 = wx.wxBitmap("pixmaps/22x22/document-open.png")
-icon.document_save_as_16x16 = wx.wxBitmap("pixmaps/16x16/document-save-as.png")
-icon.document_save_as_22x22 = wx.wxBitmap("pixmaps/22x22/document-save-as.png")
-icon.document_save_16x16 = wx.wxBitmap("pixmaps/16x16/document-save.png")
-icon.document_save_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/document-save-dimmed.png")
-icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
-icon.document_save_22x22_dimmed = wx.wxBitmap("pixmaps/22x22/document-save-dimmed.png")
-icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
-icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
-icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
-icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
-icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
-icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
-
 --==============================================================================
 -- LOCAL FUNCTIONS
 --==============================================================================
@@ -239,30 +221,30 @@ local function main()
         cfg_menu = wx.wxMenu()
 
         ui.menu_save = wx.wxMenuItem(cfg_menu, ID.MENU_SAVE, "&Save\tCtrl-S", "Save currently selected configuration")
-        ui.menu_save:SetBitmap(icon.document_save_16x16)
+        ui.menu_save:SetBitmap(ct.icon.document_save_16x16)
         cfg_menu:Append(ui.menu_save)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
-        menuitem:SetBitmap(icon.document_open_16x16)
+        menuitem:SetBitmap(ct.icon.document_open_16x16)
         cfg_menu:Append(menuitem)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
-        menuitem:SetBitmap(icon.document_save_as_16x16)
+        menuitem:SetBitmap(ct.icon.document_save_as_16x16)
         cfg_menu:Append(menuitem)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
-        menuitem:SetBitmap(icon.application_exit_16x16)
+        menuitem:SetBitmap(ct.icon.application_exit_16x16)
         cfg_menu:Append(menuitem)
 
         -- create help menu
         help_menu = wx.wxMenu()
 
         menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_REPORT_BUG, "&Report Bug...", "Report a bug by using the dnx RTOS website...")
-        menuitem:SetBitmap(icon.tools_report_bug_16x16)
+        menuitem:SetBitmap(ct.icon.tools_report_bug_16x16)
         help_menu:Append(menuitem)
 
         menuitem = wx.wxMenuItem(help_menu, ID.MENU_HELP_ABOUT, "&About", "The Configtool information")
-        menuitem:SetBitmap(icon.document_info_16x16)
+        menuitem:SetBitmap(ct.icon.document_info_16x16)
         help_menu:Append(menuitem)
 
         -- create menubar and add menus
@@ -275,10 +257,10 @@ local function main()
         toolBar = ui.frame:CreateToolBar(wx.wxTB_TEXT)
         toolBar:SetToolBitmapSize(wx.wxSize(22, 22))
         local toolBmpSize = toolBar:GetToolBitmapSize()
-        toolBar:AddTool(ID.TOOLBAR_SAVE, "Save", icon.document_save_22x22, icon.document_save_22x22_dimmed, wx.wxITEM_NORMAL, "Save currently selected configuration")
+        toolBar:AddTool(ID.TOOLBAR_SAVE, "Save",ct. icon.document_save_22x22, ct.icon.document_save_22x22_dimmed, wx.wxITEM_NORMAL, "Save currently selected configuration")
         toolBar:AddSeparator()
-        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", icon.document_open_22x22, "Import configuration from the file")
-        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", icon.document_save_as_22x22, "Export configuration to the file")
+        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", ct.icon.document_open_22x22, "Import configuration from the file")
+        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", ct.icon.document_save_as_22x22, "Export configuration to the file")
         toolBar:Realize()
         toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
 
