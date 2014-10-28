@@ -254,6 +254,9 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #if (__ENABLE_UART__ && _UART4_ENABLE)
         _DRIVER_INTERFACE(UART, "uart4", _UART4, _UART_MINOR_NUMBER),
         #endif
+        #if (__ENABLE_UART__ && _UART5_ENABLE)
+        _DRIVER_INTERFACE(UART, "uart5", _UART5, _UART_MINOR_NUMBER),
+        #endif
 
         /* PLL ===============================================================*/
         #if (__ENABLE_PLL__)
