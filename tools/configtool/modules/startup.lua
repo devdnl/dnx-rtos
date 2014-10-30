@@ -107,17 +107,17 @@ end
 --------------------------------------------------------------------------------
 -- @brief  Insert item to the wxListView
 -- @param  self     wxListView
--- @param  fs       FS name string
--- @param  src      source file string
--- @param  mp       mount point string
+-- @param  ...      Variable number of arguments that are inserted to the columns
 -- @return None
 --------------------------------------------------------------------------------
-local function insert_item(self, fs, src, mp)
+local function insert_item(self, ...)
+        local arg   = {...}
         local count = self:GetItemCount()
         self:InsertItem(count, "")
-        self:SetItem(count, 0, fs)
-        self:SetItem(count, 1, src)
-        self:SetItem(count, 2, mp)
+
+        for i, v in pairs(arg) do
+                self:SetItem(count, i - 1, v)
+        end
 end
 
 
@@ -125,25 +125,21 @@ end
 -- @brief  Get item's texts
 -- @param  self     wxListView
 -- @param  row      row read
--- @return FS name, source file, mount point
+-- @param  n        number of columns to read
+-- @return Next columns values as table
 --------------------------------------------------------------------------------
-local function get_item_texts(self, row)
+local function get_item_texts(self, row, no_of_cols)
         local item = wx.wxListItem()
         item:SetId(row)
 
-        item:SetColumn(0)
-        ui.ListView_other_FS:GetItem(item)
-        local fs = item:GetText()
+        local t = {}
+        for i = 0, no_of_cols - 1 do
+                item:SetColumn(i)
+                ui.ListView_other_FS:GetItem(item)
+                table.insert(i, item:GetText())
+        end
 
-        item:SetColumn(1)
-        ui.ListView_other_FS:GetItem(item)
-        local src = item:GetText()
-
-        item:SetColumn(2)
-        ui.ListView_other_FS:GetItem(item)
-        local mp = item:GetText()
-
-        return fs, src, mp
+        return t
 end
 
 
@@ -333,6 +329,102 @@ local function create_boot_widgets(parent)
         return ui.Panel_boot
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Create widgets for runlevel 0
+-- @param  parent       parent window
+-- @return Panel object
+--------------------------------------------------------------------------------
+local function create_runlevel_0_widgets(parent)
+        -- create runlevel 0 panel
+        ui.Panel_runlevel_0 = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        ui.FlexGridSizer_runlevel_0 = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+        -- runlevel info
+        ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "The purpose of this runlevel is initialization of driver modules required by application.")
+        ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
+        ui.FlexGridSizer_runlevel_0:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticLine = wx.wxStaticLine(ui.Panel_runlevel_0, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
+        ui.FlexGridSizer_runlevel_0:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- driver initialization group
+        ui.StaticBoxSizer_drv_init = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_0, "Drivers initialization")
+        ui.FlexGridSizer_drv_init = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+            -- driver initialization choices sizer
+            ui.FlexGridSizer_drv_init_sel = wx.wxFlexGridSizer(0, 3, 0, 0)
+
+                -- driver initialization header
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Driver name", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_drv_init_sel:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Node path", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_drv_init_sel:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add driver selection choice
+                ui.Choice_drv_name = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                ui.FlexGridSizer_drv_init_sel:Add(ui.Choice_drv_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add driver node path
+                ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {"none"})
+                ui.FlexGridSizer_drv_init_sel:Add(ui.ComboBox_drv_node, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add Add button
+                ui.Button_drv_add = wx.wxButton(ui.Panel_runlevel_0, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_drv_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add driver selection, driver node path, and add button to the group
+                ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_sel, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+            -- add list box
+            ui.ListView_drv_list = wx.wxListView(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 200), wx.wxLC_REPORT)
+            ui.ListView_drv_list.AppendItem   = insert_item
+            ui.ListView_drv_list.GetItemTexts = get_item_texts
+            ui.ListView_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
+            ui.ListView_drv_list:InsertColumn(1, "Node path", wx.wxLIST_FORMAT_LEFT, 300)
+            ui.FlexGridSizer_drv_init:Add(ui.ListView_drv_list, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add driver init group to the panel's sizer
+            ui.StaticBoxSizer_drv_init:Add(ui.FlexGridSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_0:Add(ui.StaticBoxSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- printk configuration for runlevel 0 - group
+        ui.StaticBoxSizer_sys_msg = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_0, "System messages")
+        ui.FlexGridSizer_sys_msg = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+            -- add system messages enable checkbox
+            ui.CheckBox_sys_msg_en = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system messages", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_en, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add system messages invittaion checkbox
+            ui.CheckBox_sys_msg_invitation = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system invitation", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_invitation, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add selector after which module printk must be enabled
+            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Enable messages after initialization of driver", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sys_msg:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            ui.Choice_sys_msg_init_after = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.FlexGridSizer_sys_msg:Add(ui.Choice_sys_msg_init_after, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add selection of file used by printk in this runlevel
+            ui.StaticText10 = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "To show system messages use file", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sys_msg:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            ui.ComboBox_sys_msg_file = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.FlexGridSizer_sys_msg:Add(ui.ComboBox_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add group to the panel's main sizer
+            ui.StaticBoxSizer_sys_msg:Add(ui.FlexGridSizer_sys_msg, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_0:Add(ui.StaticBoxSizer_sys_msg, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- set panel's sizer
+        ui.Panel_runlevel_0:SetSizer(ui.FlexGridSizer_runlevel_0)
+
+        return ui.Panel_runlevel_0
+end
+
+
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -350,6 +442,7 @@ function startup:create_window(parent)
                 -- create main notebook
                 ui.Notebook_runlevels = wx.wxNotebook(ui.window, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.Notebook_runlevels:AddPage(create_boot_widgets(ui.Notebook_runlevels), "Runlevel boot", false)
+                ui.Notebook_runlevels:AddPage(create_runlevel_0_widgets(ui.Notebook_runlevels), "Runlevel 0", false)
                 ui.FlexGridSizer_main:Add(ui.Notebook_runlevels, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- set main sizers
