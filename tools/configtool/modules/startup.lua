@@ -51,6 +51,7 @@ local function new_FS_list()
 
         self.reload = function(self)
                 self._list = {}
+                table.insert(self._list, "")
                 for i = 1, config.project.filesystems:NumChildren() do
                         table.insert(self._list, config.project.filesystems:Children()[i].name:GetValue():lower())
                 end
@@ -269,7 +270,7 @@ local function create_boot_widgets(parent)
             ui.FlexGridSizer_other_FS_2:Add(ui.Choice_other_FS_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- source file combobox
-            ui.ComboBox_other_FS_src = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"})
+            ui.ComboBox_other_FS_src = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"", "none"})
             ui.FlexGridSizer_other_FS_2:Add(ui.ComboBox_other_FS_src, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- FS mount point
@@ -287,6 +288,9 @@ local function create_boot_widgets(parent)
 
                             if fs_name ~= -1 and src_file ~= "" and mntpt ~= "" then
                                     ui.ListView_other_FS:AppendItem(fs_name, src_file, mntpt)
+                                    ui.Choice_other_FS_name:SetSelection(0)
+                                    ui.ComboBox_other_FS_src:SetValue("")
+                                    ui.ComboBox_other_FS_mntpt:SetValue("")
                                     modified:yes()
                             end
                     end
