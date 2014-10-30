@@ -168,7 +168,7 @@ local function event_import_configuration()
                                                "Import configuration file",
                                                config.project.path.bsp_dir:GetValue(),
                                                "",
-                                               "dnx RTOS configuration files (*.dnxc)|*.dnxc",
+                                               "dnx RTOS configuration files (*.dnxc)|*.dnxc|All files (*.*)|*.*",
                                                wx.wxFD_OPEN+wx.wxFD_FILE_MUST_EXIST)
 
                 if (dialog:ShowModal() == wx.wxID_OK) then
@@ -268,7 +268,7 @@ local function main()
         toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
 
         statusBar = ui.frame:CreateStatusBar(2)
-        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool", 0)
+        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool!", 0)
 
 
         -- create treebook view

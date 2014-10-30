@@ -38,11 +38,47 @@ startup  = {}
 
 
 --==============================================================================
+-- LOCAL CLASSES
+--==============================================================================
+--------------------------------------------------------------------------------
+-- @brief  Create a new File System list
+-- @param  None
+-- @return New object
+--------------------------------------------------------------------------------
+local function new_FS_list()
+        local self = {}
+        self._list = {}
+
+        self.reload = function(self)
+                self._list = {}
+                for i = 1, config.project.filesystems:NumChildren() do
+                        table.insert(self._list, config.project.filesystems:Children()[i].name:GetValue():lower())
+                end
+        end
+
+        self.get_list = function(self)
+                return self._list
+        end
+
+        self.get_FS_by_index = function(self, idx)
+                return self._list[idx]
+        end
+
+        self:reload()
+
+        return self
+end
+
+
+--==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
 local ui = {}
 local ID = {}
 local modified = ct:new_modify_indicator()
+local default_dirs = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
+local FS_list = new_FS_list()
+
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -126,7 +162,7 @@ local function create_boot_widgets(parent)
 
         ui.StaticText = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY,
                                         "NOTE: Some file systems requires a source files, that in this level may not exist. "..
-                                        "In this case, these file systems will not be mounted.",
+                                        "In this case, these file systems will not be mounted. File system like that can be mounted in the runlevel 1 or later.",
                                         wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
         ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
         ui.FlexGridSizer_boot:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -138,33 +174,39 @@ local function create_boot_widgets(parent)
         ui.StaticBoxSizer_boot_main_FS_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Root file system (\"/\")")
         ui.FlexGridSizer_boot_main_FS_1 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-            ui.StaticText1 = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Select base file system", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.StaticText1 = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Select base file system:", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_boot_main_FS_1:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            ui.Choice_boot_root_FS = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.Choice_boot_root_FS = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, FS_list:get_list())
             ui.FlexGridSizer_boot_main_FS_1:Add(ui.Choice_boot_root_FS, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Choice_boot_root_FS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
 
             ui.StaticBoxSizer_boot_main_FS_0:Add(ui.FlexGridSizer_boot_main_FS_1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.FlexGridSizer_boot:Add(ui.StaticBoxSizer_boot_main_FS_0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- folders group
-        ui.StaticBoxSizer_boot_folders_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Folders")
+        ui.StaticBoxSizer_boot_folders_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Create folders")
         ui.FlexGridSizer_boot_folders_1 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
             -- new folder sizer
             ui.FlexGridSizer_boot_folders_2 = wx.wxFlexGridSizer(0, 5, 0, 0)
 
                 -- folder name combobox
-                ui.ComboBox_folder_name = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                ui.ComboBox_folder_name = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, default_dirs, wx.wxTE_PROCESS_ENTER)
                 ui.FlexGridSizer_boot_folders_2:Add(ui.ComboBox_folder_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_folder_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_folder_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
 
                 -- add button
                 ui.Button_folder_add = wx.wxButton(ui.Panel_boot, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_boot_folders_2:Add(ui.Button_folder_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Button_folder_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                if ui.ComboBox_folder_name:GetValue() ~= "" then
-                                        ui.ListBox_folders:InsertItems({ui.ComboBox_folder_name:GetValue()}, ui.ListBox_folders:GetCount())
+                                local dirname = ui.ComboBox_folder_name:GetValue()
+                                if dirname:match("^/.*") then
+                                        ui.ListBox_folders:InsertItems({dirname}, ui.ListBox_folders:GetCount())
+                                        ui.ComboBox_other_FS_mntpt:Append(dirname)
+                                        ui.ComboBox_folder_name:SetValue("")
+                                        modified:yes()
                                 end
                         end
                 )
@@ -191,6 +233,9 @@ local function create_boot_widgets(parent)
 
                                 ui.ListBox_folders:Clear()
                                 ui.ListBox_folders:InsertItems(t, 0)
+                                ui.ComboBox_other_FS_mntpt:Clear()
+                                ui.ComboBox_other_FS_mntpt:Append(t)
+                                modified:yes()
                         end
                 )
 
@@ -208,7 +253,7 @@ local function create_boot_widgets(parent)
         -- Additional file systems group
         ui.StaticBoxSizer_other_FS_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Additional file systems")
         ui.FlexGridSizer_other_FS_1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.FlexGridSizer_other_FS_2 = wx.wxFlexGridSizer(0, 3, 0, 0)
+        ui.FlexGridSizer_other_FS_2 = wx.wxFlexGridSizer(0, 4, 0, 0)
 
             -- colums descriptions
             ui.StaticText = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "File system", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -217,33 +262,38 @@ local function create_boot_widgets(parent)
             ui.FlexGridSizer_other_FS_2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.StaticText = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Mount point", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_other_FS_2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_other_FS_2:Add(0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- file system name selection
-            ui.Choice_other_FS_name = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.Choice_other_FS_name = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
             ui.FlexGridSizer_other_FS_2:Add(ui.Choice_other_FS_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- source file combobox
-            ui.ComboBox_other_FS_src = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.ComboBox_other_FS_src = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"})
             ui.FlexGridSizer_other_FS_2:Add(ui.ComboBox_other_FS_src, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- FS mount point
-            ui.ComboBox_other_FS_mntpt = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.ComboBox_other_FS_mntpt = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {})
             ui.FlexGridSizer_other_FS_2:Add(ui.ComboBox_other_FS_mntpt, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add sizers
-                ui.FlexGridSizer_other_FS_1:Add(ui.FlexGridSizer_other_FS_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- add buttons
             ui.Button_other_FS_add = wx.wxButton(ui.Panel_boot, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_other_FS_1:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.Button_other_FS_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
                             local fs_name  = ui.Choice_other_FS_name:GetString(ui.Choice_other_FS_name:GetSelection())
                             local src_file = ui.ComboBox_other_FS_src:GetValue()
                             local mntpt    = ui.ComboBox_other_FS_mntpt:GetValue()
-                            ui.ListView_other_FS:AppendItem(fs_name, src_file, mntpt)
+
+                            if fs_name ~= -1 and src_file ~= "" and mntpt ~= "" then
+                                    ui.ListView_other_FS:AppendItem(fs_name, src_file, mntpt)
+                                    modified:yes()
+                            end
                     end
             )
+
+                -- add sizers
+                ui.FlexGridSizer_other_FS_1:Add(ui.FlexGridSizer_other_FS_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- folder list
             ui.ListView_other_FS = wx.wxListView(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), wx.wxLC_REPORT)
@@ -260,6 +310,8 @@ local function create_boot_widgets(parent)
             ui.Button_other_FS_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
                             local n = ui.ListView_other_FS:GetFirstSelected()
+                            if n > -1 then modified:yes() end
+
                             while n > -1 do
                                     ui.ListView_other_FS:DeleteItem(n)
                                     n = ui.ListView_other_FS:GetNextSelected(-1)
@@ -321,7 +373,11 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function startup:refresh()
-        -- load configuration
+        FS_list:reload()
+        ui.Choice_boot_root_FS:Clear()
+        ui.Choice_boot_root_FS:Append(FS_list:get_list())
+        ui.Choice_other_FS_name:Clear()
+        ui.Choice_other_FS_name:Append(FS_list:get_list())
         load_controls()
 end
 
