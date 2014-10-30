@@ -49,6 +49,7 @@ local function new_FS_list()
         local self = {}
         self._list = {}
 
+        -- method load list
         self.reload = function(self)
                 self._list = {}
                 table.insert(self._list, "")
@@ -57,10 +58,12 @@ local function new_FS_list()
                 end
         end
 
+        -- method return list
         self.get_list = function(self)
                 return self._list
         end
 
+        -- method return item by index
         self.get_FS_by_index = function(self, idx)
                 return self._list[idx]
         end
@@ -71,14 +74,65 @@ local function new_FS_list()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Create a new driver list
+-- @param  None
+-- @return New object
+--------------------------------------------------------------------------------
+local function new_driver_list()
+        local FILE_DRIVER_REGISTARTION  = config.project.path.drivers_reg_file:GetValue()
+        local self = {}
+        self._list = {}
+
+        -- method load list
+        self.reload = function(self)
+                local cpu_arch   = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+                local cpu_name   = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
+                local cpu_idx    = ct:get_cpu_index(cpu_arch, cpu_name)
+                local periph_num = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:NumChildren()
+
+                self._list = {}
+                table.insert(self._list, "")
+                for i = 1, periph_num do
+                        local module_name = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:Children()[i]:GetName():upper()
+
+                        if ct:get_module_state(module_name) == true then
+                                local regex = "_DRIVER_INTERFACE%(%s*"..module_name.."%s*,%s*\"(.*)\"%s*,%s*.*,.*%)%s*,"
+                                local n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, regex)
+                                while n > 0 do
+                                        local line = ct:get_line(FILE_DRIVER_REGISTARTION, n)
+                                        if line ~= nil then
+                                                table.insert(self._list, line:match(regex))
+                                        end
+
+                                        n = ct:find_line(FILE_DRIVER_REGISTARTION, n + 1, regex)
+                                end
+
+                        end
+                end
+
+                table.sort(self._list)
+        end
+
+        -- method return entire list
+        self.get_list = function(self)
+                return self._list
+        end
+
+        self:reload()
+
+        return self
+end
+
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
 local ui = {}
 local ID = {}
-local modified = ct:new_modify_indicator()
-local default_dirs = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
-local FS_list = new_FS_list()
+local modified                  = ct:new_modify_indicator()
+local default_dirs              = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
+local FS_list                   = new_FS_list()
+local drv_list                  = new_driver_list()
 
 
 --==============================================================================
@@ -282,7 +336,7 @@ local function create_boot_widgets(parent)
                             local src_file = ui.ComboBox_other_FS_src:GetValue()
                             local mntpt    = ui.ComboBox_other_FS_mntpt:GetValue()
 
-                            if fs_name ~= -1 and src_file ~= "" and mntpt ~= "" then
+                            if fs_name ~= -1 and src_file ~= "" and mntpt:match("^/.*") then
                                     ui.ListView_other_FS:AppendItem(fs_name, src_file, mntpt)
                                     ui.Choice_other_FS_name:SetSelection(0)
                                     ui.ComboBox_other_FS_src:SetValue("")
@@ -362,8 +416,13 @@ local function create_runlevel_0_widgets(parent)
                 ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add driver selection choice
-                ui.Choice_drv_name = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                ui.Choice_drv_name = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
                 ui.FlexGridSizer_drv_init_sel:Add(ui.Choice_drv_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_drv_name:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                        function()
+                                ui.ComboBox_drv_node:SetValue("/dev/"..ui.Choice_drv_name:GetString(ui.Choice_drv_name:GetSelection()))
+                        end
+                )
 
                 -- add driver node path
                 ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {"none"})
@@ -372,6 +431,19 @@ local function create_runlevel_0_widgets(parent)
                 -- add Add button
                 ui.Button_drv_add = wx.wxButton(ui.Panel_runlevel_0, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_drv_init_sel:Add(ui.Button_drv_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_drv_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                        function()
+                                local drv_name  = ui.Choice_drv_name:GetString(ui.Choice_drv_name:GetSelection())
+                                local node_path = ui.ComboBox_drv_node:GetValue()
+
+                                if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
+                                        ui.ListView_drv_list:AppendItem(drv_name, node_path)
+                                        ui.Choice_drv_name:SetSelection(0)
+                                        ui.ComboBox_drv_node:SetValue("")
+                                        modified:yes()
+                                end
+                        end
+                )
 
                 -- add driver selection, driver node path, and add button to the group
                 ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_sel, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -383,6 +455,21 @@ local function create_runlevel_0_widgets(parent)
             ui.ListView_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
             ui.ListView_drv_list:InsertColumn(1, "Node path", wx.wxLIST_FORMAT_LEFT, 300)
             ui.FlexGridSizer_drv_init:Add(ui.ListView_drv_list, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add remove button
+            ui.Button_drv_init_remove = wx.wxButton(ui.Panel_runlevel_0, wx.wxNewId(), "Remove selected", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_drv_init:Add(ui.Button_drv_init_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Button_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                    function()
+                            local n = ui.ListView_drv_list:GetFirstSelected()
+                            if n > -1 then modified:yes() end
+
+                            while n > -1 do
+                                    ui.ListView_drv_list:DeleteItem(n)
+                                    n = ui.ListView_drv_list:GetNextSelected(-1)
+                            end
+                    end
+            )
 
             -- add driver init group to the panel's sizer
             ui.StaticBoxSizer_drv_init:Add(ui.FlexGridSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -397,14 +484,14 @@ local function create_runlevel_0_widgets(parent)
             ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_en, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- add system messages invittaion checkbox
-            ui.CheckBox_sys_msg_invitation = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system invitation", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.CheckBox_sys_msg_invitation = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system welcome message", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_invitation, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- add selector after which module printk must be enabled
             ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Enable messages after initialization of driver", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_sys_msg:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            ui.Choice_sys_msg_init_after = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.Choice_sys_msg_init_after = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, drv_list:get_list())
             ui.FlexGridSizer_sys_msg:Add(ui.Choice_sys_msg_init_after, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- add selection of file used by printk in this runlevel
