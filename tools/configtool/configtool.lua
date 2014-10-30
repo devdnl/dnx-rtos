@@ -164,15 +164,16 @@ local function event_import_configuration()
         ui.treebook:SetSelection(0)
         if ui.treebook:GetSelection() == 0 then
 
-                dialog = wx.wxFileDialog(ui.frame,
-                                         "Import configuration file",
-                                         config.project.path.bsp_dir:GetValue(),
-                                         "",
-                                         "dnx RTOS configuration files (*.dnxc)|*.dnxc",
-                                         bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
+                local dialog = wx.wxFileDialog(ui.frame,
+                                               "Import configuration file",
+                                               config.project.path.bsp_dir:GetValue(),
+                                               "",
+                                               "dnx RTOS configuration files (*.dnxc)|*.dnxc",
+                                               wx.wxFD_OPEN+wx.wxFD_FILE_MUST_EXIST)
 
                 if (dialog:ShowModal() == wx.wxID_OK) then
                         ct:apply_project_configuration(dialog:GetPath(), ui.frame)
+                        ui.frame:SetStatusText("Loaded configuration: "..dialog:GetFilename(), 1)
                 end
         end
 end
@@ -200,7 +201,7 @@ local function event_configuration_modified(modified)
         toolBar:EnableTool(ID.TOOLBAR_SAVE, modified)
 
         if modified then
-                ui.frame:SetStatusText("Configuration is modified")
+                ui.frame:SetStatusText("Configuration is modified", 0)
         else
                 ui.frame:SetStatusText("")
         end
@@ -266,8 +267,8 @@ local function main()
         toolBar:Realize()
         toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
 
-        statusBar = ui.frame:CreateStatusBar(1)
-        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool")
+        statusBar = ui.frame:CreateStatusBar(2)
+        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool", 0)
 
 
         -- create treebook view
