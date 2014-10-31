@@ -75,6 +75,18 @@
             <NETWORK_MAC_ADDR_4><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
             <NETWORK_MAC_ADDR_5><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
             <NETWORK_ETHIF_FILE><path>../../config/project/network_flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+            <NETWORK_IP_ADDR1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR1__</key></NETWORK_IP_ADDR1>
+            <NETWORK_IP_ADDR2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR2__</key></NETWORK_IP_ADDR2>
+            <NETWORK_IP_ADDR3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR3__</key></NETWORK_IP_ADDR3>
+            <NETWORK_IP_ADDR4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR4__</key></NETWORK_IP_ADDR4>
+            <NETWORK_IP_MASK1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK1__</key></NETWORK_IP_MASK1>
+            <NETWORK_IP_MASK2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK2__</key></NETWORK_IP_MASK2>
+            <NETWORK_IP_MASK3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK3__</key></NETWORK_IP_MASK3>
+            <NETWORK_IP_MASK4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK4__</key></NETWORK_IP_MASK4>
+            <NETWORK_IP_GW1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW1__</key></NETWORK_IP_GW1>
+            <NETWORK_IP_GW2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW2__</key></NETWORK_IP_GW2>
+            <NETWORK_IP_GW3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW3__</key></NETWORK_IP_GW3>
+            <NETWORK_IP_GW4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW4__</key></NETWORK_IP_GW4>
             <NETWORK_MEMP_SEPARATE_POOLS><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_SEPARATE_POOLS__</key></NETWORK_MEMP_SEPARATE_POOLS>
             <NETWORK_MEMP_OVERFLOW_CHECK><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_OVERFLOW_CHECK__</key></NETWORK_MEMP_OVERFLOW_CHECK>
             <NETWORK_MEMP_SANITY_CHECK><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_SANITY_CHECK__</key></NETWORK_MEMP_SANITY_CHECK>

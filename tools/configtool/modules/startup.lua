@@ -621,7 +621,7 @@ local function create_runlevel_1_widgets(parent)
                 ui.FlexGridSizer_sd_cards:Add(ui.FlexGridSizer_sd_cards_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- create list with added cards
-            ui.ListView_sd_cards = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 80), wx.wxLC_REPORT)
+            ui.ListView_sd_cards = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 100), wx.wxLC_REPORT)
             ui.ListView_sd_cards.AppendItem   = insert_item
             ui.ListView_sd_cards.GetItemTexts = get_item_texts
             ui.ListView_sd_cards:InsertColumn(0, "Card file", wx.wxLIST_FORMAT_LEFT, 125)
@@ -653,112 +653,19 @@ local function create_runlevel_1_widgets(parent)
         ui.FlexGridSizer_network = wx.wxFlexGridSizer(0, 1, 0, 0)
 
             -- add DHCP enable checkbox
-            ui.CheckBox_network_DHCP = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Run DHCP client to get addresses", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.CheckBox_network_DHCP = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Start DHCP client to get addresses", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_network:Add(ui.CheckBox_network_DHCP, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.CheckBox_network_DHCP:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
 
             -- add Static configuration checkbox
-            ui.CheckBox_network_static = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Set static network configuration", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.CheckBox_network_static = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Set static IP configuration (see Network configuration)", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_network:Add(ui.CheckBox_network_static, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.CheckBox_network_static:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
-                    function(event)
-                            ui.Panel_network_static_addresses:Enable(event:IsChecked())
-                            modified:yes()
-                    end
-            )
-
-            -- create network static configuration panel
-            ui.Panel_network_static_addresses = wx.wxPanel(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL4")
-            ui.FlexGridSizer_network_static_addresses = wx.wxFlexGridSizer(0, 8, 0, 0)
-
-                -- add IP address configuration fields
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "IP Address:")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ui.SpinCtrl_network_static_address_IP_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_IP_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_IP_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_IP_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxNewId(), ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_IP_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_IP_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_IP_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_IP_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                -- add Network Mask configuration fields
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "Network Mask:")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ui.SpinCtrl_network_static_address_mask_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_mask_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_mask_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_mask_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_mask_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_mask_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_mask_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_mask_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                -- add network gateway fields
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "Gateway Address:")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                ui.SpinCtrl_network_static_address_gw_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_gw_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_gw_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_gw_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_gw_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_gw_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
-                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.SpinCtrl_network_static_address_gw_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
-                ui.SpinCtrl_network_static_address_gw_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                -- set sizer
-                ui.Panel_network_static_addresses:SetSizer(ui.FlexGridSizer_network_static_addresses)
-
-            -- add static configuration panel to configuration group
-            ui.FlexGridSizer_network:Add(ui.Panel_network_static_addresses, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_network_static:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) modified:yes() end)
 
             -- add info text
             ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "NOTE: If static and dynamic network configurations are enabled at the same time, then dynamic "..
-                                                                              "configuration will  start first. When dynamic configuration will finish with error (DHCP server "..
-                                                                              "not response or there are no network connection), then static configuration will be applied automatically.")
+                                                                              "configuration will  start first. When DHCP client cannot receive addresses, then static "..
+                                                                              "configuration will be applied automatically.")
             ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
             ui.FlexGridSizer_network:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
