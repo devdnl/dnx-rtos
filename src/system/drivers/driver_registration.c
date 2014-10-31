@@ -65,7 +65,7 @@
 #               include "noarch/sdspi_def.h"
 #       endif
 #endif
-#if (__ENABLE_ETH__)
+#if (__ENABLE_ETHMAC__)
 #       ifdef ARCH_stm32f1
 #               include "stm32f1/ethmac_def.h"
 #       endif
@@ -135,7 +135,7 @@
 #if (__ENABLE_SDSPI__)
         _IMPORT_MODULE_INTERFACE(SDSPI);
 #endif
-#if (__ENABLE_ETH__)
+#if (__ENABLE_ETHMAC__)
         _IMPORT_MODULE_INTERFACE(ETHMAC);
 #endif
 #if (__ENABLE_CRC__)
@@ -186,7 +186,7 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_SDSPI__)
         _MODULE_NAME(SDSPI),
         #endif
-        #if (__ENABLE_ETH__)
+        #if (__ENABLE_ETHMAC__)
         _MODULE_NAME(ETHMAC),
         #endif
         #if (__ENABLE_CRC__)
@@ -294,7 +294,7 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* ETH ===============================================================*/
-        #if (__ENABLE_ETH__)
+        #if (__ENABLE_ETHMAC__)
         _DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
         #endif
 

@@ -423,7 +423,12 @@ local function create_runlevel_0_widgets(parent)
                 ui.FlexGridSizer_drv_init_sel:Add(ui.Choice_drv_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_drv_name:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED,
                         function()
-                                ui.ComboBox_drv_node:SetValue("/dev/"..ui.Choice_drv_name:GetString(ui.Choice_drv_name:GetSelection()))
+                                local str = ui.Choice_drv_name:GetString(ui.Choice_drv_name:GetSelection())
+                                if str ~= "" then
+                                        ui.ComboBox_drv_node:SetValue("/dev/"..str)
+                                else
+                                        ui.ComboBox_drv_node:SetValue("")
+                                end
                         end
                 )
 

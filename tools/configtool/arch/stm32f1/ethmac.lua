@@ -63,14 +63,14 @@ link_speed_idx.ETH_Speed_100M = 1
 --------------------------------------------------------------------------------
 local function load_configuration()
         -- load configuration from files
-        local module_enable = ct:get_module_state("ETH")
-        local hw_chsum_cal  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.ETH_CHECKSUM_BY_HARDWARE))
-        local irq_prio      = ct:key_read(config.arch.stm32f1.key.ETH_IRQ_PRIORITY)
-        local link_speed    = link_speed_idx[ct:key_read(config.arch.stm32f1.key.ETH_SPEED)]
-        local PHY_name      = ct:key_read(config.arch.stm32f1.key.ETH_DEVICE)
-        local PHY_address   = ct:key_read(config.arch.stm32f1.key.ETH_PHY_ADDRESS):gsub("0x", "")
-        local reset_delay   = tonumber(ct:key_read(config.arch.stm32f1.key.ETH_PHY_RESET_DELAY))
-        local setup_delay   = tonumber(ct:key_read(config.arch.stm32f1.key.ETH_PHY_CONFIG_DELAY))
+        local module_enable = ct:get_module_state("ETHMAC")
+        local hw_chsum_cal  = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.ETHMAC_CHECKSUM_BY_HARDWARE))
+        local irq_prio      = ct:key_read(config.arch.stm32f1.key.ETHMAC_IRQ_PRIORITY)
+        local link_speed    = link_speed_idx[ct:key_read(config.arch.stm32f1.key.ETHMAC_SPEED)]
+        local PHY_name      = ct:key_read(config.arch.stm32f1.key.ETHMAC_DEVICE)
+        local PHY_address   = ct:key_read(config.arch.stm32f1.key.ETHMAC_PHY_ADDRESS):gsub("0x", "")
+        local reset_delay   = tonumber(ct:key_read(config.arch.stm32f1.key.ETHMAC_PHY_RESET_DELAY))
+        local setup_delay   = tonumber(ct:key_read(config.arch.stm32f1.key.ETHMAC_PHY_CONFIG_DELAY))
 
         -- convert IRQ selection to list index
         if irq_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
@@ -138,17 +138,17 @@ local function save_configuration()
         end
 
         -- write setup to configuration files
-        ct:enable_module("ETH", module_enable)
-        ct:key_write(config.arch.stm32f1.key.ETH_CHECKSUM_BY_HARDWARE, hw_chsum_cal)
-        ct:key_write(config.arch.stm32f1.key.ETH_IRQ_PRIORITY, irq_prio)
-        ct:key_write(config.arch.stm32f1.key.ETH_SPEED, link_speed)
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_ADDRESS, PHY_address)
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_RESET_DELAY, reset_delay)
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_CONFIG_DELAY, setup_delay)
-        ct:key_write(config.arch.stm32f1.key.ETH_DEVICE, PHY[PHY_index].name:GetValue())
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_SR, PHY[PHY_index].status_register_address:GetValue())
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_SPEED_STATUS_BM, PHY[PHY_index].speed_status_mask:GetValue())
-        ct:key_write(config.arch.stm32f1.key.ETH_PHY_DUPLEX_STATUS_BM, PHY[PHY_index].duplex_status_mask:GetValue())
+        ct:enable_module("ETHMAC", module_enable)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_CHECKSUM_BY_HARDWARE, hw_chsum_cal)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_IRQ_PRIORITY, irq_prio)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_SPEED, link_speed)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_ADDRESS, PHY_address)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_RESET_DELAY, reset_delay)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_CONFIG_DELAY, setup_delay)
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_DEVICE, PHY[PHY_index].name:GetValue())
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_SR, PHY[PHY_index].status_register_address:GetValue())
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_SPEED_STATUS_BM, PHY[PHY_index].speed_status_mask:GetValue())
+        ct:key_write(config.arch.stm32f1.key.ETHMAC_PHY_DUPLEX_STATUS_BM, PHY[PHY_index].duplex_status_mask:GetValue())
 
         modified:no()
 
@@ -282,7 +282,7 @@ end
 -- @return Module name
 --------------------------------------------------------------------------------
 function eth:get_window_name()
-        return "ETH"
+        return "ETHMAC"
 end
 
 

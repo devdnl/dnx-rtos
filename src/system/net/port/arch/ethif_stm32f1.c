@@ -46,7 +46,7 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define ETHMAC_CHECKSUM_BY_HARDWARE     __ETH_CHECKSUM_BY_HARDWARE__
+#define ETHMAC_CHECKSUM_BY_HARDWARE     __ETHMAC_CHECKSUM_BY_HARDWARE__
 
 /*==============================================================================
   Local object types

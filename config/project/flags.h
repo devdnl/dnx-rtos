@@ -61,7 +61,7 @@
 #       include "../stm32f1/crc_flags.h"
 #       include "../stm32f1/gpio_flags.h"
 #       include "../stm32f1/afio_flags.h"
-#       include "../stm32f1/eth_flags.h"
+#       include "../stm32f1/ethmac_flags.h"
 #       include "../stm32f1/pll_flags.h"
 #       include "../stm32f1/spi_flags.h"
 #       include "../stm32f1/wdg_flags.h"
@@ -131,7 +131,7 @@
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIO__ _YES_
 #define __ENABLE_CRC__ _YES_
-#define __ENABLE_ETH__ _YES_
+#define __ENABLE_ETHMAC__ _YES_
 #define __ENABLE_PLL__ _YES_
 #define __ENABLE_SDSPI__ _YES_
 #define __ENABLE_SPI__ _YES_

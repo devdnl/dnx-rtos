@@ -25,7 +25,7 @@
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_MK>
             <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_MK>
             <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>__ENABLE_CRC__</key></ENABLE_CRC_MK>
-            <ENABLE_ETH_MK><path>../../config/project/Makefile</path><key>__ENABLE_ETH__</key></ENABLE_ETH_MK>
+            <ENABLE_ETHMAC_MK><path>../../config/project/Makefile</path><key>__ENABLE_ETHMAC__</key></ENABLE_ETHMAC_MK>
             <ENABLE_PLL_MK><path>../../config/project/Makefile</path><key>__ENABLE_PLL__</key></ENABLE_PLL_MK>
             <ENABLE_SDSPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_MK>
             <ENABLE_SPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SPI__</key></ENABLE_SPI_MK>
@@ -241,7 +241,7 @@
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
             <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
             <ENABLE_CRC_H><path>../../config/project/flags.h</path><key>__ENABLE_CRC__</key></ENABLE_CRC_H>
-            <ENABLE_ETH_H><path>../../config/project/flags.h</path><key>__ENABLE_ETH__</key></ENABLE_ETH_H>
+            <ENABLE_ETHMAC_H><path>../../config/project/flags.h</path><key>__ENABLE_ETHMAC__</key></ENABLE_ETHMAC_H>
             <ENABLE_PLL_H><path>../../config/project/flags.h</path><key>__ENABLE_PLL__</key></ENABLE_PLL_H>
             <ENABLE_SDSPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_H>
             <ENABLE_SPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SPI__</key></ENABLE_SPI_H>
@@ -262,7 +262,7 @@
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
             <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
-            <module noarch="false"><name>ETH</name><description>This module handles Ethernet interface.</description></module>
+            <module noarch="false"><name>ETHMAC</name><description>This module handles Ethernet interface.</description></module>
             <module noarch="false"><name>PLL</name><description>This module handles PLL peripheral.</description></module>
             <module noarch="true"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
             <module noarch="false"><name>SPI</name><description>This module handles SPI peripherals.</description></module>
@@ -782,16 +782,16 @@
                 <SPI_SPI3_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS6_PIN_NAME__</key></SPI_SPI3_CS6_PIN_NAME>
                 <SPI_SPI3_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS7_PIN_NAME__</key></SPI_SPI3_CS7_PIN_NAME>
 
-                <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
-                <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>
-                <ETH_SPEED><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_SPEED__</key></ETH_SPEED>
-                <ETH_PHY_ADDRESS><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_ADDRESS__</key></ETH_PHY_ADDRESS>
-                <ETH_PHY_RESET_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_RESET_DELAY__</key></ETH_PHY_RESET_DELAY>
-                <ETH_PHY_CONFIG_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_CONFIG_DELAY__</key></ETH_PHY_CONFIG_DELAY>
-                <ETH_DEVICE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_DEVICE__</key></ETH_DEVICE>
-                <ETH_PHY_SR><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SR__</key></ETH_PHY_SR>
-                <ETH_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SPEED_STATUS_BM__</key></ETH_PHY_SPEED_STATUS_BM>
-                <ETH_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_DUPLEX_STATUS_BM__</key></ETH_PHY_DUPLEX_STATUS_BM>
+                <ETHMAC_IRQ_PRIORITY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_IRQ_PRIORITY__</key></ETHMAC_IRQ_PRIORITY>
+                <ETHMAC_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_CHECKSUM_BY_HARDWARE__</key></ETHMAC_CHECKSUM_BY_HARDWARE>
+                <ETHMAC_SPEED><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_SPEED__</key></ETHMAC_SPEED>
+                <ETHMAC_PHY_ADDRESS><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_ADDRESS__</key></ETHMAC_PHY_ADDRESS>
+                <ETHMAC_PHY_RESET_DELAY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_RESET_DELAY__</key></ETHMAC_PHY_RESET_DELAY>
+                <ETHMAC_PHY_CONFIG_DELAY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_CONFIG_DELAY__</key></ETHMAC_PHY_CONFIG_DELAY>
+                <ETHMAC_DEVICE><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_DEVICE__</key></ETHMAC_DEVICE>
+                <ETHMAC_PHY_SR><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_SR__</key></ETHMAC_PHY_SR>
+                <ETHMAC_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_SPEED_STATUS_BM__</key></ETHMAC_PHY_SPEED_STATUS_BM>
+                <ETHMAC_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_DUPLEX_STATUS_BM__</key></ETHMAC_PHY_DUPLEX_STATUS_BM>
 
                 <AFIO_EVENT_OUT_ENABLE><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_ENABLE__</key></AFIO_EVENT_OUT_ENABLE>
                 <AFIO_EVENT_OUT_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PORT__</key></AFIO_EVENT_OUT_PORT>
@@ -4713,7 +4713,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
+                        <ETHMAC></ETHMAC>
                         <AFIO></AFIO>
                         <IRQ></IRQ>
                         <I2C>
@@ -4754,7 +4754,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
+                        <ETHMAC></ETHMAC>
                         <AFIO></AFIO>
                         <IRQ></IRQ>
                         <I2C>
@@ -4795,7 +4795,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
+                        <ETHMAC></ETHMAC>
                         <AFIO></AFIO>
                         <IRQ></IRQ>
                         <I2C>
