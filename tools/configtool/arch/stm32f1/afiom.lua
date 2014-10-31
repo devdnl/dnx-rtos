@@ -1,5 +1,5 @@
 --[[============================================================================
-@file    afio.lua
+@file    afiomm.lua
 
 @author  Daniel Zorychta
 
@@ -37,7 +37,7 @@ require("modules/ctcore")
 -- GLOBAL OBJECTS
 --==============================================================================
 -- module's main object
-afio = {}
+afiom = {}
 
 
 --==============================================================================
@@ -72,74 +72,74 @@ local PORT_LIST        = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
 --------------------------------------------------------------------------------
 local function load_configuration()
         -- load module state
-        local module_enable = ct:get_module_state("AFIO")
+        local module_enable = ct:get_module_state("AFIOM")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel1:Enable(module_enable)
 
         -- load Cortex Event Output controls
-        local CEO_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.AFIO_EVENT_OUT_ENABLE))
+        local CEO_enable = ct:yes_no_to_bool(ct:key_read(config.arch.stm32f1.key.AFIOM_EVENT_OUT_ENABLE))
         ui.CheckBox_CEO_enable:SetValue(CEO_enable)
         ui.Panel_CEO:Enable(CEO_enable)
-        ui.Choice_CEO_port:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_EVENT_OUT_PORT)))
-        ui.Choice_CEO_pin:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_EVENT_OUT_PIN)))
+        ui.Choice_CEO_port:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_EVENT_OUT_PORT)))
+        ui.Choice_CEO_pin:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_EVENT_OUT_PIN)))
 
         -- load remap controls (common)
-        ui.Choice_remap_SPI1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_SPI1)))
-        ui.Choice_remap_I2C1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_I2C1)))
-        ui.Choice_remap_USART1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_USART1)))
-        ui.Choice_remap_USART2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_USART2)))
-        ui.Choice_remap_USART3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_USART3)))
-        ui.Choice_remap_TIM1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM1)))
-        ui.Choice_remap_TIM2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM2)))
-        ui.Choice_remap_TIM3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM3)))
-        ui.Choice_remap_TIM4:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM4)))
-        ui.Choice_remap_TIM5CH4:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM5CH4)))
-        ui.Choice_remap_CAN:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_CAN)))
-        ui.Choice_remap_PD01:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_PD01)))
-        ui.Choice_remap_ADC1_ETRGINJ:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_ADC1_ETRGINJ)))
-        ui.Choice_remap_ADC1_ETRGREG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_ADC1_ETRGREG)))
-        ui.Choice_remap_ADC2_ETRGINJ:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_ADC2_ETRGINJ)))
-        ui.Choice_remap_ADC2_ETRGREG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_ADC2_ETRGREG)))
-        ui.Choice_remap_JTAG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_SWJ_CFG)))
+        ui.Choice_remap_SPI1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_SPI1)))
+        ui.Choice_remap_I2C1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_I2C1)))
+        ui.Choice_remap_USART1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_USART1)))
+        ui.Choice_remap_USART2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_USART2)))
+        ui.Choice_remap_USART3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_USART3)))
+        ui.Choice_remap_TIM1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM1)))
+        ui.Choice_remap_TIM2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM2)))
+        ui.Choice_remap_TIM3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM3)))
+        ui.Choice_remap_TIM4:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM4)))
+        ui.Choice_remap_TIM5CH4:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM5CH4)))
+        ui.Choice_remap_CAN:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_CAN)))
+        ui.Choice_remap_PD01:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_PD01)))
+        ui.Choice_remap_ADC1_ETRGINJ:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_ADC1_ETRGINJ)))
+        ui.Choice_remap_ADC1_ETRGREG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_ADC1_ETRGREG)))
+        ui.Choice_remap_ADC2_ETRGINJ:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_ADC2_ETRGINJ)))
+        ui.Choice_remap_ADC2_ETRGREG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_ADC2_ETRGREG)))
+        ui.Choice_remap_JTAG:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_SWJ_CFG)))
 
         if cpu_family == CPU_FAMILY_CL then
-                ui.Choice_remap_ETH_IO:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_ETH)))
-                ui.Choice_remap_ETH_MII_RMII_PHY:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_MII_RMII_SEL)))
-                ui.Choice_remap_ETH_PTP_PPS:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_PTP_PPS)))
-                ui.Choice_remap_CAN2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_CAN2)))
-                ui.Choice_remap_SPI3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_SPI3)))
-                ui.Choice_remap_TIM2ITR1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM2ITR1)))
+                ui.Choice_remap_ETH_IO:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_ETH)))
+                ui.Choice_remap_ETH_MII_RMII_PHY:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_MII_RMII_SEL)))
+                ui.Choice_remap_ETH_PTP_PPS:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_PTP_PPS)))
+                ui.Choice_remap_CAN2:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_CAN2)))
+                ui.Choice_remap_SPI3:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_SPI3)))
+                ui.Choice_remap_TIM2ITR1:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM2ITR1)))
         end
 
         if cpu_family == CPU_FAMILY_LD_VL or cpu_family == CPU_FAMILY_MD_VL or cpu_family == CPU_FAMILY_HD_VL then
-                ui.Choice_remap_TIM15:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM15)))
-                ui.Choice_remap_TIM16:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM16)))
-                ui.Choice_remap_TIM17:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM17)))
-                ui.Choice_remap_CEC:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_CEC)))
-                ui.Choice_remap_TIM1_DMA:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM1_DMA)))
+                ui.Choice_remap_TIM15:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM15)))
+                ui.Choice_remap_TIM16:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM16)))
+                ui.Choice_remap_TIM17:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM17)))
+                ui.Choice_remap_CEC:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_CEC)))
+                ui.Choice_remap_TIM1_DMA:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM1_DMA)))
         end
 
         if cpu_family == CPU_FAMILY_HD_VL then
-                ui.Choice_remap_TIM76_DAC_DMA:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM76_DAC_DMA)))
-                ui.Choice_remap_TIM12:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM12)))
-                ui.Choice_remap_misc:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_MISC)))
+                ui.Choice_remap_TIM76_DAC_DMA:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM76_DAC_DMA)))
+                ui.Choice_remap_TIM12:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM12)))
+                ui.Choice_remap_misc:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_MISC)))
         end
 
         if cpu_family == CPU_FAMILY_LD or cpu_family == CPU_FAMILY_MD or cpu_family == CPU_FAMILY_HD or cpu_family == CPU_FAMILY_XL then
-                ui.Choice_remap_TIM9:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM9)))
-                ui.Choice_remap_TIM10:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM10)))
-                ui.Choice_remap_TIM11:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM11)))
+                ui.Choice_remap_TIM9:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM9)))
+                ui.Choice_remap_TIM10:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM10)))
+                ui.Choice_remap_TIM11:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM11)))
         end
 
         if cpu_family == CPU_FAMILY_HD_VL or cpu_family == CPU_FAMILY_LD or cpu_family == CPU_FAMILY_MD or cpu_family == CPU_FAMILY_HD or cpu_family == CPU_FAMILY_XL then
-                ui.Choice_remap_TIM13:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM13)))
-                ui.Choice_remap_TIM14:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_TIM14)))
-                ui.Choice_remap_NADV:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIO_REMAP_FSMC_NADV)))
+                ui.Choice_remap_TIM13:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM13)))
+                ui.Choice_remap_TIM14:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_TIM14)))
+                ui.Choice_remap_NADV:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key.AFIOM_REMAP_FSMC_NADV)))
         end
 
         -- load EXTI controls
         for i = 0, 15 do
-                ui.Choice_EXTI[i]:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key["AFIO_EXTI"..i.."_PORT"])))
+                ui.Choice_EXTI[i]:SetSelection(tonumber(ct:key_read(config.arch.stm32f1.key["AFIOM_EXTI"..i.."_PORT"])))
         end
 end
 
@@ -151,70 +151,70 @@ end
 --------------------------------------------------------------------------------
 local function save_configuration()
         -- save module state
-        ct:enable_module("AFIO", ui.CheckBox_module_enable:GetValue())
+        ct:enable_module("AFIOM", ui.CheckBox_module_enable:GetValue())
 
         -- save Cortex Event Output configuration
-        ct:key_write(config.arch.stm32f1.key.AFIO_EVENT_OUT_ENABLE, ct:bool_to_yes_no(ui.CheckBox_CEO_enable:GetValue()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_EVENT_OUT_PORT, tostring(ui.Choice_CEO_port:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_EVENT_OUT_PIN, tostring(ui.Choice_CEO_pin:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_EVENT_OUT_ENABLE, ct:bool_to_yes_no(ui.CheckBox_CEO_enable:GetValue()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_EVENT_OUT_PORT, tostring(ui.Choice_CEO_port:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_EVENT_OUT_PIN, tostring(ui.Choice_CEO_pin:GetSelection()))
 
         -- save remap configuration (common)
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_SPI1, tostring(ui.Choice_remap_SPI1:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_I2C1, tostring(ui.Choice_remap_I2C1:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_USART1, tostring(ui.Choice_remap_USART1:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_USART2, tostring(ui.Choice_remap_USART2:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_USART3, tostring(ui.Choice_remap_USART3:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM1, tostring(ui.Choice_remap_TIM1:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM2, tostring(ui.Choice_remap_TIM2:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM3, tostring(ui.Choice_remap_TIM3:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM4, tostring(ui.Choice_remap_TIM4:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM5CH4, tostring(ui.Choice_remap_TIM5CH4:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_CAN, tostring(ui.Choice_remap_CAN:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_PD01, tostring(ui.Choice_remap_PD01:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_ADC1_ETRGINJ, tostring(ui.Choice_remap_ADC1_ETRGINJ:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_ADC1_ETRGREG, tostring(ui.Choice_remap_ADC1_ETRGREG:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_ADC2_ETRGINJ, tostring(ui.Choice_remap_ADC2_ETRGINJ:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_ADC2_ETRGREG, tostring(ui.Choice_remap_ADC2_ETRGREG:GetSelection()))
-        ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_SWJ_CFG, tostring(ui.Choice_remap_JTAG:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_SPI1, tostring(ui.Choice_remap_SPI1:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_I2C1, tostring(ui.Choice_remap_I2C1:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_USART1, tostring(ui.Choice_remap_USART1:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_USART2, tostring(ui.Choice_remap_USART2:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_USART3, tostring(ui.Choice_remap_USART3:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM1, tostring(ui.Choice_remap_TIM1:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM2, tostring(ui.Choice_remap_TIM2:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM3, tostring(ui.Choice_remap_TIM3:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM4, tostring(ui.Choice_remap_TIM4:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM5CH4, tostring(ui.Choice_remap_TIM5CH4:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_CAN, tostring(ui.Choice_remap_CAN:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_PD01, tostring(ui.Choice_remap_PD01:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_ADC1_ETRGINJ, tostring(ui.Choice_remap_ADC1_ETRGINJ:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_ADC1_ETRGREG, tostring(ui.Choice_remap_ADC1_ETRGREG:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_ADC2_ETRGINJ, tostring(ui.Choice_remap_ADC2_ETRGINJ:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_ADC2_ETRGREG, tostring(ui.Choice_remap_ADC2_ETRGREG:GetSelection()))
+        ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_SWJ_CFG, tostring(ui.Choice_remap_JTAG:GetSelection()))
 
         if cpu_family == CPU_FAMILY_CL then
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_ETH, tostring(ui.Choice_remap_ETH_IO:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_MII_RMII_SEL, tostring(ui.Choice_remap_ETH_MII_RMII_PHY:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_PTP_PPS, tostring(ui.Choice_remap_ETH_PTP_PPS:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_CAN2, tostring(ui.Choice_remap_CAN2:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_SPI3, tostring(ui.Choice_remap_SPI3:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM2ITR1, tostring(ui.Choice_remap_TIM2ITR1:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_ETH, tostring(ui.Choice_remap_ETH_IO:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_MII_RMII_SEL, tostring(ui.Choice_remap_ETH_MII_RMII_PHY:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_PTP_PPS, tostring(ui.Choice_remap_ETH_PTP_PPS:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_CAN2, tostring(ui.Choice_remap_CAN2:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_SPI3, tostring(ui.Choice_remap_SPI3:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM2ITR1, tostring(ui.Choice_remap_TIM2ITR1:GetSelection()))
         end
 
         if cpu_family == CPU_FAMILY_LD_VL or cpu_family == CPU_FAMILY_MD_VL or cpu_family == CPU_FAMILY_HD_VL then
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM15, tostring(ui.Choice_remap_TIM15:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM16, tostring(ui.Choice_remap_TIM16:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM17, tostring(ui.Choice_remap_TIM17:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_CEC, tostring(ui.Choice_remap_CEC:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM1_DMA, tostring(ui.Choice_remap_TIM1_DMA:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM15, tostring(ui.Choice_remap_TIM15:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM16, tostring(ui.Choice_remap_TIM16:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM17, tostring(ui.Choice_remap_TIM17:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_CEC, tostring(ui.Choice_remap_CEC:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM1_DMA, tostring(ui.Choice_remap_TIM1_DMA:GetSelection()))
         end
 
         if cpu_family == CPU_FAMILY_HD_VL then
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM76_DAC_DMA, tostring(ui.Choice_remap_TIM76_DAC_DMA:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM12, tostring(ui.Choice_remap_TIM12:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_MISC, tostring(ui.Choice_remap_misc:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM76_DAC_DMA, tostring(ui.Choice_remap_TIM76_DAC_DMA:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM12, tostring(ui.Choice_remap_TIM12:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_MISC, tostring(ui.Choice_remap_misc:GetSelection()))
         end
 
         if cpu_family == CPU_FAMILY_LD or cpu_family == CPU_FAMILY_MD or cpu_family == CPU_FAMILY_HD or cpu_family == CPU_FAMILY_XL then
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM9, tostring(ui.Choice_remap_TIM9:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM10, tostring(ui.Choice_remap_TIM10:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM11, tostring(ui.Choice_remap_TIM11:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM9, tostring(ui.Choice_remap_TIM9:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM10, tostring(ui.Choice_remap_TIM10:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM11, tostring(ui.Choice_remap_TIM11:GetSelection()))
         end
 
         if cpu_family == CPU_FAMILY_HD_VL or cpu_family == CPU_FAMILY_LD or cpu_family == CPU_FAMILY_MD or cpu_family == CPU_FAMILY_HD or cpu_family == CPU_FAMILY_XL then
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM13, tostring(ui.Choice_remap_TIM13:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_TIM14, tostring(ui.Choice_remap_TIM14:GetSelection()))
-                ct:key_write(config.arch.stm32f1.key.AFIO_REMAP_FSMC_NADV, tostring(ui.Choice_remap_NADV:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM13, tostring(ui.Choice_remap_TIM13:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_TIM14, tostring(ui.Choice_remap_TIM14:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key.AFIOM_REMAP_FSMC_NADV, tostring(ui.Choice_remap_NADV:GetSelection()))
         end
 
         -- save EXTI configuration
         for i = 0, 15 do
-                ct:key_write(config.arch.stm32f1.key["AFIO_EXTI"..i.."_PORT"], tostring(ui.Choice_EXTI[i]:GetSelection()))
+                ct:key_write(config.arch.stm32f1.key["AFIOM_EXTI"..i.."_PORT"], tostring(ui.Choice_EXTI[i]:GetSelection()))
         end
 
         modified:no()
@@ -261,7 +261,7 @@ end
 -- @param  parent       parent window
 -- @return New window handle
 --------------------------------------------------------------------------------
-function afio:create_window(parent)
+function afiom:create_window(parent)
         cpu_name   = ct:key_read(config.arch.stm32f1.key.CPU_NAME)
         cpu_idx    = ct:get_cpu_index("stm32f1", cpu_name)
         cpu        = config.arch.stm32f1.cpulist:Children()[cpu_idx]
@@ -830,7 +830,7 @@ end
 -- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
-function afio:get_window_name()
+function afiom:get_window_name()
         return "AFIO"
 end
 
@@ -840,7 +840,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-function afio:selected()
+function afiom:selected()
 end
 
 
@@ -849,7 +849,7 @@ end
 -- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
-function afio:is_modified()
+function afiom:is_modified()
         return modified:get_value()
 end
 
@@ -858,7 +858,7 @@ end
 -- @brief  Function save configuration
 -- @return None
 --------------------------------------------------------------------------------
-function afio:save()
+function afiom:save()
         save_configuration()
 end
 
@@ -867,7 +867,7 @@ end
 -- @brief  Function discard modified configuration
 -- @return None
 --------------------------------------------------------------------------------
-function afio:discard()
+function afiom:discard()
         load_configuration()
         modified:no()
 end
@@ -879,5 +879,5 @@ end
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
-        return afio
+        return afiom
 end

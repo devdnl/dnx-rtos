@@ -60,7 +60,7 @@
 #       include "../stm32f1/cpu.h"
 #       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
-#       include "../stm32f1/afio_flags.h"
+#       include "../stm32f1/afiom_flags.h"
 #       include "../stm32f1/ethmac_flags.h"
 #       include "../stm32f1/pll_flags.h"
 #       include "../stm32f1/spi_flags.h"
@@ -129,7 +129,7 @@
 /* modules */
 #define __ENABLE_LOOP__ _YES_
 #define __ENABLE_GPIO__ _YES_
-#define __ENABLE_AFIO__ _YES_
+#define __ENABLE_AFIOM__ _YES_
 #define __ENABLE_CRCM__ _YES_
 #define __ENABLE_ETHMAC__ _YES_
 #define __ENABLE_PLL__ _YES_

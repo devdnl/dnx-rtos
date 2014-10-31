@@ -45,9 +45,9 @@
 #               include "stm32f1/gpio_def.h"
 #       endif
 #endif
-#if (__ENABLE_AFIO__)
+#if (__ENABLE_AFIOM__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/afio_def.h"
+#               include "stm32f1/afiom_def.h"
 #       endif
 #endif
 #if (__ENABLE_UART__)
@@ -120,8 +120,8 @@
 #if (__ENABLE_GPIO__)
         _IMPORT_MODULE_INTERFACE(GPIO);
 #endif
-#if (__ENABLE_AFIO__)
-        _IMPORT_MODULE_INTERFACE(afio);
+#if (__ENABLE_AFIOM__)
+        _IMPORT_MODULE_INTERFACE(AFIOM);
 #endif
 #if (__ENABLE_UART__)
         _IMPORT_MODULE_INTERFACE(UART);
@@ -171,8 +171,8 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_GPIO__)
         _MODULE_NAME(GPIO),
         #endif
-        #if (__ENABLE_AFIO__)
-        _MODULE_NAME(afio),
+        #if (__ENABLE_AFIOM__)
+        _MODULE_NAME(AFIOM),
         #endif
         #if (__ENABLE_UART__)
         _MODULE_NAME(UART),
@@ -190,7 +190,7 @@ const char *const _regdrv_module_name[] = {
         _MODULE_NAME(ETHMAC),
         #endif
         #if (__ENABLE_CRCM__)
-        _MODULE_NAME(CRCCU),
+        _MODULE_NAME(CRCM),
         #endif
         #if (__ENABLE_WDG__)
         _MODULE_NAME(WDG),
@@ -385,8 +385,8 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* AFIO ==============================================================*/
-        #if (__ENABLE_AFIO__)
-        _DRIVER_INTERFACE(afio, "afio", _AFIO_MAJOR_NUMBER, _AFIO_MINOR_NUMBER),
+        #if (__ENABLE_AFIOM__)
+        _DRIVER_INTERFACE(AFIOM, "afiom", _AFIOM_MAJOR_NUMBER, _AFIOM_MINOR_NUMBER),
         #endif
 
         /* GPIO ==============================================================*/

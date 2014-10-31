@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    afio_ioctl.h
+@file    afiom_def.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support AFIO ioctl request codes.
+@brief   This driver support AFIO definitions.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,43 +24,40 @@
 
 *//*==========================================================================*/
 
-#ifndef _AFIO_IOCTL_H_
-#define _AFIO_IOCTL_H_
-
-/*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
+#ifndef _AFIOM_DEF_H_
+#define _AFIOM_DEF_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Exported macros
+  Include files
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Exported symbolic constants/macros
+==============================================================================*/
+#define _AFIOM_MAJOR_NUMBER      0
+#define _AFIOM_MINOR_NUMBER      0
+
+/*==============================================================================
+  Exported types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported objects
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
-==============================================================================*/
-
-/*==============================================================================
-  Exported inline functions
+  Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _AFIO_IOCTL_H_ */
+#endif /* _AFIOM_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

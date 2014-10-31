@@ -19,7 +19,7 @@ __ENABLE_FATFS__=_YES_
 # modules enable flags
 __ENABLE_LOOP__=_YES_
 __ENABLE_GPIO__=_YES_
-__ENABLE_AFIO__=_YES_
+__ENABLE_AFIOM__=_YES_
 __ENABLE_CRCM__=_YES_
 __ENABLE_ETHMAC__=_YES_
 __ENABLE_PLL__=_YES_

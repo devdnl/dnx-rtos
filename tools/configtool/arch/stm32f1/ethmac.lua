@@ -282,7 +282,7 @@ end
 -- @return Module name
 --------------------------------------------------------------------------------
 function eth:get_window_name()
-        return "ETHMAC"
+        return "ETH"
 end
 
 

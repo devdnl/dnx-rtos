@@ -124,7 +124,7 @@ end
 -- @return Module name
 --------------------------------------------------------------------------------
 function crcm:get_window_name()
-        return "CRCM"
+        return "CRC"
 end
 
 
