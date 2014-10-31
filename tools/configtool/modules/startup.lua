@@ -218,7 +218,7 @@ local function create_boot_widgets(parent)
         ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
         ui.FlexGridSizer_boot:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.StaticLine = wx.wxStaticLine(ui.Panel_boot, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
+        ui.StaticLine = wx.wxStaticLine(ui.Panel_boot, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL, "wx.wxID_ANY")
         ui.FlexGridSizer_boot:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- Root file system selection group
@@ -228,7 +228,7 @@ local function create_boot_widgets(parent)
             ui.StaticText1 = wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Select base file system:", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_boot_main_FS_1:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            ui.Choice_boot_root_FS = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, FS_list:get_list())
+            ui.Choice_boot_root_FS = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(100, -1), FS_list:get_list())
             ui.FlexGridSizer_boot_main_FS_1:Add(ui.Choice_boot_root_FS, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.Choice_boot_root_FS:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
 
@@ -243,7 +243,7 @@ local function create_boot_widgets(parent)
             ui.FlexGridSizer_boot_folders_2 = wx.wxFlexGridSizer(0, 5, 0, 0)
 
                 -- folder name combobox
-                ui.ComboBox_folder_name = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, default_dirs, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_folder_name = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(100, -1), default_dirs, wx.wxTE_PROCESS_ENTER)
                 ui.FlexGridSizer_boot_folders_2:Add(ui.ComboBox_folder_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.ComboBox_folder_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_folder_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
 
@@ -253,7 +253,9 @@ local function create_boot_widgets(parent)
                 ui.Button_folder_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
                                 local dirname = ui.ComboBox_folder_name:GetValue()
-                                if dirname:match("^/.*") then
+                                if dirname ~= "" then
+                                        if not dirname:match("^/.*") then dirname = "/"..dirname end
+                                
                                         ui.ListBox_folders:InsertItems({dirname}, ui.ListBox_folders:GetCount())
                                         ui.ComboBox_other_FS_mntpt:Append(dirname)
                                         ui.ComboBox_folder_name:SetValue("")
@@ -332,7 +334,8 @@ local function create_boot_widgets(parent)
             ui.FlexGridSizer_other_FS_2:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.Button_other_FS_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
-                            local fs_name  = ui.Choice_other_FS_name:GetString(ui.Choice_other_FS_name:GetSelection())
+                            local sel      = ui.Choice_other_FS_name:GetSelection()
+                            local fs_name  = ui.Choice_other_FS_name:GetString(ifs(sel > -1, sel, 0))
                             local src_file = ui.ComboBox_other_FS_src:GetValue()
                             local mntpt    = ui.ComboBox_other_FS_mntpt:GetValue()
 
@@ -425,7 +428,7 @@ local function create_runlevel_0_widgets(parent)
                 )
 
                 -- add driver node path
-                ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {"none"})
+                ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(100, -1), {"none"})
                 ui.FlexGridSizer_drv_init_sel:Add(ui.ComboBox_drv_node, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add Add button
@@ -499,7 +502,7 @@ local function create_runlevel_0_widgets(parent)
             ui.FlexGridSizer_sys_msg:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             ui.ComboBox_sys_msg_file = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
-            ui.FlexGridSizer_sys_msg:Add(ui.ComboBox_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_sys_msg:Add(ui.ComboBox_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- add group to the panel's main sizer
             ui.StaticBoxSizer_sys_msg:Add(ui.FlexGridSizer_sys_msg, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
