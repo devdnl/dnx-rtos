@@ -258,6 +258,7 @@ local function create_boot_widgets(parent)
 
                                         ui.ListBox_folders:InsertItems({dirname}, ui.ListBox_folders:GetCount())
                                         ui.ComboBox_other_FS_mntpt:Append(dirname)
+                                        ui.ComboBox_sd_cards_mntp:Append(dirname)
                                         ui.ComboBox_folder_name:SetValue("")
                                         modified:yes()
                                 end
@@ -288,6 +289,8 @@ local function create_boot_widgets(parent)
                                 ui.ListBox_folders:InsertItems(t, 0)
                                 ui.ComboBox_other_FS_mntpt:Clear()
                                 ui.ComboBox_other_FS_mntpt:Append(t)
+                                ui.ComboBox_sd_cards_mntp:Clear()
+                                ui.ComboBox_sd_cards_mntp:Append(t)
                                 modified:yes()
                         end
                 )
@@ -339,7 +342,7 @@ local function create_boot_widgets(parent)
                             local src_file = ui.ComboBox_other_FS_src:GetValue()
                             local mntpt    = ui.ComboBox_other_FS_mntpt:GetValue()
 
-                            if fs_name ~= -1 and src_file ~= "" and mntpt:match("^/.*") then
+                            if fs_name ~= "" and src_file ~= "" and mntpt:match("^/.*") then
                                     ui.ListView_other_FS:AppendItem(fs_name, src_file, mntpt)
                                     ui.Choice_other_FS_name:SetSelection(0)
                                     ui.ComboBox_other_FS_src:SetValue("")
@@ -448,7 +451,11 @@ local function create_runlevel_0_widgets(parent)
                                         ui.ListView_drv_list:AppendItem(drv_name, node_path)
                                         ui.Choice_drv_name:SetSelection(0)
                                         ui.ComboBox_drv_node:SetValue("")
-                                        ui.ComboBox_sys_msg_file:Append(node_path)
+
+                                        if node_path ~= "none" then
+                                                ui.ComboBox_sys_msg_file:Append(node_path)
+                                                ui.ComboBox_sd_cards_file:Append(node_path)
+                                        end
                                         modified:yes()
                                 end
                         end
@@ -458,7 +465,7 @@ local function create_runlevel_0_widgets(parent)
                 ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_sel, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- add list box
-            ui.ListView_drv_list = wx.wxListView(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 200), wx.wxLC_REPORT)
+            ui.ListView_drv_list = wx.wxListView(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 300), wx.wxLC_REPORT)
             ui.ListView_drv_list.AppendItem   = insert_item
             ui.ListView_drv_list.GetItemTexts = get_item_texts
             ui.ListView_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
@@ -484,10 +491,16 @@ local function create_runlevel_0_widgets(parent)
                                     local t = {}
                                     for i = 0, ui.ListView_drv_list:GetItemCount() - 1 do
                                             local col = ui.ListView_drv_list:GetItemTexts(i, 2)
-                                            table.insert(t, col[1])
+
+                                            if col[1] ~= "none" then
+                                                    table.insert(t, col[1])
+                                            end
                                     end
+
                                     ui.ComboBox_sys_msg_file:Clear()
                                     ui.ComboBox_sys_msg_file:Append(t)
+                                    ui.ComboBox_sd_cards_file:Clear()
+                                    ui.ComboBox_sd_cards_file:Append(t)
                             end
                     end
             )
@@ -538,6 +551,272 @@ local function create_runlevel_0_widgets(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Create widgets for runlevel 1
+-- @param  parent       parent window
+-- @return Panel object
+--------------------------------------------------------------------------------
+local function create_runlevel_1_widgets(parent)
+        -- create runlevel 1 panel
+        ui.Panel_runlevel_1 = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        ui.FlexGridSizer_runlevel_1 = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+        -- add runlevel 1 description
+        ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "The purpose of this runlevel is starting daemons, network layer, and mounting file systems from external devices.")
+        ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
+        ui.FlexGridSizer_runlevel_1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        ui.StaticLine4 = wx.wxStaticLine(ui.Panel_runlevel_1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL)
+        ui.FlexGridSizer_runlevel_1:Add(ui.StaticLine4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- create SD cards initialization group
+        ui.StaticBoxSizer_sd_cards = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "SD cards initialization")
+        ui.FlexGridSizer_sd_cards = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+            -- create button sizer
+            ui.FlexGridSizer_sd_cards_buttons = wx.wxFlexGridSizer(0, 4, 0, 0)
+
+                -- add header
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Card file")
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "File system")
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Mount point")
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_sd_cards_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add combobox with SD file path
+                ui.ComboBox_sd_cards_file = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125,-1), {})
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.ComboBox_sd_cards_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- file system name selection
+                ui.Choice_sd_cards_FS_name = wx.wxChoice(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.Choice_sd_cards_FS_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add combobox with mount point
+                ui.ComboBox_sd_cards_mntp = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125,-1), {})
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.ComboBox_sd_cards_mntp, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add Add button
+                ui.Button_sd_cards_add = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.Button_sd_cards_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_sd_cards_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                        function()
+                                local sel      = ui.Choice_sd_cards_FS_name:GetSelection()
+                                local fs_name  = ui.Choice_sd_cards_FS_name:GetString(ifs(sel > -1, sel, 0))
+                                local src_file = ui.ComboBox_sd_cards_file:GetValue()
+                                local mntpt    = ui.ComboBox_sd_cards_mntp:GetValue()
+
+                                if src_file ~= "" then
+                                        ui.ListView_sd_cards:AppendItem(src_file, fs_name, mntpt)
+                                        ui.Choice_sd_cards_FS_name:SetSelection(0)
+                                        ui.ComboBox_sd_cards_file:SetValue("")
+                                        ui.ComboBox_sd_cards_mntp:SetValue("")
+                                        modified:yes()
+                                end
+                        end
+                )
+
+                -- add button sizer to the SD cards initialization group
+                ui.FlexGridSizer_sd_cards:Add(ui.FlexGridSizer_sd_cards_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+            -- create list with added cards
+            ui.ListView_sd_cards = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 80), wx.wxLC_REPORT)
+            ui.ListView_sd_cards.AppendItem   = insert_item
+            ui.ListView_sd_cards.GetItemTexts = get_item_texts
+            ui.ListView_sd_cards:InsertColumn(0, "Card file", wx.wxLIST_FORMAT_LEFT, 125)
+            ui.ListView_sd_cards:InsertColumn(1, "File system", wx.wxLIST_FORMAT_LEFT, 125)
+            ui.ListView_sd_cards:InsertColumn(2, "Mount point", wx.wxLIST_FORMAT_LEFT, 125)
+            ui.FlexGridSizer_sd_cards:Add(ui.ListView_sd_cards, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add remove button
+            ui.Button_sd_cards_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sd_cards:Add(ui.Button_sd_cards_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Button_sd_cards_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                    function()
+                            local n = ui.ListView_sd_cards:GetFirstSelected()
+                            if n > -1 then modified:yes() end
+
+                            while n > -1 do
+                                    ui.ListView_sd_cards:DeleteItem(n)
+                                    n = ui.ListView_sd_cards:GetNextSelected(-1)
+                            end
+                    end
+            )
+
+            -- add group to main panel
+            ui.StaticBoxSizer_sd_cards:Add(ui.FlexGridSizer_sd_cards, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_1:Add(ui.StaticBoxSizer_sd_cards, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- create network start group
+        ui.StaticBoxSizer_network = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "Network start")
+        ui.FlexGridSizer_network = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+            -- add DHCP enable checkbox
+            ui.CheckBox_network_DHCP = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Run DHCP client to get addresses", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_network:Add(ui.CheckBox_network_DHCP, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_network_DHCP:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+
+            -- add Static configuration checkbox
+            ui.CheckBox_network_static = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Set static network configuration", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_network:Add(ui.CheckBox_network_static, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_network_static:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                    function(event)
+                            ui.Panel_network_static_addresses:Enable(event:IsChecked())
+                            modified:yes()
+                    end
+            )
+
+            -- create network static configuration panel
+            ui.Panel_network_static_addresses = wx.wxPanel(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL, "ID.PANEL4")
+            ui.FlexGridSizer_network_static_addresses = wx.wxFlexGridSizer(0, 8, 0, 0)
+
+                -- add IP address configuration fields
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "IP Address:")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.SpinCtrl_network_static_address_IP_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_IP_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_IP_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_IP_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxNewId(), ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_IP_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_IP_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_IP_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_IP_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_IP_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                -- add Network Mask configuration fields
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "Network Mask:")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.SpinCtrl_network_static_address_mask_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_mask_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_mask_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_mask_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_mask_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_mask_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_mask_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_mask_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_mask_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                -- add network gateway fields
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, "Gateway Address:")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.SpinCtrl_network_static_address_gw_A = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_gw_A:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_A, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_gw_B = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_gw_B:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_B, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_gw_C = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_gw_C:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_C, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.StaticText = wx.wxStaticText(ui.Panel_network_static_addresses, wx.wxID_ANY, ".")
+                ui.FlexGridSizer_network_static_addresses:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                ui.SpinCtrl_network_static_address_gw_D = wx.wxSpinCtrl(ui.Panel_network_static_addresses, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(80,-1), 0, 0, 255)
+                ui.SpinCtrl_network_static_address_gw_D:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_network_static_addresses:Add(ui.SpinCtrl_network_static_address_gw_D, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                -- set sizer
+                ui.Panel_network_static_addresses:SetSizer(ui.FlexGridSizer_network_static_addresses)
+
+            -- add static configuration panel to configuration group
+            ui.FlexGridSizer_network:Add(ui.Panel_network_static_addresses, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add info text
+            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "NOTE: If static and dynamic network configurations are enabled at the same time, then dynamic "..
+                                                                              "configuration will  start first. When dynamic configuration will finish with error (DHCP server "..
+                                                                              "not response or there are no network connection), then static configuration will be applied automatically.")
+            ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
+            ui.FlexGridSizer_network:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add group to panel's sizer
+            ui.StaticBoxSizer_network:Add(ui.FlexGridSizer_network, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_1:Add(ui.StaticBoxSizer_network, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- create daemons group
+        ui.StaticBoxSizer_daemons = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "Daemons")
+        ui.FlexGridSizer_daemons = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+            -- create sizer for buttons
+            ui.FlexGridSizer_daemons_buttons = wx.wxFlexGridSizer(0, 5, 0, 0)
+
+                -- add combobox with daemons names (and parameters)
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Daemon")
+                ui.FlexGridSizer_daemons_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.ComboBox_daemons_name = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {})
+                ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_daemons_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add CWD path
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "CWD")
+                ui.FlexGridSizer_daemons_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.ComboBox_daemons_CWD = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {})
+                ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_daemons_CWD, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add Add button
+                ui.Button_daemons_add = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Add")
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_daemons_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add buttons to group
+                ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
+
+            -- add daemons list
+            ui.ListView_daemons = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 100), wx.wxLC_REPORT)
+            ui.ListView_daemons.AppendItem   = insert_item
+            ui.ListView_daemons.GetItemTexts = get_item_texts
+            ui.ListView_daemons:InsertColumn(0, "Daemon", wx.wxLIST_FORMAT_LEFT, 250)
+            ui.ListView_daemons:InsertColumn(1, "Working directory", wx.wxLIST_FORMAT_LEFT, 250)
+            ui.FlexGridSizer_daemons:Add(ui.ListView_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add remove button
+            ui.Button_daemons_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_daemons:Add(ui.Button_daemons_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add group to runlevel 1 panel
+            ui.StaticBoxSizer_daemons:Add(ui.FlexGridSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_1:Add(ui.StaticBoxSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- set runlevel 1's panel
+        ui.Panel_runlevel_1:SetSizer(ui.FlexGridSizer_runlevel_1)
+
+        return ui.Panel_runlevel_1
+end
+
+
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -556,6 +835,7 @@ function startup:create_window(parent)
                 ui.Notebook_runlevels = wx.wxNotebook(ui.window, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.Notebook_runlevels:AddPage(create_boot_widgets(ui.Notebook_runlevels), "Runlevel boot", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_0_widgets(ui.Notebook_runlevels), "Runlevel 0", false)
+                ui.Notebook_runlevels:AddPage(create_runlevel_1_widgets(ui.Notebook_runlevels), "Runlevel 1", false)
                 ui.FlexGridSizer_main:Add(ui.Notebook_runlevels, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- set main sizers
