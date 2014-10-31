@@ -124,16 +124,59 @@ local function new_driver_list()
         return self
 end
 
+
+--------------------------------------------------------------------------------
+-- @brief  Create a new application list
+-- @param  None
+-- @return New object
+--------------------------------------------------------------------------------
+local function new_app_list()
+        local FILE_PROGRAM_REGISTRATION = config.project.path.programs_reg_file:GetValue()
+        local self = {}
+        self._list = {}
+
+        -- method load list
+        self.reload = function(self)
+                self._list = {}
+                table.insert(self._list, "")
+
+                if ct.fs:exists(FILE_PROGRAM_REGISTRATION) then
+                        local regex = "%s*_IMPORT_PROGRAM%((.+)%)%s*;"
+                        local n = ct:find_line(FILE_PROGRAM_REGISTRATION, 1, regex)
+                        while n > 0 do
+                                local line = ct:get_line(FILE_PROGRAM_REGISTRATION, n)
+                                if line ~= nil then
+                                        table.insert(self._list, line:match(regex))
+                                end
+
+                                n = ct:find_line(FILE_PROGRAM_REGISTRATION, n + 1, regex)
+                        end
+
+                        table.sort(self._list)
+                end
+        end
+
+        -- method return entire list
+        self.get_list = function(self)
+                return self._list
+        end
+
+        self:reload()
+
+        return self
+end
+
+
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
 local ui = {}
 local ID = {}
-local modified                  = ct:new_modify_indicator()
-local default_dirs              = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
-local FS_list                   = new_FS_list()
-local drv_list                  = new_driver_list()
-
+local modified     = ct:new_modify_indicator()
+local default_dirs = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
+local FS_list      = new_FS_list()
+local drv_list     = new_driver_list()
+local app_list     = new_app_list()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -681,28 +724,45 @@ local function create_runlevel_1_widgets(parent)
             ui.FlexGridSizer_daemons_buttons = wx.wxFlexGridSizer(0, 5, 0, 0)
 
                 -- add combobox with daemons names (and parameters)
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Daemon")
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Daemon:")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.ComboBox_daemons_name = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {})
+                ui.ComboBox_daemons_name = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_daemons_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_daemons_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
                 ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_daemons_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add CWD path
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "CWD")
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "  CWD:")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.ComboBox_daemons_CWD = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {})
+                ui.ComboBox_daemons_CWD = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), default_dirs, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_daemons_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_daemons_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
                 ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_daemons_CWD, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add Add button
                 ui.Button_daemons_add = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Add")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_daemons_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_daemons_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                        function()
+                                local program = ui.ComboBox_daemons_name:GetValue()
+                                local cwd     = ui.ComboBox_daemons_CWD:GetValue()
+
+                                if not cwd:match("^/.*") then cwd = "/"..cwd end
+
+                                if program ~= "" then
+                                        ui.ListView_daemons:AppendItem(program, cwd)
+                                        ui.ComboBox_daemons_name:SetValue("")
+                                        ui.ComboBox_daemons_CWD:SetValue("")
+                                        modified:yes()
+                                end
+                        end
+                )
 
                 -- add buttons to group
                 ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- add daemons list
-            ui.ListView_daemons = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 100), wx.wxLC_REPORT)
+            ui.ListView_daemons = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), wx.wxLC_REPORT)
             ui.ListView_daemons.AppendItem   = insert_item
             ui.ListView_daemons.GetItemTexts = get_item_texts
             ui.ListView_daemons:InsertColumn(0, "Daemon", wx.wxLIST_FORMAT_LEFT, 250)
@@ -712,6 +772,17 @@ local function create_runlevel_1_widgets(parent)
             -- add remove button
             ui.Button_daemons_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_daemons:Add(ui.Button_daemons_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Button_daemons_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                    function()
+                            local n = ui.ListView_daemons:GetFirstSelected()
+                            if n > -1 then modified:yes() end
+
+                            while n > -1 do
+                                    ui.ListView_daemons:DeleteItem(n)
+                                    n = ui.ListView_daemons:GetNextSelected(-1)
+                            end
+                    end
+            )
 
             -- add group to runlevel 1 panel
             ui.StaticBoxSizer_daemons:Add(ui.FlexGridSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -775,6 +846,11 @@ function startup:refresh()
         ui.Choice_boot_root_FS:Append(FS_list:get_list())
         ui.Choice_other_FS_name:Clear()
         ui.Choice_other_FS_name:Append(FS_list:get_list())
+
+        app_list:reload()
+        ui.ComboBox_daemons_name:Clear()
+        ui.ComboBox_daemons_name:Append(app_list:get_list())
+
         load_controls()
 end
 
