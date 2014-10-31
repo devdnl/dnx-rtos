@@ -75,9 +75,9 @@
 #               include "stm32f1/spi_def.h"
 #       endif
 #endif
-#if (__ENABLE_CRC__)
+#if (__ENABLE_CRCM__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/crc_def.h"
+#               include "stm32f1/crcm_def.h"
 #       endif
 #endif
 #if (__ENABLE_WDG__)
@@ -138,8 +138,8 @@
 #if (__ENABLE_ETHMAC__)
         _IMPORT_MODULE_INTERFACE(ETHMAC);
 #endif
-#if (__ENABLE_CRC__)
-        _IMPORT_MODULE_INTERFACE(CRCCU);
+#if (__ENABLE_CRCM__)
+        _IMPORT_MODULE_INTERFACE(CRCM);
 #endif
 #if (__ENABLE_WDG__)
         _IMPORT_MODULE_INTERFACE(WDG);
@@ -189,7 +189,7 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_ETHMAC__)
         _MODULE_NAME(ETHMAC),
         #endif
-        #if (__ENABLE_CRC__)
+        #if (__ENABLE_CRCM__)
         _MODULE_NAME(CRCCU),
         #endif
         #if (__ENABLE_WDG__)
@@ -299,8 +299,8 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* CRC ===============================================================*/
-        #if (__ENABLE_CRC__)
-        _DRIVER_INTERFACE(CRCCU, "crc", _CRC_MAJOR_NUMBER, _CRC_MINOR_NUMBER),
+        #if (__ENABLE_CRCM__)
+        _DRIVER_INTERFACE(CRCM, "crcm", _CRCM_MAJOR_NUMBER, _CRCM_MINOR_NUMBER),
         #endif
 
         /* WDG ===============================================================*/

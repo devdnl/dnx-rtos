@@ -45,7 +45,7 @@ extern "C" {
 #endif
 #ifdef ARCH_stm32f1
 #       include "stm32f1/afio_ioctl.h"
-#       include "stm32f1/crc_ioctl.h"
+#       include "stm32f1/crcm_ioctl.h"
 #       include "stm32f1/ethmac_ioctl.h"
 #       include "stm32f1/gpio_ioctl.h"
 #       include "stm32f1/pll_ioctl.h"

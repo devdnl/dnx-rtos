@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    crc.lua
+@file    crcmm.lua
 
 @author  Daniel Zorychta
 
-@brief   Configuration script for CRC module.
+@brief   Configuration script for crcm module.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -37,7 +37,7 @@ require("modules/ctcore")
 -- GLOBAL OBJECTS
 --==============================================================================
 -- module's main object
-crc = {}
+crcm = {}
 
 
 --==============================================================================
@@ -57,7 +57,7 @@ local ID = {}
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration()
-        ui.CheckBox_enable:SetValue(ct:get_module_state("CRC"))
+        ui.CheckBox_enable:SetValue(ct:get_module_state("CRCM"))
 end
 
 
@@ -67,7 +67,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function save_configuration()
-        ct:enable_module("CRC", ui.CheckBox_enable:GetValue())
+        ct:enable_module("CRCM", ui.CheckBox_enable:GetValue())
         modified:no()
 end
 
@@ -90,7 +90,7 @@ end
 -- @param  parent       parent window
 -- @return New window handle
 --------------------------------------------------------------------------------
-function crc:create_window(parent)
+function crcm:create_window(parent)
         ui = {}
 
         ID = {}
@@ -105,7 +105,7 @@ function crc:create_window(parent)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(10, 10)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, checkbox_enable_updated)
@@ -123,8 +123,8 @@ end
 -- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
-function crc:get_window_name()
-        return "CRC"
+function crcm:get_window_name()
+        return "CRCM"
 end
 
 
@@ -133,7 +133,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-function crc:selected()
+function crcm:selected()
 end
 
 
@@ -142,7 +142,7 @@ end
 -- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
-function crc:is_modified()
+function crcm:is_modified()
         return modified:get_value()
 end
 
@@ -151,7 +151,7 @@ end
 -- @brief  Function save configuration
 -- @return None
 --------------------------------------------------------------------------------
-function crc:save()
+function crcm:save()
         save_configuration()
 end
 
@@ -160,7 +160,7 @@ end
 -- @brief  Function discard modified configuration
 -- @return None
 --------------------------------------------------------------------------------
-function crc:discard()
+function crcm:discard()
         load_configuration()
         modified:no()
 end
@@ -172,5 +172,5 @@ end
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
-        return crc
+        return crcm
 end

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    crc_ioctl.h
+@file    crcm_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   CRC driver ioctl request codes.
+@brief   CRC driver configuration
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,13 +24,12 @@
 
 *//*==========================================================================*/
 
-#ifndef _CRC_IOCTL_H_
-#define _CRC_IOCTL_H_
+#ifndef _CRCM_CFG_H_
+#define _CRCM_CFG_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,27 +38,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_CRC__SET_INPUT_MODE       _IOW(CRC, 0x00, enum CRC_input_mode*)
-
-/** @brief  Get CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_CRC__GET_INPUT_MODE       _IOR(CRC, 0x01, enum CRC_input_mode*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
-enum CRC_input_mode {
-        CRC_INPUT_MODE_BYTE,            /* base word is u8_t  *///!< CRC_INPUT_MODE_BYTE
-        CRC_INPUT_MODE_HALF_WORD,       /* base word is u16_t *///!< CRC_INPUT_MODE_HALF_WORD
-        CRC_INPUT_MODE_WORD             /* base word is u32_t *///!< CRC_INPUT_MODE_WORD
-};
 
 /*==============================================================================
   Exported objects
@@ -69,15 +51,11 @@ enum CRC_input_mode {
   Exported functions
 ==============================================================================*/
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _CRC_IOCTL_H_ */
+#endif /* _CRCM_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

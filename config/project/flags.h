@@ -58,7 +58,7 @@
 #endif
 #if (__CPU_ARCH__ == stm32f1)
 #       include "../stm32f1/cpu.h"
-#       include "../stm32f1/crc_flags.h"
+#       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
 #       include "../stm32f1/afio_flags.h"
 #       include "../stm32f1/ethmac_flags.h"
@@ -130,7 +130,7 @@
 #define __ENABLE_LOOP__ _YES_
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIO__ _YES_
-#define __ENABLE_CRC__ _YES_
+#define __ENABLE_CRCM__ _YES_
 #define __ENABLE_ETHMAC__ _YES_
 #define __ENABLE_PLL__ _YES_
 #define __ENABLE_SDSPI__ _YES_

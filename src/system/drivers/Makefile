@@ -2,7 +2,7 @@
 include $(DRV_LOC)/loop/Makefile
 include $(DRV_LOC)/gpio/Makefile
 include $(DRV_LOC)/afio/Makefile
-include $(DRV_LOC)/crc/Makefile
+include $(DRV_LOC)/crcm/Makefile
 include $(DRV_LOC)/ethmac/Makefile
 include $(DRV_LOC)/pll/Makefile
 include $(DRV_LOC)/sdspi/Makefile

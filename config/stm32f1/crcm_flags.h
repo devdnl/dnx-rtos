@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    crc_flags.h
+@file    crcm_flags.h
 
 @author  Daniel Zorychta
 
@@ -31,8 +31,8 @@
  *       All other flag definitions and statements are ignored.
  */
 
-#ifndef _CRC_FLAGS_H_
-#define _CRC_FLAGS_H_
+#ifndef _CRCM_FLAGS_H_
+#define _CRCM_FLAGS_H_
 
 #endif /* _CRC_FLAGS_H_ */
 /*==============================================================================
