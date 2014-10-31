@@ -189,8 +189,8 @@ local function get_item_texts(self, row, no_of_cols)
         local t = {}
         for i = 0, no_of_cols - 1 do
                 item:SetColumn(i)
-                ui.ListView_other_FS:GetItem(item)
-                table.insert(i, item:GetText())
+                self:GetItem(item)
+                t[i] = item:GetText()
         end
 
         return t
@@ -448,6 +448,7 @@ local function create_runlevel_0_widgets(parent)
                                         ui.ListView_drv_list:AppendItem(drv_name, node_path)
                                         ui.Choice_drv_name:SetSelection(0)
                                         ui.ComboBox_drv_node:SetValue("")
+                                        ui.ComboBox_sys_msg_file:Append(node_path)
                                         modified:yes()
                                 end
                         end
@@ -472,9 +473,21 @@ local function create_runlevel_0_widgets(parent)
                             local n = ui.ListView_drv_list:GetFirstSelected()
                             if n > -1 then modified:yes() end
 
+                            local updated = false
                             while n > -1 do
                                     ui.ListView_drv_list:DeleteItem(n)
                                     n = ui.ListView_drv_list:GetNextSelected(-1)
+                                    updated = true
+                            end
+
+                            if updated then
+                                    local t = {}
+                                    for i = 0, ui.ListView_drv_list:GetItemCount() - 1 do
+                                            local col = ui.ListView_drv_list:GetItemTexts(i, 2)
+                                            table.insert(t, col[1])
+                                    end
+                                    ui.ComboBox_sys_msg_file:Clear()
+                                    ui.ComboBox_sys_msg_file:Append(t)
                             end
                     end
             )
@@ -490,10 +503,12 @@ local function create_runlevel_0_widgets(parent)
             -- add system messages enable checkbox
             ui.CheckBox_sys_msg_en = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system messages", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_en, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_sys_msg_en:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
 
-            -- add system messages invittaion checkbox
+            -- add system messages invitation checkbox
             ui.CheckBox_sys_msg_invitation = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system welcome message", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_sys_msg_invitation, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_sys_msg_invitation:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
 
             -- add selector after which module printk must be enabled
             ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Enable messages after initialization of driver", wx.wxDefaultPosition, wx.wxDefaultSize)
@@ -501,13 +516,16 @@ local function create_runlevel_0_widgets(parent)
 
             ui.Choice_sys_msg_init_after = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, drv_list:get_list())
             ui.FlexGridSizer_sys_msg:Add(ui.Choice_sys_msg_init_after, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Choice_sys_msg_init_after:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
 
             -- add selection of file used by printk in this runlevel
-            ui.StaticText10 = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "To show system messages use file", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_sys_msg:Add(ui.StaticText10, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "To show system messages use file", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_sys_msg:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             ui.ComboBox_sys_msg_file = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
             ui.FlexGridSizer_sys_msg:Add(ui.ComboBox_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.ComboBox_sys_msg_file:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+            ui.ComboBox_sys_msg_file:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
 
             -- add group to the panel's main sizer
             ui.StaticBoxSizer_sys_msg:Add(ui.FlexGridSizer_sys_msg, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)

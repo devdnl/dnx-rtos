@@ -131,7 +131,7 @@ static int run_level_boot(void)
 static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
-        driver_init("afio", NULL);
+        driver_init("afiom", NULL);
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
@@ -146,7 +146,7 @@ static int run_level_0(void)
         driver_init("tty3", "/dev/tty3");
         driver_init("spi3-0", "/dev/spi_sda");
         driver_init("ethmac", "/dev/eth0");
-        driver_init("crc", "/dev/crc");
+        driver_init("crcm", "/dev/crc");
         driver_init("irq", "/dev/irq");
         driver_init("sdspia", "/dev/sda");
         driver_init("sdspia1", "/dev/sda1");
