@@ -255,7 +255,7 @@ local function create_boot_widgets(parent)
                                 local dirname = ui.ComboBox_folder_name:GetValue()
                                 if dirname ~= "" then
                                         if not dirname:match("^/.*") then dirname = "/"..dirname end
-                                
+
                                         ui.ListBox_folders:InsertItems({dirname}, ui.ListBox_folders:GetCount())
                                         ui.ComboBox_other_FS_mntpt:Append(dirname)
                                         ui.ComboBox_folder_name:SetValue("")
@@ -428,7 +428,7 @@ local function create_runlevel_0_widgets(parent)
                 )
 
                 -- add driver node path
-                ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(100, -1), {"none"})
+                ui.ComboBox_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"})
                 ui.FlexGridSizer_drv_init_sel:Add(ui.ComboBox_drv_node, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add Add button
