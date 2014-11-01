@@ -125,6 +125,17 @@ local function new_driver_list()
                 table.sort(self._list)
         end
 
+        -- method return index of selected value
+        self.get_index_of = function(self, value)
+                for i, v in pairs(self._list) do
+                        if value == v then
+                                return i
+                        end
+                end
+
+                return 0
+        end
+
         -- method return entire list
         self.get_list = function(self)
                 return self._list
@@ -201,22 +212,98 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 local function load_configuration()
         local initd = ct:load_table(INITD_CFG_FILE)
 
-        -- RUNLEVEL BOOT
-                -- load base file system
-                ui.Choice_RLB_root_FS:SetSelection(FS_list:get_index_of(initd.runlevel_boot.base_FS) - 1)
+        -------------------
+        -- RUNLEVEL BOOT --
+        -------------------
+        -- load base file system
+        ui.Choice_RLB_root_FS:SetSelection(FS_list:get_index_of(initd.runlevel_boot.base_FS) - 1)
 
-                -- load folders to create
-                ui.ListBox_RLB_folders:Clear()
-                for i = 1, #initd.runlevel_boot.folders do
-                        ui.ListBox_RLB_folders:Append(initd.runlevel_boot.folders[i])
-                end
+        -- load folders to create
+        ui.ListBox_RLB_folders:Clear()
+        ui.ComboBox_RLB_other_FS_mntpt:Clear()
+        ui.ComboBox_RL1_sd_cards_mntp:Clear()
+        ui.ComboBox_RL2_app_start_CWD:Clear()
+        for i = 1, #initd.runlevel_boot.folders do
+                local dirname = initd.runlevel_boot.folders[i]
+                ui.ListBox_RLB_folders:Append(dirname)
+                ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
+                ui.ComboBox_RL1_sd_cards_mntp:Append(dirname)
+                ui.ComboBox_RL2_app_start_CWD:Append(dirname)
+        end
 
-                -- load additional file systems to mount
-                ui.ListView_RLB_other_FS:DeleteAllItems()
-                for i = 1, #initd.runlevel_boot.additional_FS do
-                        local item = initd.runlevel_boot.additional_FS[i]
-                        ui.ListView_RLB_other_FS:AppendItem(item.file_system, item.source_file, item.mount_point)
-                end
+        -- load additional file systems to mount
+        ui.ListView_RLB_other_FS:DeleteAllItems()
+        for i = 1, #initd.runlevel_boot.additional_FS do
+                local item = initd.runlevel_boot.additional_FS[i]
+                ui.ListView_RLB_other_FS:AppendItem(item.file_system, item.source_file, item.mount_point)
+        end
+
+        ----------------
+        -- RUNLEVEL 0 --
+        ----------------
+        -- load list of drivers to initialize
+        ui.ListView_RL0_drv_list:DeleteAllItems()
+        ui.ComboBox_RL0_sys_msg_file:Clear()
+        ui.ComboBox_RL1_sd_cards_file:Clear()
+        ui.ComboBox_RL2_sys_msg_file:Clear()
+        ui.ComboBox_RL2_app_start_stdin:Clear()
+        ui.ComboBox_RL2_app_start_stdout:Clear()
+        ui.ComboBox_RL2_app_start_stderr:Clear()
+
+        for i = 1, #initd.runlevel_0.driver_init do
+                local item = initd.runlevel_0.driver_init[i]
+                ui.ListView_RL0_drv_list:AppendItem(item.name, item.node)
+                ui.ComboBox_RL0_sys_msg_file:Append(item.node)
+                ui.ComboBox_RL1_sd_cards_file:Append(item.node)
+                ui.ComboBox_RL2_sys_msg_file:Append(item.node)
+                ui.ComboBox_RL2_app_start_stdin:Append(item.node)
+                ui.ComboBox_RL2_app_start_stdout:Append(item.node)
+                ui.ComboBox_RL2_app_start_stderr:Append(item.node)
+        end
+
+        -- load system messages configuration
+        ui.CheckBox_RL0_sys_msg_en:SetValue(initd.runlevel_0.system_messages.show)
+        ui.Panel_RL0_sys_msg_sub:Enable(initd.runlevel_0.system_messages.show)
+        ui.CheckBox_RL0_sys_msg_invitation:SetValue(initd.runlevel_0.system_messages.invitation)
+        ui.ComboBox_RL0_sys_msg_file:SetValue(initd.runlevel_0.system_messages.file)
+        ui.Choice_RL0_sys_msg_init_after:SetSelection(drv_list:get_index_of(initd.runlevel_0.system_messages.init_after) - 1)
+
+        ----------------
+        -- RUNLEVEL 1 --
+        ----------------
+        -- load daemon list
+        ui.ListView_RL1_daemons:DeleteAllItems()
+        for i = 1, #initd.runlevel_1.daemons do
+                local item = initd.runlevel_1.daemons[i]
+                ui.ListView_RL1_daemons:AppendItem(item.name, item.CWD)
+        end
+
+        -- SD card initialization
+        ui.ListView_RL1_sd_cards:DeleteAllItems()
+        for i = 1, #initd.runlevel_1.cards_to_init do
+                local item = initd.runlevel_1.cards_to_init[i]
+                ui.ListView_RL1_sd_cards:AppendItem(item.card_file, item.file_system, item.mount_point)
+        end
+
+        -- network start
+        ui.CheckBox_RL1_network_DHCP:SetValue(initd.runlevel_1.network_start.DHCP)
+        ui.CheckBox_RL1_network_static:SetValue(initd.runlevel_1.network_start.static)
+
+        ----------------
+        -- RUNLEVEL 2 --
+        ----------------
+        -- system messages
+        ui.CheckBox_RL2_sys_msg_en:SetValue(initd.runlevel_2.system_messages.show)
+        ui.ComboBox_RL2_sys_msg_file:SetValue(initd.runlevel_2.system_messages.file)
+
+        -- load applications list
+        ui.ListView_RL2_app_start:DeleteAllItems()
+        for i = 1, #initd.runlevel_1.cards_to_init do
+                local item = initd.runlevel_2.applications[i]
+                ui.ListView_RL2_app_start:AppendItem(item.name, item.CWD, item.stdin, item.stdout, item.stderr)
+        end
+
+        modified:no()
 end
 
 

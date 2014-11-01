@@ -1,56 +1,81 @@
 -- dnx RTOS configuration file
 {
-	["runlevel_0"]={
-		["driver_init"]={
-		};
-		["system_messages"]={
-			["invitation"]=false;
-			["init_after"]="";
-			["show"]=false;
-			["file"]="";
-		};
-	};
 	["runlevel_1"]={
-		["cards_to_init"]={
+		["daemons"]={
+			[1.000000]={
+				["CWD"]="/";
+				["name"]="loopd";
+			};
+			[2.000000]={
+				["CWD"]="/";
+				["name"]="httpd";
+			};
 		};
 		["network_start"]={
-			["static"]=false;
+			["static"]=true;
 			["DHCP"]=false;
 		};
-		["daemons"]={
+		["cards_to_init"]={
+			[1.000000]={
+				["mount_point"]="/mnt";
+				["file_system"]="fatfs";
+				["card_file"]="/dev/sda1";
+			};
+			[2.000000]={
+				["mount_point"]="/tmp";
+				["file_system"]="fatfs";
+				["card_file"]="/dev/sda2";
+			};
 		};
 	};
 	["runlevel_2"]={
-		["system_messages"]={
-			["show"]=false;
-			["file"]="";
-		};
 		["applications"]={
+			[1.000000]={
+				["name"]="dsh";
+				["stdin"]="/dev/tty0";
+				["stderr"]="/dev/tty2";
+				["CWD"]="/";
+				["stdout"]="/dev/tty1";
+			};
+		};
+		["system_messages"]={
+			["file"]="/mnt/sys.log";
+			["show"]=true;
+		};
+	};
+	["runlevel_0"]={
+		["driver_init"]={
+			[1.000000]={
+				["node"]="/dev/afiom";
+				["name"]="afiom";
+			};
+		};
+		["system_messages"]={
+			["file"]="/dev/afiom";
+			["show"]=false;
+			["init_after"]="gpio";
+			["invitation"]=true;
 		};
 	};
 	["runlevel_boot"]={
-		["base_FS"]="lfs";
 		["additional_FS"]={
 			[1.000000]={
-				["mount_point"]="/dev";
-				["file_system"]="devfs";
 				["source_file"]="none";
+				["file_system"]="devfs";
+				["mount_point"]="/dev";
 			};
 			[2.000000]={
-				["mount_point"]="/proc";
-				["file_system"]="procfs";
 				["source_file"]="none";
+				["file_system"]="procfs";
+				["mount_point"]="/proc";
 			};
 		};
+		["base_FS"]="lfs";
 		["folders"]={
 			[1.000000]="/dev";
 			[2.000000]="/mnt";
 			[3.000000]="/tmp";
 			[4.000000]="/proc";
-			[5.000000]="/dev";
-			[6.000000]="/mnt";
-			[7.000000]="/tmp";
-			[8.000000]="/proc";
 		};
 	};
 }
