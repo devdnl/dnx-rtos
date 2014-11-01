@@ -97,7 +97,7 @@ local function new_driver_list()
                         local module_name = config.arch[cpu_arch].cpulist:Children()[cpu_idx].peripherals:Children()[i]:GetName():upper()
 
                         if ct:get_module_state(module_name) == true then
-                                local regex = "_DRIVER_INTERFACE%(%s*"..module_name.."%s*,%s*\"(.*)\"%s*,%s*.*,.*%)%s*,"
+                                local regex = "%s*_DRIVER_INTERFACE%(%s*"..module_name.."%s*,%s*\"(.*)\"%s*,%s*.*,.*%)%s*,"
                                 local n = ct:find_line(FILE_DRIVER_REGISTARTION, 1, regex)
                                 while n > 0 do
                                         local line = ct:get_line(FILE_DRIVER_REGISTARTION, n)

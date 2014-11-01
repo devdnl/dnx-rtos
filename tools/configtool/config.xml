@@ -46,6 +46,7 @@
             <OS_TASK_MIN_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_TASK_MIN_STACK_DEPTH__</key></OS_TASK_MIN_STACK_DEPTH>
             <OS_FILE_SYSTEM_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_FILE_SYSTEM_STACK_DEPTH__</key></OS_FILE_SYSTEM_STACK_DEPTH>
             <OS_IRQ_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_IRQ_STACK_DEPTH__</key></OS_IRQ_STACK_DEPTH>
+            <OS_INITD_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_INITD_STACK_DEPTH__</key></OS_INITD_STACK_DEPTH>
             <OS_TASK_MAX_PRIORITIES><path>../../config/project/flags.h</path><key>__OS_TASK_MAX_PRIORITIES__</key></OS_TASK_MAX_PRIORITIES>
             <OS_TASK_NAME_LEN><path>../../config/project/flags.h</path><key>__OS_TASK_NAME_LEN__</key></OS_TASK_NAME_LEN>
             <OS_TASK_SCHED_FREQ><path>../../config/project/flags.h</path><key>__OS_TASK_SCHED_FREQ__</key></OS_TASK_SCHED_FREQ>
