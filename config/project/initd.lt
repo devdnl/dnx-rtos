@@ -1,45 +1,56 @@
 -- dnx RTOS configuration file
 {
-	["runlevel_boot"]={
-		["base_FS"]="";
-		["folders"]={
-		};
-		["additional_FS"]={
-		};
-	};
-	["runlevel_2"]={
-		["applications"]={
-			[1.000000]={
-				["stdin"]="/dev/tty0";
-				["name"]="dsh";
-				["CWD"]="/home/dnl";
-				["stderr"]="/dev/tty0";
-				["stdout"]="/dev/tty0";
-			};
+	["runlevel_0"]={
+		["driver_init"]={
 		};
 		["system_messages"]={
-			["file"]="/mnt/sys.log";
-			["show"]=true;
+			["invitation"]=false;
+			["init_after"]="";
+			["show"]=false;
+			["file"]="";
 		};
 	};
 	["runlevel_1"]={
-		["daemons"]={
-		};
 		["cards_to_init"]={
 		};
 		["network_start"]={
-			["DHCP"]=false;
 			["static"]=false;
+			["DHCP"]=false;
+		};
+		["daemons"]={
 		};
 	};
-	["runlevel_0"]={
+	["runlevel_2"]={
 		["system_messages"]={
-			["invitation"]=false;
 			["show"]=false;
-			["init_after"]="";
 			["file"]="";
 		};
-		["driver_init"]={
+		["applications"]={
+		};
+	};
+	["runlevel_boot"]={
+		["base_FS"]="lfs";
+		["additional_FS"]={
+			[1.000000]={
+				["mount_point"]="/dev";
+				["file_system"]="devfs";
+				["source_file"]="none";
+			};
+			[2.000000]={
+				["mount_point"]="/proc";
+				["file_system"]="procfs";
+				["source_file"]="none";
+			};
+		};
+		["folders"]={
+			[1.000000]="/dev";
+			[2.000000]="/mnt";
+			[3.000000]="/tmp";
+			[4.000000]="/proc";
+			[5.000000]="/dev";
+			[6.000000]="/mnt";
+			[7.000000]="/tmp";
+			[8.000000]="/proc";
 		};
 	};
 }

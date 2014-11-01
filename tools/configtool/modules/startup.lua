@@ -68,6 +68,17 @@ local function new_FS_list()
                 return self._list[idx]
         end
 
+        -- method return index of selected value
+        self.get_index_of = function(self, value)
+                for i, v in pairs(self._list) do
+                        if value == v then
+                                return i
+                        end
+                end
+
+                return 0
+        end
+
         self:reload()
 
         return self
@@ -188,7 +199,24 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration()
+        local initd = ct:load_table(INITD_CFG_FILE)
 
+        -- RUNLEVEL BOOT
+                -- load base file system
+                ui.Choice_RLB_root_FS:SetSelection(FS_list:get_index_of(initd.runlevel_boot.base_FS) - 1)
+
+                -- load folders to create
+                ui.ListBox_RLB_folders:Clear()
+                for i = 1, #initd.runlevel_boot.folders do
+                        ui.ListBox_RLB_folders:Append(initd.runlevel_boot.folders[i])
+                end
+
+                -- load additional file systems to mount
+                ui.ListView_RLB_other_FS:DeleteAllItems()
+                for i = 1, #initd.runlevel_boot.additional_FS do
+                        local item = initd.runlevel_boot.additional_FS[i]
+                        ui.ListView_RLB_other_FS:AppendItem(item.file_system, item.source_file, item.mount_point)
+                end
 end
 
 
@@ -311,6 +339,9 @@ local function save_configuration()
 
         -- save configuration to file
         ct:save_table(initd, INITD_CFG_FILE)
+
+
+        -- TODO initd.c generator
 
         modified:no()
 end
