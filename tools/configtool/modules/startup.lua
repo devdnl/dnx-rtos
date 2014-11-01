@@ -795,6 +795,172 @@ local function create_runlevel_1_widgets(parent)
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Create widgets for runlevel 2
+-- @param  parent       parent window
+-- @return Panel object
+--------------------------------------------------------------------------------
+local function create_runlevel_2_widgets(parent)
+        -- create Runlevel 2 panel
+        ui.Panel_runlevel_2 = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        ui.FlexGridSizer_runlevel_2 = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+        -- add runlevel description
+        ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "The purpose of this runlevel is starting user's applications.")
+        ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
+        ui.FlexGridSizer_runlevel_2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticLine = wx.wxStaticLine(ui.Panel_runlevel_2, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL)
+        ui.FlexGridSizer_runlevel_2:Add(ui.StaticLine, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- create system messages group
+        ui.StaticBoxSizer_RL2_sys_msg = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_2, "System messages")
+        ui.FlexGridSizer_RL2_sys_msg = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+            -- add system message enable checkbox
+            ui.CheckBox_RL2_sys_msg_en = wx.wxCheckBox(ui.Panel_runlevel_2, wx.wxNewId(), "Enable in this runlevel by using file:", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_RL2_sys_msg:Add(ui.CheckBox_RL2_sys_msg_en, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_RL2_sys_msg_en:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                    function(event)
+                            ui.ComboBox_RL2_sys_msg_file:Enable(event:IsChecked())
+                            modified:yes()
+                    end
+            )
+
+            -- add filed to set printk()'s file
+            ui.ComboBox_RL2_sys_msg_file = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+            ui.FlexGridSizer_RL2_sys_msg:Add(ui.ComboBox_RL2_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.ComboBox_RL2_sys_msg_file:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+            ui.ComboBox_RL2_sys_msg_file:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+
+            -- add group to runlevel 2 panel
+            ui.StaticBoxSizer_RL2_sys_msg:Add(ui.FlexGridSizer_RL2_sys_msg, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_2:Add(ui.StaticBoxSizer_RL2_sys_msg, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- create applications start group
+        ui.StaticBoxSizer_RL2_app_start = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_2, "Applications start")
+        ui.FlexGridSizer_RL2_app_start = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+            -- add information about daemons
+            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "NOTE: If you want to start program as daemon set stdin, stdout, and stderr to 'none' or left empty.")
+            ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
+            ui.FlexGridSizer_RL2_app_start:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- create sizer for fields
+            ui.FlexGridSizer_RL2_app_start_fields = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+                -- add program name field
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "Program name")
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL2_app_start_name = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add CWD field
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "Working directory")
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL2_app_start_CWD = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_CWD, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add stdin filed
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stdin file")
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL2_app_start_stdin = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stdin, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add stdout filed
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stdout file")
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL2_app_start_stdout = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stdout, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add stderr filed
+                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stderr file")
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL2_app_start_stderr = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
+                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stderr, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- add fields to group
+                ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_fields, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add Add button
+            ui.Button_RL2_app_start_add = wx.wxButton(ui.Panel_runlevel_2, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_RL2_app_start:Add(ui.Button_RL2_app_start_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Button_RL2_app_start_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                    function()
+                            local program = ui.ComboBox_RL2_app_start_name:GetValue()
+                            local cwd     = ui.ComboBox_RL2_app_start_CWD:GetValue()
+                            local stdin   = ui.ComboBox_RL2_app_start_stdin:GetValue()
+                            local stdout  = ui.ComboBox_RL2_app_start_stdout:GetValue()
+                            local stderr  = ui.ComboBox_RL2_app_start_stderr:GetValue()
+
+                            if not cwd:match("^/.*") then cwd = "/"..cwd end
+                            if stdin  == "" then stdin  = "none" end
+                            if stdout == "" then stdout = "none" end
+                            if stderr == "" then stderr = "none" end
+
+                            if program ~= "" then
+                                    ui.ListView_RL2_app_start:AppendItem(program, cwd, stdin, stdout, stderr)
+                                    ui.ComboBox_RL2_app_start_name:SetValue("")
+                                    ui.ComboBox_RL2_app_start_CWD:SetValue("")
+                                    ui.ComboBox_RL2_app_start_stdin:SetValue("")
+                                    ui.ComboBox_RL2_app_start_stdout:SetValue("")
+                                    ui.ComboBox_RL2_app_start_stderr:SetValue("")
+                                    modified:yes()
+                            end
+                    end
+            )
+
+            -- add list
+            ui.ListView_RL2_app_start = wx.wxListView(ui.Panel_runlevel_2, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 250), wx.wxLC_REPORT)
+            ui.ListView_RL2_app_start.AppendItem   = insert_item
+            ui.ListView_RL2_app_start.GetItemTexts = get_item_texts
+            ui.ListView_RL2_app_start:InsertColumn(0, "Command", wx.wxLIST_FORMAT_LEFT, 150)
+            ui.ListView_RL2_app_start:InsertColumn(1, "Working directory", wx.wxLIST_FORMAT_LEFT, 150)
+            ui.ListView_RL2_app_start:InsertColumn(2, "stdin", wx.wxLIST_FORMAT_LEFT, 80)
+            ui.ListView_RL2_app_start:InsertColumn(3, "stdout", wx.wxLIST_FORMAT_LEFT, 80)
+            ui.ListView_RL2_app_start:InsertColumn(4, "stderr", wx.wxLIST_FORMAT_LEFT, 80)
+            ui.FlexGridSizer_RL2_app_start:Add(ui.ListView_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+            -- add Remove button
+            ui.Button_RL2_app_start_remove = wx.wxButton(ui.Panel_runlevel_2, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_RL2_app_start:Add(ui.Button_RL2_app_start_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.Button_RL2_app_start_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                    function()
+                            local n = ui.ListView_RL2_app_start:GetFirstSelected()
+                            if n > -1 then modified:yes() end
+
+                            while n > -1 do
+                                    ui.ListView_RL2_app_start:DeleteItem(n)
+                                    n = ui.ListView_RL2_app_start:GetNextSelected(-1)
+                            end
+                    end
+            )
+
+            -- add entire group to the panel
+            ui.StaticBoxSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_runlevel_2:Add(ui.StaticBoxSizer_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        -- set panel's sizer
+        ui.Panel_runlevel_2:SetSizer(ui.FlexGridSizer_runlevel_2)
+
+        return ui.Panel_runlevel_2
+end
+
+
 --==============================================================================
 -- GLOBAL FUNCTIONS
 --==============================================================================
@@ -814,6 +980,7 @@ function startup:create_window(parent)
                 ui.Notebook_runlevels:AddPage(create_boot_widgets(ui.Notebook_runlevels), "Runlevel boot", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_0_widgets(ui.Notebook_runlevels), "Runlevel 0", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_1_widgets(ui.Notebook_runlevels), "Runlevel 1", false)
+                ui.Notebook_runlevels:AddPage(create_runlevel_2_widgets(ui.Notebook_runlevels), "Runlevel 2", false)
                 ui.FlexGridSizer_main:Add(ui.Notebook_runlevels, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- set main sizers
