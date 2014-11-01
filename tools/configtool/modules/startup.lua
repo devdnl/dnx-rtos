@@ -205,6 +205,16 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- LOCAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
+-- @brief  Function generate code of init daemon according to configuration.
+--         Function ask user to overwrite current initd code.
+-- @param  cfg      initd configuration
+-- @return None
+--------------------------------------------------------------------------------
+local function generate_init_code(cfg)
+        
+end
+
+--------------------------------------------------------------------------------
 -- @brief  Function loads all controls from configuration files
 -- @param  None
 -- @return None
@@ -427,8 +437,7 @@ local function save_configuration()
         -- save configuration to file
         ct:save_table(initd, INITD_CFG_FILE)
 
-
-        -- TODO initd.c generator
+        generate_init_code()
 
         modified:no()
 end
