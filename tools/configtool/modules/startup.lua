@@ -554,34 +554,47 @@ local function create_runlevel_0_widgets(parent)
 
         -- printk configuration for runlevel 0 - group
         ui.StaticBoxSizer_sys_msg = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_0, "System messages")
-        ui.FlexGridSizer_sys_msg = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_sys_msg = wx.wxFlexGridSizer(0, 1, 0, 0)
 
             -- add system messages enable checkbox
             ui.CheckBox_RL0_sys_msg_en = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system messages")
             ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_RL0_sys_msg_en, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.CheckBox_RL0_sys_msg_en:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+            ui.CheckBox_RL0_sys_msg_en:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED,
+                    function(event)
+                            ui.Panel_RL0_sys_msg_sub:Enable(event:IsChecked())
+                            modified:yes()
+                    end
+            )
 
-            -- add system messages invitation checkbox
-            ui.CheckBox_RL0_sys_msg_invitation = wx.wxCheckBox(ui.Panel_runlevel_0, wx.wxNewId(), "Show system welcome message")
-            ui.FlexGridSizer_sys_msg:Add(ui.CheckBox_RL0_sys_msg_invitation, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.CheckBox_RL0_sys_msg_invitation:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+            -- create panel for sub-options
+            ui.Panel_RL0_sys_msg_sub = wx.wxPanel(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+            ui.FlexGridSizer_RL0_sys_msg_sub = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-            -- add selector after which module printk must be enabled
-            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Enable messages after initialization of driver")
-            ui.FlexGridSizer_sys_msg:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                -- add system messages invitation checkbox
+                ui.CheckBox_RL0_sys_msg_invitation = wx.wxCheckBox(ui.Panel_RL0_sys_msg_sub, wx.wxNewId(), "Show system invitation", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.CheckBox_RL0_sys_msg_invitation:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function() modified:yes() end)
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(ui.CheckBox_RL0_sys_msg_invitation, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            ui.Choice_RL0_sys_msg_init_after = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, drv_list:get_list())
-            ui.FlexGridSizer_sys_msg:Add(ui.Choice_RL0_sys_msg_init_after, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.Choice_RL0_sys_msg_init_after:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+                -- add selector after which module printk must be enabled
+                ui.StaticText = wx.wxStaticText(ui.Panel_RL0_sys_msg_sub, wx.wxID_ANY, "Enable messages after initialization of driver")
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            -- add selection of file used by printk in this runlevel
-            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "To show system messages use file", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_sys_msg:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Choice_RL0_sys_msg_init_after = wx.wxChoice(ui.Panel_RL0_sys_msg_sub, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, drv_list:get_list())
+                ui.Choice_RL0_sys_msg_init_after:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED, function() modified:yes() end)
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(ui.Choice_RL0_sys_msg_init_after, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-            ui.ComboBox_RL0_sys_msg_file = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
-            ui.FlexGridSizer_sys_msg:Add(ui.ComboBox_RL0_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.ComboBox_RL0_sys_msg_file:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-            ui.ComboBox_RL0_sys_msg_file:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+                -- add selection of file used by the printk in this runlevel
+                ui.StaticText = wx.wxStaticText(ui.Panel_RL0_sys_msg_sub, wx.wxID_ANY, "To show system messages use file")
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.ComboBox_RL0_sys_msg_file = wx.wxComboBox(ui.Panel_RL0_sys_msg_sub, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                ui.ComboBox_RL0_sys_msg_file:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
+                ui.ComboBox_RL0_sys_msg_file:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+                ui.FlexGridSizer_RL0_sys_msg_sub:Add(ui.ComboBox_RL0_sys_msg_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                -- set panel sizer
+                ui.Panel_RL0_sys_msg_sub:SetSizer(ui.FlexGridSizer_RL0_sys_msg_sub)
+                ui.FlexGridSizer_sys_msg:Add(ui.Panel_RL0_sys_msg_sub, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- add group to the panel's main sizer
             ui.StaticBoxSizer_sys_msg:Add(ui.FlexGridSizer_sys_msg, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
