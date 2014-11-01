@@ -186,7 +186,7 @@ local app_list     = new_app_list()
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
 
 end
 
@@ -302,6 +302,7 @@ local function create_boot_widgets(parent)
                                         ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
                                         ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
                                         ui.ComboBox_RL1_sd_cards_mntp:Append(dirname)
+                                        ui.ComboBox_RL2_app_start_CWD:Append(dirname)
                                         ui.ComboBox_RLB_folder_name:SetValue("")
                                         modified:yes()
                                 end
@@ -334,6 +335,8 @@ local function create_boot_widgets(parent)
                                 ui.ComboBox_RLB_other_FS_mntpt:Append(t)
                                 ui.ComboBox_RL1_sd_cards_mntp:Clear()
                                 ui.ComboBox_RL1_sd_cards_mntp:Append(t)
+                                ui.ComboBox_RL2_app_start_CWD:Clear()
+                                ui.ComboBox_RL2_app_start_CWD:Append(t)
                                 modified:yes()
                         end
                 )
@@ -498,6 +501,10 @@ local function create_runlevel_0_widgets(parent)
                                         if node_path ~= "none" then
                                                 ui.ComboBox_RL0_sys_msg_file:Append(node_path)
                                                 ui.ComboBox_RL1_sd_cards_file:Append(node_path)
+                                                ui.ComboBox_RL2_app_start_stdin:Append(node_path)
+                                                ui.ComboBox_RL2_app_start_stdout:Append(node_path)
+                                                ui.ComboBox_RL2_app_start_stderr:Append(node_path)
+                                                ui.ComboBox_RL2_sys_msg_file:Append(node_path)
                                         end
                                         modified:yes()
                                 end
@@ -544,6 +551,14 @@ local function create_runlevel_0_widgets(parent)
                                     ui.ComboBox_RL0_sys_msg_file:Append(t)
                                     ui.ComboBox_RL1_sd_cards_file:Clear()
                                     ui.ComboBox_RL1_sd_cards_file:Append(t)
+                                    ui.ComboBox_RL2_app_start_stdin:Clear()
+                                    ui.ComboBox_RL2_app_start_stdin:Append(t)
+                                    ui.ComboBox_RL2_app_start_stdout:Clear()
+                                    ui.ComboBox_RL2_app_start_stdout:Append(t)
+                                    ui.ComboBox_RL2_app_start_stderr:Clear()
+                                    ui.ComboBox_RL2_app_start_stderr:Append(t)
+                                    ui.ComboBox_RL2_sys_msg_file:Clear()
+                                    ui.ComboBox_RL2_sys_msg_file:Append(t)
                             end
                     end
             )
@@ -864,7 +879,7 @@ local function create_runlevel_2_widgets(parent)
                 -- add program name field
                 ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "Program name")
                 ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_name = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), {}, wx.wxTE_PROCESS_ENTER)
+                ui.ComboBox_RL2_app_start_name = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
                 ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
                 ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
                 ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
@@ -1031,7 +1046,7 @@ function startup:refresh()
         ui.ComboBox_RL1_daemons_name:Clear()
         ui.ComboBox_RL1_daemons_name:Append(app_list:get_list())
 
-        load_controls()
+        load_configuration()
 end
 
 
