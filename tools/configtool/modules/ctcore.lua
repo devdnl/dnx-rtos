@@ -1010,7 +1010,7 @@ function ct:save_project_configuration(file, parent)
         cfg_table.file     = {}
 
         -- prepare progress dialog
-        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        local progress = wx.wxProgressDialog("Configuration export", "", 5 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 150))
         progress:Centre()
@@ -1094,10 +1094,11 @@ end
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
 function ct:apply_project_configuration(file, parent)
-        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
-        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
-        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
-        local cfg_table   = ct:load_table(file)
+        local CONFIG_DIR     = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR    = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK     = config.project.path.project_makefile:GetValue()
+        local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
+        local cfg_table      = ct:load_table(file)
 
         -- check file ID and table
         if cfg_table == nil or cfg_table.ID ~= CFG_FILE_ID then
@@ -1135,7 +1136,7 @@ function ct:apply_project_configuration(file, parent)
 
         -- progress dialog
         local num_files = 0 for _, _ in pairs(cfg_table.file) do num_files = num_files + 1 end
-        local progress  = wx.wxProgressDialog("Configuration export", "", 4 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        local progress  = wx.wxProgressDialog("Configuration export", "", 5 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(450, 150))
         progress:Centre()
@@ -1169,6 +1170,10 @@ function ct:apply_project_configuration(file, parent)
                         f:close()
                 end
         end
+
+        -- load initd configuration
+        progress:Update(pulse(), "Applying initd configuration...")
+        ct:save_table(cfg_table.initd, INITD_CFG_FILE)
 
         progress:Destroy()
 

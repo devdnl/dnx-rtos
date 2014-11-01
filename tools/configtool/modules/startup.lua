@@ -298,7 +298,7 @@ local function load_configuration()
 
         -- load applications list
         ui.ListView_RL2_app_start:DeleteAllItems()
-        for i = 1, #initd.runlevel_1.cards_to_init do
+        for i = 1, #initd.runlevel_2.applications do
                 local item = initd.runlevel_2.applications[i]
                 ui.ListView_RL2_app_start:AppendItem(item.name, item.CWD, item.stdin, item.stdout, item.stderr)
         end
