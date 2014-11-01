@@ -995,12 +995,13 @@ end
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
 function ct:save_project_configuration(file, parent)
-        local cfg_table   = {}
-        local cpu_arch    = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
-        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
-        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
-        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
-        local NETWORK_HDR = config.project.path.network_flags_file:GetValue()
+        local cfg_table      = {}
+        local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local CONFIG_DIR     = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR    = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK     = config.project.path.project_makefile:GetValue()
+        local NETWORK_HDR    = config.project.path.network_flags_file:GetValue()
+        local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 
         -- basic file information
         cfg_table.ID       = CFG_FILE_ID
@@ -1069,6 +1070,10 @@ function ct:save_project_configuration(file, parent)
                         f:close()
                 end
         end
+
+        -- save initd configuration table
+        progress:Update(pulse(), "Save initd configuration...")
+        cfg_table.initd = ct:load_table(INITD_CFG_FILE)
 
         -- save configuration to the file
         progress:Update(pulse(), "Save configuration to the file...")

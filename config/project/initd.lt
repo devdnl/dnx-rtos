@@ -1,0 +1,45 @@
+-- dnx RTOS configuration file
+{
+	["runlevel_boot"]={
+		["base_FS"]="";
+		["folders"]={
+		};
+		["additional_FS"]={
+		};
+	};
+	["runlevel_2"]={
+		["applications"]={
+			[1.000000]={
+				["stdin"]="/dev/tty0";
+				["name"]="dsh";
+				["CWD"]="/home/dnl";
+				["stderr"]="/dev/tty0";
+				["stdout"]="/dev/tty0";
+			};
+		};
+		["system_messages"]={
+			["file"]="/mnt/sys.log";
+			["show"]=true;
+		};
+	};
+	["runlevel_1"]={
+		["daemons"]={
+		};
+		["cards_to_init"]={
+		};
+		["network_start"]={
+			["DHCP"]=false;
+			["static"]=false;
+		};
+	};
+	["runlevel_0"]={
+		["system_messages"]={
+			["invitation"]=false;
+			["show"]=false;
+			["init_after"]="";
+			["file"]="";
+		};
+		["driver_init"]={
+		};
+	};
+}

@@ -312,6 +312,7 @@
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
             <network_flags_file>../../config/project/network_flags.h</network_flags_file>
+            <initd_cfg_file>../../config/project/initd.lt</initd_cfg_file>
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
