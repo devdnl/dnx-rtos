@@ -195,7 +195,7 @@ end
 local ui = {}
 local ID = {}
 local modified       = ct:new_modify_indicator()
-local default_dirs   = {"/dev", "/mnt", "/tmp", "/proc", "/srv", "/home", "/usr"}
+local default_dirs   = {"/dev", "/home", "/mnt", "/proc", "/srv", "/tmp", "/usr"}
 local FS_list        = new_FS_list()
 local drv_list       = new_driver_list()
 local app_list       = new_app_list()
@@ -211,7 +211,95 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- @return None
 --------------------------------------------------------------------------------
 local function generate_init_code(cfg)
-        
+        local INITD_TEMPLATE_FILE     = config.project.path.initd_template_entire_file:GetValue()
+        local INITD_TEMPLATE_MOUNT    = config.project.path.initd_template_mount_file:GetValue()
+        local INITD_TEMPLATE_MKDIR    = config.project.path.initd_template_mkdir_file:GetValue()
+        local INITD_TEMPLATE_DRVINIT  = config.project.path.initd_template_driverinit_file:GetValue()
+        local INITD_TEMPLATE_PRINTKEN = config.project.path.initd_template_printken_file:GetValue()
+        local INITD_TEMPLATE_INVMSG   = config.project.path.initd_template_ivitationmsg_file:GetValue()
+        local INITD_SRC_FILE          = config.project.path.initd_src_file:GetValue()
+
+        local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
+                                            "Do you want to generate initd code based on current configuration?\n\n"..
+                                            "If Yes will be selected then current initd code will be overwritten (custom initd code will be lost), otherwise no changes are done.",
+                                            wx.wxYES_NO,
+                                            ui.window)
+        if answer == wx.wxID_YES then
+
+                -- clear initd.c file
+                f = io.open(INITD_SRC_FILE, "wb")
+                if f then f:close() end
+
+                -- apply initd template
+                local tags = {}
+                table.insert(tags, {tag = "<!year!>", to = os.date("%Y")})
+                ct:apply_template(INITD_TEMPLATE_FILE, INITD_SRC_FILE, tags, 1)
+
+                -- create runlevel boot
+                local regex = "^%s*static%s+int%s+run_level_boot%(.*%)$"
+                local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
+                if n then
+                        n = n + 2
+
+                        -- root file system
+                        local tags = {}
+                        table.insert(tags, {tag = "<!file_system!>", to = cfg.runlevel_boot.base_FS})
+                        table.insert(tags, {tag = "<!source_file!>", to = ""})
+                        table.insert(tags, {tag = "<!mount_point!>", to = "/"})
+                        n = n + ct:apply_template(INITD_TEMPLATE_MOUNT, INITD_SRC_FILE, tags, n)
+
+                        -- new folders
+                        for i = 1, #cfg.runlevel_boot.folders do
+                                local tags = {}
+                                table.insert(tags, {tag = "<!dir!>", to = cfg.runlevel_boot.folders[i]})
+                                n = n + ct:apply_template(INITD_TEMPLATE_MKDIR, INITD_SRC_FILE, tags, n)
+                        end
+
+                        -- additional file systems
+                        for i = 1, #cfg.runlevel_boot.additional_FS do
+                                local item = cfg.runlevel_boot.additional_FS[i]
+                                local tags = {}
+                                table.insert(tags, {tag = "<!file_system!>", to = item.file_system})
+                                table.insert(tags, {tag = "<!source_file!>", to = ifs(item.source_file == "none", "", item.source_file)})
+                                table.insert(tags, {tag = "<!mount_point!>", to = item.mount_point})
+                                n = n + ct:apply_template(INITD_TEMPLATE_MOUNT, INITD_SRC_FILE, tags, n)
+                        end
+                end
+
+                -- create runlevel 0
+                local regex = "^%s*static%s+int%s+run_level_0%(.*%)$"
+                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                if n then
+                        n = n + 2
+
+                        -- add driver to initialize
+                        for i = 1, #cfg.runlevel_0.driver_init do
+                                local drv = cfg.runlevel_0.driver_init[i]
+                                local tags = {}
+                                table.insert(tags, {tag = "<!driver!>", to = drv.name})
+                                table.insert(tags, {tag = "<!node!>", to = ifs(drv.node == "none", "NULL", '"'..drv.node..'"')})
+                                n = n + ct:apply_template(INITD_TEMPLATE_DRVINIT, INITD_SRC_FILE, tags, n)
+
+                                if cfg.runlevel_0.system_messages.show == true then
+                                        if drv.name == cfg.runlevel_0.system_messages.init_after then
+                                                local tags = {}
+                                                table.insert(tags, {tag = "<!node!>", to = cfg.runlevel_0.system_messages.file})
+                                                n = n + ct:apply_template(INITD_TEMPLATE_PRINTKEN, INITD_SRC_FILE, tags, n)
+
+                                                if cfg.runlevel_0.system_messages.invitation == true then
+                                                        local tags = {}
+                                                        n = n + ct:apply_template(INITD_TEMPLATE_INVMSG, INITD_SRC_FILE, tags, n)
+                                                end
+                                        end
+                                end
+                        end
+                end
+
+                -- create runlevel 1
+
+                print(n)
+
+        end
 end
 
 --------------------------------------------------------------------------------
@@ -437,7 +525,7 @@ local function save_configuration()
         -- save configuration to file
         ct:save_table(initd, INITD_CFG_FILE)
 
-        generate_init_code()
+        generate_init_code(initd)
 
         modified:no()
 end

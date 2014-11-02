@@ -80,7 +80,7 @@ ct.icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
 local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
 local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
-local CFG_FILE_VERSION  = "2"
+local CFG_FILE_VERSION  = "3"
 local modify_event_func = nil
 local set_status_func   = nil
 
@@ -740,7 +740,7 @@ end
 -- @param  destination_path     path where modified template will be saved
 -- @param  replace_tags         tag translation table {{.tag = "", .to = ""}, ...}
 -- @param  {startline}          start line where template is inserted
--- @return On success 1 is returned, otherwise false
+-- @return On success >1 is returned, otherwise 0
 --------------------------------------------------------------------------------
 function ct:apply_template(template_path, destination_path, replace_tags, startline)
         assert(type(template_path) == "string", "apply_template(): template_path is not the string type")
@@ -750,6 +750,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
 
         local template_bfr = {}
         local dest_bfr     = {}
+        local n            = 0
 
         -- open template file and load to the buffer and replace tags
         template = io.open(template_path, "rb")
@@ -758,6 +759,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
                 return 0
         else
                 for line in template:lines() do
+                        n = n + 1
                         for _, t in pairs(replace_tags) do
                                 line = line:gsub(t.tag, t.to)
                         end
@@ -810,7 +812,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
                 dest:close()
         end
 
-        return 1
+        return n
 end
 
 

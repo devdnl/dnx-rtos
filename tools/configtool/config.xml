@@ -312,7 +312,7 @@
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
             <network_flags_file>../../config/project/network_flags.h</network_flags_file>
-            <initd_cfg_file>../../config/project/initd.lt</initd_cfg_file>
+            <initd_cfg_file>../../config/project/initd.cfg</initd_cfg_file>
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
@@ -321,6 +321,13 @@
             <program_template_src_file>../../extra/templates/program/program.c</program_template_src_file>
             <program_template_hdr_file>../../extra/templates/program/program.h</program_template_hdr_file>
             <program_template_makefile>../../extra/templates/program/Makefile</program_template_makefile>
+            <initd_template_entire_file>../../extra/templates/initd/initd.c</initd_template_entire_file>
+            <initd_template_mount_file>../../extra/templates/initd/mount.c</initd_template_mount_file>
+            <initd_template_mkdir_file>../../extra/templates/initd/mkdir.c</initd_template_mkdir_file>
+            <initd_template_driverinit_file>../../extra/templates/initd/driver_init.c</initd_template_driverinit_file>
+            <initd_template_printken_file>../../extra/templates/initd/printk_en.c</initd_template_printken_file>
+            <initd_template_ivitationmsg_file>../../extra/templates/initd/invitation_msg.c</initd_template_ivitationmsg_file>
+            <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>
 
