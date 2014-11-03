@@ -329,6 +329,10 @@
             <initd_template_ivitationmsg_file>../../extra/templates/initd/invitation_msg.c</initd_template_ivitationmsg_file>
             <initd_template_storage_init_file>../../extra/templates/initd/storage_init.c</initd_template_storage_init_file>
             <initd_template_daemonstart_file>../../extra/templates/initd/daemon_start.c</initd_template_daemonstart_file>
+            <initd_template_dhcp_or_static_ip_file>../../extra/templates/initd/dhcp_or_static_ip.c</initd_template_dhcp_or_static_ip_file>
+            <initd_template_dhcp_ip_file>../../extra/templates/initd/dhcp_ip.c</initd_template_dhcp_ip_file>
+            <initd_template_static_ip_file>../../extra/templates/initd/static_ip.c</initd_template_static_ip_file>
+            <initd_template_ip_summary_file>../../extra/templates/initd/ip_summary.c</initd_template_ip_summary_file>
             <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>

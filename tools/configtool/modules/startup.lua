@@ -211,15 +211,19 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- @return None
 --------------------------------------------------------------------------------
 local function generate_init_code(cfg)
-        local INITD_TEMPLATE_FILE         = config.project.path.initd_template_entire_file:GetValue()
-        local INITD_TEMPLATE_MOUNT        = config.project.path.initd_template_mount_file:GetValue()
-        local INITD_TEMPLATE_MKDIR        = config.project.path.initd_template_mkdir_file:GetValue()
-        local INITD_TEMPLATE_DRVINIT      = config.project.path.initd_template_driverinit_file:GetValue()
-        local INITD_TEMPLATE_PRINTKEN     = config.project.path.initd_template_printken_file:GetValue()
-        local INITD_TEMPLATE_INVMSG       = config.project.path.initd_template_ivitationmsg_file:GetValue()
-        local INITD_TEMPLATE_DAEMON_START = config.project.path.initd_template_daemonstart_file:GetValue()
-        local INITD_TEMPLATE_STORAGE_INIT = config.project.path.initd_template_storage_init_file:GetValue()
-        local INITD_SRC_FILE              = config.project.path.initd_src_file:GetValue()
+        local INITD_TEMPLATE_FILE              = config.project.path.initd_template_entire_file:GetValue()
+        local INITD_TEMPLATE_MOUNT             = config.project.path.initd_template_mount_file:GetValue()
+        local INITD_TEMPLATE_MKDIR             = config.project.path.initd_template_mkdir_file:GetValue()
+        local INITD_TEMPLATE_DRVINIT           = config.project.path.initd_template_driverinit_file:GetValue()
+        local INITD_TEMPLATE_PRINTKEN          = config.project.path.initd_template_printken_file:GetValue()
+        local INITD_TEMPLATE_INVMSG            = config.project.path.initd_template_ivitationmsg_file:GetValue()
+        local INITD_TEMPLATE_DAEMON_START      = config.project.path.initd_template_daemonstart_file:GetValue()
+        local INITD_TEMPLATE_STORAGE_INIT      = config.project.path.initd_template_storage_init_file:GetValue()
+        local INITD_TEMPLATE_DHCP_OR_STATIC_IP = config.project.path.initd_template_dhcp_or_static_ip_file:GetValue()
+        local INITD_TEMPLATE_DHCP_IP           = config.project.path.initd_template_dhcp_ip_file:GetValue()
+        local INITD_TEMPLATE_STATIC_IP         = config.project.path.initd_template_static_ip_file:GetValue()
+        local INITD_TEMPLATE_IP_SUMMARY        = config.project.path.initd_template_ip_summary_file:GetValue()
+        local INITD_SRC_FILE                   = config.project.path.initd_src_file:GetValue()
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
                                             "Do you want to generate initd code based on current configuration?\n\n"..
@@ -327,6 +331,19 @@ local function generate_init_code(cfg)
                                 table.insert(tags, {tag = "<!source_file!>", to = ifs(item.source_file == "none", "", item.source_file)})
                                 table.insert(tags, {tag = "<!mount_point!>", to = item.mount_point})
                                 n = n + ct:apply_template(INITD_TEMPLATE_MOUNT, INITD_SRC_FILE, tags, n)
+                        end
+
+                        -- network start
+                        if cfg.runlevel_1.network.DHCP == true and cfg.runlevel_1.network.static == true then
+                                n = n + ct:apply_template(INITD_TEMPLATE_DHCP_OR_STATIC_IP, INITD_SRC_FILE, {}, n)
+                        elseif cfg.runlevel_1.network.DHCP == true then
+                                n = n + ct:apply_template(INITD_TEMPLATE_DHCP_IP, INITD_SRC_FILE, {}, n)
+                        elseif cfg.runlevel_1.network.static == true then
+                                n = n + ct:apply_template(INITD_TEMPLATE_STATIC_IP, INITD_SRC_FILE, {}, n)
+                        end
+
+                        if cfg.runlevel_1.network.DHCP == true or cfg.runlevel_1.network.static == true then
+                                n = n + ct:apply_template(INITD_TEMPLATE_IP_SUMMARY, INITD_SRC_FILE, {}, n)
                         end
                 end
 
