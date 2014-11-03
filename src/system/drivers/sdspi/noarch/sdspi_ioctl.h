@@ -40,22 +40,22 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Initialize SD card
+ *  @brief  Initialize SD card (OS storage request)
  *  @param  None
  *  @return On success (card initialized) 1 is returned.
  *          On failure (card not initialized) 0 is returned.
  *          On error -1 is returned and errno is set.
  */
-#define IOCTL_SDSPI__INITIALIZE_CARD    _IO(SDSPI, 0x00)
+#define IOCTL_SDSPI__INITIALIZE_CARD    IOCTL_STORAGE__INITIALIZE
 
 /**
- *  @brief  Read card's MBR sector and detect partitions
+ *  @brief  Read card's MBR sector and detect partitions (OS storage request)
  *  @param  None
  *  @return On success (MBR detected) 1 is returned.
  *          On failure (MBR not exist) 0 is returned.
  *          On error -1 is returned and errno is set.
  */
-#define IOCTL_SDSPI__READ_MBR           _IO(SDSPI, 0x01)
+#define IOCTL_SDSPI__READ_MBR           IOCTL_STORAGE__READ_MBR
 
 /*==============================================================================
   Exported object types

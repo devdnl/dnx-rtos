@@ -86,34 +86,27 @@ static void start_daemon(const char *name, const char *cwd)
 
 //==============================================================================
 /**
- * @brief  Function start daemon
- * @param  card         card file
- * @param  file_system  name of file system used to mount partition
- * @param  mount_point  mount point
+ * @brief  Function initialize storage device
+ * @param  storage  storage device path
  * @return None
  */
 //==============================================================================
-static void init_card_and_mount(const char *card, const char *file_system, const char *mount_point)
+static void init_storage(const char *storage)
 {
-        /* initializing SD card and detecting partitions */
-        printk("Mounting %s card... ", card);
-        FILE *sd = fopen(card, "r+");
-        if (sd) {
-                if (ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD) {
-                        if (ioctl(sd, IOCTL_SDSPI__READ_MBR) != -1) {
-                                if (mount(file_system, card, mount_point) == STD_RET_OK) {
-                                        printk("OK\n");
-                                } else {
-                                        printk(FONT_COLOR_RED"mount fail"RESET_ATTRIBUTES"\n");
-                                }
-                        } else {
-                                printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
+        printk("Initializing %s... ", storage);
+        FILE *st = fopen(storage, "r+");
+        if (st) {
+                if (ioctl(st, IOCTL_STORAGE__INITIALIZE) {
+                        switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
+                                case 1 : printk("OK\n"); break;
+                                case 0 : printk("no MBR\n"); break;
+                                default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
                         }
                 } else {
                         printk(FONT_COLOR_RED"initialization fail"RESET_ATTRIBUTES"\n");
                 }
 
-                fclose(sd);
+                fclose(st);
         } else {
                 printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
         }

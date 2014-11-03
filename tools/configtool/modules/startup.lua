@@ -218,7 +218,7 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_PRINTKEN     = config.project.path.initd_template_printken_file:GetValue()
         local INITD_TEMPLATE_INVMSG       = config.project.path.initd_template_ivitationmsg_file:GetValue()
         local INITD_TEMPLATE_DAEMON_START = config.project.path.initd_template_daemonstart_file:GetValue()
-        local INITD_TEMPLATE_CARD_MOUNT   = config.project.path.initd_template_card_mount_file:GetValue()
+        local INITD_TEMPLATE_STORAGE_INIT = config.project.path.initd_template_storage_init_file:GetValue()
         local INITD_SRC_FILE              = config.project.path.initd_src_file:GetValue()
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
@@ -314,12 +314,9 @@ local function generate_init_code(cfg)
 
                         -- initialize SD cards
                         for i = 1, #cfg.runlevel_1.cards_to_init do
-                                local card = cfg.runlevel_1.cards_to_init[i]
                                 local tags = {}
-                                table.insert(tags, {tag = "<!file!>", to = card.card_file})
-                                table.insert(tags, {tag = "<!file_system!>", to = card.file_system})
-                                table.insert(tags, {tag = "<!mount_point!>", to = card.mount_point})
-                                n = n + ct:apply_template(INITD_TEMPLATE_CARD_MOUNT, INITD_SRC_FILE, tags, n)
+                                table.insert(tags, {tag = "<!storage_path!>", to = cfg.runlevel_1.cards_to_init[i]})
+                                n = n + ct:apply_template(INITD_TEMPLATE_STORAGE_INIT, INITD_SRC_FILE, tags, n)
                         end
                 end
 
@@ -345,13 +342,11 @@ local function load_configuration()
         -- load folders to create
         ui.ListBox_RLB_folders:Clear()
         ui.ComboBox_RLB_other_FS_mntpt:Clear()
-        ui.ComboBox_RL1_sd_cards_mntp:Clear()
         ui.ComboBox_RL2_app_start_CWD:Clear()
         for i = 1, #initd.runlevel_boot.folders do
                 local dirname = initd.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
-                ui.ComboBox_RL1_sd_cards_mntp:Append(dirname)
                 ui.ComboBox_RL2_app_start_CWD:Append(dirname)
         end
 
@@ -403,10 +398,9 @@ local function load_configuration()
         end
 
         -- SD card initialization
-        ui.ListView_RL1_sd_cards:DeleteAllItems()
+        ui.ListBox_RL1_sd_cards:Clear()
         for i = 1, #initd.runlevel_1.cards_to_init do
-                local item = initd.runlevel_1.cards_to_init[i]
-                ui.ListView_RL1_sd_cards:AppendItem(item.card_file, item.file_system, item.mount_point)
+                ui.ListBox_RL1_sd_cards:Append(initd.runlevel_1.cards_to_init[i])
         end
 
         -- network start
@@ -507,15 +501,8 @@ local function save_configuration()
 
                 -- list of cards to initialize
                 initd.runlevel_1.cards_to_init = {}
-                for i = 0, ui.ListView_RL1_sd_cards:GetItemCount() - 1 do
-                        local cols = ui.ListView_RL1_sd_cards:GetItemTexts(i, 3)
-
-                        local item = {}
-                        item.card_file   = cols[0]
-                        item.file_system = cols[1]
-                        item.mount_point = cols[2]
-
-                        table.insert(initd.runlevel_1.cards_to_init, item)
+                for i = 0, ui.ListBox_RL1_sd_cards:GetCount() - 1 do
+                        table.insert(initd.runlevel_1.cards_to_init, ui.ListBox_RL1_sd_cards:GetString(i))
                 end
 
                 -- network configuration
@@ -657,7 +644,6 @@ local function create_boot_widgets(parent)
 
                                         ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
                                         ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
-                                        ui.ComboBox_RL1_sd_cards_mntp:Append(dirname)
                                         ui.ComboBox_RL2_app_start_CWD:Append(dirname)
                                         ui.ComboBox_RLB_folder_name:SetValue("")
                                         modified:yes()
@@ -689,8 +675,6 @@ local function create_boot_widgets(parent)
                                 ui.ListBox_RLB_folders:InsertItems(t, 0)
                                 ui.ComboBox_RLB_other_FS_mntpt:Clear()
                                 ui.ComboBox_RLB_other_FS_mntpt:Append(t)
-                                ui.ComboBox_RL1_sd_cards_mntp:Clear()
-                                ui.ComboBox_RL1_sd_cards_mntp:Append(t)
                                 ui.ComboBox_RL2_app_start_CWD:Clear()
                                 ui.ComboBox_RL2_app_start_CWD:Append(t)
                                 modified:yes()
@@ -1068,51 +1052,51 @@ local function create_runlevel_1_widgets(parent)
             ui.StaticBoxSizer_daemons:Add(ui.FlexGridSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.FlexGridSizer_runlevel_1:Add(ui.StaticBoxSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        -- create SD cards initialization group
-        ui.StaticBoxSizer_sd_cards = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "SD cards initialization and mount")
+        -- create storage initialization group
+        ui.StaticBoxSizer_sd_cards = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "Storage initialization")
         ui.FlexGridSizer_sd_cards = wx.wxFlexGridSizer(0, 1, 0, 0)
 
             -- create button sizer
             ui.FlexGridSizer_sd_cards_buttons = wx.wxFlexGridSizer(0, 4, 0, 0)
 
-                -- add header
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Card file")
-                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "File system")
-                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Mount point")
-                ui.FlexGridSizer_sd_cards_buttons:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_sd_cards_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
                 -- add combobox with SD file path
+                ui.FlexGridSizer_sd_cards_buttons:Add(wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Card file"), 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.ComboBox_RL1_sd_cards_file = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125,-1), {})
                 ui.FlexGridSizer_sd_cards_buttons:Add(ui.ComboBox_RL1_sd_cards_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- file system name selection
-                ui.Choice_RL1_sd_cards_FS_name = wx.wxChoice(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
-                ui.FlexGridSizer_sd_cards_buttons:Add(ui.Choice_RL1_sd_cards_FS_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add combobox with mount point
-                ui.ComboBox_RL1_sd_cards_mntp = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125,-1), {})
-                ui.FlexGridSizer_sd_cards_buttons:Add(ui.ComboBox_RL1_sd_cards_mntp, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- add Add button
                 ui.Button_RL1_sd_cards_add = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.FlexGridSizer_sd_cards_buttons:Add(ui.Button_RL1_sd_cards_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Button_RL1_sd_cards_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local sel      = ui.Choice_RL1_sd_cards_FS_name:GetSelection()
-                                local fs_name  = ui.Choice_RL1_sd_cards_FS_name:GetString(ifs(sel > -1, sel, 0))
                                 local src_file = ui.ComboBox_RL1_sd_cards_file:GetValue()
-                                local mntpt    = ui.ComboBox_RL1_sd_cards_mntp:GetValue()
-
                                 if src_file ~= "" then
-                                        ui.ListView_RL1_sd_cards:AppendItem(src_file, fs_name, mntpt)
-                                        ui.Choice_RL1_sd_cards_FS_name:SetSelection(0)
+                                        ui.ListBox_RL1_sd_cards:Append(src_file)
                                         ui.ComboBox_RL1_sd_cards_file:SetValue("")
-                                        ui.ComboBox_RL1_sd_cards_mntp:SetValue("")
                                         modified:yes()
                                 end
+                        end
+                )
+
+                -- add remove button
+                ui.Button_RL1_sd_cards_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer_sd_cards_buttons:Add(ui.Button_RL1_sd_cards_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_RL1_sd_cards_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                        function()
+                                local sel = ui.ListBox_RL1_sd_cards:GetSelection()
+                                local t   = {}
+                                for i = 0, ui.ListBox_RL1_sd_cards:GetCount() do
+                                        if i ~= sel then
+                                                local str = ui.ListBox_RL1_sd_cards:GetString(i)
+                                                if str ~= "" then
+                                                        table.insert(t, str)
+                                                end
+                                        end
+                                end
+
+                                ui.ListBox_RL1_sd_cards:Clear()
+                                ui.ListBox_RL1_sd_cards:Append(t)
+                                modified:yes()
                         end
                 )
 
@@ -1120,28 +1104,8 @@ local function create_runlevel_1_widgets(parent)
                 ui.FlexGridSizer_sd_cards:Add(ui.FlexGridSizer_sd_cards_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
 
             -- create list with added cards
-            ui.ListView_RL1_sd_cards = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 125), wx.wxLC_REPORT)
-            ui.ListView_RL1_sd_cards.AppendItem   = insert_item
-            ui.ListView_RL1_sd_cards.GetItemTexts = get_item_texts
-            ui.ListView_RL1_sd_cards:InsertColumn(0, "Card file", wx.wxLIST_FORMAT_LEFT, 125)
-            ui.ListView_RL1_sd_cards:InsertColumn(1, "File system", wx.wxLIST_FORMAT_LEFT, 125)
-            ui.ListView_RL1_sd_cards:InsertColumn(2, "Mount point", wx.wxLIST_FORMAT_LEFT, 125)
-            ui.FlexGridSizer_sd_cards:Add(ui.ListView_RL1_sd_cards, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- add remove button
-            ui.Button_RL1_sd_cards_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_sd_cards:Add(ui.Button_RL1_sd_cards_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.Button_RL1_sd_cards_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                    function()
-                            local n = ui.ListView_RL1_sd_cards:GetFirstSelected()
-                            if n > -1 then modified:yes() end
-
-                            while n > -1 do
-                                    ui.ListView_RL1_sd_cards:DeleteItem(n)
-                                    n = ui.ListView_RL1_sd_cards:GetNextSelected(-1)
-                            end
-                    end
-            )
+            ui.ListBox_RL1_sd_cards  = wx.wxListBox(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
+            ui.FlexGridSizer_sd_cards:Add(ui.ListBox_RL1_sd_cards, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
             -- add group to main panel
             ui.StaticBoxSizer_sd_cards:Add(ui.FlexGridSizer_sd_cards, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
