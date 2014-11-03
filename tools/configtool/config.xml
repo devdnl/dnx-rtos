@@ -327,6 +327,8 @@
             <initd_template_driverinit_file>../../extra/templates/initd/driver_init.c</initd_template_driverinit_file>
             <initd_template_printken_file>../../extra/templates/initd/printk_en.c</initd_template_printken_file>
             <initd_template_ivitationmsg_file>../../extra/templates/initd/invitation_msg.c</initd_template_ivitationmsg_file>
+            <initd_template_card_mount_file>../../extra/templates/initd/card_mount.c</initd_template_card_mount_file>
+            <initd_template_daemonstart_file>../../extra/templates/initd/daemon_start.c</initd_template_daemonstart_file>
             <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>

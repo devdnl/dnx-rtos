@@ -68,6 +68,59 @@ static int run_level_exit(void);
 
 //==============================================================================
 /**
+ * @brief  Function start daemon
+ * @param  name     daemon's name
+ * @param  cwd      current working directory
+ * @return None
+ */
+//==============================================================================
+static void start_daemon(const char *name, const char *cwd)
+{
+        printk("Starting %s daemon... ", name);
+        if (program_new(name, cwd, NULL, NULL, NULL)) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function start daemon
+ * @param  card         card file
+ * @param  file_system  name of file system used to mount partition
+ * @param  mount_point  mount point
+ * @return None
+ */
+//==============================================================================
+static void init_card_and_mount(const char *card, const char *file_system, const char *mount_point)
+{
+        /* initializing SD card and detecting partitions */
+        printk("Mounting %s card... ", card);
+        FILE *sd = fopen(card, "r+");
+        if (sd) {
+                if (ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD) {
+                        if (ioctl(sd, IOCTL_SDSPI__READ_MBR) != -1) {
+                                if (mount(file_system, card, mount_point) == STD_RET_OK) {
+                                        printk("OK\n");
+                                } else {
+                                        printk(FONT_COLOR_RED"mount fail"RESET_ATTRIBUTES"\n");
+                                }
+                        } else {
+                                printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
+                        }
+                } else {
+                        printk(FONT_COLOR_RED"initialization fail"RESET_ATTRIBUTES"\n");
+                }
+
+                fclose(sd);
+        } else {
+                printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
+        }
+}
+
+//==============================================================================
+/**
  * @brief Initialize devices and programs
  * User program which provide basic system functionality e.g. STDIO handle
  * (joining TTY driver with program), basic program starting and etc. This task

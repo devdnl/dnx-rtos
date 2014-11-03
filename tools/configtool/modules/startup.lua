@@ -211,13 +211,15 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- @return None
 --------------------------------------------------------------------------------
 local function generate_init_code(cfg)
-        local INITD_TEMPLATE_FILE     = config.project.path.initd_template_entire_file:GetValue()
-        local INITD_TEMPLATE_MOUNT    = config.project.path.initd_template_mount_file:GetValue()
-        local INITD_TEMPLATE_MKDIR    = config.project.path.initd_template_mkdir_file:GetValue()
-        local INITD_TEMPLATE_DRVINIT  = config.project.path.initd_template_driverinit_file:GetValue()
-        local INITD_TEMPLATE_PRINTKEN = config.project.path.initd_template_printken_file:GetValue()
-        local INITD_TEMPLATE_INVMSG   = config.project.path.initd_template_ivitationmsg_file:GetValue()
-        local INITD_SRC_FILE          = config.project.path.initd_src_file:GetValue()
+        local INITD_TEMPLATE_FILE         = config.project.path.initd_template_entire_file:GetValue()
+        local INITD_TEMPLATE_MOUNT        = config.project.path.initd_template_mount_file:GetValue()
+        local INITD_TEMPLATE_MKDIR        = config.project.path.initd_template_mkdir_file:GetValue()
+        local INITD_TEMPLATE_DRVINIT      = config.project.path.initd_template_driverinit_file:GetValue()
+        local INITD_TEMPLATE_PRINTKEN     = config.project.path.initd_template_printken_file:GetValue()
+        local INITD_TEMPLATE_INVMSG       = config.project.path.initd_template_ivitationmsg_file:GetValue()
+        local INITD_TEMPLATE_DAEMON_START = config.project.path.initd_template_daemonstart_file:GetValue()
+        local INITD_TEMPLATE_CARD_MOUNT   = config.project.path.initd_template_card_mount_file:GetValue()
+        local INITD_SRC_FILE              = config.project.path.initd_src_file:GetValue()
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
                                             "Do you want to generate initd code based on current configuration?\n\n"..
@@ -296,6 +298,30 @@ local function generate_init_code(cfg)
                 end
 
                 -- create runlevel 1
+                local regex = "^%s*static%s+int%s+run_level_1%(.*%)$"
+                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                if n then
+                        n = n + 2
+
+                        -- add deamons
+                        for i = 1, #cfg.runlevel_1.daemons do
+                                local daemon = cfg.runlevel_1.daemons[i]
+                                local tags = {}
+                                table.insert(tags, {tag = "<!name!>", to = daemon.name})
+                                table.insert(tags, {tag = "<!CWD!>", to = daemon.CWD})
+                                n = n + ct:apply_template(INITD_TEMPLATE_DAEMON_START, INITD_SRC_FILE, tags, n)
+                        end
+
+                        -- initialize SD cards
+                        for i = 1, #cfg.runlevel_1.cards_to_init do
+                                local card = cfg.runlevel_1.cards_to_init[i]
+                                local tags = {}
+                                table.insert(tags, {tag = "<!file!>", to = card.card_file})
+                                table.insert(tags, {tag = "<!file_system!>", to = card.file_system})
+                                table.insert(tags, {tag = "<!mount_point!>", to = card.mount_point})
+                                n = n + ct:apply_template(INITD_TEMPLATE_CARD_MOUNT, INITD_SRC_FILE, tags, n)
+                        end
+                end
 
                 print(n)
 
@@ -1043,7 +1069,7 @@ local function create_runlevel_1_widgets(parent)
             ui.FlexGridSizer_runlevel_1:Add(ui.StaticBoxSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- create SD cards initialization group
-        ui.StaticBoxSizer_sd_cards = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "SD cards initialization")
+        ui.StaticBoxSizer_sd_cards = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "SD cards initialization and mount")
         ui.FlexGridSizer_sd_cards = wx.wxFlexGridSizer(0, 1, 0, 0)
 
             -- create button sizer
@@ -1396,4 +1422,13 @@ end
 --------------------------------------------------------------------------------
 function startup:save()
         save_configuration()
+end
+
+--------------------------------------------------------------------------------
+-- @brief  Function generate initd code
+-- @return None
+--------------------------------------------------------------------------------
+function startup:generate_initd()
+        local cfg = ct:load_table(INITD_CFG_FILE)
+        generate_init_code(cfg)
 end
