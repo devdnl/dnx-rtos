@@ -303,7 +303,7 @@ local function generate_init_code(cfg)
                 if n then
                         n = n + 2
 
-                        -- add deamons
+                        -- add daemons
                         for i = 1, #cfg.runlevel_1.daemons do
                                 local daemon = cfg.runlevel_1.daemons[i]
                                 local tags = {}
@@ -425,8 +425,9 @@ local function load_configuration()
         end
 
         -- network start
-        ui.CheckBox_RL1_network_DHCP:SetValue(initd.runlevel_1.network_start.DHCP)
-        ui.CheckBox_RL1_network_static:SetValue(initd.runlevel_1.network_start.static)
+        ui.CheckBox_RL1_network_DHCP:SetValue(initd.runlevel_1.network.DHCP)
+        ui.CheckBox_RL1_network_static:SetValue(initd.runlevel_1.network.static)
+        ui.CheckBox_RL1_network_summary:SetValue(initd.runlevel_1.network.summary)
 
         ----------------
         -- RUNLEVEL 2 --
@@ -540,9 +541,10 @@ local function save_configuration()
                 end
 
                 -- network configuration
-                initd.runlevel_1.network_start = {}
-                initd.runlevel_1.network_start.DHCP   = ui.CheckBox_RL1_network_DHCP:GetValue()
-                initd.runlevel_1.network_start.static = ui.CheckBox_RL1_network_static:GetValue()
+                initd.runlevel_1.network = {}
+                initd.runlevel_1.network.DHCP    = ui.CheckBox_RL1_network_DHCP:GetValue()
+                initd.runlevel_1.network.static  = ui.CheckBox_RL1_network_static:GetValue()
+                initd.runlevel_1.network.summary = ui.CheckBox_RL1_network_summary:GetValue()
 
 
         -- runlevel 2
@@ -1237,6 +1239,11 @@ local function create_runlevel_1_widgets(parent)
             ui.CheckBox_RL1_network_static = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Set static IP configuration (see Network configuration)", wx.wxDefaultPosition, wx.wxDefaultSize)
             ui.FlexGridSizer_network:Add(ui.CheckBox_RL1_network_static, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
             ui.CheckBox_RL1_network_static:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) modified:yes() end)
+
+            -- add connection summary checkbox
+            ui.CheckBox_RL1_network_summary = wx.wxCheckBox(ui.Panel_runlevel_1, wx.wxNewId(), "Show connection summary", wx.wxDefaultPosition, wx.wxDefaultSize)
+            ui.FlexGridSizer_network:Add(ui.CheckBox_RL1_network_summary, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.CheckBox_RL1_network_summary:Connect(wx.wxEVT_COMMAND_CHECKBOX_CLICKED, function(event) modified:yes() end)
 
             -- add info text
             ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "NOTE: If static and dynamic network configurations are enabled at the same time, then dynamic "..
