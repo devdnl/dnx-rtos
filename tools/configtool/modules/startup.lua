@@ -313,9 +313,9 @@ local function generate_init_code(cfg)
                         end
 
                         -- initialize SD cards
-                        for i = 1, #cfg.runlevel_1.storage_to_init do
+                        for i = 1, #cfg.runlevel_1.storage_init do
                                 local tags = {}
-                                table.insert(tags, {tag = "<!storage_path!>", to = cfg.runlevel_1.storage_to_init[i]})
+                                table.insert(tags, {tag = "<!storage_path!>", to = cfg.runlevel_1.storage_init[i]})
                                 n = n + ct:apply_template(INITD_TEMPLATE_STORAGE_INIT, INITD_SRC_FILE, tags, n)
                         end
                 end
@@ -401,10 +401,17 @@ local function load_configuration()
                 ui.ListView_RL1_daemons:AppendItem(item.name, item.CWD)
         end
 
-        -- SD card initialization
+        -- storage initialization
         ui.ListBox_RL1_storage:Clear()
-        for i = 1, #initd.runlevel_1.storage_to_init do
-                ui.ListBox_RL1_storage:Append(initd.runlevel_1.storage_to_init[i])
+        for i = 1, #initd.runlevel_1.storage_init do
+                ui.ListBox_RL1_storage:Append(initd.runlevel_1.storage_init[i])
+        end
+
+        -- mount table
+        ui.ListView_RL1_FS_mount:DeleteAllItems()
+        for i = 1, #initd.runlevel_1.mount_table do
+                local item = initd.runlevel_1.mount_table[i]
+                ui.ListView_RL1_FS_mount:AppendItem(item.file_system, item.source_file, item.mount_point)
         end
 
         -- network start
@@ -503,10 +510,23 @@ local function save_configuration()
                         table.insert(initd.runlevel_1.daemons, item)
                 end
 
-                -- list of cards to initialize
-                initd.runlevel_1.storage_to_init = {}
+                -- storage initialization
+                initd.runlevel_1.storage_init = {}
                 for i = 0, ui.ListBox_RL1_storage:GetCount() - 1 do
-                        table.insert(initd.runlevel_1.storage_to_init, ui.ListBox_RL1_storage:GetString(i))
+                        table.insert(initd.runlevel_1.storage_init, ui.ListBox_RL1_storage:GetString(i))
+                end
+
+                -- mount table
+                initd.runlevel_1.mount_table = {}
+                for i = 0, ui.ListView_RL1_FS_mount:GetItemCount() - 1 do
+                        local cols = ui.ListView_RL1_FS_mount:GetItemTexts(i, 3)
+
+                        local item = {}
+                        item.file_system = cols[0]
+                        item.source_file = cols[1]
+                        item.mount_point = cols[2]
+
+                        table.insert(initd.runlevel_1.mount_table, item)
                 end
 
                 -- network configuration
