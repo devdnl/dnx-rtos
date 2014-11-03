@@ -905,11 +905,35 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Save selected table to file
--- @param  table        table to convert
+-- @param  tab          table to convert
 -- @param  file         file to dump
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
-function ct:save_table(table, file)
+function ct:save_table(tab, file)
+
+        local function spairs(t, order)
+                -- collect the keys
+                local keys = {}
+                for k in pairs(t) do keys[#keys+1] = k end
+
+                -- if order function given, sort by it by passing the table and keys a, b,
+                -- otherwise just sort the keys
+                if order then
+                        table.sort(keys, function(a,b) return order(t, a, b) end)
+                else
+                        table.sort(keys)
+                end
+
+                -- return the iterator function
+                local i = 0
+                return function()
+                        i = i + 1
+                        if keys[i] then
+                                return keys[i], t[keys[i]]
+                        end
+                end
+        end
+
         local savedTables = {} -- used to record tables that have been saved, so that we do not go into an infinite recursion
         local outFuncs = {
                 ['string']  = function(value) return string.format("%q",value) end;
@@ -938,7 +962,7 @@ function ct:save_table(table, file)
 
                 local out = '{\n'
 
-                for i,v in pairs(value) do
+                for i,v in spairs(value) do
                         out = out..indent..'['..outValue(i)..']='..outValue(v)..';\n'
                 end
 
@@ -951,11 +975,11 @@ function ct:save_table(table, file)
 
         outFuncs['table'] = tableOut;
 
-        if type(table) == "table" and type(file) == "string" then
+        if type(tab) == "table" and type(file) == "string" then
                 local f = io.open(file, "wb")
                 if f then
                         f:write("-- dnx RTOS configuration file\n")
-                        f:write(tableOut(table))
+                        f:write(tableOut(tab))
                         f:close()
                         return true
                 end

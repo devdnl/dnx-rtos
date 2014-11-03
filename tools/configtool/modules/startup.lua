@@ -697,6 +697,7 @@ local function create_boot_widgets(parent)
 
                                         ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
                                         ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
+                                        ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname)
                                         ui.ComboBox_RL2_app_start_CWD:Append(dirname)
                                         ui.ComboBox_RLB_folder_name:SetValue("")
                                         modified:yes()
