@@ -318,6 +318,16 @@ local function generate_init_code(cfg)
                                 table.insert(tags, {tag = "<!storage_path!>", to = cfg.runlevel_1.storage_init[i]})
                                 n = n + ct:apply_template(INITD_TEMPLATE_STORAGE_INIT, INITD_SRC_FILE, tags, n)
                         end
+
+                        -- mount table
+                        for i = 1, #cfg.runlevel_1.mount_table do
+                                local item = cfg.runlevel_1.mount_table[i]
+                                local tags = {}
+                                table.insert(tags, {tag = "<!file_system!>", to = item.file_system})
+                                table.insert(tags, {tag = "<!source_file!>", to = ifs(item.source_file == "none", "", item.source_file)})
+                                table.insert(tags, {tag = "<!mount_point!>", to = item.mount_point})
+                                n = n + ct:apply_template(INITD_TEMPLATE_MOUNT, INITD_SRC_FILE, tags, n)
+                        end
                 end
 
                 print(n)
