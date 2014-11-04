@@ -216,6 +216,7 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_MKDIR             = config.project.path.initd_template_mkdir_file:GetValue()
         local INITD_TEMPLATE_DRVINIT           = config.project.path.initd_template_driverinit_file:GetValue()
         local INITD_TEMPLATE_PRINTKEN          = config.project.path.initd_template_printken_file:GetValue()
+        local INITD_TEMPLATE_PRINTKDIS         = config.project.path.initd_template_printkdis_file:GetValue()
         local INITD_TEMPLATE_INVMSG            = config.project.path.initd_template_ivitationmsg_file:GetValue()
         local INITD_TEMPLATE_DAEMON_START      = config.project.path.initd_template_daemonstart_file:GetValue()
         local INITD_TEMPLATE_STORAGE_INIT      = config.project.path.initd_template_storage_init_file:GetValue()
@@ -223,6 +224,10 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_DHCP_IP           = config.project.path.initd_template_dhcp_ip_file:GetValue()
         local INITD_TEMPLATE_STATIC_IP         = config.project.path.initd_template_static_ip_file:GetValue()
         local INITD_TEMPLATE_IP_SUMMARY        = config.project.path.initd_template_ip_summary_file:GetValue()
+        local INITD_TEMPLATE_STACK_INFO        = config.project.path.initd_template_stack_info_file:GetValue()
+        local INITD_TEMPLATE_APP_PREPARE       = config.project.path.initd_template_app_prepare_file:GetValue()
+        local INITD_TEMPLATE_APP_START         = config.project.path.initd_template_app_start_file:GetValue()
+        local INITD_TEMPLATE_APP_FINISH        = config.project.path.initd_template_app_finish_file:GetValue()
         local INITD_SRC_FILE                   = config.project.path.initd_src_file:GetValue()
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
@@ -241,7 +246,7 @@ local function generate_init_code(cfg)
                 table.insert(tags, {tag = "<!year!>", to = os.date("%Y")})
                 ct:apply_template(INITD_TEMPLATE_FILE, INITD_SRC_FILE, tags, 1)
 
-                -- create runlevel boot
+                -- create runlevel boot code
                 local regex = "^%s*static%s+int%s+run_level_boot%(.*%)$"
                 local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
                 if n then
@@ -272,7 +277,7 @@ local function generate_init_code(cfg)
                         end
                 end
 
-                -- create runlevel 0
+                -- create runlevel 0 code
                 local regex = "^%s*static%s+int%s+run_level_0%(.*%)$"
                 local n     = ct:find_line(INITD_SRC_FILE, n, regex)
                 if n then
@@ -301,7 +306,7 @@ local function generate_init_code(cfg)
                         end
                 end
 
-                -- create runlevel 1
+                -- create runlevel 1 code
                 local regex = "^%s*static%s+int%s+run_level_1%(.*%)$"
                 local n     = ct:find_line(INITD_SRC_FILE, n, regex)
                 if n then
@@ -344,6 +349,80 @@ local function generate_init_code(cfg)
 
                         if cfg.runlevel_1.network.DHCP == true or cfg.runlevel_1.network.static == true then
                                 n = n + ct:apply_template(INITD_TEMPLATE_IP_SUMMARY, INITD_SRC_FILE, {}, n)
+                        end
+                end
+
+                -- create runlevel 2 code
+                local regex = "^%s*static%s+int%s+run_level_2%(.*%)$"
+                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                if n then
+                        n = n + 2
+
+                        -- add daemons
+                        for i = 1, #cfg.runlevel_2.applications do
+                                local app = cfg.runlevel_2.applications[i]
+
+                                if app.stdin == "none" and app.stdout == "none" and app.stderr == "none" then
+                                        local tags = {}
+                                        table.insert(tags, {tag = "<!name!>", to = app.name})
+                                        table.insert(tags, {tag = "<!CWD!>", to = app.CWD})
+                                        n = n + ct:apply_template(INITD_TEMPLATE_DAEMON_START, INITD_SRC_FILE, tags, n)
+                                end
+                        end
+
+                        -- add initd stack info
+                        if cfg.runlevel_0.system_messages.show == true then
+                                n = n + ct:apply_template(INITD_TEMPLATE_STACK_INFO, INITD_SRC_FILE, {}, n)
+                        end
+
+                        -- enable/disable printk
+                        if cfg.runlevel_2.system_messages.show == true then
+                                local tags = {}
+                                table.insert(tags, {tag = "<!node!>", to = cfg.runlevel_2.system_messages.file})
+                                n = n + ct:apply_template(INITD_TEMPLATE_PRINTKEN, INITD_SRC_FILE, tags, n)
+                        else
+                                n = n + ct:apply_template(INITD_TEMPLATE_PRINTKDIS, INITD_SRC_FILE, {}, n)
+                        end
+
+                        -- applications prepare
+                        local number_of_applications = 0
+                        for i = 1, #cfg.runlevel_2.applications do
+                                local app = cfg.runlevel_2.applications[i]
+                                if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
+                                        number_of_applications = number_of_applications + 1
+                                end
+                        end
+
+                        if number_of_applications > 0 then
+                                local tags = {}
+                                table.insert(tags, {tag = "<!number_of_applications!>", to = number_of_applications})
+                                n = n + ct:apply_template(INITD_TEMPLATE_APP_PREPARE, INITD_SRC_FILE, tags, n)
+                        end
+
+                        -- start applications
+                        local application_number = 0
+                        for i = 1, #cfg.runlevel_2.applications do
+                                local app = cfg.runlevel_2.applications[i]
+
+                                if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
+                                        local tags = {}
+                                        table.insert(tags, {tag = "<!application_number!>", to = application_number})
+                                        table.insert(tags, {tag = "<!name!>",   to = app.name})
+                                        table.insert(tags, {tag = "<!CWD!>",    to = app.CWD})
+                                        table.insert(tags, {tag = "<!stdin!>",  to = ifs(app.stdin  ~= "none", '"'..app.stdin..'"',  "NULL")})
+                                        table.insert(tags, {tag = "<!stdout!>", to = ifs(app.stdout ~= "none", '"'..app.stdout..'"', "NULL")})
+                                        table.insert(tags, {tag = "<!stderr!>", to = ifs(app.stderr ~= "none", '"'..app.stderr..'"', "NULL")})
+                                        n = n + ct:apply_template(INITD_TEMPLATE_APP_START, INITD_SRC_FILE, tags, n)
+
+                                        application_number = application_number + 1
+                                end
+                        end
+
+                        -- finish applications
+                        for i = 0, number_of_applications - 1 do
+                                local tags = {}
+                                table.insert(tags, {tag = "<!application_number!>", to = i})
+                                n = n + ct:apply_template(INITD_TEMPLATE_APP_FINISH, INITD_SRC_FILE, tags, n)
                         end
                 end
 
