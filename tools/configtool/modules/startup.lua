@@ -740,6 +740,7 @@ end
 local function get_item_texts(self, row, no_of_cols)
         local item = wx.wxListItem()
         item:SetId(row)
+        item:SetMask(wx.wxLIST_MASK_TEXT)
 
         local t = {}
         for i = 0, no_of_cols - 1 do
