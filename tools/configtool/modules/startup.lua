@@ -233,7 +233,8 @@ local function generate_init_code(cfg)
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
                                             "Do you want to generate initd code based on current configuration?\n\n"..
-                                            "If Yes will be selected then current initd code will be overwritten (custom initd code will be lost), otherwise no changes are done.",
+                                            "Click 'Yes' to apply initd configuration and generate new code (current initd code will be OVERWRITTEN).\n\n"..
+                                            "Click 'No' to discard generation of initd code and leave current initd implementation with no changes.",
                                             wx.wxYES_NO,
                                             ui.window)
         if answer == wx.wxID_YES then
