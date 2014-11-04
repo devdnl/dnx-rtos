@@ -466,21 +466,21 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function load_configuration()
-        local initd = ct:load_table(INITD_CFG_FILE)
+        local cfg = ct:load_table(INITD_CFG_FILE)
 
         -------------------
         -- RUNLEVEL BOOT --
         -------------------
         -- load base file system
-        ui.Choice_RLB_root_FS:SetSelection(FS_list:get_index_of(initd.runlevel_boot.base_FS) - 1)
+        ui.Choice_RLB_root_FS:SetSelection(FS_list:get_index_of(cfg.runlevel_boot.base_FS) - 1)
 
         -- load folders to create
         ui.ListBox_RLB_folders:Clear()
         ui.ComboBox_RLB_other_FS_mntpt:Clear()
         ui.ComboBox_RL1_FS_mount_mntpt:Clear()
         ui.ComboBox_RL2_app_start_CWD:Clear()
-        for i = 1, #initd.runlevel_boot.folders do
-                local dirname = initd.runlevel_boot.folders[i]
+        for i = 1, #cfg.runlevel_boot.folders do
+                local dirname = cfg.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
                 ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname)
@@ -489,8 +489,8 @@ local function load_configuration()
 
         -- load additional file systems to mount
         ui.ListView_RLB_other_FS:DeleteAllItems()
-        for i = 1, #initd.runlevel_boot.additional_FS do
-                local item = initd.runlevel_boot.additional_FS[i]
+        for i = 1, #cfg.runlevel_boot.additional_FS do
+                local item = cfg.runlevel_boot.additional_FS[i]
                 ui.ListView_RLB_other_FS:AppendItem(item.file_system, item.source_file, item.mount_point)
         end
 
@@ -507,8 +507,8 @@ local function load_configuration()
         ui.ComboBox_RL2_app_start_stdout:Clear()
         ui.ComboBox_RL2_app_start_stderr:Clear()
 
-        for i = 1, #initd.runlevel_0.driver_init do
-                local item = initd.runlevel_0.driver_init[i]
+        for i = 1, #cfg.runlevel_0.driver_init do
+                local item = cfg.runlevel_0.driver_init[i]
                 ui.ListView_RL0_drv_list:AppendItem(item.name, item.node)
                 ui.ComboBox_RL0_sys_msg_file:Append(item.node)
                 ui.ComboBox_RL1_storage_file:Append(item.node)
@@ -520,51 +520,51 @@ local function load_configuration()
         end
 
         -- load system messages configuration
-        ui.CheckBox_RL0_sys_msg_en:SetValue(initd.runlevel_0.system_messages.show)
-        ui.Panel_RL0_sys_msg_sub:Enable(initd.runlevel_0.system_messages.show)
-        ui.CheckBox_RL0_sys_msg_invitation:SetValue(initd.runlevel_0.system_messages.invitation)
-        ui.ComboBox_RL0_sys_msg_file:SetValue(initd.runlevel_0.system_messages.file)
-        ui.Choice_RL0_sys_msg_init_after:SetSelection(drv_list:get_index_of(initd.runlevel_0.system_messages.init_after) - 1)
+        ui.CheckBox_RL0_sys_msg_en:SetValue(cfg.runlevel_0.system_messages.show)
+        ui.Panel_RL0_sys_msg_sub:Enable(cfg.runlevel_0.system_messages.show)
+        ui.CheckBox_RL0_sys_msg_invitation:SetValue(cfg.runlevel_0.system_messages.invitation)
+        ui.ComboBox_RL0_sys_msg_file:SetValue(cfg.runlevel_0.system_messages.file)
+        ui.Choice_RL0_sys_msg_init_after:SetSelection(drv_list:get_index_of(cfg.runlevel_0.system_messages.init_after) - 1)
 
         ----------------
         -- RUNLEVEL 1 --
         ----------------
         -- load daemon list
         ui.ListView_RL1_daemons:DeleteAllItems()
-        for i = 1, #initd.runlevel_1.daemons do
-                local item = initd.runlevel_1.daemons[i]
+        for i = 1, #cfg.runlevel_1.daemons do
+                local item = cfg.runlevel_1.daemons[i]
                 ui.ListView_RL1_daemons:AppendItem(item.name, item.CWD)
         end
 
         -- storage initialization
         ui.ListBox_RL1_storage:Clear()
-        for i = 1, #initd.runlevel_1.storage_init do
-                ui.ListBox_RL1_storage:Append(initd.runlevel_1.storage_init[i])
+        for i = 1, #cfg.runlevel_1.storage_init do
+                ui.ListBox_RL1_storage:Append(cfg.runlevel_1.storage_init[i])
         end
 
         -- mount table
         ui.ListView_RL1_FS_mount:DeleteAllItems()
-        for i = 1, #initd.runlevel_1.mount_table do
-                local item = initd.runlevel_1.mount_table[i]
+        for i = 1, #cfg.runlevel_1.mount_table do
+                local item = cfg.runlevel_1.mount_table[i]
                 ui.ListView_RL1_FS_mount:AppendItem(item.file_system, item.source_file, item.mount_point)
         end
 
         -- network start
-        ui.CheckBox_RL1_network_DHCP:SetValue(initd.runlevel_1.network.DHCP)
-        ui.CheckBox_RL1_network_static:SetValue(initd.runlevel_1.network.static)
-        ui.CheckBox_RL1_network_summary:SetValue(initd.runlevel_1.network.summary)
+        ui.CheckBox_RL1_network_DHCP:SetValue(cfg.runlevel_1.network.DHCP)
+        ui.CheckBox_RL1_network_static:SetValue(cfg.runlevel_1.network.static)
+        ui.CheckBox_RL1_network_summary:SetValue(cfg.runlevel_1.network.summary)
 
         ----------------
         -- RUNLEVEL 2 --
         ----------------
         -- system messages
-        ui.CheckBox_RL2_sys_msg_en:SetValue(initd.runlevel_2.system_messages.show)
-        ui.ComboBox_RL2_sys_msg_file:SetValue(initd.runlevel_2.system_messages.file)
+        ui.CheckBox_RL2_sys_msg_en:SetValue(cfg.runlevel_2.system_messages.show)
+        ui.ComboBox_RL2_sys_msg_file:SetValue(cfg.runlevel_2.system_messages.file)
 
         -- load applications list
         ui.ListView_RL2_app_start:DeleteAllItems()
-        for i = 1, #initd.runlevel_2.applications do
-                local item = initd.runlevel_2.applications[i]
+        for i = 1, #cfg.runlevel_2.applications do
+                local item = cfg.runlevel_2.applications[i]
                 ui.ListView_RL2_app_start:AppendItem(item.name, item.CWD, item.stdin, item.stdout, item.stderr)
         end
 
@@ -578,128 +578,136 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function save_configuration()
-        local initd = {}
+        local cfg = {}
 
-        -- runlevel boot
-        initd.runlevel_boot = {}
+        -------------------
+        -- RUNLEVEL BOOT --
+        -------------------
+        cfg.runlevel_boot = {}
 
-                -- root FS
-                local sel = ui.Choice_RLB_root_FS:GetSelection()
-                initd.runlevel_boot.base_FS = ui.Choice_RLB_root_FS:GetString(ifs(sel > -1, sel, 0))
+        -- root FS
+        local sel = ui.Choice_RLB_root_FS:GetSelection()
+        cfg.runlevel_boot.base_FS = ui.Choice_RLB_root_FS:GetString(ifs(sel > -1, sel, 0))
 
-                -- new folder list
-                initd.runlevel_boot.folders = {}
-                for i = 0, ui.ListBox_RLB_folders:GetCount() - 1 do
-                        table.insert(initd.runlevel_boot.folders, ui.ListBox_RLB_folders:GetString(i))
-                end
+        -- new folder list
+        cfg.runlevel_boot.folders = {}
+        for i = 0, ui.ListBox_RLB_folders:GetCount() - 1 do
+                table.insert(cfg.runlevel_boot.folders, ui.ListBox_RLB_folders:GetString(i))
+        end
 
-                -- additional file system mount
-                initd.runlevel_boot.additional_FS = {}
-                for i = 0, ui.ListView_RLB_other_FS:GetItemCount() - 1 do
-                        local cols = ui.ListView_RLB_other_FS:GetItemTexts(i, 3)
+        -- additional file system mount
+        cfg.runlevel_boot.additional_FS = {}
+        for i = 0, ui.ListView_RLB_other_FS:GetItemCount() - 1 do
+                local cols = ui.ListView_RLB_other_FS:GetItemTexts(i, 3)
 
-                        local item = {}
-                        item.file_system = cols[0]
-                        item.source_file = cols[1]
-                        item.mount_point = cols[2]
+                local item = {}
+                item.file_system = cols[0]
+                item.source_file = cols[1]
+                item.mount_point = cols[2]
 
-                        table.insert(initd.runlevel_boot.additional_FS, item)
-                end
-
-
-        -- runlevel 0
-        initd.runlevel_0 = {}
-
-                -- list of drivers to initialize
-                initd.runlevel_0.driver_init = {}
-                for i = 0, ui.ListView_RL0_drv_list:GetItemCount() - 1 do
-                        local cols = ui.ListView_RL0_drv_list:GetItemTexts(i, 2)
-
-                        local item = {}
-                        item.name = cols[0]
-                        item.node = cols[1]
-
-                        table.insert(initd.runlevel_0.driver_init, item)
-                end
-
-                -- system messages
-                initd.runlevel_0.system_messages = {}
-                initd.runlevel_0.system_messages.show = ui.CheckBox_RL0_sys_msg_en:GetValue()
-                initd.runlevel_0.system_messages.invitation = ui.CheckBox_RL0_sys_msg_invitation:GetValue()
-                initd.runlevel_0.system_messages.file = ui.ComboBox_RL0_sys_msg_file:GetValue()
-                local sel = ui.Choice_RL0_sys_msg_init_after:GetSelection()
-                initd.runlevel_0.system_messages.init_after = ui.Choice_RL0_sys_msg_init_after:GetString(ifs(sel > -1, sel, 0))
+                table.insert(cfg.runlevel_boot.additional_FS, item)
+        end
 
 
-        -- runlevel 1
-        initd.runlevel_1 = {}
+        ----------------
+        -- RUNLEVEL 0 --
+        ----------------
+        cfg.runlevel_0 = {}
 
-                -- early started daemons
-                initd.runlevel_1.daemons = {}
-                for i = 0, ui.ListView_RL1_daemons:GetItemCount() - 1 do
-                        local cols = ui.ListView_RL1_daemons:GetItemTexts(i, 2)
+        -- list of drivers to initialize
+        cfg.runlevel_0.driver_init = {}
+        for i = 0, ui.ListView_RL0_drv_list:GetItemCount() - 1 do
+                local cols = ui.ListView_RL0_drv_list:GetItemTexts(i, 2)
 
-                        local item = {}
-                        item.name = cols[0]
-                        item.CWD  = cols[1]
+                local item = {}
+                item.name = cols[0]
+                item.node = cols[1]
 
-                        table.insert(initd.runlevel_1.daemons, item)
-                end
+                table.insert(cfg.runlevel_0.driver_init, item)
+        end
 
-                -- storage initialization
-                initd.runlevel_1.storage_init = {}
-                for i = 0, ui.ListBox_RL1_storage:GetCount() - 1 do
-                        table.insert(initd.runlevel_1.storage_init, ui.ListBox_RL1_storage:GetString(i))
-                end
-
-                -- mount table
-                initd.runlevel_1.mount_table = {}
-                for i = 0, ui.ListView_RL1_FS_mount:GetItemCount() - 1 do
-                        local cols = ui.ListView_RL1_FS_mount:GetItemTexts(i, 3)
-
-                        local item = {}
-                        item.file_system = cols[0]
-                        item.source_file = cols[1]
-                        item.mount_point = cols[2]
-
-                        table.insert(initd.runlevel_1.mount_table, item)
-                end
-
-                -- network configuration
-                initd.runlevel_1.network = {}
-                initd.runlevel_1.network.DHCP    = ui.CheckBox_RL1_network_DHCP:GetValue()
-                initd.runlevel_1.network.static  = ui.CheckBox_RL1_network_static:GetValue()
-                initd.runlevel_1.network.summary = ui.CheckBox_RL1_network_summary:GetValue()
+        -- system messages
+        cfg.runlevel_0.system_messages = {}
+        cfg.runlevel_0.system_messages.show = ui.CheckBox_RL0_sys_msg_en:GetValue()
+        cfg.runlevel_0.system_messages.invitation = ui.CheckBox_RL0_sys_msg_invitation:GetValue()
+        cfg.runlevel_0.system_messages.file = ui.ComboBox_RL0_sys_msg_file:GetValue()
+        local sel = ui.Choice_RL0_sys_msg_init_after:GetSelection()
+        cfg.runlevel_0.system_messages.init_after = ui.Choice_RL0_sys_msg_init_after:GetString(ifs(sel > -1, sel, 0))
 
 
-        -- runlevel 2
-        initd.runlevel_2 = {}
+        ----------------
+        -- RUNLEVEL 1 --
+        ----------------
+        cfg.runlevel_1 = {}
 
-                -- system messages
-                initd.runlevel_2.system_messages = {}
-                initd.runlevel_2.system_messages.show = ui.CheckBox_RL2_sys_msg_en:GetValue()
-                initd.runlevel_2.system_messages.file = ui.ComboBox_RL2_sys_msg_file:GetValue()
+        -- early started daemons
+        cfg.runlevel_1.daemons = {}
+        for i = 0, ui.ListView_RL1_daemons:GetItemCount() - 1 do
+                local cols = ui.ListView_RL1_daemons:GetItemTexts(i, 2)
 
-                -- applications start
-                initd.runlevel_2.applications = {}
-                for i = 0, ui.ListView_RL2_app_start:GetItemCount() - 1 do
-                        local cols = ui.ListView_RL2_app_start:GetItemTexts(i, 5)
+                local item = {}
+                item.name = cols[0]
+                item.CWD  = cols[1]
 
-                        local item = {}
-                        item.name   = cols[0]
-                        item.CWD    = cols[1]
-                        item.stdin  = cols[2]
-                        item.stdout = cols[3]
-                        item.stderr = cols[4]
+                table.insert(cfg.runlevel_1.daemons, item)
+        end
 
-                        table.insert(initd.runlevel_2.applications, item)
-                end
+        -- storage initialization
+        cfg.runlevel_1.storage_init = {}
+        for i = 0, ui.ListBox_RL1_storage:GetCount() - 1 do
+                table.insert(cfg.runlevel_1.storage_init, ui.ListBox_RL1_storage:GetString(i))
+        end
+
+        -- mount table
+        cfg.runlevel_1.mount_table = {}
+        for i = 0, ui.ListView_RL1_FS_mount:GetItemCount() - 1 do
+                local cols = ui.ListView_RL1_FS_mount:GetItemTexts(i, 3)
+
+                local item = {}
+                item.file_system = cols[0]
+                item.source_file = cols[1]
+                item.mount_point = cols[2]
+
+                table.insert(cfg.runlevel_1.mount_table, item)
+        end
+
+        -- network configuration
+        cfg.runlevel_1.network = {}
+        cfg.runlevel_1.network.DHCP    = ui.CheckBox_RL1_network_DHCP:GetValue()
+        cfg.runlevel_1.network.static  = ui.CheckBox_RL1_network_static:GetValue()
+        cfg.runlevel_1.network.summary = ui.CheckBox_RL1_network_summary:GetValue()
+
+
+        ----------------
+        -- RUNLEVEL 2 --
+        ----------------
+        cfg.runlevel_2 = {}
+
+        -- system messages
+        cfg.runlevel_2.system_messages = {}
+        cfg.runlevel_2.system_messages.show = ui.CheckBox_RL2_sys_msg_en:GetValue()
+        cfg.runlevel_2.system_messages.file = ui.ComboBox_RL2_sys_msg_file:GetValue()
+
+        -- applications start
+        cfg.runlevel_2.applications = {}
+        for i = 0, ui.ListView_RL2_app_start:GetItemCount() - 1 do
+                local cols = ui.ListView_RL2_app_start:GetItemTexts(i, 5)
+
+                local item = {}
+                item.name   = cols[0]
+                item.CWD    = cols[1]
+                item.stdin  = cols[2]
+                item.stdout = cols[3]
+                item.stderr = cols[4]
+
+                table.insert(cfg.runlevel_2.applications, item)
+        end
 
 
         -- save configuration to file
-        ct:save_table(initd, INITD_CFG_FILE)
+        ct:save_table(cfg, INITD_CFG_FILE)
 
-        generate_init_code(initd)
+        generate_init_code(cfg)
 
         modified:no()
 end
