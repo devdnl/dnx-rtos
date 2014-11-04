@@ -228,6 +228,7 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_APP_PREPARE       = config.project.path.initd_template_app_prepare_file:GetValue()
         local INITD_TEMPLATE_APP_START         = config.project.path.initd_template_app_start_file:GetValue()
         local INITD_TEMPLATE_APP_FINISH        = config.project.path.initd_template_app_finish_file:GetValue()
+        local INITD_TEMPLATE_APP_STREAM_OPEN   = config.project.path.initd_template_app_stream_open_file:GetValue()
         local INITD_SRC_FILE                   = config.project.path.initd_src_file:GetValue()
 
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
@@ -384,50 +385,74 @@ local function generate_init_code(cfg)
                                 n = n + ct:apply_template(INITD_TEMPLATE_PRINTKDIS, INITD_SRC_FILE, {}, n)
                         end
 
-                        -- applications prepare
+                        -- calculate number of applications and streams
                         local number_of_applications = 0
+                        local unique_streams         = {}
                         for i = 1, #cfg.runlevel_2.applications do
                                 local app = cfg.runlevel_2.applications[i]
                                 if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
                                         number_of_applications = number_of_applications + 1
                                 end
+
+                                unique_streams[app.stdin]  = true
+                                unique_streams[app.stdout] = true
+                                unique_streams[app.stderr] = true
                         end
 
+                        if unique_streams["none"] ~= nil then
+                                unique_streams["none"] = nil
+                        end
+
+                        local number_of_streams = 0;
+                        for k, v in pairs(unique_streams) do
+                                unique_streams[k] = number_of_streams
+                                number_of_streams = number_of_streams + 1
+                        end
+
+                        -- add applications
                         if number_of_applications > 0 then
+                                -- create application handles and streams
                                 local tags = {}
                                 table.insert(tags, {tag = "<!number_of_applications!>", to = number_of_applications})
+                                table.insert(tags, {tag = "<!number_of_streams!>", to = number_of_streams})
                                 n = n + ct:apply_template(INITD_TEMPLATE_APP_PREPARE, INITD_SRC_FILE, tags, n)
-                        end
 
-                        -- start applications
-                        local application_number = 0
-                        for i = 1, #cfg.runlevel_2.applications do
-                                local app = cfg.runlevel_2.applications[i]
-
-                                if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
+                                -- open streams
+                                for stream_path in pairs(unique_streams) do
                                         local tags = {}
-                                        table.insert(tags, {tag = "<!application_number!>", to = application_number})
-                                        table.insert(tags, {tag = "<!name!>",   to = app.name})
-                                        table.insert(tags, {tag = "<!CWD!>",    to = app.CWD})
-                                        table.insert(tags, {tag = "<!stdin!>",  to = ifs(app.stdin  ~= "none", '"'..app.stdin..'"',  "NULL")})
-                                        table.insert(tags, {tag = "<!stdout!>", to = ifs(app.stdout ~= "none", '"'..app.stdout..'"', "NULL")})
-                                        table.insert(tags, {tag = "<!stderr!>", to = ifs(app.stderr ~= "none", '"'..app.stderr..'"', "NULL")})
-                                        n = n + ct:apply_template(INITD_TEMPLATE_APP_START, INITD_SRC_FILE, tags, n)
-
-                                        application_number = application_number + 1
+                                        table.insert(tags, {tag = "<!stream_number!>", to = unique_streams[stream_path]})
+                                        table.insert(tags, {tag = "<!stream_path!>", to = stream_path})
+                                        n = n + ct:apply_template(INITD_TEMPLATE_APP_STREAM_OPEN, INITD_SRC_FILE, tags, n)
                                 end
-                        end
 
-                        -- finish applications
-                        for i = 0, number_of_applications - 1 do
-                                local tags = {}
-                                table.insert(tags, {tag = "<!application_number!>", to = i})
-                                n = n + ct:apply_template(INITD_TEMPLATE_APP_FINISH, INITD_SRC_FILE, tags, n)
+                                -- start applications
+                                local application_number = 0
+                                for i = 1, #cfg.runlevel_2.applications do
+                                        local app = cfg.runlevel_2.applications[i]
+
+                                        if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
+                                                local tags = {}
+                                                table.insert(tags, {tag = "<!application_number!>", to = application_number})
+                                                table.insert(tags, {tag = "<!name!>",   to = app.name})
+                                                table.insert(tags, {tag = "<!CWD!>",    to = app.CWD})
+
+                                                if app.stdin  == "none" then app.stdin  = "NULL" else app.stdin  = "f["..unique_streams[app.stdin].."]" end
+                                                if app.stdout == "none" then app.stdout = "NULL" else app.stdout = "f["..unique_streams[app.stdout].."]" end
+                                                if app.stderr == "none" then app.stderr = "NULL" else app.stderr = "f["..unique_streams[app.stderr].."]" end
+
+                                                table.insert(tags, {tag = "<!stdin!>",  to = app.stdin})
+                                                table.insert(tags, {tag = "<!stdout!>", to = app.stdout})
+                                                table.insert(tags, {tag = "<!stderr!>", to = app.stderr})
+                                                n = n + ct:apply_template(INITD_TEMPLATE_APP_START, INITD_SRC_FILE, tags, n)
+
+                                                application_number = application_number + 1
+                                        end
+                                end
+
+                                -- add code that wait for finishing all running programs before goes to runlevel exit
+                                n = n + ct:apply_template(INITD_TEMPLATE_APP_FINISH, INITD_SRC_FILE, {}, n)
                         end
                 end
-
-                print(n)
-
         end
 end
 

@@ -338,6 +338,7 @@
             <initd_template_app_prepare_file>../../extra/templates/initd/app_prepare.c</initd_template_app_prepare_file>
             <initd_template_app_start_file>../../extra/templates/initd/app_start.c</initd_template_app_start_file>
             <initd_template_app_finish_file>../../extra/templates/initd/app_finish.c</initd_template_app_finish_file>
+            <initd_template_app_stream_open_file>../../extra/templates/initd/stream_open.c</initd_template_app_stream_open_file>
             <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>

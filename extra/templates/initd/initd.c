@@ -35,6 +35,7 @@
 #include <dnx/os.h>
 #include <dnx/net.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "user/initd.h"
 
 /*==============================================================================
@@ -96,7 +97,7 @@ static void init_storage(const char *storage)
         printk("Initializing %s... ", storage);
         FILE *st = fopen(storage, "r+");
         if (st) {
-                if (ioctl(st, IOCTL_STORAGE__INITIALIZE) {
+                if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
                         switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
                                 case 1 : printk("OK\n"); break;
                                 case 0 : printk("no MBR\n"); break;
