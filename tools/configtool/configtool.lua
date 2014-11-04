@@ -174,6 +174,7 @@ local function event_import_configuration()
                 if (dialog:ShowModal() == wx.wxID_OK) then
                         ct:apply_project_configuration(dialog:GetPath(), ui.frame)
                         ui.frame:SetStatusText("Loaded configuration: "..dialog:GetFilename(), 1)
+                        startup:generate()
                 end
         end
 end

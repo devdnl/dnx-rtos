@@ -1634,7 +1634,7 @@ end
 -- @brief  Function generate initd code
 -- @return None
 --------------------------------------------------------------------------------
-function startup:generate_initd()
+function startup:generate()
         local cfg = ct:load_table(INITD_CFG_FILE)
         generate_init_code(cfg)
 end
