@@ -188,7 +188,9 @@ end
 local function event_export_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Export configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                ct:save_project_configuration(dialog:GetPath(), ui.frame)
+                local path = dialog:GetPath()
+                if not path:match("%.dnxc$") then path = path..".dnxc" end
+                ct:save_project_configuration(path, ui.frame)
         end
 end
 

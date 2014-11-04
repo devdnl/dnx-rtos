@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
@@ -77,7 +78,7 @@ static int run_level_exit(void);
 //==============================================================================
 static void start_daemon(const char *name, const char *cwd)
 {
-        printk("Starting %s daemon... ", name);
+        printk("Starting '%s' daemon... ", name);
         if (program_new(name, cwd, NULL, NULL, NULL)) {
                 printk("OK\n");
         } else {
@@ -100,16 +101,41 @@ static void init_storage(const char *storage)
                 if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
                         switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
                                 case 1 : printk("OK\n"); break;
-                                case 0 : printk("no MBR\n"); break;
+                                case 0 : printk("OK (no MBR)\n"); break;
                                 default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
                         }
                 } else {
-                        printk(FONT_COLOR_RED"initialization fail"RESET_ATTRIBUTES"\n");
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
 
                 fclose(st);
         } else {
                 printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function initialize storage device
+ * @param  storage  storage device path
+ * @return None
+ */
+//==============================================================================
+static void msg_mount(const char *filesystem, const char *src_file, const char *mount_point)
+{
+        printk("Mounting ");
+        if (src_file != NULL && strlen(src_file) > 0) {
+                printk("%s ", src_file);
+        } else {
+                printk("%s ", filesystem);
+        }
+        printk("to %s... ", mount_point);
+
+        errno = 0;
+        if (mount(filesystem, src_file, mount_point) == STD_RET_OK) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
         }
 }
 

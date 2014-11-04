@@ -224,7 +224,7 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_DHCP_IP           = config.project.path.initd_template_dhcp_ip_file:GetValue()
         local INITD_TEMPLATE_STATIC_IP         = config.project.path.initd_template_static_ip_file:GetValue()
         local INITD_TEMPLATE_IP_SUMMARY        = config.project.path.initd_template_ip_summary_file:GetValue()
-        local INITD_TEMPLATE_STACK_INFO        = config.project.path.initd_template_stack_info_file:GetValue()
+        local INITD_TEMPLATE_SUMMARY           = config.project.path.initd_template_summary_file:GetValue()
         local INITD_TEMPLATE_APP_PREPARE       = config.project.path.initd_template_app_prepare_file:GetValue()
         local INITD_TEMPLATE_APP_START         = config.project.path.initd_template_app_start_file:GetValue()
         local INITD_TEMPLATE_APP_FINISH        = config.project.path.initd_template_app_finish_file:GetValue()
@@ -255,6 +255,7 @@ local function generate_init_code(cfg)
 
                         -- root file system
                         local tags = {}
+                        table.insert(tags, {tag = "<!msg!>",         to = ""})
                         table.insert(tags, {tag = "<!file_system!>", to = cfg.runlevel_boot.base_FS})
                         table.insert(tags, {tag = "<!source_file!>", to = ""})
                         table.insert(tags, {tag = "<!mount_point!>", to = "/"})
@@ -271,6 +272,7 @@ local function generate_init_code(cfg)
                         for i = 1, #cfg.runlevel_boot.additional_FS do
                                 local item = cfg.runlevel_boot.additional_FS[i]
                                 local tags = {}
+                                table.insert(tags, {tag = "<!msg!>",         to = ""})
                                 table.insert(tags, {tag = "<!file_system!>", to = item.file_system})
                                 table.insert(tags, {tag = "<!source_file!>", to = ifs(item.source_file == "none", "", item.source_file)})
                                 table.insert(tags, {tag = "<!mount_point!>", to = item.mount_point})
@@ -333,6 +335,7 @@ local function generate_init_code(cfg)
                         for i = 1, #cfg.runlevel_1.mount_table do
                                 local item = cfg.runlevel_1.mount_table[i]
                                 local tags = {}
+                                table.insert(tags, {tag = "<!msg!>",         to = "msg_"})
                                 table.insert(tags, {tag = "<!file_system!>", to = item.file_system})
                                 table.insert(tags, {tag = "<!source_file!>", to = ifs(item.source_file == "none", "", item.source_file)})
                                 table.insert(tags, {tag = "<!mount_point!>", to = item.mount_point})
@@ -373,7 +376,7 @@ local function generate_init_code(cfg)
 
                         -- add initd stack info
                         if cfg.runlevel_0.system_messages.show == true then
-                                n = n + ct:apply_template(INITD_TEMPLATE_STACK_INFO, INITD_SRC_FILE, {}, n)
+                                n = n + ct:apply_template(INITD_TEMPLATE_SUMMARY, INITD_SRC_FILE, {}, n)
                         end
 
                         -- enable/disable printk

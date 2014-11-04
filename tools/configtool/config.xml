@@ -334,7 +334,7 @@
             <initd_template_dhcp_ip_file>../../extra/templates/initd/dhcp_ip.c</initd_template_dhcp_ip_file>
             <initd_template_static_ip_file>../../extra/templates/initd/static_ip.c</initd_template_static_ip_file>
             <initd_template_ip_summary_file>../../extra/templates/initd/ip_summary.c</initd_template_ip_summary_file>
-            <initd_template_stack_info_file>../../extra/templates/initd/stack_info.c</initd_template_stack_info_file>
+            <initd_template_summary_file>../../extra/templates/initd/initd_summary.c</initd_template_summary_file>
             <initd_template_app_prepare_file>../../extra/templates/initd/app_prepare.c</initd_template_app_prepare_file>
             <initd_template_app_start_file>../../extra/templates/initd/app_start.c</initd_template_app_start_file>
             <initd_template_app_finish_file>../../extra/templates/initd/app_finish.c</initd_template_app_finish_file>
