@@ -81,8 +81,8 @@ ct.icon.edit_delete_16x16 = wx.wxBitmap("pixmaps/16x16/edit-delete.png")
 ct.icon.edit_delete_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/edit-delete-dimmed.png")
 ct.icon.list_add_16x16 = wx.wxBitmap("pixmaps/16x16/list-add.png")
 ct.icon.list_add_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/list-add-dimmed.png")
-ct.icon.arrow_down = wx.wxBitmap("pixmaps/16x16/arrow-down.png")
-ct.icon.arrow_up = wx.wxBitmap("pixmaps/16x16/arrow-up.png")
+ct.icon.arrow_down_16x16 = wx.wxBitmap("pixmaps/16x16/arrow-down.png")
+ct.icon.arrow_up_16x16 = wx.wxBitmap("pixmaps/16x16/arrow-up.png")
 
 
 --==============================================================================
