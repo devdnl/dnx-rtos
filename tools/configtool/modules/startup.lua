@@ -207,7 +207,7 @@ local function new_data_dialog(parent, dialog_name, grid_size)
         end
 
         self.Add = function(self, object)
-                self._FlexGridSizer_fields:Add(object, 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 5)
+                self._FlexGridSizer_fields:Add(object, 1, (wx.wxALL+wx.wxEXPAND+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 5)
         end
 
         self.GetHandle = function(self)
@@ -527,13 +527,13 @@ local function load_configuration()
 
         -- load folders to create
         ui.ListBox_RLB_folders:Clear()
-        ui.ComboBox_RLB_other_FS_mntpt:Clear()
+--         ui.ComboBox_RLB_other_FS_mntpt:Clear()
         ui.ComboBox_RL1_FS_mount_mntpt:Clear()
         ui.ComboBox_RL2_app_start_CWD:Clear()
         for i = 1, #cfg.runlevel_boot.folders do
                 local dirname = cfg.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
-                ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
+--                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
                 ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname)
                 ui.ComboBox_RL2_app_start_CWD:Append(dirname)
         end
@@ -892,7 +892,7 @@ local function create_boot_widgets(parent)
         ui.FlexGridSizer_boot_folders_1 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
             -- add folder list
-            ui.ListBox_RLB_folders = wx.wxListBox(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
+            ui.ListBox_RLB_folders = wx.wxListBox(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), {}, 0)
             ui.FlexGridSizer_boot_folders_1:Add(ui.ListBox_RLB_folders, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
                 -- new folder sizer
@@ -904,25 +904,29 @@ local function create_boot_widgets(parent)
                 ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RLB_folder_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local dirname = ""
-
                                 -- show window with parameters to fill
-                                local dialog = new_data_dialog(ui.window, "Enter folder name", 2)
-                                local ComboBox_folder_name = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), default_dirs, wx.wxTE_PROCESS_ENTER)
-                                local function save() dirname = ComboBox_folder_name:GetValue() dialog:Close() end
+                                local dialog = new_data_dialog(ui.window, "Enter folder name", 1)
+                                local ComboBox_folder_name = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(300, -1), default_dirs, wx.wxTE_PROCESS_ENTER)
+
+                                local function save()
+                                        local dirname = ComboBox_folder_name:GetValue()
+
+                                        if dirname ~= "" then
+                                                if not dirname:match("^/.*") then dirname = "/"..dirname end
+
+                                                ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
+                                                ui.ListBox_RLB_folders:SetSelection(ui.ListBox_RLB_folders:GetCount() - 1)
+                                                modified:yes()
+                                        end
+
+                                        dialog:Close()
+                                end
+
                                 ComboBox_folder_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() save() end)
-                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Folder name"))
+                                ComboBox_folder_name:SetFocus()
                                 dialog:Add(ComboBox_folder_name)
                                 dialog:SetSaveFunction(save)
                                 dialog:ShowModal()
-
-                                if dirname ~= "" then
-                                        if not dirname:match("^/.*") then dirname = "/"..dirname end
-
-                                        ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
-                                        ui.ListBox_RLB_folders:SetSelection(ui.ListBox_RLB_folders:GetCount() - 1)
-                                        modified:yes()
-                                end
                         end
                 )
 
@@ -946,12 +950,7 @@ local function create_boot_widgets(parent)
 
                                 ui.ListBox_RLB_folders:Clear()
                                 ui.ListBox_RLB_folders:InsertItems(t, 0)
-                                ui.ListBox_RLB_folders:SetSelection(sel)
-
-                                ui.ComboBox_RLB_other_FS_mntpt:Clear()
-                                ui.ComboBox_RLB_other_FS_mntpt:Append(t)
-                                ui.ComboBox_RL2_app_start_CWD:Clear()
-                                ui.ComboBox_RL2_app_start_CWD:Append(t)
+                                ui.ListBox_RLB_folders:SetSelection(ifs(sel >= count - 1, count - 2, sel))
                                 modified:yes()
                         end
                 )
@@ -965,51 +964,60 @@ local function create_boot_widgets(parent)
 
         -- Additional file systems group
         ui.StaticBoxSizer_other_FS_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Additional file systems")
-        ui.FlexGridSizer_other_FS_1 = wx.wxFlexGridSizer(0, 1, 0, 0)
-        ui.FlexGridSizer_other_FS_2 = wx.wxFlexGridSizer(0, 6, 0, 0)
+        ui.FlexGridSizer_other_FS_1 = wx.wxFlexGridSizer(0, 2, 0, 0)
+        ui.FlexGridSizer_other_FS_2 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
-            -- colums descriptions
-            ui.FlexGridSizer_other_FS_2:Add(wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "File system"), 1, (wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_other_FS_2:Add(wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Source file"), 1, (wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_other_FS_2:Add(wx.wxStaticText(ui.Panel_boot, wx.wxID_ANY, "Mount point"), 1, (wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_other_FS_2:Add(0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_other_FS_2:Add(0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_other_FS_2:Add(0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- file system name selection
-            ui.Choice_RLB_other_FS_name = wx.wxChoice(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
-            ui.FlexGridSizer_other_FS_2:Add(ui.Choice_RLB_other_FS_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- source file combobox
-            ui.ComboBox_RLB_other_FS_src = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"", "none"})
-            ui.FlexGridSizer_other_FS_2:Add(ui.ComboBox_RLB_other_FS_src, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- FS mount point
-            ui.ComboBox_RLB_other_FS_mntpt = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {})
-            ui.FlexGridSizer_other_FS_2:Add(ui.ComboBox_RLB_other_FS_mntpt, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            -- FS list
+            ui.ListView_RLB_other_FS = wx.wxListView(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), wx.wxLC_REPORT)
+            ui.ListView_RLB_other_FS.AppendItem   = wxListView_insert_item
+            ui.ListView_RLB_other_FS.GetItemTexts = wxListView_get_item_texts
+            ui.ListView_RLB_other_FS.UpdateItem   = wxListView_update_item
+            ui.ListView_RLB_other_FS.MoveItem     = wxListView_move_item
+            ui.ListView_RLB_other_FS:InsertColumn(0, "File system", wx.wxLIST_FORMAT_LEFT, 150)
+            ui.ListView_RLB_other_FS:InsertColumn(1, "Source file", wx.wxLIST_FORMAT_LEFT, 150)
+            ui.ListView_RLB_other_FS:InsertColumn(2, "Mount point", wx.wxLIST_FORMAT_LEFT, 150)
+            ui.FlexGridSizer_other_FS_1:Add(ui.ListView_RLB_other_FS, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
             -- add Add buttons
             ui.Button_other_FS_add = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.list_add_16x16)
             ui.Button_other_FS_add:SetBitmapDisabled(ct.icon.list_add_16x16_dimmed)
             ui.Button_other_FS_add:SetToolTip("Add")
-            ui.FlexGridSizer_other_FS_2:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.Button_other_FS_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
-                            local sel      = ui.Choice_RLB_other_FS_name:GetSelection()
-                            local fs_name  = ui.Choice_RLB_other_FS_name:GetString(ifs(sel > -1, sel, 0))
-                            local src_file = ui.ComboBox_RLB_other_FS_src:GetValue()
-                            local mntpt    = ui.ComboBox_RLB_other_FS_mntpt:GetValue()
+                            -- show window with parameters to fill
+                            local dialog = new_data_dialog(ui.window, "Enter mount parameters", 3)
+                            dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "File system"))
+                            dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Source file"))
+                            dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Mount point"))
+                            local Choice_RLB_other_FS_name = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
+                            local ComboBox_RLB_other_FS_src = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"})
+                            local dirlist = {} for i = 0, ui.ListBox_RLB_folders:GetCount() - 1 do table.insert(dirlist, ui.ListBox_RLB_folders:GetString(i)) end
+                            local ComboBox_RLB_other_FS_mntpt = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), dirlist)
 
-                            if not mntpt:match("^/.*") then mntpt = "/"..mntpt end
-                            if src_file == "" then src_file = "none" end
+                            local function save()
+                                    local sel         = Choice_RLB_other_FS_name:GetSelection()
+                                    local fs_name     = Choice_RLB_other_FS_name:GetString(ifs(sel > -1, sel, 0))
+                                    local src_file    = ComboBox_RLB_other_FS_src:GetValue()
+                                    local mount_point = ComboBox_RLB_other_FS_mntpt:GetValue()
 
-                            if fs_name ~= "" then
-                                    ui.ListView_RLB_other_FS:AppendItem({fs_name, src_file, mntpt})
-                                    ui.Choice_RLB_other_FS_name:SetSelection(0)
-                                    ui.ComboBox_RLB_other_FS_src:SetValue("")
-                                    ui.ComboBox_RLB_other_FS_mntpt:SetValue("")
-                                    modified:yes()
+                                    if not mount_point:match("^/.*") then mount_point = "/"..mount_point end
+                                    if src_file == "" then src_file = "none" end
+
+                                    if fs_name ~= "" then
+                                            ui.ListView_RLB_other_FS:AppendItem({fs_name, src_file, mount_point})
+                                            modified:yes()
+                                    end
+
+                                    dialog:Close()
                             end
+
+                            Choice_RLB_other_FS_name:SetFocus()
+                            dialog:Add(Choice_RLB_other_FS_name)
+                            dialog:Add(ComboBox_RLB_other_FS_src)
+                            dialog:Add(ComboBox_RLB_other_FS_mntpt)
+                            dialog:SetSaveFunction(save)
+                            dialog:ShowModal()
                     end
             )
 
@@ -1017,7 +1025,7 @@ local function create_boot_widgets(parent)
             ui.Button_RLB_other_FS_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
             ui.Button_RLB_other_FS_remove:SetBitmapDisabled(ct.icon.edit_delete_16x16_dimmed)
             ui.Button_RLB_other_FS_remove:SetToolTip("Remove")
-            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.Button_RLB_other_FS_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
                             local n = ui.ListView_RLB_other_FS:GetFirstSelected()
@@ -1033,61 +1041,70 @@ local function create_boot_widgets(parent)
             -- add edit button
             ui.Button_RLB_other_FS_edit = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.document_edit_16x16)
             ui.Button_RLB_other_FS_edit:SetToolTip("Edit")
-            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.Button_RLB_other_FS_edit:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                     function()
-                            if ui.ListView_RLB_other_FS:IsEnabled() == true then
-                                    local sel = ui.ListView_RLB_other_FS:GetFirstSelected()
-                                    if sel > -1 then
-                                            local col = ui.ListView_RLB_other_FS:GetItemTexts(sel, 3)
-                                            ui.Choice_RLB_other_FS_name:SetSelection(FS_list:get_index_of(col[1]) - 1)
-                                            ui.ComboBox_RLB_other_FS_src:SetValue(col[2])
-                                            ui.ComboBox_RLB_other_FS_mntpt:SetValue(col[3])
+                            local selected_item = ui.ListView_RLB_other_FS:GetFirstSelected()
+                            if selected_item > -1 then
+                                    -- show window with parameters to fill
+                                    local dialog = new_data_dialog(ui.window, "Enter mount parameters", 3)
+                                    dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "File system"))
+                                    dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Source file"))
+                                    dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Mount point"))
+                                    local Choice_RLB_other_FS_name = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
+                                    local ComboBox_RLB_other_FS_src = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"})
+                                    local dirlist = {} for i = 0, ui.ListBox_RLB_folders:GetCount() - 1 do table.insert(dirlist, ui.ListBox_RLB_folders:GetString(i)) end
+                                    local ComboBox_RLB_other_FS_mntpt = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), dirlist)
 
-                                            ui.Button_other_FS_add:Enable(false)
-                                            ui.Button_RLB_other_FS_remove:Enable(false)
-                                            ui.ListView_RLB_other_FS:Enable(false)
+                                    local col = ui.ListView_RLB_other_FS:GetItemTexts(selected_item, 3)
+                                    Choice_RLB_other_FS_name:SetSelection(FS_list:get_index_of(col[1]) - 1)
+                                    ComboBox_RLB_other_FS_src:SetValue(col[2])
+                                    ComboBox_RLB_other_FS_mntpt:SetValue(col[3])
+
+                                    local function save()
+                                            local sel         = Choice_RLB_other_FS_name:GetSelection()
+                                            local fs_name     = Choice_RLB_other_FS_name:GetString(ifs(sel > -1, sel, 0))
+                                            local src_file    = ComboBox_RLB_other_FS_src:GetValue()
+                                            local mount_point = ComboBox_RLB_other_FS_mntpt:GetValue()
+
+                                            if not mount_point:match("^/.*") then mount_point = "/"..mount_point end
+                                            if src_file == "" then src_file = "none" end
+
+                                            if fs_name ~= "" then
+                                                    ui.ListView_RLB_other_FS:UpdateItem(selected_item, {fs_name, src_file, mount_point})
+                                                    modified:yes()
+                                            end
+
+                                            dialog:Close()
                                     end
-                            else
-                                    local sel      = ui.Choice_RLB_other_FS_name:GetSelection()
-                                    local fs_name  = ui.Choice_RLB_other_FS_name:GetString(ifs(sel > -1, sel, 0))
-                                    local src_file = ui.ComboBox_RLB_other_FS_src:GetValue()
-                                    local mntpt    = ui.ComboBox_RLB_other_FS_mntpt:GetValue()
 
-                                    if not mntpt:match("^/.*") then mntpt = "/"..mntpt end
-                                    if src_file == "" then src_file = "none" end
-
-                                    if fs_name ~= "" then
-                                            local listsel = ui.ListView_RLB_other_FS:GetFirstSelected()
-                                            ui.ListView_RLB_other_FS:UpdateItem(listsel, {fs_name, src_file, mntpt})
-                                            ui.ListView_RLB_other_FS:Select(listsel, true)
-                                            ui.Choice_RLB_other_FS_name:SetSelection(0)
-                                            ui.ComboBox_RLB_other_FS_src:SetValue("")
-                                            ui.ComboBox_RLB_other_FS_mntpt:SetValue("")
-                                            ui.Button_other_FS_add:Enable(true)
-                                            ui.Button_RLB_other_FS_remove:Enable(true)
-                                            ui.ListView_RLB_other_FS:Enable(true)
-                                            modified:yes()
-                                    end
+                                    Choice_RLB_other_FS_name:SetFocus()
+                                    dialog:Add(Choice_RLB_other_FS_name)
+                                    dialog:Add(ComboBox_RLB_other_FS_src)
+                                    dialog:Add(ComboBox_RLB_other_FS_mntpt)
+                                    dialog:SetSaveFunction(save)
+                                    dialog:ShowModal()
                             end
                     end
             )
 
+            -- add: arrow up button
+            ui.Button_RLB_other_FS_up = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_up_16x16)
+            ui.Button_RLB_other_FS_up:SetToolTip("Move up")
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+            ui.Button_RLB_other_FS_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(-1, 3) end)
+
+            -- add: arrow down button
+            ui.Button_RLB_other_FS_down = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_down_16x16)
+            ui.Button_RLB_other_FS_down:SetToolTip("Move down")
+            ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+            ui.Button_RLB_other_FS_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(1, 3) end)
+
             -- add sizers
             ui.FlexGridSizer_other_FS_1:Add(ui.FlexGridSizer_other_FS_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
 
-            -- FS list
-            ui.ListView_RLB_other_FS = wx.wxListView(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), wx.wxLC_REPORT)
-            ui.ListView_RLB_other_FS.AppendItem   = wxListView_insert_item
-            ui.ListView_RLB_other_FS.GetItemTexts = wxListView_get_item_texts
-            ui.ListView_RLB_other_FS.UpdateItem   = wxListView_update_item
-            ui.ListView_RLB_other_FS:InsertColumn(0, "File system", wx.wxLIST_FORMAT_LEFT, 150)
-            ui.ListView_RLB_other_FS:InsertColumn(1, "Source file", wx.wxLIST_FORMAT_LEFT, 150)
-            ui.ListView_RLB_other_FS:InsertColumn(2, "Mount point", wx.wxLIST_FORMAT_LEFT, 150)
-            ui.FlexGridSizer_other_FS_1:Add(ui.ListView_RLB_other_FS, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
             -- add group
-            ui.StaticBoxSizer_other_FS_0:Add(ui.FlexGridSizer_other_FS_1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.StaticBoxSizer_other_FS_0:Add(ui.FlexGridSizer_other_FS_1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
             ui.FlexGridSizer_boot:Add(ui.StaticBoxSizer_other_FS_0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- set panel sizer
@@ -1263,13 +1280,13 @@ local function create_runlevel_0_widgets(parent)
                         end
                 )
 
-                -- add: array up button
+                -- add: arrow up button
                 ui.Button_RL0_drv_init_up = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL0_drv_init_up:SetToolTip("Move up")
                 ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) end)
 
-                -- add: array down button
+                -- add: arrow down button
                 ui.Button_RL0_drv_init_down = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL0_drv_init_down:SetToolTip("Move down")
                 ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -1897,8 +1914,8 @@ function startup:refresh()
         FS_list:reload()
         ui.Choice_RLB_root_FS:Clear()
         ui.Choice_RLB_root_FS:Append(FS_list:get_list())
-        ui.Choice_RLB_other_FS_name:Clear()
-        ui.Choice_RLB_other_FS_name:Append(FS_list:get_list())
+--         ui.Choice_RLB_other_FS_name:Clear()
+--         ui.Choice_RLB_other_FS_name:Append(FS_list:get_list())
 
         app_list:reload()
         ui.ComboBox_RL1_daemons_name:Clear()
