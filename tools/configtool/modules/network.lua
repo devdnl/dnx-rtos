@@ -2242,6 +2242,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function network:refresh()
+        ui.window:Hide()
+
         -- refresh priority range
         priority_min, priority_max = operating_system:get_priority_range()
 
@@ -2256,6 +2258,8 @@ function network:refresh()
         modified:enable(false)
         load_controls()
         modified:enable(true)
+
+        ui.window:Show()
 end
 
 

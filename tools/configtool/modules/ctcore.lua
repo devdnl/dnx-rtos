@@ -69,10 +69,21 @@ ct.icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
 ct.icon.document_save_22x22_dimmed = wx.wxBitmap("pixmaps/22x22/document-save-dimmed.png")
 ct.icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
 ct.icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
+ct.icon.document_edit_16x16 = wx.wxBitmap("pixmaps/16x16/document-edit.png")
+ct.icon.document_edit_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/document-edit-dimmed.png")
 ct.icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
 ct.icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
 ct.icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
 ct.icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
+ct.icon.apply_16x16 = wx.wxBitmap("pixmaps/16x16/dialog-ok-apply.png")
+ct.icon.apply_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/dialog-ok-apply-dimmed.png")
+ct.icon.edit_delete_16x16 = wx.wxBitmap("pixmaps/16x16/edit-delete.png")
+ct.icon.edit_delete_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/edit-delete-dimmed.png")
+ct.icon.list_add_16x16 = wx.wxBitmap("pixmaps/16x16/list-add.png")
+ct.icon.list_add_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/list-add-dimmed.png")
+ct.icon.arrow_down = wx.wxBitmap("pixmaps/16x16/arrow-down.png")
+ct.icon.arrow_up = wx.wxBitmap("pixmaps/16x16/arrow-up.png")
+
 
 --==============================================================================
 -- LOCAL OBJECTS
