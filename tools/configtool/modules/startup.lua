@@ -551,7 +551,7 @@ local function load_configuration()
         -- load list of drivers to initialize
         ui.ListView_RL0_drv_list:DeleteAllItems()
         ui.ComboBox_RL0_sys_msg_file:Clear()
-        ui.ComboBox_RL1_storage_file:Clear()
+--         ui.ComboBox_RL1_storage_file:Clear() FIXME
         ui.ComboBox_RL1_FS_mount_src:Clear()
         ui.ComboBox_RL2_sys_msg_file:Clear()
         ui.ComboBox_RL2_app_start_stdin:Clear()
@@ -562,7 +562,7 @@ local function load_configuration()
                 local item = cfg.runlevel_0.driver_init[i]
                 ui.ListView_RL0_drv_list:AppendItem({item.name, item.node})
                 ui.ComboBox_RL0_sys_msg_file:Append(item.node)
-                ui.ComboBox_RL1_storage_file:Append(item.node)
+--                 ui.ComboBox_RL1_storage_file:Append(item.node) FIXME
                 ui.ComboBox_RL1_FS_mount_src:Append(item.node)
                 ui.ComboBox_RL2_sys_msg_file:Append(item.node)
                 ui.ComboBox_RL2_app_start_stdin:Append(item.node)
@@ -1045,7 +1045,7 @@ local function create_runlevel_boot_widgets(parent)
                             local selected_item = ui.ListView_RLB_other_FS:GetFirstSelected()
                             if selected_item > -1 then
                                     -- show window with parameters to fill
-                                    local dialog = new_data_dialog(ui.window, "Enter mount parameters", 3)
+                                    local dialog = new_data_dialog(ui.window, "Entry modification", 3)
                                     dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "File system"))
                                     dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Source file"))
                                     dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Mount point"))
@@ -1139,6 +1139,7 @@ local function create_runlevel_0_widgets(parent)
             ui.ListView_RL0_drv_list.GetItemTexts = wxListView_get_item_texts
             ui.ListView_RL0_drv_list.UpdateItem   = wxListView_update_item
             ui.ListView_RL0_drv_list.MoveItem     = wxListView_move_item
+            ui.ListView_RL0_drv_list.GetNodeList  = function(self) local t = {} for i = 0, self:GetItemCount() - 1 do local n = self:GetItemTexts(i, 2)[2] if n ~= "none" then table.insert(t, n) end end return t end
             ui.ListView_RL0_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
             ui.ListView_RL0_drv_list:InsertColumn(1, "Node path", wx.wxLIST_FORMAT_LEFT, 300)
             ui.FlexGridSizer_drv_init:Add(ui.ListView_RL0_drv_list, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
@@ -1217,7 +1218,7 @@ local function create_runlevel_0_widgets(parent)
                                 local selected_item = ui.ListView_RL0_drv_list:GetFirstSelected()
                                 if selected_item > -1 then
                                         -- show window with parameters to fill
-                                        local dialog = new_data_dialog(ui.window, "Select driver", 2)
+                                        local dialog = new_data_dialog(ui.window, "Entry modification", 2)
                                         dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Driver name"))
                                         dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Node path"))
                                         local Choice_RL0_drv_name   = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
@@ -1351,58 +1352,63 @@ local function create_runlevel_1_widgets(parent)
 
         -- create daemons group
         ui.StaticBoxSizer_daemons = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "Early started daemons")
-        ui.FlexGridSizer_daemons = wx.wxFlexGridSizer(0, 1, 0, 0)
+        ui.FlexGridSizer_daemons = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+            -- add daemons list
+            ui.ListView_RL1_daemons = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 125), wx.wxLC_REPORT)
+            ui.ListView_RL1_daemons.AppendItem   = wxListView_insert_item
+            ui.ListView_RL1_daemons.UpdateItem   = wxListView_update_item
+            ui.ListView_RL1_daemons.GetItemTexts = wxListView_get_item_texts
+            ui.ListView_RL1_daemons.MoveItem     = wxListView_move_item
+            ui.ListView_RL1_daemons:InsertColumn(0, "Daemon", wx.wxLIST_FORMAT_LEFT, 250)
+            ui.ListView_RL1_daemons:InsertColumn(1, "Working directory", wx.wxLIST_FORMAT_LEFT, 250)
+            ui.FlexGridSizer_daemons:Add(ui.ListView_RL1_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
             -- create sizer for buttons
-            ui.FlexGridSizer_daemons_buttons = wx.wxFlexGridSizer(0, 7, 0, 0)
-
-                -- create text header that describe usage of fields
-                ui.FlexGridSizer_daemons_buttons:Add(wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Name"), 1, (wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "CWD"), 1, (wx.wxALL+wx.wxALIGN_LEFT+wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_daemons_buttons:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add combobox with daemons names (and parameters)
-                ui.ComboBox_RL1_daemons_name = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), {}, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL1_daemons_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL1_daemons_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_RL1_daemons_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add CWD path
-                ui.ComboBox_RL1_daemons_CWD = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), default_dirs, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL1_daemons_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL1_daemons_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.FlexGridSizer_daemons_buttons:Add(ui.ComboBox_RL1_daemons_CWD, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_daemons_buttons = wx.wxFlexGridSizer(0, 1, 0, 0)
 
                 -- add Add button
                 ui.Button_RL1_daemons_add = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.list_add_16x16)
-                ui.Button_RL1_daemons_add:SetBitmapDisabled(ct.icon.list_add_16x16_dimmed)
                 ui.Button_RL1_daemons_add:SetToolTip("Add")
-                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                if ui.Button_RL1_daemons_add:IsEnabled() then
-                                        local program = ui.ComboBox_RL1_daemons_name:GetValue()
-                                        local cwd     = ui.ComboBox_RL1_daemons_CWD:GetValue()
+                                -- show window with parameters to fill
+                                local dialog = new_data_dialog(ui.window, "Select program", 2)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Command"))
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Working directory"))
+                                local ComboBox_RL1_daemons_name = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_RL1_daemons_CWD = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), default_dirs, wx.wxTE_PROCESS_ENTER)
+
+                                local function save()
+                                        local program = ComboBox_RL1_daemons_name:GetValue()
+                                        local cwd     = ComboBox_RL1_daemons_CWD:GetValue()
 
                                         if not cwd:match("^/.*") then cwd = "/"..cwd end
 
                                         if program ~= "" then
                                                 ui.ListView_RL1_daemons:AppendItem({program, cwd})
-                                                ui.ComboBox_RL1_daemons_name:SetValue("")
-                                                ui.ComboBox_RL1_daemons_CWD:SetValue("")
                                                 modified:yes()
                                         end
+
+                                        dialog:Close()
                                 end
+
+                                ComboBox_RL1_daemons_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_RL1_daemons_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+
+                                ComboBox_RL1_daemons_name:SetFocus()
+                                dialog:Add(ComboBox_RL1_daemons_name)
+                                dialog:Add(ComboBox_RL1_daemons_CWD)
+                                dialog:SetSaveFunction(save)
+                                dialog:ShowModal()
                         end
                 )
 
                 -- add remove button
                 ui.Button_RL1_daemons_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
-                ui.Button_RL1_daemons_remove:SetBitmapDisabled(ct.icon.edit_delete_16x16_dimmed)
                 ui.Button_RL1_daemons_remove:SetToolTip("Remove")
-                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
                                 local n = ui.ListView_RL1_daemons:GetFirstSelected()
@@ -1418,43 +1424,44 @@ local function create_runlevel_1_widgets(parent)
                 -- add: edit button
                 ui.Button_RL1_daemons_edit = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.document_edit_16x16)
                 ui.Button_RL1_daemons_edit:SetToolTip("Edit")
-                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_edit:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                if ui.ListView_RL1_daemons:IsEnabled() == true then
-                                        local sel = ui.ListView_RL1_daemons:GetFirstSelected()
-                                        if sel > -1 then
-                                                local col = ui.ListView_RL1_daemons:GetItemTexts(sel, 2)
-                                                ui.ComboBox_RL1_daemons_name:SetValue(col[1])
-                                                ui.ComboBox_RL1_daemons_CWD:SetValue(col[2])
+                                local selected_item = ui.ListView_RL1_daemons:GetFirstSelected()
+                                if selected_item > -1 then
+                                        -- show window with parameters to fill
+                                        local dialog = new_data_dialog(ui.window, "Entry modification", 2)
+                                        dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Command"))
+                                        dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Working directory"))
+                                        local ComboBox_RL1_daemons_name = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
+                                        local ComboBox_RL1_daemons_CWD = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150,-1), default_dirs, wx.wxTE_PROCESS_ENTER)
 
-                                                ui.Button_RL1_daemons_add:Enable(false)
-                                                ui.Button_RL1_daemons_remove:Enable(false)
-                                                ui.Button_RL1_daemons_up:Enable(false)
-                                                ui.Button_RL1_daemons_down:Enable(false)
-                                                ui.ListView_RL1_daemons:Enable(false)
+                                        local col = ui.ListView_RL1_daemons:GetItemTexts(selected_item, 2)
+                                        ComboBox_RL1_daemons_name:SetValue(col[1])
+                                        ComboBox_RL1_daemons_CWD:SetValue(col[2])
+
+                                        local function save()
+                                                local program = ComboBox_RL1_daemons_name:GetValue()
+                                                local cwd     = ComboBox_RL1_daemons_CWD:GetValue()
+
+                                                if not cwd:match("^/.*") then cwd = "/"..cwd end
+
+                                                if program ~= "" then
+                                                        ui.ListView_RL1_daemons:UpdateItem(selected_item, {program, cwd})
+                                                        modified:yes()
+                                                end
+
+                                                dialog:Close()
                                         end
-                                else
-                                        local program = ui.ComboBox_RL1_daemons_name:GetValue()
-                                        local cwd     = ui.ComboBox_RL1_daemons_CWD:GetValue()
 
-                                        if not cwd:match("^/.*") then cwd = "/"..cwd end
+                                        ComboBox_RL1_daemons_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                        ComboBox_RL1_daemons_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
 
-                                        if program ~= "" then
-                                                local sel = ui.ListView_RL1_daemons:GetFirstSelected()
-                                                ui.ListView_RL1_daemons:UpdateItem(sel, {program, cwd})
-                                                ui.ListView_RL1_daemons:Select(sel, true)
-                                                ui.ComboBox_RL1_daemons_name:SetValue("")
-                                                ui.ComboBox_RL1_daemons_CWD:SetValue("")
-
-                                                ui.Button_RL1_daemons_add:Enable(true)
-                                                ui.Button_RL1_daemons_remove:Enable(true)
-                                                ui.Button_RL1_daemons_up:Enable(true)
-                                                ui.Button_RL1_daemons_down:Enable(true)
-                                                ui.ListView_RL1_daemons:Enable(true)
-
-                                                modified:yes()
-                                        end
+                                        ComboBox_RL1_daemons_name:SetFocus()
+                                        dialog:Add(ComboBox_RL1_daemons_name)
+                                        dialog:Add(ComboBox_RL1_daemons_CWD)
+                                        dialog:SetSaveFunction(save)
+                                        dialog:ShowModal()
                                 end
                         end
                 )
@@ -1462,27 +1469,17 @@ local function create_runlevel_1_widgets(parent)
                 -- add: array up button
                 ui.Button_RL1_daemons_up = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL1_daemons_up:SetToolTip("Move up")
-                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(-1, 2) end)
 
                 -- add: array down button
                 ui.Button_RL1_daemons_down = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL1_daemons_down:SetToolTip("Move down")
-                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(1, 2) end)
 
                 -- add buttons to group
-                ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-            -- add daemons list
-            ui.ListView_RL1_daemons = wx.wxListView(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 125), wx.wxLC_REPORT)
-            ui.ListView_RL1_daemons.AppendItem   = wxListView_insert_item
-            ui.ListView_RL1_daemons.UpdateItem   = wxListView_update_item
-            ui.ListView_RL1_daemons.GetItemTexts = wxListView_get_item_texts
-            ui.ListView_RL1_daemons.MoveItem     = wxListView_move_item
-            ui.ListView_RL1_daemons:InsertColumn(0, "Daemon", wx.wxLIST_FORMAT_LEFT, 250)
-            ui.ListView_RL1_daemons:InsertColumn(1, "Working directory", wx.wxLIST_FORMAT_LEFT, 250)
-            ui.FlexGridSizer_daemons:Add(ui.ListView_RL1_daemons, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
 
             -- add group to runlevel 1 panel
             ui.StaticBoxSizer_daemons:Add(ui.FlexGridSizer_daemons, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -1490,38 +1487,53 @@ local function create_runlevel_1_widgets(parent)
 
         -- create storage initialization group
         ui.StaticBoxSizer_storage_init = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_1, "Storage initialization")
-        ui.FlexGridSizer_storage_init = wx.wxFlexGridSizer(0, 1, 0, 0)
+        ui.FlexGridSizer_storage_init = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+            -- create list with added cards
+            ui.ListBox_RL1_storage  = wx.wxListBox(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
+            ui.FlexGridSizer_storage_init:Add(ui.ListBox_RL1_storage, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
             -- create button sizer
-            ui.FlexGridSizer_storage_init_buttons = wx.wxFlexGridSizer(0, 4, 0, 0)
-
-                -- add combobox with storage file path
-                ui.FlexGridSizer_storage_init_buttons:Add(wx.wxStaticText(ui.Panel_runlevel_1, wx.wxID_ANY, "Storage path"), 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL1_storage_file = wx.wxComboBox(ui.Panel_runlevel_1, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125,-1), {})
-                ui.FlexGridSizer_storage_init_buttons:Add(ui.ComboBox_RL1_storage_file, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_storage_init_buttons = wx.wxFlexGridSizer(0, 1, 0, 0)
 
                 -- add Add button
-                ui.Button_RL1_storage_add = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_RL1_storage_add = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.list_add_16x16)
+                ui.Button_RL1_storage_add:SetToolTip("Add")
+                ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_add, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_storage_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local src_file = ui.ComboBox_RL1_storage_file:GetValue()
-                                if src_file ~= "" then
-                                        ui.ListBox_RL1_storage:Append(src_file)
-                                        ui.ComboBox_RL1_storage_file:SetValue("")
-                                        modified:yes()
+                                -- show window with parameters to fill
+                                local dialog = new_data_dialog(ui.window, "Select storage device", 1)
+                                local ComboBox_RL1_storage_file = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(300,-1), ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
+
+                                local function save()
+                                        local src_file = ComboBox_RL1_storage_file:GetValue()
+                                        if src_file ~= "" then
+                                                ui.ListBox_RL1_storage:Append(src_file)
+                                                modified:yes()
+                                        end
+
+                                        dialog:Close()
                                 end
+
+                                ComboBox_RL1_storage_file:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_RL1_storage_file:SetFocus()
+                                dialog:Add(ComboBox_RL1_storage_file)
+                                dialog:SetSaveFunction(save)
+                                dialog:ShowModal()
                         end
                 )
 
                 -- add remove button
-                ui.Button_RL1_storage_remove = wx.wxButton(ui.Panel_runlevel_1, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.Button_RL1_storage_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL1_daemons_remove:SetToolTip("Remove")
+                ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_storage_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local sel = ui.ListBox_RL1_storage:GetSelection()
-                                local t   = {}
-                                for i = 0, ui.ListBox_RL1_storage:GetCount() do
+                                local sel   = ui.ListBox_RL1_storage:GetSelection()
+                                local t     = {}
+                                local count = ui.ListBox_RL1_storage:GetCount()
+                                for i = 0, count - 1 do
                                         if i ~= sel then
                                                 local str = ui.ListBox_RL1_storage:GetString(i)
                                                 if str ~= "" then
@@ -1532,16 +1544,13 @@ local function create_runlevel_1_widgets(parent)
 
                                 ui.ListBox_RL1_storage:Clear()
                                 ui.ListBox_RL1_storage:Append(t)
+                                ui.ListBox_RL1_storage:SetSelection(ifs(sel >= count - 1, count - 2, sel))
                                 modified:yes()
                         end
                 )
 
                 -- add button sizer to the storage initialization group
-                ui.FlexGridSizer_storage_init:Add(ui.FlexGridSizer_storage_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-            -- create list with added cards
-            ui.ListBox_RL1_storage  = wx.wxListBox(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
-            ui.FlexGridSizer_storage_init:Add(ui.ListBox_RL1_storage, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_storage_init:Add(ui.FlexGridSizer_storage_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
 
             -- add group to main panel
             ui.StaticBoxSizer_storage_init:Add(ui.FlexGridSizer_storage_init, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
@@ -1878,15 +1887,11 @@ end
 function startup:refresh()
         ui.window:Hide()
 
+        app_list:reload()
         FS_list:reload()
+
         ui.Choice_RLB_root_FS:Clear()
         ui.Choice_RLB_root_FS:Append(FS_list:get_list())
---         ui.Choice_RLB_other_FS_name:Clear() FIXME
---         ui.Choice_RLB_other_FS_name:Append(FS_list:get_list()) FIXME
-
-        app_list:reload()
-        ui.ComboBox_RL1_daemons_name:Clear()
-        ui.ComboBox_RL1_daemons_name:Append(app_list:get_list())
 
         load_configuration()
 
