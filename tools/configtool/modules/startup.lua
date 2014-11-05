@@ -189,6 +189,57 @@ local function new_app_list()
 end
 
 
+--------------------------------------------------------------------------------
+-- @brief  Create universal data dialog
+-- @param  parent       parent object
+-- @param  dialog_name  dialog name
+-- @param  grid_size    the size of flex grid sizer used to store user's objects
+-- @return New object
+--------------------------------------------------------------------------------
+local function new_data_dialog(parent, dialog_name, grid_size)
+        local self = {}
+
+        self.ShowModal = function(self)
+                -- add sizers to main sizer
+                self._FlexGridSizer_main:Fit(self._dialog)
+                self._FlexGridSizer_main:SetSizeHints(self._dialog)
+                self._dialog:ShowModal()
+        end
+
+        self.Add = function(self, object)
+                self._FlexGridSizer_fields:Add(object, 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 5)
+        end
+
+        self.GetHandle = function(self)
+                return self._dialog
+        end
+
+        self.SetSaveFunction = function(self, func)
+                self._Button_OK:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, func)
+        end
+
+        self.Close = function(self)
+                self._dialog:Destroy()
+        end
+
+        -- create basic objects
+        self._dialog               = wx.wxDialog(parent, wx.wxID_ANY, dialog_name)
+        self._FlexGridSizer_main   = wx.wxFlexGridSizer(0, 1, 0, 0)
+        self._FlexGridSizer_fields = wx.wxFlexGridSizer(0, grid_size, 0, 0)
+        self._BoxSizer_buttons     = wx.wxBoxSizer(wx.wxHORIZONTAL)
+        self._Button_Cancel        = wx.wxButton(self._dialog, wx.wxNewId(), "Cancel")
+        self._Button_OK            = wx.wxButton(self._dialog, wx.wxNewId(), "OK")
+        self._BoxSizer_buttons:Add(self._Button_Cancel, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
+        self._BoxSizer_buttons:Add(self._Button_OK, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
+        self._Button_Cancel:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self._dialog:Destroy() end)
+        self._FlexGridSizer_main:Add(self._FlexGridSizer_fields, 1, (wx.wxALL+wx.wxEXPAND+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+        self._FlexGridSizer_main:Add(self._BoxSizer_buttons, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 0)
+        self._dialog:SetSizer(self._FlexGridSizer_main)
+
+        return self
+end
+
+
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
@@ -838,32 +889,38 @@ local function create_boot_widgets(parent)
 
         -- folders group
         ui.StaticBoxSizer_boot_folders_0 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_boot, "Create folders")
-        ui.FlexGridSizer_boot_folders_1 = wx.wxFlexGridSizer(0, 1, 0, 0)
+        ui.FlexGridSizer_boot_folders_1 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-            -- new folder sizer
-            ui.FlexGridSizer_boot_folders_2 = wx.wxFlexGridSizer(0, 5, 0, 0)
+            -- add folder list
+            ui.ListBox_RLB_folders = wx.wxListBox(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
+            ui.FlexGridSizer_boot_folders_1:Add(ui.ListBox_RLB_folders, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
-                -- folder name combobox
-                ui.ComboBox_RLB_folder_name = wx.wxComboBox(ui.Panel_boot, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), default_dirs, wx.wxTE_PROCESS_ENTER)
-                ui.FlexGridSizer_boot_folders_2:Add(ui.ComboBox_RLB_folder_name, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RLB_folder_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RLB_folder_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
+                -- new folder sizer
+                ui.FlexGridSizer_boot_folders_2 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
                 -- add button
                 ui.Button_RLB_folder_add = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.list_add_16x16)
                 ui.Button_RLB_folder_add:SetToolTip("Add")
-                ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RLB_folder_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local dirname = ui.ComboBox_RLB_folder_name:GetValue()
+                                local dirname = ""
+
+                                -- show window with parameters to fill
+                                local dialog = new_data_dialog(ui.window, "Enter folder name", 2)
+                                local ComboBox_folder_name = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), default_dirs, wx.wxTE_PROCESS_ENTER)
+                                local function save() dirname = ComboBox_folder_name:GetValue() dialog:Close() end
+                                ComboBox_folder_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() save() end)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Folder name"))
+                                dialog:Add(ComboBox_folder_name)
+                                dialog:SetSaveFunction(save)
+                                dialog:ShowModal()
+
                                 if dirname ~= "" then
                                         if not dirname:match("^/.*") then dirname = "/"..dirname end
 
                                         ui.ListBox_RLB_folders:InsertItems({dirname}, ui.ListBox_RLB_folders:GetCount())
                                         ui.ListBox_RLB_folders:SetSelection(ui.ListBox_RLB_folders:GetCount() - 1)
-                                        ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
-                                        ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname)
-                                        ui.ComboBox_RL2_app_start_CWD:Append(dirname)
-                                        ui.ComboBox_RLB_folder_name:SetValue("")
                                         modified:yes()
                                 end
                         end
@@ -872,12 +929,13 @@ local function create_boot_widgets(parent)
                 -- remove button
                 ui.Button_RLB_folder_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
                 ui.Button_RLB_folder_remove:SetToolTip("Remove")
-                ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_remove, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_remove, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RLB_folder_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local sel = ui.ListBox_RLB_folders:GetSelection()
-                                local t   = {}
-                                for i = 0, ui.ListBox_RLB_folders:GetCount() do
+                                local sel   = ui.ListBox_RLB_folders:GetSelection()
+                                local t     = {}
+                                local count = ui.ListBox_RLB_folders:GetCount()
+                                for i = 0, count - 1 do
                                         if i ~= sel then
                                                 local str = ui.ListBox_RLB_folders:GetString(i)
                                                 if str ~= "" then
@@ -888,6 +946,8 @@ local function create_boot_widgets(parent)
 
                                 ui.ListBox_RLB_folders:Clear()
                                 ui.ListBox_RLB_folders:InsertItems(t, 0)
+                                ui.ListBox_RLB_folders:SetSelection(sel)
+
                                 ui.ComboBox_RLB_other_FS_mntpt:Clear()
                                 ui.ComboBox_RLB_other_FS_mntpt:Append(t)
                                 ui.ComboBox_RL2_app_start_CWD:Clear()
@@ -897,14 +957,10 @@ local function create_boot_widgets(parent)
                 )
 
                 -- add new folder sizer to folder group
-                ui.FlexGridSizer_boot_folders_1:Add(ui.FlexGridSizer_boot_folders_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-            -- add folder list
-            ui.ListBox_RLB_folders = wx.wxListBox(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
-            ui.FlexGridSizer_boot_folders_1:Add(ui.ListBox_RLB_folders, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_boot_folders_1:Add(ui.FlexGridSizer_boot_folders_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
 
             -- add sizers
-            ui.StaticBoxSizer_boot_folders_0:Add(ui.FlexGridSizer_boot_folders_1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.StaticBoxSizer_boot_folders_0:Add(ui.FlexGridSizer_boot_folders_1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
             ui.FlexGridSizer_boot:Add(ui.StaticBoxSizer_boot_folders_0, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- Additional file systems group
