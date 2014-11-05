@@ -527,13 +527,13 @@ local function load_configuration()
 
         -- load folders to create
         ui.ListBox_RLB_folders:Clear()
---         ui.ComboBox_RLB_other_FS_mntpt:Clear()
+--         ui.ComboBox_RLB_other_FS_mntpt:Clear() FIXME
         ui.ComboBox_RL1_FS_mount_mntpt:Clear()
         ui.ComboBox_RL2_app_start_CWD:Clear()
         for i = 1, #cfg.runlevel_boot.folders do
                 local dirname = cfg.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
---                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname)
+--                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname) FIXME
                 ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname)
                 ui.ComboBox_RL2_app_start_CWD:Append(dirname)
         end
@@ -854,7 +854,7 @@ end
 -- @param  parent       parent window
 -- @return Panel object
 --------------------------------------------------------------------------------
-local function create_boot_widgets(parent)
+local function create_runlevel_boot_widgets(parent)
         -- create boot panel
         ui.Panel_boot = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_boot = wx.wxFlexGridSizer(0, 1, 0, 0)
@@ -980,7 +980,6 @@ local function create_boot_widgets(parent)
 
             -- add Add buttons
             ui.Button_other_FS_add = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.list_add_16x16)
-            ui.Button_other_FS_add:SetBitmapDisabled(ct.icon.list_add_16x16_dimmed)
             ui.Button_other_FS_add:SetToolTip("Add")
             ui.FlexGridSizer_other_FS_2:Add(ui.Button_other_FS_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.Button_other_FS_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
@@ -1023,7 +1022,6 @@ local function create_boot_widgets(parent)
 
             -- add remove button
             ui.Button_RLB_other_FS_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
-            ui.Button_RLB_other_FS_remove:SetBitmapDisabled(ct.icon.edit_delete_16x16_dimmed)
             ui.Button_RLB_other_FS_remove:SetToolTip("Remove")
             ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.Button_RLB_other_FS_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
@@ -1133,73 +1131,69 @@ local function create_runlevel_0_widgets(parent)
 
         -- driver initialization group
         ui.StaticBoxSizer_drv_init = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_0, "Drivers initialization")
-        ui.FlexGridSizer_drv_init = wx.wxFlexGridSizer(0, 1, 0, 0)
+        ui.FlexGridSizer_drv_init = wx.wxFlexGridSizer(0, 2, 0, 0)
+
+            -- add list box
+            ui.ListView_RL0_drv_list = wx.wxListView(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 300), wx.wxLC_REPORT)
+            ui.ListView_RL0_drv_list.AppendItem   = wxListView_insert_item
+            ui.ListView_RL0_drv_list.GetItemTexts = wxListView_get_item_texts
+            ui.ListView_RL0_drv_list.UpdateItem   = wxListView_update_item
+            ui.ListView_RL0_drv_list.MoveItem     = wxListView_move_item
+            ui.ListView_RL0_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
+            ui.ListView_RL0_drv_list:InsertColumn(1, "Node path", wx.wxLIST_FORMAT_LEFT, 300)
+            ui.FlexGridSizer_drv_init:Add(ui.ListView_RL0_drv_list, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
             -- driver initialization choices sizer
-            ui.FlexGridSizer_drv_init_sel = wx.wxFlexGridSizer(0, 7, 0, 0)
-
-                -- driver initialization header
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Driver name", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_drv_init_sel:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_0, wx.wxID_ANY, "Node path", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer_drv_init_sel:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.FlexGridSizer_drv_init_sel:Add(0,0,1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add: driver selection choice
-                ui.Choice_RL0_drv_name = wx.wxChoice(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Choice_RL0_drv_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.Choice_RL0_drv_name:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED,
-                        function()
-                                local str = ui.Choice_RL0_drv_name:GetString(ui.Choice_RL0_drv_name:GetSelection())
-                                if str ~= "" then
-                                        ui.ComboBox_RL0_drv_node:SetValue("/dev/"..str)
-                                else
-                                        ui.ComboBox_RL0_drv_node:SetValue("")
-                                end
-                        end
-                )
-
-                -- add: driver node path
-                ui.ComboBox_RL0_drv_node = wx.wxComboBox(ui.Panel_runlevel_0, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"})
-                ui.FlexGridSizer_drv_init_sel:Add(ui.ComboBox_RL0_drv_node, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_drv_init_buttons = wx.wxFlexGridSizer(0, 1, 0, 0)
 
                 -- add: Add button
                 ui.Button_RL0_drv_init_add = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.list_add_16x16)
-                ui.Button_RL0_drv_init_add:SetBitmapDisabled(ct.icon.list_add_16x16_dimmed)
                 ui.Button_RL0_drv_init_add:SetToolTip("Add")
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                local drv_name  = ui.Choice_RL0_drv_name:GetString(ui.Choice_RL0_drv_name:GetSelection())
-                                local node_path = ui.ComboBox_RL0_drv_node:GetValue()
+                                -- show window with parameters to fill
+                                local dialog = new_data_dialog(ui.window, "Select driver", 2)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Driver name"))
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Node path"))
+                                local Choice_RL0_drv_name   = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
+                                local ComboBox_RL0_drv_node = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"})
 
-                                if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
-                                        ui.ListView_RL0_drv_list:AppendItem({drv_name, node_path})
-                                        ui.Choice_RL0_drv_name:SetSelection(0)
-                                        ui.ComboBox_RL0_drv_node:SetValue("")
-
-                                        if node_path ~= "none" then
-                                                ui.ComboBox_RL0_sys_msg_file:Append(node_path)
-                                                ui.ComboBox_RL1_storage_file:Append(node_path)
-                                                ui.ComboBox_RL2_app_start_stdin:Append(node_path)
-                                                ui.ComboBox_RL2_app_start_stdout:Append(node_path)
-                                                ui.ComboBox_RL2_app_start_stderr:Append(node_path)
-                                                ui.ComboBox_RL2_sys_msg_file:Append(node_path)
+                                Choice_RL0_drv_name:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                                        function()
+                                                local str = Choice_RL0_drv_name:GetString(Choice_RL0_drv_name:GetSelection())
+                                                if str ~= "" then
+                                                        ComboBox_RL0_drv_node:SetValue("/dev/"..str)
+                                                else
+                                                        ComboBox_RL0_drv_node:SetValue("")
+                                                end
                                         end
-                                        modified:yes()
+                                )
+
+                                local function save()
+                                        local drv_name  = Choice_RL0_drv_name:GetString(Choice_RL0_drv_name:GetSelection())
+                                        local node_path = ComboBox_RL0_drv_node:GetValue()
+
+                                        if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
+                                                ui.ListView_RL0_drv_list:AppendItem({drv_name, node_path})
+                                                modified:yes()
+                                        end
+
+                                        dialog:Close()
                                 end
+
+                                Choice_RL0_drv_name:SetFocus()
+                                dialog:Add(Choice_RL0_drv_name)
+                                dialog:Add(ComboBox_RL0_drv_node)
+                                dialog:SetSaveFunction(save)
+                                dialog:ShowModal()
                         end
                 )
 
                 -- add: remove button
                 ui.Button_RL0_drv_init_remove = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.edit_delete_16x16)
-                ui.Button_RL0_drv_init_remove:SetBitmapDisabled(ct.icon.edit_delete_16x16_dimmed)
                 ui.Button_RL0_drv_init_remove:SetToolTip("Remove")
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
                                 local n = ui.ListView_RL0_drv_list:GetFirstSelected()
@@ -1211,71 +1205,54 @@ local function create_runlevel_0_widgets(parent)
                                         n = ui.ListView_RL0_drv_list:GetNextSelected(-1)
                                         updated = true
                                 end
-
-                                if updated then
-                                        local t = {}
-                                        for i = 0, ui.ListView_RL0_drv_list:GetItemCount() - 1 do
-                                                local col = ui.ListView_RL0_drv_list:GetItemTexts(i, 2)
-
-                                                if col[1] ~= "none" then
-                                                        table.insert(t, col[2])
-                                                end
-                                        end
-
-                                        ui.ComboBox_RL0_sys_msg_file:Clear()
-                                        ui.ComboBox_RL0_sys_msg_file:Append(t)
-                                        ui.ComboBox_RL1_storage_file:Clear()
-                                        ui.ComboBox_RL1_storage_file:Append(t)
-                                        ui.ComboBox_RL2_app_start_stdin:Clear()
-                                        ui.ComboBox_RL2_app_start_stdin:Append(t)
-                                        ui.ComboBox_RL2_app_start_stdout:Clear()
-                                        ui.ComboBox_RL2_app_start_stdout:Append(t)
-                                        ui.ComboBox_RL2_app_start_stderr:Clear()
-                                        ui.ComboBox_RL2_app_start_stderr:Append(t)
-                                        ui.ComboBox_RL2_sys_msg_file:Clear()
-                                        ui.ComboBox_RL2_sys_msg_file:Append(t)
-                                end
                         end
                 )
 
                 -- add: edit button
                 ui.Button_RL0_drv_init_edit = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.document_edit_16x16)
                 ui.Button_RL0_drv_init_edit:SetToolTip("Edit")
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_edit:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
-                                if ui.ListView_RL0_drv_list:IsEnabled() == true then
-                                        local sel = ui.ListView_RL0_drv_list:GetFirstSelected()
-                                        if sel > -1 then
-                                                local col = ui.ListView_RL0_drv_list:GetItemTexts(sel, 2)
-                                                ui.Choice_RL0_drv_name:SetSelection(drv_list:get_index_of(col[1]) - 1)
-                                                ui.ComboBox_RL0_drv_node:SetValue(col[2])
+                                local selected_item = ui.ListView_RL0_drv_list:GetFirstSelected()
+                                if selected_item > -1 then
+                                        -- show window with parameters to fill
+                                        local dialog = new_data_dialog(ui.window, "Select driver", 2)
+                                        dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Driver name"))
+                                        dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Node path"))
+                                        local Choice_RL0_drv_name   = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
+                                        local ComboBox_RL0_drv_node = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"})
 
-                                                ui.Button_RL0_drv_init_add:Enable(false)
-                                                ui.Button_RL0_drv_init_remove:Enable(false)
-                                                ui.Button_RL0_drv_init_up:Enable(false)
-                                                ui.Button_RL0_drv_init_down:Enable(false)
-                                                ui.ListView_RL0_drv_list:Enable(false)
+                                        local col = ui.ListView_RL0_drv_list:GetItemTexts(selected_item, 2)
+                                        Choice_RL0_drv_name:SetSelection(drv_list:get_index_of(col[1]) - 1)
+                                        ComboBox_RL0_drv_node:SetValue(col[2])
+
+                                        Choice_RL0_drv_name:Connect(wx.wxEVT_COMMAND_CHOICE_SELECTED,
+                                                function()
+                                                        local str = Choice_RL0_drv_name:GetString(Choice_RL0_drv_name:GetSelection())
+                                                        if str ~= "" then
+                                                                ComboBox_RL0_drv_node:Append("/dev/"..str)
+                                                        end
+                                                end
+                                        )
+
+                                        local function save()
+                                                local drv_name  = Choice_RL0_drv_name:GetString(Choice_RL0_drv_name:GetSelection())
+                                                local node_path = ComboBox_RL0_drv_node:GetValue()
+
+                                                if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
+                                                        ui.ListView_RL0_drv_list:UpdateItem(selected_item, {drv_name, node_path})
+                                                        modified:yes()
+                                                end
+
+                                                dialog:Close()
                                         end
-                                else
-                                        local drv_name  = ui.Choice_RL0_drv_name:GetString(ui.Choice_RL0_drv_name:GetSelection())
-                                        local node_path = ui.ComboBox_RL0_drv_node:GetValue()
 
-                                        if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
-                                                local sel = ui.ListView_RL0_drv_list:GetFirstSelected()
-                                                ui.ListView_RL0_drv_list:UpdateItem(sel, {drv_name, node_path})
-                                                ui.ListView_RL0_drv_list:Select(sel, true)
-                                                ui.Choice_RL0_drv_name:SetSelection(0)
-                                                ui.ComboBox_RL0_drv_node:SetValue("")
-
-                                                ui.Button_RL0_drv_init_add:Enable(true)
-                                                ui.Button_RL0_drv_init_remove:Enable(true)
-                                                ui.Button_RL0_drv_init_up:Enable(true)
-                                                ui.Button_RL0_drv_init_down:Enable(true)
-                                                ui.ListView_RL0_drv_list:Enable(true)
-
-                                                modified:yes()
-                                        end
+                                        Choice_RL0_drv_name:SetFocus()
+                                        dialog:Add(Choice_RL0_drv_name)
+                                        dialog:Add(ComboBox_RL0_drv_node)
+                                        dialog:SetSaveFunction(save)
+                                        dialog:ShowModal()
                                 end
                         end
                 )
@@ -1283,31 +1260,21 @@ local function create_runlevel_0_widgets(parent)
                 -- add: arrow up button
                 ui.Button_RL0_drv_init_up = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL0_drv_init_up:SetToolTip("Move up")
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) end)
 
                 -- add: arrow down button
                 ui.Button_RL0_drv_init_down = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL0_drv_init_down:SetToolTip("Move down")
-                ui.FlexGridSizer_drv_init_sel:Add(ui.Button_RL0_drv_init_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(1, 2) end)
 
                 -- add: driver selection, driver node path, and add button to the group
-                ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_sel, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-            -- add list box
-            ui.ListView_RL0_drv_list = wx.wxListView(ui.Panel_runlevel_0, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 300), wx.wxLC_REPORT)
-            ui.ListView_RL0_drv_list.AppendItem   = wxListView_insert_item
-            ui.ListView_RL0_drv_list.GetItemTexts = wxListView_get_item_texts
-            ui.ListView_RL0_drv_list.UpdateItem   = wxListView_update_item
-            ui.ListView_RL0_drv_list.MoveItem     = wxListView_move_item
-            ui.ListView_RL0_drv_list:InsertColumn(0, "Driver name", wx.wxLIST_FORMAT_LEFT, 200)
-            ui.ListView_RL0_drv_list:InsertColumn(1, "Node path", wx.wxLIST_FORMAT_LEFT, 300)
-            ui.FlexGridSizer_drv_init:Add(ui.ListView_RL0_drv_list, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
 
             -- add driver init group to the panel's sizer
-            ui.StaticBoxSizer_drv_init:Add(ui.FlexGridSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.FlexGridSizer_runlevel_0:Add(ui.StaticBoxSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.StaticBoxSizer_drv_init:Add(ui.FlexGridSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 5)
+            ui.FlexGridSizer_runlevel_0:Add(ui.StaticBoxSizer_drv_init, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
         -- printk configuration for runlevel 0 - group
         ui.StaticBoxSizer_sys_msg = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_0, "System messages")
@@ -1878,7 +1845,7 @@ function startup:create_window(parent)
 
                 -- create main notebook
                 ui.Notebook_runlevels = wx.wxNotebook(ui.window, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.Notebook_runlevels:AddPage(create_boot_widgets(ui.Notebook_runlevels), "Runlevel boot", false)
+                ui.Notebook_runlevels:AddPage(create_runlevel_boot_widgets(ui.Notebook_runlevels), "Runlevel boot", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_0_widgets(ui.Notebook_runlevels), "Runlevel 0", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_1_widgets(ui.Notebook_runlevels), "Runlevel 1", false)
                 ui.Notebook_runlevels:AddPage(create_runlevel_2_widgets(ui.Notebook_runlevels), "Runlevel 2", false)
@@ -1914,8 +1881,8 @@ function startup:refresh()
         FS_list:reload()
         ui.Choice_RLB_root_FS:Clear()
         ui.Choice_RLB_root_FS:Append(FS_list:get_list())
---         ui.Choice_RLB_other_FS_name:Clear()
---         ui.Choice_RLB_other_FS_name:Append(FS_list:get_list())
+--         ui.Choice_RLB_other_FS_name:Clear() FIXME
+--         ui.Choice_RLB_other_FS_name:Append(FS_list:get_list()) FIXME
 
         app_list:reload()
         ui.ComboBox_RL1_daemons_name:Clear()
