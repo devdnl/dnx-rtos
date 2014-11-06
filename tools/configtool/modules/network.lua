@@ -98,9 +98,9 @@ local function load_controls()
 
         -- load basic options
         for i = 0, 5 do ui.TextCtrl_MAC[i]:SetValue(ct:key_read(config.project.key["NETWORK_MAC_ADDR_"..i]):gsub("0x", "")) end
-        for i = 1, 4 do ui.SpinCtrl_static_IP_addr[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_ADDR"..i])) end
-        for i = 1, 4 do ui.SpinCtrl_static_IP_mask[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_MASK"..i])) end
-        for i = 1, 4 do ui.SpinCtrl_static_IP_gw[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_GW"..i])) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_addr[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_ADDR"..i])) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_mask[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_MASK"..i])) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_gw[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_GW"..i])) end
         ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
 
         -- load adv MEM options
@@ -313,9 +313,9 @@ local function save_configuration()
 
         -- save basic options
         for i = 0, 5 do ct:key_write(config.project.key["NETWORK_MAC_ADDR_"..i], "0x"..ui.TextCtrl_MAC[i]:GetValue()) end
-        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_ADDR"..i], tostring(ui.SpinCtrl_static_IP_addr[i]:GetValue())) end
-        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_MASK"..i], tostring(ui.SpinCtrl_static_IP_mask[i]:GetValue())) end
-        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_GW"..i], tostring(ui.SpinCtrl_static_IP_gw[i]:GetValue())) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_ADDR"..i], tostring(ui.TextCtrl_static_IP_addr[i]:GetValue())) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_MASK"..i], tostring(ui.TextCtrl_static_IP_mask[i]:GetValue())) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_GW"..i], tostring(ui.TextCtrl_static_IP_gw[i]:GetValue())) end
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
         -- save adv MEM options
@@ -566,44 +566,39 @@ local function create_basic_options_widgets(parent)
         ui.StaticBoxSizer_static_IP = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_basic, "Static IP configuration")
         ui.FlexGridSizer_static_IP = wx.wxFlexGridSizer(0, 8, 0, 0)
 
-                -- add IP address configuration fields
-                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "IP Address:"), 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.SpinCtrl_static_IP_addr = {}
-                for i = 1, 4 do
-                        ui.SpinCtrl_static_IP_addr[i] = wx.wxSpinCtrl(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(65,-1), 0, 0, 255)
-                        ui.SpinCtrl_static_IP_addr[i]:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                        ui.FlexGridSizer_static_IP:Add(ui.SpinCtrl_static_IP_addr[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                local function add_IP_fields(name, container)
+                        container = {}
+                        ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, name), 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
+                        for i = 1, 4 do
+                                container[i] = wx.wxTextCtrl(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(50,-1), 0, ct.decvalidator)
+                                container[i]:SetMaxLength(3)
+                                container[i]:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,
+                                        function ()
+                                                local val = tonumber(container[i]:GetValue())
+                                                if val ~= nil then
+                                                        if val > 255 then
+                                                                container[i]:SetValue("255")
+                                                                container[i]:SetInsertionPoint(3)
+                                                        end
+                                                end
 
-                        if i < 4 then
-                                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "."), 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+                                                modified:yes()
+                                        end
+                                )
+
+                                ui.FlexGridSizer_static_IP:Add(container[i], 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                                if i < 4 then
+                                        ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "."), 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+                                end
                         end
+
+                        return container
                 end
 
-                -- add IP mask address configuration fields
-                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "IP Mask:"), 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.SpinCtrl_static_IP_mask = {}
-                for i = 1, 4 do
-                        ui.SpinCtrl_static_IP_mask[i] = wx.wxSpinCtrl(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(65,-1), 0, 0, 255)
-                        ui.SpinCtrl_static_IP_mask[i]:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                        ui.FlexGridSizer_static_IP:Add(ui.SpinCtrl_static_IP_mask[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                        if i < 4 then
-                                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "."), 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
-                        end
-                end
-
-                -- add IP gateway address configuration fields
-                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "Gateway IP:"), 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.SpinCtrl_static_IP_gw = {}
-                for i = 1, 4 do
-                        ui.SpinCtrl_static_IP_gw[i] = wx.wxSpinCtrl(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(65,-1), 0, 0, 255)
-                        ui.SpinCtrl_static_IP_gw[i]:Connect(wx.wxEVT_COMMAND_SPINCTRL_UPDATED, function() modified:yes() end)
-                        ui.FlexGridSizer_static_IP:Add(ui.SpinCtrl_static_IP_gw[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                        if i < 4 then
-                                ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "."), 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
-                        end
-                end
+                ui.TextCtrl_static_IP_addr = add_IP_fields("IP Address:")
+                ui.TextCtrl_static_IP_mask = add_IP_fields("IP Mask:")
+                ui.TextCtrl_static_IP_gw   = add_IP_fields("Gateway IP:")
 
                 -- add group to panel's sizer
                 ui.StaticBoxSizer_static_IP:Add(ui.FlexGridSizer_static_IP, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
