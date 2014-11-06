@@ -527,15 +527,9 @@ local function load_configuration()
 
         -- load folders to create
         ui.ListBox_RLB_folders:Clear()
---         ui.ComboBox_RLB_other_FS_mntpt:Clear() FIXME
---         ui.ComboBox_RL1_FS_mount_mntpt:Clear() FIXME
---         ui.ComboBox_RL2_app_start_CWD:Clear() FIXME
         for i = 1, #cfg.runlevel_boot.folders do
                 local dirname = cfg.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
---                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname) FIXME
---                 ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname) FIXME
---                 ui.ComboBox_RL2_app_start_CWD:Append(dirname) FIXME
         end
 
         -- load additional file systems to mount
@@ -551,23 +545,16 @@ local function load_configuration()
         -- load list of drivers to initialize
         ui.ListView_RL0_drv_list:DeleteAllItems()
         ui.ComboBox_RL0_sys_msg_file:Clear()
---         ui.ComboBox_RL1_storage_file:Clear() FIXME
---         ui.ComboBox_RL1_FS_mount_src:Clear() FIXME
         ui.ComboBox_RL2_sys_msg_file:Clear()
---         ui.ComboBox_RL2_app_start_stdin:Clear() FIXME
---         ui.ComboBox_RL2_app_start_stdout:Clear() FIXME
---         ui.ComboBox_RL2_app_start_stderr:Clear() FIXME
 
         for i = 1, #cfg.runlevel_0.driver_init do
                 local item = cfg.runlevel_0.driver_init[i]
                 ui.ListView_RL0_drv_list:AppendItem({item.name, item.node})
-                ui.ComboBox_RL0_sys_msg_file:Append(item.node)
---                 ui.ComboBox_RL1_storage_file:Append(item.node) FIXME
---                 ui.ComboBox_RL1_FS_mount_src:Append(item.node) FIXME
-                ui.ComboBox_RL2_sys_msg_file:Append(item.node)
---                 ui.ComboBox_RL2_app_start_stdin:Append(item.node) FIXME
---                 ui.ComboBox_RL2_app_start_stdout:Append(item.node) FIXME
---                 ui.ComboBox_RL2_app_start_stderr:Append(item.node) FIXME
+
+                if item.node ~= "none" then
+                        ui.ComboBox_RL0_sys_msg_file:Append(item.node)
+                        ui.ComboBox_RL2_sys_msg_file:Append(item.node)
+                end
         end
 
         -- load system messages configuration
@@ -869,6 +856,37 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Remove selected item from the wxListBox
+-- @param  self     wxListBox
+-- @return true if removed, otherwise false
+--------------------------------------------------------------------------------
+local function wxListBox_remove_selected_item(self)
+        local sel   = self:GetSelection()
+        local t     = {}
+        local count = self:GetCount()
+        local r     = false
+
+        if sel > -1 then
+                for i = 0, count - 1 do
+                        if i ~= sel then
+                                local str = self:GetString(i)
+                                if str ~= "" then
+                                        table.insert(t, str)
+                                        r = true
+                                end
+                        end
+                end
+
+                self:Clear()
+                self:Append(t)
+                self:SetSelection(ifs(sel >= count - 1, count - 2, sel))
+        end
+
+        return r
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Show dialog to set/edit mount parameters
 -- @param  edit         true if parameters are editted or false if added
 -- @param  wxListView   wxListView object that contains mount table
@@ -880,8 +898,8 @@ local function show_dialog_add_edit_mount_entry(edit, wxListView)
                 -- show window with parameters to fill
                 local dialog            = new_data_dialog(ui.window, ifs(edit == false, "Add mount parameters", "Entry modification"), 3)
                 local Choice_FS_name    = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
-                local ComboBox_FS_src   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"})
-                local ComboBox_FS_mntpt = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), ui.ListBox_RLB_folders:GetList())
+                local ComboBox_FS_src   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"}, wx.wxTE_PROCESS_ENTER)
+                local ComboBox_FS_mntpt = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), ui.ListBox_RLB_folders:GetList(), wx.wxTE_PROCESS_ENTER)
 
                 if edit == true then
                         local col = wxListView:GetItemTexts(selected_item, 3)
@@ -910,6 +928,9 @@ local function show_dialog_add_edit_mount_entry(edit, wxListView)
                                 dialog:Close()
                         end
                 end
+
+                ComboBox_FS_src:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                ComboBox_FS_mntpt:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
 
                 Choice_FS_name:SetFocus()
                 dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "File system"))
@@ -968,6 +989,7 @@ local function create_runlevel_boot_widgets(parent)
 
             -- add folder list
             ui.ListBox_RLB_folders = wx.wxListBox(ui.Panel_boot, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 150), {}, 0)
+            ui.ListBox_RLB_folders.RemoveSelectedItem = wxListBox_remove_selected_item
             ui.FlexGridSizer_boot_folders_1:Add(ui.ListBox_RLB_folders, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
             ui.ListBox_RLB_folders.GetList = function(self) local t = {} for i = 0, self:GetCount() - 1 do table.insert(t, self:GetString(i)) end return t end
 
@@ -1009,26 +1031,7 @@ local function create_runlevel_boot_widgets(parent)
                 ui.Button_RLB_folder_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
                 ui.Button_RLB_folder_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_remove, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RLB_folder_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                        function()
-                                local sel   = ui.ListBox_RLB_folders:GetSelection()
-                                local t     = {}
-                                local count = ui.ListBox_RLB_folders:GetCount()
-                                for i = 0, count - 1 do
-                                        if i ~= sel then
-                                                local str = ui.ListBox_RLB_folders:GetString(i)
-                                                if str ~= "" then
-                                                        table.insert(t, str)
-                                                end
-                                        end
-                                end
-
-                                ui.ListBox_RLB_folders:Clear()
-                                ui.ListBox_RLB_folders:InsertItems(t, 0)
-                                ui.ListBox_RLB_folders:SetSelection(ifs(sel >= count - 1, count - 2, sel))
-                                modified:yes()
-                        end
-                )
+                ui.Button_RLB_folder_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListBox_RLB_folders:RemoveSelectedItem() then modified:yes() end end)
 
                 -- add new folder sizer to folder group
                 ui.FlexGridSizer_boot_folders_1:Add(ui.FlexGridSizer_boot_folders_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1143,7 +1146,7 @@ local function create_runlevel_0_widgets(parent)
                                 -- show window with parameters to fill
                                 local dialog            = new_data_dialog(ui.window, ifs(edit == false, "Add driver", "Entry modification"), 2)
                                 local Choice_drv_name   = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(150, -1), drv_list:get_list())
-                                local ComboBox_drv_node = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"})
+                                local ComboBox_drv_node = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(150, -1), {"none"}, wx.wxTE_PROCESS_ENTER)
 
                                 if edit == true then
                                         local col = ui.ListView_RL0_drv_list:GetItemTexts(selected_item, 2)
@@ -1175,10 +1178,18 @@ local function create_runlevel_0_widgets(parent)
                                                         ui.ListView_RL0_drv_list:UpdateItem(selected_item, {drv_name, node_path})
                                                 end
 
+                                                ui.ComboBox_RL0_sys_msg_file:Clear()
+                                                ui.ComboBox_RL0_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+
+                                                ui.ComboBox_RL2_sys_msg_file:Clear()
+                                                ui.ComboBox_RL2_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+
                                                 modified:yes()
                                                 dialog:Close()
                                         end
                                 end
+
+                                ComboBox_drv_node:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
 
                                 Choice_drv_name:SetFocus()
                                 dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Driver name"))
@@ -1200,7 +1211,19 @@ local function create_runlevel_0_widgets(parent)
                 ui.Button_RL0_drv_init_remove = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.edit_delete_16x16)
                 ui.Button_RL0_drv_init_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL0_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RL0_drv_list:RemoveSelectedItems() == true then modified:yes() end end)
+                ui.Button_RL0_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                        function()
+                                if ui.ListView_RL0_drv_list:RemoveSelectedItems() == true then
+                                        ui.ComboBox_RL0_sys_msg_file:Clear()
+                                        ui.ComboBox_RL0_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+
+                                        ui.ComboBox_RL2_sys_msg_file:Clear()
+                                        ui.ComboBox_RL2_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+
+                                        modified:yes()
+                                end
+                        end
+                )
 
                 -- add: edit button
                 ui.Button_RL0_drv_init_edit = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.document_edit_16x16)
@@ -1408,6 +1431,7 @@ local function create_runlevel_1_widgets(parent)
 
             -- create list with added cards
             ui.ListBox_RL1_storage  = wx.wxListBox(ui.Panel_runlevel_1, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 110), {}, 0)
+            ui.ListBox_RL1_storage.RemoveSelectedItem = wxListBox_remove_selected_item
             ui.FlexGridSizer_storage_init:Add(ui.ListBox_RL1_storage, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
             -- create button sizer
@@ -1444,26 +1468,7 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_storage_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
                 ui.Button_RL1_daemons_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_storage_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                        function()
-                                local sel   = ui.ListBox_RL1_storage:GetSelection()
-                                local t     = {}
-                                local count = ui.ListBox_RL1_storage:GetCount()
-                                for i = 0, count - 1 do
-                                        if i ~= sel then
-                                                local str = ui.ListBox_RL1_storage:GetString(i)
-                                                if str ~= "" then
-                                                        table.insert(t, str)
-                                                end
-                                        end
-                                end
-
-                                ui.ListBox_RL1_storage:Clear()
-                                ui.ListBox_RL1_storage:Append(t)
-                                ui.ListBox_RL1_storage:SetSelection(ifs(sel >= count - 1, count - 2, sel))
-                                modified:yes()
-                        end
-                )
+                ui.Button_RL1_storage_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListBox_RL1_storage:RemoveSelectedItem() then modified:yes() end end)
 
                 -- add button sizer to the storage initialization group
                 ui.FlexGridSizer_storage_init:Add(ui.FlexGridSizer_storage_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1672,6 +1677,8 @@ local function create_runlevel_2_widgets(parent)
 
                                                 modified:yes()
                                                 dialog:Close()
+                                        else
+                                                ComboBox_program_name:SetFocus()
                                         end
                                 end
 
