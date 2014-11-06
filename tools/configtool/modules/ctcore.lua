@@ -844,7 +844,19 @@ function ct.fs:exists(name)
                 return false
         end
 
-        return os.rename(name, name) and true or false
+        local exist = false
+
+        if os.rename(name, name) ~= true then
+                local f = io.open(name, "rb")
+                if f then
+                        exist = true
+                        f:close()
+                end
+        else
+                exist = true
+        end
+
+        return exist
 end
 
 
