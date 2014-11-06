@@ -246,7 +246,7 @@ end
 local ui = {}
 local ID = {}
 local modified       = ct:new_modify_indicator()
-local default_dirs   = {"/dev", "/home", "/mnt", "/proc", "/srv", "/tmp", "/usr"}
+local default_dirs   = {"/", "/dev", "/home", "/mnt", "/proc", "/srv", "/tmp", "/usr"}
 local FS_list        = new_FS_list()
 local drv_list       = new_driver_list()
 local app_list       = new_app_list()
@@ -529,13 +529,13 @@ local function load_configuration()
         ui.ListBox_RLB_folders:Clear()
 --         ui.ComboBox_RLB_other_FS_mntpt:Clear() FIXME
 --         ui.ComboBox_RL1_FS_mount_mntpt:Clear() FIXME
-        ui.ComboBox_RL2_app_start_CWD:Clear()
+--         ui.ComboBox_RL2_app_start_CWD:Clear() FIXME
         for i = 1, #cfg.runlevel_boot.folders do
                 local dirname = cfg.runlevel_boot.folders[i]
                 ui.ListBox_RLB_folders:Append(dirname)
 --                 ui.ComboBox_RLB_other_FS_mntpt:Append(dirname) FIXME
 --                 ui.ComboBox_RL1_FS_mount_mntpt:Append(dirname) FIXME
-                ui.ComboBox_RL2_app_start_CWD:Append(dirname)
+--                 ui.ComboBox_RL2_app_start_CWD:Append(dirname) FIXME
         end
 
         -- load additional file systems to mount
@@ -554,9 +554,9 @@ local function load_configuration()
 --         ui.ComboBox_RL1_storage_file:Clear() FIXME
 --         ui.ComboBox_RL1_FS_mount_src:Clear() FIXME
         ui.ComboBox_RL2_sys_msg_file:Clear()
-        ui.ComboBox_RL2_app_start_stdin:Clear()
-        ui.ComboBox_RL2_app_start_stdout:Clear()
-        ui.ComboBox_RL2_app_start_stderr:Clear()
+--         ui.ComboBox_RL2_app_start_stdin:Clear() FIXME
+--         ui.ComboBox_RL2_app_start_stdout:Clear() FIXME
+--         ui.ComboBox_RL2_app_start_stderr:Clear() FIXME
 
         for i = 1, #cfg.runlevel_0.driver_init do
                 local item = cfg.runlevel_0.driver_init[i]
@@ -565,9 +565,9 @@ local function load_configuration()
 --                 ui.ComboBox_RL1_storage_file:Append(item.node) FIXME
 --                 ui.ComboBox_RL1_FS_mount_src:Append(item.node) FIXME
                 ui.ComboBox_RL2_sys_msg_file:Append(item.node)
-                ui.ComboBox_RL2_app_start_stdin:Append(item.node)
-                ui.ComboBox_RL2_app_start_stdout:Append(item.node)
-                ui.ComboBox_RL2_app_start_stderr:Append(item.node)
+--                 ui.ComboBox_RL2_app_start_stdin:Append(item.node) FIXME
+--                 ui.ComboBox_RL2_app_start_stdout:Append(item.node) FIXME
+--                 ui.ComboBox_RL2_app_start_stderr:Append(item.node) FIXME
         end
 
         -- load system messages configuration
@@ -779,6 +779,25 @@ local function wxListView_insert_item(self, col)
         end
 
         self:Focus(count)
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Remove selected items form the wxListView
+-- @param  self     wxListView
+-- @return true if removed, otherwise false
+--------------------------------------------------------------------------------
+local function wxListView_remove_selected_items(self)
+        local n = self:GetFirstSelected()
+        local r = false
+
+        while n > -1 do
+                self:DeleteItem(n)
+                n = self:GetNextSelected(-1)
+                r = true
+        end
+
+        return r
 end
 
 
@@ -1772,117 +1791,131 @@ local function create_runlevel_2_widgets(parent)
 
         -- create applications start group
         ui.StaticBoxSizer_RL2_app_start = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_runlevel_2, "Applications start")
-        ui.FlexGridSizer_RL2_app_start = wx.wxFlexGridSizer(0, 1, 0, 0)
-
-            -- add information about daemons
-            ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "NOTE: If you want to start program as daemon set stdin, stdout, and stderr to 'none' or left empty.")
-            ui.StaticText:Wrap(ct.CONTROL_X_SIZE)
-            ui.FlexGridSizer_RL2_app_start:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- create sizer for fields
-            ui.FlexGridSizer_RL2_app_start_fields = wx.wxFlexGridSizer(0, 2, 0, 0)
-
-                -- add program name field
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "Program name")
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_name = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-                ui.ComboBox_RL2_app_start_name:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_name, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add CWD field
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "Working directory")
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_CWD = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-                ui.ComboBox_RL2_app_start_CWD:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_CWD, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add stdin filed
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stdin file")
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_stdin = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-                ui.ComboBox_RL2_app_start_stdin:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stdin, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add stdout filed
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stdout file")
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_stdout = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-                ui.ComboBox_RL2_app_start_stdout:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stdout, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add stderr filed
-                ui.StaticText = wx.wxStaticText(ui.Panel_runlevel_2, wx.wxID_ANY, "stderr file")
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
-                ui.ComboBox_RL2_app_start_stderr = wx.wxComboBox(ui.Panel_runlevel_2, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, wx.wxTE_PROCESS_ENTER)
-                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function() ui.Button_RL2_app_start_add:Command(wx.wxCommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)) end)
-                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
-                ui.ComboBox_RL2_app_start_stderr:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,      function() modified:yes() end)
-                ui.FlexGridSizer_RL2_app_start_fields:Add(ui.ComboBox_RL2_app_start_stderr, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                -- add fields to group
-                ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_fields, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-            -- add Add button
-            ui.Button_RL2_app_start_add = wx.wxButton(ui.Panel_runlevel_2, wx.wxNewId(), "Add", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_RL2_app_start:Add(ui.Button_RL2_app_start_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.Button_RL2_app_start_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                    function()
-                            local program = ui.ComboBox_RL2_app_start_name:GetValue()
-                            local cwd     = ui.ComboBox_RL2_app_start_CWD:GetValue()
-                            local stdin   = ui.ComboBox_RL2_app_start_stdin:GetValue()
-                            local stdout  = ui.ComboBox_RL2_app_start_stdout:GetValue()
-                            local stderr  = ui.ComboBox_RL2_app_start_stderr:GetValue()
-
-                            if not cwd:match("^/.*") then cwd = "/"..cwd end
-                            if stdin  == "" then stdin  = "none" end
-                            if stdout == "" then stdout = "none" end
-                            if stderr == "" then stderr = "none" end
-
-                            if program ~= "" then
-                                    ui.ListView_RL2_app_start:AppendItem({program, cwd, stdin, stdout, stderr})
-                                    ui.ComboBox_RL2_app_start_name:SetValue("")
-                                    ui.ComboBox_RL2_app_start_CWD:SetValue("")
-                                    ui.ComboBox_RL2_app_start_stdin:SetValue("")
-                                    ui.ComboBox_RL2_app_start_stdout:SetValue("")
-                                    ui.ComboBox_RL2_app_start_stderr:SetValue("")
-                                    modified:yes()
-                            end
-                    end
-            )
+        ui.FlexGridSizer_RL2_app_start = wx.wxFlexGridSizer(0, 2, 0, 0)
 
             -- add list
-            ui.ListView_RL2_app_start = wx.wxListView(ui.Panel_runlevel_2, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 250), wx.wxLC_REPORT)
-            ui.ListView_RL2_app_start.AppendItem   = wxListView_insert_item
-            ui.ListView_RL2_app_start.GetItemTexts = wxListView_get_item_texts
+            ui.ListView_RL2_app_start = wx.wxListView(ui.Panel_runlevel_2, wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, 300), wx.wxLC_REPORT)
+            ui.ListView_RL2_app_start.AppendItem          = wxListView_insert_item
+            ui.ListView_RL2_app_start.RemoveSelectedItems = wxListView_remove_selected_items
+            ui.ListView_RL2_app_start.UpdateItem          = wxListView_update_item
+            ui.ListView_RL2_app_start.GetItemTexts        = wxListView_get_item_texts
+            ui.ListView_RL2_app_start.MoveItem            = wxListView_move_item
             ui.ListView_RL2_app_start:InsertColumn(0, "Command", wx.wxLIST_FORMAT_LEFT, 150)
             ui.ListView_RL2_app_start:InsertColumn(1, "Working directory", wx.wxLIST_FORMAT_LEFT, 150)
             ui.ListView_RL2_app_start:InsertColumn(2, "stdin", wx.wxLIST_FORMAT_LEFT, 80)
             ui.ListView_RL2_app_start:InsertColumn(3, "stdout", wx.wxLIST_FORMAT_LEFT, 80)
             ui.ListView_RL2_app_start:InsertColumn(4, "stderr", wx.wxLIST_FORMAT_LEFT, 80)
-            ui.FlexGridSizer_RL2_app_start:Add(ui.ListView_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+            ui.FlexGridSizer_RL2_app_start:Add(ui.ListView_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
 
-            -- add Remove button
-            ui.Button_RL2_app_start_remove = wx.wxButton(ui.Panel_runlevel_2, wx.wxNewId(), "Remove", wx.wxDefaultPosition, wx.wxDefaultSize)
-            ui.FlexGridSizer_RL2_app_start:Add(ui.Button_RL2_app_start_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-            ui.Button_RL2_app_start_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                    function()
-                            local n = ui.ListView_RL2_app_start:GetFirstSelected()
-                            if n > -1 then modified:yes() end
+            -- create sizer for buttons
+            ui.FlexGridSizer_RL2_app_start_buttons = wx.wxFlexGridSizer(0, 1, 0, 0)
 
-                            while n > -1 do
-                                    ui.ListView_RL2_app_start:DeleteItem(n)
-                                    n = ui.ListView_RL2_app_start:GetNextSelected(-1)
-                            end
-                    end
-            )
+                -- function used to show dialog do enter parameters
+                local function RL2_program_add_edit_dialog(edit)
+                        local selected_item = ui.ListView_RL2_app_start:GetFirstSelected()
+                        if selected_item > -1 or edit == false then
+                                -- show window with parameters to fill
+                                local dialog = new_data_dialog(ui.window, ifs(edit == true, "Entry modification", "Add program"), 2)
+                                local ComboBox_program_name   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_program_CWD    = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, default_dirs, wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_program_stdin  = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_program_stdout = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_program_stderr = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
+                                local ToolTip_as_daemon       = "Set stdin, stdout, and stderr to 'none' or left empty to start program as daemon."
+
+                                if edit == true then
+                                        local col = ui.ListView_RL2_app_start:GetItemTexts(selected_item, 5)
+                                        ComboBox_program_name:SetValue(col[1])
+                                        ComboBox_program_CWD:SetValue(col[2])
+                                        ComboBox_program_stdin:SetValue(col[3])
+                                        ComboBox_program_stdout:SetValue(col[4])
+                                        ComboBox_program_stderr:SetValue(col[5])
+                                end
+
+                                local function save()
+                                        local program = ComboBox_program_name:GetValue()
+                                        local cwd     = ComboBox_program_CWD:GetValue()
+                                        local stdin   = ComboBox_program_stdin:GetValue()
+                                        local stdout  = ComboBox_program_stdout:GetValue()
+                                        local stderr  = ComboBox_program_stderr:GetValue()
+
+                                        if not cwd:match("^/.*") then cwd = "/"..cwd end
+                                        if stdin  == "" then stdin  = "none" end
+                                        if stdout == "" then stdout = "none" end
+                                        if stderr == "" then stderr = "none" end
+
+                                        if program ~= "" then
+                                                if edit == true then
+                                                        ui.ListView_RL2_app_start:UpdateItem(selected_item, {program, cwd, stdin, stdout, stderr})
+                                                else
+                                                        ui.ListView_RL2_app_start:AppendItem({program, cwd, stdin, stdout, stderr})
+                                                end
+
+                                                modified:yes()
+                                                dialog:Close()
+                                        end
+                                end
+
+                                ComboBox_program_name:SetFocus()
+                                ComboBox_program_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_program_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_program_stdin:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_program_stdout:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+                                ComboBox_program_stderr:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
+
+                                ComboBox_program_name:SetToolTip("Type program name and parameters.")
+                                ComboBox_program_stdin:SetToolTip(ToolTip_as_daemon)
+                                ComboBox_program_stdout:SetToolTip(ToolTip_as_daemon)
+                                ComboBox_program_stderr:SetToolTip(ToolTip_as_daemon)
+
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Program name"))
+                                dialog:Add(ComboBox_program_name)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "Working directory"))
+                                dialog:Add(ComboBox_program_CWD)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "stdin stream"))
+                                dialog:Add(ComboBox_program_stdin)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "stdout stream"))
+                                dialog:Add(ComboBox_program_stdout)
+                                dialog:Add(wx.wxStaticText(dialog:GetHandle(), wx.wxID_ANY, "stderr stream"))
+                                dialog:Add(ComboBox_program_stderr)
+
+                                dialog:SetSaveFunction(save)
+                                dialog:ShowModal()
+                        end
+                end
+
+                -- add Add button
+                ui.Button_RL2_app_start_add = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.list_add_16x16)
+                ui.Button_RL2_app_start_add:SetToolTip("Add")
+                ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_add, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+                ui.Button_RL2_app_start_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() RL2_program_add_edit_dialog(false) end)
+
+                -- add Remove button
+                ui.Button_RL2_app_start_remove = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL2_app_start_remove:SetToolTip("Remove")
+                ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+                ui.Button_RL2_app_start_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RL2_app_start:RemoveSelectedItems() == true then modified:yes() end end)
+
+                -- add: edit button
+                ui.Button_RL2_app_start_edit = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.document_edit_16x16)
+                ui.Button_RL2_app_start_edit:SetToolTip("Edit")
+                ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_edit, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+                ui.Button_RL2_app_start_edit:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() RL2_program_add_edit_dialog(true) end)
+
+                -- add: arrow up button
+                ui.Button_RL2_app_start_up = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_up_16x16)
+                ui.Button_RL2_app_start_up:SetToolTip("Move up")
+                ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 2) end)
+
+                -- add: arrow down button
+                ui.Button_RL2_app_start_down = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_down_16x16)
+                ui.Button_RL2_app_start_down:SetToolTip("Move down")
+                ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
+                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 2) end)
+
+                -- add fields to group
+                ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
 
             -- add entire group to the panel
             ui.StaticBoxSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
