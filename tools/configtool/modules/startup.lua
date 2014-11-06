@@ -841,7 +841,7 @@ local function wxListView_move_item(self, move, n)
         local sel   = self:GetFirstSelected()
         local count = self:GetItemCount()
 
-        if ((move == -1 and sel > 0) or (move == 1 and sel < count - 1)) and n > 0 then
+        if sel > -1 and n > 0 and ((move == -1 and sel > 0) or (move == 1 and sel < count - 1)) then
                 self:Freeze()
                 local newp = wxListView_get_item_texts(self, sel + move, n)
                 local curr = wxListView_get_item_texts(self, sel, n)
