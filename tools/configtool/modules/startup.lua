@@ -1028,7 +1028,7 @@ local function create_runlevel_boot_widgets(parent)
                 )
 
                 -- remove button
-                ui.Button_RLB_folder_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RLB_folder_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RLB_folder_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_boot_folders_2:Add(ui.Button_RLB_folder_remove, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RLB_folder_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListBox_RLB_folders:RemoveSelectedItem() then modified:yes() end end)
@@ -1066,7 +1066,7 @@ local function create_runlevel_boot_widgets(parent)
                 ui.Button_other_FS_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() show_dialog_add_edit_mount_entry(false, ui.ListView_RLB_other_FS) end)
 
                 -- add: remove button
-                ui.Button_RLB_other_FS_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RLB_other_FS_remove = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RLB_other_FS_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RLB_other_FS_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RLB_other_FS:RemoveSelectedItems() == true then modified:yes() end end)
@@ -1208,7 +1208,7 @@ local function create_runlevel_0_widgets(parent)
                 ui.Button_RL0_drv_init_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() RL0_add_edit_driver_dialog(false) end)
 
                 -- add: remove button
-                ui.Button_RL0_drv_init_remove = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL0_drv_init_remove = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RL0_drv_init_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL0_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
@@ -1395,7 +1395,7 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_daemons_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() RL1_dialog_add_edit_daemon(false) end)
 
                 -- add remove button
-                ui.Button_RL1_daemons_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL1_daemons_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RL1_daemons_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_daemons_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RL1_daemons:RemoveSelectedItems() then modified:yes() end end)
@@ -1465,7 +1465,7 @@ local function create_runlevel_1_widgets(parent)
                 )
 
                 -- add remove button
-                ui.Button_RL1_storage_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL1_storage_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RL1_daemons_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_storage_init_buttons:Add(ui.Button_RL1_storage_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_storage_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListBox_RL1_storage:RemoveSelectedItem() then modified:yes() end end)
@@ -1504,7 +1504,7 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_FS_mount_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() show_dialog_add_edit_mount_entry(false, ui.ListView_RL1_FS_mount) end)
 
                 -- add: remove button
-                ui.Button_RL1_FS_mount_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL1_FS_mount_remove = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RL1_FS_mount_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_FS_mount_buttons:Add(ui.Button_RL1_FS_mount_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL1_FS_mount_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RL1_FS_mount:RemoveSelectedItems() then modified:yes() end end)
@@ -1717,7 +1717,7 @@ local function create_runlevel_2_widgets(parent)
                 ui.Button_RL2_app_start_add:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() RL2_dialog_add_edit_program(false) end)
 
                 -- add Remove button
-                ui.Button_RL2_app_start_remove = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.edit_delete_16x16)
+                ui.Button_RL2_app_start_remove = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.list_remove_16x16)
                 ui.Button_RL2_app_start_remove:SetToolTip("Remove")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_remove, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
                 ui.Button_RL2_app_start_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() if ui.ListView_RL2_app_start:RemoveSelectedItems() == true then modified:yes() end end)
