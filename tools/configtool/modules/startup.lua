@@ -293,8 +293,29 @@ local function generate_init_code(cfg)
         local INITD_TEMPLATE_APP_START         = config.project.path.initd_template_app_start_file:GetValue()
         local INITD_TEMPLATE_APP_FINISH        = config.project.path.initd_template_app_finish_file:GetValue()
         local INITD_TEMPLATE_APP_STREAM_OPEN   = config.project.path.initd_template_app_stream_open_file:GetValue()
+        local INITD_TEMPLATE_FUNC_MSG_MOUNT    = config.project.path.initd_template_msg_mount_func_file:GetValue()
+        local INITD_TEMPLATE_FUNC_INIT_STORAGE = config.project.path.initd_template_init_storage_func_file:GetValue()
+        local INITD_TEMPLATE_FUNC_START_DAEMON = config.project.path.initd_template_start_daemon_func_file:GetValue()
         local INITD_SRC_FILE                   = config.project.path.initd_src_file:GetValue()
 
+        -- append specified functions templates to initd code and when asked again then don't add a new instance
+        local function_added_to_code = {}
+        local function add_function_to_code(func_temp_file)
+                local lines = 0
+                if function_added_to_code[func_temp_file] ~= true then
+                        local regex = "^%s*Function definitions$"
+                        local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
+                        if n then
+                                n = n + 2
+                                lines = ct:apply_template(func_temp_file, INITD_SRC_FILE, {}, n)
+                                function_added_to_code[func_temp_file] = true
+                        end
+                end
+
+                return lines
+        end
+
+        -- ask user that want to overwrite initd code
         local answer = ct:show_question_msg(ct.MAIN_WINDOW_NAME,
                                             "Do you want to generate initd code based on current configuration?\n\n"..
                                             "Click 'Yes' to apply initd configuration and generate new code (current initd code will be OVERWRITTEN).\n\n"..
@@ -312,7 +333,10 @@ local function generate_init_code(cfg)
                 table.insert(tags, {tag = "<!year!>", to = os.date("%Y")})
                 ct:apply_template(INITD_TEMPLATE_FILE, INITD_SRC_FILE, tags, 1)
 
-                -- create runlevel boot code
+
+                -------------------------------
+                -- create runlevel BOOT code --
+                -------------------------------
                 local regex = "^%s*static%s+int%s+run_level_boot%(.*%)$"
                 local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
                 if n then
@@ -345,9 +369,12 @@ local function generate_init_code(cfg)
                         end
                 end
 
-                -- create runlevel 0 code
+
+                ----------------------------
+                -- create runlevel 0 code --
+                ----------------------------
                 local regex = "^%s*static%s+int%s+run_level_0%(.*%)$"
-                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
                 if n then
                         n = n + 2
 
@@ -374,14 +401,19 @@ local function generate_init_code(cfg)
                         end
                 end
 
-                -- create runlevel 1 code
+
+                ----------------------------
+                -- create runlevel 1 code --
+                ----------------------------
                 local regex = "^%s*static%s+int%s+run_level_1%(.*%)$"
-                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
                 if n then
                         n = n + 2
 
                         -- add daemons
                         for i = 1, #cfg.runlevel_1.daemons do
+                                n = n + add_function_to_code(INITD_TEMPLATE_FUNC_START_DAEMON)
+
                                 local daemon = cfg.runlevel_1.daemons[i]
                                 local tags = {}
                                 table.insert(tags, {tag = "<!name!>", to = daemon.name})
@@ -391,6 +423,8 @@ local function generate_init_code(cfg)
 
                         -- initialize SD cards
                         for i = 1, #cfg.runlevel_1.storage_init do
+                                n = n + add_function_to_code(INITD_TEMPLATE_FUNC_INIT_STORAGE)
+
                                 local tags = {}
                                 table.insert(tags, {tag = "<!storage_path!>", to = cfg.runlevel_1.storage_init[i]})
                                 n = n + ct:apply_template(INITD_TEMPLATE_STORAGE_INIT, INITD_SRC_FILE, tags, n)
@@ -398,6 +432,8 @@ local function generate_init_code(cfg)
 
                         -- mount table
                         for i = 1, #cfg.runlevel_1.mount_table do
+                                n = n + add_function_to_code(INITD_TEMPLATE_FUNC_MSG_MOUNT)
+
                                 local item = cfg.runlevel_1.mount_table[i]
                                 local tags = {}
                                 table.insert(tags, {tag = "<!msg!>",         to = "msg_"})
@@ -421,9 +457,12 @@ local function generate_init_code(cfg)
                         end
                 end
 
-                -- create runlevel 2 code
+
+                ----------------------------
+                -- create runlevel 2 code --
+                ----------------------------
                 local regex = "^%s*static%s+int%s+run_level_2%(.*%)$"
-                local n     = ct:find_line(INITD_SRC_FILE, n, regex)
+                local n     = ct:find_line(INITD_SRC_FILE, 1, regex)
                 if n then
                         n = n + 2
 
@@ -432,6 +471,8 @@ local function generate_init_code(cfg)
                                 local app = cfg.runlevel_2.applications[i]
 
                                 if app.stdin == "none" and app.stdout == "none" and app.stderr == "none" then
+                                        n = n + add_function_to_code(INITD_TEMPLATE_FUNC_START_DAEMON)
+
                                         local tags = {}
                                         table.insert(tags, {tag = "<!name!>", to = app.name})
                                         table.insert(tags, {tag = "<!CWD!>", to = app.CWD})
