@@ -201,9 +201,16 @@ local function new_data_dialog(parent, dialog_name, grid_size)
 
         self.ShowModal = function(self)
                 -- add sizers to main sizer
-                self._FlexGridSizer_main:Fit(self._dialog)
-                self._FlexGridSizer_main:SetSizeHints(self._dialog)
-                self._dialog:ShowModal()
+                self._Panel:SetSizer(self._FlexGridSizer_panel)
+                self._FlexGridSizer_panel:Fit(self._Panel)
+                self._FlexGridSizer_panel:SetSizeHints(self._Panel)
+                self._FlexGridSizer_main:Add(self._Panel)
+
+                self._Dialog:SetSizer(self._FlexGridSizer_main)
+                self._FlexGridSizer_main:Fit(self._Dialog)
+                self._FlexGridSizer_main:SetSizeHints(self._Dialog)
+
+                self._Dialog:ShowModal()
         end
 
         self.Add = function(self, object)
@@ -211,7 +218,7 @@ local function new_data_dialog(parent, dialog_name, grid_size)
         end
 
         self.GetHandle = function(self)
-                return self._dialog
+                return self._Panel
         end
 
         self.SetSaveFunction = function(self, func)
@@ -219,22 +226,28 @@ local function new_data_dialog(parent, dialog_name, grid_size)
         end
 
         self.Close = function(self)
-                self._dialog:Destroy()
+                self._Dialog:Destroy()
         end
 
-        -- create basic objects
-        self._dialog               = wx.wxDialog(parent, wx.wxID_ANY, dialog_name)
-        self._FlexGridSizer_main   = wx.wxFlexGridSizer(0, 1, 0, 0)
+        -- create dialog
+        self._Dialog = wx.wxDialog(parent, wx.wxID_ANY, dialog_name)
+        self._FlexGridSizer_main = wx.wxFlexGridSizer(0, 1, 0, 0)
+
+        self._Panel = wx.wxPanel(self._Dialog, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        self._FlexGridSizer_panel = wx.wxFlexGridSizer(0, 1, 0, 0)
+
         self._FlexGridSizer_fields = wx.wxFlexGridSizer(0, grid_size, 0, 0)
-        self._BoxSizer_buttons     = wx.wxBoxSizer(wx.wxHORIZONTAL)
-        self._Button_Cancel        = wx.wxButton(self._dialog, wx.wxNewId(), "Cancel")
-        self._Button_OK            = wx.wxButton(self._dialog, wx.wxNewId(), "OK")
+        self._FlexGridSizer_panel:Add(self._FlexGridSizer_fields, 1, (wx.wxALL+wx.wxEXPAND+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        self._BoxSizer_buttons  = wx.wxBoxSizer(wx.wxHORIZONTAL)
+        self._Button_Cancel = wx.wxButton(self._Panel, wx.wxNewId(), "Cancel")
+        self._Button_Cancel:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self._Dialog:Destroy() end)
         self._BoxSizer_buttons:Add(self._Button_Cancel, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
+
+        self._Button_OK = wx.wxButton(self._Panel, wx.wxNewId(), "OK")
         self._BoxSizer_buttons:Add(self._Button_OK, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
-        self._Button_Cancel:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self._dialog:Destroy() end)
-        self._FlexGridSizer_main:Add(self._FlexGridSizer_fields, 1, (wx.wxALL+wx.wxEXPAND+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
-        self._FlexGridSizer_main:Add(self._BoxSizer_buttons, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 0)
-        self._dialog:SetSizer(self._FlexGridSizer_main)
+
+        self._FlexGridSizer_panel:Add(self._BoxSizer_buttons, 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
 
         return self
 end
@@ -898,13 +911,14 @@ local function show_dialog_add_edit_mount_entry(edit, wxListView)
                 -- show window with parameters to fill
                 local dialog            = new_data_dialog(ui.window, ifs(edit == false, "Add mount parameters", "Entry modification"), 3)
                 local Choice_FS_name    = wx.wxChoice(dialog:GetHandle(), wx.wxNewId(), wx.wxDefaultPosition, wx.wxSize(125, -1), FS_list:get_list())
-                local ComboBox_FS_src   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), {"none"}, wx.wxTE_PROCESS_ENTER)
+                local ComboBox_FS_src   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), ui.ListView_RL0_drv_list:GetNodeList())
                 local ComboBox_FS_mntpt = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(125, -1), ui.ListBox_RLB_folders:GetList(), wx.wxTE_PROCESS_ENTER)
 
                 if edit == true then
                         local col = wxListView:GetItemTexts(selected_item, 3)
                         Choice_FS_name:SetSelection(FS_list:get_index_of(col[1]) - 1)
                         ComboBox_FS_src:SetValue(col[2])
+                        ComboBox_FS_mntpt:Append(col[3])
                         ComboBox_FS_mntpt:SetValue(col[3])
                 end
 
@@ -929,7 +943,6 @@ local function show_dialog_add_edit_mount_entry(edit, wxListView)
                         end
                 end
 
-                ComboBox_FS_src:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
                 ComboBox_FS_mntpt:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
 
                 Choice_FS_name:SetFocus()
@@ -1168,7 +1181,8 @@ local function create_runlevel_0_widgets(parent)
                                 )
 
                                 local function save()
-                                        local drv_name  = Choice_drv_name:GetString(Choice_drv_name:GetSelection())
+                                        local sel       = Choice_drv_name:GetSelection()
+                                        local drv_name  = Choice_drv_name:GetString(ifs(sel > -1, sel, 0))
                                         local node_path = ComboBox_drv_node:GetValue()
 
                                         if drv_name ~= "" and (node_path:match("^/.*") or node_path == "none") then
@@ -1178,11 +1192,15 @@ local function create_runlevel_0_widgets(parent)
                                                         ui.ListView_RL0_drv_list:UpdateItem(selected_item, {drv_name, node_path})
                                                 end
 
+                                                local last = ui.ComboBox_RL0_sys_msg_file:GetValue()
                                                 ui.ComboBox_RL0_sys_msg_file:Clear()
                                                 ui.ComboBox_RL0_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+                                                ui.ComboBox_RL0_sys_msg_file:SetValue(last)
 
+                                                local last = ui.ComboBox_RL2_sys_msg_file:GetValue()
                                                 ui.ComboBox_RL2_sys_msg_file:Clear()
                                                 ui.ComboBox_RL2_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+                                                ui.ComboBox_RL2_sys_msg_file:SetValue(last)
 
                                                 modified:yes()
                                                 dialog:Close()
@@ -1214,11 +1232,15 @@ local function create_runlevel_0_widgets(parent)
                 ui.Button_RL0_drv_init_remove:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED,
                         function()
                                 if ui.ListView_RL0_drv_list:RemoveSelectedItems() == true then
+                                        local last = ui.ComboBox_RL0_sys_msg_file:GetValue()
                                         ui.ComboBox_RL0_sys_msg_file:Clear()
                                         ui.ComboBox_RL0_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+                                        ui.ComboBox_RL0_sys_msg_file:SetValue(last)
 
+                                        local last = ui.ComboBox_RL2_sys_msg_file:GetValue()
                                         ui.ComboBox_RL2_sys_msg_file:Clear()
                                         ui.ComboBox_RL2_sys_msg_file:Append(ui.ListView_RL0_drv_list:GetNodeList())
+                                        ui.ComboBox_RL2_sys_msg_file:SetValue(last)
 
                                         modified:yes()
                                 end
@@ -1370,9 +1392,8 @@ local function create_runlevel_1_widgets(parent)
                                                 end
 
                                                 modified:yes()
+                                                dialog:Close()
                                         end
-
-                                        dialog:Close()
                                 end
 
                                 ComboBox_daemon_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
@@ -1640,10 +1661,10 @@ local function create_runlevel_2_widgets(parent)
                         if selected_item > -1 or edit == false then
                                 -- show window with parameters to fill
                                 local dialog = new_data_dialog(ui.window, ifs(edit == true, "Entry modification", "Add program"), 2)
-                                local ComboBox_program_name   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), app_list:get_list(), wx.wxTE_PROCESS_ENTER)
-                                local ComboBox_program_CWD    = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, default_dirs, wx.wxTE_PROCESS_ENTER)
-                                local ComboBox_program_stdin  = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
-                                local ComboBox_program_stdout = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
+                                local ComboBox_program_name   = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(250,-1), app_list:get_list())
+                                local ComboBox_program_CWD    = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, default_dirs)
+                                local ComboBox_program_stdin  = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList())
+                                local ComboBox_program_stdout = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList())
                                 local ComboBox_program_stderr = wx.wxComboBox(dialog:GetHandle(), wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, ui.ListView_RL0_drv_list:GetNodeList(), wx.wxTE_PROCESS_ENTER)
                                 local ToolTip_as_daemon       = "Set stdin, stdout, and stderr to 'none' or left empty to start program as daemon."
 
@@ -1683,10 +1704,6 @@ local function create_runlevel_2_widgets(parent)
                                 end
 
                                 ComboBox_program_name:SetFocus()
-                                ComboBox_program_name:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
-                                ComboBox_program_CWD:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
-                                ComboBox_program_stdin:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
-                                ComboBox_program_stdout:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
                                 ComboBox_program_stderr:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, save)
 
                                 ComboBox_program_name:SetToolTip("Type program name and parameters.")
