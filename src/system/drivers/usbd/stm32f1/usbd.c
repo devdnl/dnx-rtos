@@ -113,8 +113,6 @@ typedef struct {
         sem_t                  *tx;                     /* interrupt/setup transfer completed semaphore */
         sem_t                  *rx;                     /* interrupt/setup transfer completed semaphore */
         sem_t                  *setup;                  /* setup transfer completed semaphore */
-        volatile bool           rx_done           :1;   /* bulk/isochronous transfer completed flag */
-        volatile bool           tx_done           :1;   /* bulk/isochornous transfer completed flag */
         volatile bool           setup_in_progress :1;   /* flag that indicate setup in progress */
         volatile bool           read_in_progress  :1;   /* flag that indicate read in progress */
         volatile bool           write_in_progress :1;   /* flag that indicate write in progress */
@@ -479,37 +477,20 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
                                         send_ZLP(hdl->minor);
                                 }
                         } else {
-                                bool first = true;
-
                                 while (count) {
                                         size_t len = (count > ep_size) ? ep_size : count;
 
-                                        hdl->tx_done = false;
                                         low_level_pma_write(USB_PMA->EP[hdl->minor].SBF.ADDR_TX, src, len);
                                         USB_PMA->EP[hdl->minor].SBF.COUNT_TX = len;
                                         set_ep_tx_status(hdl->minor, USB_EP_STATUS__VALID);
 
-                                        if ( (  usb_mem->ep_config->ep[hdl->minor].transfer_type == USB_TRANSFER__BULK
-                                             || usb_mem->ep_config->ep[hdl->minor].transfer_type == USB_TRANSFER__ISOCHRONOUS )
-                                           && first == false ) {
-
-                                                while (hdl->tx_done == false);
-                                                semaphore_wait(hdl->tx, 0);
+                                        if (semaphore_wait(hdl->tx, MAX_DELAY_MS) != true) {
+                                                set_ep_tx_status(hdl->minor, USB_EP_STATUS__NAK);
+                                                break;
+                                        } else {
                                                 if (hdl->write_in_progress == false) {
                                                         break;
                                                 }
-
-                                        } else {
-                                                if (semaphore_wait(hdl->tx, MAX_DELAY_MS) != true) {
-                                                        set_ep_tx_status(hdl->minor, USB_EP_STATUS__NAK);
-                                                        break;
-                                                } else {
-                                                        if (hdl->write_in_progress == false) {
-                                                                break;
-                                                        }
-                                                }
-
-                                                first = false;
                                         }
 
                                         n     += len;
@@ -605,33 +586,16 @@ API_MOD_READ(USBD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                         }
                                 }
                         } else {
-                                bool first = true;
-
                                 while (count) {
                                         /* wait for OUT token */
-                                        hdl->rx_done = false;
                                         set_ep_rx_status(hdl->minor, USB_EP_STATUS__VALID);
 
-                                        if ( (  usb_mem->ep_config->ep[hdl->minor].transfer_type == USB_TRANSFER__BULK
-                                             || usb_mem->ep_config->ep[hdl->minor].transfer_type == USB_TRANSFER__ISOCHRONOUS )
-                                           && first == false ) {
-
-                                                while (hdl->rx_done == false);
-                                                semaphore_wait(hdl->rx, 0);
+                                        if (semaphore_wait(hdl->rx, MAX_DELAY_MS) != true) {
+                                                break;
+                                        } else {
                                                 if (hdl->read_in_progress == false) {
                                                         break;
                                                 }
-
-                                        } else {
-                                                if (semaphore_wait(hdl->rx, MAX_DELAY_MS) != true) {
-                                                        break;
-                                                } else {
-                                                        if (hdl->read_in_progress == false) {
-                                                                break;
-                                                        }
-                                                }
-
-                                                first = false;
                                         }
 
                                         /* copy data to user's buffer */
@@ -1377,14 +1341,14 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
                 } else if (ep_flags & USB_EPR_CTR_RX) {
 
                         clear_EPR_CTR_RX(ep_id);
-                        usb_mem->ep[ep_id]->rx_done = true;
                         semaphore_signal_from_ISR(usb_mem->ep[ep_id]->rx, &rx_woken);
+                        rx_woken = true;
 
                 } else if (ep_flags & USB_EPR_CTR_TX) {
 
                         clear_EPR_CTR_TX(ep_id);
-                        usb_mem->ep[ep_id]->tx_done = true;
                         semaphore_signal_from_ISR(usb_mem->ep[ep_id]->tx, &tx_woken);
+                        tx_woken = true;
                 }
         }
 
