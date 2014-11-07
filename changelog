@@ -17,7 +17,7 @@ New Features, Improvements:
 - Eclipse: added Configtool to the External tools
 - GPIO: defined pin that is not connected to any input/output (pin NONE)
 - Added SLRE library (regular expressions)
-- BSP: board support package for zl26arm development board added
+- BSP: board support package for zl26arm and STM32USBcomp development boards added
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
