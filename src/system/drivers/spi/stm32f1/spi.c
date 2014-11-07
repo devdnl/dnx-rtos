@@ -864,7 +864,9 @@ static void select_slave(u8_t major, u8_t minor)
         GPIO_t *GPIO = SPI_cfg[major].CS[minor].port;
         u16_t   mask = SPI_cfg[major].CS[minor].pin_mask;
 
-        GPIO->BRR = mask;
+        if (GPIO) {
+                GPIO->BRR = mask;
+        }
 }
 
 //==============================================================================
@@ -880,7 +882,10 @@ static void deselect_slave(u8_t major)
         for (int minor = 0; minor < SPI_cfg[major].number_of_slaves; minor++) {
                 GPIO_t *GPIO = SPI_cfg[major].CS[minor].port;
                 u16_t   mask = SPI_cfg[major].CS[minor].pin_mask;
-                GPIO->BSRR   = mask;
+
+                if (GPIO) {
+                        GPIO->BSRR = mask;
+                }
         }
 }
 
