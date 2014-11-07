@@ -496,27 +496,20 @@ local function generate_init_code(cfg)
 
                         -- calculate number of applications and streams
                         local number_of_applications = 0
-                        local unique_streams         = {}
+                        local streams                = {}
+                        local number_of_streams      = 0
                         for i = 1, #cfg.runlevel_2.applications do
                                 local app = cfg.runlevel_2.applications[i]
                                 if app.stdin ~= "none" or app.stdout ~= "none" or app.stderr ~= "none" then
                                         number_of_applications = number_of_applications + 1
                                 end
 
-                                unique_streams[app.stdin]  = true
-                                unique_streams[app.stdout] = true
-                                unique_streams[app.stderr] = true
+                                if app.stdin  ~= "none" then table.insert(streams, app.stdin)  end
+                                if app.stdout ~= "none" then table.insert(streams, app.stdout) end
+                                if app.stderr ~= "none" then table.insert(streams, app.stderr) end
                         end
 
-                        if unique_streams["none"] ~= nil then
-                                unique_streams["none"] = nil
-                        end
-
-                        local number_of_streams = 0;
-                        for k, v in pairs(unique_streams) do
-                                unique_streams[k] = number_of_streams
-                                number_of_streams = number_of_streams + 1
-                        end
+                        number_of_streams, streams = ct:table_unique(streams)
 
                         -- add applications
                         if number_of_applications > 0 then
@@ -527,9 +520,9 @@ local function generate_init_code(cfg)
                                 n = n + ct:apply_template(INITD_TEMPLATE_APP_PREPARE, INITD_SRC_FILE, tags, n)
 
                                 -- open streams
-                                for stream_path in pairs(unique_streams) do
+                                for i, stream_path in ipairs(streams) do
                                         local tags = {}
-                                        table.insert(tags, {tag = "<!stream_number!>", to = unique_streams[stream_path]})
+                                        table.insert(tags, {tag = "<!stream_number!>", to = i - 1})
                                         table.insert(tags, {tag = "<!stream_path!>", to = stream_path})
                                         n = n + ct:apply_template(INITD_TEMPLATE_APP_STREAM_OPEN, INITD_SRC_FILE, tags, n)
                                 end
@@ -545,9 +538,9 @@ local function generate_init_code(cfg)
                                                 table.insert(tags, {tag = "<!name!>",   to = app.name})
                                                 table.insert(tags, {tag = "<!CWD!>",    to = app.CWD})
 
-                                                if app.stdin  == "none" then app.stdin  = "NULL" else app.stdin  = "f["..unique_streams[app.stdin].."]" end
-                                                if app.stdout == "none" then app.stdout = "NULL" else app.stdout = "f["..unique_streams[app.stdout].."]" end
-                                                if app.stderr == "none" then app.stderr = "NULL" else app.stderr = "f["..unique_streams[app.stderr].."]" end
+                                                if app.stdin  == "none" then app.stdin  = "NULL" else app.stdin  = "f[".. ct:get_string_index(streams, app.stdin ) - 1 .."]" end
+                                                if app.stdout == "none" then app.stdout = "NULL" else app.stdout = "f[".. ct:get_string_index(streams, app.stdout) - 1 .."]" end
+                                                if app.stderr == "none" then app.stderr = "NULL" else app.stderr = "f[".. ct:get_string_index(streams, app.stderr) - 1 .."]" end
 
                                                 table.insert(tags, {tag = "<!stdin!>",  to = app.stdin})
                                                 table.insert(tags, {tag = "<!stdout!>", to = app.stdout})

@@ -441,6 +441,28 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Function leave only unique values of the table in the order
+-- @param  t        table to modify
+-- @return Number of unique elements and table
+--------------------------------------------------------------------------------
+function ct:table_unique(t)
+        local unique = 0
+        local ut     = {}
+        local u      = {}
+
+        for i,v in ipairs(t) do
+                if u[v] == nil then
+                        u[v] = true
+                        table.insert(ut, v)
+                        unique = unique + 1
+                end
+        end
+
+        return unique, ut
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Function enables/disables selected module
 -- @param  name     name of module (string)
 -- @param  state    new state of module (bool)
