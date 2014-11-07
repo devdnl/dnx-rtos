@@ -3,12 +3,6 @@
 	["ID"]="87f472ea728616a4127b47dc08e5f2d2";
 	["cpu_arch"]="stm32f1";
 	["file"]={
-		["../../config/noarch/loop_flags.h"]={
-			[1.000000]={
-				["key"]="__LOOP_CFG_NUMBER_OF_DEVICES__";
-				["value"]="1";
-			};
-		};
 		["../../config/noarch/sdspi_flags.h"]={
 			[1.000000]={
 				["key"]="__SDSPI_NUMBER_OF_CARDS__";
@@ -1284,8 +1278,6 @@
 				["key"]="__CPU_FAMILY__";
 				["value"]="_STM32F10X_CL_";
 			};
-		};
-		["../../config/stm32f1/crcm_flags.h"]={
 		};
 		["../../config/stm32f1/ethmac_flags.h"]={
 			[1.000000]={
@@ -2937,136 +2929,6 @@
 				["value"]="0";
 			};
 		};
-		["../../config/stm32f1/irq_flags.h"]={
-			[1.000000]={
-				["key"]="__IRQ_LINE_0_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[2.000000]={
-				["key"]="__IRQ_LINE_1_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[3.000000]={
-				["key"]="__IRQ_LINE_2_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[4.000000]={
-				["key"]="__IRQ_LINE_3_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[5.000000]={
-				["key"]="__IRQ_LINE_4_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[6.000000]={
-				["key"]="__IRQ_LINE_5_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[7.000000]={
-				["key"]="__IRQ_LINE_6_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[8.000000]={
-				["key"]="__IRQ_LINE_7_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[9.000000]={
-				["key"]="__IRQ_LINE_8_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[10.000000]={
-				["key"]="__IRQ_LINE_9_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[11.000000]={
-				["key"]="__IRQ_LINE_10_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[12.000000]={
-				["key"]="__IRQ_LINE_11_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[13.000000]={
-				["key"]="__IRQ_LINE_12_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[14.000000]={
-				["key"]="__IRQ_LINE_13_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[15.000000]={
-				["key"]="__IRQ_LINE_14_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[16.000000]={
-				["key"]="__IRQ_LINE_15_MODE__";
-				["value"]="_IRQ_MODE_DISABLED";
-			};
-			[17.000000]={
-				["key"]="__IRQ_LINE_0_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[18.000000]={
-				["key"]="__IRQ_LINE_1_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[19.000000]={
-				["key"]="__IRQ_LINE_2_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[20.000000]={
-				["key"]="__IRQ_LINE_3_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[21.000000]={
-				["key"]="__IRQ_LINE_4_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[22.000000]={
-				["key"]="__IRQ_LINE_5_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[23.000000]={
-				["key"]="__IRQ_LINE_6_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[24.000000]={
-				["key"]="__IRQ_LINE_7_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[25.000000]={
-				["key"]="__IRQ_LINE_8_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[26.000000]={
-				["key"]="__IRQ_LINE_9_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[27.000000]={
-				["key"]="__IRQ_LINE_10_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[28.000000]={
-				["key"]="__IRQ_LINE_11_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[29.000000]={
-				["key"]="__IRQ_LINE_12_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[30.000000]={
-				["key"]="__IRQ_LINE_13_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[31.000000]={
-				["key"]="__IRQ_LINE_14_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[32.000000]={
-				["key"]="__IRQ_LINE_15_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-		};
 		["../../config/stm32f1/pll_flags.h"]={
 			[1.000000]={
 				["key"]="__PLL_LSI_ON__";
@@ -3248,67 +3110,67 @@
 			};
 			[17.000000]={
 				["key"]="__SPI_SPI1_CS0_PIN_NAME__";
-				["value"]="SD_CS";
+				["value"]="NONE";
 			};
 			[18.000000]={
 				["key"]="__SPI_SPI1_CS1_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[19.000000]={
 				["key"]="__SPI_SPI1_CS2_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[20.000000]={
 				["key"]="__SPI_SPI1_CS3_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[21.000000]={
 				["key"]="__SPI_SPI1_CS4_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[22.000000]={
 				["key"]="__SPI_SPI1_CS5_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[23.000000]={
 				["key"]="__SPI_SPI1_CS6_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[24.000000]={
 				["key"]="__SPI_SPI1_CS7_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[25.000000]={
 				["key"]="__SPI_SPI2_CS0_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[26.000000]={
 				["key"]="__SPI_SPI2_CS1_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[27.000000]={
 				["key"]="__SPI_SPI2_CS2_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[28.000000]={
 				["key"]="__SPI_SPI2_CS3_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[29.000000]={
 				["key"]="__SPI_SPI2_CS4_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[30.000000]={
 				["key"]="__SPI_SPI2_CS5_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[31.000000]={
 				["key"]="__SPI_SPI2_CS6_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[32.000000]={
 				["key"]="__SPI_SPI2_CS7_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[33.000000]={
 				["key"]="__SPI_SPI3_CS0_PIN_NAME__";
@@ -3316,31 +3178,31 @@
 			};
 			[34.000000]={
 				["key"]="__SPI_SPI3_CS1_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[35.000000]={
 				["key"]="__SPI_SPI3_CS2_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[36.000000]={
 				["key"]="__SPI_SPI3_CS3_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[37.000000]={
 				["key"]="__SPI_SPI3_CS4_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[38.000000]={
 				["key"]="__SPI_SPI3_CS5_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[39.000000]={
 				["key"]="__SPI_SPI3_CS6_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 			[40.000000]={
 				["key"]="__SPI_SPI3_CS7_PIN_NAME__";
-				["value"]="ADC12_IN5";
+				["value"]="NONE";
 			};
 		};
 		["../../config/stm32f1/uart_flags.h"]={
@@ -3423,38 +3285,6 @@
 			[20.000000]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
-			};
-		};
-		["../../config/stm32f1/usbd_flags.h"]={
-			[1.000000]={
-				["key"]="__USBD_PULLUP_PIN__";
-				["value"]="USB_EN";
-			};
-			[2.000000]={
-				["key"]="__USBD_IRQ_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
-			};
-			[3.000000]={
-				["key"]="__USBD_ENDPOINT0_SIZE__";
-				["value"]="8";
-			};
-		};
-		["../../config/stm32f1/wdg_flags.h"]={
-			[1.000000]={
-				["key"]="__WDG_DEVICE_LOCK_AT_OPEN__";
-				["value"]="_YES_";
-			};
-			[2.000000]={
-				["key"]="__WDG_CLK_DIVIDER__";
-				["value"]="256";
-			};
-			[3.000000]={
-				["key"]="__WDG_RELOAD_VALUE__";
-				["value"]="1563";
-			};
-			[4.000000]={
-				["key"]="__WDG_DISABLE_ON_DEBUG__";
-				["value"]="_YES_";
 			};
 		};
 	};
