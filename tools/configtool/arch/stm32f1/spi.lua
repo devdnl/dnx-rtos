@@ -111,7 +111,10 @@ local function load_configuration()
 
                 for CS = 0, NUMBER_OF_CS - 1 do
                         local pin_name = ct:key_read(config.arch.stm32f1.key["SPI_SPI"..SPI.."_CS"..CS.."_PIN_NAME"])
-                        ui.Choice_CS_pin[SPI][CS]:SetSelection(ct:get_string_index(pin_list, pin_name) - 1)
+                        local pin_no   = ct:get_string_index(pin_list, pin_name)
+                        pin_no = ifs(pin_no == 0, ct:get_string_index(pin_list, "NONE"), pin_no)
+
+                        ui.Choice_CS_pin[SPI][CS]:SetSelection(pin_no - 1)
                         ui.Panel_CS[SPI][CS]:Enable(CS <= number_of_CS)
                 end
 
@@ -145,6 +148,11 @@ local function save_configuration()
         -- disables all SPI ports (will be enabled later)
         for SPI = 1, NUMBER_OF_SPI_DEVICES do
                 ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_ENABLE"], config.project.def.NO:GetValue())
+
+                -- set neutral pin name
+                for CS = 0, NUMBER_OF_CS - 1 do
+                        ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_CS"..CS.."_PIN_NAME"], "NONE")
+                end
         end
 
         -- write settings for specified SPI
@@ -167,9 +175,7 @@ local function save_configuration()
 
                 for CS = 0, NUMBER_OF_CS - 1 do
                         local pin_number = ui.Choice_CS_pin[SPI][CS]:GetSelection() + 1
-                        if pin_number < 1 then
-                                pin_number = 1
-                        end
+                        if pin_number < 1 then pin_number = ct:get_string_index(pin_list, "NONE") end
 
                         ct:key_write(config.arch.stm32f1.key["SPI_SPI"..SPI.."_CS"..CS.."_PIN_NAME"], pin_list[pin_number])
                 end
@@ -366,6 +372,10 @@ function spi:create_window(parent)
                                 local number_of_cs = event:GetSelection() + 1
                                 for CS = 0, NUMBER_OF_CS - 1 do
                                         ui.Panel_CS[SPI][CS]:Enable(CS < number_of_cs)
+
+                                        if CS >= number_of_cs then
+                                                ui.Choice_CS_pin[SPI][CS]:SetSelection(ct:get_string_index(pin_list, "NONE") - 1)
+                                        end
                                 end
                                 modified:yes()
                         end

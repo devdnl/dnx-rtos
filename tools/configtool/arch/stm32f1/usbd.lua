@@ -76,6 +76,7 @@ local function load_configuration()
 
         -- load D+ pullup pin name
         local pullup_pin = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.USBD_PULLUP_PIN))
+        pullup_pin = ifs(pullup_pin == 0, ct:get_string_index(pin_list, "NONE"), pullup_pin)
         ui.Choice_pullup_pin:SetSelection(pullup_pin - 1)
 
         -- load interrupt priority
@@ -101,7 +102,7 @@ local function save_configuration()
                 pullup_pin = 1
         end
         ct:key_write(config.arch.stm32f1.key.USBD_PULLUP_PIN, pin_list[pullup_pin])
-        
+
         -- save module enable settings
         ct:enable_module("USBD", ui.CheckBox_module_enable:GetValue())
 

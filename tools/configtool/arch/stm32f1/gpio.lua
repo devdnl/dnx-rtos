@@ -140,7 +140,7 @@ local function load_configuration()
         local module_enable = ct:get_module_state("GPIO")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel_module:Enable(module_enable)
-        
+
         ui.Panel_module:Thaw()
 end
 
@@ -451,13 +451,14 @@ function gpio:get_pin_list(sort_list)
         local gpio_cfg = config.arch.stm32f1.cpulist:Children()[cpu_idx].peripherals.GPIO
         local list     = {}
 
+        table.insert(list, "NONE")
         for i = 1, gpio_cfg.layout:NumChildren() do
                 local port_name = gpio_cfg.layout:Children()[i].name:GetValue()
                 local pin_mask  = gpio_cfg.layout:Children()[i].pinmask:GetValue()
 
                 for pin = 0, MAX_NUMBER_OF_PINS - 1 do
                         if bit.band(pin_mask, 1) == 1 then
-                                list[#list + 1] = ct:key_read(config.arch.stm32f1.key["GPIO_P"..port_name.."_PIN_"..pin.."_NAME"])
+                                table.insert(list, ct:key_read(config.arch.stm32f1.key["GPIO_P"..port_name.."_PIN_"..pin.."_NAME"]))
                         end
 
                         pin_mask = bit.rshift(pin_mask, 1)
