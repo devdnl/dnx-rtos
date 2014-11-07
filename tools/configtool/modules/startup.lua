@@ -127,13 +127,7 @@ local function new_driver_list()
 
         -- method return index of selected value
         self.get_index_of = function(self, value)
-                for i, v in pairs(self._list) do
-                        if value == v then
-                                return i
-                        end
-                end
-
-                return 0
+                return ct:get_string_index(self._list, value)
         end
 
         -- method return entire list
@@ -1860,6 +1854,9 @@ function startup:refresh()
 
         ui.Choice_RLB_root_FS:Clear()
         ui.Choice_RLB_root_FS:Append(FS_list:get_list())
+
+        ui.Choice_RL0_sys_msg_init_after:Clear()
+        ui.Choice_RL0_sys_msg_init_after:Append(drv_list:get_list())
 
         load_configuration()
 
