@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <dnx/misc.h>
 #include <dnx/thread.h>
@@ -56,7 +57,6 @@
 #define BULK_BUF_SIZE           64
 
 #define LB_SIZE                 512
-#define LB_COUNT                ((2U*1024*1024*1024) / (LB_SIZE))
 #define BUFFER_SIZE             (LB_SIZE * 4)
 
 /*==============================================================================
@@ -87,6 +87,8 @@ union {
 bool configured;
 
 GLOBAL_VARIABLES_SECTION_END
+
+static u32_t LB_COUNT = 0;
 
 /* USB constants */
 static const usbd_ep_config_t ep_cfg = {
@@ -225,11 +227,6 @@ static const scsi_unit_serial_number_data_t serial_number = {
         .serial_number  = {'0', '0', '0', '0', '0', '0', '0', '1'}
 };
 
-static const scsi_capacity_data_t capacity = {
-        .last_lba       = REVERSE_UINT32(LB_COUNT - 1),
-        .block_length   = REVERSE_UINT32(LB_SIZE)
-};
-
 static const scsi_mode_parameter_header6_t mode_sense6 = {
         .mode_data_length               = sizeof(scsi_mode_parameter_header6_t) - 1,
         .medium_type                    = 0,
@@ -244,15 +241,6 @@ static const scsi_mode_parameter_header10_t mode_sense10 = {
         .long_lba                       = 0,
         .reserved                       = 0,
         .block_descriptor_length        = 0
-};
-
-static const scsi_format_capacity_data_t format_capacity = {
-        .reserved               = {0, 0, 0},
-        .capacity_list_length   = sizeof(scsi_format_capacity_data_t) - 4,
-        .lba_count              = REVERSE_UINT32(LB_COUNT),
-        .descriptor_code        = 1,
-        .block_length_msb       = 0,
-        .block_length           = REVERSE_UINT16(LB_SIZE)
 };
 
 static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__NONE);
@@ -300,14 +288,11 @@ static void ep1_handler(void *arg)
         FILE *gpio   = fopen("/dev/gpio", "r+");
         FILE *ep1    = fopen("/dev/usb_ep1", "r+");
         FILE *sda    = fopen("/dev/sda", "r+");
-        bool  sdinit = false;
 
         if (sda) {
-                ioctl(sda, IOCTL_SDSPI__INITIALIZE_CARD, &sdinit);
-                if (!sdinit) {
-                        puts("SD not present");
-                        fclose(sda);
-                        sda = NULL;
+                struct stat stat;
+                if (fstat(sda, &stat) == 0) {
+                        LB_COUNT = stat.st_size / LB_SIZE;
                 }
         }
 
@@ -420,12 +405,24 @@ static void ep1_handler(void *arg)
 
                         case SCSI_REQUEST__READ_CAPACITY_10:
                                 puts("READ CAPACITY (10)");
+                                scsi_capacity_data_t capacity = {
+                                        .last_lba       = REVERSE_UINT32(LB_COUNT - 1),
+                                        .block_length   = REVERSE_UINT32(LB_SIZE)
+                                };
                                 fwrite(&capacity, 1, sizeof(capacity), ep1);
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
                                 break;
 
                         case SCSI_REQUEST__READ_FORMAT_CAPACITIES:
                                 puts("READ FORMAT CAPACITIES");
+                                scsi_format_capacity_data_t format_capacity = {
+                                        .reserved               = {0, 0, 0},
+                                        .capacity_list_length   = sizeof(scsi_format_capacity_data_t) - 4,
+                                        .lba_count              = REVERSE_UINT32(LB_COUNT),
+                                        .descriptor_code        = 1,
+                                        .block_length_msb       = 0,
+                                        .block_length           = REVERSE_UINT16(LB_SIZE)
+                                };
                                 fwrite(&format_capacity, 1, sizeof(format_capacity), ep1);
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
                                 break;
@@ -457,7 +454,7 @@ static void ep1_handler(void *arg)
                                         fseek(sda, lba * LB_SIZE, SEEK_SET);
 
                                         while (lbc) {
-                                                int count = (lbc >= (BUFFER_SIZE / LB_SIZE) ? (BUFFER_SIZE / LB_SIZE) : lbc);
+                                                int count = min(lbc, BUFFER_SIZE / LB_SIZE);
                                                 fread(&global->msc.buffer, LB_SIZE, count, sda);
                                                 fwrite(&global->msc.buffer, LB_SIZE, count, ep1);
                                                 lbc -= count;
@@ -491,7 +488,7 @@ static void ep1_handler(void *arg)
                                 if (sda) {
                                         fseek(sda, lba * LB_SIZE, SEEK_SET);
                                         while (lbc) {
-                                                int count = (lbc >= (BUFFER_SIZE / LB_SIZE) ? (BUFFER_SIZE / LB_SIZE) : lbc);
+                                                int count = min(lbc, BUFFER_SIZE / LB_SIZE);
                                                 fread(&global->msc.buffer, LB_SIZE, count, ep1);
                                                 fwrite(&global->msc.buffer, LB_SIZE, count, sda);
                                                 lbc -= count;
