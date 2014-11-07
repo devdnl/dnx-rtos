@@ -783,6 +783,7 @@ static void handle_irq(u8_t major)
 
                 if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
                         semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
+                        task_yield_from_ISR();
                 }
         }
 
@@ -807,6 +808,7 @@ static void handle_irq(u8_t major)
 
                 CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
                 semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                task_yield_from_ISR();
         }
 }
 
