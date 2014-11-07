@@ -76,7 +76,7 @@ local function load_configuration()
 
         -- load D+ pullup pin name
         local pullup_pin = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.USBD_PULLUP_PIN))
-        ui.Choice_pullup_pin:SetSelection(pullup_pin)
+        ui.Choice_pullup_pin:SetSelection(pullup_pin - 1)
 
         -- load interrupt priority
         local irq_prio = ct:key_read(config.arch.stm32f1.key.USBD_IRQ_PRIORITY)
@@ -96,7 +96,7 @@ end
 --------------------------------------------------------------------------------
 local function save_configuration()
         -- save pullup pin name
-        local pullup_pin = ui.Choice_pullup_pin:GetSelection()
+        local pullup_pin = ui.Choice_pullup_pin:GetSelection() + 1
         if pullup_pin == 0 then
                 pullup_pin = 1
         end
