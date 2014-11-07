@@ -5,7 +5,7 @@
 
 @brief   This file contain initialize and runtime daemon
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,12 +29,14 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <dnx/os.h>
 #include <dnx/net.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "user/initd.h"
 
 /*==============================================================================
@@ -65,6 +67,77 @@ static int run_level_exit(void);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Function initialize storage device
+ * @param  storage  storage device path
+ * @return None
+ */
+//==============================================================================
+static void msg_mount(const char *filesystem, const char *src_file, const char *mount_point)
+{
+        printk("Mounting ");
+        if (src_file != NULL && strlen(src_file) > 0) {
+                printk("%s ", src_file);
+        } else {
+                printk("%s ", filesystem);
+        }
+        printk("to %s... ", mount_point);
+
+        errno = 0;
+        if (mount(filesystem, src_file, mount_point) == STD_RET_OK) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function initialize storage device
+ * @param  storage  storage device path
+ * @return None
+ */
+//==============================================================================
+static void init_storage(const char *storage)
+{
+        printk("Initializing %s... ", storage);
+        FILE *st = fopen(storage, "r+");
+        if (st) {
+                if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
+                        switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
+                                case 1 : printk("OK\n"); break;
+                                case 0 : printk("OK (no MBR)\n"); break;
+                                default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
+                        }
+                } else {
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                }
+
+                fclose(st);
+        } else {
+                printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function start daemon
+ * @param  name     daemon's name
+ * @param  cwd      current working directory
+ * @return None
+ */
+//==============================================================================
+static void start_daemon(const char *name, const char *cwd)
+{
+        printk("Starting '%s' daemon... ", name);
+        if (program_new(name, cwd, NULL, NULL, NULL)) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+        }
+}
 
 //==============================================================================
 /**
@@ -113,7 +186,6 @@ static int run_level_boot(void)
         mkdir("/mnt", 0666);
         mkdir("/proc", 0666);
         mkdir("/tmp", 0666);
-
         mount("procfs", "", "/proc");
         mount("devfs", "", "/dev");
 
@@ -135,26 +207,22 @@ static int run_level_0(void)
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
-
         printk_enable("/dev/tty0");
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_GRAY "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
-
         driver_init("tty1", "/dev/tty1");
         driver_init("tty2", "/dev/tty2");
         driver_init("tty3", "/dev/tty3");
         driver_init("spi3-0", "/dev/spi_sda");
-        driver_init("ethmac", "/dev/eth0");
-        driver_init("crcm", "/dev/crc");
-        driver_init("irq", "/dev/irq");
         driver_init("sdspia", "/dev/sda");
         driver_init("sdspia1", "/dev/sda1");
         driver_init("sdspia2", "/dev/sda2");
         driver_init("sdspia3", "/dev/sda3");
         driver_init("sdspia4", "/dev/sda4");
-        driver_init("i2c1-0", "/dev/ds1307");
-        driver_init("loop0", "/dev/loop0");
+        driver_init("ethmac", "/dev/eth0");
+        driver_init("i2c1-0", "/dev/DS1307");
+        driver_init("i2c1-1", "/dev/MPL115A2");
 
         return STD_RET_OK;
 }
@@ -169,61 +237,21 @@ static int run_level_0(void)
 //==============================================================================
 static int run_level_1(void)
 {
-        /* mbus-daemon start */
-        printk("Starting mbus daemon... ");
-        if (program_new("mbus_daemon", "/", NULL, NULL, NULL)) {
-                printk("OK\n");
-        } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
-        }
+        start_daemon("mbus_daemon", "/");
+        init_storage("/dev/sda");
+        msg_mount("fatfs", "/dev/sda1", "/mnt");
 
-        /* initializing SD card and detecting partitions */
-        printk("Starting SD card... ");
-        FILE *sd = fopen("/dev/sda", "r+");
-        if (sd) {
-                switch (ioctl(sd, IOCTL_SDSPI__INITIALIZE_CARD)) {
-                case 1:
-                        switch (ioctl(sd, IOCTL_SDSPI__READ_MBR)) {
-                        case 1:
-                                mount("fatfs", "/dev/sda1", "/mnt");
-                                printk("initialized\n");
-                                break;
-
-                        case 0:
-                                printk(FONT_COLOR_YELLOW"no partitions"RESET_ATTRIBUTES"\n");
-                                break;
-
-                        case -1:
-                                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
-                                break;
-                        }
-                        break;
-
-                default:
-                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
-                        break;
-                }
-
-                fclose(sd);
-        } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
-        }
-
-        /* network up */
         printk("Configuring DHCP client... ");
-
         if (net_start_DHCP_client() == 0) {
                 printk("OK\n");
         } else {
                 printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
                 printk("Configuring static IP... ");
-
                 net_ip_t ip, mask, gateway;
-                net_set_ip(&ip, 192,168,0,120);
-                net_set_ip(&mask, 255,255,255,0);
-                net_set_ip(&gateway, 192,168,0,1);
-
+                net_set_ip(&ip, __NETWORK_IP_ADDR1__,__NETWORK_IP_ADDR2__,__NETWORK_IP_ADDR3__,__NETWORK_IP_ADDR4__);
+                net_set_ip(&mask, __NETWORK_IP_MASK1__,__NETWORK_IP_MASK2__,__NETWORK_IP_MASK3__,__NETWORK_IP_MASK4__);
+                net_set_ip(&gateway, __NETWORK_IP_GW1__,__NETWORK_IP_GW2__,__NETWORK_IP_GW3__,__NETWORK_IP_GW4__);
                 if (net_ifup(&ip, &mask, &gateway) == 0) {
                         printk("OK\n");
                 } else {
@@ -232,10 +260,9 @@ static int run_level_1(void)
         }
 
         ifconfig_t ifcfg;
-        int stat = net_get_ifconfig(&ifcfg);
-        if (stat == 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+        if (net_get_ifconfig(&ifcfg) == 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
-                       "  MAC       : %2X:%2X:%2X:%2X:%2X:%2X\n"
+                       "  MAC       : %02X:%02X:%02X:%02X:%02X:%02X\n"
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
                        "  Gateway   : %d.%d.%d.%d\n",
@@ -248,6 +275,8 @@ static int run_level_1(void)
                        net_get_ip_part_c(&ifcfg.net_mask), net_get_ip_part_d(&ifcfg.net_mask),
                        net_get_ip_part_a(&ifcfg.gateway), net_get_ip_part_b(&ifcfg.gateway),
                        net_get_ip_part_c(&ifcfg.gateway), net_get_ip_part_d(&ifcfg.gateway));
+        } else {
+                printk("Network not configured\n");
         }
 
         return STD_RET_OK;
@@ -263,81 +292,49 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        FILE  *tty0 = NULL;
-        while (!(tty0 = fopen("/dev/tty0", "r+"))) {
-                sleep_ms(200);
-        }
-
-        int number_of_ttys = 0;
-        ioctl(tty0, IOCTL_TTY__GET_NUMBER_OF_TTYS, &number_of_ttys);
-
-        /* stdio program control */
-        FILE   *tty[number_of_ttys];
-        prog_t *program[number_of_ttys - 1];
-        int     current_tty = -1;
-
-        memset(tty, 0, sizeof(tty));
-        memset(program, 0, sizeof(program));
-
-        /* terminal size info */
-        int col = 0;
-        int row = 0;
-        ioctl(tty0, IOCTL_TTY__GET_COL, &col);
-        ioctl(tty0, IOCTL_TTY__GET_ROW, &row);
-        printk("Terminal size: %d columns x %d rows\n", col, row);
-
-        /* initd info about stack usage */
         printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
-
-        /* change TTY for printk */
+        printk("Welcome to dnx RTOS!\n");
         printk_enable("/dev/tty3");
 
-        for (;;) {
-                ioctl(tty0, IOCTL_TTY__GET_CURRENT_TTY, &current_tty);
+        /* initialize handles for applications and streams */
+        prog_t *p[3];
+        memset(p, 0, sizeof(p));
 
-                if (current_tty >= 0 && current_tty < number_of_ttys - 1) {
-                        if (!program[current_tty]) {
-                                if (tty[current_tty] == NULL) {
-                                        char path[16];
-                                        snprintf(path, sizeof(path), "/dev/tty%c", '0' + current_tty);
-                                        tty[current_tty] = fopen(path, "r+");
+        FILE *f[3];
+        memset(f, 0, sizeof(f));
+
+        /* open streams and start applications */
+        f[0] = fopen("/dev/tty0", "r+");
+        f[1] = fopen("/dev/tty1", "r+");
+        f[2] = fopen("/dev/tty2", "r+");
+        p[0] = program_new("dsh", "/", f[0], f[0], f[0]);
+        p[1] = program_new("dsh", "/", f[1], f[1], f[1]);
+        p[2] = program_new("dsh", "/", f[2], f[2], f[2]);
+
+        /* waits until all applications are closed */
+        while (true) {
+                size_t closed_programs = 0;
+                for (size_t i = 0; i < ARRAY_SIZE(p); i++) {
+                        if (p[i]) {
+                                if (program_is_closed(p[i])) {
+                                        program_delete(p[i]);
+                                        p[i] = NULL;
+                                        closed_programs++;
                                 }
-
-                                fprintf(tty[current_tty], "Welcome to %s (tty%d)\n",
-                                        get_OS_name(), current_tty);
-
-
-                                program[current_tty] = program_new("dsh", "/",
-                                                                   tty[current_tty],
-                                                                   tty[current_tty],
-                                                                   tty[current_tty]);
-                                if (!program[current_tty]) {
-                                        perror("initd");
-                                } else {
-                                        printk("initd: shell started\n");
-                                }
+                        } else {
+                                closed_programs++;
                         }
                 }
 
-                for (int i = 0; i < number_of_ttys - 1; i++) {
-                        if (program[i]) {
-                                if (program_is_closed(program[i])) {
-                                        printk("initd: shell closed\n");
-                                        program_delete(program[i]);
-                                        program[i] = NULL;
-
-                                        ioctl(tty[i], IOCTL_TTY__CLEAR_SCR);
-                                        fclose(tty[i]);
-                                        tty[i] = NULL;
-
-                                        if (current_tty == i) {
-                                                ioctl(tty0, IOCTL_TTY__SWITCH_TTY_TO, 0);
-                                        }
-                                }
+                if (closed_programs >= ARRAY_SIZE(p)) {
+                        for (size_t i = 0; i < ARRAY_SIZE(f); i++) {
+                                fclose(f[i]);
                         }
+
+                        break;
                 }
 
-                sleep_ms(500);
+                sleep(1);
         }
 
         return STD_RET_OK;

@@ -44,11 +44,11 @@
 #define __I2C1_USE_DMA__ _YES_
 #define __I2C1_SCL_FREQ__ 100000
 #define __I2C1_IRQ_PRIO__ CONFIG_USER_IRQ_PRIORITY
-#define __I2C1_NUMBER_OF_DEVICES__ 1
+#define __I2C1_NUMBER_OF_DEVICES__ 2
 #define __I2C1_DEV_0_ADDRESS__ 0xD0
 #define __I2C1_DEV_0_10BIT_ADDR__ _NO_
 #define __I2C1_DEV_0_SEND_SUB_ADDR__ 1
-#define __I2C1_DEV_1_ADDRESS__ 0xA0
+#define __I2C1_DEV_1_ADDRESS__ 0xC0
 #define __I2C1_DEV_1_10BIT_ADDR__ _NO_
 #define __I2C1_DEV_1_SEND_SUB_ADDR__ 0
 #define __I2C1_DEV_2_ADDRESS__ 0xA0
