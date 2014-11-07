@@ -23,9 +23,9 @@
             <ENABLE_A_MK><path>../../config/project/Makefile</path><key>__ENABLE_A__</key></ENABLE_A_MK>
             <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_MK>
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_MK>
-            <ENABLE_AFIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_MK>
-            <ENABLE_CRC_MK><path>../../config/project/Makefile</path><key>__ENABLE_CRC__</key></ENABLE_CRC_MK>
-            <ENABLE_ETH_MK><path>../../config/project/Makefile</path><key>__ENABLE_ETH__</key></ENABLE_ETH_MK>
+            <ENABLE_AFIOM_MK><path>../../config/project/Makefile</path><key>__ENABLE_AFIOM__</key></ENABLE_AFIOM_MK>
+            <ENABLE_CRCM_MK><path>../../config/project/Makefile</path><key>__ENABLE_CRCM__</key></ENABLE_CRCM_MK>
+            <ENABLE_ETHMAC_MK><path>../../config/project/Makefile</path><key>__ENABLE_ETHMAC__</key></ENABLE_ETHMAC_MK>
             <ENABLE_PLL_MK><path>../../config/project/Makefile</path><key>__ENABLE_PLL__</key></ENABLE_PLL_MK>
             <ENABLE_SDSPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_MK>
             <ENABLE_SPI_MK><path>../../config/project/Makefile</path><key>__ENABLE_SPI__</key></ENABLE_SPI_MK>
@@ -46,6 +46,7 @@
             <OS_TASK_MIN_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_TASK_MIN_STACK_DEPTH__</key></OS_TASK_MIN_STACK_DEPTH>
             <OS_FILE_SYSTEM_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_FILE_SYSTEM_STACK_DEPTH__</key></OS_FILE_SYSTEM_STACK_DEPTH>
             <OS_IRQ_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_IRQ_STACK_DEPTH__</key></OS_IRQ_STACK_DEPTH>
+            <OS_INITD_STACK_DEPTH><path>../../config/project/flags.h</path><key>__OS_INITD_STACK_DEPTH__</key></OS_INITD_STACK_DEPTH>
             <OS_TASK_MAX_PRIORITIES><path>../../config/project/flags.h</path><key>__OS_TASK_MAX_PRIORITIES__</key></OS_TASK_MAX_PRIORITIES>
             <OS_TASK_NAME_LEN><path>../../config/project/flags.h</path><key>__OS_TASK_NAME_LEN__</key></OS_TASK_NAME_LEN>
             <OS_TASK_SCHED_FREQ><path>../../config/project/flags.h</path><key>__OS_TASK_SCHED_FREQ__</key></OS_TASK_SCHED_FREQ>
@@ -75,6 +76,18 @@
             <NETWORK_MAC_ADDR_4><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_4__</key></NETWORK_MAC_ADDR_4>
             <NETWORK_MAC_ADDR_5><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_5__</key></NETWORK_MAC_ADDR_5>
             <NETWORK_ETHIF_FILE><path>../../config/project/network_flags.h</path><key>__NETWORK_ETHIF_FILE__</key></NETWORK_ETHIF_FILE>
+            <NETWORK_IP_ADDR1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR1__</key></NETWORK_IP_ADDR1>
+            <NETWORK_IP_ADDR2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR2__</key></NETWORK_IP_ADDR2>
+            <NETWORK_IP_ADDR3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR3__</key></NETWORK_IP_ADDR3>
+            <NETWORK_IP_ADDR4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_ADDR4__</key></NETWORK_IP_ADDR4>
+            <NETWORK_IP_MASK1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK1__</key></NETWORK_IP_MASK1>
+            <NETWORK_IP_MASK2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK2__</key></NETWORK_IP_MASK2>
+            <NETWORK_IP_MASK3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK3__</key></NETWORK_IP_MASK3>
+            <NETWORK_IP_MASK4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_MASK4__</key></NETWORK_IP_MASK4>
+            <NETWORK_IP_GW1><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW1__</key></NETWORK_IP_GW1>
+            <NETWORK_IP_GW2><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW2__</key></NETWORK_IP_GW2>
+            <NETWORK_IP_GW3><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW3__</key></NETWORK_IP_GW3>
+            <NETWORK_IP_GW4><path>../../config/project/network_flags.h</path><key>__NETWORK_IP_GW4__</key></NETWORK_IP_GW4>
             <NETWORK_MEMP_SEPARATE_POOLS><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_SEPARATE_POOLS__</key></NETWORK_MEMP_SEPARATE_POOLS>
             <NETWORK_MEMP_OVERFLOW_CHECK><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_OVERFLOW_CHECK__</key></NETWORK_MEMP_OVERFLOW_CHECK>
             <NETWORK_MEMP_SANITY_CHECK><path>../../config/project/network_flags.h</path><key>__NETWORK_MEMP_SANITY_CHECK__</key></NETWORK_MEMP_SANITY_CHECK>
@@ -239,9 +252,9 @@
             <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
             <ENABLE_LOOP_H><path>../../config/project/flags.h</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_H>
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
-            <ENABLE_AFIO_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIO__</key></ENABLE_AFIO_H>
-            <ENABLE_CRC_H><path>../../config/project/flags.h</path><key>__ENABLE_CRC__</key></ENABLE_CRC_H>
-            <ENABLE_ETH_H><path>../../config/project/flags.h</path><key>__ENABLE_ETH__</key></ENABLE_ETH_H>
+            <ENABLE_AFIOM_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIOM__</key></ENABLE_AFIOM_H>
+            <ENABLE_CRCM_H><path>../../config/project/flags.h</path><key>__ENABLE_CRCM__</key></ENABLE_CRCM_H>
+            <ENABLE_ETHMAC_H><path>../../config/project/flags.h</path><key>__ENABLE_ETHMAC__</key></ENABLE_ETHMAC_H>
             <ENABLE_PLL_H><path>../../config/project/flags.h</path><key>__ENABLE_PLL__</key></ENABLE_PLL_H>
             <ENABLE_SDSPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SDSPI__</key></ENABLE_SDSPI_H>
             <ENABLE_SPI_H><path>../../config/project/flags.h</path><key>__ENABLE_SPI__</key></ENABLE_SPI_H>
@@ -260,9 +273,9 @@
         <modules>
             <module noarch="true"><name>LOOP</name><description>Universal virtual device that allow to connect applications together</description></module>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
-            <module noarch="false"><name>AFIO</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
-            <module noarch="false"><name>CRC</name><description>This module handles CRC peripherals.</description></module>
-            <module noarch="false"><name>ETH</name><description>This module handles Ethernet interface.</description></module>
+            <module noarch="false"><name>AFIOM</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
+            <module noarch="false"><name>CRCM</name><description>This module handles CRC peripherals.</description></module>
+            <module noarch="false"><name>ETHMAC</name><description>This module handles Ethernet interface.</description></module>
             <module noarch="false"><name>PLL</name><description>This module handles PLL peripheral.</description></module>
             <module noarch="true"><name>SDSPI</name><description>This module handles SD Cards in the SPI communication mode.</description></module>
             <module noarch="false"><name>SPI</name><description>This module handles SPI peripherals.</description></module>
@@ -286,6 +299,7 @@
             <drivers_reg_file>../../src/system/drivers/driver_registration.c</drivers_reg_file>
             <drivers_main_makefile>../../src/system/drivers/Makefile</drivers_main_makefile>
             <programs_dir>../../src/programs</programs_dir>
+            <programs_reg_file>../../src/programs/program_registration.c</programs_reg_file>
             <module_template_cfg_file>../../extra/templates/module/module_cfg.h</module_template_cfg_file>
             <module_template_def_file>../../extra/templates/module/module_def.h</module_template_def_file>
             <module_template_flags_file>../../extra/templates/module/module_flags.h</module_template_flags_file>
@@ -298,6 +312,7 @@
             <project_flags_file>../../config/project/flags.h</project_flags_file>
             <project_makefile>../../config/project/Makefile</project_makefile>
             <network_flags_file>../../config/project/network_flags.h</network_flags_file>
+            <initd_cfg_file>../../config/project/initd.cfg</initd_cfg_file>
             <sys_ioctl_file>../../src/system/include/stdc/sys/ioctl.h</sys_ioctl_file>
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
@@ -306,6 +321,28 @@
             <program_template_src_file>../../extra/templates/program/program.c</program_template_src_file>
             <program_template_hdr_file>../../extra/templates/program/program.h</program_template_hdr_file>
             <program_template_makefile>../../extra/templates/program/Makefile</program_template_makefile>
+            <initd_template_entire_file>../../extra/templates/initd/initd.c</initd_template_entire_file>
+            <initd_template_mount_file>../../extra/templates/initd/mount.c</initd_template_mount_file>
+            <initd_template_mkdir_file>../../extra/templates/initd/mkdir.c</initd_template_mkdir_file>
+            <initd_template_driverinit_file>../../extra/templates/initd/driver_init.c</initd_template_driverinit_file>
+            <initd_template_printken_file>../../extra/templates/initd/printk_en.c</initd_template_printken_file>
+            <initd_template_printkdis_file>../../extra/templates/initd/printk_dis.c</initd_template_printkdis_file>
+            <initd_template_ivitationmsg_file>../../extra/templates/initd/invitation_msg.c</initd_template_ivitationmsg_file>
+            <initd_template_storage_init_file>../../extra/templates/initd/storage_init.c</initd_template_storage_init_file>
+            <initd_template_daemonstart_file>../../extra/templates/initd/daemon_start.c</initd_template_daemonstart_file>
+            <initd_template_dhcp_or_static_ip_file>../../extra/templates/initd/dhcp_or_static_ip.c</initd_template_dhcp_or_static_ip_file>
+            <initd_template_dhcp_ip_file>../../extra/templates/initd/dhcp_ip.c</initd_template_dhcp_ip_file>
+            <initd_template_static_ip_file>../../extra/templates/initd/static_ip.c</initd_template_static_ip_file>
+            <initd_template_ip_summary_file>../../extra/templates/initd/ip_summary.c</initd_template_ip_summary_file>
+            <initd_template_summary_file>../../extra/templates/initd/initd_summary.c</initd_template_summary_file>
+            <initd_template_app_prepare_file>../../extra/templates/initd/app_prepare.c</initd_template_app_prepare_file>
+            <initd_template_app_start_file>../../extra/templates/initd/app_start.c</initd_template_app_start_file>
+            <initd_template_app_finish_file>../../extra/templates/initd/app_finish.c</initd_template_app_finish_file>
+            <initd_template_app_stream_open_file>../../extra/templates/initd/stream_open.c</initd_template_app_stream_open_file>
+            <initd_template_msg_mount_func_file>../../extra/templates/initd/msg_mount_func.c</initd_template_msg_mount_func_file>
+            <initd_template_init_storage_func_file>../../extra/templates/initd/init_storage_func.c</initd_template_init_storage_func_file>
+            <initd_template_start_daemon_func_file>../../extra/templates/initd/start_daemon_func.c</initd_template_start_daemon_func_file>
+            <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>
 
@@ -782,73 +819,73 @@
                 <SPI_SPI3_CS6_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS6_PIN_NAME__</key></SPI_SPI3_CS6_PIN_NAME>
                 <SPI_SPI3_CS7_PIN_NAME><path>../../config/stm32f1/spi_flags.h</path><key>__SPI_SPI3_CS7_PIN_NAME__</key></SPI_SPI3_CS7_PIN_NAME>
 
-                <ETH_IRQ_PRIORITY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_IRQ_PRIORITY__</key></ETH_IRQ_PRIORITY>
-                <ETH_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_CHECKSUM_BY_HARDWARE__</key></ETH_CHECKSUM_BY_HARDWARE>
-                <ETH_SPEED><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_SPEED__</key></ETH_SPEED>
-                <ETH_PHY_ADDRESS><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_ADDRESS__</key></ETH_PHY_ADDRESS>
-                <ETH_PHY_RESET_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_RESET_DELAY__</key></ETH_PHY_RESET_DELAY>
-                <ETH_PHY_CONFIG_DELAY><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_CONFIG_DELAY__</key></ETH_PHY_CONFIG_DELAY>
-                <ETH_DEVICE><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_DEVICE__</key></ETH_DEVICE>
-                <ETH_PHY_SR><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SR__</key></ETH_PHY_SR>
-                <ETH_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_SPEED_STATUS_BM__</key></ETH_PHY_SPEED_STATUS_BM>
-                <ETH_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/eth_flags.h</path><key>__ETH_PHY_DUPLEX_STATUS_BM__</key></ETH_PHY_DUPLEX_STATUS_BM>
+                <ETHMAC_IRQ_PRIORITY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_IRQ_PRIORITY__</key></ETHMAC_IRQ_PRIORITY>
+                <ETHMAC_CHECKSUM_BY_HARDWARE><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_CHECKSUM_BY_HARDWARE__</key></ETHMAC_CHECKSUM_BY_HARDWARE>
+                <ETHMAC_SPEED><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_SPEED__</key></ETHMAC_SPEED>
+                <ETHMAC_PHY_ADDRESS><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_ADDRESS__</key></ETHMAC_PHY_ADDRESS>
+                <ETHMAC_PHY_RESET_DELAY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_RESET_DELAY__</key></ETHMAC_PHY_RESET_DELAY>
+                <ETHMAC_PHY_CONFIG_DELAY><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_CONFIG_DELAY__</key></ETHMAC_PHY_CONFIG_DELAY>
+                <ETHMAC_DEVICE><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_DEVICE__</key></ETHMAC_DEVICE>
+                <ETHMAC_PHY_SR><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_SR__</key></ETHMAC_PHY_SR>
+                <ETHMAC_PHY_SPEED_STATUS_BM><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_SPEED_STATUS_BM__</key></ETHMAC_PHY_SPEED_STATUS_BM>
+                <ETHMAC_PHY_DUPLEX_STATUS_BM><path>../../config/stm32f1/ethmac_flags.h</path><key>__ETHMAC_PHY_DUPLEX_STATUS_BM__</key></ETHMAC_PHY_DUPLEX_STATUS_BM>
 
-                <AFIO_EVENT_OUT_ENABLE><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_ENABLE__</key></AFIO_EVENT_OUT_ENABLE>
-                <AFIO_EVENT_OUT_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PORT__</key></AFIO_EVENT_OUT_PORT>
-                <AFIO_EVENT_OUT_PIN><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EVENT_OUT_PIN__</key></AFIO_EVENT_OUT_PIN>
-                <AFIO_REMAP_SPI1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SPI1__</key></AFIO_REMAP_SPI1>
-                <AFIO_REMAP_I2C1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_I2C1__</key></AFIO_REMAP_I2C1>
-                <AFIO_REMAP_USART1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART1__</key></AFIO_REMAP_USART1>
-                <AFIO_REMAP_USART2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART2__</key></AFIO_REMAP_USART2>
-                <AFIO_REMAP_USART3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_USART3__</key></AFIO_REMAP_USART3>
-                <AFIO_REMAP_TIM1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM1__</key></AFIO_REMAP_TIM1>
-                <AFIO_REMAP_TIM2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM2__</key></AFIO_REMAP_TIM2>
-                <AFIO_REMAP_TIM3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM3__</key></AFIO_REMAP_TIM3>
-                <AFIO_REMAP_TIM4><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM4__</key></AFIO_REMAP_TIM4>
-                <AFIO_REMAP_CAN><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CAN__</key></AFIO_REMAP_CAN>
-                <AFIO_REMAP_PD01><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_PD01__</key></AFIO_REMAP_PD01>
-                <AFIO_REMAP_TIM5CH4><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM5CH4__</key></AFIO_REMAP_TIM5CH4>
-                <AFIO_REMAP_ADC1_ETRGINJ><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC1_ETRGINJ__</key></AFIO_REMAP_ADC1_ETRGINJ>
-                <AFIO_REMAP_ADC1_ETRGREG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC1_ETRGREG__</key></AFIO_REMAP_ADC1_ETRGREG>
-                <AFIO_REMAP_ADC2_ETRGINJ><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC2_ETRGINJ__</key></AFIO_REMAP_ADC2_ETRGINJ>
-                <AFIO_REMAP_ADC2_ETRGREG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ADC2_ETRGREG__</key></AFIO_REMAP_ADC2_ETRGREG>
-                <AFIO_REMAP_SWJ_CFG><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SWJ_CFG__</key></AFIO_REMAP_SWJ_CFG>
-                <AFIO_REMAP_ETH><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_ETH__</key></AFIO_REMAP_ETH>
-                <AFIO_REMAP_CAN2><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CAN2__</key></AFIO_REMAP_CAN2>
-                <AFIO_REMAP_MII_RMII_SEL><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_MII_RMII_SEL__</key></AFIO_REMAP_MII_RMII_SEL>
-                <AFIO_REMAP_SPI3><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_SPI3__</key></AFIO_REMAP_SPI3>
-                <AFIO_REMAP_TIM2ITR1><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM2ITR1__</key></AFIO_REMAP_TIM2ITR1>
-                <AFIO_REMAP_PTP_PPS><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_PTP_PPS__</key></AFIO_REMAP_PTP_PPS>
-                <AFIO_REMAP_CEC><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_CEC__</key></AFIO_REMAP_CEC>
-                <AFIO_REMAP_TIM1_DMA><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM1_DMA__</key></AFIO_REMAP_TIM1_DMA>
-                <AFIO_REMAP_TIM9><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM9__</key></AFIO_REMAP_TIM9>
-                <AFIO_REMAP_TIM10><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM10__</key></AFIO_REMAP_TIM10>
-                <AFIO_REMAP_TIM11><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM11__</key></AFIO_REMAP_TIM11>
-                <AFIO_REMAP_TIM12><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM12__</key></AFIO_REMAP_TIM12>
-                <AFIO_REMAP_TIM13><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM13__</key></AFIO_REMAP_TIM13>
-                <AFIO_REMAP_TIM14><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM14__</key></AFIO_REMAP_TIM14>
-                <AFIO_REMAP_TIM15><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM15__</key></AFIO_REMAP_TIM15>
-                <AFIO_REMAP_TIM16><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM16__</key></AFIO_REMAP_TIM16>
-                <AFIO_REMAP_TIM17><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM17__</key></AFIO_REMAP_TIM17>
-                <AFIO_REMAP_FSMC_NADV><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_FSMC_NADV__</key></AFIO_REMAP_FSMC_NADV>
-                <AFIO_REMAP_TIM76_DAC_DMA><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_TIM76_DAC_DMA__</key></AFIO_REMAP_TIM76_DAC_DMA>
-                <AFIO_REMAP_MISC><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_REMAP_MISC__</key></AFIO_REMAP_MISC>
-                <AFIO_EXTI0_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI0_PORT__</key></AFIO_EXTI0_PORT>
-                <AFIO_EXTI1_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI1_PORT__</key></AFIO_EXTI1_PORT>
-                <AFIO_EXTI2_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI2_PORT__</key></AFIO_EXTI2_PORT>
-                <AFIO_EXTI3_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI3_PORT__</key></AFIO_EXTI3_PORT>
-                <AFIO_EXTI4_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI4_PORT__</key></AFIO_EXTI4_PORT>
-                <AFIO_EXTI5_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI5_PORT__</key></AFIO_EXTI5_PORT>
-                <AFIO_EXTI6_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI6_PORT__</key></AFIO_EXTI6_PORT>
-                <AFIO_EXTI7_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI7_PORT__</key></AFIO_EXTI7_PORT>
-                <AFIO_EXTI8_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI8_PORT__</key></AFIO_EXTI8_PORT>
-                <AFIO_EXTI9_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI9_PORT__</key></AFIO_EXTI9_PORT>
-                <AFIO_EXTI10_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI10_PORT__</key></AFIO_EXTI10_PORT>
-                <AFIO_EXTI11_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI11_PORT__</key></AFIO_EXTI11_PORT>
-                <AFIO_EXTI12_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI12_PORT__</key></AFIO_EXTI12_PORT>
-                <AFIO_EXTI13_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI13_PORT__</key></AFIO_EXTI13_PORT>
-                <AFIO_EXTI14_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI14_PORT__</key></AFIO_EXTI14_PORT>
-                <AFIO_EXTI15_PORT><path>../../config/stm32f1/afio_flags.h</path><key>__AFIO_EXTI15_PORT__</key></AFIO_EXTI15_PORT>
+                <AFIOM_EVENT_OUT_ENABLE><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EVENT_OUT_ENABLE__</key></AFIOM_EVENT_OUT_ENABLE>
+                <AFIOM_EVENT_OUT_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EVENT_OUT_PORT__</key></AFIOM_EVENT_OUT_PORT>
+                <AFIOM_EVENT_OUT_PIN><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EVENT_OUT_PIN__</key></AFIOM_EVENT_OUT_PIN>
+                <AFIOM_REMAP_SPI1><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_SPI1__</key></AFIOM_REMAP_SPI1>
+                <AFIOM_REMAP_I2C1><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_I2C1__</key></AFIOM_REMAP_I2C1>
+                <AFIOM_REMAP_USART1><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_USART1__</key></AFIOM_REMAP_USART1>
+                <AFIOM_REMAP_USART2><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_USART2__</key></AFIOM_REMAP_USART2>
+                <AFIOM_REMAP_USART3><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_USART3__</key></AFIOM_REMAP_USART3>
+                <AFIOM_REMAP_TIM1><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM1__</key></AFIOM_REMAP_TIM1>
+                <AFIOM_REMAP_TIM2><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM2__</key></AFIOM_REMAP_TIM2>
+                <AFIOM_REMAP_TIM3><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM3__</key></AFIOM_REMAP_TIM3>
+                <AFIOM_REMAP_TIM4><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM4__</key></AFIOM_REMAP_TIM4>
+                <AFIOM_REMAP_CAN><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_CAN__</key></AFIOM_REMAP_CAN>
+                <AFIOM_REMAP_PD01><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_PD01__</key></AFIOM_REMAP_PD01>
+                <AFIOM_REMAP_TIM5CH4><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM5CH4__</key></AFIOM_REMAP_TIM5CH4>
+                <AFIOM_REMAP_ADC1_ETRGINJ><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_ADC1_ETRGINJ__</key></AFIOM_REMAP_ADC1_ETRGINJ>
+                <AFIOM_REMAP_ADC1_ETRGREG><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_ADC1_ETRGREG__</key></AFIOM_REMAP_ADC1_ETRGREG>
+                <AFIOM_REMAP_ADC2_ETRGINJ><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_ADC2_ETRGINJ__</key></AFIOM_REMAP_ADC2_ETRGINJ>
+                <AFIOM_REMAP_ADC2_ETRGREG><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_ADC2_ETRGREG__</key></AFIOM_REMAP_ADC2_ETRGREG>
+                <AFIOM_REMAP_SWJ_CFG><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_SWJ_CFG__</key></AFIOM_REMAP_SWJ_CFG>
+                <AFIOM_REMAP_ETH><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_ETH__</key></AFIOM_REMAP_ETH>
+                <AFIOM_REMAP_CAN2><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_CAN2__</key></AFIOM_REMAP_CAN2>
+                <AFIOM_REMAP_MII_RMII_SEL><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_MII_RMII_SEL__</key></AFIOM_REMAP_MII_RMII_SEL>
+                <AFIOM_REMAP_SPI3><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_SPI3__</key></AFIOM_REMAP_SPI3>
+                <AFIOM_REMAP_TIM2ITR1><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM2ITR1__</key></AFIOM_REMAP_TIM2ITR1>
+                <AFIOM_REMAP_PTP_PPS><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_PTP_PPS__</key></AFIOM_REMAP_PTP_PPS>
+                <AFIOM_REMAP_CEC><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_CEC__</key></AFIOM_REMAP_CEC>
+                <AFIOM_REMAP_TIM1_DMA><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM1_DMA__</key></AFIOM_REMAP_TIM1_DMA>
+                <AFIOM_REMAP_TIM9><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM9__</key></AFIOM_REMAP_TIM9>
+                <AFIOM_REMAP_TIM10><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM10__</key></AFIOM_REMAP_TIM10>
+                <AFIOM_REMAP_TIM11><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM11__</key></AFIOM_REMAP_TIM11>
+                <AFIOM_REMAP_TIM12><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM12__</key></AFIOM_REMAP_TIM12>
+                <AFIOM_REMAP_TIM13><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM13__</key></AFIOM_REMAP_TIM13>
+                <AFIOM_REMAP_TIM14><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM14__</key></AFIOM_REMAP_TIM14>
+                <AFIOM_REMAP_TIM15><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM15__</key></AFIOM_REMAP_TIM15>
+                <AFIOM_REMAP_TIM16><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM16__</key></AFIOM_REMAP_TIM16>
+                <AFIOM_REMAP_TIM17><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM17__</key></AFIOM_REMAP_TIM17>
+                <AFIOM_REMAP_FSMC_NADV><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_FSMC_NADV__</key></AFIOM_REMAP_FSMC_NADV>
+                <AFIOM_REMAP_TIM76_DAC_DMA><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_TIM76_DAC_DMA__</key></AFIOM_REMAP_TIM76_DAC_DMA>
+                <AFIOM_REMAP_MISC><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_REMAP_MISC__</key></AFIOM_REMAP_MISC>
+                <AFIOM_EXTI0_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI0_PORT__</key></AFIOM_EXTI0_PORT>
+                <AFIOM_EXTI1_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI1_PORT__</key></AFIOM_EXTI1_PORT>
+                <AFIOM_EXTI2_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI2_PORT__</key></AFIOM_EXTI2_PORT>
+                <AFIOM_EXTI3_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI3_PORT__</key></AFIOM_EXTI3_PORT>
+                <AFIOM_EXTI4_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI4_PORT__</key></AFIOM_EXTI4_PORT>
+                <AFIOM_EXTI5_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI5_PORT__</key></AFIOM_EXTI5_PORT>
+                <AFIOM_EXTI6_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI6_PORT__</key></AFIOM_EXTI6_PORT>
+                <AFIOM_EXTI7_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI7_PORT__</key></AFIOM_EXTI7_PORT>
+                <AFIOM_EXTI8_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI8_PORT__</key></AFIOM_EXTI8_PORT>
+                <AFIOM_EXTI9_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI9_PORT__</key></AFIOM_EXTI9_PORT>
+                <AFIOM_EXTI10_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI10_PORT__</key></AFIOM_EXTI10_PORT>
+                <AFIOM_EXTI11_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI11_PORT__</key></AFIOM_EXTI11_PORT>
+                <AFIOM_EXTI12_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI12_PORT__</key></AFIOM_EXTI12_PORT>
+                <AFIOM_EXTI13_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI13_PORT__</key></AFIOM_EXTI13_PORT>
+                <AFIOM_EXTI14_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI14_PORT__</key></AFIOM_EXTI14_PORT>
+                <AFIOM_EXTI15_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI15_PORT__</key></AFIOM_EXTI15_PORT>
 
                 <USB_PULLUP_PIN><path>../../config/stm32f1/usb_flags.h</path><key>__USB_PULLUP_PIN__</key></USB_PULLUP_PIN>
                 <USB_IRQ_PRIORITY><path>../../config/stm32f1/usb_flags.h</path><key>__USB_IRQ_PRIORITY__</key></USB_IRQ_PRIORITY>
@@ -3319,7 +3356,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3331,7 +3368,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3356,7 +3393,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3368,7 +3405,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3393,7 +3430,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3408,7 +3445,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3434,7 +3471,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3446,7 +3483,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3474,7 +3511,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3489,7 +3526,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3514,7 +3551,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3526,7 +3563,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3551,7 +3588,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3563,7 +3600,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3588,7 +3625,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3600,7 +3637,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3625,7 +3662,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3637,7 +3674,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3663,7 +3700,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3675,7 +3712,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3701,7 +3738,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3713,7 +3750,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3738,7 +3775,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3748,7 +3785,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3773,7 +3810,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3785,7 +3822,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3811,7 +3848,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3823,7 +3860,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3849,7 +3886,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3859,7 +3896,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3884,7 +3921,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3896,7 +3933,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3922,7 +3959,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3934,7 +3971,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -3960,7 +3997,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -3975,7 +4012,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4001,7 +4038,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4016,7 +4053,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4042,7 +4079,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4057,7 +4094,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4083,7 +4120,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4098,7 +4135,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4123,7 +4160,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4133,7 +4170,7 @@
                             <port><name>1</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4159,7 +4196,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4171,7 +4208,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4198,7 +4235,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4210,7 +4247,7 @@
                             <port><name>2</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4237,7 +4274,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4252,7 +4289,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4279,7 +4316,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4294,7 +4331,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4321,7 +4358,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4336,7 +4373,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4363,7 +4400,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4378,7 +4415,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4407,7 +4444,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4422,7 +4459,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4451,7 +4488,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4466,7 +4503,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4495,7 +4532,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4510,7 +4547,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4536,7 +4573,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4551,7 +4588,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4576,7 +4613,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4591,7 +4628,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4617,7 +4654,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4632,7 +4669,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4658,7 +4695,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4673,7 +4710,7 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <AFIO></AFIO>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4698,7 +4735,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4713,8 +4750,8 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
-                        <AFIO></AFIO>
+                        <ETHMAC></ETHMAC>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4739,7 +4776,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4754,8 +4791,8 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
-                        <AFIO></AFIO>
+                        <ETHMAC></ETHMAC>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>
@@ -4780,7 +4817,7 @@
                         </GPIO>
                         <PLL></PLL>
                         <TTY></TTY>
-                        <CRC></CRC>
+                        <CRCM></CRCM>
                         <WDG></WDG>
                         <UART>
                             <port><name>1</name></port>
@@ -4795,8 +4832,8 @@
                             <port><name>3</name></port>
                         </SPI>
                         <SDSPI></SDSPI>
-                        <ETH></ETH>
-                        <AFIO></AFIO>
+                        <ETHMAC></ETHMAC>
+                        <AFIOM></AFIOM>
                         <IRQ></IRQ>
                         <I2C>
                             <port><name>1</name></port>

@@ -266,7 +266,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         if (device_is_access_granted(&hdl->dev_lock)) {
                 switch (request) {
-                case IOCTL_ETH__ETHERNET_INIT:
+                case IOCTL_ETHMAC__ETHERNET_INIT:
                         /* configure Ethernet */
                         ETH_DeInit();
                         ETH_SoftwareReset();
@@ -317,7 +317,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EIO;
                         break;
 
-                case IOCTL_ETH__GET_RX_FLAG:
+                case IOCTL_ETHMAC__GET_RX_FLAG:
                         if (arg) {
                                 *(bool *)arg = hdl->rx_data_ready;
                                 return STD_RET_OK;
@@ -325,11 +325,11 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__CLEAR_RX_FLAG:
+                case IOCTL_ETHMAC__CLEAR_RX_FLAG:
                         hdl->rx_data_ready = false;
                         return STD_RET_OK;
 
-                case IOCTL_ETH__SET_MAC_ADR:
+                case IOCTL_ETHMAC__SET_MAC_ADR:
                         if (arg) {
                                 u8_t *MAC = arg;
                                 ETH_MACAddressConfig(ETH_MAC_Address0, MAC);
@@ -338,7 +338,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__GET_RX_PACKET_SIZE:
+                case IOCTL_ETHMAC__GET_RX_PACKET_SIZE:
                         if (arg) {
                                 u32_t *packet_size = arg;
                                 *packet_size = ETH_GetRxPktSize();
@@ -347,7 +347,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__GET_RX_PACKET_CHAIN_MODE:
+                case IOCTL_ETHMAC__GET_RX_PACKET_CHAIN_MODE:
                         if (arg) {
                                 struct ethmac_frame frame = {.length = 0, .buffer = NULL};
 
@@ -395,7 +395,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__GET_RX_BUFFER_UNAVAILABLE_STATUS:
+                case IOCTL_ETHMAC__GET_RX_BUFFER_UNAVAILABLE_STATUS:
                         if (arg) {
                                 bool *status = arg;
                                 if (ETH->DMASR & ETH_DMASR_RBUS)
@@ -408,15 +408,15 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__CLEAR_RX_BUFFER_UNAVAILABLE_STATUS:
+                case IOCTL_ETHMAC__CLEAR_RX_BUFFER_UNAVAILABLE_STATUS:
                         ETH->DMASR = ETH_DMASR_RBUS;
                         return STD_RET_OK;
 
-                case IOCTL_ETH__RESUME_DMA_RECEPTION:
+                case IOCTL_ETHMAC__RESUME_DMA_RECEPTION:
                         ETH->DMARPDR = 0;
                         return STD_RET_OK;
 
-                case IOCTL_ETH__SET_TX_FRAME_LENGTH_CHAIN_MODE:
+                case IOCTL_ETHMAC__SET_TX_FRAME_LENGTH_CHAIN_MODE:
                         if (arg) {
                                 u16_t frame_length = *(int*)arg;
 
@@ -453,7 +453,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__GET_CURRENT_TX_BUFFER:
+                case IOCTL_ETHMAC__GET_CURRENT_TX_BUFFER:
                         if (arg) {
                                 u8_t **buffer = arg;
 
@@ -464,7 +464,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__INIT_DMA_TX_DESC_LIST_CHAIN_MODE:
+                case IOCTL_ETHMAC__INIT_DMA_TX_DESC_LIST_CHAIN_MODE:
                         if (arg) {
                                 struct ethmac_DMA_description DMA_desc = *(struct ethmac_DMA_description *)arg;
                                 eth_mem->tx_buffer_count       = DMA_desc.buffer_count;
@@ -482,7 +482,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case IOCTL_ETH__INIT_DMA_RX_DESC_LIST_CHAIN_MODE:
+                case IOCTL_ETHMAC__INIT_DMA_RX_DESC_LIST_CHAIN_MODE:
                         if (arg) {
                                 struct ethmac_DMA_description DMA_desc = *(struct ethmac_DMA_description *)arg;
                                 eth_mem->rx_buffer_count       = DMA_desc.buffer_count;
@@ -500,7 +500,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         }
                         break;
 
-                case IOCTL_ETH__ENABLE_RX_IRQ:
+                case IOCTL_ETHMAC__ENABLE_RX_IRQ:
                         if (eth_mem->DMA_rx_descriptor_tab != NULL) {
                                 for (uint i = 0; i < eth_mem->rx_buffer_count; i++) {
                                         ETH_DMARxDescReceiveITConfig(&eth_mem->DMA_rx_descriptor_tab[i], ENABLE);
@@ -511,7 +511,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__ENABLE_TX_HARDWARE_CHECKSUM:
+                case IOCTL_ETHMAC__ENABLE_TX_HARDWARE_CHECKSUM:
                         if (eth_mem->DMA_tx_descriptor_tab != NULL) {
                                 for (uint i = 0; i < eth_mem->tx_buffer_count; i++) {
                                         ETH_DMATxDescChecksumInsertionConfig(&eth_mem->DMA_tx_descriptor_tab[i],
@@ -523,11 +523,11 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         errno = EINVAL;
                         break;
 
-                case IOCTL_ETH__ETHERNET_START:
+                case IOCTL_ETHMAC__ETHERNET_START:
                         ETH_Start();
                         return STD_RET_OK;
 
-                case IOCTL_ETH__ETHERNET_DEINIT:
+                case IOCTL_ETHMAC__ETHERNET_DEINIT:
                         ETH_DeInit();
                         ETH_SoftwareReset();
                         while (ETH_GetSoftwareResetStatus() == SET);

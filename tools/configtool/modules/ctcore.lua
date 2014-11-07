@@ -69,10 +69,28 @@ ct.icon.document_save_22x22 = wx.wxBitmap("pixmaps/22x22/document-save.png")
 ct.icon.document_save_22x22_dimmed = wx.wxBitmap("pixmaps/22x22/document-save-dimmed.png")
 ct.icon.document_info_16x16 = wx.wxBitmap("pixmaps/16x16/documentinfo.png")
 ct.icon.document_info_22x22 = wx.wxBitmap("pixmaps/22x22/documentinfo.png")
+ct.icon.document_export_16x16 = wx.wxBitmap("pixmaps/16x16/document-export.png")
+ct.icon.document_export_22x22 = wx.wxBitmap("pixmaps/22x22/document-export.png")
+ct.icon.document_import_16x16 = wx.wxBitmap("pixmaps/16x16/document-import.png")
+ct.icon.document_import_22x22 = wx.wxBitmap("pixmaps/22x22/document-import.png")
+ct.icon.document_edit_16x16 = wx.wxBitmap("pixmaps/16x16/document-edit.png")
+ct.icon.document_edit_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/document-edit-dimmed.png")
 ct.icon.tools_report_bug_16x16 = wx.wxBitmap("pixmaps/16x16/tools-report-bug.png")
 ct.icon.tools_report_bug_22x22 = wx.wxBitmap("pixmaps/22x22/tools-report-bug.png")
 ct.icon.view_pim_tasks_16x16 = wx.wxBitmap("pixmaps/16x16/view-pim-tasks.png")
 ct.icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
+ct.icon.apply_16x16 = wx.wxBitmap("pixmaps/16x16/dialog-ok-apply.png")
+ct.icon.apply_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/dialog-ok-apply-dimmed.png")
+ct.icon.edit_delete_16x16 = wx.wxBitmap("pixmaps/16x16/edit-delete.png")
+ct.icon.edit_delete_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/edit-delete-dimmed.png")
+ct.icon.list_add_16x16 = wx.wxBitmap("pixmaps/16x16/list-add.png")
+ct.icon.list_add_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/list-add-dimmed.png")
+ct.icon.list_remove_16x16 = wx.wxBitmap("pixmaps/16x16/list-remove.png")
+ct.icon.list_remove_16x16_dimmed = wx.wxBitmap("pixmaps/16x16/list-remove-dimmed.png")
+ct.icon.arrow_down_16x16 = wx.wxBitmap("pixmaps/16x16/arrow-down.png")
+ct.icon.arrow_up_16x16 = wx.wxBitmap("pixmaps/16x16/arrow-up.png")
+ct.icon.executable_16x16 = wx.wxBitmap("pixmaps/16x16/application-x-executable.png")
+
 
 --==============================================================================
 -- LOCAL OBJECTS
@@ -80,7 +98,7 @@ ct.icon.view_pim_tasks_22x22 = wx.wxBitmap("pixmaps/22x22/view-pim-tasks.png")
 local FILETYPE_HEADER   = 0
 local FILETYPE_MAKEFILE = 1
 local CFG_FILE_ID       = "87f472ea728616a4127b47dc08e5f2d2"
-local CFG_FILE_VERSION  = "2"
+local CFG_FILE_VERSION  = "3"
 local modify_event_func = nil
 local set_status_func   = nil
 
@@ -740,7 +758,7 @@ end
 -- @param  destination_path     path where modified template will be saved
 -- @param  replace_tags         tag translation table {{.tag = "", .to = ""}, ...}
 -- @param  {startline}          start line where template is inserted
--- @return On success 1 is returned, otherwise false
+-- @return On success >1 is returned, otherwise 0
 --------------------------------------------------------------------------------
 function ct:apply_template(template_path, destination_path, replace_tags, startline)
         assert(type(template_path) == "string", "apply_template(): template_path is not the string type")
@@ -750,6 +768,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
 
         local template_bfr = {}
         local dest_bfr     = {}
+        local n            = 0
 
         -- open template file and load to the buffer and replace tags
         template = io.open(template_path, "rb")
@@ -758,6 +777,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
                 return 0
         else
                 for line in template:lines() do
+                        n = n + 1
                         for _, t in pairs(replace_tags) do
                                 line = line:gsub(t.tag, t.to)
                         end
@@ -810,7 +830,7 @@ function ct:apply_template(template_path, destination_path, replace_tags, startl
                 dest:close()
         end
 
-        return 1
+        return n
 end
 
 
@@ -824,7 +844,19 @@ function ct.fs:exists(name)
                 return false
         end
 
-        return os.rename(name, name) and true or false
+        local exist = false
+
+        if os.rename(name, name) ~= true then
+                local f = io.open(name, "rb")
+                if f then
+                        exist = true
+                        f:close()
+                end
+        else
+                exist = true
+        end
+
+        return exist
 end
 
 
@@ -903,11 +935,35 @@ end
 
 --------------------------------------------------------------------------------
 -- @brief  Save selected table to file
--- @param  table        table to convert
+-- @param  tab          table to convert
 -- @param  file         file to dump
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
-function ct:save_table(table, file)
+function ct:save_table(tab, file)
+
+        local function spairs(t, order)
+                -- collect the keys
+                local keys = {}
+                for k in pairs(t) do keys[#keys+1] = k end
+
+                -- if order function given, sort by it by passing the table and keys a, b,
+                -- otherwise just sort the keys
+                if order then
+                        table.sort(keys, function(a,b) return order(t, a, b) end)
+                else
+                        table.sort(keys)
+                end
+
+                -- return the iterator function
+                local i = 0
+                return function()
+                        i = i + 1
+                        if keys[i] then
+                                return keys[i], t[keys[i]]
+                        end
+                end
+        end
+
         local savedTables = {} -- used to record tables that have been saved, so that we do not go into an infinite recursion
         local outFuncs = {
                 ['string']  = function(value) return string.format("%q",value) end;
@@ -936,7 +992,7 @@ function ct:save_table(table, file)
 
                 local out = '{\n'
 
-                for i,v in pairs(value) do
+                for i,v in spairs(value) do
                         out = out..indent..'['..outValue(i)..']='..outValue(v)..';\n'
                 end
 
@@ -949,11 +1005,11 @@ function ct:save_table(table, file)
 
         outFuncs['table'] = tableOut;
 
-        if type(table) == "table" and type(file) == "string" then
+        if type(tab) == "table" and type(file) == "string" then
                 local f = io.open(file, "wb")
                 if f then
                         f:write("-- dnx RTOS configuration file\n")
-                        f:write(tableOut(table))
+                        f:write(tableOut(tab))
                         f:close()
                         return true
                 end
@@ -995,12 +1051,13 @@ end
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
 function ct:save_project_configuration(file, parent)
-        local cfg_table   = {}
-        local cpu_arch    = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
-        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
-        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
-        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
-        local NETWORK_HDR = config.project.path.network_flags_file:GetValue()
+        local cfg_table      = {}
+        local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
+        local CONFIG_DIR     = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR    = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK     = config.project.path.project_makefile:GetValue()
+        local NETWORK_HDR    = config.project.path.network_flags_file:GetValue()
+        local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 
         -- basic file information
         cfg_table.ID       = CFG_FILE_ID
@@ -1009,7 +1066,7 @@ function ct:save_project_configuration(file, parent)
         cfg_table.file     = {}
 
         -- prepare progress dialog
-        local progress = wx.wxProgressDialog("Configuration export", "", 4 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        local progress = wx.wxProgressDialog("Configuration export", "", 5 + config.project.modules:NumChildren(), ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(300, 150))
         progress:Centre()
@@ -1070,6 +1127,10 @@ function ct:save_project_configuration(file, parent)
                 end
         end
 
+        -- save initd configuration table
+        progress:Update(pulse(), "Save initd configuration...")
+        cfg_table.initd = ct:load_table(INITD_CFG_FILE)
+
         -- save configuration to the file
         progress:Update(pulse(), "Save configuration to the file...")
         local status = ct:save_table(cfg_table, file)
@@ -1089,10 +1150,11 @@ end
 -- @return On success true is returned, otherwise false
 --------------------------------------------------------------------------------
 function ct:apply_project_configuration(file, parent)
-        local CONFIG_DIR  = config.project.path.config_dir:GetValue()
-        local PROJECT_HDR = config.project.path.project_flags_file:GetValue()
-        local PROJECT_MK  = config.project.path.project_makefile:GetValue()
-        local cfg_table   = ct:load_table(file)
+        local CONFIG_DIR     = config.project.path.config_dir:GetValue()
+        local PROJECT_HDR    = config.project.path.project_flags_file:GetValue()
+        local PROJECT_MK     = config.project.path.project_makefile:GetValue()
+        local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
+        local cfg_table      = ct:load_table(file)
 
         -- check file ID and table
         if cfg_table == nil or cfg_table.ID ~= CFG_FILE_ID then
@@ -1130,7 +1192,7 @@ function ct:apply_project_configuration(file, parent)
 
         -- progress dialog
         local num_files = 0 for _, _ in pairs(cfg_table.file) do num_files = num_files + 1 end
-        local progress  = wx.wxProgressDialog("Configuration export", "", 4 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
+        local progress  = wx.wxProgressDialog("Configuration export", "", 5 + num_files, ifs(parent, parent, wx.NULL), bit.bor(wx.wxPD_APP_MODAL,wx.wxPD_AUTO_HIDE))
         p = 0 local function pulse() p = p + 1 return p end
         progress:SetMinSize(wx.wxSize(450, 150))
         progress:Centre()
@@ -1164,6 +1226,10 @@ function ct:apply_project_configuration(file, parent)
                         f:close()
                 end
         end
+
+        -- load initd configuration
+        progress:Update(pulse(), "Applying initd configuration...")
+        ct:save_table(cfg_table.initd, INITD_CFG_FILE)
 
         progress:Destroy()
 

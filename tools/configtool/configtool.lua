@@ -42,6 +42,7 @@ require("modules/about")
 require("modules/creators")
 require("modules/new_module")
 require("modules/new_program")
+require("modules/startup")
 
 
 --==============================================================================
@@ -61,6 +62,7 @@ local page = {
         {form = file_systems,       subpage = true },
         {form = network,            subpage = true },
         {form = modules,            subpage = true },
+        {form = startup,            subpage = true },
         {form = creators,           subpage = false},
         {form = new_program,        subpage = true },
         {form = new_module,         subpage = true },
@@ -69,16 +71,17 @@ local page = {
 -- container for UI controls
 local ui = {}
 local ID = {}
-ID.TREEBOOK             = wx.wxNewId()
-ID.MENU_SAVE            = wx.wxID_SAVE
-ID.MENU_IMPORT          = wx.wxID_OPEN
-ID.MENU_EXPORT          = wx.wxID_SAVEAS
-ID.MENU_EXIT            = wx.wxID_EXIT
-ID.MENU_HELP_ABOUT      = wx.wxID_ABOUT
-ID.MENU_HELP_REPORT_BUG = wx.wxNewId()
-ID.TOOLBAR_SAVE         = wx.wxNewId()
-ID.TOOLBAR_IMPORT       = wx.wxNewId()
-ID.TOOLBAR_EXPORT       = wx.wxNewId()
+ID.TREEBOOK                 = wx.wxNewId()
+ID.MENU_SAVE                = wx.wxID_SAVE
+ID.MENU_IMPORT              = wx.wxID_OPEN
+ID.MENU_EXPORT              = wx.wxID_SAVEAS
+ID.MENU_EXIT                = wx.wxID_EXIT
+ID.MENU_CODE_GENERATE_INITD = wx.wxNewId()
+ID.MENU_HELP_ABOUT          = wx.wxID_ABOUT
+ID.MENU_HELP_REPORT_BUG     = wx.wxNewId()
+ID.TOOLBAR_SAVE             = wx.wxNewId()
+ID.TOOLBAR_IMPORT           = wx.wxNewId()
+ID.TOOLBAR_EXPORT           = wx.wxNewId()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -162,15 +165,17 @@ local function event_import_configuration()
         ui.treebook:SetSelection(0)
         if ui.treebook:GetSelection() == 0 then
 
-                dialog = wx.wxFileDialog(ui.frame,
-                                         "Import configuration file",
-                                         config.project.path.bsp_dir:GetValue(),
-                                         "",
-                                         "dnx RTOS configuration files (*.dnxc)|*.dnxc",
-                                         bit.bor(wx.wxFD_OPEN, wx.wxFD_FILE_MUST_EXIST))
+                local dialog = wx.wxFileDialog(ui.frame,
+                                               "Import configuration file",
+                                               config.project.path.bsp_dir:GetValue(),
+                                               "",
+                                               "dnx RTOS configuration files (*.dnxc)|*.dnxc|All files (*.*)|*.*",
+                                               wx.wxFD_OPEN+wx.wxFD_FILE_MUST_EXIST)
 
                 if (dialog:ShowModal() == wx.wxID_OK) then
                         ct:apply_project_configuration(dialog:GetPath(), ui.frame)
+                        ui.frame:SetStatusText("Loaded configuration: "..dialog:GetFilename(), 1)
+                        startup:generate()
                 end
         end
 end
@@ -184,8 +189,20 @@ end
 local function event_export_configuration()
         dialog = wx.wxFileDialog(ui.frame, "Export configuration file", config.project.path.bsp_dir:GetValue(), "", "dnx RTOS configuration files (*.dnxc)|*.dnxc", bit.bor(wx.wxFD_SAVE, wx.wxFD_OVERWRITE_PROMPT))
         if (dialog:ShowModal() == wx.wxID_OK) then
-                ct:save_project_configuration(dialog:GetPath(), ui.frame)
+                local path = dialog:GetPath()
+                if not path:match("%.dnxc$") then path = path..".dnxc" end
+                ct:save_project_configuration(path, ui.frame)
         end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Signal is called when menu's generate initd item is clicked
+-- @param  None
+-- @return None
+--------------------------------------------------------------------------------
+local function event_generate_initd()
+        startup:generate()
 end
 
 
@@ -198,7 +215,7 @@ local function event_configuration_modified(modified)
         toolBar:EnableTool(ID.TOOLBAR_SAVE, modified)
 
         if modified then
-                ui.frame:SetStatusText("Configuration is modified")
+                ui.frame:SetStatusText("Configuration is modified", 0)
         else
                 ui.frame:SetStatusText("")
         end
@@ -225,16 +242,23 @@ local function main()
         cfg_menu:Append(ui.menu_save)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_IMPORT, "&Import\tCtrl-I", "Import configuration from file")
-        menuitem:SetBitmap(ct.icon.document_open_16x16)
+        menuitem:SetBitmap(ct.icon.document_import_16x16)
         cfg_menu:Append(menuitem)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXPORT, "&Export\tCtrl-E", "Export configuration to file")
-        menuitem:SetBitmap(ct.icon.document_save_as_16x16)
+        menuitem:SetBitmap(ct.icon.document_export_16x16)
         cfg_menu:Append(menuitem)
 
         menuitem = wx.wxMenuItem(cfg_menu, ID.MENU_EXIT, "&Quit\tCtrl-Q", "Quit from Configtool")
         menuitem:SetBitmap(ct.icon.application_exit_16x16)
         cfg_menu:Append(menuitem)
+
+        -- create code menu
+        code_menu = wx.wxMenu()
+
+        menuitem = wx.wxMenuItem(code_menu, ID.MENU_CODE_GENERATE_INITD, "&Generate initd...", "Generate the initd code accortding to the current configuration...")
+        menuitem:SetBitmap(ct.icon.executable_16x16)
+        code_menu:Append(menuitem)
 
         -- create help menu
         help_menu = wx.wxMenu()
@@ -250,6 +274,7 @@ local function main()
         -- create menubar and add menus
         menubar = wx.wxMenuBar()
         menubar:Append(cfg_menu, "&Configuration")
+        menubar:Append(code_menu, "&Code")
         menubar:Append(help_menu, "&Help")
         ui.frame:SetMenuBar(menubar)
 
@@ -259,13 +284,13 @@ local function main()
         local toolBmpSize = toolBar:GetToolBitmapSize()
         toolBar:AddTool(ID.TOOLBAR_SAVE, "Save",ct. icon.document_save_22x22, ct.icon.document_save_22x22_dimmed, wx.wxITEM_NORMAL, "Save currently selected configuration")
         toolBar:AddSeparator()
-        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", ct.icon.document_open_22x22, "Import configuration from the file")
-        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", ct.icon.document_save_as_22x22, "Export configuration to the file")
+        toolBar:AddTool(ID.TOOLBAR_IMPORT, "Import", ct.icon.document_import_22x22, "Import configuration from the file")
+        toolBar:AddTool(ID.TOOLBAR_EXPORT, "Export", ct.icon.document_export_22x22, "Export configuration to the file")
         toolBar:Realize()
         toolBar:EnableTool(ID.TOOLBAR_SAVE, false)
 
-        statusBar = ui.frame:CreateStatusBar(1)
-        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool")
+        statusBar = ui.frame:CreateStatusBar(2)
+        ui.frame:SetStatusText("Welcome to dnx RTOS Configtool!", 0)
 
 
         -- create treebook view
@@ -294,6 +319,7 @@ local function main()
         ui.frame:Connect(ID.MENU_IMPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_import_configuration)
         ui.frame:Connect(ID.MENU_EXPORT, wx.wxEVT_COMMAND_MENU_SELECTED, event_export_configuration)
         ui.frame:Connect(ID.MENU_EXIT, wx.wxEVT_COMMAND_MENU_SELECTED, window_close)
+        ui.frame:Connect(ID.MENU_CODE_GENERATE_INITD, wx.wxEVT_COMMAND_MENU_SELECTED, event_generate_initd)
         ui.frame:Connect(ID.MENU_HELP_ABOUT, wx.wxEVT_COMMAND_MENU_SELECTED, function() about:show(ui.frame) end)
         ui.frame:Connect(ID.MENU_HELP_REPORT_BUG, wx.wxEVT_COMMAND_MENU_SELECTED, function() wx.wxLaunchDefaultBrowser("https://bitbucket.org/devdnl/dnx/issues/new") end)
         ui.frame:Connect(ID.TOOLBAR_SAVE, wx.wxEVT_COMMAND_MENU_SELECTED, event_save_configuration)

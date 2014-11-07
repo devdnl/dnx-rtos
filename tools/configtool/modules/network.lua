@@ -98,6 +98,9 @@ local function load_controls()
 
         -- load basic options
         for i = 0, 5 do ui.TextCtrl_MAC[i]:SetValue(ct:key_read(config.project.key["NETWORK_MAC_ADDR_"..i]):gsub("0x", "")) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_addr[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_ADDR"..i])) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_mask[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_MASK"..i])) end
+        for i = 1, 4 do ui.TextCtrl_static_IP_gw[i]:SetValue(ct:key_read(config.project.key["NETWORK_IP_GW"..i])) end
         ui.ComboBox_path:SetValue(ct:key_read(config.project.key.NETWORK_ETHIF_FILE):gsub('"', ''))
 
         -- load adv MEM options
@@ -310,6 +313,9 @@ local function save_configuration()
 
         -- save basic options
         for i = 0, 5 do ct:key_write(config.project.key["NETWORK_MAC_ADDR_"..i], "0x"..ui.TextCtrl_MAC[i]:GetValue()) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_ADDR"..i], tostring(ui.TextCtrl_static_IP_addr[i]:GetValue())) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_MASK"..i], tostring(ui.TextCtrl_static_IP_mask[i]:GetValue())) end
+        for i = 1, 4 do ct:key_write(config.project.key["NETWORK_IP_GW"..i], tostring(ui.TextCtrl_static_IP_gw[i]:GetValue())) end
         ct:key_write(config.project.key.NETWORK_ETHIF_FILE, '"'..ui.ComboBox_path:GetValue()..'"')
 
         -- save adv MEM options
@@ -517,11 +523,8 @@ end
 -- @return Created panel with widgets
 --------------------------------------------------------------------------------
 local function create_basic_options_widgets(parent)
-        ID.PANEL_BASIC   = wx.wxNewId()
-        ID.COMBOBOX_PATH = wx.wxNewId()
-
         -- create panel for basic options
-        ui.Panel_basic = wx.wxPanel(parent, ID.PANEL_BASIC, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
+        ui.Panel_basic = wx.wxPanel(parent, wx.wxNewId(), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTAB_TRAVERSAL)
         ui.FlexGridSizer_basic = wx.wxFlexGridSizer(0, 1, 0, 0)
 
         -- create staticbox sizer for MAC address
@@ -530,11 +533,8 @@ local function create_basic_options_widgets(parent)
 
                 -- add MAC address widgets
                 ui.TextCtrl_MAC = {}
-                ID.TEXTCTRL_MAC = {}
                 for i = 0, 5 do
-                        ID.TEXTCTRL_MAC[i] = wx.wxNewId()
-
-                        ui.TextCtrl_MAC[i] = wx.wxTextCtrl(ui.Panel_basic, ID.TEXTCTRL_MAC[i], "FF", wx.wxDefaultPosition, wx.wxSize(30,-1), 0, ct.hexvalidator)
+                        ui.TextCtrl_MAC[i] = wx.wxTextCtrl(ui.Panel_basic, wx.wxNewId(), "FF", wx.wxDefaultPosition, wx.wxSize(30,-1), 0, ct.hexvalidator)
                         ui.TextCtrl_MAC[i]:SetMaxLength(2)
                         ui.FlexGridSizer_MAC:Add(ui.TextCtrl_MAC[i], 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -543,7 +543,7 @@ local function create_basic_options_widgets(parent)
                                 ui.FlexGridSizer_MAC:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                         end
 
-                        ui.window:Connect(ID.TEXTCTRL_MAC[i], wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
+                        ui.TextCtrl_MAC[i]:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
                 end
 
                 -- add MAC group to the sizer
@@ -554,12 +554,55 @@ local function create_basic_options_widgets(parent)
         ui.StaticBoxSizer_path = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_basic, "Ethernet device path")
 
                 -- create path selection combobox
-                ui.ComboBox_path = wx.wxComboBox(ui.Panel_basic, ID.COMBOBOX_PATH, "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
-                ui.ComboBox_path:Append("/dev/eth0")
+                ui.ComboBox_path = wx.wxComboBox(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxDefaultSize, {})
+                ui.ComboBox_path:Append({"/dev/eth0", "/dev/ethmac"})
                 ui.ComboBox_path:Connect(wx.wxEVT_COMMAND_COMBOBOX_SELECTED, function() modified:yes() end)
                 ui.ComboBox_path:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function() modified:yes() end)
                 ui.StaticBoxSizer_path:Add(ui.ComboBox_path, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer_basic:Add(ui.StaticBoxSizer_path, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+
+        -- create IP configuration group
+        ui.StaticBoxSizer_static_IP = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel_basic, "Static IP configuration")
+        ui.FlexGridSizer_static_IP = wx.wxFlexGridSizer(0, 8, 0, 0)
+
+                local function add_IP_fields(name, container)
+                        container = {}
+                        ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, name), 1, (wx.wxALL+wx.wxALIGN_RIGHT+wx.wxALIGN_CENTER_VERTICAL), 5)
+                        for i = 1, 4 do
+                                container[i] = wx.wxTextCtrl(ui.Panel_basic, wx.wxNewId(), "", wx.wxDefaultPosition, wx.wxSize(50,-1), 0, ct.decvalidator)
+                                container[i]:SetMaxLength(3)
+                                container[i]:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED,
+                                        function ()
+                                                local val = tonumber(container[i]:GetValue())
+                                                if val ~= nil then
+                                                        if val > 255 then
+                                                                container[i]:SetValue("255")
+                                                                container[i]:SetInsertionPoint(3)
+                                                        end
+                                                end
+
+                                                modified:yes()
+                                        end
+                                )
+
+                                ui.FlexGridSizer_static_IP:Add(container[i], 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+
+                                if i < 4 then
+                                        ui.FlexGridSizer_static_IP:Add(wx.wxStaticText(ui.Panel_basic, wx.wxID_ANY, "."), 1, (wx.wxALL+wx.wxALIGN_CENTER_HORIZONTAL+wx.wxALIGN_CENTER_VERTICAL), 0)
+                                end
+                        end
+
+                        return container
+                end
+
+                ui.TextCtrl_static_IP_addr = add_IP_fields("IP Address:")
+                ui.TextCtrl_static_IP_mask = add_IP_fields("IP Mask:")
+                ui.TextCtrl_static_IP_gw   = add_IP_fields("Gateway IP:")
+
+                -- add group to panel's sizer
+                ui.StaticBoxSizer_static_IP:Add(ui.FlexGridSizer_static_IP, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer_basic:Add(ui.StaticBoxSizer_static_IP, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         -- set panel's sizer
         ui.Panel_basic:SetSizer(ui.FlexGridSizer_basic)
@@ -2194,6 +2237,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function network:refresh()
+        ui.window:Hide()
+
         -- refresh priority range
         priority_min, priority_max = operating_system:get_priority_range()
 
@@ -2208,6 +2253,8 @@ function network:refresh()
         modified:enable(false)
         load_controls()
         modified:enable(true)
+
+        ui.window:Show()
 end
 
 
