@@ -11,6 +11,7 @@ New Features, Improvements:
 - Configtool: added clock tree window to the PLL configuration
 - Configtool: added a new program creator
 - Configtool: added more network configuration options (basic and advanced)
+- Configtool: added initd configuration. From/to BSP can be imported/exported initd configuration as well.
 - net: added a new interface: net_get_host_by_name() that resolves IP address by host name (by using DNS)
 - Makefile: added flash and reset targets (targets are connected to the scripts)
 - Eclipse: added Configtool to the External tools
