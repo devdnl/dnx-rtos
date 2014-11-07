@@ -85,9 +85,9 @@
 #               include "stm32f1/wdg_def.h"
 #       endif
 #endif
-#if (__ENABLE_USB__)
+#if (__ENABLE_USBD__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/usb_def.h"
+#               include "stm32f1/usbd_def.h"
 #       endif
 #endif
 #if (__ENABLE_IRQ__)
@@ -147,7 +147,7 @@
 #if (__ENABLE_SPI__)
         _IMPORT_MODULE_INTERFACE(SPI);
 #endif
-#if (__ENABLE_USB__)
+#if (__ENABLE_USBD__)
         _IMPORT_MODULE_INTERFACE(USBD);
 #endif
 #if (__ENABLE_IRQ__)
@@ -198,7 +198,7 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_SPI__)
         _MODULE_NAME(SPI),
         #endif
-        #if (__ENABLE_USB__)
+        #if (__ENABLE_USBD__)
         _MODULE_NAME(USBD),
         #endif
         #if (__ENABLE_IRQ__)
@@ -395,15 +395,15 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* USB ===============================================================*/
-        #if (__ENABLE_USB__)
-        _DRIVER_INTERFACE(USBD, "usb_ep0", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_0),
-        _DRIVER_INTERFACE(USBD, "usb_ep1", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_1),
-        _DRIVER_INTERFACE(USBD, "usb_ep2", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_2),
-        _DRIVER_INTERFACE(USBD, "usb_ep3", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_3),
-        _DRIVER_INTERFACE(USBD, "usb_ep4", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_4),
-        _DRIVER_INTERFACE(USBD, "usb_ep5", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_5),
-        _DRIVER_INTERFACE(USBD, "usb_ep6", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_6),
-        _DRIVER_INTERFACE(USBD, "usb_ep7", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_7),
+        #if (__ENABLE_USBD__)
+        _DRIVER_INTERFACE(USBD, "usbd-ep0", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_0),
+        _DRIVER_INTERFACE(USBD, "usbd-ep1", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_1),
+        _DRIVER_INTERFACE(USBD, "usbd-ep2", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_2),
+        _DRIVER_INTERFACE(USBD, "usbd-ep3", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_3),
+        _DRIVER_INTERFACE(USBD, "usbd-ep4", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_4),
+        _DRIVER_INTERFACE(USBD, "usbd-ep5", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_5),
+        _DRIVER_INTERFACE(USBD, "usbd-ep6", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_6),
+        _DRIVER_INTERFACE(USBD, "usbd-ep7", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_7),
         #endif
 
         /* IRQ ===============================================================*/

@@ -1,5 +1,5 @@
 --[[============================================================================
-@file    usb.lua
+@file    usbd.lua
 
 @author  Daniel Zorychta
 
@@ -36,7 +36,7 @@ require("modules/ctcore")
 --==============================================================================
 -- GLOBAL OBJECTS
 --==============================================================================
-usb = {}
+usbd = {}
 
 
 --==============================================================================
@@ -65,21 +65,21 @@ ep0_size_idx["64"] = 3
 --------------------------------------------------------------------------------
 local function load_configuration()
         -- load module enable controls
-        local module_enable = ct:get_module_state("USB")
+        local module_enable = ct:get_module_state("USBD")
         ui.CheckBox_module_enable:SetValue(module_enable)
         ui.Panel1:Enable(module_enable)
 
         -- load endpoint 0 size controls
-        local ep0_size = ep0_size_idx[ct:key_read(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE)]
+        local ep0_size = ep0_size_idx[ct:key_read(config.arch.stm32f1.key.USBD_ENDPOINT0_SIZE)]
         if ep0_size == nil then ep0_size = 0 end
         ui.Choice_EP0_size:SetSelection(ep0_size)
 
         -- load D+ pullup pin name
-        local pullup_pin = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.USB_PULLUP_PIN))
+        local pullup_pin = ct:get_string_index(pin_list, ct:key_read(config.arch.stm32f1.key.USBD_PULLUP_PIN))
         ui.Choice_pullup_pin:SetSelection(pullup_pin)
 
         -- load interrupt priority
-        local irq_prio = ct:key_read(config.arch.stm32f1.key.USB_IRQ_PRIORITY)
+        local irq_prio = ct:key_read(config.arch.stm32f1.key.USBD_IRQ_PRIORITY)
         if irq_prio == config.project.def.DEFAULT_IRQ_PRIORITY:GetValue() then
                 irq_prio = #prio_list
         else
@@ -100,10 +100,10 @@ local function save_configuration()
         if pullup_pin == 0 then
                 pullup_pin = 1
         end
-        ct:key_write(config.arch.stm32f1.key.USB_PULLUP_PIN, pin_list[pullup_pin])
+        ct:key_write(config.arch.stm32f1.key.USBD_PULLUP_PIN, pin_list[pullup_pin])
         
         -- save module enable settings
-        ct:enable_module("USB", ui.CheckBox_module_enable:GetValue())
+        ct:enable_module("USBD", ui.CheckBox_module_enable:GetValue())
 
         -- save endpoint 0 size
         local ep0_size = ui.Choice_EP0_size:GetSelection()
@@ -114,7 +114,7 @@ local function save_configuration()
                 end
         end
         if type(ep0_size) == "number" then ep0_size = "8" end
-        ct:key_write(config.arch.stm32f1.key.USB_ENDPOINT0_SIZE, ep0_size)
+        ct:key_write(config.arch.stm32f1.key.USBD_ENDPOINT0_SIZE, ep0_size)
 
         -- save interrupt priority
         local irq_prio = ui.Choice_irq_prio:GetSelection() + 1
@@ -123,7 +123,7 @@ local function save_configuration()
         else
                 irq_prio = prio_list[irq_prio].value
         end
-        ct:key_write(config.arch.stm32f1.key.USB_IRQ_PRIORITY, irq_prio)
+        ct:key_write(config.arch.stm32f1.key.USBD_IRQ_PRIORITY, irq_prio)
 
         --
         modified:no()
@@ -158,7 +158,7 @@ end
 -- @param  parent       parent window
 -- @return New window handle
 --------------------------------------------------------------------------------
-function usb:create_window(parent)
+function usbd:create_window(parent)
         pin_list = gpio:get_pin_list(true)
 
         ui = {}
@@ -222,7 +222,7 @@ end
 -- @param  None
 -- @return Module name
 --------------------------------------------------------------------------------
-function usb:get_window_name()
+function usbd:get_window_name()
         return "USB"
 end
 
@@ -232,7 +232,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-function usb:selected()
+function usbd:selected()
         local new_pin_list = gpio:get_pin_list(true)
 
         local equal = true
@@ -257,7 +257,7 @@ end
 -- @param  None
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
-function usb:is_modified()
+function usbd:is_modified()
         return modified:get_value()
 end
 
@@ -266,7 +266,7 @@ end
 -- @brief  Function save configuration
 -- @return None
 --------------------------------------------------------------------------------
-function usb:save()
+function usbd:save()
         save_configuration()
 end
 
@@ -275,7 +275,7 @@ end
 -- @brief  Function discard modified configuration
 -- @return None
 --------------------------------------------------------------------------------
-function usb:discard()
+function usbd:discard()
         load_configuration()
         modified:no()
 end
@@ -287,5 +287,5 @@ end
 -- @return Module handler
 --------------------------------------------------------------------------------
 function get_handler()
-        return usb
+        return usbd
 end

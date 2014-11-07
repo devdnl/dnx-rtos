@@ -1861,6 +1861,7 @@ end
 function startup:refresh()
         ui.window:Hide()
 
+        drv_list:reload()
         app_list:reload()
         FS_list:reload()
 

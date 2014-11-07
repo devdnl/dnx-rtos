@@ -32,7 +32,7 @@
             <ENABLE_TTY_MK><path>../../config/project/Makefile</path><key>__ENABLE_TTY__</key></ENABLE_TTY_MK>
             <ENABLE_UART_MK><path>../../config/project/Makefile</path><key>__ENABLE_UART__</key></ENABLE_UART_MK>
             <ENABLE_WDG_MK><path>../../config/project/Makefile</path><key>__ENABLE_WDG__</key></ENABLE_WDG_MK>
-            <ENABLE_USB_MK><path>../../config/project/Makefile</path><key>__ENABLE_USB__</key></ENABLE_USB_MK>
+            <ENABLE_USBD_MK><path>../../config/project/Makefile</path><key>__ENABLE_USBD__</key></ENABLE_USBD_MK>
             <ENABLE_I2C_MK><path>../../config/project/Makefile</path><key>__ENABLE_I2C__</key></ENABLE_I2C_MK>
             <ENABLE_IRQ_MK><path>../../config/project/Makefile</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_MK>
 
@@ -261,7 +261,7 @@
             <ENABLE_TTY_H><path>../../config/project/flags.h</path><key>__ENABLE_TTY__</key></ENABLE_TTY_H>
             <ENABLE_UART_H><path>../../config/project/flags.h</path><key>__ENABLE_UART__</key></ENABLE_UART_H>
             <ENABLE_WDG_H><path>../../config/project/flags.h</path><key>__ENABLE_WDG__</key></ENABLE_WDG_H>
-            <ENABLE_USB_H><path>../../config/project/flags.h</path><key>__ENABLE_USB__</key></ENABLE_USB_H>
+            <ENABLE_USBD_H><path>../../config/project/flags.h</path><key>__ENABLE_USBD__</key></ENABLE_USBD_H>
             <ENABLE_I2C_H><path>../../config/project/flags.h</path><key>__ENABLE_I2C__</key></ENABLE_I2C_H>
             <ENABLE_IRQ_H><path>../../config/project/flags.h</path><key>__ENABLE_IRQ__</key></ENABLE_IRQ_H>
         </key>
@@ -282,7 +282,7 @@
             <module noarch="true" ><name>TTY</name><description>This module handles virtual terminals used to communicate with user.</description></module>
             <module noarch="false"><name>UART</name><description>This module handles UART peripherals.</description></module>
             <module noarch="false"><name>WDG</name><description>This module handles Watchdog peripherals.</description></module>
-            <module noarch="false"><name>USB</name><description>This module handles USB peripherals in the device mode.</description></module>
+            <module noarch="false"><name>USBD</name><description>This module handles USB peripherals in the device mode.</description></module>
             <module noarch="false"><name>I2C</name><description>This module handles I2C peripherals.</description></module>
             <module noarch="false"><name>IRQ</name><description>This module handles external interrupts.</description></module>
         </modules>
@@ -887,9 +887,9 @@
                 <AFIOM_EXTI14_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI14_PORT__</key></AFIOM_EXTI14_PORT>
                 <AFIOM_EXTI15_PORT><path>../../config/stm32f1/afiom_flags.h</path><key>__AFIOM_EXTI15_PORT__</key></AFIOM_EXTI15_PORT>
 
-                <USB_PULLUP_PIN><path>../../config/stm32f1/usb_flags.h</path><key>__USB_PULLUP_PIN__</key></USB_PULLUP_PIN>
-                <USB_IRQ_PRIORITY><path>../../config/stm32f1/usb_flags.h</path><key>__USB_IRQ_PRIORITY__</key></USB_IRQ_PRIORITY>
-                <USB_ENDPOINT0_SIZE><path>../../config/stm32f1/usb_flags.h</path><key>__USB_ENDPOINT0_SIZE__</key></USB_ENDPOINT0_SIZE>
+                <USBD_PULLUP_PIN><path>../../config/stm32f1/usbd_flags.h</path><key>__USBD_PULLUP_PIN__</key></USBD_PULLUP_PIN>
+                <USBD_IRQ_PRIORITY><path>../../config/stm32f1/usbd_flags.h</path><key>__USBD_IRQ_PRIORITY__</key></USBD_IRQ_PRIORITY>
+                <USBD_ENDPOINT0_SIZE><path>../../config/stm32f1/usbd_flags.h</path><key>__USBD_ENDPOINT0_SIZE__</key></USBD_ENDPOINT0_SIZE>
 
                 <UART_UART1_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART1_ENABLE__</key></UART_UART1_ENABLE>
                 <UART_UART2_ENABLE><path>../../config/stm32f1/uart_flags.h</path><key>__UART_UART2_ENABLE__</key></UART_UART2_ENABLE>
@@ -3790,7 +3790,7 @@
                         <I2C>
                             <port><name>1</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -3828,7 +3828,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -3866,7 +3866,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -3901,7 +3901,7 @@
                         <I2C>
                             <port><name>1</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -3939,7 +3939,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -3977,7 +3977,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4018,7 +4018,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4059,7 +4059,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4100,7 +4100,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4141,7 +4141,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4175,7 +4175,7 @@
                         <I2C>
                             <port><name>1</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4214,7 +4214,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4253,7 +4253,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4295,7 +4295,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4337,7 +4337,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4379,7 +4379,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4421,7 +4421,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4465,7 +4465,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4509,7 +4509,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>
@@ -4553,7 +4553,7 @@
                             <port><name>1</name></port>
                             <port><name>2</name></port>
                         </I2C>
-                        <USB></USB>
+                        <USBD></USBD>
                         <LOOP></LOOP>
                     </peripherals>
                 </cpu>

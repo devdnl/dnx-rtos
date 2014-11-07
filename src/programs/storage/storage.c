@@ -89,15 +89,15 @@ bool configured;
 GLOBAL_VARIABLES_SECTION_END
 
 /* USB constants */
-static const usb_ep_config_t ep_cfg = {
-        .ep[USB_EP_NUM__ENDP0] = USB_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USB_EP0_SIZE, USB_EP0_SIZE),
-        .ep[USB_EP_NUM__ENDP1] = USB_EP_CONFIG_IN_OUT(USB_TRANSFER__BULK, BULK_BUF_SIZE, BULK_BUF_SIZE),
-        .ep[USB_EP_NUM__ENDP2] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP3] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP4] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP5] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP6] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP7] = USB_EP_CONFIG_DISABLED()
+static const usbd_ep_config_t ep_cfg = {
+        .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
+        .ep[USB_EP_NUM__ENDP1] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__BULK, BULK_BUF_SIZE, BULK_BUF_SIZE),
+        .ep[USB_EP_NUM__ENDP2] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP3] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP4] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP5] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP6] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP7] = USBD_EP_CONFIG_DISABLED()
 };
 
 static const usb_device_descriptor_t device_descriptor = {
@@ -107,7 +107,7 @@ static const usb_device_descriptor_t device_descriptor = {
         .bDeviceClass        = USB_CLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceSubClass     = USB_SUBCLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceProtocol     = USB_PROTOCOL__SPECIFIED_AT_INTERFACE_LEVEL,
-        .bMaxPacketSize0     = USB_EP0_SIZE,
+        .bMaxPacketSize0     = USBD_EP0_SIZE,
         .idVendor            = HTOUSBS(0x0483),
         .idProduct           = HTOUSBS(0x5755),
         .bcdDevice           = HTOUSBS(0x0100),
@@ -362,8 +362,8 @@ static void ep1_handler(void *arg)
                         printf("global->msc.CBW.bCBWCBLength: %d (max %d)\n", global->msc.CBW.bCBWCBLength, USB_MASS_STORAGE_REQUEST_CBWCB_LENGTH);
                         printf("read: %d\n (max %d)\n", static_cast(int, n), static_cast(int, sizeof(usb_msc_bot_cbw_t)));
 
-                        ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
-                        ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
 
                         global->configured = false;
                         while (!global->configured) {
@@ -563,10 +563,10 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
         thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
 
         if (ep0 && ep1_thread) {
-                usb_setup_container_t setup = {.timeout = 250};
+                usbd_setup_container_t setup = {.timeout = 250};
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                ioctl(ep0, IOCTL_USB__START);
+                ioctl(ep0, IOCTL_USBD__START);
 
                 while (true) {
                         /* check if program shall be terminated */
@@ -576,14 +576,14 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                         }
 
                         /* wait for SETUP packet */
-                        if (ioctl(ep0, IOCTL_USB__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USB__WAS_RESET);
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -593,8 +593,8 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USB__SEND_ZLP) == STD_RET_OK) {
-                                                        ioctl(ep0, IOCTL_USB__SET_ADDRESS, setup.packet.wValue);
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");
@@ -603,7 +603,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
 
                                         case SET_CONFIGURATION:
                                                 printf(tostring(SET_CONFIGURATION)" (%d):", setup.packet.wValue);
-                                                operation = ioctl(ep0, IOCTL_USB__CONFIGURE_EP_1_7, &ep_cfg);
+                                                operation = ioctl(ep0, IOCTL_USBD__CONFIGURE_EP_1_7, &ep_cfg);
                                                 global->configured = true;
                                                 break;
                                         }
@@ -625,7 +625,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                                 switch (setup.packet.wValue) {
                                                 case ENDPOINT_HALT:
                                                         printf(tostring(ENDPOINT_HALT)" (0x%x):", setup.packet.wIndex);
-                                                        ioctl(ep0, IOCTL_USB__SET_EP_VALID, setup.packet.wIndex);
+                                                        ioctl(ep0, IOCTL_USBD__SET_EP_VALID, setup.packet.wIndex);
                                                         operation = 0;
                                                         break;
                                                 }
@@ -633,18 +633,18 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USB__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");
                                         }
                                 } else if (operation == 1) {
                                         puts(" ERROR");
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 } else {
                                         puts("UNKNOWN REQUEST");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else if ((setup.packet.bmRequestType & REQUEST_DIRECTION_MASK) == DEVICE_TO_HOST) {
@@ -698,7 +698,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else {
@@ -706,12 +706,12 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 default:
                                         puts("UNKNOWN REQUEST [OUT]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
                         }
                 }
 
-                ioctl(ep0, IOCTL_USB__STOP);
+                ioctl(ep0, IOCTL_USBD__STOP);
         }
 
         if (ep0)

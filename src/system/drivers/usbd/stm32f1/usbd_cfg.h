@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    usb_cfg.h
+@file    usbd_cfg.h
 
 @author  Daniel Zorychta
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _USB_CFG_H_
-#define _USB_CFG_H_
+#ifndef _USBD_CFG_H_
+#define _USBD_CFG_H_
 
 /*==============================================================================
   Include files
@@ -41,12 +41,12 @@ extern "C" {
 /**
  * Pin connected to pull-up resistor used by system to indicate USB connection
  */
-#define _USB_CONFIG_PIN_PULLUP          __USB_PULLUP_PIN__
+#define _USBD_CONFIG_PIN_PULLUP         __USBD_PULLUP_PIN__
 
 /**
  * Interrupt priority
  */
-#define _USB_IRQ_PRIORITY               __USB_IRQ_PRIORITY__
+#define _USBD_IRQ_PRIORITY              __USBD_IRQ_PRIORITY__
 
 /**
  * Endpoint 0 size
@@ -54,7 +54,7 @@ extern "C" {
  * If value is out of this range then enpoint is disabled.
  * NOTE: make sure that Device Descriptor's bMaxPacketSize0 field has the same value!
  */
-#define _USB_ENDPOINT0_SIZE             __USB_ENDPOINT0_SIZE__
+#define _USBD_ENDPOINT0_SIZE            __USBD_ENDPOINT0_SIZE__
 
 /*==============================================================================
   Exported object types
@@ -76,7 +76,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _USB_CFG_H_ */
+#endif /* _USBD_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

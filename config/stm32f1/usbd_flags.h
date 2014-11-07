@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    usb_flags.h
+@file    usbd_flags.h
 
 @author  Daniel Zorychta
 
-@brief   USB module configuration flags.
+@brief   USB-Device module configuration flags.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,14 +31,14 @@
  *       All other flag definitions and statements are ignored.
  */
 
-#ifndef _USB_FLAGS_H_
-#define _USB_FLAGS_H_
+#ifndef _USBD_FLAGS_H_
+#define _USBD_FLAGS_H_
 
-#define __USB_PULLUP_PIN__ USB_EN
-#define __USB_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
-#define __USB_ENDPOINT0_SIZE__ 8
+#define __USBD_PULLUP_PIN__ USB_EN
+#define __USBD_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
+#define __USBD_ENDPOINT0_SIZE__ 8
 
-#endif /* _USB_FLAGS_H_ */
+#endif /* _USBD_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -51,7 +51,7 @@ extern "C" {
 #       include "stm32f1/pll_ioctl.h"
 #       include "stm32f1/spi_ioctl.h"
 #       include "stm32f1/uart_ioctl.h"
-#       include "stm32f1/usb_ioctl.h"
+#       include "stm32f1/usbd_ioctl.h"
 #       include "stm32f1/irq_ioctl.h"
 #       include "stm32f1/i2c_ioctl.h"
 #       include "stm32f1/wdg_ioctl.h"

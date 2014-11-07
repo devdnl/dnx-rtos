@@ -131,7 +131,7 @@
 				["value"]="_NO_";
 			};
 			[19.000000]={
-				["key"]="__ENABLE_USB__";
+				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
 			[20.000000]={
@@ -337,7 +337,7 @@
 				["value"]="_NO_";
 			};
 			[48.000000]={
-				["key"]="__ENABLE_USB__";
+				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
 			[49.000000]={
@@ -3425,17 +3425,17 @@
 				["value"]="115200";
 			};
 		};
-		["../../config/stm32f1/usb_flags.h"]={
+		["../../config/stm32f1/usbd_flags.h"]={
 			[1.000000]={
-				["key"]="__USB_PULLUP_PIN__";
+				["key"]="__USBD_PULLUP_PIN__";
 				["value"]="USB_EN";
 			};
 			[2.000000]={
-				["key"]="__USB_IRQ_PRIORITY__";
+				["key"]="__USBD_IRQ_PRIORITY__";
 				["value"]="CONFIG_USER_IRQ_PRIORITY";
 			};
 			[3.000000]={
-				["key"]="__USB_ENDPOINT0_SIZE__";
+				["key"]="__USBD_ENDPOINT0_SIZE__";
 				["value"]="8";
 			};
 		};

@@ -10,6 +10,6 @@ include $(DRV_LOC)/spi/Makefile
 include $(DRV_LOC)/tty/Makefile
 include $(DRV_LOC)/uart/Makefile
 include $(DRV_LOC)/wdg/Makefile
-include $(DRV_LOC)/usb/Makefile
+include $(DRV_LOC)/usbd/Makefile
 include $(DRV_LOC)/irq/Makefile
 include $(DRV_LOC)/i2c/Makefile

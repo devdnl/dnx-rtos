@@ -59,7 +59,7 @@ enum _IO_GROUP {
         _IO_GROUP_UART,
         _IO_GROUP_WDG,
         _IO_GROUP_I2C,
-        _IO_GROUP_USB,
+        _IO_GROUP_USBD,
         _IO_GROUP_IRQ,
         _IO_GROUP_LOOP,
 };

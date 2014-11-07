@@ -66,7 +66,7 @@
 #       include "../stm32f1/spi_flags.h"
 #       include "../stm32f1/wdg_flags.h"
 #       include "../stm32f1/uart_flags.h"
-#       include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/usbd_flags.h"
 #       include "../stm32f1/irq_flags.h"
 #       include "../stm32f1/i2c_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
@@ -139,7 +139,7 @@
 #define __ENABLE_TTY__ _YES_
 #define __ENABLE_UART__ _YES_
 #define __ENABLE_WDG__ _NO_
-#define __ENABLE_USB__ _NO_
+#define __ENABLE_USBD__ _NO_
 #define __ENABLE_I2C__ _YES_
 #define __ENABLE_IRQ__ _NO_
 
