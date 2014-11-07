@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    usb_ioctl.h
+@file    usbd_ioctl.h
 
 @author  Daniel Zorychta
 
@@ -24,15 +24,15 @@
 
 *//*==========================================================================*/
 
-#ifndef _USB_IOCTL_H_
-#define _USB_IOCTL_H_
+#ifndef _USBD_IOCTL_H_
+#define _USBD_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
 #include "core/ioctl_macros.h"
 #include "usb_std.h"
-#include "usb_cfg.h"
+#include "usbd_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,8 +44,8 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Constants related with USB module (do not edit)
 //------------------------------------------------------------------------------
-#define _USB_NUMBER_OF_ENDPOINTS                8
-#define USB_EP0_SIZE                            _USB_ENDPOINT0_SIZE
+#define _USBD_NUMBER_OF_ENDPOINTS               8
+#define USBD_EP0_SIZE                           _USBD_ENDPOINT0_SIZE
 
 
 
@@ -60,8 +60,8 @@ extern "C" {
  * @param size          size of buffer
  */
 //==============================================================================
-#define USB_EP_CONFIG_IN(usb_transfer_t__transfer, u16_t__size)\
-        {.IN_enabled = true, .OUT_enabled = false, .transfer_type = usb_transfer_t__transfer, .IN_buffer_size = u16_t__size, .OUT_buffer_size = 0}
+#define USBD_EP_CONFIG_IN(usbd_transfer_t__transfer, u16_t__size)\
+        {.IN_enabled = true, .OUT_enabled = false, .transfer_type = usbd_transfer_t__transfer, .IN_buffer_size = u16_t__size, .OUT_buffer_size = 0}
 
 //==============================================================================
 /**
@@ -71,8 +71,8 @@ extern "C" {
  * @param size          size of buffer
  */
 //==============================================================================
-#define USB_EP_CONFIG_OUT(usb_transfer_t__transfer, u16_t__size)\
-        {.IN_enabled = false, .OUT_enabled = true, .transfer_type = usb_transfer_t__transfer, .IN_buffer_size = 0, .OUT_buffer_size = u16_t__size}
+#define USBD_EP_CONFIG_OUT(usbd_transfer_t__transfer, u16_t__size)\
+        {.IN_enabled = false, .OUT_enabled = true, .transfer_type = usbd_transfer_t__transfer, .IN_buffer_size = 0, .OUT_buffer_size = u16_t__size}
 
 //==============================================================================
 /**
@@ -82,15 +82,15 @@ extern "C" {
  * @param size          size of buffer
  */
 //==============================================================================
-#define USB_EP_CONFIG_IN_OUT(usb_transfer_t__transfer, u16_t__in_size, u16_t__out_size)\
-        {.IN_enabled = true, .OUT_enabled = true, .transfer_type = usb_transfer_t__transfer, .IN_buffer_size = u16_t__in_size, .OUT_buffer_size = u16_t__out_size}
+#define USBD_EP_CONFIG_IN_OUT(usbd_transfer_t__transfer, u16_t__in_size, u16_t__out_size)\
+        {.IN_enabled = true, .OUT_enabled = true, .transfer_type = usbd_transfer_t__transfer, .IN_buffer_size = u16_t__in_size, .OUT_buffer_size = u16_t__out_size}
 
 //==============================================================================
 /**
  * @brief Macro disable selected endpoint (an item of usb_ep_config_t)
  */
 //==============================================================================
-#define USB_EP_CONFIG_DISABLED()\
+#define USBD_EP_CONFIG_DISABLED()\
         {.IN_enabled = false, .OUT_enabled = false, .transfer_type = 0, .IN_buffer_size = 0, .OUT_buffer_size = 0}
 
 
@@ -105,7 +105,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__START                        _IO (USB, 0x00)
+#define IOCTL_USBD__START                       _IO (USBD, 0x00)
 
 //==============================================================================
 /**
@@ -114,7 +114,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__STOP                         _IO (USB, 0x01)
+#define IOCTL_USBD__STOP                        _IO (USBD, 0x01)
 
 //==============================================================================
 /**
@@ -123,7 +123,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__CONFIGURE_EP_1_7             _IOW(USB, 0x02, const usb_ep_config_t*)
+#define IOCTL_USBD__CONFIGURE_EP_1_7            _IOW(USBD, 0x02, const usbd_ep_config_t*)
 
 //==============================================================================
 /**
@@ -132,7 +132,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_ADDRESS                  _IOW(USB, 0x03, int)
+#define IOCTL_USBD__SET_ADDRESS                 _IOW(USBD, 0x03, int)
 
 //==============================================================================
 /**
@@ -141,7 +141,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SEND_ZLP                     _IO (USB, 0x04)
+#define IOCTL_USBD__SEND_ZLP                    _IO (USBD, 0x04)
 
 //==============================================================================
 /**
@@ -151,7 +151,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_EP_STALL                 _IOW(USB, 0x05, int)
+#define IOCTL_USBD__SET_EP_STALL                _IOW(USBD, 0x05, int)
 
 //==============================================================================
 /**
@@ -161,7 +161,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_EP_VALID                 _IOW(USB, 0x06, int)
+#define IOCTL_USBD__SET_EP_VALID                _IOW(USBD, 0x06, int)
 
 //==============================================================================
 /**
@@ -170,7 +170,7 @@ extern "C" {
  * @return On success returns true or false, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__WAS_RESET                    _IO (USB, 0x07)
+#define IOCTL_USBD__WAS_RESET                   _IO (USBD, 0x07)
 
 //==============================================================================
 /**
@@ -180,7 +180,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__GET_SETUP_PACKET             _IOR(USB, 0x08, usb_setup_container_t*)
+#define IOCTL_USBD__GET_SETUP_PACKET            _IOR(USBD, 0x08, usbd_setup_container_t*)
 
 //==============================================================================
 /**
@@ -189,7 +189,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__SET_ERROR_STATUS             _IO (USB, 0x09)
+#define IOCTL_USBD__SET_ERROR_STATUS            _IO (USBD, 0x09)
 
 //==============================================================================
 /**
@@ -198,7 +198,7 @@ extern "C" {
  * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
  */
 //==============================================================================
-#define IOCTL_USB__GET_ERROR_COUNTER            _IOR(USB, 0x0A, int*)
+#define IOCTL_USBD__GET_ERROR_COUNTER           _IOR(USBD, 0x0A, int*)
 
 /*==============================================================================
   Exported object types
@@ -207,14 +207,14 @@ extern "C" {
  * Endpoint configuration (the ENDP0 configuration is ignored)
  */
 typedef struct {
-        struct usb_ep_config {
+        struct usbd_ep_config {
                 bool            IN_enabled      : 1;
                 bool            OUT_enabled     : 1;
                 usb_transfer_t  transfer_type   : 2;
                 u16_t           IN_buffer_size  : 10;
                 u16_t           OUT_buffer_size : 10;
-        } ep[_USB_NUMBER_OF_ENDPOINTS];
-} usb_ep_config_t;
+        } ep[_USBD_NUMBER_OF_ENDPOINTS];
+} usbd_ep_config_t;
 
 /**
  * SETUP packet container and receive timeout
@@ -222,7 +222,7 @@ typedef struct {
 typedef struct {
         usb_setup_packet_t packet;
         int                timeout;
-} usb_setup_container_t;
+} usbd_setup_container_t;
 
 /*==============================================================================
   Exported objects
@@ -240,7 +240,7 @@ typedef struct {
 }
 #endif
 
-#endif /* _USB_IOCTL_H_ */
+#endif /* _USBD_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

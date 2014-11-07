@@ -72,6 +72,10 @@ enum port##_##number##_CFG {\
 /** enable (1) or disable (0) GPIOG port */
 #define _GPIOG_EN                               __GPIO_PG_ENABLE__
 
+/** GPIO pin NONE definition */
+#define GPIO_NONE_BASE 0
+_PIN_CONFIGURATION(GPIO_NONE, 0, NONE, _GPIO_ANALOG, _GPIO_IN_FLOAT);
+
 /** GPIOA pins configuration */
 #if _GPIOA_EN
 _PIN_CONFIGURATION(GPIOA,  0, __GPIO_PA_PIN_0_NAME__ , __GPIO_PA_PIN_0_MODE__ , __GPIO_PA_PIN_0_STATE__ );

@@ -441,6 +441,28 @@ end
 
 
 --------------------------------------------------------------------------------
+-- @brief  Function leave only unique values of the table in the order
+-- @param  t        table to modify
+-- @return Number of unique elements and table
+--------------------------------------------------------------------------------
+function ct:table_unique(t)
+        local unique = 0
+        local ut     = {}
+        local u      = {}
+
+        for i,v in ipairs(t) do
+                if u[v] == nil then
+                        u[v] = true
+                        table.insert(ut, v)
+                        unique = unique + 1
+                end
+        end
+
+        return unique, ut
+end
+
+
+--------------------------------------------------------------------------------
 -- @brief  Function enables/disables selected module
 -- @param  name     name of module (string)
 -- @param  state    new state of module (bool)
@@ -1080,24 +1102,27 @@ function ct:save_project_configuration(file, parent)
 
                 progress:Update(pulse(), "Loading configuration of "..module_name:upper().."...")
 
-                if noarch == "true" then
-                        cfgfile = CONFIG_DIR.."/noarch/"..module_name.."_flags.h"
-                else
-                        cfgfile = CONFIG_DIR.."/"..cpu_arch.."/"..module_name.."_flags.h"
-                end
-
-                cfg_table.file[cfgfile] = {}
-
-                local f = io.open(cfgfile, "rb")
-                if f then
-                        for line in f:lines() do
-                                local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
-                                if k and v then
-                                        table.insert(cfg_table.file[cfgfile], {key = k, value = v})
-                                end
+                -- add only enabled modules
+                if ct:get_module_state(module_name:upper()) == true then
+                        if noarch == "true" then
+                                cfgfile = CONFIG_DIR.."/noarch/"..module_name.."_flags.h"
+                        else
+                                cfgfile = CONFIG_DIR.."/"..cpu_arch.."/"..module_name.."_flags.h"
                         end
 
-                        f:close()
+                        cfg_table.file[cfgfile] = {}
+
+                        local f = io.open(cfgfile, "rb")
+                        if f then
+                                for line in f:lines() do
+                                        local k, v = get_key_and_value_from_line(line, FILETYPE_HEADER)
+                                        if k and v then
+                                                table.insert(cfg_table.file[cfgfile], {key = k, value = v})
+                                        end
+                                end
+
+                                f:close()
+                        end
                 end
         end
 

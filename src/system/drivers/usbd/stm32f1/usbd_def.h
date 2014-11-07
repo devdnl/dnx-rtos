@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    usb_def.h
+@file    usbd_def.h
 
 @author  Daniel Zorychta
 
@@ -24,13 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _USB_DEF_H_
-#define _USB_DEF_H_
+#ifndef _USBD_DEF_H_
+#define _USBD_DEF_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "usb_cfg.h"
+#include "usbd_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,17 +39,17 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _USB_MAJOR_NUMBER       0
+#define _USBD_MAJOR_NUMBER      0
 
 enum {
-        _USB_MINOR_NUMBER_EP_0 = 0,
-        _USB_MINOR_NUMBER_EP_1,
-        _USB_MINOR_NUMBER_EP_2,
-        _USB_MINOR_NUMBER_EP_3,
-        _USB_MINOR_NUMBER_EP_4,
-        _USB_MINOR_NUMBER_EP_5,
-        _USB_MINOR_NUMBER_EP_6,
-        _USB_MINOR_NUMBER_EP_7,
+        _USBD_MINOR_NUMBER_EP_0 = 0,
+        _USBD_MINOR_NUMBER_EP_1,
+        _USBD_MINOR_NUMBER_EP_2,
+        _USBD_MINOR_NUMBER_EP_3,
+        _USBD_MINOR_NUMBER_EP_4,
+        _USBD_MINOR_NUMBER_EP_5,
+        _USBD_MINOR_NUMBER_EP_6,
+        _USBD_MINOR_NUMBER_EP_7,
 };
 
 /*==============================================================================
@@ -72,7 +72,7 @@ enum {
 }
 #endif
 
-#endif /* _USB_DEF_H_ */
+#endif /* _USBD_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

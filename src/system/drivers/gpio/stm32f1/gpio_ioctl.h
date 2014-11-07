@@ -113,9 +113,9 @@ typedef struct {
 #define _PIN_NAME(_port, _pin, _name)   enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}
 
 /** GPIO pin NONE definition */
-#define _GPIO_NONE     0xF
-#define _GPIO_PIN_NONE 0
-_PIN_NAME(_GPIO_NONE, 0, NONE);
+#define _GPIO_IOCTL_NONE        0xF
+#define _GPIO_PIN_NONE          0
+_PIN_NAME(_GPIO_IOCTL_NONE, 0, NONE);
 
 /** GPIOA pins configuration */
 #if __GPIO_PA_ENABLE__
