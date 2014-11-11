@@ -32,6 +32,7 @@
 ==============================================================================*/
 #include <sys/types.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,30 +45,39 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** the mbus statuses  */
+/** mbus errors  */
 typedef enum {
-        MBUS_STATUS_SUCCESS             = 0,    //!< An operation finished successfully
-        MBUS_STATUS_SLOT_EXIST          = 1,    //!< A slot with the same name exist
-        MBUS_STATUS_SLOT_NOT_EXIST      = 2,    //!< A slot not exist
-        MBUS_STATUS_SLOT_EMPTY          = 3,    //!< A slot is empty (created but has no data)
-        MBUS_STATUS_SLOT_HAS_MSG        = 4,    //!< A slot contains a object
-        MBUS_STATUS_INVALID_OBJECT      = 5,    //!< An used object is invalid
-        MBUS_STATUS_INVALID_ARGUMENTS   = 6,    //!< Passed arguments are not correct
-        MBUS_STATUS_ERROR               = 7,    //!< A general operation error (e.g. not enough free memory)
-        MBUS_STATUS_DAEMON_IS_RUNNING   = 8     //!< The daemon is already started and is not possible to start a new one
-} mbus_status_t;
+        MBUS_ERRNO__NO_ERROR,
+        MBUS_ERRNO__INVALID_OBJECT_OR_ARGUMENT,
+        MBUS_ERRNO__ACCESS_DENIED,
+        MBUS_ERRNO__TIMEOUT,
+        MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED,
+        MBUS_ERRNO__NOT_ENOUGH_MEMORY
+} mbus_errno_t;
 
-/** a mbus main object */
+/** mbus signal permissions */
+typedef enum {
+        MBUS_PERM__PRIVATE,
+        MBUS_PERM__READ,
+        MBUS_PERM__WRITE
+} mbus_sig_perm_t;
+
+/** mbus signal type */
+typedef enum {
+        MBUS_SIG_TYPE__MBOX,
+        MBUS_SIG_TYPE__FLAG
+} mbus_sig_type_t;
+
+/** mbus signal information */
+typedef struct {
+        const char     *name;
+        mbus_sig_perm_t permissions;
+        mbus_sig_type_t type;
+        size_t          size;
+} mbus_sig_info_t;
+
+/** mbus main object */
 typedef struct mbus mbus_t;
-
-/** a slot ID type */
-typedef u32_t mbus_slot_ID_t;
-
-/** a slot object */
-typedef struct mbus_slot {
-        mbus_slot_ID_t  ID;
-        u32_t           magic;
-} mbus_slot_t;
 
 /*==============================================================================
   Exported objects
@@ -76,19 +86,20 @@ typedef struct mbus_slot {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern mbus_status_t mbus_daemon                 ();
-extern mbus_t       *mbus_bus_new                ();
-extern mbus_status_t mbus_bus_delete             (mbus_t *mbus);
-extern mbus_status_t mbus_bus_get_number_of_slots(mbus_t *mbus, uint *number);
-extern mbus_status_t mbus_bus_get_slot_name      (mbus_t *mbus, uint n, char *name, size_t buf_len);
-extern mbus_status_t mbus_slot_create            (mbus_t *mbus, const char *name, size_t msg_size, mbus_slot_t *slot);
-extern mbus_status_t mbus_slot_destroy           (mbus_t *mbus, const char *name);
-extern mbus_status_t mbus_slot_connect           (mbus_t *mbus, const char *name, mbus_slot_t *slot);
-extern mbus_status_t mbus_slot_disconnect        (mbus_t *mbus, mbus_slot_t *slot);
-extern mbus_status_t mbus_slot_has_msg           (mbus_t *mbus, mbus_slot_t *slot);
-extern mbus_status_t mbus_slot_clear             (mbus_t *mbus, mbus_slot_t *slot);
-extern mbus_status_t mbus_msg_send               (mbus_t *mbus, mbus_slot_t *slot, const void *msg);
-extern mbus_status_t mbus_msg_receive            (mbus_t *mbus, mbus_slot_t *slot, void *msg);
+extern mbus_errno_t mbus_daemon();
+extern mbus_t      *mbus_new();
+extern bool         mbus_delete(mbus_t*);
+extern mbus_errno_t mbus_get_errno(mbus_t*);
+extern int          mbus_get_number_of_signals(mbus_t*);
+extern bool         mbus_get_signal_info(mbus_t*, size_t n, mbus_sig_info_t*);
+extern bool         mbus_mbox_create(mbus_t*, const char*, size_t, mbus_sig_perm_t);
+extern bool         mbus_mbox_delete(mbus_t*, const char*);
+extern bool         mbus_mbox_send(mbus_t*, const char*, const void*);
+extern bool         mbus_mbox_receive(mbus_t*, const char*, void*);
+extern bool         mbus_value_create(mbus_t*, const char*, size_t, mbus_sig_perm_t);
+extern bool         mbus_value_delete(mbus_t*, const char*);
+extern bool         mbus_value_set(mbus_t*, const char*, const void*);
+extern bool         mbus_value_get(mbus_t*, const char*, void*);
 
 /*==============================================================================
   Exported inline functions

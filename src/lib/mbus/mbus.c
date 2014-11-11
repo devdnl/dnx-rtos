@@ -28,92 +28,156 @@
   Include files
 ==============================================================================*/
 #include "mbus.h"
+#include "llist.h"
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
+#include <dnx/timer.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-/** a number of slots in a single chain */
-#define NUMBER_OF_SLOTS_IN_CHAIN        4
-
-/** type casting of variable to variant type */
-#define variant(_v)                     (variant_t)_v
+#define REQUEST_QUEUE_LENGTH    8
+#define REQUEST_WAIT_TIMEOUT    1000
+#define MBUS_CYCLE_MS           10000
+#define REQUEST_ACTION_TIMEOUT  25000
+#define MAX_NAME_LENGTH         128
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
-/** daemon requests */
-enum rqid {
-        CREATE_SLOT,            //!< Creates a new slot
-        DESTROY_SLOT,           //!< Destroys an existing slot
-        GET_SLOT_ID,            //!< Gets a slot ID
-        CLEAR_SLOT,             //!< Clears a selected slot
-        SEND_MSG,               //!< Sends a message to a selected slot
-        RECEIVE_MSG,            //!< Receives a message from a selected slot
-        HAS_DATA,               //!< Checks if a slot contains a message
-        GET_NUMBER_OF_SLOTS,    //!< Returns a number of created slots
-        GET_SLOT_NAME,          //!< Returns a slot name by using interation
-        NUMBER_OF_REQUESTS      //!< A number of requests
-};
-
-/** type used to pass an arguments in the request and response  */
-typedef union {
-        const void     *src_msg;
-        void           *dst_msg;
-        queue_t        *queue;
-        const char     *const_string;
-        char           *string;
-        mbus_slot_ID_t  slot_ID;
-        size_t          size;
-        int             integer;
-} variant_t;
-
-/** main mbus object used to communicate with the daemon */
 struct mbus {
-        queue_t        *response;
-        u32_t           magic;
+        queue_t         *response;
+        mbus_errno_t     errorno;
+        struct mbus     *self;
 };
 
-/** a slot definition used internally by the deamon */
-struct slot {
-        char           *name;
-        void           *data;
-        size_t          size;
-        mbus_slot_ID_t  ID;
-};
-
-/** a chain that contains slots */
-struct chain {
-        struct slot     slot[NUMBER_OF_SLOTS_IN_CHAIN];
-        u8_t            used;
-        struct chain   *prev;
-        struct chain   *next;
-};
-
-/** the daemon memory allocation definition */
 struct mbus_mem {
-        queue_t        *request_queue;
-        task_t         *task;
-        struct chain    slots;
-        mbus_slot_ID_t  ID_counter;
+        queue_t         *request;
+        task_t          *owner;
+        llist_t         *signals;
 };
 
-/** the deamon request object type */
-struct request {
-        queue_t        *response;
-        enum rqid       request;
-        variant_t       arg[3];
-};
+typedef struct {
+        const char      *name;
+        task_t          *owner;
+        mbus_sig_perm_t  perm;
+} signal_t;
 
-/** the daemon-client communication object type */
-struct response {
-        mbus_status_t   status;
-        variant_t       arg1;
-};
+typedef enum {
+        CMD_GET_NUMBER_OF_SIGNALS,
+        CMD_GET_SIGNAL_INFO,
+        CMD_MBOX_CREATE,
+        CMD_MBOX_DELETE,
+        CMD_MBOX_SEND,
+        CMD_MBOX_RECEIVE,
+        CMD_VALUE_CREATE,
+        CMD_VALUE_DELETE,
+        CMD_VALUE_SET,
+        CMD_VALUE_GET
+} cmd_t;
+
+typedef struct {
+        cmd_t cmd;
+
+        union {
+                struct RQ_CMD_GET_SIGNAL_INFO {
+                        int             n;
+                } CMD_GET_SIGNAL_INFO;
+
+                struct RQ_CMD_MBOX_CREATE {
+                        const char     *name;
+                        size_t          size;
+                        mbus_sig_perm_t perm;
+                } CMD_MBOX_CREATE;
+
+                struct RQ_CMD_MBOX_DELETE {
+                        const char     *name;
+                } CMD_MBOX_DELETE;
+
+                struct RQ_CMD_MBOX_SEND {
+                        const char     *name;
+                        const void     *data;
+                } CMD_MBOX_SEND;
+
+                struct RQ_CMD_MBOX_RECEIVE {
+                        const char     *name;
+                } CMD_MBOX_RECEIVE;
+
+                struct RQ_CMD_VALUE_CREATE {
+                        const char     *name;
+                        size_t          size;
+                        mbus_sig_perm_t perm;
+                } CMD_VALUE_CREATE;
+
+                struct RQ_CMD_VALUE_DELETE {
+                        const char     *name;
+                } CMD_VALUE_DELETE;
+
+                struct RQ_CMD_VALUE_SET {
+                        const char     *name;
+                        const void     *data;
+                } CMD_VALUE_SET;
+
+                struct RQ_CMD_VALUE_GET {
+                        const char     *name;
+                } CMD_VALUE_GET;
+        } arg;
+
+        queue_t *response;
+        task_t  *owner;
+} request_t;
+
+typedef struct {
+        union {
+                struct RES_CMD_GET_NUMBER_OF_SIGNALS {
+                        int             number_of_signals;
+                } CMD_GET_NUMBER_OF_SIGNALS;
+
+                struct RES_CMD_GET_SIGNAL_INFO {
+                        mbus_sig_info_t info;
+                } CMD_GET_SIGNAL_INFO;
+
+//                struct RES_CMD_MBOX_CREATE {
+//                        bool            status;
+//                } CMD_MBOX_CREATE;
+
+//                struct RES_CMD_MBOX_DELETE {
+//                        bool            status;
+//                } CMD_MBOX_DELETE;
+
+//                struct RES_CMD_MBOX_SEND {
+//                        bool            status;
+//                } CMD_MBOX_SEND;
+
+                struct RES_CMD_MBOX_RECEIVE {
+                        const void     *data;
+                        size_t          size;
+                } CMD_MBOX_RECEIVE;
+
+//                struct RES_CMD_VALUE_CREATE {
+//                        bool            status;
+//                } CMD_VALUE_CREATE;
+
+//                struct RES_CMD_VALUE_DELETE {
+//                        bool            status;
+//                } CMD_VALUE_DELETE;
+
+//                struct RES_CMD_VALUE_SET {
+//                        bool            status;
+//                } CMD_VALUE_SET;
+
+                struct RES_CMD_VALUE_GET {
+                        const void     *data;
+                        size_t          size;
+                } CMD_VALUE_GET;
+        } of;
+
+        mbus_errno_t errorno;
+} response_t;
 
 /*==============================================================================
   Local function prototypes
@@ -122,12 +186,10 @@ struct response {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static const size_t request_queue_len   = 8;
-static const size_t name_max_len        = 64;
-static const u32_t  mbus_magic          = 0x367C01D2;
-static const u32_t  slot_magic          = 0xB15D6196;
 
-/** the shared object */
+/*==============================================================================
+  Shared objects
+==============================================================================*/
 static struct mbus_mem *mbus;
 
 /*==============================================================================
@@ -141,1206 +203,603 @@ static struct mbus_mem *mbus;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
 //==============================================================================
 /**
- * @brief Creates the request
- *
- * @param bus           a bus object
- * @param request       a request ID
- * @param ...           an additional arguments depending on the request
- *
- * @return Response object data
+ * @brief  Function check if mbus object is valid
+ * @param  this                 mbus object
+ * @return If object is valid then true is returned, otherwise false.
  */
 //==============================================================================
-static struct response daemon_request(mbus_t *bus, enum rqid request, ...)
+static bool is_valid(mbus_t *this)
 {
-        static const u8_t args[NUMBER_OF_REQUESTS] = {
-                [CREATE_SLOT]         = 2,
-                [DESTROY_SLOT]        = 1,
-                [GET_SLOT_ID]         = 1,
-                [CLEAR_SLOT]          = 1,
-                [SEND_MSG]            = 2,
-                [RECEIVE_MSG]         = 2,
-                [HAS_DATA]            = 1,
-                [GET_NUMBER_OF_SLOTS] = 0,
-                [GET_SLOT_NAME]       = 3,
-        };
-
-        va_list arg;
-        va_start(arg, request);
-
-        struct request cmd;
-        cmd.request  = request;
-        cmd.response = bus->response;
-
-        for (int i = 0; i < args[request]; i++) {
-                cmd.arg[i] = va_arg(arg, variant_t);
-        }
-
-        va_end(arg);
-
-        struct response response;
-        response.arg1.size = 0;
-        response.status    = MBUS_STATUS_ERROR;
-
-        if (mbus) {
-                if (queue_send(mbus->request_queue, &cmd, MAX_DELAY_MS)) {
-                        queue_receive(bus->response, &response, MAX_DELAY_MS);
-                }
-        }
-
-        return response;
+        return this && this->self == this;
 }
 
 //==============================================================================
 /**
- * @brief Adds a new slot to the chain
- *
- * @param slot_name     a slot name
- * @param msg_size      a message size
- *
- * @return Operation status
+ * @brief  Function send request to the daemon
+ * @param  request              request to send
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static mbus_status_t add_slot(const char *slot_name, size_t msg_size)
+static bool request_action(mbus_t *this, request_t *request, response_t *response)
 {
-        struct chain *chain = &mbus->slots;
-        struct chain *last_chain = chain;
+        request->response = this->response;
+        request->owner    = task_get_handle();
 
-        while (true) {
-                for (; chain != NULL; chain = chain->next) {
-                        for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                                struct slot *slot = &chain->slot[i];
-
-                                if (slot->name == NULL) {
-                                        size_t len = strnlen(slot_name, name_max_len);
-                                        char *name = calloc(len + 1, 1);
-                                        if (name) {
-                                                strncpy(name, slot_name, len);
-                                                slot->name = name;
-                                                slot->data = NULL;
-                                                slot->size = msg_size;
-                                                slot->ID   = ++mbus->ID_counter;
-                                                chain->used++;
-                                                return MBUS_STATUS_SUCCESS;
-                                        } else {
-                                                return MBUS_STATUS_ERROR;
-                                        }
-                                } else {
-                                        if (strncmp(slot->name, slot_name, name_max_len) == 0) {
-                                                return MBUS_STATUS_SLOT_EXIST;
-                                        }
-                                }
-                        }
-
-                        last_chain = chain;
-                }
-
-                /* all slots are used - create new chain */
-                struct chain *new_chain = calloc(1, sizeof(struct chain));
-                if (new_chain) {
-                        new_chain->prev  = last_chain;
-                        last_chain->next = new_chain;
-                        chain            = new_chain;
-                } else {
-                        return MBUS_STATUS_ERROR;
+        if (queue_send(mbus->request, request, REQUEST_ACTION_TIMEOUT)) {
+                if (queue_receive(this->response, response, REQUEST_ACTION_TIMEOUT)) {
+                        this->errorno = response->errorno;
+                        return true;
                 }
         }
 
-        return MBUS_STATUS_ERROR;
+        this->errorno = MBUS_ERRNO__TIMEOUT;
+        return false;
 }
 
 //==============================================================================
 /**
- * @brief Deletes a selected slot
- *
- * @param slot_name     a slot name to delete
- *
- * @return Operation status
+ * @brief  Function realize CMD_GET_NUMBER_OF_SIGNALS command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t delete_slot(const char *slot_name)
+static void realize_CMD_GET_NUMBER_OF_SIGNALS(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        struct slot *slot = &chain->slot[i];
+        printk("%s\n", __func__);
 
-                        if (slot->name) {
-                                if (strncmp(slot->name, slot_name, name_max_len) == 0) {
-                                        free(slot->name);
-                                        slot->name = NULL;
-                                        slot->size = 0;
-                                        slot->ID   = 0;
-
-                                        if (slot->data) {
-                                                free(slot->data);
-                                                slot->data = NULL;
-                                        }
-
-                                        if (--chain->used == 0 && chain != &mbus->slots) {
-                                                chain->prev->next = chain->next;
-                                                free(chain);
-                                        }
-
-                                        return MBUS_STATUS_SUCCESS;
-                                }
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        response_t response;
+        response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals = llist_size(mbus->signals);
+        response.errorno = MBUS_ERRNO__NO_ERROR;
+        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
 }
 
 //==============================================================================
 /**
- * @brief Returns an ID of a selected slot by its name
- *
- * @param slot_name     a slot name
- *
- * @return A slot ID
+ * @brief  Function realize CMD_GET_SIGNAL_INFO command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_slot_ID_t get_slot_ID(const char *slot_name)
+static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        struct slot *slot = &chain->slot[i];
-
-                        if (slot->name) {
-                                if (strncmp(slot->name, slot_name, name_max_len) == 0) {
-                                        return slot->ID;
-                                }
-                        }
-                }
-        }
-
-        return 0;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Writes a data to a selected slot
- *
- * @param slot_ID       a slot ID
- * @param msg           a message to write
- *
- * @return Operation status
+ * @brief  Function realize CMD_MBOX_CREATE command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t write_slot(mbus_slot_ID_t slot_ID, const void *msg)
+static void realize_CMD_MBOX_CREATE(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        if (chain->slot[i].ID == slot_ID) {
-                                struct slot *slot = &chain->slot[i];
-
-                                void *data = malloc(slot->size);
-                                if (data) {
-                                        memcpy(data, msg, slot->size);
-
-                                        if (slot->data) {
-                                                free(slot->data);
-                                        }
-                                        slot->data = data;
-
-                                        return MBUS_STATUS_SUCCESS;
-                                } else {
-                                        return MBUS_STATUS_ERROR;
-                                }
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Reads a data from a selected slot
- *
- * @param slot_ID       a slot ID
- * @param msg           a buffer where a message will be copied
- *
- * @return Operation status
+ * @brief  Function realize CMD_MBOX_DELETE command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t read_slot(mbus_slot_ID_t slot_ID, void *msg)
+static void realize_CMD_MBOX_DELETE(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        if (chain->slot[i].ID == slot_ID) {
-                                struct slot *slot = &chain->slot[i];
-
-                                if (slot->data) {
-                                        memcpy(msg, slot->data, slot->size);
-                                        return MBUS_STATUS_SUCCESS;
-                                } else {
-                                        return MBUS_STATUS_SLOT_EMPTY;
-                                }
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Clears a message from a selected slot
- *
- * @param slot_ID       a slot ID
- *
- * @return Operation status
+ * @brief  Function realize CMD_MBOX_SEND command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t clear_slot(mbus_slot_ID_t slot_ID)
+static void realize_CMD_MBOX_SEND(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        if (chain->slot[i].ID == slot_ID) {
-                                struct slot *slot = &chain->slot[i];
-
-                                if (slot->data) {
-                                        free(slot->data);
-                                        slot->data = NULL;
-                                        return MBUS_STATUS_SUCCESS;
-                                } else {
-                                        return MBUS_STATUS_SLOT_EMPTY;
-                                }
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Checks if a slot contains message
- *
- * @param slot_ID       a slot ID
- *
- * @return Operation status
+ * @brief  Function realize CMD_MBOX_RECEIVE command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t is_msg_in_slot(mbus_slot_ID_t slot_ID)
+static void realize_CMD_MBOX_RECEIVE(request_t *request)
 {
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        if (chain->slot[i].ID == slot_ID) {
-                                struct slot *slot = &chain->slot[i];
-
-                                if (slot->data) {
-                                        return MBUS_STATUS_SLOT_HAS_MSG;
-                                } else {
-                                        return MBUS_STATUS_SLOT_EMPTY;
-                                }
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Returns a number of all created slots
- *
- * @return A number of all created slots
+ * @brief  Function realize CMD_VALUE_CREATE command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static uint get_number_of_slots()
+static void realize_CMD_VALUE_CREATE(request_t *request)
 {
-        uint counter = 0;
-
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                counter += chain->used;
-        }
-
-        return counter;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief Returns a name of a selected slot by using interation
- *
- * @return A number of all created slots
+ * @brief  Function realize CMD_VALUE_DELETE command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-static mbus_status_t get_slot_name(uint n, char *buf, size_t buf_len)
+static void realize_CMD_VALUE_DELETE(request_t *request)
 {
-        uint counter = 0;
-
-        for (struct chain *chain = &mbus->slots; chain != NULL; chain = chain->next) {
-                for (int i = 0; i < NUMBER_OF_SLOTS_IN_CHAIN; i++) {
-                        struct slot *slot = &chain->slot[i];
-
-                        if (slot->name && n == counter) {
-                                strncpy(buf, slot->name, buf_len - 1);
-                                return MBUS_STATUS_SUCCESS;
-                        } else {
-                                counter++;
-                        }
-                }
-        }
-
-        return MBUS_STATUS_SLOT_NOT_EXIST;
+        printk("%s\n", __func__);
 }
 
 //==============================================================================
 /**
- * @brief The main function of the daemon. This function must be started in the
- *        program (or task).
- *
- * @return The function if starts correctly never returns. If error will occured
- *         the function returns an operation error.
+ * @brief  Function realize CMD_VALUE_SET command
+ * @param  request              request data
+ * @return None
  */
 //==============================================================================
-mbus_status_t mbus_daemon()
+static void realize_CMD_VALUE_SET(request_t *request)
 {
-        if (mbus) {
-                if (task_is_exist(mbus->task)) {
-                        return MBUS_STATUS_DAEMON_IS_RUNNING;
-                } else {
-                        if (mbus->request_queue)
-                                queue_delete(mbus->request_queue);
+        printk("%s\n", __func__);
+}
 
-                        mbus = NULL;
-                }
+//==============================================================================
+/**
+ * @brief  Function realize CMD_VALUE_GET command
+ * @param  request              request data
+ * @return None
+ */
+//==============================================================================
+static void realize_CMD_VALUE_GET(request_t *request)
+{
+        printk("%s\n", __func__);
+}
+
+//==============================================================================
+/**
+ * @brief  Main daemon function
+ * @param  None
+ * @return Function not return if daemon started correctly, otherwise specified
+ *         error is returned.
+ */
+//==============================================================================
+mbus_errno_t mbus_daemon()
+{
+        mbus_errno_t err = MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED;
+
+        // check if mbus is orphaned
+        if (mbus && !task_is_exist(mbus->owner)) {
+                mbus->owner = task_get_handle();
         }
 
-
+        // create new object if started first time
         if (!mbus) {
-                mbus = calloc(1, sizeof(struct mbus_mem));
-                if (!mbus) {
-                        return MBUS_STATUS_ERROR;
+                mbus             = malloc(sizeof(struct mbus_mem));
+                queue_t *request = queue_new(REQUEST_QUEUE_LENGTH, sizeof(request_t));
+                llist_t *signals = llist_new(NULL, NULL);
+
+                if (mbus && request && signals) {
+                        mbus->request = request;
+                        mbus->signals = signals;
+                        mbus->owner   = task_get_handle();
+
+                } else {
+                        err = MBUS_ERRNO__NOT_ENOUGH_MEMORY;
+
+                        if (mbus) {
+                                free(mbus); mbus = NULL;
+                        }
+
+                        if (request) {
+                                queue_delete(request);
+                        }
+
+                        if (signals) {
+                                llist_delete(signals);
+                        }
                 }
-
-                mbus->task       = task_get_handle();
-                mbus->ID_counter = 0;
         }
 
-
-        mbus->request_queue = queue_new(request_queue_len, sizeof(struct request));
-        if (!mbus->request_queue) {
-                free(mbus);
-                mbus = NULL;
-                return MBUS_STATUS_ERROR;
-        }
-
-
-        while (true) {
-                struct request  request;
-                struct response response;
-                response.status    = MBUS_STATUS_ERROR;
-                response.arg1.size = 0;
-
-                if (queue_receive(mbus->request_queue, &request, MAX_DELAY_MS)) {
-                        switch (request.request) {
-                        case CREATE_SLOT: {
-                                response.status = add_slot(request.arg[0].const_string, request.arg[1].size);
-                                if (response.status == MBUS_STATUS_SUCCESS) {
-                                        response.arg1.slot_ID = mbus->ID_counter;
-                                }
+        // execute requests
+        timer_t cycle_timer = timer_reset();
+        while (mbus) {
+                request_t request;
+                if (queue_receive(mbus->request, &request, REQUEST_WAIT_TIMEOUT)) {
+                        switch (request.cmd) {
+                        case CMD_GET_NUMBER_OF_SIGNALS:
+                                realize_CMD_GET_NUMBER_OF_SIGNALS(&request);
                                 break;
-                        }
 
-                        case DESTROY_SLOT: {
-                                response.status = delete_slot(request.arg[0].const_string);
+                        case CMD_GET_SIGNAL_INFO:
+                                realize_CMD_GET_SIGNAL_INFO(&request);
                                 break;
-                        }
 
-                        case GET_SLOT_ID: {
-                                mbus_slot_ID_t id = get_slot_ID(request.arg[0].const_string);
-
-                                if (id == 0) {
-                                        response.status = MBUS_STATUS_SLOT_NOT_EXIST;
-                                } else {
-                                        response.status = MBUS_STATUS_SUCCESS;
-                                }
-                                response.arg1.slot_ID = id;
+                        case CMD_MBOX_CREATE:
+                                realize_CMD_MBOX_CREATE(&request);
                                 break;
-                        }
 
-                        case SEND_MSG: {
-                                response.status = write_slot(request.arg[0].slot_ID, request.arg[1].src_msg);
+                        case CMD_MBOX_DELETE:
+                                realize_CMD_MBOX_DELETE(&request);
                                 break;
-                        }
 
-                        case RECEIVE_MSG: {
-                                response.status = read_slot(request.arg[0].slot_ID, request.arg[1].dst_msg);
+                        case CMD_MBOX_SEND:
+                                realize_CMD_MBOX_SEND(&request);
                                 break;
-                        }
 
-                        case CLEAR_SLOT: {
-                                response.status = clear_slot(request.arg[0].slot_ID);
+                        case CMD_MBOX_RECEIVE:
+                                realize_CMD_MBOX_RECEIVE(&request);
                                 break;
-                        }
 
-                        case HAS_DATA: {
-                                response.status = is_msg_in_slot(request.arg[0].slot_ID);
+                        case CMD_VALUE_CREATE:
+                                realize_CMD_VALUE_CREATE(&request);
                                 break;
-                        }
 
-                        case GET_NUMBER_OF_SLOTS: {
-                                response.status       = MBUS_STATUS_SUCCESS;
-                                response.arg1.integer = get_number_of_slots();
+                        case CMD_VALUE_DELETE:
+                                realize_CMD_VALUE_DELETE(&request);
                                 break;
-                        }
 
-                        case GET_SLOT_NAME: {
-                                response.status = get_slot_name(request.arg[0].integer,
-                                                                request.arg[1].string,
-                                                                request.arg[2].size);
-                        }
+                        case CMD_VALUE_SET:
+                                realize_CMD_VALUE_SET(&request);
+                                break;
+
+                        case CMD_VALUE_GET:
+                                realize_CMD_VALUE_GET(&request);
+                                break;
 
                         default:
                                 break;
                         }
+                }
 
-                        queue_send(request.response, &response, 0);
+                if (timer_is_expired(cycle_timer, MBUS_CYCLE_MS)) {
+                        cycle_timer = timer_reset();
                 }
         }
 
-        return MBUS_STATUS_ERROR;
+        // exit on error
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief Creates a new bus communication object
- *
- * @return On success, bus object is returned. On error, NULL is returned.
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- * }
+ * @brief  Create a new mbus object
+ * @param  this                 mbus object
+ * @return On success mbus object is returned, otherwise NULL.
  */
 //==============================================================================
-mbus_t *mbus_bus_new()
+mbus_t *mbus_new()
 {
-        mbus_t *bus = NULL;
+        mbus_t *this = malloc(sizeof(mbus_t));
+        if (this) {
+                queue_t *response = queue_new(1, sizeof(response_t));
+                if (response) {
+                        this->response = response;
+                        this->errorno  = MBUS_ERRNO__NO_ERROR;
+                        this->self     = this;
+                } else {
+                        free(this);
+                        this = NULL;
+                }
+        }
 
-        if (mbus) {
-                if (task_is_exist(mbus->task)) {
-                        bus = calloc(1, sizeof(mbus_t));
-                        if (bus) {
-                                bus->response = queue_new(1, sizeof(struct response));
-                                if (bus->response) {
-                                        bus->magic = mbus_magic;
-                                } else {
-                                        free(bus);
-                                        bus = NULL;
-                                }
+        return this;
+}
+
+//==============================================================================
+/**
+ * @brief  Delete created mbus object
+ * @param  this                 mbus object
+ * @return On success true is returned. On error false and error number is set.
+ */
+//==============================================================================
+bool mbus_delete(mbus_t *this)
+{
+        bool status = false;
+
+        if (is_valid(this)) {
+                queue_delete(this->response);
+                this->self = NULL;
+                free(this);
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Return last error number
+ * @param  this                 mbus object
+ * @return Last error number.
+ */
+//==============================================================================
+mbus_errno_t mbus_get_errno(mbus_t *this)
+{
+        if (is_valid(this)) {
+                mbus_errno_t err = this->errorno;
+                this->errorno    = MBUS_ERRNO__NO_ERROR;
+                return err;
+        } else {
+                return MBUS_ERRNO__INVALID_OBJECT_OR_ARGUMENT;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Return number of registered signals
+ * @param  this                 mbus object
+ * @return On success return number of signals, otherwise -1 and error number is set.
+ */
+//==============================================================================
+int mbus_get_number_of_signals(mbus_t *this)
+{
+        int status = -1;
+
+        if (is_valid(this)) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_GET_NUMBER_OF_SIGNALS;
+                if (request_action(this, &request, &response)) {
+                        return response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals;
+                }
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Return information of selected signal
+ * @param  this                 mbus object
+ * @param  n                    n-element to get
+ * @param  info                 pointer to the signal info object
+ * @return On success true is returned. On error false and error number is set.
+ */
+//==============================================================================
+bool mbus_get_signal_info(mbus_t *this, size_t n, mbus_sig_info_t *info)
+{
+        bool status = false;
+
+        if (is_valid(this) && n > 0 && info) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_GET_SIGNAL_INFO;
+                request.arg.CMD_GET_SIGNAL_INFO.n = n;
+                if (request_action(this, &request, &response)) {
+                        if (response.errorno == MBUS_ERRNO__NO_ERROR) {
+                                *info = response.of.CMD_GET_SIGNAL_INFO.info;
                         }
                 }
         }
 
-        return bus;
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Deletes a selected bus object (closes the communication with mbus deamon)
- *
- * @param mbus          a bus object
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- * }
+ * @brief  Create new mbox
+ * @param  this                 mbus object
+ * @param  name                 mbox name
+ * @param  size                 mbox size
+ * @param  permissions          mbox permissions
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_bus_delete(mbus_t *mbus)
+bool mbus_mbox_create(mbus_t *this, const char *name, size_t size, mbus_sig_perm_t permissions)
 {
-        if (mbus) {
-                if (mbus->magic == mbus_magic) {
-                        queue_delete(mbus->response);
-                        mbus->response = NULL;
-                        mbus->magic    = 0;
-                        free(mbus);
-                        return MBUS_STATUS_SUCCESS;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        bool status = false;
+
+        if (is_valid(this) && name && size > 0) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_MBOX_CREATE;
+                request.arg.CMD_MBOX_CREATE.name = name;
+                request.arg.CMD_MBOX_CREATE.size = size;
+                request.arg.CMD_MBOX_CREATE.perm = permissions;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Returns a number of created slots
- *
- * @param mbus          a bus object
- * @param number        an output pointer to variable
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // ...
- *
- *      char *name = calloc(1, 64);
- *      if (name) {
- *            uint slots = 0;
- *            mbus_bus_get_number_of_slots(bus, &slots);
- *
- *            for (uint slot = 0; slot < slots; slot++) {
- *                  mbus_bus_get_slot_name(bus, slot, name, 64);
- *                  puts(name);
- *            }
- *
- *            free(name);
- *      }
- *
- *      // ...
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- * }
+ * @brief  Delete mbox
+ * @param  this                 mbus object
+ * @param  name                 name of mbox to delete
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_bus_get_number_of_slots(mbus_t *mbus, uint *number)
+bool mbus_mbox_delete(mbus_t *this, const char *name)
 {
-        if (mbus && number) {
-                if (mbus->magic == mbus_magic) {
-                        struct response response;
-                        response = daemon_request(mbus, GET_NUMBER_OF_SLOTS);
-                        *number  = response.arg1.integer;
-                        return response.status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        bool status = false;
+
+        if (is_valid(this) && name) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_MBOX_DELETE;
+                request.arg.CMD_MBOX_DELETE.name = name;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Returns a name of a selected slot by using iteration
- *
- * @param mbus          a bus object
- * @param n             a n-slot
- * @param name          a pointer to buffer where name will be written
- * @param buf_len       a size of a buffer used to store a slot name
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // ...
- *
- *      char *name = calloc(1, 64);
- *      if (name) {
- *            uint slots = 0;
- *            mbus_bus_get_number_of_slots(bus, &slots);
- *
- *            for (uint slot = 0; slot < slots; slot++) {
- *                  mbus_bus_get_slot_name(bus, slot, name, 64);
- *                  puts(name);
- *            }
- *
- *            free(name);
- *      }
- *
- *      // ...
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- * }
+ * @brief  Send selected data to mbox
+ * @param  this                 mbus object
+ * @param  name                 name of mbox
+ * @param  data                 data to send
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_bus_get_slot_name(mbus_t *mbus, uint n, char *name, size_t buf_len)
+bool mbus_mbox_send(mbus_t *this, const char *name, const void *data)
 {
-        if (mbus && name && buf_len) {
-                if (mbus->magic == mbus_magic) {
-                        return daemon_request(mbus, GET_SLOT_NAME,
-                                              variant(n),
-                                              variant(name),
-                                              variant(buf_len)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        bool status = false;
+
+        if (is_valid(this) && name && data) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_MBOX_SEND;
+                request.arg.CMD_MBOX_SEND.name = name;
+                request.arg.CMD_MBOX_SEND.data = data;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Creates a new slot by name and a message size
- *
- * @param mbus          a bus object
- * @param name          a new slot name
- * @param msg_size      a new slot message size
- * @param slot          an output pointer to a slot object (can be NULL)
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- * }
+ * @brief  Receive data from mbox
+ * @param  this                 mbus object
+ * @param  name                 name of mbox
+ * @param  data                 data destination
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_slot_create(mbus_t *mbus, const char *name, size_t msg_size, mbus_slot_t *slot)
+bool mbus_mbox_receive(mbus_t *this, const char *name, void *data)
 {
-        if (mbus && name && msg_size) {
-                if (mbus->magic == mbus_magic) {
-                        struct response response;
-                        response = daemon_request(mbus, CREATE_SLOT, variant(name), variant(msg_size));
+        bool status = false;
 
-                        if (slot) {
-                                mbus_slot_t s;
-                                s.ID    = response.arg1.slot_ID;
-                                s.magic = slot_magic;
-                                *slot   = s;
+        if (is_valid(this) && name && data) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_MBOX_RECEIVE;
+                request.arg.CMD_MBOX_RECEIVE.name = name;
+                if (request_action(this, &request, &response)) {
+                        if (response.of.CMD_MBOX_RECEIVE.data) {
+                                memcpy(data, response.of.CMD_MBOX_RECEIVE.data, response.of.CMD_MBOX_RECEIVE.size);
+                                status = true;
                         }
-
-                        return response.status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Destroys a selected slot by name
- *
- * @param mbus          a bus object
- * @param name          a slot name to destroy
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
+ * @brief  Create new value
+ * @param  this                 mbus object
+ * @param  name                 name of value
+ * @param  size                 size of value
+ * @param  permissions          value permissions
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_slot_destroy(mbus_t *mbus, const char *name)
+bool mbus_value_create(mbus_t *this, const char *name, size_t size, mbus_sig_perm_t permissions)
 {
-        if (mbus && name) {
-                if (mbus->magic == mbus_magic) {
-                        return daemon_request(mbus, DESTROY_SLOT, variant(name)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        bool status = false;
+
+        if (is_valid(this) && name && size > 0) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_VALUE_CREATE;
+                request.arg.CMD_VALUE_CREATE.name = name;
+                request.arg.CMD_VALUE_CREATE.size = size;
+                request.arg.CMD_VALUE_CREATE.perm = permissions;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Connects to a selected slot
- *
- * @param mbus          a bus object
- * @param name          a slot name to connect
- * @param slot          a output pointer to slot object
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
+ * @brief  Delete selected value
+ * @param  this                 mbus object
+ * @param  name                 name of value
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_slot_connect(mbus_t *mbus, const char *name, mbus_slot_t *slot)
+bool mbus_value_delete(mbus_t *this, const char *name)
 {
-        if (mbus && name && slot) {
-                if (mbus->magic == mbus_magic) {
-                        struct response response;
-                        response = daemon_request(mbus, GET_SLOT_ID, variant(name));
+        bool status = false;
 
-                        slot->ID    = response.arg1.slot_ID;
-                        slot->magic = slot_magic;
-
-                        return response.status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        if (is_valid(this) && name) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_VALUE_DELETE;
+                request.arg.CMD_VALUE_DELETE.name = name;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Disconnects a selected slot
- *
- * @param mbus          a bus object
- * @param slot          a slot to disconnect
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
+ * @brief  Set selected value
+ * @param  this                 mbus object
+ * @param  name                 name of value
+ * @param  data                 data of value
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_slot_disconnect(mbus_t *mbus, mbus_slot_t *slot)
+bool mbus_value_set(mbus_t *this, const char *name, const void *data)
 {
-        if (mbus && slot) {
-                if (mbus->magic == mbus_magic && slot->magic == slot_magic) {
-                        slot->ID    = 0;
-                        slot->magic = 0;
-                        return MBUS_STATUS_SUCCESS;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        bool status = false;
+
+        if (is_valid(this) && name && data) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_VALUE_SET;
+                request.arg.CMD_VALUE_SET.name = name;
+                request.arg.CMD_VALUE_SET.data = data;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
+
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Clears a data from a selected slot
- *
- * @param mbus          a bus object
- * @param slot          a slot to clear
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
+ * @brief  Get selected value
+ * @param  this                 mbus object
+ * @param  name                 name of value
+ * @param  data                 value destination
+ * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-mbus_status_t mbus_slot_clear(mbus_t *mbus, mbus_slot_t *slot)
+bool mbus_value_get(mbus_t *this, const char *name, void *data)
 {
-        if (mbus && slot) {
-                if (mbus->magic == mbus_magic && slot->magic == slot_magic && slot->ID) {
-                        return daemon_request(mbus, CLEAR_SLOT, variant(slot->ID)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
-                }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
-        }
-}
+        bool status = false;
 
-//==============================================================================
-/**
- * @brief Checks if a message exist in a selected slot
- *
- * @param mbus          a bus object
- * @param slot          a slot to check
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- * #include <unistd.h>
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      while (mbus_slot_has_msg != MBUS_STATUS_SLOT_WITH_DATA) {
- *           sleep_ms(100);
- *      }
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- *
- */
-//==============================================================================
-mbus_status_t mbus_slot_has_msg(mbus_t *mbus, mbus_slot_t *slot)
-{
-        if (mbus && slot) {
-                if (mbus->magic == mbus_magic && slot->magic == slot_magic && slot->ID) {
-                        return daemon_request(mbus, HAS_DATA, variant(slot->ID)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
+        if (is_valid(this) && name && data) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_VALUE_GET;
+                request.arg.CMD_VALUE_GET.name = name;
+                if (request_action(this, &request, &response)) {
+                        if (response.of.CMD_VALUE_GET.data) {
+                                memcpy(data, response.of.CMD_VALUE_GET.data, response.of.CMD_VALUE_GET.size);
+                                status = true;
+                        }
                 }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
         }
-}
 
-//==============================================================================
-/**
- * @brief Sends a message to a selected slot
- *
- * @param mbus          a bus object
- * @param slot          a slot object to write to
- * @param msg           a message to send
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- */
-//==============================================================================
-mbus_status_t mbus_msg_send(mbus_t *mbus, mbus_slot_t *slot, const void *msg)
-{
-        if (mbus && slot && msg) {
-                if (mbus->magic == mbus_magic && slot->magic == slot_magic && slot->ID) {
-                        return daemon_request(mbus, SEND_MSG, variant(slot->ID), variant(msg)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
-                }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
-        }
-}
-
-//==============================================================================
-/**
- * @brief Receives a data from a selected slot
- *
- * @param mbus          a bus object
- * @param slot          a slot object to read from
- * @param msg           a message pointer where data will be stored
- *
- * @return Operation status
- *
- * @example
- * #include "lib/mbus/mbus.h"
- *
- * // ...
- *
- * mbus_t *bus = mbus_bus_new();
- * if (bus) {
- *
- *      // creates a new slot to communicate with
- *      mbus_slot_t slot;
- *      mbus_slot_create(bus, "slot_name", sizeof(u32_t),&slot);
- *
- *      // sends a data object
- *      u32_t data = 15;
- *      mbus_msg_send(bus, &slot, &data);
- *
- *      // ...
- *
- *      mbus_msg_receive(bus, &slot, &data);
- *
- *      // ...
- *
- *      // clears a slot
- *      mbus_slot_clear(bus, &slot);
- *
- *      // disconnects a slot
- *      mbus_slot_disconnect(bus, &slot);
- *
- *      // destroys created slot
- *      mbus_slot_destroy(bus, "slot_name");
- *
- *      // deletes communication object
- *      mbus_bus_delete(bus);
- */
-//==============================================================================
-mbus_status_t mbus_msg_receive(mbus_t *mbus, mbus_slot_t *slot, void *msg)
-{
-        if (mbus && slot && msg) {
-                if (mbus->magic == mbus_magic && slot->magic == slot_magic && slot->ID) {
-                        return daemon_request(mbus, RECEIVE_MSG, variant(slot->ID), variant(msg)).status;
-                } else {
-                        return MBUS_STATUS_INVALID_OBJECT;
-                }
-        } else {
-                return MBUS_STATUS_INVALID_ARGUMENTS;
-        }
+        return status;
 }
 
 /*==============================================================================

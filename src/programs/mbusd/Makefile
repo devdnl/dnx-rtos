@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += mbus_daemon/mbus_daemon.c
+CSRC_PROGRAMS   += mbusd/mbusd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

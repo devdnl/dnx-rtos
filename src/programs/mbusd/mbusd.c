@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    lsmod.c
+@file    mbusd.c
 
 @author  Daniel Zorychta
 
-@brief   Module listing
+@brief   mbus daemon
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -49,10 +49,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const size_t buf_len = 128;
-
-GLOBAL_VARIABLES_SECTION_BEGIN
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -67,52 +65,9 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(mbus_daemon, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        errno = 0;
-
-        if (argc == 2) {
-                if (strcmp(argv[1], "-l") == 0) {
-                        mbus_t *bus = mbus_bus_new();
-                        if (bus) {
-                                char *name = calloc(1, buf_len);
-                                if (name) {
-                                        uint slots = 0;
-                                        mbus_bus_get_number_of_slots(bus, &slots);
-
-                                        printf("Registered slots (%d):\n", slots);
-
-                                        for (uint i = 0; i < slots; i++) {
-                                                if (mbus_bus_get_slot_name(bus, i, name, buf_len) == MBUS_STATUS_SUCCESS) {
-                                                        printf("  %d: %s\n", i + 1, name);
-                                                }
-                                        }
-
-                                        free(name);
-                                }
-
-                                mbus_bus_delete(bus);
-                        }
-                } else  {
-                        printf("Usage: %s [-l|-h|--help]\n", argv[0]);
-                }
-
-                return EXIT_SUCCESS;
-        }
-
-
-        mbus_status_t status = mbus_daemon();
-
-        FILE *log = fopen("/tmp/mbus.log", "a+");
-        if (log) {
-                if (status == MBUS_STATUS_DAEMON_IS_RUNNING) {
-                        fprintf(log, "%d: Daemon is already started.\n", get_time_ms());
-                } else {
-                        fprintf(log, "%d: Daemon start error: %s\n", get_time_ms(), strerror(errno));
-                }
-
-                fclose(log);
-        }
+        mbus_daemon();
 
         return EXIT_FAILURE;
 }
