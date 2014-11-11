@@ -52,20 +52,27 @@ typedef enum {
         MBUS_ERRNO__ACCESS_DENIED,
         MBUS_ERRNO__TIMEOUT,
         MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED,
-        MBUS_ERRNO__NOT_ENOUGH_MEMORY
+        MBUS_ERRNO__DAEMON_NOT_RUNNING,
+        MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY,
+        MBUS_ERRNO__INTERNAL_ERROR,
+        MBUS_ERRNO__NO_ITEM,
+        MBUS_ERRNO__MBOX_IS_FULL,
+        MBUS_ERRNO__MBOX_EMPTY
 } mbus_errno_t;
 
 /** mbus signal permissions */
 typedef enum {
         MBUS_PERM__PRIVATE,
         MBUS_PERM__READ,
-        MBUS_PERM__WRITE
+        MBUS_PERM__WRITE,
+        MBUS_PERM__INVALID
 } mbus_sig_perm_t;
 
 /** mbus signal type */
 typedef enum {
         MBUS_SIG_TYPE__MBOX,
-        MBUS_SIG_TYPE__FLAG
+        MBUS_SIG_TYPE__VALUE,
+        MBUS_SIG_TYPE__INVALID
 } mbus_sig_type_t;
 
 /** mbus signal information */

@@ -59,6 +59,29 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void print_help()
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void print_signal_list()
+{
+
+}
 
 //==============================================================================
 /**
@@ -67,7 +90,39 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        mbus_daemon();
+        bool help = false, list = false;
+
+        // search parameters
+        for (int i = 1; i < argc; i++) {
+                if (strcmp(argv[i], "-l") == 0) {
+                        list = true;
+                        continue;
+                }
+
+                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+                        help = true;
+                        continue;
+                }
+        }
+
+        // analyze parameters
+        if (help) {
+                print_help();
+                return EXIT_SUCCESS;
+
+        } else if (list) {
+                print_signal_list();
+                return EXIT_SUCCESS;
+        }
+
+        // start daemon
+        if (mbus_daemon() == MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED) {
+                FILE *f = fopen("/var/mbus.log", "a+");
+                if (f) {
+                        fprintf(f, "[%d] mbus is already started\n", get_time_ms());
+                        fclose(f);
+                }
+        }
 
         return EXIT_FAILURE;
 }
