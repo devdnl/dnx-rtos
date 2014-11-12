@@ -97,8 +97,8 @@ typedef struct {
                 } CMD_GET_SIGNAL_INFO;
 
                 struct RQ_CMD_SIGNAL_CREATE {
-                        const char *name;
-                        size_t size;
+                        const char     *name;
+                        size_t          size;
                         mbus_sig_perm_t perm;
                         mbus_sig_type_t type;
                 } CMD_SIGNAL_CREATE;
@@ -263,7 +263,7 @@ static bool signal_is_valid(signal_t *this)
 /**
  * @brief  Delete signal
  * @param  this                 signal to delete
- * @return ?
+ * @return None
  */
 //==============================================================================
 static void signal_delete(signal_t *this)
@@ -303,6 +303,54 @@ static void signal_delete(signal_t *this)
 
 //==============================================================================
 /**
+ * @brief  Get name of the signal
+ * @param  this                 signal object
+ * @return Return name pointer or empty string on error.
+ */
+//==============================================================================
+static char *signal_get_name(signal_t *this)
+{
+        if (signal_is_valid(this)) {
+                return this->name;
+        } else {
+                return "";
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Get signal type
+ * @param  this                 signal object
+ * @return Return signal type
+ */
+//==============================================================================
+static mbus_sig_type_t signal_get_type(signal_t *this)
+{
+        if (signal_is_valid(this)) {
+                return this->type;
+        } else {
+                return MBUS_SIG_TYPE__INVALID;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Get signal size
+ * @param  this                 signal object
+ * @return Return signal size, 0 on error
+ */
+//==============================================================================
+static size_t signal_get_size(signal_t *this)
+{
+        if (signal_is_valid(this)) {
+                return this->size;
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Add data to the selected signal
  * @param  this                 signal object
  * @param  data                 data to set
@@ -314,6 +362,8 @@ static mbus_errno_t signal_set_data(signal_t *this, const void *data)
         mbus_errno_t err = MBUS_ERRNO__INTERNAL_ERROR;
 
         if (signal_is_valid(this) && data) {
+                //TODO permissions
+
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
                         void *item = malloc(this->size);
                         if (item) {
@@ -348,6 +398,8 @@ static mbus_errno_t signal_get_data(signal_t *this, void **data)
         mbus_errno_t err = MBUS_ERRNO__INTERNAL_ERROR;
 
         if (signal_is_valid(this) && data) {
+                //TODO permissions
+
                 err = MBUS_ERRNO__NO_ERROR;
 
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
@@ -476,8 +528,7 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
         printk("%s\n", __func__); // TEST
 
         response_t response;
-        signal_t *sig = llist_at(mbus->signals,
-                                 request->arg.CMD_GET_SIGNAL_INFO.n);
+        signal_t *sig = llist_at(mbus->signals, request->arg.CMD_GET_SIGNAL_INFO.n);
         if (sig) {
                 response.of.CMD_GET_SIGNAL_INFO.info.name        = sig->name;
                 response.of.CMD_GET_SIGNAL_INFO.info.permissions = sig->perm;
@@ -539,19 +590,18 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
 {
         printk("%s\n", __func__); // TEST
 
-        mbus_errno_t err = MBUS_ERRNO__NO_ERROR;
-        bool found = false;
+        response_t response;
+        response.errorno = MBUS_ERRNO__NO_ITEM;
         int n = 0;
 
         llist_foreach(signal_t*, sig, mbus->signals) {
-
-                if (strcmp(sig->name, request->arg.CMD_SIGNAL_DELETE.name) == 0) {
-                        found = true;
+                if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_DELETE.name) == 0) {
 
                         if (sig->owner == request->owner) {
                                 llist_erase(mbus->signals, n);
+                                response.errorno = MBUS_ERRNO__NO_ERROR;
                         } else {
-                                err = MBUS_ERRNO__ACCESS_DENIED;
+                                response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
                         break;
@@ -560,12 +610,6 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                 n++;
         }
 
-        if (!found) {
-                err = MBUS_ERRNO__NO_ITEM;
-        }
-
-        response_t response;
-        response.errorno = err;
         queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
 }
 
@@ -580,6 +624,17 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
 {
         printk("%s\n", __func__); // TEST
 
+        response_t response;
+        response.errorno = MBUS_ERRNO__NO_ITEM;
+
+        llist_foreach(signal_t*, sig, mbus->signals) {
+                if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
+                        response.errorno = signal_set_data(sig, request->arg.CMD_SIGNAL_SET.data);
+                        break;
+                }
+        }
+
+        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
 }
 
 //==============================================================================
@@ -592,6 +647,36 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
 static void realize_CMD_SIGNAL_GET(request_t *request)
 {
         printk("%s\n", __func__); // TEST
+
+        response_t response;
+        response.errorno = MBUS_ERRNO__NO_ITEM;
+
+        llist_foreach(signal_t*, sig, mbus->signals) {
+                if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
+                        mbus_sig_type_t type = signal_get_type(sig);
+
+                        void *data;
+                        response.errorno = signal_get_data(sig, &data);
+
+                        if (response.errorno == MBUS_ERRNO__NO_ERROR) {
+                                response.of.CMD_SIGNAL_GET.data = data;
+                                response.of.CMD_SIGNAL_GET.size = signal_get_size(sig);
+
+                                if (type == MBUS_SIG_TYPE__MBOX) {
+                                        if (llist_push_back(mbus->garbage, garbage_new(data)) == NULL) {
+                                                response.of.CMD_SIGNAL_GET.data = NULL;
+                                                response.of.CMD_SIGNAL_GET.size = 0;
+                                                free(data);
+                                                response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
+                                        }
+                                }
+                        }
+
+                        break;
+                }
+        }
+
+        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
 }
 
 //==============================================================================
@@ -628,13 +713,12 @@ mbus_errno_t mbus_daemon()
         // create new object if started first time
         if (!mbus) {
                 mbus = malloc(sizeof(struct mbus_mem));
-                queue_t *request = queue_new(REQUEST_QUEUE_LENGTH,
-                                             sizeof(request_t));
-                llist_t *signals = llist_new(
-                (llist_cmp_functor_t) signal_compare,
-                (llist_obj_dtor_t) signal_delete);
-                llist_t *garbage = llist_new(NULL,
-                                             (llist_obj_dtor_t) garbage_delete);
+                queue_t *request = queue_new(REQUEST_QUEUE_LENGTH, sizeof(request_t));
+
+                llist_t *signals = llist_new(reinterpret_cast(llist_cmp_functor_t, signal_compare),
+                                             reinterpret_cast(llist_obj_dtor_t, signal_delete));
+
+                llist_t *garbage = llist_new(NULL, reinterpret_cast(llist_obj_dtor_t, garbage_delete));
 
                 if (mbus && request && signals && garbage) {
                         mbus->request = request;

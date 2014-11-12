@@ -68,7 +68,7 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 static void print_help(const char *name)
 {
-        printf("Usage: %d [options]\n", name);
+        printf("Usage: %s [options]\n", name);
         puts(  "  -h, --help    this help");
         puts(  "  -l            signal list");
 }
@@ -84,7 +84,7 @@ static void print_signal_list()
 {
         mbus_t *mbus = mbus_new();
         if (mbus) {
-                printf(FONT_BOLD"NAME, TYPE, SIZE, PERMISSIONS"RESET_ATTRIBUTES"\n");
+                printf(FONT_BOLD"NAME [TYPE, SIZE, PERMISSIONS]"RESET_ATTRIBUTES"\n");
                 int n = mbus_get_number_of_signals(mbus);
                 for (int i = 0; i < n; i++) {
                         mbus_sig_info_t info;
@@ -104,7 +104,7 @@ static void print_signal_list()
                                 default                       : perm_str = "Invalid";    break;
                                 }
 
-                                printf("%s, %s, %dB, %s\n", info.name, type_str, info.size, perm_str);
+                                printf("%s [%s, %dB, %s]\n", info.name, type_str, info.size, perm_str);
                         } else {
                                 break;
                         }
@@ -139,20 +139,66 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
                 // TEST
-                if (strcmp(argv[i], "1") == 0) {
+                if (strcmp(argv[i], "a") == 0) {
                         mbus_t *mbus = mbus_new();
                         if (mbus) {
-                                mbus_signal_create(mbus, "Test1", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
-                                printf("Status: %d\n", mbus_get_errno(mbus));
+                                mbus_signal_create(mbus, "mbusd.Test1", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
+                                printf("A Status: %d\n", mbus_get_errno(mbus));
 
-                                mbus_signal_create(mbus, "network", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ);
-                                printf("Status: %d\n", mbus_get_errno(mbus));
+                                mbus_signal_create(mbus, "mbusd.network", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ);
+                                printf("A Status: %d\n", mbus_get_errno(mbus));
 
-                                mbus_signal_create(mbus, "val", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("Status: %d\n", mbus_get_errno(mbus));
+                                mbus_signal_create(mbus, "mbusd.val", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
+                                printf("A Status: %d\n", mbus_get_errno(mbus));
 
-                                mbus_signal_create(mbus, "env", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("Status: %d\n", mbus_get_errno(mbus));
+                                mbus_signal_create(mbus, "mbusd.env", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
+                                printf("A Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_delete(mbus);
+                        }
+                }
+
+                if (strcmp(argv[i], "d") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                mbus_signal_delete(mbus, "mbusd.val");
+                                printf("D Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_delete(mbus, "mbusd.val2");
+                                printf("D Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_delete(mbus, "mbusd.network");
+                                printf("D Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_delete(mbus);
+                        }
+                }
+
+                if (strcmp(argv[i], "wr") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                int data = get_time_ms();
+                                mbus_signal_set(mbus, "mbusd.Test1", &data);
+                                printf("Wr status: %d; %d\n", mbus_get_errno(mbus), data);
+
+                                data = get_time_ms();
+                                mbus_signal_set(mbus, "mbusd.env", &data);
+                                printf("Wr status: %d; %d\n", mbus_get_errno(mbus), data);
+
+                                mbus_delete(mbus);
+                        }
+                }
+
+                if (strcmp(argv[i], "rd") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                int data = -1;
+                                mbus_signal_get(mbus, "mbusd.Test1", &data);
+                                printf("Rd status: %d; %d\n", mbus_get_errno(mbus), data);
+
+                                data = -1;
+                                mbus_signal_get(mbus, "mbusd.env", &data);
+                                printf("Rd status: %d; %d\n", mbus_get_errno(mbus), data);
 
                                 mbus_delete(mbus);
                         }
