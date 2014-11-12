@@ -66,9 +66,11 @@ GLOBAL_VARIABLES_SECTION {
  * @return ?
  */
 //==============================================================================
-static void print_help()
+static void print_help(const char *name)
 {
-
+        printf("Usage: %d [options]\n", name);
+        puts(  "  -h, --help    this help");
+        puts(  "  -l            signal list");
 }
 
 //==============================================================================
@@ -80,7 +82,39 @@ static void print_help()
 //==============================================================================
 static void print_signal_list()
 {
+        mbus_t *mbus = mbus_new();
+        if (mbus) {
+                printf(FONT_BOLD"NAME, TYPE, SIZE, PERMISSIONS"RESET_ATTRIBUTES"\n");
+                int n = mbus_get_number_of_signals(mbus);
+                for (int i = 0; i < n; i++) {
+                        mbus_sig_info_t info;
+                        if (mbus_get_signal_info(mbus, i, &info)) {
+                                const char *type_str;
+                                switch (info.type) {
+                                case MBUS_SIG_TYPE__MBOX : type_str = "MBOX";    break;
+                                case MBUS_SIG_TYPE__VALUE: type_str = "Value";   break;
+                                default                  : type_str = "Invalid"; break;
+                                }
 
+                                const char *perm_str;
+                                switch (info.permissions) {
+                                case MBUS_SIG_PERM__PRIVATE   : perm_str = "Private";    break;
+                                case MBUS_SIG_PERM__READ      : perm_str = "Read";       break;
+                                case MBUS_SIG_PERM__READ_WRITE: perm_str = "Read-Write"; break;
+                                default                       : perm_str = "Invalid";    break;
+                                }
+
+                                printf("%s, %s, %dB, %s\n", info.name, type_str, info.size, perm_str);
+                        } else {
+                                break;
+                        }
+                }
+
+                mbus_delete(mbus);
+        } else {
+                perror("Unable to create mbus connection!");
+                exit(EXIT_FAILURE);
+        }
 }
 
 //==============================================================================
@@ -103,11 +137,31 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                         help = true;
                         continue;
                 }
+
+                // TEST
+                if (strcmp(argv[i], "1") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                mbus_signal_create(mbus, "Test1", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
+                                printf("Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_create(mbus, "network", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ);
+                                printf("Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_create(mbus, "val", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
+                                printf("Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_create(mbus, "env", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
+                                printf("Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_delete(mbus);
+                        }
+                }
         }
 
         // analyze parameters
         if (help) {
-                print_help();
+                print_help(argv[0]);
                 return EXIT_SUCCESS;
 
         } else if (list) {

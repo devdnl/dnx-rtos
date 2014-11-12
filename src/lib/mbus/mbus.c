@@ -1,32 +1,32 @@
 /*=========================================================================*//**
-@file    mbus.c
+ @file    mbus.c
 
-@author  Daniel Zorychta
+ @author  Daniel Zorychta
 
-@brief   Message Bus Library
+ @brief   Message Bus Library
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+ @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the  Free Software  Foundation;  either version 2 of the License, or
+ any later version.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+ This  program  is  distributed  in the hope that  it will be useful,
+ but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+ MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+ GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ You  should  have received a copy  of the GNU General Public License
+ along  with  this  program;  if not,  write  to  the  Free  Software
+ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+ *//*==========================================================================*/
 
 /*==============================================================================
-  Include files
-==============================================================================*/
+ Include files
+ ==============================================================================*/
 #include "mbus.h"
 #include "llist.h"
 #include <string.h>
@@ -38,8 +38,8 @@
 #include <dnx/timer.h>
 
 /*==============================================================================
-  Local macros
-==============================================================================*/
+ Local macros
+ ==============================================================================*/
 #define REQUEST_QUEUE_LENGTH    8
 #define REQUEST_WAIT_TIMEOUT    1000
 #define REQUEST_ACTION_TIMEOUT  25000
@@ -48,48 +48,44 @@
 #define GARBAGE_LIVE_TIME       2000
 
 /*==============================================================================
-  Local object types
-==============================================================================*/
+ Local object types
+ ==============================================================================*/
 struct mbus {
-        queue_t         *response;
-        mbus_errno_t     errorno;
-        struct mbus     *self;
+        queue_t *response;
+        mbus_errno_t errorno;
+        struct mbus *self;
 };
 
 struct mbus_mem {
-        queue_t         *request;
-        task_t          *owner;
-        llist_t         *signals;
-        llist_t         *garbage;
+        queue_t *request;
+        task_t *owner;
+        llist_t *signals;
+        llist_t *garbage;
 };
 
 typedef struct {
-        char            *name;
-        task_t          *owner;
-        void            *data;
-        void            *self;
-        size_t           size;
-        mbus_sig_perm_t  perm;
-        mbus_sig_type_t  type;
+        char *name;
+        task_t *owner;
+        void *data;
+        void *self;
+        size_t size;
+        mbus_sig_perm_t perm;
+        mbus_sig_type_t type;
 } signal_t;
 
 typedef struct {
-        void            *data;
-        void            *self;
-        timer_t          timer;
+        void *data;
+        void *self;
+        timer_t timer;
 } garbage_t;
 
 typedef enum {
         CMD_GET_NUMBER_OF_SIGNALS,
         CMD_GET_SIGNAL_INFO,
-        CMD_MBOX_CREATE,
-        CMD_MBOX_DELETE,
-        CMD_MBOX_SEND,
-        CMD_MBOX_RECEIVE,
-        CMD_VALUE_CREATE,
-        CMD_VALUE_DELETE,
-        CMD_VALUE_SET,
-        CMD_VALUE_GET
+        CMD_SIGNAL_CREATE,
+        CMD_SIGNAL_DELETE,
+        CMD_SIGNAL_SET,
+        CMD_SIGNAL_GET
 } cmd_t;
 
 typedef struct {
@@ -97,100 +93,77 @@ typedef struct {
 
         union {
                 struct RQ_CMD_GET_SIGNAL_INFO {
-                        int             n;
+                        int n;
                 } CMD_GET_SIGNAL_INFO;
 
-                struct RQ_CMD_MBOX_CREATE {
-                        const char     *name;
-                        size_t          size;
+                struct RQ_CMD_SIGNAL_CREATE {
+                        const char *name;
+                        size_t size;
                         mbus_sig_perm_t perm;
-                } CMD_MBOX_CREATE;
+                        mbus_sig_type_t type;
+                } CMD_SIGNAL_CREATE;
 
-                struct RQ_CMD_MBOX_DELETE {
-                        const char     *name;
-                } CMD_MBOX_DELETE;
+                struct RQ_CMD_SIGNAL_DELETE {
+                        const char *name;
+                } CMD_SIGNAL_DELETE;
 
-                struct RQ_CMD_MBOX_SEND {
-                        const char     *name;
-                        const void     *data;
-                } CMD_MBOX_SEND;
+                struct RQ_CMD_SIGNAL_SET {
+                        const char *name;
+                        const void *data;
+                } CMD_SIGNAL_SET;
 
-                struct RQ_CMD_MBOX_RECEIVE {
-                        const char     *name;
-                } CMD_MBOX_RECEIVE;
-
-                struct RQ_CMD_VALUE_CREATE {
-                        const char     *name;
-                        size_t          size;
-                        mbus_sig_perm_t perm;
-                } CMD_VALUE_CREATE;
-
-                struct RQ_CMD_VALUE_DELETE {
-                        const char     *name;
-                } CMD_VALUE_DELETE;
-
-                struct RQ_CMD_VALUE_SET {
-                        const char     *name;
-                        const void     *data;
-                } CMD_VALUE_SET;
-
-                struct RQ_CMD_VALUE_GET {
-                        const char     *name;
-                } CMD_VALUE_GET;
+                struct RQ_CMD_SIGNAL_GET {
+                        const char *name;
+                } CMD_SIGNAL_GET;
         } arg;
 
         queue_t *response;
-        task_t  *owner;
+        task_t *owner;
 } request_t;
 
 typedef struct {
         union {
                 struct RES_CMD_GET_NUMBER_OF_SIGNALS {
-                        int             number_of_signals;
+                        int number_of_signals;
                 } CMD_GET_NUMBER_OF_SIGNALS;
 
                 struct RES_CMD_GET_SIGNAL_INFO {
                         mbus_sig_info_t info;
                 } CMD_GET_SIGNAL_INFO;
 
-                struct RES_CMD_MBOX_RECEIVE {
-                        const void     *data;
-                        size_t          size;
-                } CMD_MBOX_RECEIVE;
-
-                struct RES_CMD_VALUE_GET {
-                        const void     *data;
-                        size_t          size;
-                } CMD_VALUE_GET;
+                struct RES_CMD_SIGNAL_GET {
+                        const void *data;
+                        size_t size;
+                } CMD_SIGNAL_GET;
         } of;
 
         mbus_errno_t errorno;
 } response_t;
 
 /*==============================================================================
-  Local function prototypes
-==============================================================================*/
+ Local function prototypes
+ ==============================================================================*/
 
 /*==============================================================================
-  Local objects
-==============================================================================*/
+ Local objects
+ ==============================================================================*/
 
 /*==============================================================================
-  Shared objects
-==============================================================================*/
+ Shared objects
+ ==============================================================================*/
 static struct mbus_mem *mbus;
 
 /*==============================================================================
-  Exported objects
-==============================================================================*/
+ Exported objects
+ ==============================================================================*/
 
 /*==============================================================================
-  External objects
-==============================================================================*/
+ External objects
+ ==============================================================================*/
 
 /*==============================================================================
-  Function definitions
-==============================================================================*/
+ Function definitions
+ ==============================================================================*/
 //==============================================================================
 /**
  * @brief  Function send request to the daemon
@@ -198,7 +171,8 @@ static struct mbus_mem *mbus;
  * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static bool request_action(mbus_t *this, request_t *request, response_t *response)
+static bool request_action(mbus_t *this, request_t *request,
+                           response_t *response)
 {
         if (mbus) {
                 request->response = this->response;
@@ -230,7 +204,8 @@ static bool request_action(mbus_t *this, request_t *request, response_t *respons
  * @return Created object or NULL on error.
  */
 //==============================================================================
-static signal_t *signal_new(const char *name, task_t *owner, size_t size, mbus_sig_perm_t perm, mbus_sig_type_t type)
+static signal_t *signal_new(const char *name, task_t *owner, size_t size,
+                            mbus_sig_perm_t perm, mbus_sig_type_t type)
 {
         signal_t *this        = malloc(sizeof(signal_t));
         char     *signal_name = malloc(strnlen(name, MAX_NAME_LENGTH) + 1);
@@ -298,7 +273,7 @@ static void signal_delete(signal_t *this)
                 this->name  = NULL;
                 this->self  = NULL;
                 this->owner = NULL;
-                this->perm  = MBUS_PERM__INVALID;
+                this->perm  = MBUS_SIG_PERM__INVALID;
                 this->size  = 0;
                 this->type  = MBUS_SIG_TYPE__INVALID;
 
@@ -389,6 +364,23 @@ static mbus_errno_t signal_get_data(signal_t *this, void **data)
 
 //==============================================================================
 /**
+ * @brief  Compare signals (by name)
+ * @param  first                first object
+ * @param  second               second object
+ * @return Error number
+ */
+//==============================================================================
+static int signal_compare(signal_t *first, signal_t *second)
+{
+        if (signal_is_valid(first) && signal_is_valid(second)) {
+                return strcmp(first->name, second->name);
+        } else {
+                return 1;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Create new garbage object
  * @param  data                 garbage data to link
  * @return Garbage object or NULL on error.
@@ -398,9 +390,9 @@ static garbage_t *garbage_new(void *data)
 {
         garbage_t *this = malloc(sizeof(garbage_t));
         if (this) {
-                this->data  = data;
+                this->data = data;
                 this->timer = timer_reset();
-                this->self  = this;
+                this->self = this;
         }
 
         return this;
@@ -484,13 +476,14 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
         printk("%s\n", __func__); // TEST
 
         response_t response;
-        signal_t  *sig = llist_at(mbus->signals, request->arg.CMD_GET_SIGNAL_INFO.n);
+        signal_t *sig = llist_at(mbus->signals,
+                                 request->arg.CMD_GET_SIGNAL_INFO.n);
         if (sig) {
                 response.of.CMD_GET_SIGNAL_INFO.info.name        = sig->name;
                 response.of.CMD_GET_SIGNAL_INFO.info.permissions = sig->perm;
                 response.of.CMD_GET_SIGNAL_INFO.info.size        = sig->size;
                 response.of.CMD_GET_SIGNAL_INFO.info.type        = sig->type;
-                response.errorno                                 = MBUS_ERRNO__NO_ERROR;
+                response.errorno = MBUS_ERRNO__NO_ERROR;
 
         } else {
                 response.errorno = MBUS_ERRNO__NO_ITEM;
@@ -506,24 +499,29 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
  * @return None
  */
 //==============================================================================
-static void realize_CMD_MBOX_CREATE(request_t *request)
+static void realize_CMD_SIGNAL_CREATE(request_t *request)
 {
         printk("%s\n", __func__); // TEST
 
         response_t response;
         response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
 
-        signal_t *sig = signal_new(request->arg.CMD_MBOX_CREATE.name,
+        signal_t *sig = signal_new(request->arg.CMD_SIGNAL_CREATE.name,
                                    request->owner,
-                                   request->arg.CMD_MBOX_CREATE.size,
-                                   request->arg.CMD_MBOX_CREATE.perm,
-                                   MBUS_SIG_TYPE__MBOX);
-
+                                   request->arg.CMD_SIGNAL_CREATE.size,
+                                   request->arg.CMD_SIGNAL_CREATE.perm,
+                                   request->arg.CMD_SIGNAL_CREATE.type);
         if (sig) {
-                if (llist_push_back(mbus->signals, sig)) {
-                        response.errorno = MBUS_ERRNO__NO_ERROR;
+                if (llist_find_begin(mbus->signals, sig) == -1) {
+                        if (llist_push_back(mbus->signals, sig)) {
+                                response.errorno = MBUS_ERRNO__NO_ERROR;
+                                llist_sort(mbus->signals);
+                        } else {
+                                signal_delete(sig);
+                        }
                 } else {
                         signal_delete(sig);
+                        response.errorno = MBUS_ERRNO__SIGNAL_EXIST;
                 }
         }
 
@@ -537,16 +535,17 @@ static void realize_CMD_MBOX_CREATE(request_t *request)
  * @return None
  */
 //==============================================================================
-static void realize_CMD_MBOX_DELETE(request_t *request)
+static void realize_CMD_SIGNAL_DELETE(request_t *request)
 {
         printk("%s\n", __func__); // TEST
 
         mbus_errno_t err = MBUS_ERRNO__NO_ERROR;
-        bool found       = false;
-        int  n           = 0;
+        bool found = false;
+        int n = 0;
 
         llist_foreach(signal_t*, sig, mbus->signals) {
-                if (strcmp(sig->name, request->arg.CMD_MBOX_DELETE.name) == 0) {
+
+                if (strcmp(sig->name, request->arg.CMD_SIGNAL_DELETE.name) == 0) {
                         found = true;
 
                         if (sig->owner == request->owner) {
@@ -577,10 +576,9 @@ static void realize_CMD_MBOX_DELETE(request_t *request)
  * @return None
  */
 //==============================================================================
-static void realize_CMD_MBOX_SEND(request_t *request)
+static void realize_CMD_SIGNAL_SET(request_t *request)
 {
         printk("%s\n", __func__); // TEST
-
 
 }
 
@@ -591,55 +589,7 @@ static void realize_CMD_MBOX_SEND(request_t *request)
  * @return None
  */
 //==============================================================================
-static void realize_CMD_MBOX_RECEIVE(request_t *request)
-{
-        printk("%s\n", __func__); // TEST
-}
-
-//==============================================================================
-/**
- * @brief  Function realize CMD_VALUE_CREATE command
- * @param  request              request data
- * @return None
- */
-//==============================================================================
-static void realize_CMD_VALUE_CREATE(request_t *request)
-{
-        printk("%s\n", __func__); // TEST
-}
-
-//==============================================================================
-/**
- * @brief  Function realize CMD_VALUE_DELETE command
- * @param  request              request data
- * @return None
- */
-//==============================================================================
-static void realize_CMD_VALUE_DELETE(request_t *request)
-{
-        printk("%s\n", __func__); // TEST
-}
-
-//==============================================================================
-/**
- * @brief  Function realize CMD_VALUE_SET command
- * @param  request              request data
- * @return None
- */
-//==============================================================================
-static void realize_CMD_VALUE_SET(request_t *request)
-{
-        printk("%s\n", __func__); // TEST
-}
-
-//==============================================================================
-/**
- * @brief  Function realize CMD_VALUE_GET command
- * @param  request              request data
- * @return None
- */
-//==============================================================================
-static void realize_CMD_VALUE_GET(request_t *request)
+static void realize_CMD_SIGNAL_GET(request_t *request)
 {
         printk("%s\n", __func__); // TEST
 }
@@ -671,18 +621,26 @@ mbus_errno_t mbus_daemon()
         // check if mbus is orphaned
         if (mbus && !task_is_exist(mbus->owner)) {
                 mbus->owner = task_get_handle();
+        } else if (mbus) {
+                return err;
         }
 
         // create new object if started first time
         if (!mbus) {
-                mbus             = malloc(sizeof(struct mbus_mem));
-                queue_t *request = queue_new(REQUEST_QUEUE_LENGTH, sizeof(request_t));
-                llist_t *signals = llist_new(NULL, (llist_obj_dtor_t)signal_delete);
+                mbus = malloc(sizeof(struct mbus_mem));
+                queue_t *request = queue_new(REQUEST_QUEUE_LENGTH,
+                                             sizeof(request_t));
+                llist_t *signals = llist_new(
+                (llist_cmp_functor_t) signal_compare,
+                (llist_obj_dtor_t) signal_delete);
+                llist_t *garbage = llist_new(NULL,
+                                             (llist_obj_dtor_t) garbage_delete);
 
-                if (mbus && request && signals) {
+                if (mbus && request && signals && garbage) {
                         mbus->request = request;
                         mbus->signals = signals;
-                        mbus->owner   = task_get_handle();
+                        mbus->garbage = garbage;
+                        mbus->owner = task_get_handle();
 
                 } else {
                         err = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
@@ -699,13 +657,18 @@ mbus_errno_t mbus_daemon()
                         if (signals) {
                                 llist_delete(signals);
                         }
+
+                        if (garbage) {
+                                llist_delete(garbage);
+                        }
                 }
         }
 
         // execute requests
         while (mbus) {
                 request_t request;
-                if (queue_receive(mbus->request, &request, REQUEST_WAIT_TIMEOUT)) {
+                if (queue_receive(mbus->request, &request,
+                                  REQUEST_WAIT_TIMEOUT)) {
                         switch (request.cmd) {
                         case CMD_GET_NUMBER_OF_SIGNALS:
                                 realize_CMD_GET_NUMBER_OF_SIGNALS(&request);
@@ -715,36 +678,20 @@ mbus_errno_t mbus_daemon()
                                 realize_CMD_GET_SIGNAL_INFO(&request);
                                 break;
 
-                        case CMD_MBOX_CREATE:
-                                realize_CMD_MBOX_CREATE(&request);
+                        case CMD_SIGNAL_CREATE:
+                                realize_CMD_SIGNAL_CREATE(&request);
                                 break;
 
-                        case CMD_MBOX_DELETE:
-                                realize_CMD_MBOX_DELETE(&request);
+                        case CMD_SIGNAL_DELETE:
+                                realize_CMD_SIGNAL_DELETE(&request);
                                 break;
 
-                        case CMD_MBOX_SEND:
-                                realize_CMD_MBOX_SEND(&request);
+                        case CMD_SIGNAL_SET:
+                                realize_CMD_SIGNAL_SET(&request);
                                 break;
 
-                        case CMD_MBOX_RECEIVE:
-                                realize_CMD_MBOX_RECEIVE(&request);
-                                break;
-
-                        case CMD_VALUE_CREATE:
-                                realize_CMD_VALUE_CREATE(&request);
-                                break;
-
-                        case CMD_VALUE_DELETE:
-                                realize_CMD_VALUE_DELETE(&request);
-                                break;
-
-                        case CMD_VALUE_SET:
-                                realize_CMD_VALUE_SET(&request);
-                                break;
-
-                        case CMD_VALUE_GET:
-                                realize_CMD_VALUE_GET(&request);
+                        case CMD_SIGNAL_GET:
+                                realize_CMD_SIGNAL_GET(&request);
                                 break;
 
                         default:
@@ -752,11 +699,15 @@ mbus_errno_t mbus_daemon()
                         }
                 }
 
-                llist_foreach(garbage_t*, g, mbus->garbage) {
+                int n = 0;
+                llist_foreach(garbage_t*, g, mbus->garbage)
+                {
                         if (garbage_is_time_expired(g)) {
                                 printk("Remove garbage\n"); // TEST
-                                garbage_delete(g);
+                                llist_erase(mbus->garbage, n);
                         }
+
+                        n++;
                 }
         }
 
@@ -840,7 +791,7 @@ int mbus_get_number_of_signals(mbus_t *this)
 
         if (mbus_is_valid(this)) {
                 response_t response;
-                request_t  request;
+                request_t request;
                 request.cmd = CMD_GET_NUMBER_OF_SIGNALS;
                 if (request_action(this, &request, &response)) {
                         return response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals;
@@ -863,123 +814,14 @@ bool mbus_get_signal_info(mbus_t *this, size_t n, mbus_sig_info_t *info)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && n > 0 && info) {
+        if (mbus_is_valid(this) && info) {
                 response_t response;
-                request_t  request;
+                request_t request;
                 request.cmd = CMD_GET_SIGNAL_INFO;
                 request.arg.CMD_GET_SIGNAL_INFO.n = n;
                 if (request_action(this, &request, &response)) {
                         if (response.errorno == MBUS_ERRNO__NO_ERROR) {
-                                *info = response.of.CMD_GET_SIGNAL_INFO.info;
-                        }
-                }
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Create new mbox
- * @param  this                 mbus object
- * @param  name                 mbox name
- * @param  size                 mbox size
- * @param  permissions          mbox permissions
- * @return On success true is returned. On error false and error number is set.
- */
-//==============================================================================
-bool mbus_mbox_create(mbus_t *this, const char *name, size_t size, mbus_sig_perm_t permissions)
-{
-        bool status = false;
-
-        if (mbus_is_valid(this) && name && size > 0) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_MBOX_CREATE;
-                request.arg.CMD_MBOX_CREATE.name = name;
-                request.arg.CMD_MBOX_CREATE.size = size;
-                request.arg.CMD_MBOX_CREATE.perm = permissions;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
-                }
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Delete mbox
- * @param  this                 mbus object
- * @param  name                 name of mbox to delete
- * @return On success true is returned. On error false and error number is set.
- */
-//==============================================================================
-bool mbus_mbox_delete(mbus_t *this, const char *name)
-{
-        bool status = false;
-
-        if (mbus_is_valid(this) && name) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_MBOX_DELETE;
-                request.arg.CMD_MBOX_DELETE.name = name;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
-                }
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Send selected data to mbox
- * @param  this                 mbus object
- * @param  name                 name of mbox
- * @param  data                 data to send
- * @return On success true is returned. On error false and error number is set.
- */
-//==============================================================================
-bool mbus_mbox_send(mbus_t *this, const char *name, const void *data)
-{
-        bool status = false;
-
-        if (mbus_is_valid(this) && name && data) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_MBOX_SEND;
-                request.arg.CMD_MBOX_SEND.name = name;
-                request.arg.CMD_MBOX_SEND.data = data;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
-                }
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Receive data from mbox
- * @param  this                 mbus object
- * @param  name                 name of mbox
- * @param  data                 data destination
- * @return On success true is returned. On error false and error number is set.
- */
-//==============================================================================
-bool mbus_mbox_receive(mbus_t *this, const char *name, void *data)
-{
-        bool status = false;
-
-        if (mbus_is_valid(this) && name && data) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_MBOX_RECEIVE;
-                request.arg.CMD_MBOX_RECEIVE.name = name;
-                if (request_action(this, &request, &response)) {
-                        if (response.of.CMD_MBOX_RECEIVE.data) {
-                                memcpy(data, response.of.CMD_MBOX_RECEIVE.data, response.of.CMD_MBOX_RECEIVE.size);
+                                *info  = response.of.CMD_GET_SIGNAL_INFO.info;
                                 status = true;
                         }
                 }
@@ -990,25 +832,27 @@ bool mbus_mbox_receive(mbus_t *this, const char *name, void *data)
 
 //==============================================================================
 /**
- * @brief  Create new value
+ * @brief  Create new signal
  * @param  this                 mbus object
- * @param  name                 name of value
- * @param  size                 size of value
- * @param  permissions          value permissions
+ * @param  name                 signal name
+ * @param  size                 signal size
+ * @param  type                 signal type
+ * @param  permissions          signal permissions
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_value_create(mbus_t *this, const char *name, size_t size, mbus_sig_perm_t permissions)
+bool mbus_signal_create(mbus_t *this, const char *name, size_t size, mbus_sig_type_t type, mbus_sig_perm_t permissions)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name && size > 0) {
+        if (mbus_is_valid(this) && name && size > 0 && type < MBUS_SIG_TYPE__INVALID) {
                 response_t response;
-                request_t  request;
-                request.cmd = CMD_VALUE_CREATE;
-                request.arg.CMD_VALUE_CREATE.name = name;
-                request.arg.CMD_VALUE_CREATE.size = size;
-                request.arg.CMD_VALUE_CREATE.perm = permissions;
+                request_t request;
+                request.cmd = CMD_SIGNAL_CREATE;
+                request.arg.CMD_SIGNAL_CREATE.name = name;
+                request.arg.CMD_SIGNAL_CREATE.size = size;
+                request.arg.CMD_SIGNAL_CREATE.perm = permissions;
+                request.arg.CMD_SIGNAL_CREATE.type = type;
                 if (request_action(this, &request, &response)) {
                         status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
@@ -1019,21 +863,21 @@ bool mbus_value_create(mbus_t *this, const char *name, size_t size, mbus_sig_per
 
 //==============================================================================
 /**
- * @brief  Delete selected value
+ * @brief  Delete signal
  * @param  this                 mbus object
- * @param  name                 name of value
+ * @param  name                 name of signal to delete
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_value_delete(mbus_t *this, const char *name)
+bool mbus_signal_delete(mbus_t *this, const char *name)
 {
         bool status = false;
 
         if (mbus_is_valid(this) && name) {
                 response_t response;
-                request_t  request;
-                request.cmd = CMD_VALUE_DELETE;
-                request.arg.CMD_VALUE_DELETE.name = name;
+                request_t request;
+                request.cmd = CMD_SIGNAL_DELETE;
+                request.arg.CMD_SIGNAL_DELETE.name = name;
                 if (request_action(this, &request, &response)) {
                         status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
@@ -1044,23 +888,23 @@ bool mbus_value_delete(mbus_t *this, const char *name)
 
 //==============================================================================
 /**
- * @brief  Set selected value
+ * @brief  Set selected signal
  * @param  this                 mbus object
- * @param  name                 name of value
- * @param  data                 data of value
+ * @param  name                 name of signal
+ * @param  data                 data to set
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_value_set(mbus_t *this, const char *name, const void *data)
+bool mbus_signal_set(mbus_t *this, const char *name, const void *data)
 {
         bool status = false;
 
         if (mbus_is_valid(this) && name && data) {
                 response_t response;
-                request_t  request;
-                request.cmd = CMD_VALUE_SET;
-                request.arg.CMD_VALUE_SET.name = name;
-                request.arg.CMD_VALUE_SET.data = data;
+                request_t request;
+                request.cmd = CMD_SIGNAL_SET;
+                request.arg.CMD_SIGNAL_SET.name = name;
+                request.arg.CMD_SIGNAL_SET.data = data;
                 if (request_action(this, &request, &response)) {
                         status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
@@ -1071,25 +915,27 @@ bool mbus_value_set(mbus_t *this, const char *name, const void *data)
 
 //==============================================================================
 /**
- * @brief  Get selected value
+ * @brief  Get data from signal
  * @param  this                 mbus object
- * @param  name                 name of value
- * @param  data                 value destination
+ * @param  name                 name of signal
+ * @param  data                 data destination
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_value_get(mbus_t *this, const char *name, void *data)
+bool mbus_signal_get(mbus_t *this, const char *name, void *data)
 {
         bool status = false;
 
         if (mbus_is_valid(this) && name && data) {
                 response_t response;
-                request_t  request;
-                request.cmd = CMD_VALUE_GET;
-                request.arg.CMD_VALUE_GET.name = name;
+                request_t request;
+                request.cmd = CMD_SIGNAL_GET;
+                request.arg.CMD_SIGNAL_GET.name = name;
                 if (request_action(this, &request, &response)) {
-                        if (response.of.CMD_VALUE_GET.data) {
-                                memcpy(data, response.of.CMD_VALUE_GET.data, response.of.CMD_VALUE_GET.size);
+                        if (response.of.CMD_SIGNAL_GET.data) {
+                                memcpy(data, response.of.CMD_SIGNAL_GET.data,
+                                       response.of.CMD_SIGNAL_GET.size);
+
                                 status = true;
                         }
                 }
@@ -1099,5 +945,5 @@ bool mbus_value_get(mbus_t *this, const char *name, void *data)
 }
 
 /*==============================================================================
-  End of file
-==============================================================================*/
+ End of file
+ ==============================================================================*/

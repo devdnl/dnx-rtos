@@ -54,6 +54,7 @@ typedef enum {
         MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED,
         MBUS_ERRNO__DAEMON_NOT_RUNNING,
         MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY,
+        MBUS_ERRNO__SIGNAL_EXIST,
         MBUS_ERRNO__INTERNAL_ERROR,
         MBUS_ERRNO__NO_ITEM,
         MBUS_ERRNO__MBOX_IS_FULL,
@@ -62,10 +63,10 @@ typedef enum {
 
 /** mbus signal permissions */
 typedef enum {
-        MBUS_PERM__PRIVATE,
-        MBUS_PERM__READ,
-        MBUS_PERM__WRITE,
-        MBUS_PERM__INVALID
+        MBUS_SIG_PERM__PRIVATE,
+        MBUS_SIG_PERM__READ,
+        MBUS_SIG_PERM__READ_WRITE,
+        MBUS_SIG_PERM__INVALID
 } mbus_sig_perm_t;
 
 /** mbus signal type */
@@ -99,14 +100,10 @@ extern bool         mbus_delete(mbus_t*);
 extern mbus_errno_t mbus_get_errno(mbus_t*);
 extern int          mbus_get_number_of_signals(mbus_t*);
 extern bool         mbus_get_signal_info(mbus_t*, size_t n, mbus_sig_info_t*);
-extern bool         mbus_mbox_create(mbus_t*, const char*, size_t, mbus_sig_perm_t);
-extern bool         mbus_mbox_delete(mbus_t*, const char*);
-extern bool         mbus_mbox_send(mbus_t*, const char*, const void*);
-extern bool         mbus_mbox_receive(mbus_t*, const char*, void*);
-extern bool         mbus_value_create(mbus_t*, const char*, size_t, mbus_sig_perm_t);
-extern bool         mbus_value_delete(mbus_t*, const char*);
-extern bool         mbus_value_set(mbus_t*, const char*, const void*);
-extern bool         mbus_value_get(mbus_t*, const char*, void*);
+extern bool         mbus_signal_create(mbus_t*, const char*, size_t, mbus_sig_type_t, mbus_sig_perm_t);
+extern bool         mbus_signal_delete(mbus_t*, const char*);
+extern bool         mbus_signal_send(mbus_t*, const char*, const void*);
+extern bool         mbus_signal_receive(mbus_t*, const char*, void*);
 
 /*==============================================================================
   Exported inline functions
