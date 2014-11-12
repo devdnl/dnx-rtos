@@ -45,7 +45,7 @@ extern "C" {
 ==============================================================================*/
 // list foreach iterator
 #define llist_foreach(type, element, llist_t__list)\
-        for (bool _tb = true; _tb; _tb = false)\
+        for (bool _tb = true; _tb && llist_size(llist_t__list); _tb = false)\
                 for (llist_iterator_t _iterator = llist_iterator(llist_t__list); _tb;)\
                         for (type element = llist_begin(&_iterator);\
                              element;\
@@ -53,7 +53,7 @@ extern "C" {
 
 // list reversed foreach iterator
 #define llist_foreach_reverse(type, element, llist_t__list)\
-        for (bool _tb = true; _tb; _tb = false)\
+        for (bool _tb = true; _tb && llist_size(llist_t__list); _tb = false)\
                 for (llist_iterator_t _iterator = llist_iterator(llist_t__list); _tb;)\
                         for (type element = llist_end(&_iterator);\
                              element;\
