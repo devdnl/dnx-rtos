@@ -51,32 +51,32 @@
  Local object types
  ==============================================================================*/
 struct mbus {
-        queue_t *response;
-        mbus_errno_t errorno;
-        struct mbus *self;
+        queue_t         *response;
+        mbus_errno_t     errorno;
+        struct mbus     *self;
 };
 
 struct mbus_mem {
-        queue_t *request;
-        task_t *owner;
-        llist_t *signals;
-        llist_t *garbage;
+        queue_t         *request;
+        task_t          *owner;
+        llist_t         *signals;
+        llist_t         *garbage;
 };
 
 typedef struct {
-        char *name;
-        task_t *owner;
-        void *data;
-        void *self;
-        size_t size;
-        mbus_sig_perm_t perm;
-        mbus_sig_type_t type;
+        char            *name;
+        task_t          *owner;
+        void            *data;
+        void            *self;
+        size_t           size;
+        mbus_sig_perm_t  perm;
+        mbus_sig_type_t  type;
 } signal_t;
 
 typedef struct {
-        void *data;
-        void *self;
-        timer_t timer;
+        void            *data;
+        void            *self;
+        timer_t          timer;
 } garbage_t;
 
 typedef enum {
@@ -171,8 +171,7 @@ static struct mbus_mem *mbus;
  * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static bool request_action(mbus_t *this, request_t *request,
-                           response_t *response)
+static bool request_action(mbus_t *this, request_t *request, response_t *response)
 {
         if (mbus) {
                 request->response = this->response;
@@ -191,6 +190,19 @@ static bool request_action(mbus_t *this, request_t *request,
         }
 
         return false;
+}
+
+//==============================================================================
+/**
+ * @brief  Function send response to request
+ * @param  request              request to response
+ * @param  response             response
+ * @return None
+ */
+//==============================================================================
+static void send_response(request_t *request, response_t *response)
+{
+        queue_send(request->response, response, REQUEST_ACTION_TIMEOUT);
 }
 
 //==============================================================================
@@ -351,6 +363,38 @@ static size_t signal_get_size(signal_t *this)
 
 //==============================================================================
 /**
+ * @brief  Get signal owner
+ * @param  this                 signal object
+ * @return Return signal owner or NULL on error.
+ */
+//==============================================================================
+static task_t *signal_get_owner(signal_t *this)
+{
+        if (signal_is_valid(this)) {
+                return this->owner;
+        } else {
+                return NULL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Get signal permissions
+ * @param  this                 signal object
+ * @return Return permissions.
+ */
+//==============================================================================
+static mbus_sig_perm_t signal_get_permissions(signal_t *this)
+{
+        if (signal_is_valid(this)) {
+                return this->perm;
+        } else {
+                return MBUS_SIG_PERM__INVALID;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Add data to the selected signal
  * @param  this                 signal object
  * @param  data                 data to set
@@ -362,8 +406,6 @@ static mbus_errno_t signal_set_data(signal_t *this, const void *data)
         mbus_errno_t err = MBUS_ERRNO__INTERNAL_ERROR;
 
         if (signal_is_valid(this) && data) {
-                //TODO permissions
-
                 err = MBUS_ERRNO__NO_ERROR;
 
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
@@ -400,8 +442,6 @@ static mbus_errno_t signal_get_data(signal_t *this, void **data)
         mbus_errno_t err = MBUS_ERRNO__INTERNAL_ERROR;
 
         if (signal_is_valid(this) && data) {
-                //TODO permissions
-
                 err = MBUS_ERRNO__NO_ERROR;
 
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
@@ -444,9 +484,9 @@ static garbage_t *garbage_new(void *data)
 {
         garbage_t *this = malloc(sizeof(garbage_t));
         if (this) {
-                this->data = data;
+                this->data  = data;
                 this->timer = timer_reset();
-                this->self = this;
+                this->self  = this;
         }
 
         return this;
@@ -515,7 +555,7 @@ static void realize_CMD_GET_NUMBER_OF_SIGNALS(request_t *request)
         response_t response;
         response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals = count;
         response.errorno = count == -1 ? MBUS_ERRNO__INTERNAL_ERROR : MBUS_ERRNO__NO_ERROR;
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
@@ -542,7 +582,7 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
                 response.errorno = MBUS_ERRNO__NO_ITEM;
         }
 
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
@@ -578,7 +618,7 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
                 }
         }
 
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
@@ -599,7 +639,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_DELETE.name) == 0) {
 
-                        if (sig->owner == request->owner) {
+                        if (signal_get_owner(sig) == request->owner) {
                                 llist_erase(mbus->signals, n);
                                 response.errorno = MBUS_ERRNO__NO_ERROR;
                         } else {
@@ -612,7 +652,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                 n++;
         }
 
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
@@ -631,12 +671,21 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
 
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
-                        response.errorno = signal_set_data(sig, request->arg.CMD_SIGNAL_SET.data);
+
+                        bool is_owner = signal_get_owner(sig) == request->owner;
+                        mbus_sig_perm_t perm = signal_get_permissions(sig);
+
+                        if (is_owner || perm == MBUS_SIG_PERM__READ_WRITE) {
+                                response.errorno = signal_set_data(sig, request->arg.CMD_SIGNAL_SET.data);
+                        } else {
+                                response.errorno = MBUS_ERRNO__ACCESS_DENIED;
+                        }
+
                         llist_foreach_break;
                 }
         }
 
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
@@ -655,30 +704,37 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
 
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
-                        mbus_sig_type_t type = signal_get_type(sig);
 
-                        void *data;
-                        response.errorno = signal_get_data(sig, &data);
+                        bool is_owner = signal_get_owner(sig) == request->owner;
+                        mbus_sig_perm_t perm = signal_get_permissions(sig);
 
-                        if (response.errorno == MBUS_ERRNO__NO_ERROR) {
-                                response.of.CMD_SIGNAL_GET.data = data;
-                                response.of.CMD_SIGNAL_GET.size = signal_get_size(sig);
+                        if (is_owner || perm == MBUS_SIG_PERM__READ || perm == MBUS_SIG_PERM__READ_WRITE) {
 
-                                if (type == MBUS_SIG_TYPE__MBOX) {
-                                        if (llist_push_back(mbus->garbage, garbage_new(data)) == NULL) {
-                                                response.of.CMD_SIGNAL_GET.data = NULL;
-                                                response.of.CMD_SIGNAL_GET.size = 0;
-                                                free(data);
-                                                response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
+                                void *data;
+                                response.errorno = signal_get_data(sig, &data);
+
+                                if (response.errorno == MBUS_ERRNO__NO_ERROR) {
+                                        response.of.CMD_SIGNAL_GET.data = data;
+                                        response.of.CMD_SIGNAL_GET.size = signal_get_size(sig);
+
+                                        if (signal_get_type(sig) == MBUS_SIG_TYPE__MBOX) {
+                                                if (llist_push_back(mbus->garbage, garbage_new(data)) == NULL) {
+                                                        response.of.CMD_SIGNAL_GET.data = NULL;
+                                                        response.of.CMD_SIGNAL_GET.size = 0;
+                                                        response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
+                                                        free(data);
+                                                }
                                         }
                                 }
+                        } else {
+                                response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
                         llist_foreach_break;
                 }
         }
 
-        queue_send(request->response, &response, REQUEST_ACTION_TIMEOUT);
+        send_response(request, &response);
 }
 
 //==============================================================================
