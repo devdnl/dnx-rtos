@@ -85,7 +85,6 @@ static void print_signal_list()
 {
         mbus_t *mbus = mbus_new();
         if (mbus) {
-//                printf(FONT_BOLD"NAME [TYPE, SIZE, PERMISSIONS]"RESET_ATTRIBUTES"\n");
                 int n = mbus_get_number_of_signals(mbus);
 
                 printf("Number of signals: %d\n", n);
@@ -108,7 +107,7 @@ static void print_signal_list()
                                 default                       : perm_str = "Invalid";    break;
                                 }
 
-                                printf("%s "FONT_COLOR_GRAY"[type: %s, item size: %dB, permissions: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
+                                printf("  %s "FONT_COLOR_GRAY"[type: %s, item size: %dB, permissions: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
                         } else {
                                 break;
                         }

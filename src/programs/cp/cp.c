@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <dnx/os.h>
 #include <dnx/timer.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -144,8 +145,11 @@ PROGRAM_MAIN(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
         uint  stop_time = get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
+        struct stat stat;
+        stat.st_size = 0;
+        fstat(src_file, &stat);
 
-        if (ferror(src_file)) {
+        if (ferror(src_file) && stat.st_size > 0) {
                 perror(argv[1]);
                 goto exit_error;
         }
