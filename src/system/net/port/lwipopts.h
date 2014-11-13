@@ -1282,7 +1282,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  - To disable it and process by CPU set to 0.
  - Make sure that ETH driver support hardware checksum calculation.
 */
-#define LWIP_CHECKSUM_BY_HARDWARE               __ETH_CHECKSUM_BY_HARDWARE__
+#define LWIP_CHECKSUM_BY_HARDWARE               __ETHMAC_CHECKSUM_BY_HARDWARE__
 
 #if (LWIP_CHECKSUM_BY_HARDWARE != 0 && defined(ARCH_stm32f1))
   /** CHECKSUM_GEN_IP==0: Generate checksums by hardware for outgoing IP packets.*/
