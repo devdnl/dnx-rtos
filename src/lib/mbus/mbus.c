@@ -364,6 +364,8 @@ static mbus_errno_t signal_set_data(signal_t *this, const void *data)
         if (signal_is_valid(this) && data) {
                 //TODO permissions
 
+                err = MBUS_ERRNO__NO_ERROR;
+
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
                         void *item = malloc(this->size);
                         if (item) {
@@ -604,7 +606,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                                 response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
-                        break;
+                        llist_foreach_break;
                 }
 
                 n++;
@@ -630,7 +632,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
                         response.errorno = signal_set_data(sig, request->arg.CMD_SIGNAL_SET.data);
-                        break;
+                        llist_foreach_break;
                 }
         }
 
@@ -672,7 +674,7 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
                                 }
                         }
 
-                        break;
+                        llist_foreach_break;
                 }
         }
 
