@@ -728,6 +728,8 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
 
         response_t response;
         response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.of.CMD_SIGNAL_GET.data = NULL;
+        response.of.CMD_SIGNAL_GET.size = 0;
 
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
@@ -837,8 +839,7 @@ mbus_errno_t mbus_daemon()
         // execute requests
         while (mbus) {
                 request_t request;
-                if (queue_receive(mbus->request, &request,
-                                  REQUEST_WAIT_TIMEOUT)) {
+                if (queue_receive(mbus->request, &request, REQUEST_WAIT_TIMEOUT)) {
                         switch (request.cmd) {
                         case CMD_GET_NUMBER_OF_SIGNALS:
                                 realize_CMD_GET_NUMBER_OF_SIGNALS(&request);
