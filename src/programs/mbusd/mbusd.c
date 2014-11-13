@@ -32,6 +32,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dnx/os.h>
+#include <unistd.h>
 #include "mbus.h"
 
 /*==============================================================================
@@ -86,6 +87,9 @@ static void print_signal_list()
         if (mbus) {
 //                printf(FONT_BOLD"NAME [TYPE, SIZE, PERMISSIONS]"RESET_ATTRIBUTES"\n");
                 int n = mbus_get_number_of_signals(mbus);
+
+                printf("Number of signals: %d\n", n);
+
                 for (int i = 0; i < n; i++) {
                         mbus_sig_info_t info;
                         if (mbus_get_signal_info(mbus, i, &info)) {
@@ -104,7 +108,7 @@ static void print_signal_list()
                                 default                       : perm_str = "Invalid";    break;
                                 }
 
-                                printf("%s [%s, %dB, %s]\n", info.name, type_str, info.size, perm_str);
+                                printf("%s "FONT_COLOR_GRAY"[type: %s, item size: %dB, permissions: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
                         } else {
                                 break;
                         }
@@ -154,7 +158,7 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 mbus_signal_create(mbus, "mbusd.env", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
                                 printf("A Status: %d\n", mbus_get_errno(mbus));
 
-                                mbus_signal_create(mbus, "mbusd.call()", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
+                                mbus_signal_create(mbus, "mbusd.var", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
                                 printf("A Status: %d\n", mbus_get_errno(mbus));
 
                                 mbus_delete(mbus, false);
@@ -226,6 +230,33 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 mbus_delete(mbus, true);
 
                                 print_signal_list();
+                        }
+                }
+
+                if (strcmp(argv[i], "lo") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                while (true) {
+                                        int var = -1;
+                                        if (mbus_signal_get(mbus, "mbusd.var", &var)) {
+                                                printf("Var: %d\n", var);
+                                        } else {
+                                                sleep_ms(500);
+                                        }
+                                }
+
+                                mbus_delete(mbus, false);
+                        }
+                }
+
+                if (strcmp(argv[i], "+") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                int var = get_time_ms();
+                                if (mbus_signal_set(mbus, "mbusd.var", &var)) {
+                                        printf("Var: %d\n", var);
+                                }
+                                mbus_delete(mbus, false);
                         }
                 }
         }

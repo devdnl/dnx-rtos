@@ -644,7 +644,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
         if (request->arg.CMD_SIGNAL_DELETE.all) {
                 int n = llist_size(mbus->signals);
                 int i = 0;
-                while (n > 0) {
+                while (i < n) {
                         signal_t *sig = llist_at(mbus->signals, i);
                         if (sig) {
                                 if (signal_get_owner(sig) == request->owner_ID) {
@@ -870,15 +870,22 @@ mbus_errno_t mbus_daemon()
                         }
                 }
 
-                int n = 0;
-                llist_foreach(garbage_t*, g, mbus->garbage)
-                {
-                        if (garbage_is_time_expired(g)) {
-                                printk("Remove garbage\n"); // TEST
-                                llist_erase(mbus->garbage, n);
+                int n = llist_size(mbus->garbage);
+                int i = 0;
+                while (i < n) {
+                        garbage_t *g = llist_at(mbus->garbage, i);
+                        if (g) {
+                                if (garbage_is_time_expired(g)) {
+                                        printk("Remove garbage\n"); // TEST
+                                        if (llist_erase(mbus->garbage, i)) {
+                                                continue;
+                                        }
+                                }
+                        } else {
+                                break;
                         }
 
-                        n++;
+                        i++;
                 }
         }
 
