@@ -50,24 +50,28 @@
 /*==============================================================================
  Local object types
  ==============================================================================*/
+typedef u32_t owner_ID_t;
+
 struct mbus {
         queue_t         *response;
-        mbus_errno_t     errorno;
         struct mbus     *self;
+        mbus_errno_t     errorno;
+        owner_ID_t       owner_ID;
 };
 
 struct mbus_mem {
         queue_t         *request;
-        task_t          *owner;
+        task_t          *mbus_owner;
         llist_t         *signals;
         llist_t         *garbage;
+        owner_ID_t       owner_ID_cnt;
 };
 
 typedef struct {
         char            *name;
-        task_t          *owner;
         void            *data;
         void            *self;
+        owner_ID_t       owner_ID;
         size_t           size;
         mbus_sig_perm_t  perm;
         mbus_sig_type_t  type;
@@ -98,13 +102,14 @@ typedef struct {
 
                 struct RQ_CMD_SIGNAL_CREATE {
                         const char     *name;
-                        size_t          size;
-                        mbus_sig_perm_t perm;
-                        mbus_sig_type_t type;
+                        size_t          size:16;
+                        mbus_sig_perm_t perm:8;
+                        mbus_sig_type_t type:8;
                 } CMD_SIGNAL_CREATE;
 
                 struct RQ_CMD_SIGNAL_DELETE {
                         const char *name;
+                        bool        all;
                 } CMD_SIGNAL_DELETE;
 
                 struct RQ_CMD_SIGNAL_SET {
@@ -117,8 +122,8 @@ typedef struct {
                 } CMD_SIGNAL_GET;
         } arg;
 
-        queue_t *response;
-        task_t *owner;
+        queue_t    *response;
+        owner_ID_t  owner_ID;
 } request_t;
 
 typedef struct {
@@ -175,7 +180,7 @@ static bool request_action(mbus_t *this, request_t *request, response_t *respons
 {
         if (mbus) {
                 request->response = this->response;
-                request->owner    = task_get_handle();
+                request->owner_ID = this->owner_ID;
 
                 if (queue_send(mbus->request, request, REQUEST_ACTION_TIMEOUT)) {
                         if (queue_receive(this->response, response, REQUEST_ACTION_TIMEOUT)) {
@@ -209,14 +214,14 @@ static void send_response(request_t *request, response_t *response)
 /**
  * @brief  Create new signal
  * @param  name                 name of signal
- * @param  owner                signal owner
+ * @param  owner_ID             signal owner
  * @param  size                 signal size
  * @param  perm                 signal permissions
  * @param  type                 signal type
  * @return Created object or NULL on error.
  */
 //==============================================================================
-static signal_t *signal_new(const char *name, task_t *owner, size_t size,
+static signal_t *signal_new(const char *name, owner_ID_t owner_ID, size_t size,
                             mbus_sig_perm_t perm, mbus_sig_type_t type)
 {
         signal_t *this        = malloc(sizeof(signal_t));
@@ -233,13 +238,13 @@ static signal_t *signal_new(const char *name, task_t *owner, size_t size,
         if (this && signal_name && data) {
                 strcpy(signal_name, name);
 
-                this->data  = data;
-                this->name  = signal_name;
-                this->owner = owner;
-                this->perm  = perm;
-                this->size  = size;
-                this->type  = type;
-                this->self  = this;
+                this->data     = data;
+                this->name     = signal_name;
+                this->owner_ID = owner_ID;
+                this->perm     = perm;
+                this->size     = size;
+                this->type     = type;
+                this->self     = this;
 
         } else {
                 if (this) {
@@ -268,7 +273,7 @@ static signal_t *signal_new(const char *name, task_t *owner, size_t size,
 //==============================================================================
 static bool signal_is_valid(signal_t *this)
 {
-        return this && this->self == this && this->name && this->data && this->size;
+        return this && this->self == this && this->name && this->data && this->size && this->owner_ID > 0;
 }
 
 //==============================================================================
@@ -282,12 +287,12 @@ static void signal_delete(signal_t *this)
 {
         if (signal_is_valid(this)) {
                 free(this->name);
-                this->name  = NULL;
-                this->self  = NULL;
-                this->owner = NULL;
-                this->perm  = MBUS_SIG_PERM__INVALID;
-                this->size  = 0;
-                this->type  = MBUS_SIG_TYPE__INVALID;
+                this->name     = NULL;
+                this->self     = NULL;
+                this->owner_ID = 0;
+                this->size     = 0;
+                this->perm     = MBUS_SIG_PERM__INVALID;
+                this->type     = MBUS_SIG_TYPE__INVALID;
 
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
                         for (int i = 0; i < MBOX_QUEUE_LENGTH; i++) {
@@ -365,15 +370,15 @@ static size_t signal_get_size(signal_t *this)
 /**
  * @brief  Get signal owner
  * @param  this                 signal object
- * @return Return signal owner or NULL on error.
+ * @return Return signal owner or 0 on error.
  */
 //==============================================================================
-static task_t *signal_get_owner(signal_t *this)
+static owner_ID_t signal_get_owner(signal_t *this)
 {
         if (signal_is_valid(this)) {
-                return this->owner;
+                return this->owner_ID;
         } else {
-                return NULL;
+                return 0;
         }
 }
 
@@ -600,7 +605,7 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
         response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
 
         signal_t *sig = signal_new(request->arg.CMD_SIGNAL_CREATE.name,
-                                   request->owner,
+                                   request->owner_ID,
                                    request->arg.CMD_SIGNAL_CREATE.size,
                                    request->arg.CMD_SIGNAL_CREATE.perm,
                                    request->arg.CMD_SIGNAL_CREATE.type);
@@ -636,20 +641,42 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
         response.errorno = MBUS_ERRNO__NO_ITEM;
         int n = 0;
 
-        llist_foreach(signal_t*, sig, mbus->signals) {
-                if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_DELETE.name) == 0) {
-
-                        if (signal_get_owner(sig) == request->owner) {
-                                llist_erase(mbus->signals, n);
-                                response.errorno = MBUS_ERRNO__NO_ERROR;
+        if (request->arg.CMD_SIGNAL_DELETE.all) {
+                int n = llist_size(mbus->signals);
+                int i = 0;
+                while (n > 0) {
+                        signal_t *sig = llist_at(mbus->signals, i);
+                        if (sig) {
+                                if (signal_get_owner(sig) == request->owner_ID) {
+                                        if (llist_erase(mbus->signals, i)) {
+                                                continue;
+                                        }
+                                }
                         } else {
-                                response.errorno = MBUS_ERRNO__ACCESS_DENIED;
+                                break;
                         }
 
-                        llist_foreach_break;
+                        i++;
                 }
 
-                n++;
+                response.errorno = MBUS_ERRNO__NO_ERROR;
+
+        } else {
+                llist_foreach(signal_t*, sig, mbus->signals) {
+                        if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_DELETE.name) == 0) {
+
+                                if (signal_get_owner(sig) == request->owner_ID) {
+                                        llist_erase(mbus->signals, n);
+                                        response.errorno = MBUS_ERRNO__NO_ERROR;
+                                } else {
+                                        response.errorno = MBUS_ERRNO__ACCESS_DENIED;
+                                }
+
+                                llist_foreach_break;
+                        }
+
+                        n++;
+                }
         }
 
         send_response(request, &response);
@@ -672,7 +699,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
 
-                        bool is_owner = signal_get_owner(sig) == request->owner;
+                        bool is_owner = signal_get_owner(sig) == request->owner_ID;
                         mbus_sig_perm_t perm = signal_get_permissions(sig);
 
                         if (is_owner || perm == MBUS_SIG_PERM__READ_WRITE) {
@@ -705,7 +732,7 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
 
-                        bool is_owner = signal_get_owner(sig) == request->owner;
+                        bool is_owner = signal_get_owner(sig) == request->owner_ID;
                         mbus_sig_perm_t perm = signal_get_permissions(sig);
 
                         if (is_owner || perm == MBUS_SIG_PERM__READ || perm == MBUS_SIG_PERM__READ_WRITE) {
@@ -762,8 +789,8 @@ mbus_errno_t mbus_daemon()
         mbus_errno_t err = MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED;
 
         // check if mbus is orphaned
-        if (mbus && !task_is_exist(mbus->owner)) {
-                mbus->owner = task_get_handle();
+        if (mbus && !task_is_exist(mbus->mbus_owner)) {
+                mbus->mbus_owner = task_get_handle();
         } else if (mbus) {
                 return err;
         }
@@ -779,10 +806,11 @@ mbus_errno_t mbus_daemon()
                 llist_t *garbage = llist_new(NULL, reinterpret_cast(llist_obj_dtor_t, garbage_delete));
 
                 if (mbus && request && signals && garbage) {
-                        mbus->request = request;
-                        mbus->signals = signals;
-                        mbus->garbage = garbage;
-                        mbus->owner = task_get_handle();
+                        mbus->request      = request;
+                        mbus->signals      = signals;
+                        mbus->garbage      = garbage;
+                        mbus->owner_ID_cnt = 0;
+                        mbus->mbus_owner   = task_get_handle();
 
                 } else {
                         err = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
@@ -872,6 +900,7 @@ mbus_t *mbus_new()
                 if (response) {
                         this->response = response;
                         this->errorno  = MBUS_ERRNO__NO_ERROR;
+                        this->owner_ID = ++mbus->owner_ID_cnt;
                         this->self     = this;
                 } else {
                         free(this);
@@ -886,17 +915,33 @@ mbus_t *mbus_new()
 /**
  * @brief  Delete created mbus object
  * @param  this                 mbus object
+ * @param  delete_signals       delete all signals of this owner
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_delete(mbus_t *this)
+bool mbus_delete(mbus_t *this, bool delete_signals)
 {
         bool status = false;
 
         if (mbus_is_valid(this)) {
-                queue_delete(this->response);
-                this->self = NULL;
-                free(this);
+                status = true;
+
+                if (delete_signals) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_DELETE;
+                        request.arg.CMD_SIGNAL_DELETE.name = "";
+                        request.arg.CMD_SIGNAL_DELETE.all  = true;
+                        if (request_action(this, &request, &response)) {
+                                status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                        }
+                }
+
+                if (status) {
+                        queue_delete(this->response);
+                        this->self = NULL;
+                        free(this);
+                }
         }
 
         return status;
@@ -1020,6 +1065,7 @@ bool mbus_signal_delete(mbus_t *this, const char *name)
                 request_t request;
                 request.cmd = CMD_SIGNAL_DELETE;
                 request.arg.CMD_SIGNAL_DELETE.name = name;
+                request.arg.CMD_SIGNAL_DELETE.all  = false;
                 if (request_action(this, &request, &response)) {
                         status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }

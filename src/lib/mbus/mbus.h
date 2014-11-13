@@ -96,7 +96,7 @@ typedef struct mbus mbus_t;
 ==============================================================================*/
 extern mbus_errno_t mbus_daemon();
 extern mbus_t      *mbus_new();
-extern bool         mbus_delete(mbus_t*);
+extern bool         mbus_delete(mbus_t*, bool);
 extern mbus_errno_t mbus_get_errno(mbus_t*);
 extern int          mbus_get_number_of_signals(mbus_t*);
 extern bool         mbus_get_signal_info(mbus_t*, size_t n, mbus_sig_info_t*);

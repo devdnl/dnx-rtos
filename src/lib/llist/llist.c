@@ -691,7 +691,7 @@ llist_iterator_t llist_iterator(llist_t *this)
 
         if (is_list_valid(this)) {
                 iterator.list  = this;
-                iterator.begin  = NULL;
+                iterator.begin = NULL;
                 iterator.magic = magic_number;
         }
 
