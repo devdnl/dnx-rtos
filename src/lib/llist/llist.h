@@ -59,6 +59,9 @@ extern "C" {
                              element;\
                              element = llist_iterator_prev(&_iterator), _tb = false)
 
+// foreach break
+#define llist_foreach_break {_tb = false; break;}
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
