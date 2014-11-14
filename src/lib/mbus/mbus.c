@@ -672,7 +672,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                                         response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                                 }
 
-                                llist_foreach_break;
+                                break;
                         }
 
                         n++;
@@ -708,7 +708,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
                                 response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
-                        llist_foreach_break;
+                        break;
                 }
         }
 
@@ -759,7 +759,7 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
                                 response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
-                        llist_foreach_break;
+                        break;
                 }
         }
 

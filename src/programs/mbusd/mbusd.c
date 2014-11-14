@@ -107,7 +107,7 @@ static void print_signal_list()
                                 default                       : perm_str = "Invalid";    break;
                                 }
 
-                                printf("  %s "FONT_COLOR_GRAY"[type: %s, item size: %dB, permissions: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
+                                printf("  %s "FONT_COLOR_GRAY"[type: %s, size: %dB, mode: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
                         } else {
                                 break;
                         }
