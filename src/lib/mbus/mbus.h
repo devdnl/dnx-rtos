@@ -102,6 +102,7 @@ extern int          mbus_get_number_of_signals(mbus_t*);
 extern bool         mbus_get_signal_info(mbus_t*, size_t n, mbus_sig_info_t*);
 extern bool         mbus_signal_create(mbus_t*, const char*, size_t, mbus_sig_type_t, mbus_sig_perm_t);
 extern bool         mbus_signal_delete(mbus_t*, const char*);
+extern bool         mbus_signal_force_delete(mbus_t*, const char*);
 extern bool         mbus_signal_set(mbus_t*, const char*, const void*);
 extern bool         mbus_signal_get(mbus_t*, const char*, void*);
 

@@ -109,7 +109,8 @@ typedef struct {
 
                 struct RQ_CMD_SIGNAL_DELETE {
                         const char *name;
-                        bool        all;
+                        bool        all:1;
+                        bool        force:1;
                 } CMD_SIGNAL_DELETE;
 
                 struct RQ_CMD_SIGNAL_SET {
@@ -665,9 +666,12 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                 llist_foreach(signal_t*, sig, mbus->signals) {
                         if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_DELETE.name) == 0) {
 
-                                if (signal_get_owner(sig) == request->owner_ID) {
+                                if (  signal_get_owner(sig) == request->owner_ID
+                                   || request->arg.CMD_SIGNAL_DELETE.force ) {
+
                                         llist_erase(mbus->signals, n);
                                         response.errorno = MBUS_ERRNO__NO_ERROR;
+
                                 } else {
                                         response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                                 }
@@ -986,7 +990,7 @@ int mbus_get_number_of_signals(mbus_t *this)
 
         if (mbus_is_valid(this)) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_GET_NUMBER_OF_SIGNALS;
                 if (request_action(this, &request, &response)) {
                         return response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals;
@@ -1011,7 +1015,7 @@ bool mbus_get_signal_info(mbus_t *this, size_t n, mbus_sig_info_t *info)
 
         if (mbus_is_valid(this) && info) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_GET_SIGNAL_INFO;
                 request.arg.CMD_GET_SIGNAL_INFO.n = n;
                 if (request_action(this, &request, &response)) {
@@ -1042,7 +1046,7 @@ bool mbus_signal_create(mbus_t *this, const char *name, size_t size, mbus_sig_ty
 
         if (mbus_is_valid(this) && name && size > 0 && type < MBUS_SIG_TYPE__INVALID) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_SIGNAL_CREATE;
                 request.arg.CMD_SIGNAL_CREATE.name = name;
                 request.arg.CMD_SIGNAL_CREATE.size = size;
@@ -1070,10 +1074,38 @@ bool mbus_signal_delete(mbus_t *this, const char *name)
 
         if (mbus_is_valid(this) && name) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_SIGNAL_DELETE;
-                request.arg.CMD_SIGNAL_DELETE.name = name;
-                request.arg.CMD_SIGNAL_DELETE.all  = false;
+                request.arg.CMD_SIGNAL_DELETE.name  = name;
+                request.arg.CMD_SIGNAL_DELETE.all   = false;
+                request.arg.CMD_SIGNAL_DELETE.force = false;
+                if (request_action(this, &request, &response)) {
+                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                }
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Force delete signal (even signal that caller is not owner)
+ * @param  this                 mbus object
+ * @param  name                 name of signal to delete
+ * @return On success true is returned. On error false and error number is set.
+ */
+//==============================================================================
+bool mbus_signal_force_delete(mbus_t *this, const char *name)
+{
+        bool status = false;
+
+        if (mbus_is_valid(this) && name) {
+                response_t response;
+                request_t  request;
+                request.cmd = CMD_SIGNAL_DELETE;
+                request.arg.CMD_SIGNAL_DELETE.name  = name;
+                request.arg.CMD_SIGNAL_DELETE.all   = false;
+                request.arg.CMD_SIGNAL_DELETE.force = true;
                 if (request_action(this, &request, &response)) {
                         status = response.errorno == MBUS_ERRNO__NO_ERROR;
                 }
@@ -1097,7 +1129,7 @@ bool mbus_signal_set(mbus_t *this, const char *name, const void *data)
 
         if (mbus_is_valid(this) && name && data) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_SIGNAL_SET;
                 request.arg.CMD_SIGNAL_SET.name = name;
                 request.arg.CMD_SIGNAL_SET.data = data;
@@ -1124,7 +1156,7 @@ bool mbus_signal_get(mbus_t *this, const char *name, void *data)
 
         if (mbus_is_valid(this) && name && data) {
                 response_t response;
-                request_t request;
+                request_t  request;
                 request.cmd = CMD_SIGNAL_GET;
                 request.arg.CMD_SIGNAL_GET.name = name;
                 if (request_action(this, &request, &response)) {

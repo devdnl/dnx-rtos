@@ -258,6 +258,28 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 mbus_delete(mbus, false);
                         }
                 }
+
+                if (strcmp(argv[i], "f") == 0) {
+                        mbus_t *mbus = mbus_new();
+                        if (mbus) {
+                                mbus_signal_force_delete(mbus, "mbusd.var");
+                                printf("F Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_force_delete(mbus, "mbusd.env");
+                                printf("F Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_force_delete(mbus, "mbusd.val");
+                                printf("F Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_force_delete(mbus, "mbusd.network");
+                                printf("F Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_signal_force_delete(mbus, "mbusd.Test1");
+                                printf("F Status: %d\n", mbus_get_errno(mbus));
+
+                                mbus_delete(mbus, false);
+                        }
+                }
         }
 
         // analyze parameters
