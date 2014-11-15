@@ -89,7 +89,8 @@ typedef enum {
         CMD_SIGNAL_CREATE,
         CMD_SIGNAL_DELETE,
         CMD_SIGNAL_SET,
-        CMD_SIGNAL_GET
+        CMD_SIGNAL_GET,
+        CMD_SIGNAL_IS_EXIST
 } cmd_t;
 
 typedef struct {
@@ -121,6 +122,10 @@ typedef struct {
                 struct RQ_CMD_SIGNAL_GET {
                         const char *name;
                 } CMD_SIGNAL_GET;
+
+                struct RQ_CMD_IS_SIGNAL_EXIST {
+                        const char *name;
+                } CMD_SIGNAL_IS_EXIST;
         } arg;
 
         queue_t    *response;
@@ -139,8 +144,12 @@ typedef struct {
 
                 struct RES_CMD_SIGNAL_GET {
                         const void *data;
-                        size_t size;
+                        size_t      size;
                 } CMD_SIGNAL_GET;
+
+                struct RES_CMD_IS_SIGNAL_EXIST {
+                        bool exist;
+                } CMD_SIGNAL_IS_EXIST;
         } of;
 
         mbus_errno_t errorno;
@@ -593,7 +602,7 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
 
 //==============================================================================
 /**
- * @brief  Function realize CMD_MBOX_CREATE command
+ * @brief  Function realize CMD_SIGNAL_CREATE command
  * @param  request              request data
  * @return None
  */
@@ -629,7 +638,7 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
 
 //==============================================================================
 /**
- * @brief  Function realize CMD_MBOX_DELETE command
+ * @brief  Function realize CMD_SIGNAL_DELETE command
  * @param  request              request data
  * @return None
  */
@@ -688,7 +697,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
 
 //==============================================================================
 /**
- * @brief  Function realize CMD_MBOX_SEND command
+ * @brief  Function realize CMD_SIGNAL_SET command
  * @param  request              request data
  * @return None
  */
@@ -706,7 +715,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
                         bool is_owner = signal_get_owner(sig) == request->owner_ID;
                         mbus_sig_perm_t perm = signal_get_permissions(sig);
 
-                        if (is_owner || perm == MBUS_SIG_PERM__READ_WRITE) {
+                        if (is_owner || perm == MBUS_SIG_PERM__READ_WRITE || perm == MBUS_SIG_PERM__WRITE) {
                                 response.errorno = signal_set_data(sig, request->arg.CMD_SIGNAL_SET.data);
                         } else {
                                 response.errorno = MBUS_ERRNO__ACCESS_DENIED;
@@ -721,7 +730,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
 
 //==============================================================================
 /**
- * @brief  Function realize CMD_MBOX_RECEIVE command
+ * @brief  Function realize CMD_SIGNAL_GET command
  * @param  request              request data
  * @return None
  */
@@ -763,6 +772,32 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
                                 response.errorno = MBUS_ERRNO__ACCESS_DENIED;
                         }
 
+                        break;
+                }
+        }
+
+        send_response(request, &response);
+}
+
+//==============================================================================
+/**
+ * @brief  Function realize CMD_SIGNAL_IS_EXIST command
+ * @param  request              request data
+ * @return None
+ */
+//==============================================================================
+static void realize_CMD_SIGNAL_IS_EXIST(request_t *request)
+{
+        printk("%s\n", __func__); // TEST
+
+        response_t response;
+        response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.of.CMD_SIGNAL_IS_EXIST.exist = false;
+
+        llist_foreach(signal_t*, sig, mbus->signals) {
+                if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_IS_EXIST.name) == 0) {
+                        response.of.CMD_SIGNAL_IS_EXIST.exist = true;
+                        response.errorno = MBUS_ERRNO__NO_ERROR;
                         break;
                 }
         }
@@ -869,6 +904,10 @@ mbus_errno_t mbus_daemon()
                                 realize_CMD_SIGNAL_GET(&request);
                                 break;
 
+                        case CMD_SIGNAL_IS_EXIST:
+                                realize_CMD_SIGNAL_IS_EXIST(&request);
+                                break;
+
                         default:
                                 break;
                         }
@@ -973,7 +1012,7 @@ mbus_errno_t mbus_get_errno(mbus_t *this)
                 this->errorno    = MBUS_ERRNO__NO_ERROR;
                 return err;
         } else {
-                return MBUS_ERRNO__INVALID_OBJECT_OR_ARGUMENT;
+                return MBUS_ERRNO__INVALID_OBJECT;
         }
 }
 
@@ -1013,16 +1052,20 @@ bool mbus_get_signal_info(mbus_t *this, size_t n, mbus_sig_info_t *info)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && info) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_GET_SIGNAL_INFO;
-                request.arg.CMD_GET_SIGNAL_INFO.n = n;
-                if (request_action(this, &request, &response)) {
-                        if (response.errorno == MBUS_ERRNO__NO_ERROR) {
-                                *info  = response.of.CMD_GET_SIGNAL_INFO.info;
-                                status = true;
+        if (mbus_is_valid(this)) {
+                if (info) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_GET_SIGNAL_INFO;
+                        request.arg.CMD_GET_SIGNAL_INFO.n = n;
+                        if (request_action(this, &request, &response)) {
+                                if (response.errorno == MBUS_ERRNO__NO_ERROR) {
+                                        *info  = response.of.CMD_GET_SIGNAL_INFO.info;
+                                        status = true;
+                                }
                         }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 
@@ -1044,16 +1087,20 @@ bool mbus_signal_create(mbus_t *this, const char *name, size_t size, mbus_sig_ty
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name && size > 0 && type < MBUS_SIG_TYPE__INVALID) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_SIGNAL_CREATE;
-                request.arg.CMD_SIGNAL_CREATE.name = name;
-                request.arg.CMD_SIGNAL_CREATE.size = size;
-                request.arg.CMD_SIGNAL_CREATE.perm = permissions;
-                request.arg.CMD_SIGNAL_CREATE.type = type;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
+        if (mbus_is_valid(this)) {
+                if (name && size > 0 && type < MBUS_SIG_TYPE__INVALID) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_CREATE;
+                        request.arg.CMD_SIGNAL_CREATE.name = name;
+                        request.arg.CMD_SIGNAL_CREATE.size = size;
+                        request.arg.CMD_SIGNAL_CREATE.perm = permissions;
+                        request.arg.CMD_SIGNAL_CREATE.type = type;
+                        if (request_action(this, &request, &response)) {
+                                status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 
@@ -1072,15 +1119,19 @@ bool mbus_signal_delete(mbus_t *this, const char *name)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_SIGNAL_DELETE;
-                request.arg.CMD_SIGNAL_DELETE.name  = name;
-                request.arg.CMD_SIGNAL_DELETE.all   = false;
-                request.arg.CMD_SIGNAL_DELETE.force = false;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
+        if (mbus_is_valid(this)) {
+                if (name) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_DELETE;
+                        request.arg.CMD_SIGNAL_DELETE.name  = name;
+                        request.arg.CMD_SIGNAL_DELETE.all   = false;
+                        request.arg.CMD_SIGNAL_DELETE.force = false;
+                        if (request_action(this, &request, &response)) {
+                                status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 
@@ -1099,15 +1150,19 @@ bool mbus_signal_force_delete(mbus_t *this, const char *name)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_SIGNAL_DELETE;
-                request.arg.CMD_SIGNAL_DELETE.name  = name;
-                request.arg.CMD_SIGNAL_DELETE.all   = false;
-                request.arg.CMD_SIGNAL_DELETE.force = true;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
+        if (mbus_is_valid(this)) {
+                if (name) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_DELETE;
+                        request.arg.CMD_SIGNAL_DELETE.name  = name;
+                        request.arg.CMD_SIGNAL_DELETE.all   = false;
+                        request.arg.CMD_SIGNAL_DELETE.force = true;
+                        if (request_action(this, &request, &response)) {
+                                status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 
@@ -1127,14 +1182,18 @@ bool mbus_signal_set(mbus_t *this, const char *name, const void *data)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name && data) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_SIGNAL_SET;
-                request.arg.CMD_SIGNAL_SET.name = name;
-                request.arg.CMD_SIGNAL_SET.data = data;
-                if (request_action(this, &request, &response)) {
-                        status = response.errorno == MBUS_ERRNO__NO_ERROR;
+        if (mbus_is_valid(this)) {
+                if (name && data) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_SET;
+                        request.arg.CMD_SIGNAL_SET.name = name;
+                        request.arg.CMD_SIGNAL_SET.data = data;
+                        if (request_action(this, &request, &response)) {
+                                status = response.errorno == MBUS_ERRNO__NO_ERROR;
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 
@@ -1154,18 +1213,57 @@ bool mbus_signal_get(mbus_t *this, const char *name, void *data)
 {
         bool status = false;
 
-        if (mbus_is_valid(this) && name && data) {
-                response_t response;
-                request_t  request;
-                request.cmd = CMD_SIGNAL_GET;
-                request.arg.CMD_SIGNAL_GET.name = name;
-                if (request_action(this, &request, &response)) {
-                        if (response.of.CMD_SIGNAL_GET.data) {
-                                memcpy(data, response.of.CMD_SIGNAL_GET.data,
-                                       response.of.CMD_SIGNAL_GET.size);
+        if (mbus_is_valid(this)) {
+                if (name && data) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_GET;
+                        request.arg.CMD_SIGNAL_GET.name = name;
+                        if (request_action(this, &request, &response)) {
+                                if (response.of.CMD_SIGNAL_GET.data) {
+                                        memcpy(data, response.of.CMD_SIGNAL_GET.data,
+                                               response.of.CMD_SIGNAL_GET.size);
 
-                                status = true;
+                                        status = true;
+                                }
                         }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
+                }
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Check if signal exists
+ * @param  this                 mbus object
+ * @param  name                 signal name
+ * @return If exists then 1 is returned.
+ *         If not exists then 0 is returned.
+ *         On error -1 is returned and errorno is set.
+ */
+//==============================================================================
+int mbus_signal_is_exist(mbus_t *this, const char *name)
+{
+        int status = -1;
+
+        if (mbus_is_valid(this)) {
+                if (name) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_IS_EXIST;
+                        request.arg.CMD_SIGNAL_IS_EXIST.name = name;
+                        if (request_action(this, &request, &response)) {
+                                if (response.of.CMD_SIGNAL_IS_EXIST.exist) {
+                                        status = 1;
+                                } else {
+                                        status = 0;
+                                }
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
                 }
         }
 

@@ -48,7 +48,8 @@ extern "C" {
 /** mbus errors  */
 typedef enum {
         MBUS_ERRNO__NO_ERROR,
-        MBUS_ERRNO__INVALID_OBJECT_OR_ARGUMENT,
+        MBUS_ERRNO__INVALID_OBJECT,
+        MBUS_ERRNO__INVALID_ARGUMENT,
         MBUS_ERRNO__ACCESS_DENIED,
         MBUS_ERRNO__TIMEOUT,
         MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED,
@@ -65,6 +66,7 @@ typedef enum {
 typedef enum {
         MBUS_SIG_PERM__PRIVATE,
         MBUS_SIG_PERM__READ,
+        MBUS_SIG_PERM__WRITE,
         MBUS_SIG_PERM__READ_WRITE,
         MBUS_SIG_PERM__INVALID
 } mbus_sig_perm_t;
@@ -105,6 +107,7 @@ extern bool         mbus_signal_delete(mbus_t*, const char*);
 extern bool         mbus_signal_force_delete(mbus_t*, const char*);
 extern bool         mbus_signal_set(mbus_t*, const char*, const void*);
 extern bool         mbus_signal_get(mbus_t*, const char*, void*);
+extern int          mbus_signal_is_exist(mbus_t*, const char*);
 
 /*==============================================================================
   Exported inline functions
