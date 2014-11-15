@@ -237,7 +237,7 @@ static int run_level_0(void)
 //==============================================================================
 static int run_level_1(void)
 {
-        start_daemon("mbus_daemon", "/");
+        start_daemon("mbusd", "/");
         init_storage("/dev/sda");
         msg_mount("fatfs", "/dev/sda1", "/mnt");
 

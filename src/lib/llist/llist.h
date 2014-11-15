@@ -43,14 +43,21 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-
 // list foreach iterator
 #define llist_foreach(type, element, llist_t__list)\
-        for (bool _tb = true; _tb; _tb = false)\
-                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); _tb;)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
                         for (type element = llist_begin(&_iterator);\
                              element;\
-                             element = llist_iterator_next(&_iterator), _tb = false)
+                             element = llist_iterator_next(&_iterator), __loop = false)
+
+// list reversed foreach iterator
+#define llist_foreach_reverse(type, element, llist_t__list)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
+                        for (type element = llist_end(&_iterator);\
+                             element;\
+                             element = llist_iterator_prev(&_iterator), __loop = false)
 
 /*==============================================================================
   Exported object types
@@ -313,7 +320,7 @@ extern int llist_find_begin(llist_t *list, const void *object);
  * @return Object position, or -1 on error
  */
 //==============================================================================
-extern int   llist_find_end(llist_t *list, const void *object);
+extern int llist_find_end(llist_t *list, const void *object);
 
 //==============================================================================
 /**
