@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Message Bus Library
+@brief   Message Bus - user space IPC library.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
