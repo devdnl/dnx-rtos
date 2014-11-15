@@ -13,50 +13,40 @@
  *****************************************************************************/
 
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd. 
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -69,21 +59,22 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 
@@ -105,12 +96,12 @@
 
 
 /* Constants required to setup the task context. */
-#define portINITIAL_SR            ( ( portSTACK_TYPE ) 0x00400000 ) /* AVR32 : [M2:M0]=001 I1M=0 I0M=0, GM=0 */
-#define portINSTRUCTION_SIZE      ( ( portSTACK_TYPE ) 0 )
+#define portINITIAL_SR            ( ( StackType_t ) 0x00400000 ) /* AVR32 : [M2:M0]=001 I1M=0 I0M=0, GM=0 */
+#define portINSTRUCTION_SIZE      ( ( StackType_t ) 0 )
 
 /* Each task maintains its own critical nesting variable. */
-#define portNO_CRITICAL_NESTING   ( ( unsigned long ) 0 )
-volatile unsigned long ulCriticalNesting = 9999UL;
+#define portNO_CRITICAL_NESTING   ( ( uint32_t ) 0 )
+volatile uint32_t ulCriticalNesting = 9999UL;
 
 #if( configTICK_USE_TC==0 )
 	static void prvScheduleNextTick( void );
@@ -139,7 +130,7 @@ void _init_startup(void)
 	#if configHEAP_INIT
 		extern void __heap_start__;
 		extern void __heap_end__;
-		portBASE_TYPE *pxMem;
+		BaseType_t *pxMem;
 	#endif
 
 	/* Load the Exception Vector Base Address in the corresponding system register. */
@@ -154,7 +145,7 @@ void _init_startup(void)
 	#if configHEAP_INIT
 
 		/* Initialize the heap used by malloc. */
-		for( pxMem = &__heap_start__; pxMem < ( portBASE_TYPE * )&__heap_end__; )
+		for( pxMem = &__heap_start__; pxMem < ( BaseType_t * )&__heap_end__; )
 		{
 			*pxMem++ = 0xA5A5A5A5;
 		}
@@ -254,7 +245,7 @@ __attribute__((__naked__)) static void vTick( void )
 	/* Because FreeRTOS is not supposed to run with nested interrupts, put all OS
 	calls in a critical section . */
 	portENTER_CRITICAL();
-		vTaskIncrementTick();
+		xTaskIncrementTick();
 	portEXIT_CRITICAL();
 
 	/* Restore the context of the "elected task". */
@@ -307,36 +298,36 @@ __attribute__((__noinline__)) void vPortExitCritical( void )
  *
  * See header file for description.
  */
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
 	/* Setup the initial stack of the task.  The stack is set exactly as
 	expected by the portRESTORE_CONTEXT() macro. */
 
 	/* When the task starts, it will expect to find the function parameter in R12. */
 	pxTopOfStack--;
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x08080808;					/* R8 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x09090909;					/* R9 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x0A0A0A0A;					/* R10 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x0B0B0B0B;					/* R11 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) pvParameters;					/* R12 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0xDEADBEEF;					/* R14/LR */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) pxCode + portINSTRUCTION_SIZE; /* R15/PC */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) portINITIAL_SR;				/* SR */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0xFF0000FF;					/* R0 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x01010101;					/* R1 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x02020202;					/* R2 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x03030303;					/* R3 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x04040404;					/* R4 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x05050505;					/* R5 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x06060606;					/* R6 */
-	*pxTopOfStack-- = ( portSTACK_TYPE ) 0x07070707;					/* R7 */
-	*pxTopOfStack = ( portSTACK_TYPE ) portNO_CRITICAL_NESTING;			/* ulCriticalNesting */
+	*pxTopOfStack-- = ( StackType_t ) 0x08080808;					/* R8 */
+	*pxTopOfStack-- = ( StackType_t ) 0x09090909;					/* R9 */
+	*pxTopOfStack-- = ( StackType_t ) 0x0A0A0A0A;					/* R10 */
+	*pxTopOfStack-- = ( StackType_t ) 0x0B0B0B0B;					/* R11 */
+	*pxTopOfStack-- = ( StackType_t ) pvParameters;					/* R12 */
+	*pxTopOfStack-- = ( StackType_t ) 0xDEADBEEF;					/* R14/LR */
+	*pxTopOfStack-- = ( StackType_t ) pxCode + portINSTRUCTION_SIZE; /* R15/PC */
+	*pxTopOfStack-- = ( StackType_t ) portINITIAL_SR;				/* SR */
+	*pxTopOfStack-- = ( StackType_t ) 0xFF0000FF;					/* R0 */
+	*pxTopOfStack-- = ( StackType_t ) 0x01010101;					/* R1 */
+	*pxTopOfStack-- = ( StackType_t ) 0x02020202;					/* R2 */
+	*pxTopOfStack-- = ( StackType_t ) 0x03030303;					/* R3 */
+	*pxTopOfStack-- = ( StackType_t ) 0x04040404;					/* R4 */
+	*pxTopOfStack-- = ( StackType_t ) 0x05050505;					/* R5 */
+	*pxTopOfStack-- = ( StackType_t ) 0x06060606;					/* R6 */
+	*pxTopOfStack-- = ( StackType_t ) 0x07070707;					/* R7 */
+	*pxTopOfStack = ( StackType_t ) portNO_CRITICAL_NESTING;			/* ulCriticalNesting */
 
 	return pxTopOfStack;
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xPortStartScheduler( void )
+BaseType_t xPortStartScheduler( void )
 {
 	/* Start the timer that generates the tick ISR.  Interrupts are disabled
 	here already. */
@@ -362,7 +353,7 @@ clock cycles from now. */
 #if( configTICK_USE_TC==0 )
 	static void prvScheduleFirstTick(void)
 	{
-		unsigned long lCycles;
+		uint32_t lCycles;
 
 		lCycles = Get_system_register(AVR32_COUNT);
 		lCycles += (configCPU_CLOCK_HZ/configTICK_RATE_HZ);
@@ -377,7 +368,7 @@ clock cycles from now. */
 	
 	__attribute__((__noinline__)) static void prvScheduleNextTick(void)
 	{
-		unsigned long lCycles, lCount;
+		uint32_t lCycles, lCount;
 
 		lCycles = Get_system_register(AVR32_COMPARE);
 		lCycles += (configCPU_CLOCK_HZ/configTICK_RATE_HZ);

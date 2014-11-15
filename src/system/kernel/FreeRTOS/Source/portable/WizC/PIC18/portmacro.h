@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,24 +45,25 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
-/* 
+/*
 Changes from V3.0.0
 
 Changes from V3.0.1
@@ -96,15 +87,20 @@ Changes from V3.0.1
 #define portDOUBLE		portFLOAT
 #define portLONG		long
 #define portSHORT		short
-#define portSTACK_TYPE	unsigned char
+#define portSTACK_TYPE	uint8_t
 #define portBASE_TYPE	char
 
+typedef portSTACK_TYPE StackType_t;
+typedef signed char BaseType_t;
+typedef unsigned char UBaseType_t;
+
+
 #if( configUSE_16_BIT_TICKS == 1 )
-	typedef unsigned portSHORT portTickType;
-	#define portMAX_DELAY ( portTickType )	( 0xFFFF )
+	typedef uint16_t TickType_t;
+	#define portMAX_DELAY ( TickType_t )	( 0xFFFF )
 #else
-	typedef unsigned portLONG portTickType;
-	#define portMAX_DELAY ( portTickType )	( 0xFFFFFFFF )
+	typedef uint32_t TickType_t;
+	#define portMAX_DELAY ( TickType_t )	( 0xFFFFFFFF )
 #endif
 
 #define portBYTE_ALIGNMENT			1
@@ -112,13 +108,13 @@ Changes from V3.0.1
 /*-----------------------------------------------------------*/
 
 /*
- * Constant used for context switch macro when we require the interrupt 
+ * Constant used for context switch macro when we require the interrupt
  * enable state to be forced when the interrupted task is switched back in.
  */
 #define portINTERRUPTS_FORCED				(0x01)
 
 /*
- * Constant used for context switch macro when we require the interrupt 
+ * Constant used for context switch macro when we require the interrupt
  * enable state to be unchanged when the interrupted task is switched back in.
  */
 #define portINTERRUPTS_UNCHANGED			(0x00)
@@ -136,21 +132,21 @@ Changes from V3.0.1
 	{								\
 		bGIE=0;						\
 	} while(bGIE)	// MicroChip recommends this check!
-	
+
 #define portENABLE_INTERRUPTS()		\
 	do								\
 	{								\
 		bGIE=1;						\
 	} while(0)
 
-/*-----------------------------------------------------------*/	
+/*-----------------------------------------------------------*/
 
 /*
  * Critical section macros.
  */
-extern unsigned portCHAR ucCriticalNesting;
+extern uint8_t ucCriticalNesting;
 
-#define portNO_CRITICAL_SECTION_NESTING		( ( unsigned portCHAR ) 0 )
+#define portNO_CRITICAL_SECTION_NESTING		( ( uint8_t ) 0 )
 
 #define portENTER_CRITICAL()										\
 	do																\
@@ -195,8 +191,8 @@ extern unsigned portCHAR ucCriticalNesting;
  * portMINIMAL_STACK_SIZE. Some input to this calculation is
  * compiletime determined, other input is port-defined (see port.c)
  */
-extern unsigned portSHORT usPortCALCULATE_MINIMAL_STACK_SIZE( void );
-extern unsigned portSHORT usCalcMinStackSize;
+extern uint16_t usPortCALCULATE_MINIMAL_STACK_SIZE( void );
+extern uint16_t usCalcMinStackSize;
 
 #define portMINIMAL_STACK_SIZE					\
 	((usCalcMinStackSize == 0)					\
@@ -214,15 +210,15 @@ extern unsigned portSHORT usCalcMinStackSize;
  * Macro's that pushes all the registers that make up the context of a task onto
  * the stack, then saves the new top of stack into the TCB. TOSU and TBLPTRU
  * are only saved/restored on devices with more than 64kB (32k Words) ROM.
- * 
+ *
  * The stackpointer is helt by WizC in FSR2 and points to the first free byte.
  * WizC uses a "downgrowing" stack. There is no framepointer.
  *
  * We keep track of the interruptstatus using ucCriticalNesting. When this
  * value equals zero, interrupts have to be enabled upon exit from the
  * portRESTORE_CONTEXT macro.
- * 
- * If this is called from an ISR then the interrupt enable bits must have been 
+ *
+ * If this is called from an ISR then the interrupt enable bits must have been
  * set for the ISR to ever get called.  Therefore we want to save
  * ucCriticalNesting with value zero. This means the interrupts will again be
  * re-enabled when the interrupted task is switched back in.
@@ -437,7 +433,7 @@ extern unsigned portSHORT usCalcMinStackSize;
 
 /*-----------------------------------------------------------*/
 
-#define portTICK_RATE_MS	( ( portTickType ) 1000 / configTICK_RATE_HZ )		
+#define portTICK_PERIOD_MS	( ( TickType_t ) 1000 / configTICK_RATE_HZ )
 
 /*-----------------------------------------------------------*/
 

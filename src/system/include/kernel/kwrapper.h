@@ -46,15 +46,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** error handling */
-#if (pdTRUE != true)
-#error "pdTRUE != true"
-#endif
-
-#if (pdFALSE != false)
-#error "pdFALSE != false"
-#endif
-
 /** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
 #undef free
 #undef malloc
@@ -231,7 +222,7 @@ static inline void _task_yield(void)
 static inline void _task_yield_from_ISR(void)
 {
 #ifdef portYIELD_FROM_ISR
-        portYIELD_FROM_ISR();
+        portYIELD_FROM_ISR(true);
 #else
         taskYIELD();
 #endif
@@ -246,7 +237,7 @@ static inline void _task_yield_from_ISR(void)
 //==============================================================================
 static inline char *_task_get_name(void)
 {
-        return (char *)pcTaskGetTaskName(THIS_TASK);
+        return pcTaskGetTaskName(THIS_TASK);
 }
 
 //==============================================================================
@@ -307,7 +298,7 @@ static inline int _task_get_free_stack(void)
 //==============================================================================
 static inline void _task_set_tag(task_t *taskhdl, void *tag)
 {
-        vTaskSetApplicationTaskTag(taskhdl, (pdTASK_HOOK_CODE)tag);
+        vTaskSetApplicationTaskTag(taskhdl, (TaskHookFunction_t)tag);
 }
 
 //==============================================================================
@@ -511,7 +502,7 @@ static inline void _sleep(const uint seconds)
 //==============================================================================
 static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 {
-        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(milliseconds));
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(milliseconds));
 }
 
 //==============================================================================
@@ -524,7 +515,7 @@ static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 static inline void _sleep_until(const uint seconds, int *ref_time_ticks)
 {
-        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(seconds * 1000UL));
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(seconds * 1000UL));
 }
 
 #ifdef __cplusplus

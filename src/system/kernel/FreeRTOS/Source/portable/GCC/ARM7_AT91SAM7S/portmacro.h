@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,31 +45,32 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 /*
 	Changes from V3.2.3
-	
+
 	+ Modified portENTER_SWITCHING_ISR() to allow use with GCC V4.0.1.
 
 	Changes from V3.2.4
 
-	+ Removed the use of the %0 parameter within the assembler macros and 
+	+ Removed the use of the %0 parameter within the assembler macros and
 	  replaced them with hard coded registers.  This will ensure the
 	  assembler does not select the link register as the temp register as
 	  was occasionally happening previously.
@@ -90,7 +81,7 @@
 	Changes from V4.5.0
 
 	+ Removed the portENTER_SWITCHING_ISR() and portEXIT_SWITCHING_ISR() macros
-	  and replaced them with portYIELD_FROM_ISR() macro.  Application code 
+	  and replaced them with portYIELD_FROM_ISR() macro.  Application code
 	  should now make use of the portSAVE_CONTEXT() and portRESTORE_CONTEXT()
 	  macros as per the V4.5.1 demo code.
 */
@@ -103,7 +94,7 @@ extern "C" {
 #endif
 
 /*-----------------------------------------------------------
- * Port specific definitions.  
+ * Port specific definitions.
  *
  * The settings in this file configure FreeRTOS correctly for the
  * given hardware and compiler.
@@ -118,24 +109,28 @@ extern "C" {
 #define portDOUBLE		double
 #define portLONG		long
 #define portSHORT		short
-#define portSTACK_TYPE	unsigned portLONG
+#define portSTACK_TYPE	uint32_t
 #define portBASE_TYPE	portLONG
 
+typedef portSTACK_TYPE StackType_t;
+typedef long BaseType_t;
+typedef unsigned long UBaseType_t;
+
 #if( configUSE_16_BIT_TICKS == 1 )
-	typedef unsigned portSHORT portTickType;
-	#define portMAX_DELAY ( portTickType ) 0xffff
+	typedef uint16_t TickType_t;
+	#define portMAX_DELAY ( TickType_t ) 0xffff
 #else
-	typedef unsigned portLONG portTickType;
-	#define portMAX_DELAY ( portTickType ) 0xffffffff
+	typedef uint32_t TickType_t;
+	#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
 #endif
-/*-----------------------------------------------------------*/	
+/*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
 #define portSTACK_GROWTH			( -1 )
-#define portTICK_RATE_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )		
+#define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
 #define portBYTE_ALIGNMENT			8
-#define portNOP()					asm volatile ( "NOP" );
-/*-----------------------------------------------------------*/	
+#define portNOP()					__asm volatile ( "NOP" );
+/*-----------------------------------------------------------*/
 
 
 /* Scheduler utilities. */
@@ -150,10 +145,10 @@ extern "C" {
 #define portRESTORE_CONTEXT()											\
 {																		\
 extern volatile void * volatile pxCurrentTCB;							\
-extern volatile unsigned portLONG ulCriticalNesting;					\
+extern volatile uint32_t ulCriticalNesting;					\
 																		\
 	/* Set the LR to the task stack. */									\
-	asm volatile (														\
+	__asm volatile (													\
 	"LDR		R0, =pxCurrentTCB								\n\t"	\
 	"LDR		R0, [R0]										\n\t"	\
 	"LDR		LR, [R0]										\n\t"	\
@@ -187,10 +182,10 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 #define portSAVE_CONTEXT()												\
 {																		\
 extern volatile void * volatile pxCurrentTCB;							\
-extern volatile unsigned portLONG ulCriticalNesting;					\
+extern volatile uint32_t ulCriticalNesting;					\
 																		\
 	/* Push R0 as we are going to use the register. */					\
-	asm volatile (														\
+	__asm volatile (													\
 	"STMDB	SP!, {R0}											\n\t"	\
 																		\
 	/* Set R0 to point to the task stack pointer. */					\
@@ -232,7 +227,7 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 
 
 #define portYIELD_FROM_ISR()		vTaskSwitchContext()
-#define portYIELD()					asm volatile ( "SWI 0" )
+#define portYIELD()					__asm volatile ( "SWI 0" )
 /*-----------------------------------------------------------*/
 
 
@@ -240,8 +235,8 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 
 /*
  * The interrupt management utilities can only be called from ARM mode.  When
- * THUMB_INTERWORK is defined the utilities are defined as functions in 
- * portISR.c to ensure a switch to ARM mode.  When THUMB_INTERWORK is not 
+ * THUMB_INTERWORK is defined the utilities are defined as functions in
+ * portISR.c to ensure a switch to ARM mode.  When THUMB_INTERWORK is not
  * defined then the utilities are defined as macros here - as per other ports.
  */
 
@@ -252,19 +247,19 @@ extern volatile unsigned portLONG ulCriticalNesting;					\
 
 	#define portDISABLE_INTERRUPTS()	vPortDisableInterruptsFromThumb()
 	#define portENABLE_INTERRUPTS()		vPortEnableInterruptsFromThumb()
-	
+
 #else
 
 	#define portDISABLE_INTERRUPTS()											\
-		asm volatile (															\
+		__asm volatile (														\
 			"STMDB	SP!, {R0}		\n\t"	/* Push R0.						*/	\
 			"MRS	R0, CPSR		\n\t"	/* Get CPSR.					*/	\
 			"ORR	R0, R0, #0xC0	\n\t"	/* Disable IRQ, FIQ.			*/	\
 			"MSR	CPSR, R0		\n\t"	/* Write back modified value.	*/	\
 			"LDMIA	SP!, {R0}			" )	/* Pop R0.						*/
-			
+
 	#define portENABLE_INTERRUPTS()												\
-		asm volatile (															\
+		__asm volatile (														\
 			"STMDB	SP!, {R0}		\n\t"	/* Push R0.						*/	\
 			"MRS	R0, CPSR		\n\t"	/* Get CPSR.					*/	\
 			"BIC	R0, R0, #0xC0	\n\t"	/* Enable IRQ, FIQ.				*/	\
