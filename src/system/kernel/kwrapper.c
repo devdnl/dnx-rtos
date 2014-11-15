@@ -825,6 +825,24 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue)
         }
 }
 
+//==============================================================================
+/**
+ * @brief Function gets number of free items in queue
+ *
+ * @param[in] *queue            queue object
+ *
+ * @return a number of free items in queue, -1 if error
+ */
+//==============================================================================
+int _queue_get_space_available(queue_t *queue)
+{
+        if (is_queue_valid(queue)) {
+                return uxQueueSpacesAvailable(queue);
+        } else {
+                return -1;
+        }
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

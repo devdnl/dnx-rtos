@@ -144,6 +144,7 @@ extern bool          _queue_receive_from_ISR            (queue_t*, void*, bool*)
 extern bool          _queue_receive_peek                (queue_t*, void*, const uint);
 extern int           _queue_get_number_of_items         (queue_t*);
 extern int           _queue_get_number_of_items_from_ISR(queue_t*);
+extern int           _queue_get_space_available         (queue_t *queue);
 
 /*==============================================================================
   Exported inline functions
