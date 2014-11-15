@@ -3371,7 +3371,7 @@
 			["daemons"]={
 				[1.000000]={
 					["CWD"]="/";
-					["name"]="mbus_daemon";
+					["name"]="mbusd";
 				};
 			};
 			["mount_table"]={
