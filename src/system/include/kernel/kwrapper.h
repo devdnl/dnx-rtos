@@ -70,7 +70,7 @@ extern "C" {
 #define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))
 #define NORMAL_PRIORITY                 0
 #define LOWEST_PRIORITY                 (-(int)(configMAX_PRIORITIES / 2))
-#define HIGHEST_PRIORITY                (int)(configMAX_PRIORITIES / 2)
+#define HIGHEST_PRIORITY                ((int)(configMAX_PRIORITIES / 2))
 #define LOW_PRIORITY                    LOWEST_PRIORITY
 #define MAX_PRIORITY                    HIGHEST_PRIORITY
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
