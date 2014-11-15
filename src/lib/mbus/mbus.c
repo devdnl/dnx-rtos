@@ -182,7 +182,9 @@ static struct mbus_mem *mbus;
 //==============================================================================
 /**
  * @brief  Function send request to the daemon
+ * @param  this                 mbus context
  * @param  request              request to send
+ * @param  response             response data
  * @return On success true is returned, otherwise false.
  */
 //==============================================================================
@@ -563,8 +565,6 @@ static bool garbage_is_time_expired(garbage_t *this)
 //==============================================================================
 static void realize_CMD_GET_NUMBER_OF_SIGNALS(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         int count = llist_size(mbus->signals);
 
         response_t response;
@@ -582,8 +582,6 @@ static void realize_CMD_GET_NUMBER_OF_SIGNALS(request_t *request)
 //==============================================================================
 static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
         signal_t *sig = llist_at(mbus->signals, request->arg.CMD_GET_SIGNAL_INFO.n);
         if (sig) {
@@ -594,7 +592,7 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
                 response.errorno = MBUS_ERRNO__NO_ERROR;
 
         } else {
-                response.errorno = MBUS_ERRNO__NO_ITEM;
+                response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
         }
 
         send_response(request, &response);
@@ -609,8 +607,6 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
 //==============================================================================
 static void realize_CMD_SIGNAL_CREATE(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
         response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
 
@@ -645,10 +641,8 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
 //==============================================================================
 static void realize_CMD_SIGNAL_DELETE(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
-        response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
         int n = 0;
 
         if (request->arg.CMD_SIGNAL_DELETE.all) {
@@ -704,10 +698,8 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
 //==============================================================================
 static void realize_CMD_SIGNAL_SET(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
-        response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
 
         llist_foreach(signal_t*, sig, mbus->signals) {
                 if (strcmp(signal_get_name(sig), request->arg.CMD_SIGNAL_SET.name) == 0) {
@@ -737,10 +729,8 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
 //==============================================================================
 static void realize_CMD_SIGNAL_GET(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
-        response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
         response.of.CMD_SIGNAL_GET.data = NULL;
         response.of.CMD_SIGNAL_GET.size = 0;
 
@@ -788,10 +778,8 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
 //==============================================================================
 static void realize_CMD_SIGNAL_IS_EXIST(request_t *request)
 {
-        printk("%s\n", __func__); // TEST
-
         response_t response;
-        response.errorno = MBUS_ERRNO__NO_ITEM;
+        response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
         response.of.CMD_SIGNAL_IS_EXIST.exist = false;
 
         llist_foreach(signal_t*, sig, mbus->signals) {
@@ -919,7 +907,6 @@ mbus_errno_t mbus_daemon()
                         garbage_t *g = llist_at(mbus->garbage, i);
                         if (g) {
                                 if (garbage_is_time_expired(g)) {
-                                        printk("Remove garbage\n"); // TEST
                                         if (llist_erase(mbus->garbage, i)) {
                                                 continue;
                                         }
@@ -939,7 +926,7 @@ mbus_errno_t mbus_daemon()
 //==============================================================================
 /**
  * @brief  Create a new mbus object
- * @param  this                 mbus object
+ * @param  None
  * @return On success mbus object is returned, otherwise NULL.
  */
 //==============================================================================

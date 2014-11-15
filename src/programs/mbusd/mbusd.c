@@ -180,9 +180,9 @@ static int add_signal(int n, char *argv[])
                         if (strcmp(argv[n], "r") == 0) {
                                 signal_perm = MBUS_SIG_PERM__READ;
                         } else if (strcmp(argv[n], "w") == 0) {
-                                signal_perm = MBUS_SIG_PERM__READ_WRITE;
+                                signal_perm = MBUS_SIG_PERM__WRITE;
                         } else if (strcmp(argv[n], "rw") == 0) {
-                               signal_perm = MBUS_SIG_PERM__WRITE;
+                               signal_perm = MBUS_SIG_PERM__READ_WRITE;
                         } else if (strcmp(argv[n], "prv") == 0) {
                                 signal_perm = MBUS_SIG_PERM__PRIVATE;
                         } else {
