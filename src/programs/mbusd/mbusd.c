@@ -129,8 +129,8 @@ static int print_signal_list()
 //==============================================================================
 /**
  * @brief  Add signal to base
- * @param  n            first argument where flag was found
- * @param  argv         argument table
+ * @param  n                    first argument where flag was found
+ * @param  argv                 argument table
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 //==============================================================================
@@ -212,7 +212,7 @@ static int add_signal(int n, char *argv[])
 //==============================================================================
 /**
  * @brief  Delete signal from base
- * @param  signal_name  name of signal to delete
+ * @param  signal_name          name of signal to delete
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 //==============================================================================
@@ -247,7 +247,6 @@ static int delete_signal(char *signal_name)
 //==============================================================================
 int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        // search parameters
         for (int i = 1; i < argc; i++) {
                 if (strcmp(argv[i], "-l") == 0) {
                         return print_signal_list();
@@ -264,156 +263,9 @@ int_main(mbusd, STACK_DEPTH_LOW, int argc, char *argv[])
                 if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--del") == 0) {
                         return delete_signal(argv[i + 1]);
                 }
-
-
-                // TEST
-                if (strcmp(argv[i], "a") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                mbus_signal_create(mbus, "mbusd.Test1", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__WRITE);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_create(mbus, "mbusd.network", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_create(mbus, "mbusd.val", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_create(mbus, "mbusd.env", sizeof(int), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_create(mbus, "mbusd.var", sizeof(int), MBUS_SIG_TYPE__MBOX, MBUS_SIG_PERM__READ_WRITE);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_delete(mbus, false);
-                                printf("A Status: %d\n", mbus_get_errno(mbus));
-                        }
-                }
-
-                if (strcmp(argv[i], "d") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                mbus_signal_delete(mbus, "mbusd.val");
-                                printf("D Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_delete(mbus, "mbusd.val2");
-                                printf("D Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_delete(mbus, "mbusd.network");
-                                printf("D Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_delete(mbus, false);
-                        }
-                }
-
-                if (strcmp(argv[i], "wr") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                int data = get_time_ms();
-                                mbus_signal_set(mbus, "mbusd.Test1", &data);
-                                printf("Wr status: %d; %d\n", mbus_get_errno(mbus), data);
-
-                                data = -get_time_ms();
-                                mbus_signal_set(mbus, "mbusd.env", &data);
-                                printf("Wr status: %d; %d\n", mbus_get_errno(mbus), data);
-
-                                int e = mbus_signal_is_exist(mbus, "mbusd.Test1");
-                                printf("Ex status: %d; %d\n", e, mbus_get_errno(mbus));
-
-                                e = mbus_signal_is_exist(mbus, "mbusd.Test1fdsf");
-                                printf("Ex status: %d; %d\n", e, mbus_get_errno(mbus));
-
-                                mbus_delete(mbus, false);
-                        }
-                }
-
-                if (strcmp(argv[i], "rd") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                int data = -1;
-                                mbus_signal_get(mbus, "mbusd.Test1", &data);
-                                printf("Rd status: %d; %d\n", mbus_get_errno(mbus), data);
-
-                                data = -1;
-                                mbus_signal_get(mbus, "mbusd.env", &data);
-                                printf("Rd status: %d; %d\n", mbus_get_errno(mbus), data);
-
-                                mbus_delete(mbus, false);
-                        }
-                }
-
-                if (strcmp(argv[i], "e") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                bool status;
-                                status = mbus_signal_create(mbus, "1", sizeof(bool), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("e %d; %d\n", status, mbus_get_errno(mbus));
-
-                                status = mbus_signal_create(mbus, "2", sizeof(bool), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("e %d; %d\n", status, mbus_get_errno(mbus));
-
-                                status = mbus_signal_create(mbus, "3", sizeof(mbus_errno_t), MBUS_SIG_TYPE__VALUE, MBUS_SIG_PERM__PRIVATE);
-                                printf("e %d; %d\n", status, mbus_get_errno(mbus));
-
-                                print_signal_list();
-
-                                mbus_delete(mbus, true);
-
-                                print_signal_list();
-                        }
-                }
-
-                if (strcmp(argv[i], "lo") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                while (true) {
-                                        int var = -1;
-                                        if (mbus_signal_get(mbus, "mbusd.var", &var)) {
-                                                printf("Var: %d\n", var);
-                                        } else {
-                                                sleep_ms(500);
-                                        }
-                                }
-
-                                mbus_delete(mbus, false);
-                        }
-                }
-
-                if (strcmp(argv[i], "+") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                int var = get_time_ms();
-                                if (mbus_signal_set(mbus, "mbusd.var", &var)) {
-                                        printf("Var: %d\n", var);
-                                }
-                                mbus_delete(mbus, false);
-                        }
-                }
-
-                if (strcmp(argv[i], "f") == 0) {
-                        mbus_t *mbus = mbus_new();
-                        if (mbus) {
-                                mbus_signal_force_delete(mbus, "mbusd.var");
-                                printf("F Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_force_delete(mbus, "mbusd.env");
-                                printf("F Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_force_delete(mbus, "mbusd.val");
-                                printf("F Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_force_delete(mbus, "mbusd.network");
-                                printf("F Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_signal_force_delete(mbus, "mbusd.Test1");
-                                printf("F Status: %d\n", mbus_get_errno(mbus));
-
-                                mbus_delete(mbus, false);
-                        }
-                }
         }
 
-        // print help if argument is give but is illegal
+        // print help if argument is given but is unknown
         if (argc > 1) {
                 print_help(argv[0]);
                 return EXIT_FAILURE;
