@@ -827,11 +827,14 @@ void sys_perror(const char *str)
  *   %.*s       - print selected string but only the length passed by argument
  *                printf("%.*s\n", 3, "Foobar"); => Foo
  *
+ *   %.ns       - print selected string but only the n length
+ *                printf("%.3s\n", "Foobar"); => Foo
+ *
  *   %d, %i     - print decimal integer values
  *                printf("%d, %i", -5, 10); => -5, 10
  *
  *   %u         - print unsigned decimal integer values
- *                printf("%d, %i", -1, 10); => 4294967295, 10
+ *                printf("%u, %u", -1, 10); => 4294967295, 10
  *
  *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
  *                printf("0x%x, 0x%X", 0x5A, 0xfa); => 0x5a, 0xFA
@@ -930,6 +933,17 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 if (!get_format_char()) {
                                         return false;
                                 }
+                        } else if (chr >= '0' && chr <= '9') {
+                                arg_size     = 0;
+                                arg_size_str = true;
+                                while (chr >= '0' && chr <= '9') {
+                                        arg_size *= 10;
+                                        arg_size += chr - '0';
+
+                                        if (!get_format_char()) {
+                                                return false;
+                                        }
+                                }
                         } else {
                                 break_loop();
                                 return false;
@@ -990,6 +1004,10 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         char *str = va_arg(arg, char*);
                         if (!str) {
                                 str = "";
+                        }
+
+                        if (arg_size == 0 && arg_size_str == true) {
+                                return true;
                         }
 
                         if (arg_size <= 0 || arg_size_str == false) {
