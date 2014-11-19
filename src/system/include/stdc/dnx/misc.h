@@ -190,7 +190,7 @@ extern "C" {
  */
 //==============================================================================
 #ifndef __cplusplus
-#define static_cast(type, var) (type)(var)
+#define static_cast(type, var) ((type)(var))
 #endif
 
 //==============================================================================
@@ -222,7 +222,7 @@ extern "C" {
  */
 //==============================================================================
 #ifndef __cplusplus
-#define const_cast(type, var) (type)(var)
+#define const_cast(type, var) ((type)(var))
 #endif
 
 //==============================================================================
@@ -248,7 +248,59 @@ extern "C" {
  */
 //==============================================================================
 #ifndef __cplusplus
-#define reinterpret_cast(type, var) (type)(var)
+#define reinterpret_cast(type, var) ((type)(var))
+#endif
+
+//==============================================================================
+/**
+ * @brief min(a, b)
+ * The macro <b>min()</b> compares variables <i>a</i> and <i>b</i> and returns
+ * the smaller value. Use this macro with caution because of side effects
+ * possibility (e.g. by using increment or decrement instructions).
+ *
+ * @param a             variable a
+ * @param b             variable b
+ *
+ * @errors None
+ *
+ * @return The smaller value.
+ *
+ * @example
+ * // ...
+ *
+ * printf("%d\n", min(5, 6)); // prints 5
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+//==============================================================================
+/**
+ * @brief max(a, b)
+ * The macro <b>max()</b> compares variables <i>a</i> and <i>b</i> and returns
+ * the higher value. Use this macro with caution because of side effects
+ * possibility (e.g. by using increment or decrement instructions).
+ *
+ * @param a             variable a
+ * @param b             variable b
+ *
+ * @errors None
+ *
+ * @return The higher value.
+ *
+ * @example
+ * // ...
+ *
+ * printf("%d\n", max(5, 6)); // prints 6
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 /*==============================================================================

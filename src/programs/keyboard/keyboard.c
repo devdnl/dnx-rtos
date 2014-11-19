@@ -39,7 +39,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define min(a, b)                       (a > b ? b : a)
 #define tostring(a)                     #a
 #define USB_mA(mA)                      (mA / 2)
 #define USB_KEY_CHARACTER_CODE(c)       (4  + ((c) - 'A'))
