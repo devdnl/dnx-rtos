@@ -293,21 +293,10 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
         int n = 0;
 
         if (request->arg.CMD_SIGNAL_DELETE.all) {
-                int n = llist_size(mbus->signals);
-                int i = 0;
-                while (i < n) {
-                        _mbus_signal_t *sig = llist_at(mbus->signals, i);
-                        if (sig) {
-                                if (_mbus_signal_get_owner(sig) == request->owner_ID) {
-                                        if (llist_erase(mbus->signals, i)) {
-                                                continue;
-                                        }
-                                }
-                        } else {
-                                break;
+                llist_foreach(_mbus_signal_t*, sig, mbus->signals) {
+                        if (_mbus_signal_get_owner(sig) == request->owner_ID) {
+                                llist_erase_by_iterator(&llist_foreach_iterator);
                         }
-
-                        i++;
                 }
 
                 response.errorno = MBUS_ERRNO__NO_ERROR;
@@ -548,21 +537,10 @@ mbus_errno_t mbus_daemon()
                         }
                 }
 
-                int n = llist_size(mbus->garbage);
-                int i = 0;
-                while (i < n) {
-                        _mbus_garbage_t *g = llist_at(mbus->garbage, i);
-                        if (g) {
-                                if (_mbus_garbage_is_time_expired(g)) {
-                                        if (llist_erase(mbus->garbage, i)) {
-                                                continue;
-                                        }
-                                }
-                        } else {
-                                break;
+                llist_foreach(_mbus_garbage_t*, g, mbus->garbage) {
+                        if (_mbus_garbage_is_time_expired(g)) {
+                                llist_erase_by_iterator(&llist_foreach_iterator);
                         }
-
-                        i++;
                 }
         }
 

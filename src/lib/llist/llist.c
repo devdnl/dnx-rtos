@@ -39,15 +39,15 @@
   Local macros
 ==============================================================================*/
 #ifndef const_cast
-#define const_cast(t, v) (t)(v)
+#define const_cast(t, v) ((t)(v))
 #endif
 
 #ifndef reinterpret_cast
-#define reinterpret_cast(t, v) (t)(v)
+#define reinterpret_cast(t, v) ((t)(v))
 #endif
 
 #ifndef static_cast
-#define static_cast(t, v) (t)(v)
+#define static_cast(t, v) ((t)(v))
 #endif
 
 /*==============================================================================
@@ -691,7 +691,6 @@ llist_iterator_t llist_iterator(llist_t *this)
 
         if (is_list_valid(this)) {
                 iterator.list  = this;
-                iterator.begin = NULL;
                 iterator.magic = magic_number;
         }
 
@@ -709,12 +708,11 @@ void *llist_begin(llist_iterator_t *iterator)
 {
         if (is_iterator_valid(iterator)) {
                 if (is_list_valid(iterator->list)) {
-                        iterator->begin = iterator->list->head;
-                        iterator->end   = iterator->list->tail;
-                        iterator->fini  = false;
+                        iterator->current = iterator->list->head;
 
-                        if (iterator->begin) {
-                                return (reinterpret_cast(item_t*, iterator->begin))->data;
+                        if (iterator->current) {
+                                iterator->next = reinterpret_cast(item_t*, iterator->current)->next;
+                                return reinterpret_cast(item_t*, iterator->current)->data;
                         }
                 }
         }
@@ -733,12 +731,11 @@ void *llist_end(llist_iterator_t *iterator)
 {
         if (is_iterator_valid(iterator)) {
                 if (is_list_valid(iterator->list)) {
-                        iterator->begin = iterator->list->tail;
-                        iterator->end   = iterator->list->head;
-                        iterator->fini  = false;
+                        iterator->current = iterator->list->tail;
 
-                        if (iterator->begin) {
-                                return (reinterpret_cast(item_t*, iterator->begin))->data;
+                        if (iterator->current) {
+                                iterator->next = reinterpret_cast(item_t*, iterator->current)->prev;
+                                return reinterpret_cast(item_t*, iterator->current)->data;
                         }
                 }
         }
@@ -757,19 +754,26 @@ void *llist_end(llist_iterator_t *iterator)
 //==============================================================================
 void *llist_range(llist_iterator_t *iterator, int begin, int end)
 {
+        void *obj = NULL;
+
         if (is_iterator_valid(iterator) && begin >= 0 && end >= 0) {
                 if (is_list_valid(iterator->list)) {
-                        iterator->begin = get_item(iterator->list, begin);
-                        iterator->end   = get_item(iterator->list, end);
-                        iterator->fini  = begin == end;
+                        int direction     = begin > end ? -1 : 1;
+                        iterator->next    = get_item(iterator->list, begin + direction);
+                        iterator->current = get_item(iterator->list, begin);
+                        iterator->to      = get_item(iterator->list, end);
 
-                        if (iterator->begin) {
-                                return (reinterpret_cast(item_t*, iterator->begin))->data;
+                        if (iterator->current) {
+                                obj = reinterpret_cast(item_t*, iterator->current)->data;
+
+                                if (iterator->current == iterator->to) {
+                                        iterator->current = NULL;
+                                }
                         }
                 }
         }
 
-        return NULL;
+        return obj;
 }
 
 //==============================================================================
@@ -784,14 +788,15 @@ void *llist_iterator_next(llist_iterator_t *iterator)
         void *obj = NULL;
 
         if (is_iterator_valid(iterator)) {
-                if (is_list_valid(iterator->list) && iterator->begin && !iterator->fini) {
-                        iterator->begin = (reinterpret_cast(item_t*, iterator->begin))->next;
+                if (is_list_valid(iterator->list) && iterator->current) {
+                        iterator->current = iterator->next;
 
-                        if (iterator->begin) {
-                                obj = (reinterpret_cast(item_t*, iterator->begin))->data;
+                        if (iterator->current) {
+                                iterator->next = reinterpret_cast(item_t*, iterator->current)->next;
+                                obj = reinterpret_cast(item_t*, iterator->current)->data;
 
-                                if (iterator->begin == iterator->end) {
-                                        iterator->fini = true;
+                                if (iterator->current == iterator->to) {
+                                        iterator->current = NULL;
                                 }
                         }
                 }
@@ -812,20 +817,39 @@ void *llist_iterator_prev(llist_iterator_t *iterator)
         void *obj = NULL;
 
         if (is_iterator_valid(iterator)) {
-                if (is_list_valid(iterator->list) && iterator->begin && !iterator->fini) {
-                        iterator->begin = (reinterpret_cast(item_t*, iterator->begin))->prev;
+                if (is_list_valid(iterator->list) && iterator->current) {
+                        iterator->current = iterator->next;
 
-                        if (iterator->begin) {
-                                obj = (reinterpret_cast(item_t*, iterator->begin))->data;
+                        if (iterator->current) {
+                                iterator->next = reinterpret_cast(item_t*, iterator->next)->prev;
+                                obj = reinterpret_cast(item_t*, iterator->current)->data;
 
-                                if (iterator->begin == iterator->end) {
-                                        iterator->fini = true;
+                                if (iterator->current == iterator->to) {
+                                        iterator->current = NULL;
                                 }
                         }
                 }
         }
 
         return obj;
+}
+
+//==============================================================================
+/**
+ * @brief  Erase selected begin of the list. The element is destroyed
+ * @param  iterator     position to remove
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+int llist_erase_by_iterator(llist_iterator_t *iterator)
+{
+        if (is_iterator_valid(iterator)) {
+                if (is_list_valid(iterator->list) && iterator->current) {
+                        return remove_item(iterator->list, iterator->current, false);
+                }
+        }
+
+        return 0;
 }
 
 //==============================================================================
@@ -837,13 +861,7 @@ void *llist_iterator_prev(llist_iterator_t *iterator)
 //==============================================================================
 static bool is_list_valid(llist_t *this)
 {
-        if (this) {
-                if (this->magic == magic_number && this->self == this) {
-                        return true;
-                }
-        }
-
-        return false;
+        return this && this->magic && this->self == this;
 }
 
 //==============================================================================
@@ -855,13 +873,7 @@ static bool is_list_valid(llist_t *this)
 //==============================================================================
 static bool is_iterator_valid(llist_iterator_t *this)
 {
-        if (this) {
-                if (this->magic == magic_number) {
-                        return true;
-                }
-        }
-
-        return false;
+        return this && this->magic == magic_number;
 }
 
 //==============================================================================

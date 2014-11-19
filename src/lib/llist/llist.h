@@ -59,6 +59,9 @@ extern "C" {
                              element;\
                              element = llist_iterator_prev(&_iterator), __loop = false)
 
+// list iterator
+#define llist_foreach_iterator _iterator
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -69,9 +72,9 @@ typedef void (*llist_obj_dtor_t)(void *object);
 // iterator object
 typedef struct {
         llist_t  *list;
-        void     *begin;
-        void     *end;
-        bool      fini;
+        void     *current;
+        void     *next;
+        void     *to;
         uint32_t  magic;
 } llist_iterator_t;
 
@@ -395,6 +398,15 @@ extern void *llist_iterator_next(llist_iterator_t *iterator);
  */
 //==============================================================================
 extern void *llist_iterator_prev(llist_iterator_t *iterator);
+
+//==============================================================================
+/**
+ * @brief  Erase selected begin of the list. The element is destroyed
+ * @param  iterator     position to remove
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+extern int llist_erase_by_iterator(llist_iterator_t *iterator);
 
 /*==============================================================================
   Exported inline functions
