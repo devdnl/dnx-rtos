@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd. 
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,21 +45,22 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 /* GCC/HCS12 port by Jefferson L Smith, 2005 */
@@ -105,7 +96,7 @@ void ATTR_NEAR vPortYield( void );
 void ATTR_NEAR vPortTickInterrupt( void );
 
 /* Function in non-banked memory which actually switches to first task. */
-portBASE_TYPE ATTR_NEAR xStartSchedulerNear( void );
+BaseType_t ATTR_NEAR xStartSchedulerNear( void );
 
 /* Calls to portENTER_CRITICAL() can be nested.  When they are nested the 
 critical section should not be left (i.e. interrupts should not be re-enabled)
@@ -113,14 +104,14 @@ until the nesting depth reaches 0.  This variable simply tracks the nesting
 depth.  Each task maintains it's own critical nesting depth variable so 
 uxCriticalNesting is saved and restored from the task stack during a context
 switch. */
-volatile unsigned portBASE_TYPE uxCriticalNesting = 0x80;  // un-initialized
+volatile UBaseType_t uxCriticalNesting = 0x80;  // un-initialized
 
 /*-----------------------------------------------------------*/
 
 /* 
  * See header file for description. 
  */
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
 
 
@@ -130,28 +121,28 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 
 
 	/* The address of the task function is placed in the stack byte at a time. */
-	*pxTopOfStack   = ( portSTACK_TYPE ) *( ((portSTACK_TYPE *) (&pxCode) ) + 1 );
-	*--pxTopOfStack = ( portSTACK_TYPE ) *( ((portSTACK_TYPE *) (&pxCode) ) + 0 );
+	*pxTopOfStack   = ( StackType_t ) *( ((StackType_t *) (&pxCode) ) + 1 );
+	*--pxTopOfStack = ( StackType_t ) *( ((StackType_t *) (&pxCode) ) + 0 );
 
 	/* Next are all the registers that form part of the task context. */
 
 	/* Y register */
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0xff;
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0xee;
+	*--pxTopOfStack = ( StackType_t ) 0xff;
+	*--pxTopOfStack = ( StackType_t ) 0xee;
 
 	/* X register */
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0xdd;
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0xcc;
+	*--pxTopOfStack = ( StackType_t ) 0xdd;
+	*--pxTopOfStack = ( StackType_t ) 0xcc;
  
 	/* A register contains parameter high byte. */
-	*--pxTopOfStack = ( portSTACK_TYPE ) *( ((portSTACK_TYPE *) (&pvParameters) ) + 0 );
+	*--pxTopOfStack = ( StackType_t ) *( ((StackType_t *) (&pvParameters) ) + 0 );
 
 	/* B register contains parameter low byte. */
-	*--pxTopOfStack = ( portSTACK_TYPE ) *( ((portSTACK_TYPE *) (&pvParameters) ) + 1 );
+	*--pxTopOfStack = ( StackType_t ) *( ((StackType_t *) (&pvParameters) ) + 1 );
 
 	/* CCR: Note that when the task starts interrupts will be enabled since
 	"I" bit of CCR is cleared */
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0x80;		// keeps Stop disabled (MCU default)
+	*--pxTopOfStack = ( StackType_t ) 0x80;		// keeps Stop disabled (MCU default)
 	
 	/* tmp softregs used by GCC. Values right now don't	matter. */
 	__asm("\n\
@@ -170,7 +161,7 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	
 	/* The critical nesting depth is initialised with 0 (meaning not in
 	a critical section). */
-	*--pxTopOfStack = ( portSTACK_TYPE ) 0x00;
+	*--pxTopOfStack = ( StackType_t ) 0x00;
 
 
 	return pxTopOfStack;
@@ -192,7 +183,7 @@ static void prvSetupTimerInterrupt( void )
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xPortStartScheduler( void )
+BaseType_t xPortStartScheduler( void )
 {
 	/* xPortStartScheduler() does not start the scheduler directly because 
 	the header file containing the xPortStartScheduler() prototype is part 
@@ -200,13 +191,13 @@ portBASE_TYPE xPortStartScheduler( void )
 	Instead it simply calls the locally defined xNearStartScheduler() - 
 	which does use the CODE_SEG pragma. */
 
-	short register d;
+	int16_t register d;
 	__asm ("jmp  xStartSchedulerNear		; will never return": "=d"(d));
 	return d;
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xStartSchedulerNear( void )
+BaseType_t xStartSchedulerNear( void )
 {
 	/* Configure the timer that will generate the RTOS tick.  Interrupts are
 	disabled when this function is called. */
@@ -263,11 +254,11 @@ void vPortTickInterrupt( void )
 		portSAVE_CONTEXT();
 
 		/* Increment the tick ... */
-		vTaskIncrementTick();
-
-		/* ... then see if the new tick value has necessitated a
-		context switch. */
-		vTaskSwitchContext();
+		if( xTaskIncrementTick() != pdFALSE )
+		{
+			/* A context switch is necessary. */
+			vTaskSwitchContext();
+		}
 
 		/* Restore the context of a task - which may be a different task
 		to that interrupted. */
@@ -275,7 +266,7 @@ void vPortTickInterrupt( void )
 	}
 	#else
 	{
-		vTaskIncrementTick();
+		xTaskIncrementTick();
 	}
 	#endif
 

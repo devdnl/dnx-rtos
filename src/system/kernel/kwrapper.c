@@ -155,7 +155,7 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
 
         taskENTER_CRITICAL();
         task_t *task = NULL;
-        if (xTaskCreate(func, (signed char *)name, stack_depth, argv, child_priority, &task) == pdPASS) {
+        if (xTaskCreate(func, name, stack_depth, argv, child_priority, &task) == pdPASS) {
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
                         vTaskSuspend(task);
@@ -418,7 +418,7 @@ void _semaphore_delete(sem_t *sem)
 bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
-                return xSemaphoreTake(sem->object, MS2TICK((portTickType)blocktime_ms));
+                return xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
         } else {
                 return false;
         }
@@ -561,9 +561,9 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
         if (is_mutex_valid(mutex) && _task_get_data()->f_task_kill == false) {
                 bool status;
                 if (mutex->recursive) {
-                        status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((portTickType)blocktime_ms));
+                        status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((TickType_t)blocktime_ms));
                 } else {
-                        status = xSemaphoreTake(mutex->object, MS2TICK((portTickType)blocktime_ms));
+                        status = xSemaphoreTake(mutex->object, MS2TICK((TickType_t)blocktime_ms));
                 }
 
                 if (status) {
@@ -687,7 +687,7 @@ void _queue_reset(queue_t *queue)
 bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueueSend(queue->object, item, MS2TICK((portTickType)waittime_ms));
+                return xQueueSend(queue->object, item, MS2TICK((TickType_t)waittime_ms));
         } else {
                 return false;
         }
@@ -735,7 +735,7 @@ bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueueReceive(queue->object, item, MS2TICK((portTickType)waittime_ms));
+                return xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
         } else {
                 return false;
         }
@@ -783,7 +783,7 @@ bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueuePeek(queue->object, item, MS2TICK((portTickType)waittime_ms));
+                return xQueuePeek(queue->object, item, MS2TICK((TickType_t)waittime_ms));
         } else {
                 return false;
         }
@@ -820,6 +820,24 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 return uxQueueMessagesWaitingFromISR(queue->object);
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets number of free items in queue
+ *
+ * @param[in] *queue            queue object
+ *
+ * @return a number of free items in queue, -1 if error
+ */
+//==============================================================================
+int _queue_get_space_available(queue_t *queue)
+{
+        if (is_queue_valid(queue)) {
+                return uxQueueSpacesAvailable(queue);
         } else {
                 return -1;
         }
