@@ -19,6 +19,7 @@ New Features, Improvements:
 - Added SLRE library (regular expressions)
 - BSP: board support package for zl26arm and STM32USBcomp development boards added
 - reimplemented mbus library
+- Updated kernel to FreeRTOS V8.1.2
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
