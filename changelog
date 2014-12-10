@@ -1,4 +1,4 @@
-dnx RTOS 1.4.2 RC
+dnx RTOS 1.5.0 RC
 ==============
 New Features, Improvements:
 - Configtool: corrected project configuraiton script to be faster
@@ -20,12 +20,14 @@ New Features, Improvements:
 - BSP: board support package for zl26arm and STM32USBcomp development boards added
 - reimplemented mbus library
 - Updated kernel to FreeRTOS V8.1.2
+- Cleanup net.h library
 
 Fixed Bugs:
 - LOOP: module uses not C99-standard union construction
 - Configtool: fixed bug in the GPIO configuration script (issue #124)
 - TTY: problems with printing single characters (issue #139)
-- printf(): fixed problem with %c and other formats (Issue #134)
+- printf(): fixed problem with %c and other formats (issue #134)
+- Ethernet: fixed long pings and reimplement ETHMAC module and network manager (issue #151)
 
 dnx RTOS 1.4.1
 ==============
