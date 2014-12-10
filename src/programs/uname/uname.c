@@ -67,9 +67,12 @@ PROGRAM_MAIN(uname, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf("%s %s, %s %s, %s\n",
-               get_OS_name(), get_OS_version(),
-               get_kernel_name(), get_kernel_version(),
+        printf("%s %s \"%s\", %s %s, %s\n",
+               get_OS_name(),
+               get_OS_version(),
+               get_OS_codename(),
+               get_kernel_name(),
+               get_kernel_version(),
                get_platform_name());
 
         return EXIT_SUCCESS;

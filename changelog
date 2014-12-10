@@ -1,4 +1,4 @@
-dnx RTOS 1.5.0 RC
+dnx RTOS 1.4.1
 ==============
 New Features, Improvements:
 - Configtool: corrected project configuraiton script to be faster

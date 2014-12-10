@@ -558,7 +558,33 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.5.0 RC";
+        return "1.4.1";
+}
+
+//==============================================================================
+/**
+ * @brief const char *get_OS_codename(void)
+ * The function <b>get_OS_codename</b>() return a codename string.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Codename string.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Codename: %s\n", get_OS_codename());
+ *
+ * // ...
+ */
+//==============================================================================
+static inline const char *get_OS_codename(void)
+{
+        return "Antelope";
 }
 
 //==============================================================================

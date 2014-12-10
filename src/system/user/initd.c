@@ -292,7 +292,7 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
-        printk("Welcome to dnx RTOS!\n");
+        printk("Welcome to dnx RTOS \"%s\"!\n", get_OS_codename());
         printk_enable("/dev/tty3");
 
         /* initialize handles for applications and streams */
