@@ -1,5 +1,4 @@
 # Makefile for GNU make
-CSRC_CORE   += core/dnx.c
 CSRC_CORE   += core/sysmoni.c
 CSRC_CORE   += core/progman.c
 CSRC_CORE   += core/pipe.c

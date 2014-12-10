@@ -184,7 +184,7 @@ static void modify_module_memory_usage(void *mod_no, i32_t size)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_init(void)
+stdret_t _sysm_init(void)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         sysm_system_memory_usage = (i32_t)_MEMMAN_RAM_SIZE - (i32_t)_MEMMAN_HEAP_SIZE;

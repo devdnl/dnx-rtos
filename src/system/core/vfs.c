@@ -117,7 +117,7 @@ static const u32_t      dir_magic_number  = 0x297E823D;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_init(void)
+stdret_t _vfs_init(void)
 {
         vfs_mnt_list     = list_new();
         vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);

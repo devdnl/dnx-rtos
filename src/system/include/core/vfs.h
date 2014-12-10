@@ -207,7 +207,7 @@ struct vfs_FS_interface {
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
-extern stdret_t         vfs_init                (void);
+extern stdret_t         _vfs_init               (void);
 extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
 extern stdret_t         vfs_umount              (const char*);
 extern int              vfs_getmntentry         (int, struct mntent*);
