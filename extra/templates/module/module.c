@@ -170,8 +170,8 @@ API_MOD_READ(<!MODULE_NAME!>, void *device_handle, u8_t *dst, size_t count, fpos
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return Value depends on request. To obtain more information see module's
+ *         ioctl request definitions.
  */
 //==============================================================================
 API_MOD_IOCTL(<!MODULE_NAME!>, void *device_handle, int request, void *arg)

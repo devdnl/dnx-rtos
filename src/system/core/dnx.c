@@ -32,7 +32,7 @@
 #include "user/initd.h"
 
 #if (CONFIG_NETWORK_ENABLE != 0)
-#       include "arch/ethif.h"
+#       include "arch/netman.h"
 #endif
 
 /*==============================================================================
@@ -66,20 +66,15 @@
 //==============================================================================
 void dnx_init(void)
 {
-        static bool initialized = false;
-
-        if (!initialized) {
-                _cpuctl_init();
-                _memman_init();
-                _stop_if(vfs_init() != STD_RET_OK);
-                _stop_if(sysm_init() != STD_RET_OK);
-                task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+        _cpuctl_init();
+        _memman_init();
+        vfs_init();
+        sysm_init();
+        task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 
 #if (CONFIG_NETWORK_ENABLE != 0)
-                _ethif_start_lwIP_daemon();
+        _netman_init();
 #endif
-                initialized = true;
-        }
 }
 
 /*==============================================================================

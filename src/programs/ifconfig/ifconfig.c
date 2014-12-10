@@ -30,10 +30,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <dnx/net.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define KiB                             static_cast(u32_t, 1024)
+#define MiB                             static_cast(u32_t, 1024*1024)
+#define CONVERT_TO_KiB(_val)            (_val >> 10)
+#define CONVERT_TO_MiB(_val)            (_val >> 20)
 
 /*==============================================================================
   Local types, enums definitions
@@ -65,14 +70,31 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 static net_ip_t strtoip(const char *str)
 {
-        net_ip_t ip;
         int a = 0, b = 0, c = 0, d = 0;
 
         sscanf(str, "%3d.%3d.%3d.%3d", &a, &b, &c, &d);
 
-        net_set_ip(&ip, a, b, c, d);
+        return net_IP_set(a, b, c, d);
+}
 
-        return ip;
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static const char *convert_unit(u64_t *val)
+{
+        if (*val >= 10*MiB) {
+                *val = CONVERT_TO_MiB(*val);
+                return "MiB";
+        } else if (*val >= 10*KiB) {
+                *val = CONVERT_TO_KiB(*val);
+                return "KiB";
+        } else {
+                return "B";
+        }
 }
 
 //==============================================================================
@@ -86,34 +108,60 @@ static void show_details()
                 "NOT CONFIGURED",
                 "STATIC IP",
                 "DHCP CONFIGURING",
-                "DHCP CONFIGURED"
+                "DHCP CONFIGURED",
+                "DISCONNECTED"
         };
 
-        ifconfig_t ifcfg;
-        memset(&ifcfg, 0, sizeof(ifconfig_t));
+        net_config_t ifcfg;
+        memset(&ifcfg, 0, sizeof(net_config_t));
         net_get_ifconfig(&ifcfg);
 
-        printf("Network status: %s  HWaddr %2x:%2x:%2x:%2x:%2x:%2x\n"
-               "inet addr:%d.%d.%d.%d  gateway:%d.%d.%d.%d  Mask:%d.%d.%d.%d\n"
-               "RX packets:%d  RX bytes:%d\n"
-               "TX packets:%d  TX bytes:%d\n",
+        const char *tx_unit = convert_unit(&ifcfg.tx_bytes);
+        const char *rx_unit = convert_unit(&ifcfg.rx_bytes);
+
+        printf("Network status: %s\n"
+               "HWaddr %2X:%2X:%2X:%2X:%2X:%2X\n"
+               "Addr:%d.%d.%d.%d\n"
+               "Gateway:%d.%d.%d.%d\n"
+               "Mask:%d.%d.%d.%d\n"
+               "RX packets:%d (%d %s)\n"
+               "TX packets:%d (%d %s)\n",
                if_status[ifcfg.status],
                ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-               net_get_ip_part_a(&ifcfg.IP_address),
-               net_get_ip_part_b(&ifcfg.IP_address),
-               net_get_ip_part_c(&ifcfg.IP_address),
-               net_get_ip_part_d(&ifcfg.IP_address),
-               net_get_ip_part_a(&ifcfg.gateway),
-               net_get_ip_part_b(&ifcfg.gateway),
-               net_get_ip_part_c(&ifcfg.gateway),
-               net_get_ip_part_d(&ifcfg.gateway),
-               net_get_ip_part_a(&ifcfg.net_mask),
-               net_get_ip_part_b(&ifcfg.net_mask),
-               net_get_ip_part_c(&ifcfg.net_mask),
-               net_get_ip_part_d(&ifcfg.net_mask),
-               ifcfg.rx_packets, ifcfg.rx_bytes,
-               ifcfg.tx_packets, ifcfg.tx_bytes);
+               net_IP_get_part_a(&ifcfg.IP_address),
+               net_IP_get_part_b(&ifcfg.IP_address),
+               net_IP_get_part_c(&ifcfg.IP_address),
+               net_IP_get_part_d(&ifcfg.IP_address),
+               net_IP_get_part_a(&ifcfg.gateway),
+               net_IP_get_part_b(&ifcfg.gateway),
+               net_IP_get_part_c(&ifcfg.gateway),
+               net_IP_get_part_d(&ifcfg.gateway),
+               net_IP_get_part_a(&ifcfg.net_mask),
+               net_IP_get_part_b(&ifcfg.net_mask),
+               net_IP_get_part_c(&ifcfg.net_mask),
+               net_IP_get_part_d(&ifcfg.net_mask),
+               ifcfg.rx_packets, static_cast(int, ifcfg.rx_bytes), rx_unit,
+               ifcfg.tx_packets, static_cast(int, ifcfg.tx_bytes), tx_unit);
+}
+
+//==============================================================================
+/**
+ * @brief  Print help message
+ * @param  prog_name    program name
+ * @return None
+ */
+//==============================================================================
+static void print_help_msg(const char *prog_name)
+{
+        printf("Usage: %s <options>\n"
+               "  addr=<address>\n"
+               "  mask=<netmask>\n"
+               "  gw=<gateway>\n"
+               "  dhcp\n"
+               "  up\n"
+               "  down\n",
+               prog_name);
 }
 
 //==============================================================================
@@ -134,37 +182,26 @@ PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
                 bool up   = false;
                 bool down = false;
                 bool dhcp = false;
-                net_ip_t ip;
-                net_ip_t netmask;
-                net_ip_t gateway;
 
-                net_set_ip(&ip     , 0,0,0,0);
-                net_set_ip(&netmask, 0,0,0,0);
-                net_set_ip(&gateway, 0,0,0,0);
+                net_ip_t ip      = net_IP_set(0,0,0,0);
+                net_ip_t netmask = net_IP_set(0,0,0,0);
+                net_ip_t gateway = net_IP_set(0,0,0,0);
 
                 for (int i = 1; i < argc; i++) {
                         if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-                                printf("Usage: %s <options>\n"
-                                       "  addr <address>\n"
-                                       "  mask <netmask>\n"
-                                       "  gw <gateway>\n"
-                                       "  dhcp\n"
-                                       "  up\n"
-                                       "  down\n",
-                                       argv[0]);
-
+                                print_help_msg(argv[0]);
                                 return 0;
-                        } else if (strcmp(argv[i], "addr") == 0) {
-                                if (argv[i + 1]) {
-                                        ip = strtoip(argv[i + 1]);
+                        } else if (strncmp(argv[i], "addr=", 5) == 0) {
+                                if (argv[i]) {
+                                        ip = strtoip(argv[i] + 5);
                                 }
-                        } else if (strcmp(argv[i], "mask") == 0) {
-                                if (argv[i + 1]) {
-                                        netmask = strtoip(argv[i + 1]);
+                        } else if (strncmp(argv[i], "mask=", 5) == 0) {
+                                if (argv[i]) {
+                                        netmask = strtoip(argv[i] + 5);
                                 }
-                        } else if (strcmp(argv[i], "gw") == 0) {
-                                if (argv[i + 1]) {
-                                        gateway = strtoip(argv[i + 1]);
+                        } else if (strncmp(argv[i], "gw=", 3) == 0) {
+                                if (argv[i]) {
+                                        gateway = strtoip(argv[i] + 3);
                                 }
                         } else if (strcmp(argv[i], "dhcp") == 0) {
                                 dhcp = true;
@@ -172,6 +209,9 @@ PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
                                 up = true;
                         } else if (strcmp(argv[i], "down") == 0) {
                                 down = true;
+                        } else {
+                                print_help_msg(argv[0]);
+                                return 0;
                         }
                 }
 
@@ -180,19 +220,19 @@ PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
                         return 0;
                 }
 
-                ifconfig_t ifcfg;
-                memset(&ifcfg, 0, sizeof(ifconfig_t));
+                net_config_t ifcfg;
+                memset(&ifcfg, 0, sizeof(net_config_t));
                 net_get_ifconfig(&ifcfg);
 
                 if (down) {
-                        if (  ifcfg.status == IFSTATUS_DHCP_CONFIGURED
-                           || ifcfg.status == IFSTATUS_DHCP_CONFIGURING) {
+                        if (  ifcfg.status == NET_STATUS_DHCP_CONFIGURED
+                           || ifcfg.status == NET_STATUS_DHCP_CONFIGURING) {
 
-                                if (net_stop_DHCP_client() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                                if (net_DHCP_stop() != 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
                                         puts("DHCP stop error!");
                                 }
                         } else {
-                                if (net_ifdown() != 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                                if (net_ifdown() != 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
                                         puts("Interface down fail!");
                                 }
                         }
@@ -200,7 +240,7 @@ PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 if (up) {
                         if (dhcp) {
-                                if (net_start_DHCP_client() == 0) {
+                                if (net_DHCP_start() == 0) {
                                         show_details();
                                 } else {
                                         puts("DHCP start error!");

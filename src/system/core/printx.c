@@ -845,10 +845,13 @@ void sys_perror(const char *str)
  *                printf("0x02X, 0x03X", 0x5, 0x1F43); => 0x05, 0x1F43
  *
  *   %f         - print float number. Note: make sure that input value is the float!
- *                printf("Foobar: %f", 1.0); Foobar: 1.000000
+ *                printf("Foobar: %f", 1.0); => Foobar: 1.000000
  *
  *   %l?        - print long long values, where ? means d, i, u, x, or X.
  *                NOTE: not supported
+ *
+ *   %p         - print pointer
+ *                printf("Pointer: %p", main); => Pointer: 0x4028B4
  */
 //==============================================================================
 int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
@@ -1124,6 +1127,34 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
         }
 
+        /// @brief  Put pointer value
+        /// @param  None
+        /// @return If format was found then true is returned, otherwise false.
+        bool put_pointer()
+        {
+                if (chr == 'p') {
+                        int   val = va_arg(arg, int);
+                        char  result[16];
+                        char *result_ptr = itoa(val, result, 16, true, 0);
+
+                        if (!put_char('0'))
+                                return true;
+
+                        if (!put_char('x'))
+                                return true;
+
+                        while ((chr = *result_ptr++)) {
+                                if (!put_char(chr)) {
+                                        break;
+                                }
+                        }
+
+                        return true;
+                } else {
+                        return false;
+                }
+        }
+
         // read characters from format string
         while (loop_break == false) {
 
@@ -1151,6 +1182,9 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 continue;
 
                         if (put_float())
+                                continue;
+
+                        if (put_pointer())
                                 continue;
                 }
         }

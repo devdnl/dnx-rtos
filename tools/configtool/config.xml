@@ -156,6 +156,7 @@
             <NETWORK_TCP_SYNMAXRTX><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_SYNMAXRTX__</key></NETWORK_TCP_SYNMAXRTX>
             <NETWORK_TCP_QUEUE_OOSEQ><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_QUEUE_OOSEQ__</key></NETWORK_TCP_QUEUE_OOSEQ>
             <NETWORK_TCP_MSS><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_MSS__</key></NETWORK_TCP_MSS>
+            <NETWORK_TCP_MSL><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_MSL__</key></NETWORK_TCP_MSL>
             <NETWORK_TCP_CALCULATE_EFF_SEND_MSS><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_CALCULATE_EFF_SEND_MSS__</key></NETWORK_TCP_CALCULATE_EFF_SEND_MSS>
             <NETWORK_TCP_OOSEQ_MAX_BYTES><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_OOSEQ_MAX_BYTES__</key></NETWORK_TCP_OOSEQ_MAX_BYTES>
             <NETWORK_TCP_OOSEQ_MAX_PBUFS><path>../../config/project/network_flags.h</path><key>__NETWORK_TCP_OOSEQ_MAX_PBUFS__</key></NETWORK_TCP_OOSEQ_MAX_PBUFS>

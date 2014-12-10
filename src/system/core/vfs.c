@@ -57,7 +57,7 @@ struct vfs_file
         stdret_t       (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
         ssize_t        (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
         ssize_t        (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        stdret_t       (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
+        int            (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t       (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
         stdret_t       (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void            *f_extra_data;

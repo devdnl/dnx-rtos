@@ -42,16 +42,6 @@
 */
 
 /**
- * MAC address
- */
-#define ETHIF_MAC_ADDR_0                        (__NETWORK_MAC_ADDR_0__)
-#define ETHIF_MAC_ADDR_1                        (__NETWORK_MAC_ADDR_1__)
-#define ETHIF_MAC_ADDR_2                        (__NETWORK_MAC_ADDR_2__)
-#define ETHIF_MAC_ADDR_3                        (__NETWORK_MAC_ADDR_3__)
-#define ETHIF_MAC_ADDR_4                        (__NETWORK_MAC_ADDR_4__)
-#define ETHIF_MAC_ADDR_5                        (__NETWORK_MAC_ADDR_5__)
-
-/**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
  * allocation and deallocation.
@@ -758,6 +748,11 @@
 #define TCP_MSS                                 __NETWORK_TCP_MSS__
 
 /**
+ * The maximum segment lifetime in milliseconds
+ */
+#define TCP_MSL                                 __NETWORK_TCP_MSL__
+
+/**
  * TCP_CALCULATE_EFF_SEND_MSS: "The maximum size of a segment that TCP really
  * sends, the 'effective send MSS,' MUST be the smaller of the send MSS (which
  * reflects the available reassembly buffer size at the remote host) and the
@@ -890,7 +885,7 @@
 
 /**
  * LWIP_NETIF_STATUS_CALLBACK==1: Support a callback function whenever an interface
- * changes its up/down status (i.e., due to DHCP IP acquistion)
+ * changes its up/down status (i.e., due to DHCP IP acquisition)
  */
 #define LWIP_NETIF_STATUS_CALLBACK              0
 

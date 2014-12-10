@@ -42,29 +42,14 @@ extern "C" {
 #define SYS_MBOX_NULL                   NULL
 #define SYS_SEM_NULL                    NULL
 
-extern void _ethif_manager(void);
-#define LWIP_TCPIP_THREAD_ALIVE()       _ethif_manager()
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 typedef task_t          *sys_thread_t;
 typedef int              sys_prot_t;
-
-typedef struct sys_mutex {
-        mutex_t *mutex;
-        u32_t    valid;
-} sys_mutex_t;
-
-typedef struct sys_sem {
-        sem_t *sem;
-        u32_t  valid;
-} sys_sem_t;
-
-typedef struct sys_mbox {
-        queue_t *queue;
-        u32_t    valid;
-} sys_mbox_t;
+typedef mutex_t         *sys_mutex_t;
+typedef sem_t           *sys_sem_t;
+typedef queue_t         *sys_mbox_t;
 
 /*==============================================================================
   Exported objects

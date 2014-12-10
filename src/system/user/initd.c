@@ -242,25 +242,24 @@ static int run_level_1(void)
         msg_mount("fatfs", "/dev/sda1", "/mnt");
 
         printk("Configuring DHCP client... ");
-        if (net_start_DHCP_client() == 0) {
+        if (net_DHCP_start() == 0) {
                 printk("OK\n");
         } else {
                 printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
                 printk("Configuring static IP... ");
-                net_ip_t ip, mask, gateway;
-                net_set_ip(&ip, __NETWORK_IP_ADDR1__,__NETWORK_IP_ADDR2__,__NETWORK_IP_ADDR3__,__NETWORK_IP_ADDR4__);
-                net_set_ip(&mask, __NETWORK_IP_MASK1__,__NETWORK_IP_MASK2__,__NETWORK_IP_MASK3__,__NETWORK_IP_MASK4__);
-                net_set_ip(&gateway, __NETWORK_IP_GW1__,__NETWORK_IP_GW2__,__NETWORK_IP_GW3__,__NETWORK_IP_GW4__);
-                if (net_ifup(&ip, &mask, &gateway) == 0) {
+                net_ip_t ip      = net_IP_set(__NETWORK_IP_ADDR1__,__NETWORK_IP_ADDR2__,__NETWORK_IP_ADDR3__,__NETWORK_IP_ADDR4__);
+                net_ip_t netmask = net_IP_set(__NETWORK_IP_MASK1__,__NETWORK_IP_MASK2__,__NETWORK_IP_MASK3__,__NETWORK_IP_MASK4__);
+                net_ip_t gateway = net_IP_set(__NETWORK_IP_GW1__,__NETWORK_IP_GW2__,__NETWORK_IP_GW3__,__NETWORK_IP_GW4__);
+                if (net_ifup(&ip, &netmask, &gateway) == 0) {
                         printk("OK\n");
                 } else {
                         printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
-        ifconfig_t ifcfg;
-        if (net_get_ifconfig(&ifcfg) == 0 && ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+        net_config_t ifcfg;
+        if (net_get_ifconfig(&ifcfg) == 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %02X:%02X:%02X:%02X:%02X:%02X\n"
                        "  IP Address: %d.%d.%d.%d\n"
@@ -269,12 +268,12 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-                       net_get_ip_part_a(&ifcfg.IP_address), net_get_ip_part_b(&ifcfg.IP_address),
-                       net_get_ip_part_c(&ifcfg.IP_address), net_get_ip_part_d(&ifcfg.IP_address),
-                       net_get_ip_part_a(&ifcfg.net_mask), net_get_ip_part_b(&ifcfg.net_mask),
-                       net_get_ip_part_c(&ifcfg.net_mask), net_get_ip_part_d(&ifcfg.net_mask),
-                       net_get_ip_part_a(&ifcfg.gateway), net_get_ip_part_b(&ifcfg.gateway),
-                       net_get_ip_part_c(&ifcfg.gateway), net_get_ip_part_d(&ifcfg.gateway));
+                       net_IP_get_part_a(&ifcfg.IP_address), net_IP_get_part_b(&ifcfg.IP_address),
+                       net_IP_get_part_c(&ifcfg.IP_address), net_IP_get_part_d(&ifcfg.IP_address),
+                       net_IP_get_part_a(&ifcfg.net_mask), net_IP_get_part_b(&ifcfg.net_mask),
+                       net_IP_get_part_c(&ifcfg.net_mask), net_IP_get_part_d(&ifcfg.net_mask),
+                       net_IP_get_part_a(&ifcfg.gateway), net_IP_get_part_b(&ifcfg.gateway),
+                       net_IP_get_part_c(&ifcfg.gateway), net_IP_get_part_d(&ifcfg.gateway));
         } else {
                 printk("Network not configured\n");
         }

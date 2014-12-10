@@ -178,8 +178,7 @@ API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t 
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return Value depends on driver implementation (int)
  */
 //==============================================================================
 API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)

@@ -34,9 +34,10 @@ ifeq ($(__ENABLE_NETWORK__), _YES_)
    CSRC_CORE   += net/core/ipv4/ip_frag.c
    CSRC_CORE   += net/netif/etharp.c
    CSRC_CORE   += net/port/arch/sys_arch.c
+   CSRC_CORE   += net/port/arch/netman.c
 
 	ifeq ($(TARGET), stm32f1)
-   	CSRC_ARCH   += net/port/arch/ethif_stm32f1.c
+   	CSRC_ARCH   += net/port/arch/netman_stm32f1.c
    endif
 endif
 

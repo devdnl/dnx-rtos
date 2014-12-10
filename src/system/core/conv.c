@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local macros
@@ -99,7 +100,7 @@ char *sys_strtoi(const char *string, int base, i32_t *value)
                         base = 10;
                 }
         } else if (base < 2 || base > 16) {
-                goto end;
+                return const_cast(char*, string);
         }
 
         char  character;
@@ -121,7 +122,7 @@ char *sys_strtoi(const char *string, int base, i32_t *value)
                 } else if (character >= '0') {
                         character -= '0';
                 } else {
-                        goto apply_sign;
+                        break;
                 }
 
                 /* check character range according to actual base */
@@ -136,11 +137,9 @@ char *sys_strtoi(const char *string, int base, i32_t *value)
                 string++;
         }
 
-apply_sign:
         *value *= sign;
 
-end:
-        return (char *)string;
+        return const_cast(char*, string);
 }
 
 //==============================================================================

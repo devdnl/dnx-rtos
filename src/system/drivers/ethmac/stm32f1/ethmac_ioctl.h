@@ -39,120 +39,74 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Initialize Ethernet interface
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__ETHERNET_INIT                        _IO (ETHMAC, 0x00)
+#define ETHMAC_PACKET_SIZE 1520
 
-/** @brief  Gets Rx flag state
- *  @param  bool *
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Wait for receive of Rx packet
+ * @param  int         timeout value
+ * @return n: size of received packet
+ *         0: packet not received - timeout
+ *        -1: error
  */
-#define IOCTL_ETHMAC__GET_RX_FLAG                          _IOR(ETHMAC, 0x01, bool*)
+#define IOCTL_ETHMAC__WAIT_FOR_PACKET                   _IOR(ETHMAC, 0x00, int)
 
-/** @brief  Clear Rx flag
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Set MAC address
+ * @param  u8_t[6] (pointer to buffer)
+ * @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_ETHMAC__CLEAR_RX_FLAG                        _IO (ETHMAC, 0x02)
+#define IOCTL_ETHMAC__SET_MAC_ADDR                      _IOW(ETHMAC, 0x01, u8_t*)
 
-/** @brief  Set MAC address
- *  @param  u8_t[6] (pointer to buffer)
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Send packet from chain buffer
+ * @param  ethmac_packet_chain_t*       chain buffer reference
+ * @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_ETHMAC__SET_MAC_ADR                          _IOW(ETHMAC, 0x03, u8_t*)
+#define IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN            _IOW(ETHMAC, 0x02, ethmac_packet_chain_t*)
 
-/** @brief  Gets Rx packet size
- *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Receive packet to chain buffer
+ * @param  ethmac_packet_chain_t*       chain buffer reference (each chain must have allocated memory!)
+ * @return n: size of received data
+ *        -1: error
  */
-#define IOCTL_ETHMAC__GET_RX_PACKET_SIZE                   _IOR(ETHMAC, 0x04, u32_t*)
+#define IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN           _IOR(ETHMAC, 0x03, ethmac_packet_chain_t*)
 
-/** @brief  Gets Rx packet (chain mode)
- *  @param  struct ethmac_frame *
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Starts Ethernet interface
+ * @param  None
+ * @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_ETHMAC__GET_RX_PACKET_CHAIN_MODE             _IOR(ETHMAC, 0x05, struct ethmac_frame*)
+#define IOCTL_ETHMAC__ETHERNET_START                    _IO(ETHMAC, 0x04)
 
-/** @brief  Gets Rx buffer unavailable status
- *  @param  bool *
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Stop Ethernet interface
+ * @param  None
+ * @return STD_RET_OK, STD_RET_ERROR
  */
-#define IOCTL_ETHMAC__GET_RX_BUFFER_UNAVAILABLE_STATUS     _IOR(ETHMAC, 0x06, bool*)
+#define IOCTL_ETHMAC__ETHERNET_STOP                     _IO(ETHMAC, 0x05)
 
-/** @brief  Clear Rx buffer unavailable flag
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+/**
+ * @brief  Return link status
+ * @param  None
+ * @return Values from ethmac_link_status_t
  */
-#define IOCTL_ETHMAC__CLEAR_RX_BUFFER_UNAVAILABLE_STATUS   _IO (ETHMAC, 0x07)
-
-/** @brief  Resume DMA reception
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__RESUME_DMA_RECEPTION                 _IO (ETHMAC, 0x08)
-
-/** @brief  Set Tx frame length (chain mode)
- *  @param  int *
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__SET_TX_FRAME_LENGTH_CHAIN_MODE       _IOW(ETHMAC, 0x09, int*)
-
-/** @brief  Gets current Tx buffer
- *  @param  u8_t ** (pointer to buffer)
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__GET_CURRENT_TX_BUFFER                _IOR(ETHMAC, 0x0A, u8_t**)
-
-/** @brief  Initialize DMA Tx descriptor list (chain mode)
- *  @param  struct ethmac_DMA_description *
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__INIT_DMA_TX_DESC_LIST_CHAIN_MODE     _IOW(ETHMAC, 0x0B, struct ethmac_DMA_description*)
-
-/** @brief  Initialize DMA Rx decsriptor list (chain mode)
- *  @param  struct ethmac_DMA_description *
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__INIT_DMA_RX_DESC_LIST_CHAIN_MODE     _IOW(ETHMAC, 0x0C, struct ethmac_DMA_description*)
-
-/** @brief  Enable Rx interrupt
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__ENABLE_RX_IRQ                        _IO (ETHMAC, 0x0D)
-
-/** @brief  Enable Tx hardware checksum
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__ENABLE_TX_HARDWARE_CHECKSUM          _IO (ETHMAC, 0x0E)
-
-/** @brief  Starts Ethernet interface
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__ETHERNET_START                       _IO (ETHMAC, 0x0F)
-
-/** @brief  Deinitialize Ethernet interface
- *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
- */
-#define IOCTL_ETHMAC__ETHERNET_DEINIT                      _IO (ETHMAC, 0x10)
+#define IOCTL_ETHMAC__GET_LINK_STATUS                   _IO(ETHMAC, 0x06)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-struct ethmac_DMA_description {
-        u8_t *buffer;
-        u8_t  buffer_count;
-};
+typedef struct ethmac_packet_chain {
+        struct ethmac_packet_chain *next;
+        void                       *payload;
+        u16_t                       total_size;
+        u16_t                       payload_size;
+} ethmac_packet_chain_t;
 
-struct ethmac_frame {
-        u8_t *buffer;
-        u32_t length;
-};
+typedef enum {
+        ETHMAC_LINK_STATUS_CONNECTED,
+        ETHMAC_LINK_STATUS_DISCONNECTED
+} ethmac_link_status_t;
 
 /*==============================================================================
   Exported objects

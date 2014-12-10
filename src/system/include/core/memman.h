@@ -5,7 +5,7 @@
 
 @brief   This file support dynamic memory management.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@
 *
 * Author: Adam Dunkels <adam@sics.se>
 *
-* Modified: Daniel Zorychta
 *//*==========================================================================*/
 
 #ifndef _MEMMAN_H_
@@ -79,6 +78,13 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/**
+ * @brief  Type define the function that is called when a block is successfully allocated or freed.
+ * @param  arg          user defined argument
+ * @param  size         size of allocated (positive value) or freed (negative value) block
+ * @return None
+ */
+typedef void (*_memman_func_t)(void *arg, i32_t size);
 
 /*==============================================================================
   Exported object declarations
@@ -91,9 +97,9 @@ extern void *__heap_start;
   Exported function prototypes
 ==============================================================================*/
 extern void   _memman_init(void);
-extern void  *_memman_malloc(size_t size, size_t *real_size);
-extern void  *_memman_calloc(size_t count, size_t size, size_t *real_size);
-extern size_t _memman_free(void *mem);
+extern void  *_memman_malloc(size_t, _memman_func_t, void*);
+extern void  *_memman_calloc(size_t count, size_t size, _memman_func_t, void*);
+extern void   _memman_free(void *mem, _memman_func_t, void*);
 extern u32_t  _memman_get_free_heap(void);
 
 #ifdef __cplusplus
