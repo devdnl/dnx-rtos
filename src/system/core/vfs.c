@@ -57,7 +57,7 @@ struct vfs_file
         stdret_t       (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
         ssize_t        (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
         ssize_t        (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        stdret_t       (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
+        int            (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t       (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
         stdret_t       (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void            *f_extra_data;
@@ -117,7 +117,7 @@ static const u32_t      dir_magic_number  = 0x297E823D;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_init(void)
+stdret_t _vfs_init(void)
 {
         vfs_mnt_list     = list_new();
         vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
@@ -336,7 +336,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
  * @brief Function create node for driver file
  *
  * @param[in] path              path when driver-file shall be created
- * @param[in] dev               pointer to description of driver
+ * @param[in] dev               device number
  *
  * @return zero on success. On error, -1 is returned
  */
@@ -673,7 +673,7 @@ exit:
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chmod(const char *path, int mode)
+int vfs_chmod(const char *path, mode_t mode)
 {
         if (!path) {
                 errno = EINVAL;
@@ -715,7 +715,7 @@ int vfs_chmod(const char *path, int mode)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chown(const char *path, int owner, int group)
+int vfs_chown(const char *path, uid_t owner, gid_t group)
 {
         if (!path) {
                 errno = EINVAL;

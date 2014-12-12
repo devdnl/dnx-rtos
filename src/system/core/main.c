@@ -27,7 +27,13 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/os.h>
+#include <dnx/thread.h>
+#include "core/fs.h"
+#include "user/initd.h"
+
+#if (CONFIG_NETWORK_ENABLE != 0)
+#       include "arch/netman.h"
+#endif
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -60,8 +66,17 @@
 //==============================================================================
 int main(void)
 {
-        dnx_init();
-        kernel_start();
+        _cpuctl_init();
+        _memman_init();
+        _vfs_init();
+        _sysm_init();
+        task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+
+#if (CONFIG_NETWORK_ENABLE != 0)
+        _netman_init();
+#endif
+
+        _kernel_start();
         return 0;
 }
 

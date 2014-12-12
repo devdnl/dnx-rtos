@@ -96,7 +96,7 @@ PROGRAM_MAIN(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                         const char *type;
 
                         switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"d";  break;
+                        case FILE_TYPE_DIR:     type = FONT_COLOR_LIGHT_BLUE"d";  break;
                         case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"c"; break;
                         case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
                         case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;

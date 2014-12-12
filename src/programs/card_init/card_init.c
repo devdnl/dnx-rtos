@@ -35,8 +35,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define INIT_REQUEST                    IOCTL_SDSPI__INITIALIZE_CARD
-#define MBR_READ_REQUEST                IOCTL_SDSPI__READ_MBR
+#define INIT_REQUEST                    IOCTL_STORAGE__INITIALIZE
+#define MBR_READ_REQUEST                IOCTL_STORAGE__READ_MBR
 
 /*==============================================================================
   Local types, enums definitions
@@ -49,7 +49,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
+GLOBAL_VARIABLES_SECTION {
 };
 
 /*==============================================================================

@@ -46,10 +46,11 @@ extern "C" {
 /* CT: IO group list */
 enum _IO_GROUP {
         _IO_GROUP_PIPE,
+        _IO_GROUP_STORAGE,
         _IO_GROUP_VFS,
         _IO_GROUP_AFIO,
-        _IO_GROUP_CRC,
-        _IO_GROUP_ETH,
+        _IO_GROUP_CRCM,
+        _IO_GROUP_ETHMAC,
         _IO_GROUP_GPIO,
         _IO_GROUP_PLL,
         _IO_GROUP_SDSPI,
@@ -58,10 +59,29 @@ enum _IO_GROUP {
         _IO_GROUP_UART,
         _IO_GROUP_WDG,
         _IO_GROUP_I2C,
-        _IO_GROUP_USB,
+        _IO_GROUP_USBD,
         _IO_GROUP_IRQ,
         _IO_GROUP_LOOP,
 };
+
+/* predefined requests*/
+/**
+ *  @brief  Initialize storage device
+ *  @param  None
+ *  @return On success (device initialized) 1 is returned.
+ *          On failure (device not initialized) 0 is returned.
+ *          On error -1 is returned and errno is set.
+ */
+#define IOCTL_STORAGE__INITIALIZE       _IO(STORAGE, 0x00)
+
+/**
+ *  @brief  Read storage's MBR sector and detect partitions
+ *  @param  None
+ *  @return On success (MBR detected) 1 is returned.
+ *          On failure (MBR not exist) 0 is returned.
+ *          On error -1 is returned and errno is set.
+ */
+#define IOCTL_STORAGE__READ_MBR         _IO(STORAGE, 0x01)
 
 /*==============================================================================
   Exported object types

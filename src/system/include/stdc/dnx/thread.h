@@ -2480,6 +2480,41 @@ static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
 
 //==============================================================================
 /**
+ * @brief int queue_get_space_available(queue_t *queue)
+ * The function <b>queue_get_space_available</b>() returns a number of free
+ * items available in the queue pointed by <i>queue</i>.
+ *
+ * @param queue     queue object
+ *
+ * @errors None
+ *
+ * @return Number of free items available in the queue. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue = queue_new(10, sizeof(int));
+ *
+ * // ...
+ *
+ * if (queue_get_space_available(queue) > 0) {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int queue_get_space_available(queue_t *queue)
+{
+        return _queue_get_space_available(queue);
+}
+
+//==============================================================================
+/**
  * @brief void critical_section_begin(void)
  * The function <b>critical_section_begin</b>() enters the code to the
  * critical section. From critical section masked interrupts and context switch

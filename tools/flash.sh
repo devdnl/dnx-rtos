@@ -25,4 +25,4 @@ create_gdb_command
 arm-none-eabi-gdb --quiet --batch -x gdbcmd ../build/$target/dnx.elf
 rm -f gdbcmd
 
-date "+Done [%k:%M:%S]"
+date "+Done [%H:%M:%S]"

@@ -45,9 +45,9 @@
 #               include "stm32f1/gpio_def.h"
 #       endif
 #endif
-#if (__ENABLE_AFIO__)
+#if (__ENABLE_AFIOM__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/afio_def.h"
+#               include "stm32f1/afiom_def.h"
 #       endif
 #endif
 #if (__ENABLE_UART__)
@@ -65,7 +65,7 @@
 #               include "noarch/sdspi_def.h"
 #       endif
 #endif
-#if (__ENABLE_ETH__)
+#if (__ENABLE_ETHMAC__)
 #       ifdef ARCH_stm32f1
 #               include "stm32f1/ethmac_def.h"
 #       endif
@@ -75,9 +75,9 @@
 #               include "stm32f1/spi_def.h"
 #       endif
 #endif
-#if (__ENABLE_CRC__)
+#if (__ENABLE_CRCM__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/crc_def.h"
+#               include "stm32f1/crcm_def.h"
 #       endif
 #endif
 #if (__ENABLE_WDG__)
@@ -85,9 +85,9 @@
 #               include "stm32f1/wdg_def.h"
 #       endif
 #endif
-#if (__ENABLE_USB__)
+#if (__ENABLE_USBD__)
 #       ifdef ARCH_stm32f1
-#               include "stm32f1/usb_def.h"
+#               include "stm32f1/usbd_def.h"
 #       endif
 #endif
 #if (__ENABLE_IRQ__)
@@ -120,8 +120,8 @@
 #if (__ENABLE_GPIO__)
         _IMPORT_MODULE_INTERFACE(GPIO);
 #endif
-#if (__ENABLE_AFIO__)
-        _IMPORT_MODULE_INTERFACE(afio);
+#if (__ENABLE_AFIOM__)
+        _IMPORT_MODULE_INTERFACE(AFIOM);
 #endif
 #if (__ENABLE_UART__)
         _IMPORT_MODULE_INTERFACE(UART);
@@ -135,11 +135,11 @@
 #if (__ENABLE_SDSPI__)
         _IMPORT_MODULE_INTERFACE(SDSPI);
 #endif
-#if (__ENABLE_ETH__)
+#if (__ENABLE_ETHMAC__)
         _IMPORT_MODULE_INTERFACE(ETHMAC);
 #endif
-#if (__ENABLE_CRC__)
-        _IMPORT_MODULE_INTERFACE(CRCCU);
+#if (__ENABLE_CRCM__)
+        _IMPORT_MODULE_INTERFACE(CRCM);
 #endif
 #if (__ENABLE_WDG__)
         _IMPORT_MODULE_INTERFACE(WDG);
@@ -147,7 +147,7 @@
 #if (__ENABLE_SPI__)
         _IMPORT_MODULE_INTERFACE(SPI);
 #endif
-#if (__ENABLE_USB__)
+#if (__ENABLE_USBD__)
         _IMPORT_MODULE_INTERFACE(USBD);
 #endif
 #if (__ENABLE_IRQ__)
@@ -171,8 +171,8 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_GPIO__)
         _MODULE_NAME(GPIO),
         #endif
-        #if (__ENABLE_AFIO__)
-        _MODULE_NAME(afio),
+        #if (__ENABLE_AFIOM__)
+        _MODULE_NAME(AFIOM),
         #endif
         #if (__ENABLE_UART__)
         _MODULE_NAME(UART),
@@ -186,11 +186,11 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_SDSPI__)
         _MODULE_NAME(SDSPI),
         #endif
-        #if (__ENABLE_ETH__)
+        #if (__ENABLE_ETHMAC__)
         _MODULE_NAME(ETHMAC),
         #endif
-        #if (__ENABLE_CRC__)
-        _MODULE_NAME(CRCCU),
+        #if (__ENABLE_CRCM__)
+        _MODULE_NAME(CRCM),
         #endif
         #if (__ENABLE_WDG__)
         _MODULE_NAME(WDG),
@@ -198,7 +198,7 @@ const char *const _regdrv_module_name[] = {
         #if (__ENABLE_SPI__)
         _MODULE_NAME(SPI),
         #endif
-        #if (__ENABLE_USB__)
+        #if (__ENABLE_USBD__)
         _MODULE_NAME(USBD),
         #endif
         #if (__ENABLE_IRQ__)
@@ -254,6 +254,9 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #if (__ENABLE_UART__ && _UART4_ENABLE)
         _DRIVER_INTERFACE(UART, "uart4", _UART4, _UART_MINOR_NUMBER),
         #endif
+        #if (__ENABLE_UART__ && _UART5_ENABLE)
+        _DRIVER_INTERFACE(UART, "uart5", _UART5, _UART_MINOR_NUMBER),
+        #endif
 
         /* PLL ===============================================================*/
         #if (__ENABLE_PLL__)
@@ -291,13 +294,13 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* ETH ===============================================================*/
-        #if (__ENABLE_ETH__)
+        #if (__ENABLE_ETHMAC__)
         _DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
         #endif
 
         /* CRC ===============================================================*/
-        #if (__ENABLE_CRC__)
-        _DRIVER_INTERFACE(CRCCU, "crc", _CRC_MAJOR_NUMBER, _CRC_MINOR_NUMBER),
+        #if (__ENABLE_CRCM__)
+        _DRIVER_INTERFACE(CRCM, "crcm", _CRCM_MAJOR_NUMBER, _CRCM_MINOR_NUMBER),
         #endif
 
         /* WDG ===============================================================*/
@@ -382,8 +385,8 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* AFIO ==============================================================*/
-        #if (__ENABLE_AFIO__)
-        _DRIVER_INTERFACE(afio, "afio", _AFIO_MAJOR_NUMBER, _AFIO_MINOR_NUMBER),
+        #if (__ENABLE_AFIOM__)
+        _DRIVER_INTERFACE(AFIOM, "afiom", _AFIOM_MAJOR_NUMBER, _AFIOM_MINOR_NUMBER),
         #endif
 
         /* GPIO ==============================================================*/
@@ -392,15 +395,15 @@ const struct _driver_entry _regdrv_driver_table[] = {
         #endif
 
         /* USB ===============================================================*/
-        #if (__ENABLE_USB__)
-        _DRIVER_INTERFACE(USBD, "usb_ep0", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_0),
-        _DRIVER_INTERFACE(USBD, "usb_ep1", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_1),
-        _DRIVER_INTERFACE(USBD, "usb_ep2", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_2),
-        _DRIVER_INTERFACE(USBD, "usb_ep3", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_3),
-        _DRIVER_INTERFACE(USBD, "usb_ep4", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_4),
-        _DRIVER_INTERFACE(USBD, "usb_ep5", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_5),
-        _DRIVER_INTERFACE(USBD, "usb_ep6", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_6),
-        _DRIVER_INTERFACE(USBD, "usb_ep7", _USB_MAJOR_NUMBER, _USB_MINOR_NUMBER_EP_7),
+        #if (__ENABLE_USBD__)
+        _DRIVER_INTERFACE(USBD, "usbd-ep0", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_0),
+        _DRIVER_INTERFACE(USBD, "usbd-ep1", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_1),
+        _DRIVER_INTERFACE(USBD, "usbd-ep2", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_2),
+        _DRIVER_INTERFACE(USBD, "usbd-ep3", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_3),
+        _DRIVER_INTERFACE(USBD, "usbd-ep4", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_4),
+        _DRIVER_INTERFACE(USBD, "usbd-ep5", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_5),
+        _DRIVER_INTERFACE(USBD, "usbd-ep6", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_6),
+        _DRIVER_INTERFACE(USBD, "usbd-ep7", _USBD_MAJOR_NUMBER, _USBD_MINOR_NUMBER_EP_7),
         #endif
 
         /* IRQ ===============================================================*/

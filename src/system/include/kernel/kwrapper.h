@@ -46,28 +46,19 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** error handling */
-#if (pdTRUE != true)
-#error "pdTRUE != true"
-#endif
-
-#if (pdFALSE != false)
-#error "pdFALSE != false"
-#endif
-
 /** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
 #undef free
 #undef malloc
 
 /** STANDARD STACK SIZES */
-#define STACK_DEPTH_MINIMAL             ((1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LOW            ((2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_LOW                 ((4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_MEDIUM              ((6  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_LARGE               ((8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LARGE          ((10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_HUGE                ((12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_HUGE           ((14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_MINIMAL             ((1   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LOW            ((2   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_LOW                 ((4   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_MEDIUM              ((8   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_LARGE               ((16  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LARGE          ((32  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_HUGE                ((64  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_VERY_HUGE           ((128 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_USER(depth)         (depth)
 
 /** OS BASIC DEFINITIONS */
@@ -79,7 +70,7 @@ extern "C" {
 #define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))
 #define NORMAL_PRIORITY                 0
 #define LOWEST_PRIORITY                 (-(int)(configMAX_PRIORITIES / 2))
-#define HIGHEST_PRIORITY                (int)(configMAX_PRIORITIES / 2)
+#define HIGHEST_PRIORITY                ((int)(configMAX_PRIORITIES / 2))
 #define LOW_PRIORITY                    LOWEST_PRIORITY
 #define MAX_PRIORITY                    HIGHEST_PRIORITY
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
@@ -153,6 +144,7 @@ extern bool          _queue_receive_from_ISR            (queue_t*, void*, bool*)
 extern bool          _queue_receive_peek                (queue_t*, void*, const uint);
 extern int           _queue_get_number_of_items         (queue_t*);
 extern int           _queue_get_number_of_items_from_ISR(queue_t*);
+extern int           _queue_get_space_available         (queue_t *queue);
 
 /*==============================================================================
   Exported inline functions
@@ -231,7 +223,7 @@ static inline void _task_yield(void)
 static inline void _task_yield_from_ISR(void)
 {
 #ifdef portYIELD_FROM_ISR
-        portYIELD_FROM_ISR();
+        portYIELD_FROM_ISR(true);
 #else
         taskYIELD();
 #endif
@@ -246,7 +238,7 @@ static inline void _task_yield_from_ISR(void)
 //==============================================================================
 static inline char *_task_get_name(void)
 {
-        return (char *)pcTaskGetTaskName(THIS_TASK);
+        return pcTaskGetTaskName(THIS_TASK);
 }
 
 //==============================================================================
@@ -307,7 +299,7 @@ static inline int _task_get_free_stack(void)
 //==============================================================================
 static inline void _task_set_tag(task_t *taskhdl, void *tag)
 {
-        vTaskSetApplicationTaskTag(taskhdl, (pdTASK_HOOK_CODE)tag);
+        vTaskSetApplicationTaskTag(taskhdl, (TaskHookFunction_t)tag);
 }
 
 //==============================================================================
@@ -511,7 +503,7 @@ static inline void _sleep(const uint seconds)
 //==============================================================================
 static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 {
-        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(milliseconds));
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(milliseconds));
 }
 
 //==============================================================================
@@ -524,7 +516,7 @@ static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 static inline void _sleep_until(const uint seconds, int *ref_time_ticks)
 {
-        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(seconds * 1000UL));
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(seconds * 1000UL));
 }
 
 #ifdef __cplusplus

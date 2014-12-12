@@ -65,61 +65,10 @@ typedef struct sysmoni_used_memory memstat_t;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief void dnx_init(void)
- * The function <b>dnx_init</b>() starts dnx initialization process.
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/os.h>
- *
- * int main()
- * {
- *         dnx_init();
- *         kernel_start();
- *         return 0;
- * }
- */
-//==============================================================================
-extern void dnx_init(void);
 
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief void kernel_start(void)
- * The function <b>kernel_start</b>() starts kernel. This function must be
- * called after <b>dnx_init</b>().
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/os.h>
- *
- * int main()
- * {
- *         dnx_init();
- *         kernel_start();
- *         return 0;
- * }
- */
-//==============================================================================
-static inline void kernel_start(void)
-{
-        _kernel_start();
-}
-
 //==============================================================================
 /**
  * @brief u32_t get_used_static_memory(void)
@@ -609,7 +558,33 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.4.1";
+        return "1.5.0";
+}
+
+//==============================================================================
+/**
+ * @brief const char *get_OS_codename(void)
+ * The function <b>get_OS_codename</b>() return a codename string.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Codename string.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Codename: %s\n", get_OS_codename());
+ *
+ * // ...
+ */
+//==============================================================================
+static inline const char *get_OS_codename(void)
+{
+        return "Antelope";
 }
 
 //==============================================================================

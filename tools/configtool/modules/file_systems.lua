@@ -40,15 +40,15 @@ file_systems = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
-local ui = {}
-local ID = {}
-ID.BUTTON_SAVE = wx.wxNewId()
-ID.CHECKBOX_DEVFS = wx.wxNewId()
-ID.CHECKBOX_FATFS = wx.wxNewId()
-ID.CHECKBOX_FATFS_LFN = wx.wxNewId()
-ID.CHECKBOX_LFS = wx.wxNewId()
-ID.CHECKBOX_PROCFS = wx.wxNewId()
-ID.CHOICE_FATFS_LFN_CODEPAGE = wx.wxNewId()
+local modified                  = ct:new_modify_indicator()
+local ui                        = {}
+local ID                        = {}
+ID.CHECKBOX_DEVFS               = wx.wxNewId()
+ID.CHECKBOX_FATFS               = wx.wxNewId()
+ID.CHECKBOX_FATFS_LFN           = wx.wxNewId()
+ID.CHECKBOX_LFS                 = wx.wxNewId()
+ID.CHECKBOX_PROCFS              = wx.wxNewId()
+ID.CHOICE_FATFS_LFN_CODEPAGE    = wx.wxNewId()
 
 local codepage = {"437 - U.S.",
                   "720 - Arabic",
@@ -85,7 +85,7 @@ local codepage = {"437 - U.S.",
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         ui.CheckBox_devfs:SetValue(ct:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(ct:get_module_state("LFS"))
         ui.CheckBox_procfs:SetValue(ct:get_module_state("PROCFS"))
@@ -93,10 +93,19 @@ local function load_controls()
         local fatfs_en = ct:get_module_state("FATFS")
         ui.CheckBox_fatfs:SetValue(fatfs_en)
 
+        local codepage_idx = 1
+        local codepage_val = ct:key_read(config.project.key.FATFS_LFN_CODEPAGE)
+        for i = 1, #codepage do
+                if codepage[i]:match(codepage_val) then
+                        codepage_idx = i
+                        break
+                end
+        end
+
         local fatfs_lfn = ct:yes_no_to_bool(ct:key_read(config.project.key.FATFS_LFN_ENABLE))
         ui.CheckBox_fatfs_lfn:SetValue(fatfs_lfn)
         ui.CheckBox_fatfs_lfn:Enable(fatfs_en)
-        ui.Choice_fatfs_lfn_codepage:SetSelection(ct:get_string_index(codepage, ct:key_read(config.project.key.FATFS_LFN_CODEPAGE)) - 1)
+        ui.Choice_fatfs_lfn_codepage:SetSelection(codepage_idx - 1)
         ui.Choice_fatfs_lfn_codepage:Enable(fatfs_lfn and fatfs_en)
 end
 
@@ -106,7 +115,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         ct:enable_module("DEVFS", ui.CheckBox_devfs:GetValue())
         ct:enable_module("LFS", ui.CheckBox_lfs:GetValue())
         ct:enable_module("FATFS", ui.CheckBox_fatfs:GetValue())
@@ -114,7 +123,7 @@ local function on_button_save_click()
         ct:key_write(config.project.key.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         ct:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -124,7 +133,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_changed()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -136,7 +145,7 @@ end
 local function FATFS_state_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
         ui.CheckBox_fatfs_lfn:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -147,6 +156,7 @@ end
 --------------------------------------------------------------------------------
 local function LFN_enable_changed(this)
         ui.Choice_fatfs_lfn_codepage:Enable(this:IsChecked())
+        modified:yes()
 end
 
 
@@ -231,13 +241,6 @@ function file_systems:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticLine2 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-                ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(50, 50)
 
@@ -248,7 +251,6 @@ function file_systems:create_window(parent)
                 this:Connect(ID.CHECKBOX_FATFS_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
                 this:Connect(ID.CHOICE_FATFS_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
                 this:Connect(ID.CHECKBOX_PROCFS,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
-                this:Connect(ID.BUTTON_SAVE,               wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click)
         end
 
         return ui.window
@@ -270,8 +272,8 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function file_systems:refresh()
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 end
 
 
@@ -280,5 +282,14 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function file_systems:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function file_systems:save()
+        save_configuration()
 end

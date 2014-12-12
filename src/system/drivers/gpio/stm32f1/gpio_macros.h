@@ -54,7 +54,7 @@ extern "C" {
 #define _GPIO_ALT_OUT_OPEN_DRAIN_10MHZ          0x0D
 #define _GPIO_ALT_OUT_OPEN_DRAIN_2MHZ           0x0E
 #define _GPIO_ALT_OUT_OPEN_DRAIN_50MHZ          0x0F
-#define _GPIO_IN_ANALOG                         0x00
+#define _GPIO_ANALOG                            0x00
 #define _GPIO_IN_FLOAT                          0x04
 #define _GPIO_IN_PULLED                         0x08
 
@@ -64,9 +64,9 @@ extern "C" {
 #define _HIGH                                   1U
 
 /** PIN control macros */
-#define GPIO_SET_PIN(name)                      ((GPIO_t*)_CONCAT(_GPIO_, name))->BSRR |= _CONCAT(_BM_, name)
-#define GPIO_CLEAR_PIN(name)                    ((GPIO_t*)_CONCAT(_GPIO_, name))->BRR  |= _CONCAT(_BM_, name)
-#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_CONCAT(_GPIO_, name))->IDR  & _CONCAT(_BM_, name))
+#define GPIO_SET_PIN(name)                      if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BSRR |= _CONCAT(_BM_, name);}
+#define GPIO_CLEAR_PIN(name)                    if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BRR  |= _CONCAT(_BM_, name);}
+#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_CONCAT(_GPIO_, name))->IDR & _CONCAT(_BM_, name))
 #define GPIO_PIN_PORT(name)                     ((GPIO_t*)_CONCAT(_GPIO_, name))
 #define GPIO_PIN_MASK(name)                     (_CONCAT(_BM_, name))
 

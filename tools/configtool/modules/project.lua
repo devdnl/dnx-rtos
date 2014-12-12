@@ -40,80 +40,102 @@ project  = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 ID.WINDOW                  = wx.wxNewId()
-ID.STATICLINE1             = wx.wxNewId()
 ID.STATICTEXT2             = wx.wxNewId()
 ID.TEXTCTRL_PROJECT_NAME   = wx.wxNewId()
 ID.TEXTCTRL_TOOLCHAIN_NAME = wx.wxNewId()
-ID.STATICLINE2             = wx.wxNewId()
-ID.BUTTON_SAVE             = wx.wxNewId()
 ID.CHOICE_CPU_ARCH         = wx.wxNewId()
 ID.CHOICE_CPU_NAME         = wx.wxNewId()
 ID.CHOICE_DEFAULT_IRQ_PRIO = wx.wxNewId()
 ID.SPINCTRL_OSC_FREQ       = wx.wxNewId()
+
+local last_cpu_arch
+local last_cpu_name
+local last_priority
 
 
 --==============================================================================
 -- LOCAL FUNCTIONS
 --==============================================================================
 --------------------------------------------------------------------------------
--- @brief  Set all controls that depend on CPU selection
--- @param  cpu_arch     CPU architecture
+-- @brief  Function loads CPU list according to selected CPU architecture
+-- @param  cpu_arch
 -- @return None
 --------------------------------------------------------------------------------
-local function set_cpu_specific_controls(cpu_arch)
-        -- fill architecture list and select CPU architecture
-        local cpu_found = false
-        ui.Choice_CPU_arch:Clear()
-        for i = 1, config.arch:NumChildren() do
-                local arch_name = config.arch:Children()[i]:GetName()
-                ui.Choice_CPU_arch:Append(arch_name)
-                if arch_name == cpu_arch then
-                        ui.Choice_CPU_arch:SetSelection(i - 1)
-                        cpu_found = true
+local function load_cpu_list(cpu_arch)
+        if cpu_arch ~= last_cpu_arch then
+                -- load CPU architecture list if not loaded
+                if ui.Choice_CPU_arch:GetCount() == 0 then
+                        ui.Choice_CPU_arch:Clear()
+                        for i = 1, config.arch:NumChildren() do
+                                ui.Choice_CPU_arch:Append(config.arch:Children()[i]:GetName())
+                        end
+                end
+
+                -- select CPU architecture from existing architectures
+                for i = 1, config.arch:NumChildren() do
+                        local arch_name = config.arch:Children()[i]:GetName()
+                        if arch_name == cpu_arch then
+                                ui.Choice_CPU_arch:SetSelection(i - 1)
+                                break
+                        end
+                end
+        end
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function loads microcontroller list of selected CPU architecture
+-- @param  cpu_arch
+-- @return None
+--------------------------------------------------------------------------------
+local function load_cpu_name_list(cpu_name, cpu_arch)
+        -- load CPU name list if CPU architecture was changed
+        if last_cpu_arch ~= cpu_arch then
+                ui.Choice_CPU_name:Clear()
+                for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
+                        ui.Choice_CPU_name:Append(cpu.name:GetValue())
                 end
         end
 
-        -- check if CPU was found
-        if cpu_found then
-                ui.Choice_CPU_arch.OldSelection = ui.Choice_CPU_arch:GetSelection()
-
-                -- load list with CPU names
-                local micro = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
-                local micro_found = false
-                ui.Choice_CPU_name:Clear()
+        -- select specified CPU
+        if last_cpu_name ~= cpu_name or last_cpu_arch ~= cpu_arch then
                 for i, cpu in pairs(config.arch[cpu_arch].cpulist.cpu) do
                         local name = cpu.name:GetValue()
-                        ui.Choice_CPU_name:Append(name)
-                        if name:match(micro) then
+
+                        if name == cpu_name then
                                 ui.Choice_CPU_name:SetSelection(i - 1)
-                                ui.Choice_CPU_name.OldSelection = i - 1
-                                micro_found = true
+                                break
                         end
                 end
+        end
+end
 
-                if not micro_found then
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, micro..": microcontroller name not found!")
-                end
 
-                -- load list with CPU priorities
-                local prio = ct:key_read(config.project.key.IRQ_USER_PRIORITY)
-                local prio_found = false
-                for i, item in pairs(ct:get_priority_list(cpu_arch)) do
-                        ui.Choice_default_irq_prio:Append(item.name)
-                        if prio == item.value then
-                                ui.Choice_default_irq_prio:SetSelection(i - 1)
-                                prio_found = true
-                        end
+--------------------------------------------------------------------------------
+-- @brief  Function loads priority list of selected CPU architecture
+-- @param  cpu_arch
+-- @return None
+--------------------------------------------------------------------------------
+local function load_cpu_priorities(cpu_arch)
+        -- load priority list
+        if last_cpu_arch ~= cpu_arch then
+                ui.Choice_default_irq_prio:Clear()
+                for i, priority in pairs(ct:get_priority_list(cpu_arch)) do
+                        ui.Choice_default_irq_prio:Append(priority.name)
                 end
+        end
 
-                if not prio_found then
-                        ct:show_error_msg(ct.MAIN_WINDOW_NAME, prio..": priority number not found!")
+        -- select priority
+        local user_priority = ct:key_read(config.project.key.IRQ_USER_PRIORITY)
+        for i, priority in pairs(ct:get_priority_list(cpu_arch)) do
+                if user_priority == priority.value then
+                        ui.Choice_default_irq_prio:SetSelection(i - 1)
+                        break
                 end
-        else
-                ct:show_error_msg(ct.MAIN_WINDOW_NAME, cpu_arch..": Unknown CPU architecture!")
         end
 end
 
@@ -123,19 +145,25 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local project_name   = ct:key_read(config.project.key.PROJECT_NAME)
         local toolchain_name = ct:key_read(config.project.key.PROJECT_TOOLCHAIN)
         local cpu_arch       = ct:key_read(config.project.key.PROJECT_CPU_ARCH)
         local cpu_osc_freq   = ct:key_read(config.project.key.CPU_OSC_FREQ)
+        local cpu_name       = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
 
         ui.TextCtrl_project_name:SetValue(project_name)
         ui.TextCtrl_toolchain_name:SetValue(toolchain_name)
-
-        set_cpu_specific_controls(cpu_arch)
-
         ui.SpinCtrl_osc_freq:SetValue(cpu_osc_freq)
-        ui.Button_save:Enable(true)
+
+        load_cpu_list(cpu_arch)
+        load_cpu_name_list(cpu_name, cpu_arch)
+        load_cpu_priorities(cpu_arch)
+
+        last_cpu_arch = cpu_arch
+        last_cpu_name = cpu_name
+
+        modified:no()
 end
 
 
@@ -144,7 +172,7 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local cpu_arch     = config.arch:Children()[ui.Choice_CPU_arch:GetSelection() + 1]:GetName()
         local cpu_name     = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].name:GetValue()
         local cpu_family   = config.arch[cpu_arch].cpulist:Children()[ui.Choice_CPU_name:GetSelection() + 1].family:GetValue()
@@ -186,14 +214,9 @@ local function on_button_save_click()
         end
 
         -- info about changed configuration
-        if ui.Choice_CPU_arch.Modified or ui.Choice_CPU_name.Modified then
-                ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.")
+        ct:show_info_msg(ct.MAIN_WINDOW_NAME, "The CPU configuration was changed. Make sure that the specific peripherals assigned to the selected microcontroller are correctly configured.", ui.window)
 
-                ui.Choice_CPU_arch.Modified = false
-                ui.Choice_CPU_name.Modified = false
-        end
-
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -203,7 +226,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function textctrl_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -212,15 +235,18 @@ end
 -- @param  this     event object
 -- @return None
 --------------------------------------------------------------------------------
-local function choice_cpu_arch_selected(this)
-        if ui.Choice_CPU_arch.OldSelection ~= this:GetSelection() then
-                ui.Choice_CPU_arch.OldSelection = this:GetSelection()
-                ui.Choice_CPU_name:Clear()
-                ui.Choice_default_irq_prio:Clear()
-                set_cpu_specific_controls(config.arch:Children()[this:GetSelection() + 1]:GetName())
-                ui.Button_save:Enable(true)
-                ui.Choice_CPU_arch.Modified = true
-        end
+local function choice_cpu_arch_selected(event)
+        local cpu_arch = event:GetString(event:GetSelection())
+        local cpu_name = ct:key_read(config.arch[cpu_arch].key.CPU_NAME)
+
+        load_cpu_list(cpu_arch)
+        load_cpu_name_list(cpu_name, cpu_arch)
+        load_cpu_priorities(cpu_arch)
+
+        last_cpu_arch = cpu_arch
+        last_cpu_name = cpu_name
+
+        modified:yes()
 end
 
 
@@ -230,11 +256,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_name_selected(this)
-        if ui.Choice_CPU_name.OldSelection ~= this:GetSelection() then
-                ui.Button_save:Enable(true)
-                ui.Choice_CPU_name.Modified = true
-                ui.Choice_CPU_name.OldSelection = this:GetSelection()
-        end
+        modified:yes()
 end
 
 
@@ -244,7 +266,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function choice_cpu_prio_selected(this)
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -254,7 +276,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function spinctrl_osc_freq_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -290,15 +312,12 @@ function project:create_window(parent)
                 -- CPU architecture groupbox
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "CPU architecture")
                 ui.Choice_CPU_arch = wx.wxChoice(this, ID.CHOICE_CPU_ARCH, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0);
-                ui.Choice_CPU_arch.Modified = false
                 ui.StaticBoxSizer1:Add(ui.Choice_CPU_arch, 1, bit.bor(wx.wxALL, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 -- Microcontroller selection groupbox
                 ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "Microcontroller selection")
                 ui.Choice_CPU_name = wx.wxChoice(this, ID.CHOICE_CPU_NAME, wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.Choice_CPU_name.Modified = false
-                ui.Choice_CPU_name.OldSelection = 0
                 ui.StaticBoxSizer3:Add(ui.Choice_CPU_name, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
@@ -320,19 +339,10 @@ function project:create_window(parent)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 5)
 
                 --
-                ui.StaticLine2 = wx.wxStaticLine(this, ID.STATICLINE2, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL)
-                ui.FlexGridSizer1:Add(ui.StaticLine2, 1, bit.bor(wx.wxALL, wx.wxEXPAND, wx.wxALIGN_CENTER_HORIZONTAL, wx.wxALIGN_CENTER_VERTICAL), 0)
-
-                --
-                ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "&Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-                ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL, wx.wxALIGN_RIGHT, wx.wxALIGN_CENTER_VERTICAL), 5)
-
-                --
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(5, 5)
 
                 -- event connections
-                this:Connect(ID.BUTTON_SAVE,             wx.wxEVT_COMMAND_BUTTON_CLICKED,   on_button_save_click     )
                 this:Connect(ID.TEXTCTRL_PROJECT_NAME,   wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.TEXTCTRL_TOOLCHAIN_NAME, wx.wxEVT_COMMAND_TEXT_UPDATED,     textctrl_updated         )
                 this:Connect(ID.CHOICE_CPU_ARCH,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_arch_selected )
@@ -340,7 +350,7 @@ function project:create_window(parent)
                 this:Connect(ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_prio_selected )
                 this:Connect(ID.SPINCTRL_OSC_FREQ,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED, spinctrl_osc_freq_updated)
 
-                load_controls()
+                load_configuration()
         end
 
         return ui.window
@@ -361,8 +371,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 function project:refresh()
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
 end
 
 
@@ -371,5 +380,15 @@ end
 -- @return true if options are modified, otherwise false
 --------------------------------------------------------------------------------
 function project:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
 end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function project:save()
+        save_configuration()
+end
+

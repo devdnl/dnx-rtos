@@ -69,7 +69,7 @@ extern "C" {
 #define API_FS_CLOSE(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_close(__VA_ARGS__)
 #define API_FS_WRITE(fsname, ...)               _FS_EXTERN_C ssize_t _##fsname##_write(__VA_ARGS__)
 #define API_FS_READ(fsname, ...)                _FS_EXTERN_C ssize_t _##fsname##_read(__VA_ARGS__)
-#define API_FS_IOCTL(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_ioctl(__VA_ARGS__)
+#define API_FS_IOCTL(fsname, ...)               _FS_EXTERN_C int _##fsname##_ioctl(__VA_ARGS__)
 #define API_FS_FSTAT(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_fstat(__VA_ARGS__)
 #define API_FS_FLUSH(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_flush(__VA_ARGS__)
 #define API_FS_MKDIR(fsname, ...)               _FS_EXTERN_C stdret_t _##fsname##_mkdir(__VA_ARGS__)
@@ -179,7 +179,7 @@ static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpo
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_ioctl(dev_t id, int request, void *arg)
+static inline int driver_ioctl(dev_t id, int request, void *arg)
 {
         return _driver_ioctl(id, request, arg);
 }

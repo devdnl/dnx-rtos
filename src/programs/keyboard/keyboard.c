@@ -39,7 +39,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define min(a, b)                       (a > b ? b : a)
 #define tostring(a)                     #a
 #define USB_mA(mA)                      (mA / 2)
 #define USB_KEY_CHARACTER_CODE(c)       (4  + ((c) - 'A'))
@@ -60,15 +59,15 @@
 GLOBAL_VARIABLES_SECTION_BEGIN
 GLOBAL_VARIABLES_SECTION_END
 
-static const usb_ep_config_t ep_cfg = {
-        .ep[USB_EP_NUM__ENDP0] = USB_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USB_EP0_SIZE, USB_EP0_SIZE),
-        .ep[USB_EP_NUM__ENDP1] = USB_EP_CONFIG_IN(USB_TRANSFER__INTERRUPT, 8),
-        .ep[USB_EP_NUM__ENDP2] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP3] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP4] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP5] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP6] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP7] = USB_EP_CONFIG_DISABLED()
+static const usbd_ep_config_t ep_cfg = {
+        .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
+        .ep[USB_EP_NUM__ENDP1] = USBD_EP_CONFIG_IN(USB_TRANSFER__INTERRUPT, 8),
+        .ep[USB_EP_NUM__ENDP2] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP3] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP4] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP5] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP6] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP7] = USBD_EP_CONFIG_DISABLED()
 };
 
 static const usb_device_descriptor_t device_descriptor = {
@@ -78,7 +77,7 @@ static const usb_device_descriptor_t device_descriptor = {
         .bDeviceClass       = USB_CLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceSubClass    = USB_SUBCLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceProtocol    = USB_PROTOCOL__SPECIFIED_AT_INTERFACE_LEVEL,
-        .bMaxPacketSize0    = USB_EP0_SIZE,
+        .bMaxPacketSize0    = USBD_EP0_SIZE,
         .idVendor           = HTOUSBS(0x0483),
         .idProduct          = HTOUSBS(0x5752),
         .bcdDevice          = HTOUSBS(0x0001),
@@ -218,9 +217,9 @@ static const usb_max_string_descriptor_t *string[] = {
         reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
-static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__TP210);
-static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__TP211);
-static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__TP212);
+static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions
@@ -266,12 +265,12 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
         FILE *ep1  = fopen("/dev/usb_ep1", "r+");
         FILE *gpio = fopen("/dev/gpio", "r+");
         if (ep0 && ep1 && gpio) {
-                usb_setup_container_t setup      = {.timeout = 25};
+                usbd_setup_container_t setup     = {.timeout = 25};
                 bool                  configured = false;
                 int                   operation  = -1;
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                ioctl(ep0, IOCTL_USB__START);
+                ioctl(ep0, IOCTL_USBD__START);
 
                 while (true) {
                         int ch = getchar();
@@ -337,14 +336,14 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
                                        sizeof(report));
                         }
 
-                        if (ioctl(ep0, IOCTL_USB__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USB__WAS_RESET);
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -354,8 +353,8 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USB__SEND_ZLP) == STD_RET_OK) {
-                                                        ioctl(ep0, IOCTL_USB__SET_ADDRESS, setup.packet.wValue);
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");
@@ -364,7 +363,7 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
 
                                         case SET_CONFIGURATION:
                                                 printf(tostring(SET_CONFIGURATION)" (%d):", setup.packet.wValue);
-                                                operation = ioctl(ep0, IOCTL_USB__CONFIGURE_EP_1_7, &ep_cfg);
+                                                operation = ioctl(ep0, IOCTL_USBD__CONFIGURE_EP_1_7, &ep_cfg);
                                                 break;
                                         }
                                         break;
@@ -380,18 +379,18 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USB__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");
                                         }
                                 } else if (operation == 1) {
                                         puts(" ERROR");
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 } else {
                                         puts("UNKNOWN REQUEST");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else if ((setup.packet.bmRequestType & REQUEST_DIRECTION_MASK) == DEVICE_TO_HOST) {
@@ -445,7 +444,7 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else {
@@ -477,12 +476,12 @@ PROGRAM_MAIN(keyboard, STACK_DEPTH_LOW, int argc, char *argv[])
                                 default:
                                         puts("UNKNOWN REQUEST [OUT]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
                         }
                 }
 
-                ioctl(ep0, IOCTL_USB__STOP);
+                ioctl(ep0, IOCTL_USBD__STOP);
         }
 
         if (ep0)

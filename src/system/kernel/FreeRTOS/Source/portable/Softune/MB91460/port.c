@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd. 
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,21 +45,22 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 #include "FreeRTOS.h"
@@ -80,8 +71,8 @@
 
 /* We require the address of the pxCurrentTCB variable, but don't want to know
 any details of its type. */
-typedef void tskTCB;
-extern volatile tskTCB * volatile pxCurrentTCB;
+typedef void TCB_t;
+extern volatile TCB_t * volatile pxCurrentTCB;
 
 /*-----------------------------------------------------------*/
  
@@ -152,7 +143,7 @@ static void prvSetupTimerInterrupt( void );
  * 
  * See the header file portable.h.
  */
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
 	/* Place a few bytes of known values on the bottom of the stack. 
 	This is just useful for debugging. */
@@ -167,63 +158,63 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	/* This is a redundant push to the stack, it may be required if 
 	in some implementations of the compiler the parameter to the task 
 	is passed on to the stack rather than in R4 register. */
-	*pxTopOfStack = (portSTACK_TYPE)(pvParameters);
+	*pxTopOfStack = (StackType_t)(pvParameters);
 	pxTopOfStack--;                  
     
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00000000;	/* RP */
+	*pxTopOfStack = ( StackType_t ) 0x00000000;	/* RP */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00007777;	/* R7 */
+	*pxTopOfStack = ( StackType_t ) 0x00007777;	/* R7 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00006666;	/* R6 */
+	*pxTopOfStack = ( StackType_t ) 0x00006666;	/* R6 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00005555;	/* R5 */
+	*pxTopOfStack = ( StackType_t ) 0x00005555;	/* R5 */
 	pxTopOfStack--;
 	
 	/* In the current implementation of the compiler the first 
 	parameter to the task (or function) is passed via R4 parameter 
 	to the task, hence the pvParameters pointer is copied into the R4 
 	register. See compiler manual section 4.6.2 for more information. */
-	*pxTopOfStack = ( portSTACK_TYPE ) (pvParameters);	/* R4 */
+	*pxTopOfStack = ( StackType_t ) (pvParameters);	/* R4 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00003333;	/* R3 */
+	*pxTopOfStack = ( StackType_t ) 0x00003333;	/* R3 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00002222;	/* R2 */
+	*pxTopOfStack = ( StackType_t ) 0x00002222;	/* R2 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00001111;	/* R1 */
+	*pxTopOfStack = ( StackType_t ) 0x00001111;	/* R1 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00000001;	/* R0 */
+	*pxTopOfStack = ( StackType_t ) 0x00000001;	/* R0 */
 	pxTopOfStack--;	
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x0000EEEE;	/* R14 */
+	*pxTopOfStack = ( StackType_t ) 0x0000EEEE;	/* R14 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x0000DDDD;	/* R13 */
+	*pxTopOfStack = ( StackType_t ) 0x0000DDDD;	/* R13 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x0000CCCC;	/* R12 */
+	*pxTopOfStack = ( StackType_t ) 0x0000CCCC;	/* R12 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x0000BBBB;	/* R11 */
+	*pxTopOfStack = ( StackType_t ) 0x0000BBBB;	/* R11 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x0000AAAA;	/* R10 */
+	*pxTopOfStack = ( StackType_t ) 0x0000AAAA;	/* R10 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00009999;	/* R9 */
+	*pxTopOfStack = ( StackType_t ) 0x00009999;	/* R9 */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x00008888;	/* R8 */
+	*pxTopOfStack = ( StackType_t ) 0x00008888;	/* R8 */
 	pxTopOfStack--;	
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x11110000;	/* MDH */
+	*pxTopOfStack = ( StackType_t ) 0x11110000;	/* MDH */
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x22220000;	/* MDL */
+	*pxTopOfStack = ( StackType_t ) 0x22220000;	/* MDL */
 	pxTopOfStack--;
 
 	/* The start of the task code. */
-	*pxTopOfStack = ( portSTACK_TYPE ) pxCode;	/* PC */
+	*pxTopOfStack = ( StackType_t ) pxCode;	/* PC */
 	pxTopOfStack--;
 	 
     /* PS - User Mode, USP, ILM=31, Interrupts enabled */
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x001F0030;	/* PS */
+	*pxTopOfStack = ( StackType_t ) 0x001F0030;	/* PS */
 
 	return pxTopOfStack;
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xPortStartScheduler( void )
+BaseType_t xPortStartScheduler( void )
 {
 	/* Setup the hardware to generate the tick. */
 	prvSetupTimerInterrupt();
@@ -252,7 +243,7 @@ void vPortEndScheduler( void )
 static void prvSetupTimerInterrupt( void )
 {
 /* The peripheral clock divided by 32 is used by the timer. */
-const unsigned short usReloadValue = ( unsigned short ) ( ( ( configPER_CLOCK_HZ / configTICK_RATE_HZ ) / 32UL ) - 1UL );
+const uint16_t usReloadValue = ( uint16_t ) ( ( ( configPER_CLOCK_HZ / configTICK_RATE_HZ ) / 32UL ) - 1UL );
 
 	/* Setup RLT0 to generate a tick interrupt. */
 
@@ -292,7 +283,7 @@ const unsigned short usReloadValue = ( unsigned short ) ( ( ( configPER_CLOCK_HZ
 	LDI #_tmcsr0, R0
 	AND R1,@R0								;Clear RLT0 interrupt flag
 
-	CALL32	 _vTaskIncrementTick,R12		;Increment Tick
+	CALL32	 _xTaskIncrementTick,R12		;Increment Tick
 	CALL32	 _vTaskSwitchContext,R12		;Switch context if required
 
 	ANDCCR #0xEF							;Disable Interrupts
@@ -314,7 +305,7 @@ const unsigned short usReloadValue = ( unsigned short ) ( ( ( configPER_CLOCK_HZ
 	{
 		/* Clear RLT0 interrupt flag */
 		TMCSR0_UF = 0; 
-		vTaskIncrementTick();
+		xTaskIncrementTick();
 	}
 
 #endif

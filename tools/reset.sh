@@ -12,4 +12,4 @@ create_gdb_command
 arm-none-eabi-gdb --quiet --batch -x gdbcmd
 rm -f gdbcmd
 
-echo "Done."
+date "+Done [%H:%M:%S]"

@@ -38,7 +38,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CACHE_LEN               2048
+#define CACHE_LEN               1460
 #define PATH_LEN                100
 
 /*==============================================================================
@@ -76,7 +76,7 @@ static void serve(net_conn_t *conn)
         errno = 0;
 
         net_buf_t *inbuf;
-        if (net_recv(conn, &inbuf) == NET_ERR_OK) {
+        if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
 
                 char *buf;
                 u16_t buf_len;
@@ -103,13 +103,13 @@ static void serve(net_conn_t *conn)
 
                                         FILE *file = fopen(path, "r");
                                         if (file) {
-                                                net_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
+                                                net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
 
                                                 char *cache = malloc(CACHE_LEN);
                                                 if (cache) {
                                                         size_t n;
                                                         while ((n = fread(cache, 1, CACHE_LEN, file))) {
-                                                                net_write(conn, cache, n, NET_CONN_FLAG_COPY);
+                                                                net_conn_write(conn, cache, n, NET_CONN_FLAG_COPY);
                                                         }
 
                                                         if (ferror(file)) {
@@ -135,9 +135,11 @@ static void serve(net_conn_t *conn)
 
                 puts("Connection closed");
 
-                net_close(conn);
-                net_delete_buf(inbuf);
+                net_buf_delete(inbuf);
         }
+
+        net_conn_close(conn);
+        net_conn_delete(conn);
 }
 
 //==============================================================================
@@ -155,27 +157,26 @@ PROGRAM_MAIN(httpserver, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        net_conn_t *conn = net_new_conn(NET_CONN_TYPE_TCP);
+        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
         if (conn) {
-                if (net_bind(conn, NULL, 80) == NET_ERR_OK) {
-                        if (net_listen(conn) == NET_ERR_OK) {
+                if (net_conn_bind(conn, NULL, 80) == NET_ERR_OK) {
+                        if (net_conn_listen(conn) == NET_ERR_OK) {
                                 puts("Listen connection");
 
                                 net_err_t err;
                                 do {
                                         net_conn_t *new_conn;
-                                        err = net_accept(conn, &new_conn);
+                                        err = net_conn_accept(conn, &new_conn);
                                         if (err == NET_ERR_OK) {
                                                 puts("Accept connection");
                                                 serve(new_conn);
-                                                net_delete_conn(new_conn);
                                         }
 
                                 } while (err == NET_ERR_OK);
                         }
                 }
 
-                net_delete_conn(conn);
+                net_conn_delete(conn);
         }
 
         puts("Exit");

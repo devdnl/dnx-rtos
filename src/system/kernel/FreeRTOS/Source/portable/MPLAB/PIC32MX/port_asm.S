@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,24 +45,25 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
-#include <p32xxxx.h>
+#include <xc.h>
 #include <sys/asm.h>
 #include "ISR_Support.h"
 
@@ -111,7 +102,7 @@ vPortTickInterruptHandler:
 
  	.set		noreorder
 	.set 		noat
- 	.ent		xPortStartScheduler
+ 	.ent		vPortStartFirstTask
 
 vPortStartFirstTask:
 
@@ -119,35 +110,32 @@ vPortStartFirstTask:
 	created so far. */
 	portRESTORE_CONTEXT
 
-	.end xPortStartScheduler
+	.end vPortStartFirstTask
 
 
 
 /*******************************************************************/
 
- 	.set		noreorder
+	.set		noreorder
 	.set 		noat
- 	.ent		vPortYieldISR
+	.ent		vPortYieldISR
 
 vPortYieldISR:
 
-	/* Make room for the context. First save the current status so we can
-	manipulate it, and the cause and EPC registers so we capture their
-	original values in case of interrupt nesting. */
-	mfc0		k0, _CP0_CAUSE
-	addiu		sp,	sp, -portCONTEXT_SIZE
+	/* Make room for the context. First save the current status so it can be
+	manipulated. */
+	addiu		sp, sp, -portCONTEXT_SIZE
 	mfc0		k1, _CP0_STATUS
 
-	/* Also save s6 and s5 so we can use them during this interrupt.  Any
-	nesting interrupts should maintain the values of these registers
-	across the ISR. */
+	/* Also save s6 and s5 so they can be used.  Any nesting interrupts should
+	maintain the values of these registers across the ISR. */
 	sw			s6, 44(sp)
 	sw			s5, 40(sp)
 	sw			k1, portSTATUS_STACK_LOCATION(sp)
 
-	/* Enable interrupts above the current priority. */
-	srl			k0, k0, 0xa
-	ins 		k1, k0, 10, 6
+	/* Prepare to re-enabled interrupt above the kernel priority. */
+	ins 		k1, zero, 10, 6
+	ori			k1, k1, ( configMAX_SYSCALL_INTERRUPT_PRIORITY << 10 )
 	ins			k1, zero, 1, 4
 
 	/* s5 is used as the frame pointer. */
@@ -168,16 +156,16 @@ vPortYieldISR:
 	after interrupts are enabled. */
 	mfc0 		s6, _CP0_EPC
 
-	/* Re-enable interrupts. */
+	/* Re-enable interrupts above configMAX_SYSCALL_INTERRUPT_PRIORITY. */
 	mtc0		k1, _CP0_STATUS
 
 	/* Save the context into the space just created.  s6 is saved again
 	here as it now contains the EPC value. */
-	sw			ra,	120(s5)
+	sw			ra, 120(s5)
 	sw			s8, 116(s5)
 	sw			t9, 112(s5)
-	sw			t8,	108(s5)
-	sw			t7,	104(s5)
+	sw			t8, 108(s5)
+	sw			t7, 104(s5)
 	sw			t6, 100(s5)
 	sw			t5, 96(s5)
 	sw			t4, 92(s5)
@@ -194,7 +182,7 @@ vPortYieldISR:
 	sw			s7, 48(s5)
 	sw			s6, portEPC_STACK_LOCATION(s5)
 	/* s5 and s6 has already been saved. */
-	sw			s4,	36(s5)
+	sw			s4, 36(s5)
 	sw			s3, 32(s5)
 	sw			s2, 28(s5)
 	sw			s1, 24(s5)
@@ -218,18 +206,21 @@ vPortYieldISR:
 	is below configMAX_SYSCALL_INTERRUPT_PRIORITY - so this can only ever
 	raise the IPL value and never lower it. */
 	di
+	ehb
 	mfc0		s7, _CP0_STATUS
-	ins 		s7, $0, 10, 6
+	ins 		s7, zero, 10, 6
 	ori			s6, s7, ( configMAX_SYSCALL_INTERRUPT_PRIORITY << 10 ) | 1
 
 	/* This mtc0 re-enables interrupts, but only above
 	configMAX_SYSCALL_INTERRUPT_PRIORITY. */
 	mtc0		s6, _CP0_STATUS
+	ehb
 
 	/* Clear the software interrupt in the core. */
 	mfc0		s6, _CP0_CAUSE
 	ins			s6, zero, 8, 1
 	mtc0		s6, _CP0_CAUSE
+	ehb
 
 	/* Clear the interrupt in the interrupt controller. */
 	la			s6, IFS0CLR
@@ -241,6 +232,7 @@ vPortYieldISR:
 
 	/* Clear the interrupt mask again.  The saved status value is still in s7. */
 	mtc0		s7, _CP0_STATUS
+	ehb
 
 	/* Restore the stack pointer from the TCB. */
 	la			s0, pxCurrentTCB
@@ -282,6 +274,7 @@ vPortYieldISR:
 
 	/* Protect access to the k registers, and others. */
 	di
+	ehb
 
 	/* Set nesting back to zero.  As the lowest priority interrupt this
 	interrupt cannot have nested. */
@@ -299,10 +292,11 @@ vPortYieldISR:
 	lw			k0, portEPC_STACK_LOCATION(sp)
 
 	/* Remove stack frame. */
-	addiu		sp,	sp,	portCONTEXT_SIZE
+	addiu		sp, sp, portCONTEXT_SIZE
 
 	mtc0		k1, _CP0_STATUS
 	mtc0 		k0, _CP0_EPC
+	ehb
 	eret
 	nop
 

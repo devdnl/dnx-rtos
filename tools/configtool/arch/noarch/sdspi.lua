@@ -43,6 +43,7 @@ sdspi = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 local NUMBER_OF_CARDS = 2
@@ -55,7 +56,7 @@ local NUMBER_OF_CARDS = 2
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local module_enable   = ct:get_module_state("SDSPI")
         local number_of_cards = tonumber(ct:key_read(config.noarch.key.SDSPI_NUMBER_OF_CARDS))
 
@@ -80,7 +81,7 @@ end
 -- @param  None
 -- @return On success true, otherwise false
 --------------------------------------------------------------------------------
-local function event_on_button_save_click()
+local function save_configuration()
         ct:enable_module("SDSPI", ui.CheckBox_module_enable:GetValue())
         ct:key_write(config.noarch.key.SDSPI_NUMBER_OF_CARDS, tostring(ui.Choice_card_count:GetSelection() + 1))
 
@@ -90,7 +91,7 @@ local function event_on_button_save_click()
         end
 
         --
-        ui.Button_save:Enable(false)
+        modified:no()
 
         return true
 end
@@ -103,7 +104,7 @@ end
 --------------------------------------------------------------------------------
 local function event_checkbox_module_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -113,7 +114,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function event_value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -129,7 +130,7 @@ local function event_number_of_cards_changed(event)
                 ui.Panel_card[i]:Enable(i <= card_count)
         end
 
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -153,7 +154,6 @@ function sdspi:create_window(parent)
         ID.CHOICE_CARD_COUNT = wx.wxNewId()
         ID.COMBOBOX_CARD = {}
         ID.SPINCTRL_CARD = {}
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -166,8 +166,8 @@ function sdspi:create_window(parent)
         ui.FlexGridSizerPanel1 = wx.wxFlexGridSizer(0, 1, 0, 0)
         ui.FlexGridSizer2 = wx.wxFlexGridSizer(0, 2, 0, 0)
 
-        ui.StaticText1 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Number of cards", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer2:Add(ui.StaticText1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Number of cards", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizer2:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Choice_card_count = wx.wxChoice(ui.Panel1, ID.CHOICE_CARD_COUNT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0)
         ui.Choice_card_count:Append("1 card")
         ui.Choice_card_count:Append("2 cards")
@@ -205,20 +205,17 @@ function sdspi:create_window(parent)
                 this:Connect(ID.SPINCTRL_CARD[i], wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  event_value_updated)
         end
 
-        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
+        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxLI_HORIZONTAL)
         ui.FlexGridSizerPanel1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        ui.StaticText4 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizerPanel1:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: clock frequency is configured in the SPI module", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizerPanel1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+        ui.StaticText = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "Note: make sure that the MISO pin is set to input pulled-up mode", wx.wxDefaultPosition, wx.wxDefaultSize)
+        ui.FlexGridSizerPanel1:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+        
         ui.Panel1:SetSizer(ui.FlexGridSizerPanel1)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.StaticLine1 = wx.wxStaticLine(this, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), wx.wxLI_HORIZONTAL)
-        ui.FlexGridSizer1:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize)
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
@@ -226,12 +223,11 @@ function sdspi:create_window(parent)
 
         --
         this:Connect(ID.CHECKBOX_MODULE_ENABLE, wx.wxEVT_COMMAND_CHECKBOX_CLICKED, event_checkbox_module_enable_updated)
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,   event_on_button_save_click          )
         this:Connect(ID.CHOICE_CARD_COUNT,      wx.wxEVT_COMMAND_CHOICE_SELECTED,  event_number_of_cards_changed       )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -262,7 +258,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function sdspi:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function sdspi:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function sdspi:discard()
+        load_configuration()
+        modified:no()
 end
 
 

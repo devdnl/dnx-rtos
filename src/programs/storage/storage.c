@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <dnx/misc.h>
 #include <dnx/thread.h>
@@ -42,7 +43,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define min(a, b)               (a > b ? b : a)
 #define tostring(a)             #a
 #define USB_mA(mA)              (mA / 2)
 
@@ -56,7 +56,6 @@
 #define BULK_BUF_SIZE           64
 
 #define LB_SIZE                 512
-#define LB_COUNT                ((2U*1024*1024*1024) / (LB_SIZE))
 #define BUFFER_SIZE             (LB_SIZE * 4)
 
 /*==============================================================================
@@ -88,16 +87,18 @@ bool configured;
 
 GLOBAL_VARIABLES_SECTION_END
 
+static u32_t LB_COUNT = 0;
+
 /* USB constants */
-static const usb_ep_config_t ep_cfg = {
-        .ep[USB_EP_NUM__ENDP0] = USB_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USB_EP0_SIZE, USB_EP0_SIZE),
-        .ep[USB_EP_NUM__ENDP1] = USB_EP_CONFIG_IN_OUT(USB_TRANSFER__BULK, BULK_BUF_SIZE, BULK_BUF_SIZE),
-        .ep[USB_EP_NUM__ENDP2] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP3] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP4] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP5] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP6] = USB_EP_CONFIG_DISABLED(),
-        .ep[USB_EP_NUM__ENDP7] = USB_EP_CONFIG_DISABLED()
+static const usbd_ep_config_t ep_cfg = {
+        .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
+        .ep[USB_EP_NUM__ENDP1] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__BULK, BULK_BUF_SIZE, BULK_BUF_SIZE),
+        .ep[USB_EP_NUM__ENDP2] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP3] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP4] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP5] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP6] = USBD_EP_CONFIG_DISABLED(),
+        .ep[USB_EP_NUM__ENDP7] = USBD_EP_CONFIG_DISABLED()
 };
 
 static const usb_device_descriptor_t device_descriptor = {
@@ -107,7 +108,7 @@ static const usb_device_descriptor_t device_descriptor = {
         .bDeviceClass        = USB_CLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceSubClass     = USB_SUBCLASS__SPECIFIED_AT_INTERFACE_LEVEL,
         .bDeviceProtocol     = USB_PROTOCOL__SPECIFIED_AT_INTERFACE_LEVEL,
-        .bMaxPacketSize0     = USB_EP0_SIZE,
+        .bMaxPacketSize0     = USBD_EP0_SIZE,
         .idVendor            = HTOUSBS(0x0483),
         .idProduct           = HTOUSBS(0x5755),
         .bcdDevice           = HTOUSBS(0x0100),
@@ -225,11 +226,6 @@ static const scsi_unit_serial_number_data_t serial_number = {
         .serial_number  = {'0', '0', '0', '0', '0', '0', '0', '1'}
 };
 
-static const scsi_capacity_data_t capacity = {
-        .last_lba       = REVERSE_UINT32(LB_COUNT - 1),
-        .block_length   = REVERSE_UINT32(LB_SIZE)
-};
-
 static const scsi_mode_parameter_header6_t mode_sense6 = {
         .mode_data_length               = sizeof(scsi_mode_parameter_header6_t) - 1,
         .medium_type                    = 0,
@@ -246,17 +242,8 @@ static const scsi_mode_parameter_header10_t mode_sense10 = {
         .block_descriptor_length        = 0
 };
 
-static const scsi_format_capacity_data_t format_capacity = {
-        .reserved               = {0, 0, 0},
-        .capacity_list_length   = sizeof(scsi_format_capacity_data_t) - 4,
-        .lba_count              = REVERSE_UINT32(LB_COUNT),
-        .descriptor_code        = 1,
-        .block_length_msb       = 0,
-        .block_length           = REVERSE_UINT16(LB_SIZE)
-};
-
-static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__TP210);
-static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__TP211);
+static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions
@@ -300,14 +287,11 @@ static void ep1_handler(void *arg)
         FILE *gpio   = fopen("/dev/gpio", "r+");
         FILE *ep1    = fopen("/dev/usb_ep1", "r+");
         FILE *sda    = fopen("/dev/sda", "r+");
-        bool  sdinit = false;
 
         if (sda) {
-                ioctl(sda, IOCTL_SDSPI__INITIALIZE_CARD, &sdinit);
-                if (!sdinit) {
-                        puts("SD not present");
-                        fclose(sda);
-                        sda = NULL;
+                struct stat stat;
+                if (fstat(sda, &stat) == 0) {
+                        LB_COUNT = stat.st_size / LB_SIZE;
                 }
         }
 
@@ -362,8 +346,8 @@ static void ep1_handler(void *arg)
                         printf("global->msc.CBW.bCBWCBLength: %d (max %d)\n", global->msc.CBW.bCBWCBLength, USB_MASS_STORAGE_REQUEST_CBWCB_LENGTH);
                         printf("read: %d\n (max %d)\n", static_cast(int, n), static_cast(int, sizeof(usb_msc_bot_cbw_t)));
 
-                        ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
-                        ioctl(ep1, IOCTL_USB__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
 
                         global->configured = false;
                         while (!global->configured) {
@@ -420,12 +404,24 @@ static void ep1_handler(void *arg)
 
                         case SCSI_REQUEST__READ_CAPACITY_10:
                                 puts("READ CAPACITY (10)");
+                                scsi_capacity_data_t capacity = {
+                                        .last_lba       = REVERSE_UINT32(LB_COUNT - 1),
+                                        .block_length   = REVERSE_UINT32(LB_SIZE)
+                                };
                                 fwrite(&capacity, 1, sizeof(capacity), ep1);
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
                                 break;
 
                         case SCSI_REQUEST__READ_FORMAT_CAPACITIES:
                                 puts("READ FORMAT CAPACITIES");
+                                scsi_format_capacity_data_t format_capacity = {
+                                        .reserved               = {0, 0, 0},
+                                        .capacity_list_length   = sizeof(scsi_format_capacity_data_t) - 4,
+                                        .lba_count              = REVERSE_UINT32(LB_COUNT),
+                                        .descriptor_code        = 1,
+                                        .block_length_msb       = 0,
+                                        .block_length           = REVERSE_UINT16(LB_SIZE)
+                                };
                                 fwrite(&format_capacity, 1, sizeof(format_capacity), ep1);
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
                                 break;
@@ -457,7 +453,7 @@ static void ep1_handler(void *arg)
                                         fseek(sda, lba * LB_SIZE, SEEK_SET);
 
                                         while (lbc) {
-                                                int count = (lbc >= (BUFFER_SIZE / LB_SIZE) ? (BUFFER_SIZE / LB_SIZE) : lbc);
+                                                int count = min(lbc, BUFFER_SIZE / LB_SIZE);
                                                 fread(&global->msc.buffer, LB_SIZE, count, sda);
                                                 fwrite(&global->msc.buffer, LB_SIZE, count, ep1);
                                                 lbc -= count;
@@ -491,7 +487,7 @@ static void ep1_handler(void *arg)
                                 if (sda) {
                                         fseek(sda, lba * LB_SIZE, SEEK_SET);
                                         while (lbc) {
-                                                int count = (lbc >= (BUFFER_SIZE / LB_SIZE) ? (BUFFER_SIZE / LB_SIZE) : lbc);
+                                                int count = min(lbc, BUFFER_SIZE / LB_SIZE);
                                                 fread(&global->msc.buffer, LB_SIZE, count, ep1);
                                                 fwrite(&global->msc.buffer, LB_SIZE, count, sda);
                                                 lbc -= count;
@@ -563,10 +559,10 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
         thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
 
         if (ep0 && ep1_thread) {
-                usb_setup_container_t setup = {.timeout = 250};
+                usbd_setup_container_t setup = {.timeout = 250};
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                ioctl(ep0, IOCTL_USB__START);
+                ioctl(ep0, IOCTL_USBD__START);
 
                 while (true) {
                         /* check if program shall be terminated */
@@ -576,14 +572,14 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                         }
 
                         /* wait for SETUP packet */
-                        if (ioctl(ep0, IOCTL_USB__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USB__WAS_RESET);
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -593,8 +589,8 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USB__SEND_ZLP) == STD_RET_OK) {
-                                                        ioctl(ep0, IOCTL_USB__SET_ADDRESS, setup.packet.wValue);
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");
@@ -603,7 +599,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
 
                                         case SET_CONFIGURATION:
                                                 printf(tostring(SET_CONFIGURATION)" (%d):", setup.packet.wValue);
-                                                operation = ioctl(ep0, IOCTL_USB__CONFIGURE_EP_1_7, &ep_cfg);
+                                                operation = ioctl(ep0, IOCTL_USBD__CONFIGURE_EP_1_7, &ep_cfg);
                                                 global->configured = true;
                                                 break;
                                         }
@@ -625,7 +621,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                                 switch (setup.packet.wValue) {
                                                 case ENDPOINT_HALT:
                                                         printf(tostring(ENDPOINT_HALT)" (0x%x):", setup.packet.wIndex);
-                                                        ioctl(ep0, IOCTL_USB__SET_EP_VALID, setup.packet.wIndex);
+                                                        ioctl(ep0, IOCTL_USBD__SET_EP_VALID, setup.packet.wIndex);
                                                         operation = 0;
                                                         break;
                                                 }
@@ -633,18 +629,18 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USB__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");
                                         }
                                 } else if (operation == 1) {
                                         puts(" ERROR");
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 } else {
                                         puts("UNKNOWN REQUEST");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else if ((setup.packet.bmRequestType & REQUEST_DIRECTION_MASK) == DEVICE_TO_HOST) {
@@ -698,7 +694,7 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else {
@@ -706,12 +702,12 @@ PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 default:
                                         puts("UNKNOWN REQUEST [OUT]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USB__SET_ERROR_STATUS);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
                                 }
                         }
                 }
 
-                ioctl(ep0, IOCTL_USB__STOP);
+                ioctl(ep0, IOCTL_USBD__STOP);
         }
 
         if (ep0)

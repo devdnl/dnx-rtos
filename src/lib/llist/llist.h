@@ -43,14 +43,24 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-
 // list foreach iterator
 #define llist_foreach(type, element, llist_t__list)\
-        for (bool _tb = true; _tb; _tb = false)\
-                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); _tb;)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
                         for (type element = llist_begin(&_iterator);\
                              element;\
-                             element = llist_iterator_next(&_iterator), _tb = false)
+                             element = llist_iterator_next(&_iterator), __loop = false)
+
+// list reversed foreach iterator
+#define llist_foreach_reverse(type, element, llist_t__list)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
+                        for (type element = llist_end(&_iterator);\
+                             element;\
+                             element = llist_iterator_prev(&_iterator), __loop = false)
+
+// list iterator
+#define llist_foreach_iterator _iterator
 
 /*==============================================================================
   Exported object types
@@ -62,9 +72,9 @@ typedef void (*llist_obj_dtor_t)(void *object);
 // iterator object
 typedef struct {
         llist_t  *list;
-        void     *begin;
-        void     *end;
-        bool      fini;
+        void     *current;
+        void     *next;
+        void     *to;
         uint32_t  magic;
 } llist_iterator_t;
 
@@ -313,7 +323,7 @@ extern int llist_find_begin(llist_t *list, const void *object);
  * @return Object position, or -1 on error
  */
 //==============================================================================
-extern int   llist_find_end(llist_t *list, const void *object);
+extern int llist_find_end(llist_t *list, const void *object);
 
 //==============================================================================
 /**
@@ -388,6 +398,15 @@ extern void *llist_iterator_next(llist_iterator_t *iterator);
  */
 //==============================================================================
 extern void *llist_iterator_prev(llist_iterator_t *iterator);
+
+//==============================================================================
+/**
+ * @brief  Erase selected begin of the list. The element is destroyed
+ * @param  iterator     position to remove
+ * @return On success 1 is returned, otherwise 0
+ */
+//==============================================================================
+extern int llist_erase_by_iterator(llist_iterator_t *iterator);
 
 /*==============================================================================
   Exported inline functions

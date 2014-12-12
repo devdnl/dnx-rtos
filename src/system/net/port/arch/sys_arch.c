@@ -48,7 +48,6 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static const u32_t validation_value = 0x56CAEEDE;
 
 /*==============================================================================
   Exported objects
@@ -64,7 +63,9 @@ static const u32_t validation_value = 0x56CAEEDE;
 
 //==============================================================================
 /**
- * @brief Initialize system calls
+ * @brief  Initialize system calls
+ * @param  None
+ * @return None
  */
 //==============================================================================
 void sys_init()
@@ -107,6 +108,10 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
  * function should support recursive calls from the same task or interrupt. In
  * other words, sys_arch_protect() could be called while already protected. In
  * that case the return value indicates that it is already protected.
+ *
+ * @param  None
+ *
+ * @return Protect level (not used)
  */
 //==============================================================================
 sys_prot_t sys_arch_protect()
@@ -120,9 +125,13 @@ sys_prot_t sys_arch_protect()
  * @brief Unprotect thread
  *
  * This optional function does a "fast" set of critical region protection to the
- * value specified by pval. See the documentation for sys_arch_protect() for
+ * value specified by val. See the documentation for sys_arch_protect() for
  * more information. This function is only required if your port is supporting
  * an operating system.
+ *
+ * @param  lev          protection level
+ *
+ * @return None
  */
 //==============================================================================
 void sys_arch_unprotect(sys_prot_t lev)
@@ -139,6 +148,8 @@ void sys_arch_unprotect(sys_prot_t lev)
  * for wraparound, this is only used for time diffs).
  * Not implementing this function means you cannot use some modules (e.g. TCP
  * timestamps, internal timeouts for NO_SYS==1).
+ *
+ * @param  None
  *
  * @return time in milliseconds
  */
@@ -163,13 +174,12 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                sem->sem = semaphore_new(1, count);
-                if (sem->sem) {
-                        sem->valid = validation_value;
+                *sem = semaphore_new(1, count);
+                if (*sem) {
                         return ERR_OK;
+                } else {
+                        return ERR_MEM;
                 }
-
-                return ERR_MEM;
         }
 
         return ERR_ARG;
@@ -180,16 +190,16 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
  * @brief Delete a semaphore
  *
  * @param sem semaphore to delete
+ *
+ * @return None
  */
 //==============================================================================
 void sys_sem_free(sys_sem_t *sem)
 {
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
-        if (sem) {
-                if (sem->sem && sem->valid == validation_value) {
-                        semaphore_delete(sem->sem);
-                }
+        if (sem && *sem) {
+                semaphore_delete(*sem);
         }
 }
 
@@ -198,16 +208,16 @@ void sys_sem_free(sys_sem_t *sem)
  * @brief Signals a semaphore
  *
  * @param sem the semaphore to signal
+ *
+ * @return None
  */
 //==============================================================================
 void sys_sem_signal(sys_sem_t *sem)
 {
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
-        if (sem) {
-                if (sem->sem && sem->valid == validation_value) {
-                        semaphore_signal(sem->sem);
-                }
+        if (sem && *sem) {
+                semaphore_signal(*sem);
         }
 }
 
@@ -215,8 +225,8 @@ void sys_sem_signal(sys_sem_t *sem)
 /**
  * @brief Wait for a semaphore for the specified timeout
  *
- * @param sem the semaphore to wait for
- * @param timeout timeout in milliseconds to wait (0 = wait forever)
+ * @param sem           the semaphore to wait for
+ * @param timeout       timeout in milliseconds to wait (0 = wait forever)
  *
  * @return time (in milliseconds) waited for the semaphore or SYS_ARCH_TIMEOUT on timeout
  */
@@ -225,20 +235,18 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
-        if (sem) {
-                if (sem->sem && sem->valid == validation_value) {
-                        u32_t start_time = get_time_ms();
-                        bool  sem_status = false;
+        if (sem && *sem) {
+                u32_t start_time = get_time_ms();
+                bool  sem_status = false;
 
-                        if (timeout) {
-                                sem_status = semaphore_wait(sem->sem, timeout);
-                        } else {
-                                sem_status = semaphore_wait(sem->sem, MAX_DELAY_MS);
-                        }
+                if (timeout) {
+                        sem_status = semaphore_wait(*sem, timeout);
+                } else {
+                        sem_status = semaphore_wait(*sem, MAX_DELAY_MS);
+                }
 
-                        if (sem_status) {
-                                return (u32_t)get_time_ms() - start_time;
-                        }
+                if (sem_status) {
+                        return (u32_t)get_time_ms() - start_time;
                 }
         }
 
@@ -249,6 +257,8 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 /**
  * @brief Check if a semaphore is valid/allocated
  *
+ * @param sem           semaphore
+ *
  * @return 1 for valid, 0 for invalid
  */
 //==============================================================================
@@ -256,18 +266,20 @@ int sys_sem_valid(sys_sem_t *sem)
 {
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
-        if (sem) {
-                if (sem->sem && sem->valid == validation_value) {
-                        return 1;
-                }
+        if (sem && *sem) {
+                return 1;
+        } else {
+                return 0;
         }
-
-        return 0;
 }
 
 //==============================================================================
 /**
  * @brief Set a semaphore invalid so that sys_sem_valid returns 0
+ *
+ * @param  sem          semaphore
+ *
+ * @return None
  */
 //==============================================================================
 void sys_sem_set_invalid(sys_sem_t *sem)
@@ -275,8 +287,7 @@ void sys_sem_set_invalid(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                sem->sem   = NULL;
-                sem->valid = false;
+                *sem   = NULL;
         }
 }
 
@@ -295,13 +306,12 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox && size) {
-                mbox->queue = queue_new(size, sizeof(void*));
-                if (mbox->queue) {
-                        mbox->valid = validation_value;
+                *mbox = queue_new(size, sizeof(void*));
+                if (*mbox) {
                         return ERR_OK;
+                } else {
+                        return ERR_MEM;
                 }
-
-                return ERR_MEM;
         }
 
         return ERR_ARG;
@@ -312,17 +322,16 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
  * @brief Delete an mbox
  *
  * @param mbox          mbox to delete
+ *
+ * @return None
  */
 //==============================================================================
 void sys_mbox_free(sys_mbox_t *mbox)
 {
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        queue_get_number_of_items(mbox->queue);
-                        queue_delete(mbox->queue);
-                }
+        if (mbox && *mbox) {
+                queue_delete(*mbox);
         }
 }
 
@@ -333,16 +342,16 @@ void sys_mbox_free(sys_mbox_t *mbox)
  *
  * @param mbox          mbox to posts the message
  * @param msg           message to post (ATTENTION: can be NULL)
+ *
+ * @return None
  */
 //==============================================================================
 void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 {
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        queue_send(mbox->queue, &msg, MAX_DELAY_MS);
-                }
+        if (mbox && *mbox) {
+                queue_send(*mbox, &msg, MAX_DELAY_MS);
         }
 }
 
@@ -360,14 +369,12 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        if (queue_send(mbox->queue, &msg, 0)) {
-                                return ERR_OK;
-                        }
+        if (mbox && *mbox) {
+                if (queue_send(*mbox, &msg, 0)) {
+                        return ERR_OK;
+                } else {
+                        return ERR_MEM;
                 }
-
-                return ERR_MEM;
         }
 
         return ERR_ARG;
@@ -379,7 +386,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
  *
  * @param mbox          mbox to get a message from
  * @param msg           pointer where the message is stored
- * @param timeout       maximum time (in milliseconds) to wait for a message
+ * @param timeout       maximum time (in milliseconds) to wait for a message (0 = wait forever)
  *
  * @return time (in milliseconds) waited for a message, may be 0 if not waited
  *         or SYS_ARCH_TIMEOUT on timeout
@@ -391,20 +398,11 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        u32_t start_time = get_time_ms();
-                        bool  received   = false;
+        if (mbox && *mbox) {
+                u32_t start_time = get_time_ms();
 
-                        if (timeout) {
-                                received = queue_receive(mbox->queue, &(*msg), timeout);
-                        } else {
-                                received = queue_receive(mbox->queue, &(*msg), MAX_DELAY_MS);
-                        }
-
-                        if (received) {
-                                return (u32_t)get_time_ms() - start_time;
-                        }
+                if (queue_receive(*mbox, &(*msg), timeout ? timeout : MAX_DELAY_MS)) {
+                        return (u32_t)get_time_ms() - start_time;
                 }
         }
 
@@ -417,7 +415,6 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
  *
  * @param mbox          mbox to get a message from
  * @param msg           pointer where the message is stored
- * @param timeout       maximum time (in milliseconds) to wait for a message
  *
  * @return 0 (milliseconds) if a message has been received
  *         or SYS_MBOX_EMPTY if the mailbox is empty
@@ -428,11 +425,9 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        if (queue_receive(mbox->queue, &(*msg), 0)) {
-                                return 0;
-                        }
+        if (mbox && *mbox) {
+                if (queue_receive(*mbox, &(*msg), 0)) {
+                        return 0;
                 }
         }
 
@@ -443,6 +438,8 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 /**
  * @brief Check if an mbox is valid/allocated
  *
+ * @param mbox          mbox to check
+ *
  * @return 1 for valid, 0 for invalid
  */
 //==============================================================================
@@ -450,18 +447,20 @@ int sys_mbox_valid(sys_mbox_t *mbox)
 {
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
-        if (mbox) {
-                if (mbox->queue && mbox->valid == validation_value) {
-                        return 1;
-                }
+        if (mbox && *mbox) {
+                return 1;
+        } else {
+                return 0;
         }
-
-        return 0;
 }
 
 //==============================================================================
 /**
  * @brief Set an mbox invalid so that sys_mbox_valid returns 0
+ *
+ * @param mbox          mbox to invalidate
+ *
+ * @return None
  */
 //==============================================================================
 void sys_mbox_set_invalid(sys_mbox_t *mbox)
@@ -469,8 +468,7 @@ void sys_mbox_set_invalid(sys_mbox_t *mbox)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox) {
-                mbox->queue = NULL;
-                mbox->valid = 0;
+                *mbox = NULL;
         }
 }
 

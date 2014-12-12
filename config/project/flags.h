@@ -58,15 +58,15 @@
 #endif
 #if (__CPU_ARCH__ == stm32f1)
 #       include "../stm32f1/cpu.h"
-#       include "../stm32f1/crc_flags.h"
+#       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
-#       include "../stm32f1/afio_flags.h"
-#       include "../stm32f1/eth_flags.h"
+#       include "../stm32f1/afiom_flags.h"
+#       include "../stm32f1/ethmac_flags.h"
 #       include "../stm32f1/pll_flags.h"
 #       include "../stm32f1/spi_flags.h"
 #       include "../stm32f1/wdg_flags.h"
 #       include "../stm32f1/uart_flags.h"
-#       include "../stm32f1/usb_flags.h"
+#       include "../stm32f1/usbd_flags.h"
 #       include "../stm32f1/irq_flags.h"
 #       include "../stm32f1/i2c_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
@@ -92,6 +92,7 @@
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
 #define __OS_FILE_SYSTEM_STACK_DEPTH__ 48
 #define __OS_IRQ_STACK_DEPTH__ 16
+#define __OS_INITD_STACK_DEPTH__ 220
 #define __OS_TASK_MAX_PRIORITIES__ 7
 #define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
@@ -116,13 +117,7 @@
 
 /* network configuration */
 #define __NETWORK_ENABLE__ _YES_
-#define __NETWORK_MAC_ADDR_0__ 0x50
-#define __NETWORK_MAC_ADDR_1__ 0xE5
-#define __NETWORK_MAC_ADDR_2__ 0x49
-#define __NETWORK_MAC_ADDR_3__ 0x37
-#define __NETWORK_MAC_ADDR_4__ 0xB5
-#define __NETWORK_MAC_ADDR_5__ 0xBD
-#define __NETWORK_ETHIF_FILE__ "/dev/eth0"
+#include "network_flags.h"
 
 /* file systems */
 #define __ENABLE_DEVFS__ _YES_
@@ -133,20 +128,20 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
-#define __ENABLE_LOOP__ _YES_
+#define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
-#define __ENABLE_AFIO__ _YES_
-#define __ENABLE_CRC__ _YES_
-#define __ENABLE_ETH__ _YES_
+#define __ENABLE_AFIOM__ _YES_
+#define __ENABLE_CRCM__ _NO_
+#define __ENABLE_ETHMAC__ _YES_
 #define __ENABLE_PLL__ _YES_
 #define __ENABLE_SDSPI__ _YES_
 #define __ENABLE_SPI__ _YES_
 #define __ENABLE_TTY__ _YES_
 #define __ENABLE_UART__ _YES_
-#define __ENABLE_WDG__ _YES_
-#define __ENABLE_USB__ _NO_
+#define __ENABLE_WDG__ _NO_
+#define __ENABLE_USBD__ _NO_
 #define __ENABLE_I2C__ _YES_
-#define __ENABLE_IRQ__ _YES_
+#define __ENABLE_IRQ__ _NO_
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

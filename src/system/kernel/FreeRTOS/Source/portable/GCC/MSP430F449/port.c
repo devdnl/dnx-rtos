@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd. 
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,21 +45,22 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 /*
@@ -92,14 +83,14 @@
 
 /* Constants required for hardware setup.  The tick ISR runs off the ACLK, 
 not the MCLK. */
-#define portACLK_FREQUENCY_HZ			( ( portTickType ) 32768 )
-#define portINITIAL_CRITICAL_NESTING	( ( unsigned short ) 10 )
-#define portFLAGS_INT_ENABLED	( ( portSTACK_TYPE ) 0x08 )
+#define portACLK_FREQUENCY_HZ			( ( TickType_t ) 32768 )
+#define portINITIAL_CRITICAL_NESTING	( ( uint16_t ) 10 )
+#define portFLAGS_INT_ENABLED	( ( StackType_t ) 0x08 )
 
 /* We require the address of the pxCurrentTCB variable, but don't want to know
 any details of its type. */
-typedef void tskTCB;
-extern volatile tskTCB * volatile pxCurrentTCB;
+typedef void TCB_t;
+extern volatile TCB_t * volatile pxCurrentTCB;
 
 /* Most ports implement critical sections by placing the interrupt flags on
 the stack before disabling interrupts.  Exiting the critical section is then
@@ -113,7 +104,7 @@ with interrupts only being re-enabled if the count is zero.
 usCriticalNesting will get set to zero when the scheduler starts, but must
 not be initialised to zero as this will cause problems during the startup
 sequence. */
-volatile unsigned short usCriticalNesting = portINITIAL_CRITICAL_NESTING;
+volatile uint16_t usCriticalNesting = portINITIAL_CRITICAL_NESTING;
 /*-----------------------------------------------------------*/
 
 /* 
@@ -187,17 +178,17 @@ static void prvSetupTimerInterrupt( void );
  * 
  * See the header file portable.h.
  */
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
 	/* 
 		Place a few bytes of known values on the bottom of the stack. 
 		This is just useful for debugging and can be included if required.
 
-		*pxTopOfStack = ( portSTACK_TYPE ) 0x1111;
+		*pxTopOfStack = ( StackType_t ) 0x1111;
 		pxTopOfStack--;
-		*pxTopOfStack = ( portSTACK_TYPE ) 0x2222;
+		*pxTopOfStack = ( StackType_t ) 0x2222;
 		pxTopOfStack--;
-		*pxTopOfStack = ( portSTACK_TYPE ) 0x3333;
+		*pxTopOfStack = ( StackType_t ) 0x3333;
 		pxTopOfStack--; 
 	*/
 
@@ -205,38 +196,38 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	executing an ISR.  We want the stack to look just as if this has happened
 	so place a pointer to the start of the task on the stack first - followed
 	by the flags we want the task to use when it starts up. */
-	*pxTopOfStack = ( portSTACK_TYPE ) pxCode;
+	*pxTopOfStack = ( StackType_t ) pxCode;
 	pxTopOfStack--;
 	*pxTopOfStack = portFLAGS_INT_ENABLED;
 	pxTopOfStack--;
 
 	/* Next the general purpose registers. */
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x4444;
+	*pxTopOfStack = ( StackType_t ) 0x4444;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x5555;
+	*pxTopOfStack = ( StackType_t ) 0x5555;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x6666;
+	*pxTopOfStack = ( StackType_t ) 0x6666;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x7777;
+	*pxTopOfStack = ( StackType_t ) 0x7777;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x8888;
+	*pxTopOfStack = ( StackType_t ) 0x8888;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0x9999;
+	*pxTopOfStack = ( StackType_t ) 0x9999;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0xaaaa;
+	*pxTopOfStack = ( StackType_t ) 0xaaaa;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0xbbbb;
+	*pxTopOfStack = ( StackType_t ) 0xbbbb;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0xcccc;
+	*pxTopOfStack = ( StackType_t ) 0xcccc;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0xdddd;
+	*pxTopOfStack = ( StackType_t ) 0xdddd;
 	pxTopOfStack--;
-	*pxTopOfStack = ( portSTACK_TYPE ) 0xeeee;
+	*pxTopOfStack = ( StackType_t ) 0xeeee;
 	pxTopOfStack--;
 
 	/* When the task starts is will expect to find the function parameter in
 	R15. */
-	*pxTopOfStack = ( portSTACK_TYPE ) pvParameters;
+	*pxTopOfStack = ( StackType_t ) pvParameters;
 	pxTopOfStack--;
 
 	/* The code generated by the mspgcc compiler does not maintain separate
@@ -244,7 +235,7 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	use the stack as per other ports.  Instead a variable is used to keep
 	track of the critical section nesting.  This variable has to be stored
 	as part of the task context and is initially set to zero. */
-	*pxTopOfStack = ( portSTACK_TYPE ) portNO_CRITICAL_SECTION_NESTING;	
+	*pxTopOfStack = ( StackType_t ) portNO_CRITICAL_SECTION_NESTING;	
 
 	/* Return a pointer to the top of the stack we have generated so this can
 	be stored in the task control block for the task. */
@@ -252,7 +243,7 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xPortStartScheduler( void )
+BaseType_t xPortStartScheduler( void )
 {
 	/* Setup the hardware to generate the tick.  Interrupts are disabled when
 	this function is called. */
@@ -348,8 +339,10 @@ static void prvSetupTimerInterrupt( void )
 
 		/* Increment the tick count then switch to the highest priority task
 		that is ready to run. */
-		vTaskIncrementTick();
-		vTaskSwitchContext();
+		if( xTaskIncrementTick() != pdFALSE )
+		{
+			vTaskSwitchContext();
+		}
 
 		/* Restore the context of the new task. */
 		portRESTORE_CONTEXT();
@@ -365,7 +358,7 @@ static void prvSetupTimerInterrupt( void )
 	interrupt (TIMERA0_VECTOR) prvTickISR( void );
 	interrupt (TIMERA0_VECTOR) prvTickISR( void )
 	{
-		vTaskIncrementTick();
+		xTaskIncrementTick();
 	}
 #endif
 

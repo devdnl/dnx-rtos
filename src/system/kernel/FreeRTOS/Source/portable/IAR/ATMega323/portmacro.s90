@@ -1,6 +1,7 @@
 ;/*
-;    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
-;	
+;    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+;    All rights reserved
+;
 ;
 ;    ***************************************************************************
 ;     *                                                                       *
@@ -67,7 +68,7 @@ EXTERN SIG_UART_DATA
 ; ---------------------------
 EXTERN vTaskSwitchContext
 EXTERN pxCurrentTCB
-EXTERN vTaskIncrementTick
+EXTERN xTaskIncrementTick
 EXTERN uxCriticalNesting
 
 ; Functions implemented in this file
@@ -103,7 +104,7 @@ PUBLIC vPortStart
 	ORG USART_UDRE_vect					; Vector address
 		jmp SIG_UART_DATA				; ISR
 
-	
+
 	RSEG CODE
 
 
@@ -222,7 +223,7 @@ portRESTORE_CONTEXT MACRO
 	out SREG, r0
 
 	ld	r0, y+					; Finally we have finished with r0, so restore r0.
-	
+
 	ENDM
 
 
@@ -243,8 +244,11 @@ vPortYield:
 
 vPortYieldFromTick:
 	portSAVE_CONTEXT			; Save the context of the current task.
-	call vTaskIncrementTick		; Call the timer tick function.
+	call xTaskIncrementTick		; Call the timer tick function.
+	tst r16
+	breq SkipTaskSwitch
 	call vTaskSwitchContext		; Call the scheduler.
+SkipTaskSwitch:
 	portRESTORE_CONTEXT			; Restore the context of whichever task the ...
 	ret							; ... scheduler decided should run.
 

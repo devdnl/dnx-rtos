@@ -79,7 +79,7 @@ struct _driver_if {
         stdret_t (*drv_close  )(void *drvhdl, bool force);
         ssize_t  (*drv_write  )(void *drvhdl, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
         ssize_t  (*drv_read   )(void *drvhdl, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        stdret_t (*drv_ioctl  )(void *drvhdl, int iorq, void *args);
+        int      (*drv_ioctl  )(void *drvhdl, int iorq, void *args);
         stdret_t (*drv_flush  )(void *drvhdl);
         stdret_t (*drv_stat   )(void *drvhdl, struct vfs_dev_stat *info);
 };
@@ -105,7 +105,7 @@ extern stdret_t    _driver_open                 (dev_t, vfs_open_flags_t);
 extern stdret_t    _driver_close                (dev_t, bool);
 extern ssize_t     _driver_write                (dev_t, const u8_t*, size_t, fpos_t*, struct vfs_fattr);
 extern ssize_t     _driver_read                 (dev_t, u8_t*, size_t, fpos_t*, struct vfs_fattr);
-extern stdret_t    _driver_ioctl                (dev_t, int, void*);
+extern int         _driver_ioctl                (dev_t, int, void*);
 extern stdret_t    _driver_flush                (dev_t);
 extern stdret_t    _driver_stat                 (dev_t, struct vfs_dev_stat*);
 extern const char *_get_module_name             (uint);

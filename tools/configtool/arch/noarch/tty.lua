@@ -43,7 +43,7 @@ tty = {}
 --==============================================================================
 -- LOCAL OBJECTS
 --==============================================================================
--- local objects
+local modified = ct:new_modify_indicator()
 local ui = {}
 local ID = {}
 
@@ -56,19 +56,17 @@ local ID = {}
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function load_controls()
+local function load_configuration()
         local enable          = ct:get_module_state("TTY")
         local term_cols       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_COLS))
         local term_rows       = tonumber(ct:key_read(config.noarch.key.TTY_TERM_ROWS))
         local out_stream_size = tonumber(ct:key_read(config.noarch.key.TTY_OUT_STREAM_LEN))
         local number_of_term  = tonumber(ct:key_read(config.noarch.key.TTY_NUMBER_OF_TERM)) - 1
-        local autosize_enable = ct:yes_no_to_bool(ct:key_read(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK))
         local term_in_file    = ct:key_read(config.noarch.key.TTY_TERM_IN_FILE):gsub('"', '')
         local term_out_file   = ct:key_read(config.noarch.key.TTY_TERM_OUT_FILE):gsub('"', '')
 
         ui.SpinCtrl_columns:SetValue(term_cols)
         ui.SpinCtrl_rows:SetValue(term_rows)
-        ui.CheckBox_autosize:SetValue(autosize_enable)
         ui.SpinCtrl_outbufsize:SetValue(out_stream_size)
         ui.Choice_termcount:SetSelection(number_of_term)
         ui.ComboBox_instreampath:SetValue(term_in_file)
@@ -83,13 +81,12 @@ end
 -- @param  None
 -- @return None
 --------------------------------------------------------------------------------
-local function on_button_save_click()
+local function save_configuration()
         local enable          = ui.CheckBox_enable:GetValue()
         local term_cols       = tostring(ui.SpinCtrl_columns:GetValue())
         local term_rows       = tostring(ui.SpinCtrl_rows:GetValue())
         local out_stream_size = tostring(ui.SpinCtrl_outbufsize:GetValue())
         local number_of_term  = tostring(ui.Choice_termcount:GetSelection() + 1)
-        local autosize_enable = ct:bool_to_yes_no(ui.CheckBox_autosize:GetValue())
         local term_in_file    = '"'..ui.ComboBox_instreampath:GetValue()..'"'
         local term_out_file   = '"'..ui.ComboBox_outstreampath:GetValue()..'"'
 
@@ -98,11 +95,10 @@ local function on_button_save_click()
         ct:key_write(config.noarch.key.TTY_TERM_ROWS, term_rows)
         ct:key_write(config.noarch.key.TTY_OUT_STREAM_LEN, out_stream_size)
         ct:key_write(config.noarch.key.TTY_NUMBER_OF_TERM, number_of_term)
-        ct:key_write(config.noarch.key.TTY_ENABLE_TERM_SIZE_CHECK, autosize_enable)
         ct:key_write(config.noarch.key.TTY_TERM_IN_FILE, term_in_file)
         ct:key_write(config.noarch.key.TTY_TERM_OUT_FILE, term_out_file)
 
-        ui.Button_save:Enable(false)
+        modified:no()
 end
 
 
@@ -113,7 +109,7 @@ end
 --------------------------------------------------------------------------------
 local function checkbox_enable_updated(this)
         ui.Panel1:Enable(this:IsChecked())
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -123,7 +119,7 @@ end
 -- @return None
 --------------------------------------------------------------------------------
 local function value_updated()
-        ui.Button_save:Enable(true)
+        modified:yes()
 end
 
 
@@ -153,8 +149,6 @@ function tty:create_window(parent)
         ID.COMBOBOX_INSTREAMPATH = wx.wxNewId()
         ID.STATICTEXT5 = wx.wxNewId()
         ID.COMBOBOX_OUTSTREAMPATH = wx.wxNewId()
-        ID.STATICLINE1 = wx.wxNewId()
-        ID.BUTTON_SAVE = wx.wxNewId()
 
         ui.window  = wx.wxScrolledWindow(parent, wx.wxID_ANY)
         local this = ui.window
@@ -178,11 +172,6 @@ function tty:create_window(parent)
         ui.SpinCtrl_rows:SetToolTip("Default terminal size.")
         ui.FlexGridSizer3:Add(ui.SpinCtrl_rows, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer1:Add(ui.FlexGridSizer3, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.BoxSizer1 = wx.wxBoxSizer(wx.wxHORIZONTAL)
-        ui.CheckBox_autosize = wx.wxCheckBox(ui.Panel1, ID.CHECKBOX_AUTOSIZE, "Get real terminal size", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_AUTOSIZE")
-        ui.CheckBox_autosize:SetToolTip("This option enables a read of a real terminal size. The default terminal size will be overwritten.")
-        ui.BoxSizer1:Add(ui.CheckBox_autosize, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticBoxSizer1:Add(ui.BoxSizer1, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer2 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Output stream size")
         ui.FlexGridSizer4 = wx.wxFlexGridSizer(0, 2, 0, 0)
@@ -194,7 +183,7 @@ function tty:create_window(parent)
         ui.StaticBoxSizer2:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, ui.Panel1, "Number of virtual terminals")
-        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1), {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
+        ui.Choice_termcount = wx.wxChoice(ui.Panel1, ID.CHOICE_TERMCOUNT, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_TERMCOUNT")
         ui.Choice_termcount:Append("1 terminal")
         ui.Choice_termcount:Append("2 terminals")
         ui.Choice_termcount:Append("3 terminals")
@@ -206,44 +195,39 @@ function tty:create_window(parent)
         ui.StaticText4 = wx.wxStaticText(ui.Panel1, ID.STATICTEXT4, "Input stream", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
         ui.FlexGridSizer5:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.ComboBox_instreampath = wx.wxComboBox(ui.Panel1, ID.COMBOBOX_INSTREAMPATH, "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.COMBOBOX_INSTREAMPATH")
-        ui.ComboBox_instreampath:Append("/dev/ttyS0")
+        ui.ComboBox_instreampath:Append({"/dev/ttyS0", "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", "/dev/uart1", "/dev/uart2", "/dev/uart3", "/dev/uart4", "/dev/uart5"})
         ui.ComboBox_instreampath:SetToolTip("This is a path to the input stream of the module. From this file module reads keys. If input and output streams are the same, make sure that selected file can be accessed from many threads (one thread for read and one for write).")
         ui.FlexGridSizer5:Add(ui.ComboBox_instreampath, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticText5 = wx.wxStaticText(ui.Panel1, ID.STATICTEXT5, "Output stream", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT5")
         ui.FlexGridSizer5:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.ComboBox_outstreampath = wx.wxComboBox(ui.Panel1, ID.COMBOBOX_OUTSTREAMPATH, "", wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.COMBOBOX_OUTSTREAMPATH")
-        ui.ComboBox_outstreampath:Append("/dev/ttyS0")
+        ui.ComboBox_outstreampath:Append({"/dev/ttyS0", "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", "/dev/uart1", "/dev/uart2", "/dev/uart3", "/dev/uart4", "/dev/uart5"})
         ui.ComboBox_outstreampath:SetToolTip("This is a path to the output stream of the module. Module by using this file sends messages to terminal. If input and output streams are the same, make sure that selected file can be accessed from many threads (one thread for read and one for write).")
         ui.FlexGridSizer5:Add(ui.ComboBox_outstreampath, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.StaticBoxSizer4:Add(ui.FlexGridSizer5, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
         ui.FlexGridSizer2:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
-        ui.StaticLine1 = wx.wxStaticLine(ui.Panel1, ID.STATICLINE1, wx.wxDefaultPosition, wx.wxSize(10,-1), wx.wxLI_HORIZONTAL, "ID.STATICLINE1")
-        ui.FlexGridSizer2:Add(ui.StaticLine1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
         ui.Panel1:SetSizer(ui.FlexGridSizer2)
         ui.FlexGridSizer1:Add(ui.Panel1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
-        ui.Button_save = wx.wxButton(this, ID.BUTTON_SAVE, "Save", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.BUTTON_SAVE")
-        ui.FlexGridSizer1:Add(ui.Button_save, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
         --
         this:SetSizer(ui.FlexGridSizer1)
-        this:SetScrollRate(50, 50)
+        this:SetScrollRate(25, 25)
 
         --
         this:Connect(ID.CHECKBOX_ENABLE,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  checkbox_enable_updated)
-        this:Connect(ID.SPINCTRL_COLUMNS,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
-        this:Connect(ID.SPINCTRL_ROWS,          wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
+        this:Connect(ID.SPINCTRL_COLUMNS,       wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
+        this:Connect(ID.SPINCTRL_ROWS,          wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.CHECKBOX_AUTOSIZE,      wx.wxEVT_COMMAND_CHECKBOX_CLICKED,  value_updated          )
-        this:Connect(ID.SPINCTRL_OUTBUFSIZE,    wx.wxEVT_COMMAND_SPINCTRL_UPDATED,  value_updated          )
+        this:Connect(ID.SPINCTRL_OUTBUFSIZE,    wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.CHOICE_TERMCOUNT,       wx.wxEVT_COMMAND_CHOICE_SELECTED,   value_updated          )
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_INSTREAMPATH,  wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_COMBOBOX_SELECTED, value_updated          )
         this:Connect(ID.COMBOBOX_OUTSTREAMPATH, wx.wxEVT_COMMAND_TEXT_UPDATED,      value_updated          )
-        this:Connect(ID.BUTTON_SAVE,            wx.wxEVT_COMMAND_BUTTON_CLICKED,    on_button_save_click   )
 
         --
-        load_controls()
-        ui.Button_save:Enable(false)
+        load_configuration()
+        modified:no()
 
         return ui.window
 end
@@ -270,7 +254,26 @@ end
 -- @return If data is modified true is returned, otherwise false
 --------------------------------------------------------------------------------
 function tty:is_modified()
-        return ui.Button_save:IsEnabled()
+        return modified:get_value()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function save configuration
+-- @return None
+--------------------------------------------------------------------------------
+function tty:save()
+        save_configuration()
+end
+
+
+--------------------------------------------------------------------------------
+-- @brief  Function discard modified configuration
+-- @return None
+--------------------------------------------------------------------------------
+function tty:discard()
+        load_configuration()
+        modified:no()
 end
 
 

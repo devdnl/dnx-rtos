@@ -1,48 +1,38 @@
 /*
-    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd. 
+    All rights reserved
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
-    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
-     *    FreeRTOS tutorial books are available in pdf and paperback.        *
-     *    Complete, revised, and edited pdf reference manuals are also       *
-     *    available.                                                         *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that has become a de facto standard.             *
      *                                                                       *
-     *    Purchasing FreeRTOS documentation will not only help you, by       *
-     *    ensuring you get running as quickly as possible and with an        *
-     *    in-depth knowledge of how to use FreeRTOS, it will also help       *
-     *    the FreeRTOS project to continue with its mission of providing     *
-     *    professional grade, cross platform, de facto standard solutions    *
-     *    for microcontrollers - completely free of charge!                  *
+     *    Help yourself get started quickly and support the FreeRTOS         *
+     *    project by purchasing a FreeRTOS tutorial book, reference          *
+     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
      *                                                                       *
-     *    >>> See http://www.FreeRTOS.org/Documentation for details. <<<     *
-     *                                                                       *
-     *    Thank you for using FreeRTOS, and thank you for your support!      *
+     *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
-    distribute a combined work that includes FreeRTOS without being obliged to
-    provide the source code for proprietary components outside of the FreeRTOS
-    kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-    details. You should have received a copy of the GNU General Public License
-    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
-    viewed here: http://www.freertos.org/a00114.html and also obtained by
-    writing to Real Time Engineers Ltd., contact details for whom are available
-    on the FreeRTOS WEB site.
+    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    link: http://www.freertos.org/a00114.html
 
     1 tab == 4 spaces!
 
@@ -55,21 +45,22 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, and our new
-    fully thread aware and reentrant UDP/IP stack.
+    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+    compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
-    Integrity Systems, who sell the code with commercial support, 
-    indemnification and middleware, under the OpenRTOS brand.
-    
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
-    engineered and independently SIL3 certified version for use in safety and 
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
+    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and middleware.
+
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+    engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
+
+    1 tab == 4 spaces!
 */
 
 /* Standard includes. */
@@ -135,17 +126,17 @@ static void prvInterruptYield( int iTrapIdentification );
 /*-----------------------------------------------------------*/
 
 /* This reference is required by the save/restore context macros. */
-extern volatile unsigned long *pxCurrentTCB;
+extern volatile uint32_t *pxCurrentTCB;
 
 /* Precalculate the compare match value at compile time. */
-static const unsigned long ulCompareMatchValue = ( configPERIPHERAL_CLOCK_HZ / configTICK_RATE_HZ );
+static const uint32_t ulCompareMatchValue = ( configPERIPHERAL_CLOCK_HZ / configTICK_RATE_HZ );
 
 /*-----------------------------------------------------------*/
 
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE * pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
-unsigned long *pulUpperCSA = NULL;
-unsigned long *pulLowerCSA = NULL;
+uint32_t *pulUpperCSA = NULL;
+uint32_t *pulLowerCSA = NULL;
 
 	/* 16 Address Registers (4 Address registers are global), 16 Data
 	Registers, and 3 System Registers.
@@ -198,24 +189,24 @@ unsigned long *pulLowerCSA = NULL;
 	portEXIT_CRITICAL();
 
 	/* Clear the upper CSA. */
-	memset( pulUpperCSA, 0, portNUM_WORDS_IN_CSA * sizeof( unsigned long ) );
+	memset( pulUpperCSA, 0, portNUM_WORDS_IN_CSA * sizeof( uint32_t ) );
 
 	/* Upper Context. */
-	pulUpperCSA[ 2 ] = ( unsigned long )pxTopOfStack;		/* A10;	Stack Return aka Stack Pointer */
+	pulUpperCSA[ 2 ] = ( uint32_t )pxTopOfStack;		/* A10;	Stack Return aka Stack Pointer */
 	pulUpperCSA[ 1 ] = portSYSTEM_PROGRAM_STATUS_WORD;		/* PSW	*/
 
 	/* Clear the lower CSA. */
-	memset( pulLowerCSA, 0, portNUM_WORDS_IN_CSA * sizeof( unsigned long ) );
+	memset( pulLowerCSA, 0, portNUM_WORDS_IN_CSA * sizeof( uint32_t ) );
 
 	/* Lower Context. */
-	pulLowerCSA[ 8 ] = ( unsigned long ) pvParameters;		/* A4;	Address Type Parameter Register	*/
-	pulLowerCSA[ 1 ] = ( unsigned long ) pxCode;			/* A11;	Return Address aka RA */
+	pulLowerCSA[ 8 ] = ( uint32_t ) pvParameters;		/* A4;	Address Type Parameter Register	*/
+	pulLowerCSA[ 1 ] = ( uint32_t ) pxCode;			/* A11;	Return Address aka RA */
 
 	/* PCXI pointing to the Upper context. */
-	pulLowerCSA[ 0 ] = ( portINITIAL_PCXI_UPPER_CONTEXT_WORD | ( unsigned long ) portADDRESS_TO_CSA( pulUpperCSA ) );
+	pulLowerCSA[ 0 ] = ( portINITIAL_PCXI_UPPER_CONTEXT_WORD | ( uint32_t ) portADDRESS_TO_CSA( pulUpperCSA ) );
 
 	/* Save the link to the CSA in the top of stack. */
-	pxTopOfStack = (unsigned long * ) portADDRESS_TO_CSA( pulLowerCSA );
+	pxTopOfStack = (uint32_t * ) portADDRESS_TO_CSA( pulLowerCSA );
 
 	/* DSync to ensure that buffering is not a problem. */
 	_dsync();
@@ -224,12 +215,12 @@ unsigned long *pulLowerCSA = NULL;
 }
 /*-----------------------------------------------------------*/
 
-long xPortStartScheduler( void )
+int32_t xPortStartScheduler( void )
 {
 extern void vTrapInstallHandlers( void );
-unsigned long ulMFCR = 0UL;
-unsigned long *pulUpperCSA = NULL;
-unsigned long *pulLowerCSA = NULL;
+uint32_t ulMFCR = 0UL;
+uint32_t *pulUpperCSA = NULL;
+uint32_t *pulLowerCSA = NULL;
 
 	/* Interrupts at or below configMAX_SYSCALL_INTERRUPT_PRIORITY are disable
 	when this function is called. */
@@ -331,10 +322,11 @@ static void prvSetupTimerInterrupt( void )
 
 static void prvSystemTickHandler( int iArg )
 {
-unsigned long ulSavedInterruptMask;
-unsigned long *pxUpperCSA = NULL;
-unsigned long xUpperCSA = 0UL;
-extern volatile unsigned long *pxCurrentTCB;
+uint32_t ulSavedInterruptMask;
+uint32_t *pxUpperCSA = NULL;
+uint32_t xUpperCSA = 0UL;
+extern volatile uint32_t *pxCurrentTCB;
+int32_t lYieldRequired;
 
 	/* Just to avoid compiler warnings about unused parameters. */
 	( void ) iArg;
@@ -365,11 +357,11 @@ extern volatile unsigned long *pxCurrentTCB;
 	ulSavedInterruptMask = portSET_INTERRUPT_MASK_FROM_ISR();
 	{
 		/* Increment the Tick. */
-		vTaskIncrementTick();
+		lYieldRequired = xTaskIncrementTick();
 	}
 	portCLEAR_INTERRUPT_MASK_FROM_ISR( ulSavedInterruptMask );
 
-	#if configUSE_PREEMPTION == 1
+	if( lYieldRequired != pdFALSE )
 	{
 		/* Save the context of a task.
 		The upper context is automatically saved when entering a trap or interrupt.
@@ -400,7 +392,6 @@ extern volatile unsigned long *pxCurrentTCB;
 		CPU_SRC0.bits.SETR = 0;
 		_isync();
 	}
-	#endif
 }
 /*-----------------------------------------------------------*/
 
@@ -422,10 +413,10 @@ extern volatile unsigned long *pxCurrentTCB;
  * than they can be freed assuming that tasks are being spawned and
  * deleted frequently.
  */
-void vPortReclaimCSA( unsigned long *pxTCB )
+void vPortReclaimCSA( uint32_t *pxTCB )
 {
-unsigned long pxHeadCSA, pxTailCSA, pxFreeCSA;
-unsigned long *pulNextCSA;
+uint32_t pxHeadCSA, pxTailCSA, pxFreeCSA;
+uint32_t *pulNextCSA;
 
 	/* A pointer to the first CSA in the list of CSAs consumed by the task is
 	stored in the first element of the tasks TCB structure (where the stack
@@ -485,9 +476,9 @@ void vPortEndScheduler( void )
 
 static void prvTrapYield( int iTrapIdentification )
 {
-unsigned long *pxUpperCSA = NULL;
-unsigned long xUpperCSA = 0UL;
-extern volatile unsigned long *pxCurrentTCB;
+uint32_t *pxUpperCSA = NULL;
+uint32_t xUpperCSA = 0UL;
+extern volatile uint32_t *pxCurrentTCB;
 
 	switch( iTrapIdentification )
 	{
@@ -532,9 +523,9 @@ extern volatile unsigned long *pxCurrentTCB;
 
 static void prvInterruptYield( int iId )
 {
-unsigned long *pxUpperCSA = NULL;
-unsigned long xUpperCSA = 0UL;
-extern volatile unsigned long *pxCurrentTCB;
+uint32_t *pxUpperCSA = NULL;
+uint32_t xUpperCSA = 0UL;
+extern volatile uint32_t *pxCurrentTCB;
 
 	/* Just to remove compiler warnings. */
 	( void ) iId;
@@ -570,9 +561,9 @@ extern volatile unsigned long *pxCurrentTCB;
 }
 /*-----------------------------------------------------------*/
 
-unsigned long uxPortSetInterruptMaskFromISR( void )
+uint32_t uxPortSetInterruptMaskFromISR( void )
 {
-unsigned long uxReturn = 0UL;
+uint32_t uxReturn = 0UL;
 
 	_disable();
 	uxReturn = _mfcr( $ICR );

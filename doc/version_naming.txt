@@ -1,0 +1,15 @@
+The naming convention of the dnx RTOS is as follow:
+
+   dnx RTOS <version number> "codename"
+   
+where:
+   - <version number> are a major.minor.patch numbers. The major number means
+     the main version of the RTOS. The minor number means the version of user's
+     interface. If minor number is different then user's programs may be not
+     compatible. The patch number indicates stable or development fixes.
+     All even numbers of then patch number means that current version
+     is stable, odd numbers means that version is under development and can be
+     unstable.
+   - "codename" is a name that is assigned to the specified version. The codenames
+     start from A letter and go to Z letter in the next versions. The codename is
+     connected with minor version of software.

@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
+<!program_header!>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -44,9 +45,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-
-};
+<!global_variables_in_src!>
 
 /*==============================================================================
   Exported object definitions
@@ -60,7 +59,7 @@ GLOBAL_VARIABLES {
  * @brief Program main function
  */
 //==============================================================================
-int_main(<!program_name!>, <!STACK_SIZE!>, int argc, char *argv[])
+int_main(<!program_name!>, <!stack_size!>, int argc, char *argv[])
 {
         return 0;
 }

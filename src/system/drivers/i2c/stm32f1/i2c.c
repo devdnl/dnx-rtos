@@ -654,7 +654,8 @@ static bool enable_I2C(u8_t major)
         CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
         SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
 
-        RCC_ClocksTypeDef clocks = {0};
+        RCC_ClocksTypeDef clocks;
+        memset(&clocks, 0, sizeof(RCC_ClocksTypeDef));
         RCC_GetClocksFreq(&clocks);
         clocks.PCLK1_Frequency /= 1000000;
 

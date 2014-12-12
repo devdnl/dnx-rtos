@@ -1,6 +1,7 @@
 ;/*
-;    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
-;	
+;    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+;    All rights reserved
+;
 ;
 ;    ***************************************************************************
 ;     *                                                                       *
@@ -53,11 +54,6 @@
 
 #include "ISR_Support.h"
 
-
-#if __CORE__ != __RL78_1__
-	#error "This file is only for RL78 Devices"
-#endif
-
 #define CS                    0xFFFFC
 #define ES                    0xFFFFD
 
@@ -66,7 +62,7 @@
 	PUBLIC    vPortTickISR
 
 	EXTERN    vTaskSwitchContext
-	EXTERN    vTaskIncrementTick
+	EXTERN    xTaskIncrementTick
 
 ; FreeRTOS yield handler.  This is installed as the BRK software interrupt
 ; handler.
@@ -77,7 +73,7 @@ vPortYield:
 	portRESTORE_CONTEXT		        ; Restore the context of the next task to run.
 	retb
 
-	
+
 ; Starts the scheduler by restoring the context of the task that will execute
 ; first.
     RSEG CODE:CODE
@@ -91,19 +87,19 @@ vPortStartFirstTask:
 	 RSEG CODE:CODE
 vPortTickISR:
 
-	portSAVE_CONTEXT		        ; Save the context of the current task.
-	call      vTaskIncrementTick    ; Call the timer tick function.
-#if configUSE_PREEMPTION == 1
-	call      vTaskSwitchContext    ; Call the scheduler to select the next task.
-#endif
-	portRESTORE_CONTEXT		        ; Restore the context of the next task to run.
+	portSAVE_CONTEXT		       ; Save the context of the current task.
+	call	xTaskIncrementTick     ; Call the timer tick function.
+	cmpw	ax, #0x00
+	skz
+	call	vTaskSwitchContext     ; Call the scheduler to select the next task.
+	portRESTORE_CONTEXT		       ; Restore the context of the next task to run.
 	reti
 
 
 ; Install the interrupt handlers
 
 	COMMON INTVEC:CODE:ROOT(1)
-	ORG 56
+	ORG configTICK_VECTOR
 	DW vPortTickISR
 
 	COMMON INTVEC:CODE:ROOT(1)

@@ -5,7 +5,7 @@
 
 @brief   Code in this file is responsible for buffer support.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013, 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/misc.h>
+#include "dnx/misc.h"
 #include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
@@ -36,15 +36,20 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define CR_LF_LEN       2
+#define CR_LF_NUL_LEN   3
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttybfr {
-        char           *line[_TTY_DEFAULT_TERMINAL_ROWS];
-        u32_t           valid;
-        u16_t           write_index;
-        bool            fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
+        void  *self;
+        char  *line[_TTY_TERMINAL_ROWS];
+        char   new_line_bfr[_TTY_TERMINAL_COLUMNS + CR_LF_NUL_LEN];
+        size_t new_line_bfr_idx;
+        u16_t  carriage;
+        u16_t  line_head;
+        bool   fresh_line[_TTY_TERMINAL_ROWS];
 };
 
 /*==============================================================================
@@ -56,7 +61,7 @@ struct ttybfr {
 ==============================================================================*/
 MODULE_NAME(TTY);
 
-static const u32_t validation_token = 0xFF49421D;
+static const char *CR_LF = "\r\n";
 
 /*==============================================================================
   Exported objects
@@ -72,175 +77,135 @@ static const u32_t validation_token = 0xFF49421D;
 
 //==============================================================================
 /**
- * @brief Function copy string and replace \n to \r\n
- *
- * @param *dst          destination string
- * @param *src          source string
- * @param  n            destination length
+ * @brief  Check if given object is valid
+ * @param  this         object to examine
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static void strncpy_LF2CRLF(char *dst, const char *src, uint n)
+static bool is_valid(ttybfr_t *this)
 {
-        for (uint i = 0; i < (n - 1); i++) {
-                if (*src == '\n') {
-                        *(dst++) = '\r';
-                        *(dst++) = *(src++);
-                        i++;
-                } else if (*src == '\0') {
-                        break;
-                } else {
-                        *(dst++) = *(src++);
-                }
-        }
-
-        *dst = '\0';
+        return this && this->self == this;
 }
 
 //==============================================================================
 /**
- * @brief Convert \n to \r\n
- *
- * @param[in] line              line data
- * @param[in] line_len          line length
- *
- * @return pointer to new corrected line
- */
-//==============================================================================
-static char *new_CRLF_line(const char *line, uint line_len)
-{
-        /* calculate how many '\n' exist in string */
-        uint LF_count = 0;
-        for (uint i = 0; i < line_len; i++) {
-                if (line[i] == '\n') {
-                        LF_count++;
-                }
-        }
-
-        char *new_line = malloc(line_len + LF_count + 1);
-        if (new_line) {
-                strncpy_LF2CRLF(new_line, line, line_len + LF_count + 1);
-        }
-
-        return new_line;
-}
-
-//==============================================================================
-/**
- * @brief Get last or selected line
- *
- * @param this          buffer object
- * @param go_back       number of lines from current index
- *
+ * @brief  Get last or selected line
+ * @param  this          buffer object
+ * @param  go_back       number of lines from current index
  * @return line's index
  */
 //==============================================================================
 static uint get_line_index(ttybfr_t *this, uint go_back)
 {
-        if (this->write_index < go_back) {
-                return _TTY_DEFAULT_TERMINAL_ROWS - (go_back - this->write_index);
+        if (this->line_head < go_back) {
+                return _TTY_TERMINAL_ROWS - (go_back - this->line_head);
         } else {
-                return this->write_index - go_back;
+                return this->line_head - go_back;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function free the oldest line
- *
- * @param this          buffer object
- *
- * @return 0 if success, 1 on error
- */
-//==============================================================================
-static int free_the_oldest_line(ttybfr_t *this)
-{
-        for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
-                int line_index = get_line_index(this, i);
-                if (this->line[line_index]) {
-                        free(this->line[line_index]);
-                        this->line[line_index] = NULL;
-                        return 0;
-                }
-        }
-
-        return 1;
-}
-
-//==============================================================================
-/**
- * @brief Function create new buffer for new line or merge new line with the
- *        latest
- *
- * Function create new buffer for new line if latest line is LF ended,
- * otherwise function merge latest line with new line. Function returns
- * pointer to new buffer (if created) or to source buffer if no changes was made.
- *
- * @param [in]  this            buffer object
- * @param [in]  src             source line
- * @param [out] new             if new string created set to true
- *
- * @return pointer to new line
- */
-//==============================================================================
-static char *merge_or_create_line(ttybfr_t *this, const char *src, bool *new)
-{
-        char *line      = const_cast(char*, src);
-        char *last_line = this->line[get_line_index(this, 1)];
-
-        *new = false;
-
-        if (last_line) {
-                if (LAST_CHARACTER(last_line) != '\n') {
-
-                        size_t last_line_len = strlen(last_line) + 1;
-
-                        if (FIRST_CHARACTER(src) == '\r' && strncmp(src, "\r\n", 2) != 0) {
-                                line = malloc(strlen(src + 1) + 1);
-                                if (line) {
-                                        strcpy(line, src + 1);
-                                } else {
-                                        return NULL;
-                                }
-                        } else {
-                                line = malloc(last_line_len + strlen(src) + 1);
-                                if (line) {
-                                        strcpy(line, last_line);
-                                        strcat(line, src);
-                                } else {
-                                        return NULL;
-                                }
-                        }
-
-                        this->write_index = get_line_index(this, 1);
-
-                        *new = true;
-                }
-        }
-
-        return line;
-}
-
-//==============================================================================
-/**
- * @brief Function link prepared line to buffer
- *
- * @param this          buffer object
- * @param line          line
+ * @brief  Function link prepared line to buffer
+ * @param  this          buffer object
+ * @param  line          line
+ * @return None
  */
 //==============================================================================
 static void link_line(ttybfr_t *this, char *line)
 {
-        if (this->line[this->write_index]) {
-                free(this->line[this->write_index]);
+        if (this->line[this->line_head]) {
+                free(this->line[this->line_head]);
+                this->line[this->line_head] = NULL;
         }
 
-        this->fresh_line[this->write_index] = true;
-        this->line[this->write_index++]     = line;
+        this->line[this->line_head]       = line;
+        this->fresh_line[this->line_head] = true;
 
-        if (this->write_index >= _TTY_DEFAULT_TERMINAL_ROWS) {
-                this->write_index = 0;
+        if (LAST_CHARACTER(line) == '\n') {
+                this->line_head = (this->line_head + 1) % _TTY_TERMINAL_ROWS;
+
+                if (this->line[this->line_head]) {
+                        free(this->line[this->line_head]);
+                        this->line[this->line_head] = NULL;
+                }
         }
 }
+
+//==============================================================================
+/**
+ * @brief  Clear the new line buffer
+ * @param  this         buffer object
+ * @return None
+ */
+//==============================================================================
+static void clear_new_line_buffer(ttybfr_t *this)
+{
+        memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
+        this->new_line_bfr_idx = 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Clear last line
+ * @param  this          buffer object
+ * @return None
+ */
+//==============================================================================
+static void clear_last_line(ttybfr_t *this)
+{
+        if (this->line[this->line_head]) {
+                free(this->line[this->line_head]);
+                this->line[this->line_head] = NULL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Put the new line buffer to the main buffer
+ * @param  this         buffer object
+ * @return None
+ */
+//==============================================================================
+static void put_new_line_buffer(ttybfr_t *this)
+{
+        /* function link a new line to the buffer */
+        void link_new_line(const char *str, size_t len)
+        {
+                char *line = malloc(len + 1);
+                if (line) {
+                        strcpy(line, str);
+                        link_line(this, line);
+                }
+        }
+
+        /* check if in buffer is VT100 clear command */
+        if (strncmp(VT100_CLEAR_SCREEN, this->new_line_bfr, 4) == 0) {
+                ttybfr_clear(this);
+        }
+
+        /* add line to the buffer */
+        size_t new_line_len = strlen(this->new_line_bfr);
+        char *last_line     = this->line[get_line_index(this, 0)];
+        if (last_line) {
+                if (LAST_CHARACTER(last_line) == '\n') {
+                        link_new_line(this->new_line_bfr, new_line_len);
+                } else {
+                        size_t last_line_len = strlen(last_line);
+                        char *line = malloc(last_line_len + new_line_len + 1);
+                        if (line) {
+                                strcpy(line, last_line);
+                                strcat(line, this->new_line_bfr);
+                                link_line(this, line);
+                        }
+                }
+        } else {
+                link_new_line(this->new_line_bfr, new_line_len);
+        }
+
+        clear_new_line_buffer(this);
+}
+
 
 /*------------------------------------------------------------------------------
  * INTERFACES
@@ -248,16 +213,16 @@ static void link_line(ttybfr_t *this, char *line)
 
 //==============================================================================
 /**
- * @brief Initialize buffer
- *
- * @return if success buffer object, NULL on error
+ * @brief  Initialize buffer
+ * @param  None
+ * @return If success buffer object, NULL on error
  */
 //==============================================================================
 ttybfr_t *ttybfr_new()
 {
         ttybfr_t *bfr = calloc(1, sizeof(ttybfr_t));
         if (bfr) {
-                bfr->valid =  validation_token;
+                bfr->self = bfr;
         }
 
         return bfr;
@@ -265,61 +230,79 @@ ttybfr_t *ttybfr_new()
 
 //==============================================================================
 /**
- * @brief Destroy buffer object
- *
- * @param this          buffer object
+ * @brief  Destroy buffer object
+ * @param  this          buffer object
+ * @return None
  */
 //==============================================================================
 void ttybfr_delete(ttybfr_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        this->valid = 0;
-                        free(this);
-                }
+        if (is_valid(this)) {
+                this->self = NULL;
+                free(this);
         }
 }
 
 //==============================================================================
 /**
- * @brief Add new line to buffer
- *
- * @param this          buffer object
- * @param src           source
- * @param len           length
+ * @brief  Put string buffer to the line
+ * @param  this          buffer object
+ * @param  src           source
+ * @param  len           length
+ * @return None
  */
 //==============================================================================
-void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
+void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        while (len) {
-                                /* --- find line in buffer --- */
-                                const char *line = src;
-                                size_t      llen = 0;
+        void put_char(const char chr)
+        {
+                this->new_line_bfr[this->new_line_bfr_idx++] = chr;
 
-                                while (llen++, --len && *src++ != '\n');
+                if (this->new_line_bfr_idx > _TTY_TERMINAL_COLUMNS) {
+                        put_new_line_buffer(this);
+                }
+        }
 
-                                /* --- add line to buffer --- */
-                                if (strncmp(VT100_CLEAR_SCREEN, (char *)line, 4) == 0) {
-                                        ttybfr_clear(this);
+        if (is_valid(this)) {
+                bool VT100_cmd = false;
+
+                while (len--) {
+                        char chr = *src++;
+
+                        if (chr == '\r') {
+                                this->carriage = 0;
+                                this->new_line_bfr_idx = 0;
+
+                                if (LAST_CHARACTER(this->line[this->line_head]) != '\n') {
+                                        clear_last_line(this);
                                 }
 
-                                char *crlf_line;
-                                while (!(crlf_line = new_CRLF_line(line, llen))) {
-                                        if (free_the_oldest_line(this) != 0) {
-                                                break;
-                                        }
+                        } else if (chr == '\n') {
+                                strcat(this->new_line_bfr, CR_LF);
+                                put_new_line_buffer(this);
+                                this->carriage = 0;
+
+                        } else if (chr == '\e') {
+                                VT100_cmd = true;
+                                put_char(chr);
+
+                        } else if (VT100_cmd) {
+                                put_char(chr);
+
+                                if (strchr("hlHKCDm", chr)) {
+                                        VT100_cmd = false;
                                 }
 
-                                if (crlf_line) {
-                                        bool  new      = false;
-                                        char *new_line = merge_or_create_line(this, crlf_line, &new);
-                                        link_line(this, new_line);
+                        } else if (this->carriage >= _TTY_TERMINAL_COLUMNS) {
+                                strcat(this->new_line_bfr, "\r\n");
+                                put_new_line_buffer(this);
+                                this->carriage = 0;
+                                put_char(chr);
 
-                                        if (new || new_line == NULL) {
-                                                free(crlf_line);
-                                        }
+                        } else {
+                                if (chr == '\t' || (chr >= ' ' && chr < 0x80)) {
+                                        put_char(chr);
+                                        this->carriage++;
                                 }
                         }
                 }
@@ -328,45 +311,39 @@ void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
 
 //==============================================================================
 /**
- * @brief Clear whole terminal
- *
- * @param this          buffer object
+ * @brief  Clear whole terminal
+ * @param  this          buffer object
+ * @return None
  */
 //==============================================================================
 void ttybfr_clear(ttybfr_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
-                                if (this->line[i]) {
-                                        free(this->line[i]);
-                                        this->line[i] = NULL;
-                                }
-
-                                this->fresh_line[i] = false;
+        if (is_valid(this)) {
+                for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
+                        if (this->line[i]) {
+                                free(this->line[i]);
+                                this->line[i] = NULL;
                         }
 
-                        this->write_index = 0;
+                        this->fresh_line[i] = false;
                 }
+
+                this->line_head = 0;
         }
 }
 
 //==============================================================================
 /**
- * @brief Return n-line
- *
- * @param this          buffer object
- * @param n             n-line from head
- *
+ * @brief  Return n-line
+ * @param  this          buffer object
+ * @param  n             n-line from head
  * @return pointer to line or NULL if line doesn't exist
  */
 //==============================================================================
 const char *ttybfr_get_line(ttybfr_t *this, int n)
 {
-        if (this && n > 0 && n <= _TTY_DEFAULT_TERMINAL_ROWS) {
-                if (this->valid == validation_token) {
-                        return this->line[get_line_index(this, n)];
-                }
+        if (is_valid(this) && n >= 0 && n < _TTY_TERMINAL_ROWS) {
+                return this->line[get_line_index(this, n)];
         }
 
         return NULL;
@@ -374,23 +351,19 @@ const char *ttybfr_get_line(ttybfr_t *this, int n)
 
 //==============================================================================
 /**
- * @brief Return fresh line
- *
- * @param this          buffer object
- *
+ * @brief  Return fresh line
+ * @param  this          buffer object
  * @return pointer to new line or NULL if no new line
  */
 //==============================================================================
 const char *ttybfr_get_fresh_line(ttybfr_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
-                                uint idx = get_line_index(this, i);
-                                if (this->fresh_line[idx]) {
-                                        this->fresh_line[idx] = false;
-                                        return this->line[idx];
-                                }
+        if (is_valid(this)) {
+                for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
+                        uint idx = get_line_index(this, i);
+                        if (this->fresh_line[idx]) {
+                                this->fresh_line[idx] = false;
+                                return this->line[idx];
                         }
                 }
         }
@@ -400,18 +373,33 @@ const char *ttybfr_get_fresh_line(ttybfr_t *this)
 
 //==============================================================================
 /**
- * @brief Clear fresh line counter
- *
- * @param this          buffer object
+ * @brief  Clear fresh line counter
+ * @param  this          buffer object
+ * @return None
  */
 //==============================================================================
 void ttybfr_clear_fresh_line_counter(ttybfr_t *this)
 {
-        if (this) {
-                if (this->valid == validation_token) {
-                        for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
-                                this->fresh_line[i] = false;
-                        }
+        if (is_valid(this)) {
+                for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
+                        this->fresh_line[i] = false;
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Flush prepare buffer
+ * @param  this          buffer object
+ * @return None
+ */
+//==============================================================================
+void ttybfr_flush(ttybfr_t *this)
+{
+        if (is_valid(this)) {
+                if (strlen(this->new_line_bfr)) {
+                        put_new_line_buffer(this);
+                        clear_new_line_buffer(this);
                 }
         }
 }

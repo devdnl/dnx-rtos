@@ -139,6 +139,9 @@ CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
 ADDPROGS   = ./tools/progsearch.sh
 ADDLIBS    = ./tools/libsearch.sh
+FLASH_CPU  = ./tools/flash.sh
+RESET_CPU  = ./tools/reset.sh
+GIT_HOOKS  = ./tools/apply_git_hooks.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -203,7 +206,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : add_programs
+all : add_programs apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -224,12 +227,14 @@ help :
 	@$(ECHO) "Non-build targets:"
 	@$(ECHO) "   check               static code analyze by using cppcheck"
 	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
+	@$(ECHO) "   flash               flash target CPU by using ./tools/flash.sh script"
+	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 
 ####################################################################################################
 # project configuration wizard
 ####################################################################################################
 .PHONY : config
-config : clean
+config : clean apply_git_hooks
 	@$(ECHO) "Starting configtool..."
 	@$(CONFIGTOOL)
 
@@ -239,10 +244,10 @@ config : clean
 .PHONY : check
 check :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
-	
+
 quickcheck :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/stdc/dnx $(CSRC) $(CXXSRC)
-	
+
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
@@ -272,7 +277,7 @@ hex :
 .PHONY : status
 status :
 	@$(ECHO) "-----------------------------------"
-	@$(ECHO) "| `$(DATE) "+Compilation completed: %k:%M:%S"` |"
+	@$(ECHO) "| `$(DATE) "+Compilation completed: %H:%M:%S"` |"
 	@$(ECHO) "-----------------------------------"
 
 ####################################################################################################
@@ -287,6 +292,13 @@ add_programs :
 	@$(ECHO) "Adding user's programs and libraries to the project..."
 	@$(ADDPROGS) ./src/programs
 	@$(ADDLIBS) ./src/lib
+
+####################################################################################################
+# Copy git hooks to git repository
+####################################################################################################
+.PHONY : apply_git_hooks
+apply_git_hooks :
+	@$(GIT_HOOKS)
 
 ####################################################################################################
 # makes dependences
@@ -368,6 +380,20 @@ clean :
 cleanall:
 	@$(ECHO) "Cleaning up project..."
 	-@$(RM) -r $(TARGET_DIR_NAME) $(INFO_LOC)
+
+####################################################################################################
+# flash target CPU by using ./tools/flash.sh script
+####################################################################################################
+.PHONY : flash
+flash:
+	@$(FLASH_CPU)
+
+####################################################################################################
+# reset target CPU by using ./tools/flash.sh script
+####################################################################################################
+.PHONY : reset
+reset:
+	@$(RESET_CPU)
 
 ####################################################################################################
 # include all dependencies

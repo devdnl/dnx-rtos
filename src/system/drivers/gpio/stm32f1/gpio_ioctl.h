@@ -74,25 +74,29 @@ typedef struct {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set selected pin (pin state 1)
+/**
+ *  @brief  Set selected pin (pin state 1)
  *  @param  GPIO_pin_t *
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__SET_PIN             _IOW(GPIO, 0, GPIO_pin_t*)
 
-/** @brief  Clear selected pin (pin state 0)
+/**
+ *  @brief  Clear selected pin (pin state 0)
  *  @param  GPIO_pin_t *
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__CLEAR_PIN           _IOW(GPIO, 1, GPIO_pin_t*)
 
-/** @brief  Toggle pin state
+/**
+ *  @brief  Toggle pin state
  *  @param  GPIO_pin_t *
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__TOGGLE_PIN          _IOW(GPIO, 2, GPIO_pin_t*)
 
-/** @brief  Gets pin state
+/**
+ *  @brief  Gets pin state
  *  @param  GPIO_pin_t *
  *  @return On success 0 or 1 (pin state), on error -1
  */
@@ -107,6 +111,11 @@ typedef struct {
 /* helper macros */
 #define _CAT(x, y) x ## y
 #define _PIN_NAME(_port, _pin, _name)   enum _port##_pin {_CAT(GPIO_PIN__, _name) = _pin, _CAT(_PORT_GPIO_PIN__, _name) = _port, _CAT(GPIO_PORT_OF__, _name) = _port}
+
+/** GPIO pin NONE definition */
+#define _GPIO_IOCTL_NONE        0xF
+#define _GPIO_PIN_NONE          0
+_PIN_NAME(_GPIO_IOCTL_NONE, 0, NONE);
 
 /** GPIOA pins configuration */
 #if __GPIO_PA_ENABLE__

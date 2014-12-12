@@ -1,3 +1,35 @@
+dnx RTOS 1.5.0
+==============
+New Features, Improvements:
+- Configtool: corrected project configuraiton script to be faster
+- Configtool: the import of the configuration with unknown CPU architecture is disabled
+- Configtool: release version is added to the title bar
+- Configtool: tool uses save questions instead of discard
+- Configtool: added status and tool bar, removed Save buttons from configuration forms
+- Configtool: added tooltips to the AFIO configuration
+- Configtool: added pin configuration propositions in the GPIO configuration script
+- Configtool: added clock tree window to the PLL configuration
+- Configtool: added a new program creator
+- Configtool: added more network configuration options (basic and advanced)
+- Configtool: added initd configuration. From/to BSP can be imported/exported initd configuration as well.
+- net: added a new interface: net_conn_get_host_by_name() that resolves IP address by host name (by using DNS)
+- Makefile: added flash and reset targets (targets are connected to the scripts)
+- Eclipse: added Configtool to the External tools
+- GPIO: defined pin that is not connected to any input/output (pin NONE)
+- Added SLRE library (regular expressions)
+- BSP: board support package for zl26arm and STM32USBcomp development boards added
+- reimplemented mbus library
+- Updated kernel to FreeRTOS V8.1.2
+- Cleanup net.h library
+
+Fixed Bugs:
+- LOOP: module uses not C99-standard union construction
+- Configtool: fixed bug in the GPIO configuration script (issue #124)
+- TTY: problems with printing single characters (issue #139)
+- printf(): fixed problem with %c and other formats (issue #134)
+- Ethernet: fixed long pings and reimplement ETHMAC module and network manager (issue #151)
+- Mutex: object delete causes a negative value of kernel memory usage (issue #152)
+
 dnx RTOS 1.4.1
 ==============
 New Features, Improvements:

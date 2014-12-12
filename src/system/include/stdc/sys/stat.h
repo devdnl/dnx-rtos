@@ -144,7 +144,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 
 //==============================================================================
 /**
- * @brief int chmod(const char *pathname, int mode)
+ * @brief int chmod(const char *pathname, mode_t mode)
  * The <b>chmod</b>() system call change the permissions of a file.
  *
  * @param pathname      file to permission change
@@ -163,7 +163,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
  * // ...
  */
 //==============================================================================
-static inline int chmod(const char *pathname, int mode)
+static inline int chmod(const char *pathname, mode_t mode)
 {
         return vfs_chmod(pathname, mode);
 }

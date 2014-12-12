@@ -304,7 +304,7 @@ ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t _driver_ioctl(dev_t id, int request, void *arg)
+int _driver_ioctl(dev_t id, int request, void *arg)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_ioctl(driver_memory_region[id], request, arg);

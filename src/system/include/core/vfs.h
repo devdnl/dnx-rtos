@@ -188,7 +188,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
         ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
         ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
+        int      (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
@@ -207,7 +207,7 @@ struct vfs_FS_interface {
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
-extern stdret_t         vfs_init                (void);
+extern stdret_t         _vfs_init               (void);
 extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
 extern stdret_t         vfs_umount              (const char*);
 extern int              vfs_getmntentry         (int, struct mntent*);
@@ -219,8 +219,8 @@ extern int              vfs_closedir            (DIR*);
 extern dirent_t         vfs_readdir             (DIR*);
 extern int              vfs_remove              (const char*);
 extern int              vfs_rename              (const char*, const char*);
-extern int              vfs_chmod               (const char*, int);
-extern int              vfs_chown               (const char*, int, int);
+extern int              vfs_chmod               (const char*, mode_t);
+extern int              vfs_chown               (const char*, uid_t, gid_t);
 extern int              vfs_stat                (const char*, struct stat*);
 extern int              vfs_statfs              (const char*, struct statfs*);
 extern FILE            *vfs_fopen               (const char*, const char*);

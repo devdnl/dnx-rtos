@@ -5,7 +5,7 @@
 
 @brief   This file support dynamic memory management.
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -110,10 +110,10 @@ static void plug_holes(struct mem *mem);
                                       Local object definitions
 ==============================================================================*/
 /** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
-static u8_t *ram;
+static u8_t *heap;
 
 /** the last entry, always unused! */
-static struct mem *ram_end;
+static struct mem *heap_end;
 
 /** pointer to the lowest free block, this is used for faster search */
 static struct mem *lfree;
@@ -131,15 +131,32 @@ static u32_t used_mem;
 
 //==============================================================================
 /**
- * "Plug holes" by combining adjacent empty struct mems.
- * After this function is through, there should not exist
- * one empty struct mem pointing to another empty struct mem.
- *
- * @param mem this points to a struct mem which just has been freed
- * @internal this function is only called by mem_free() and mem_trim()
- *
- * This assumes access to the heap is protected by the calling function
- * already.
+ * @brief  Function calls user defined function when memory is allocated or
+ *         freed. On error function is not called. If memory was allocated then
+ *         positive value of size is passed. If memory was freed then negative
+ *         value of size is passed.
+ * @param  func         user defined function
+ * @param  arg          argument to pass via function
+ * @param  size         allocated/freed size
+ * @return None
+ */
+//==============================================================================
+static inline void call_user_function(_memman_func_t func, void *arg, i32_t size)
+{
+        if (func) {
+                func(arg, size);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  "Plug holes" by combining adjacent empty struct mems.
+ *         After this function is through, there should not exist
+ *         one empty struct mem pointing to another empty struct mem.
+ *         This assumes access to the heap is protected by the calling function
+ *         already.
+ * @param  mem        this points to a struct mem which just has been freed
+ * @return None
  */
 //==============================================================================
 static void plug_holes(struct mem *mem)
@@ -148,9 +165,9 @@ static void plug_holes(struct mem *mem)
         struct mem *pmem;
 
         /* plug hole forward */
-        nmem = (struct mem *)(void *)&ram[mem->next];
+        nmem = (struct mem *)(void *)&heap[mem->next];
 
-        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)ram_end) {
+        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)heap_end) {
                 /* if mem->next is unused and not end of ram, combine mem and mem->next */
                 if (lfree == nmem) {
                         lfree = mem;
@@ -158,11 +175,11 @@ static void plug_holes(struct mem *mem)
 
                 mem->next = nmem->next;
 
-                ((struct mem*)(void*)&ram[nmem->next])->prev = (size_t)((u8_t*)mem - ram);
+                ((struct mem*)(void*)&heap[nmem->next])->prev = (size_t)((u8_t*)mem - heap);
         }
 
         /* plug hole backward */
-        pmem = (struct mem *)(void *)&ram[mem->prev];
+        pmem = (struct mem *)(void *)&heap[mem->prev];
 
         if (pmem != mem && pmem->used == 0) {
                 /* if mem->prev is unused, combine mem and mem->prev */
@@ -172,98 +189,87 @@ static void plug_holes(struct mem *mem)
 
                 pmem->next = mem->next;
 
-                ((struct mem *)(void *)&ram[mem->next])->prev = (size_t)((u8_t *)pmem - ram);
+                ((struct mem *)(void *)&heap[mem->next])->prev = (size_t)((u8_t *)pmem - heap);
         }
 }
 
 //==============================================================================
 /**
-* @brief Zero the heap and initialize start, end and lowest-free
+* @brief  Zero the heap and initialize start, end and lowest-free
+* @param  None
+* @return None
 */
 //==============================================================================
 void _memman_init(void)
 {
         /* align the heap */
-        ram = (u8_t*)_MEMMAN_HEAP_START;
+        heap = (u8_t*)_MEMMAN_HEAP_START;
 
         /* initialize the start of the heap */
-        struct mem *mem = (struct mem *)ram;
+        struct mem *mem = (struct mem *)heap;
         mem->next = MEM_SIZE_ALIGNED;
         mem->prev = 0;
         mem->used = 0;
 
         /* initialize the end of the heap */
-        ram_end = (struct mem *)&ram[MEM_SIZE_ALIGNED];
-        ram_end->used = 1;
-        ram_end->next = MEM_SIZE_ALIGNED;
-        ram_end->prev = MEM_SIZE_ALIGNED;
+        heap_end = (struct mem *)&heap[MEM_SIZE_ALIGNED];
+        heap_end->used = 1;
+        heap_end->next = MEM_SIZE_ALIGNED;
+        heap_end->prev = MEM_SIZE_ALIGNED;
 
         /* initialize the lowest-free pointer to the start of the heap */
-        lfree = (struct mem *)ram;
+        lfree = (struct mem *)heap;
 }
 
 //==============================================================================
 /**
- * @brief Put a struct mem back on the heap
- *
- * @param rmem is the data portion of a struct mem as returned by a previous
- *             call to mem_malloc()
- *
- * @return number of really freed bytes
+ * @brief  Put a struct mem back on the heap
+ * @param  rmem         is the data portion of a struct mem as returned by a previous
+ *                      call to mem_malloc()
+ * @param  func         user defined function called if memory was successfully
+ *                      freed
+ * @param  arg          user defined argument that is passed via 'func'
+ * @return Number of really freed bytes
  */
 //==============================================================================
-size_t _memman_free(void *rmem)
+void _memman_free(void *rmem, _memman_func_t func, void *arg)
 {
-        struct mem *mem;
-        size_t freed;
+        if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end)
+        {
+                vTaskSuspendAll();
 
-        if (rmem == NULL) {
-                return 0;
+                /* Get the corresponding struct mem ... */
+                struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+                /* ... which has to be in a used state and is now unused. */
+                mem->used = 0;
+
+                if (mem < lfree) {
+                        /* the newly freed struct is now the lowest */
+                        lfree = mem;
+                }
+
+                size_t freed = (mem->next - (size_t)(((u8_t *)mem - heap)));
+                used_mem -= freed;
+
+                call_user_function(func, arg, -freed);
+
+                plug_holes(mem);
+
+                xTaskResumeAll();
         }
-
-        if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end) {
-                return 0;
-        }
-
-        /* protect the heap from concurrent access */
-        vTaskSuspendAll();
-
-        /* Get the corresponding struct mem ... */
-        mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
-        /* ... which has to be in a used state ... */
-        /* ... and is now unused. */
-        mem->used = 0;
-
-        if (mem < lfree) {
-                /* the newly freed struct is now the lowest */
-                lfree = mem;
-        }
-
-        freed = (mem->next - (size_t)(((u8_t *)mem - ram)));
-        used_mem -= freed;
-
-        /* finally, see if prev or next are free also */
-        plug_holes(mem);
-
-        xTaskResumeAll();
-
-        return freed;
 }
 
 //==============================================================================
 /**
- * Adam's mem_malloc() plus solution for bug #17922
- * Allocate a block of memory with a minimum of 'size' bytes.
- *
- * @param[in]   size         is the minimum size of the requested block in bytes.
- * @param[out] *real_size    the real allocated memory
- *
- * @return pointer to allocated memory or NULL if no free memory was found.
- *
- * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
+ * @brief  Allocate a block of memory with a minimum of 'size' bytes.
+ *         Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
+ * @param  size    is the minimum size of the requested block in bytes.
+ * @param  func    user defined function called when memory was allocated
+ * @param  arg     user defined argument passed via 'func' function
+ * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_memman_malloc(size_t size, size_t *real_size)
+void *_memman_malloc(size_t size, _memman_func_t func, void *arg)
 {
         size_t ptr, ptr2;
         struct mem *mem, *mem2;
@@ -294,11 +300,11 @@ void *_memman_malloc(size_t size, size_t *real_size)
          * Scan through the heap searching for a free block that is big enough,
          * beginning with the lowest free block.
          */
-        for (ptr = (size_t)((u8_t *)lfree - ram);
+        for (ptr = (size_t)((u8_t *)lfree - heap);
              ptr < MEM_SIZE_ALIGNED - size;
-             ptr = ((struct mem *)(void *)&ram[ptr])->next) {
+             ptr = ((struct mem *)(void *)&heap[ptr])->next) {
 
-                mem = (struct mem *)(void *)&ram[ptr];
+                mem = (struct mem *)(void *)&heap[ptr];
 
                 if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
                         /*
@@ -323,7 +329,7 @@ void *_memman_malloc(size_t size, size_t *real_size)
                                 ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
 
                                 /* create mem2 struct */
-                                mem2 = (struct mem *)(void *)&ram[ptr2];
+                                mem2 = (struct mem *)(void *)&heap[ptr2];
                                 mem2->used = 0;
                                 mem2->next = mem->next;
                                 mem2->prev = ptr;
@@ -333,7 +339,7 @@ void *_memman_malloc(size_t size, size_t *real_size)
                                 mem->used = 1;
 
                                 if (mem2->next != MEM_SIZE_ALIGNED) {
-                                        ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+                                        ((struct mem *)(void *)&heap[mem2->next])->prev = ptr2;
                                 }
 
                                 used = (size + SIZEOF_STRUCT_MEM);
@@ -350,27 +356,23 @@ void *_memman_malloc(size_t size, size_t *real_size)
                                  */
                                 mem->used = 1;
 
-                                used = (mem->next - (size_t)((u8_t *)mem - ram));
+                                used = (mem->next - (size_t)((u8_t *)mem - heap));
                                 used_mem += used;
                         }
 
                         if (mem == lfree) {
                                 /* Find next free block after mem and update lowest free pointer */
-                                while (lfree->used && lfree != ram_end) {
-                                        lfree = (struct mem *)(void *)&ram[lfree->next];
+                                while (lfree->used && lfree != heap_end) {
+                                        lfree = (struct mem *)(void *)&heap[lfree->next];
                                 }
                         }
 
-                        if (real_size)
-                                *real_size = used;
+                        call_user_function(func, arg, used);
 
                         xTaskResumeAll();
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
                 }
         }
-
-        if (real_size)
-                *real_size = 0;
 
         xTaskResumeAll();
         errno = ENOMEM;
@@ -379,24 +381,21 @@ void *_memman_malloc(size_t size, size_t *real_size)
 
 //==============================================================================
 /**
- * Contiguously allocates enough space for count objects that are size bytes
- * of memory each and returns a pointer to the allocated memory.
- *
- * The allocated memory is filled with bytes of value zero.
- *
- * @param[in]  count            number of objects to allocate
- * @param[in]  size             size of the objects to allocate
- * @param[out] *real_size       the real allocated memory
- *
- * @return pointer to allocated memory / NULL pointer if there is an error
+ * @brief  Contiguously allocates enough space for count objects that are size
+ *         bytes of memory each and returns a pointer to the allocated memory.
+ *         The allocated memory is filled with bytes of value zero.
+ * @param  count   number of objects to allocate
+ * @param  size    size of the objects to allocate
+ * @param  func    user defined function called when memory was allocated
+ * @param  arg     user defined argument passed via 'func' function
+ * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_memman_calloc(size_t count, size_t size, size_t *real_size)
+void *_memman_calloc(size_t count, size_t size, _memman_func_t func, void *arg)
 {
-        void *p = _memman_malloc(count * size, real_size);
-
+        void *p = _memman_malloc(count * size, func, arg);
         if (p) {
-                memset(p, 0, count * size);
+                memset(p, 0, MEM_ALIGN_SIZE(count * size));
         }
 
         return p;
@@ -404,9 +403,9 @@ void *_memman_calloc(size_t count, size_t size, size_t *real_size)
 
 //==============================================================================
 /**
- * @brief Function return free memory
- *
- * @return free memory
+ * @brief  Function return free memory
+ * @param  None
+ * @return Free memory value
  */
 //==============================================================================
 u32_t _memman_get_free_heap(void)
