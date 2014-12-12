@@ -205,7 +205,7 @@ static void network_interface_thread(void *arg)
         /* open interface file */
         while (netman->if_file == NULL) {
                 netman->if_file = fopen(__NETWORK_ETHIF_FILE__, "r+");
-                sleep_ms(1);
+                sleep_ms(100);
         }
 
         /* initialize interface */

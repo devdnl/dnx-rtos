@@ -84,11 +84,7 @@ static const u32_t sem_magic_number   = 0xDAD9B8E0;
 //==============================================================================
 static bool is_semaphore_valid(sem_t *sem)
 {
-        if (sem) {
-                return sem->object && sem->magic == sem_magic_number && sem->this == sem;
-        } else {
-                return false;
-        }
+        return sem && sem->object && sem->magic == sem_magic_number && sem->this == sem;
 }
 
 //==============================================================================
@@ -100,11 +96,7 @@ static bool is_semaphore_valid(sem_t *sem)
 //==============================================================================
 static bool is_mutex_valid(mutex_t *mtx)
 {
-        if (mtx) {
-                return mtx->object && mtx->magic == mutex_magic_number && mtx->this == mtx;
-        } else {
-                return false;
-        }
+        return mtx && mtx->object && mtx->magic == mutex_magic_number && mtx->this == mtx;
 }
 
 //==============================================================================
@@ -116,11 +108,7 @@ static bool is_mutex_valid(mutex_t *mtx)
 //==============================================================================
 static bool is_queue_valid(queue_t *queue)
 {
-        if (queue) {
-                return queue->object && queue->magic == queue_magic_number && queue->this == queue;
-        } else {
-                return false;
-        }
+        return queue && queue->object && queue->magic == queue_magic_number && queue->this == queue;
 }
 
 //==============================================================================
@@ -279,7 +267,7 @@ bool _task_resume_from_ISR(task_t *taskhdl)
 char *_task_get_name_of(task_t *taskhdl)
 {
         if (taskhdl)
-                return (char *)pcTaskGetTaskName(taskhdl);
+                return pcTaskGetTaskName(taskhdl);
         else
                 return NULL;
 }
@@ -398,8 +386,9 @@ void _semaphore_delete(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 vSemaphoreDelete(sem->object);
-                sem->magic = 0;
-                sem->this  = NULL;
+                sem->object = NULL;
+                sem->magic  = 0;
+                sem->this   = NULL;
                 sysm_kfree(sem);
         }
 }
@@ -538,9 +527,10 @@ mutex_t *_mutex_new(enum mutex_type type)
 void _mutex_delete(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
-                vSemaphoreDelete(mutex);
-                mutex->magic = 0;
-                mutex->this  = NULL;
+                vSemaphoreDelete(mutex->object);
+                mutex->object = NULL;
+                mutex->magic  = 0;
+                mutex->this   = NULL;
                 sysm_kfree(mutex);
         }
 }
@@ -652,8 +642,9 @@ void _queue_delete(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 vQueueDelete(queue->object);
-                queue->magic = 0;
-                queue->this  = NULL;
+                queue->object = NULL;
+                queue->magic  = 0;
+                queue->this   = NULL;
                 sysm_kfree(queue);
         }
 }

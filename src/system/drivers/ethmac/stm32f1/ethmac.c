@@ -231,7 +231,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
         struct ethmac *hdl    = device_handle;
-        stdret_t        status = STD_RET_ERROR;
+        stdret_t       status = STD_RET_ERROR;
 
         critical_section_begin();
 

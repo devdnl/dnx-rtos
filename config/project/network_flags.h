@@ -45,7 +45,7 @@
 #define __NETWORK_IP_ADDR1__ 192
 #define __NETWORK_IP_ADDR2__ 168
 #define __NETWORK_IP_ADDR3__ 0
-#define __NETWORK_IP_ADDR4__ 100
+#define __NETWORK_IP_ADDR4__ 120
 #define __NETWORK_IP_MASK1__ 255
 #define __NETWORK_IP_MASK2__ 255
 #define __NETWORK_IP_MASK3__ 255
