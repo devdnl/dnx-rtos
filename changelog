@@ -28,6 +28,7 @@ Fixed Bugs:
 - TTY: problems with printing single characters (issue #139)
 - printf(): fixed problem with %c and other formats (issue #134)
 - Ethernet: fixed long pings and reimplement ETHMAC module and network manager (issue #151)
+- Mutex: object delete causes a negative value of kernel memory usage (issue #152)
 
 dnx RTOS 1.4.1
 ==============
