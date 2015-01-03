@@ -52,6 +52,7 @@ typedef task_t *dev_lock_t;
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 static const char *drv_already_init_str = FONT_COLOR_RED"Driver '%s' is already initialized!"RESET_ATTRIBUTES"\n";
 static const char *drv_initializing_str = "Initializing %s... ";
 static const char *drv_error_str        = FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n";
@@ -59,6 +60,17 @@ static const char *drv_node_created_str = "%s node created\n";
 static const char *drv_node_fail_str    = FONT_COLOR_RED"%s node create fail"RESET_ATTRIBUTES"\n";
 static const char *drv_initialized_str  = "initialized\n";
 static const char *drv_not_exist_str    = FONT_COLOR_RED"Driver '%s' does not exist!" RESET_ATTRIBUTES"\n";
+static const char *mod_not_exist_str    = FONT_COLOR_RED"Module %s does not exist!"RESET_ATTRIBUTES"\n";
+#else
+static const char *drv_already_init_str = "";
+static const char *drv_initializing_str = "";
+static const char *drv_error_str        = "";
+static const char *drv_node_created_str = "";
+static const char *drv_node_fail_str    = "";
+static const char *drv_initialized_str  = "";
+static const char *drv_not_exist_str    = "";
+static const char *mod_not_exist_str    = "";
+#endif
 
 /* pointers to memory handle used by drivers */
 static void **driver_memory_region;
@@ -391,7 +403,7 @@ int _get_module_number(const char *module_name)
                 }
         }
 
-        printk(FONT_COLOR_RED"Module %s does not exist!"RESET_ATTRIBUTES"\n", module_name);
+        printk(mod_not_exist_str, module_name);
         return -1;
 }
 

@@ -42,9 +42,9 @@
   Local object types
 ==============================================================================*/
 struct pipe {
-        queue_t *queue;
-        u32_t    valid;
-        bool     closed;
+        queue_t     *queue;
+        struct pipe *self;
+        bool         closed;
 };
 
 /*==============================================================================
@@ -54,9 +54,8 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static const u32_t pipe_validation_number = 0x2B1D0852;
-static const int   pipe_read_timeout      = MAX_DELAY_MS;
-static const int   pipe_write_timeout     = MAX_DELAY_MS;
+static const int pipe_read_timeout  = MAX_DELAY_MS;
+static const int pipe_write_timeout = MAX_DELAY_MS;
 
 /*==============================================================================
   Exported objects
@@ -69,6 +68,18 @@ static const int   pipe_write_timeout     = MAX_DELAY_MS;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Check if pipe is valid
+ * @param  this         pipe object
+ * @return true if valid, otherwise false
+ */
+//==============================================================================
+static bool is_valid(pipe_t *this)
+{
+        return this && this->self == this;
+}
 
 //==============================================================================
 /**
@@ -85,7 +96,7 @@ pipe_t *pipe_new()
         if (pipe && queue) {
 
                 pipe->queue  = queue;
-                pipe->valid  = pipe_validation_number;
+                pipe->self   = pipe;
                 pipe->closed = false;
 
         } else {
@@ -111,10 +122,9 @@ pipe_t *pipe_new()
 //==============================================================================
 void pipe_delete(pipe_t *pipe)
 {
-        if (pipe) {
-                if (pipe->valid == pipe_validation_number) {
-                        queue_delete(pipe->queue);
-                }
+        if (is_valid(pipe)) {
+                queue_delete(pipe->queue);
+                pipe->self = NULL;
         }
 }
 
@@ -129,13 +139,11 @@ void pipe_delete(pipe_t *pipe)
 //==============================================================================
 int pipe_get_length(pipe_t *pipe)
 {
-        if (pipe) {
-                if (pipe->valid == pipe_validation_number) {
-                        return queue_get_number_of_items(pipe->queue);
-                }
+        if (is_valid(pipe)) {
+                return queue_get_number_of_items(pipe->queue);
+        } else {
+                return -1;
         }
-
-        return -1;
 }
 
 //==============================================================================
@@ -152,24 +160,23 @@ int pipe_get_length(pipe_t *pipe)
 //==============================================================================
 int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 {
-        if (pipe && buf && count) {
-                if (pipe->valid == pipe_validation_number) {
-                        int n = 0;
-                        for (; n < (int)count; n++) {
+        if (is_valid(pipe) && buf && count) {
 
-                                if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
-                                        u8_t null = '\0';
-                                        queue_send(pipe->queue, &null, pipe_write_timeout);
-                                        break;
-                                }
+                int n = 0;
+                for (; n < (int)count; n++) {
 
-                                if (!queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : pipe_read_timeout)) {
-                                        break;
-                                }
+                        if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                                u8_t null = '\0';
+                                queue_send(pipe->queue, &null, pipe_write_timeout);
+                                break;
                         }
 
-                        return n;
+                        if (!queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : pipe_read_timeout)) {
+                                break;
+                        }
                 }
+
+                return n;
         }
 
         return -1;
@@ -189,22 +196,21 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 //==============================================================================
 int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 {
-        if (pipe && buf && count) {
-                if (pipe->valid == pipe_validation_number) {
-                        int n = 0;
-                        for (; n < (int)count; n++) {
+        if (is_valid(pipe) && buf && count) {
 
-                                if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
-                                        break;
-                                }
+                int n = 0;
+                for (; n < (int)count; n++) {
 
-                                if (!queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout)) {
-                                        break;
-                                }
+                        if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                                break;
                         }
 
-                        return n;
+                        if (!queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout)) {
+                                break;
+                        }
                 }
+
+                return n;
         }
 
         return -1;
@@ -221,18 +227,14 @@ int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 //==============================================================================
 bool pipe_close(pipe_t *pipe)
 {
-        if (pipe) {
-                if (pipe->valid == pipe_validation_number) {
-                        pipe->closed = true;
+        if (is_valid(pipe)) {
+                pipe->closed = true;
 
-                        u8_t null = '\0';
-                        if (queue_send(pipe->queue, &null, pipe_write_timeout)) {
-                                return true;
-                        }
-                }
+                const u8_t null = '\0';
+                return queue_send(pipe->queue, &null, pipe_write_timeout);
+        } else {
+                return false;
         }
-
-        return false;
 }
 
 /*==============================================================================

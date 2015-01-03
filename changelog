@@ -1,8 +1,10 @@
 dnx RTOS 1.5.1
 ==============
 New Features, Improvements:
+- Decreased ROM usage in some configurations
 
 Fixed Bugs:
+- Fixed net.h library (compiler error when network disabled)
 
 dnx RTOS 1.5.0
 ==============

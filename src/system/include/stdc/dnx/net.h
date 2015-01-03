@@ -487,11 +487,14 @@ static inline net_ip_t net_IP_set(const u8_t a, const u8_t b, const u8_t c, cons
         IP4_ADDR(&ip, a, b, c, d);
         return ip;
 #else
-        (void) ip;
         (void) a;
         (void) b;
         (void) c;
         (void) d;
+
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -522,7 +525,9 @@ static inline net_ip_t net_IP_set_to_any()
 #if (CONFIG_NETWORK_ENABLE > 0)
         return ip_addr_any;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -555,7 +560,9 @@ static inline net_ip_t net_IP_set_to_loopback()
         ip_addr_set_loopback(&ip);
         return ip;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -586,7 +593,9 @@ static inline net_ip_t net_IP_set_to_broadcast()
 #if (CONFIG_NETWORK_ENABLE > 0)
         return ip_addr_broadcast;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
