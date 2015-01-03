@@ -1,4 +1,4 @@
-dnx RTOS 1.5.1
+dnx RTOS 1.5.2
 ==============
 New Features, Improvements:
 - Decreased ROM usage in some configurations
