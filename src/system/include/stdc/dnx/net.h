@@ -447,7 +447,7 @@ static inline int net_get_ifconfig(net_config_t *ifcfg)
 
 //==============================================================================
 /**
- * @brief void net_IP_set(const u8_t a, const u8_t b, const u8_t c, const u8_t d)
+ * @brief net_ip_t net_IP_set(const u8_t a, const u8_t b, const u8_t c, const u8_t d)
  * The function <b>net_IP_set</b>() set specified fields of IP object.
  * Specific parts of IP address are passed by <i>a</i>, <i>b</i>, <i>c</i>,
  * and <i>d</i> values.
@@ -487,11 +487,14 @@ static inline net_ip_t net_IP_set(const u8_t a, const u8_t b, const u8_t c, cons
         IP4_ADDR(&ip, a, b, c, d);
         return ip;
 #else
-        (void) ip;
         (void) a;
         (void) b;
         (void) c;
         (void) d;
+
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -522,7 +525,9 @@ static inline net_ip_t net_IP_set_to_any()
 #if (CONFIG_NETWORK_ENABLE > 0)
         return ip_addr_any;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -555,7 +560,9 @@ static inline net_ip_t net_IP_set_to_loopback()
         ip_addr_set_loopback(&ip);
         return ip;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -586,7 +593,9 @@ static inline net_ip_t net_IP_set_to_broadcast()
 #if (CONFIG_NETWORK_ENABLE > 0)
         return ip_addr_broadcast;
 #else
-        return 0;
+        net_ip_t ip;
+        IP4_ADDR(&ip, 0, 0, 0, 0);
+        return ip;
 #endif
 }
 
@@ -965,7 +974,7 @@ static inline net_conn_type_t net_conn_get_type(net_conn_t *conn)
  *                                         puts("Accept connection");
  *
  *                                         net_ip_t ip;
- *                                         u16_t       port;
+ *                                         u16_t    port;
  *                                         net_conn_get_address(new_conn, &ip, &port, false);
  *
  *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
@@ -1039,7 +1048,7 @@ static inline net_err_t net_conn_get_address(net_conn_t *conn, net_ip_t *addr, u
  *                                         puts("Accept connection");
  *
  *                                         net_ip_t ip;
- *                                         u16_t       port;
+ *                                         u16_t    port;
  *                                         net_conn_get_address(new_conn, &ip, &port, false);
  *
  *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
@@ -1213,7 +1222,7 @@ static inline net_err_t net_conn_disconnect(net_conn_t *conn)
  *                                         puts("Accept connection");
  *
  *                                         net_ip_t ip;
- *                                         u16_t       port;
+ *                                         u16_t    port;
  *                                         net_conn_get_address(new_conn, &ip, &port, false);
  *
  *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
@@ -1282,7 +1291,7 @@ static inline net_err_t net_conn_listen(net_conn_t *conn)
  *                                         puts("Accept connection");
  *
  *                                         net_ip_t ip;
- *                                         u16_t       port;
+ *                                         u16_t    port;
  *                                         net_conn_get_address(new_conn, &ip, &port, false);
  *
  *                                         printf("Remote connection from: %d.%d.%d.%d:%d\n",
@@ -1879,7 +1888,7 @@ static inline net_err_t net_conn_get_host_by_name(const char *name, net_ip_t *ip
 //==============================================================================
 /**
  * @brief net_err_t net_conn_get_error(net_conn_t *conn)
- * The function <b>net_conn_get_error</b>() return last connection error
+ * The function <b>net_conn_get_error</b>() return last error of connection
  * pointed by <i>conn</i>.
  *
  * @param conn          the connection
@@ -2124,8 +2133,8 @@ static inline void net_buf_free(net_buf_t *buf)
 
 //==============================================================================
 /**
- * @brief net_err_t net_ref_buf(net_buf_t *buf, const void *data, u16_t size)
- * The function <b>net_ref_buf</b>() lets a reference of network buffer pointed by <i>buf</i>
+ * @brief net_err_t net_buf_ref(net_buf_t *buf, const void *data, u16_t size)
+ * The function <b>net_buf_ref</b>() lets a reference of network buffer pointed by <i>buf</i>
  * to existing non-volatile data pointed by <i>data</i> of size <i>size</i>.
  *
  * @param buf           pointer to the network buffer
