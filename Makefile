@@ -149,7 +149,7 @@ GIT_HOOKS  = ./tools/apply_git_hooks.sh
 # defines VALUES
 _YES_ = 1
 _NO_  = 0
-EMPTY   =
+EMPTY =
 
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
