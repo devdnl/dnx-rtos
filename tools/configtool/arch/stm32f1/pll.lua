@@ -337,7 +337,7 @@ local function calculate_frequencies()
         local ADC_prescaler  = ADC_prescaler[ui.Choice_ADC_prescaler:GetSelection() + 1].value
 
         local USB_prescaler
-        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+        if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                 USB_prescaler = ifs(cpu_family:is_CL(), USB_clksrc_CL, USB_clksrc)[ui.Choice_USB_clksrc:GetSelection() + 1].value
         end
 
@@ -410,7 +410,7 @@ local function calculate_frequencies()
         end
 
         -- calculate USB frequency (if USB exist)
-        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+        if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                 freq.USBCLK = ifs(cpu_family:is_CL(), freq.PLLVCO / USB_prescaler, freq.PLLCLK / USB_prescaler)
         end
 
@@ -493,7 +493,7 @@ local function load_configuration()
                         ui.Choice_PLL3:SetSelection(get_table_index(PLL3_on, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL3_MUL)) - 1)
                 end
 
-                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                         ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc_CL, "key", ct:key_read(config.arch.stm32f1.key.PLL_USB_DIV_CL)) - 1)
                 end
 
@@ -511,7 +511,7 @@ local function load_configuration()
                         ui.Choice_PLL:SetSelection(get_table_index(PLL_on, "key", ct:key_read(config.arch.stm32f1.key.PLL_PLL_MUL)) - 1)
                 end
 
-                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                         ui.Choice_USB_clksrc:SetSelection(get_table_index(USB_clksrc, "key", ct:key_read(config.arch.stm32f1.key.PLL_USB_DIV)) - 1)
                 end
 
@@ -564,7 +564,7 @@ local function save_configuration()
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL3_MUL, PLL3_on[ui.Choice_PLL3:GetSelection() + 1].key)
                 end
 
-                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                         ct:key_write(config.arch.stm32f1.key.PLL_USB_DIV_CL, USB_clksrc_CL[ui.Choice_USB_clksrc:GetSelection() + 1].key)
                 end
 
@@ -583,7 +583,7 @@ local function save_configuration()
                         ct:key_write(config.arch.stm32f1.key.PLL_PLL_MUL, PLL_on[ui.Choice_PLL:GetSelection() + 1].key)
                 end
 
-                if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+                if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                         ct:key_write(config.arch.stm32f1.key.PLL_USB_DIV, USB_clksrc[ui.Choice_USB_clksrc:GetSelection() + 1].key)
                 end
 
@@ -638,7 +638,7 @@ local function event_value_updated()
                 ui.StaticText_I2S3_clksrc:SetLabel(freqlabel(freq.I2S3CLK, "%s (I2S3CLK)"))
         end
 
-        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+        if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                 ui.StaticText_USB_clksrc:SetLabel(freqlabel(freq.USBCLK, "%s (USBCLK)"))
         end
 
@@ -848,7 +848,7 @@ function pll:create_window(parent)
         ui.StaticText_MCO_clksrc = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, ":", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
         ui.FlexGridSizer3:Add(ui.StaticText_MCO_clksrc, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-        if cpu.peripherals.USB ~= nil or cpu.peripherals.USBOTG then
+        if cpu.peripherals.USBD ~= nil or cpu.peripherals.USBOTG then
                 ui.StaticText14 = wx.wxStaticText(ui.Panel1, wx.wxID_ANY, "USB clock source", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "wx.wxID_ANY")
                 ui.FlexGridSizer3:Add(ui.StaticText14, 1, bit.bor(wx.wxALL,wx.wxALIGN_RIGHT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.Choice_USB_clksrc = wx.wxChoice(ui.Panel1, ID.CHOICE_USB_CLKSRC, wx.wxDefaultPosition, wx.wxDefaultSize, {}, 0, wx.wxDefaultValidator, "ID.CHOICE_USB_CLKSRC")
