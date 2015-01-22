@@ -302,8 +302,8 @@ static void ep1_handler(void *arg)
 {
         (void) arg;
 
-        FILE *ep1  = fopen("/dev/usb_ep1", "r+");
-        FILE *ep2  = fopen("/dev/usb_ep2", "r+");
+        FILE *ep1  = fopen("/dev/usbd-ep1", "r+");
+        FILE *ep2  = fopen("/dev/usbd-ep2", "r+");
         FILE *gpio = fopen("/dev/gpio", "r+");
 
         while (!global->configured) {
@@ -351,7 +351,7 @@ PROGRAM_MAIN(serial, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argc;
         (void)argv;
 
-        FILE     *ep0        = fopen("/dev/usb_ep0", "r+");
+        FILE     *ep0        = fopen("/dev/usbd-ep0", "r+");
         thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
 
         if (ep0 && ep1_thread) {
