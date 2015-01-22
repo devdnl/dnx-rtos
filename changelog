@@ -1,3 +1,11 @@
+dnx RTOS 1.5.4
+==============
+New Features, Improvements:
+- Added new configurations
+
+Fixed Bugs:
+- Fixed PLL module in the Configtool
+
 dnx RTOS 1.5.2
 ==============
 New Features, Improvements:

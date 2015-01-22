@@ -255,8 +255,8 @@ PROGRAM_MAIN(mouse, STACK_DEPTH_LOW, int argc, char *argv[])
 start:
         printf("Test number: %d\n", ++test_cnt);
 
-        FILE *ep0 = fopen("/dev/usb_ep0", "r+");
-        FILE *ep1 = fopen("/dev/usb_ep1", "r+");
+        FILE *ep0 = fopen("/dev/usbd-ep0", "r+");
+        FILE *ep1 = fopen("/dev/usbd-ep1", "r+");
         if (ep0 && ep1) {
                 usbd_setup_container_t setup     = {.timeout = 25};
                 bool                  configured = false;
