@@ -593,6 +593,8 @@ int vfs_remove(const char *path)
                         status = base_fs->interface.fs_remove(base_fs->handle,
                                                               external_path) == STD_RET_OK ? 0 : -1;
                 }
+        } else if (mount_fs) {
+                errno = EBUSY;
         }
 
         sysm_sysfree(cwd_path);
