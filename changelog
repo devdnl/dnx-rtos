@@ -1,10 +1,10 @@
-dnx RTOS 1.5.4
+dnx RTOS 1.5.5
 ==============
 New Features, Improvements:
-- Added new configurations
+- None
 
 Fixed Bugs:
-- Fixed PLL module in the Configtool
+- Fixed kill message of "top" program (fflush() missing) 
 
 dnx RTOS 1.5.2
 ==============

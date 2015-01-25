@@ -181,6 +181,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         int task_handle = 0;
 
                         printf("Enter task handle: 0x");
+                        fflush(stdout);
                         scanf("%8X", &task_handle);
 
                         task_t *task = (task_t *)task_handle;
