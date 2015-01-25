@@ -557,17 +557,22 @@ mbus_errno_t mbus_daemon()
 //==============================================================================
 mbus_t *mbus_new()
 {
-        mbus_t *this = malloc(sizeof(mbus_t));
-        if (this) {
-                queue_t *response = queue_new(1, sizeof(response_t));
-                if (response) {
-                        this->response = response;
-                        this->errorno  = MBUS_ERRNO__NO_ERROR;
-                        this->owner_ID = ++mbus->owner_ID_cnt;
-                        this->self     = this;
-                } else {
-                        free(this);
-                        this = NULL;
+        mbus_t *this = NULL;
+
+        if (mbus && task_is_exist(mbus->mbus_owner)) {
+
+                this = malloc(sizeof(mbus_t));
+                if (this) {
+                        queue_t *response = queue_new(1, sizeof(response_t));
+                        if (response) {
+                                this->response = response;
+                                this->errorno  = MBUS_ERRNO__NO_ERROR;
+                                this->owner_ID = ++mbus->owner_ID_cnt;
+                                this->self     = this;
+                        } else {
+                                free(this);
+                                this = NULL;
+                        }
                 }
         }
 
