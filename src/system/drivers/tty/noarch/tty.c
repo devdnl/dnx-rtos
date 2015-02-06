@@ -453,7 +453,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__REFRESH_LAST_LINE:
-                send_cmd(CMD_REFRESH_LAST_LINE, tty_module->current_tty);
+                send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
                 break;
 
         default:
@@ -480,7 +480,8 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                 ttybfr_flush(tty->screen);
-                send_cmd(CMD_REFRESH_LAST_LINE, tty_module->current_tty);
+                ttyedit_clear(tty->editline);
+                send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
                 mutex_unlock(tty->secure_mtx);
         }
 
