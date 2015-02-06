@@ -1429,27 +1429,27 @@ static inline void mutex_force_lock(mutex_t *mtx)
 //==============================================================================
 static vfs_open_flags_t file_mode_str_to_flags(const char *str)
 {
-        if (strcmp("r", str) == 0) {
+        if (strcmp("r", str) == 0 || strcmp("rb", str) == 0) {
                 return (O_RDONLY);
         }
 
-        if (strcmp("r+", str) == 0) {
+        if (strcmp("r+", str) == 0 || strcmp("rb+", str) == 0) {
                 return (O_RDWR);
         }
 
-        if (strcmp("w", str) == 0) {
+        if (strcmp("w", str) == 0 || strcmp("wb", str) == 0) {
                 return (O_WRONLY | O_CREATE);
         }
 
-        if (strcmp("w+", str) == 0) {
+        if (strcmp("w+", str) == 0 || strcmp("wb+", str) == 0) {
                 return (O_RDWR | O_CREATE);
         }
 
-        if (strcmp("a", str) == 0) {
+        if (strcmp("a", str) == 0 || strcmp("ab", str) == 0) {
                 return (O_WRONLY | O_CREATE | O_APPEND);
         }
 
-        if (strcmp("a+", str) == 0) {
+        if (strcmp("a+", str) == 0 || strcmp("ab+", str) == 0) {
                 return (O_RDWR | O_CREATE | O_APPEND);
         }
 
