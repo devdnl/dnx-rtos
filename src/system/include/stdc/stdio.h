@@ -74,6 +74,11 @@ extern "C" {
 #define SEEK_END                VFS_SEEK_END
 #endif
 
+#define FILENAME_MAX            255
+#define FOPEN_MAX               255
+#define TMP_MAX                 32
+#define L_tmpnam                32
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
