@@ -34,4 +34,4 @@ CSRC_LIB   += lua/lutf8lib.c
 CSRC_LIB   += lua/lvm.c
 CSRC_LIB   += lua/lzio.c
 CXXSRC_LIB += 
-HDRLOC_LIB += mbus
+HDRLOC_LIB += lua

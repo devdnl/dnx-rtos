@@ -33,7 +33,7 @@
 ** ensure that all software connected to Lua will be compiled with the
 ** same configuration.
 */
-/* #define LUA_32BITS */
+#define LUA_32BITS
 
 
 /*
@@ -407,7 +407,7 @@
 #define LUAI_UACNUMBER	double
 
 #define LUA_NUMBER_FRMLEN	""
-#define LUA_NUMBER_FMT		"%.7g"
+#define LUA_NUMBER_FMT		"%f"
 
 #define l_mathop(op)		op##f
 
