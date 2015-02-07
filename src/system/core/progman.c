@@ -619,15 +619,18 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->stderr   = sterr;
                                         prog->func     = *prog_data.main_function;
                                         prog->mem_size = *prog_data.globals_size;
+                                        prog->magic    = prog_magic_number;
+                                        prog->this     = prog;
                                         prog->task     = task_new(program_startup,
                                                                   prog_data.program_name,
                                                                   *prog_data.stack_depth,
                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->magic = prog_magic_number;
-                                                prog->this  = prog;
                                                 return prog;
+                                        } else {
+                                                prog->magic = 0;
+                                                prog->this  = NULL;
                                         }
 
                                         semaphore_delete(prog->exit_sem);

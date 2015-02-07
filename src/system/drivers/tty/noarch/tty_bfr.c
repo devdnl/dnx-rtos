@@ -141,8 +141,9 @@ static void link_line(ttybfr_t *this, char *line)
 //==============================================================================
 static void clear_new_line_buffer(ttybfr_t *this)
 {
-        memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
         this->new_line_bfr_idx = 0;
+        this->carriage = 0;
+        memset(this->new_line_bfr, '\0', sizeof(this->new_line_bfr));
 }
 
 //==============================================================================

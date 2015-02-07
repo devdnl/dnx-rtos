@@ -136,7 +136,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 println("Modules : %d\n", mem.used_modules_memory);
                 println("Network : %d\n", mem.used_network_memory);
                 println("Programs: %d\n", mem.used_programs_memory);
-                println("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
+                println("\x1B[30;47mTSKHDL    PRI   FRSTK   ST+MEM  OPFI    %%CPU    NAME \x1B[0m\n");
 
                 if (key == '.') {
                         if (shift + global->term_row < task_number) {

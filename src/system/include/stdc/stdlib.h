@@ -501,16 +501,21 @@ static inline void free(void *ptr)
 //==============================================================================
 static inline void *realloc(void *ptr, size_t size)
 {
-        if (!ptr) {
-                return sysm_tskmalloc(size);
-        } else {
-                if (size == 0) {
+        extern _PTR memcpy(_PTR dest, const _PTR src, size_t n);
+
+        if (size) {
+                void *mem = sysm_tskmalloc(size);
+                if (ptr == NULL)
+                        return mem;
+
+                if (mem) {
+                        memcpy(mem, ptr, size);
                         sysm_tskfree(ptr);
-                        return NULL;
-                } else {
-                        return ptr;
+                        return mem;
                 }
         }
+
+        return NULL;
 }
 
 //==============================================================================

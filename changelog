@@ -1,10 +1,24 @@
 dnx RTOS 1.5.5
 ==============
 New Features, Improvements:
-- None
+- Added lua library (with lua and luac programs)
+- System monitor adds programs' stack size to the used memory
+- Added time.h stub library
+- Added "b" flags to the fopen() function
 
 Fixed Bugs:
-- Fixed kill message of "top" program (fflush() missing) 
+- Fixed kill message of "top" program (missing fflush()) 
+- Fixed _program_new() function (invalid initialized object)
+- Fixed realloc() function (old implementation works out of standard)
+- TTY: fixed REFRESH_LAST_LINE and flush() requests
+
+dnx RTOS 1.5.4
+==============
+New Features, Improvements:
+- Added new configurations
+
+Fixed Bugs:
+- Fixed PLL module in the Configtool
 
 dnx RTOS 1.5.2
 ==============
