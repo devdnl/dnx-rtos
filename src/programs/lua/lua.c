@@ -65,7 +65,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(lua, STACK_DEPTH_LARGE, int argc, char *argv[])
+int_main(lua, STACK_DEPTH_HUGE, int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("%s [file]\n", argv[0]);
