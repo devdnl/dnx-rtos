@@ -309,7 +309,7 @@ bool sysm_is_task_exist(task_t *taskhdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_start_task_monitoring(task_t *taskhdl)
+stdret_t sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -320,7 +320,7 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 
         struct task_monitor_data *tmdata = sysm_syscalloc(1, sizeof(struct task_monitor_data));
         if (tmdata) {
-
+                tmdata->used_memory = stack_size;
                 if (list_add_item(sysm_task_list, (u32_t)taskhdl, NULL) < 0) {
                         sysm_sysfree(tmdata);
                         _task_set_monitor_data(taskhdl, NULL);

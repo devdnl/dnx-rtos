@@ -80,7 +80,7 @@ extern stdret_t _sysm_init                              (void);
 extern void     sysm_lock_access                        (void);
 extern void     sysm_unlock_access                      (void);
 extern bool     sysm_is_task_exist                      (task_t*);
-extern stdret_t sysm_start_task_monitoring              (task_t*);
+extern stdret_t sysm_start_task_monitoring              (task_t*, size_t);
 extern stdret_t sysm_stop_task_monitoring               (task_t*);
 extern stdret_t sysm_get_task_stat                      (task_t*, struct sysmoni_taskstat*);
 extern stdret_t sysm_get_ntask_stat                     (uint, struct sysmoni_taskstat*);

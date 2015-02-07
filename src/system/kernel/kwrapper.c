@@ -152,7 +152,7 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
                 taskEXIT_CRITICAL();
                 vTaskSetApplicationTaskTag(task, (void *)data);
 
-                if (sysm_start_task_monitoring(task) == STD_RET_OK) {
+                if (sysm_start_task_monitoring(task, sizeof(StackType_t) * stack_depth) == STD_RET_OK) {
                         vTaskResume(task);
                 } else {
                         vTaskDelete(task);
