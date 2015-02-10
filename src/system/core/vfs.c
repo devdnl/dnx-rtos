@@ -731,7 +731,7 @@ int vfs_chown(const char *path, uid_t owner, gid_t group)
 
         mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
-        struct FS_data *fs  = find_base_FS(path, &external_path);
+        struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
         mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
@@ -772,7 +772,7 @@ int vfs_stat(const char *path, struct stat *stat)
 
         mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
-        struct FS_data *fs  = find_base_FS(path, &external_path);
+        struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
         mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
