@@ -65,7 +65,6 @@ struct vfs_file
         fd_t             fd;
         fpos_t           f_lseek;
         file_flags_t     f_flag;
-        u32_t            magic;
 };
 
 struct FS_data {
@@ -102,8 +101,6 @@ static char            *new_corrected_path      (const char *path, enum path_cor
 static list_t          *vfs_mnt_list;
 static mutex_t         *vfs_resource_mtx;
 static u32_t            vfs_id_counter;
-static const u32_t      file_magic_number = 0x495D47CB;
-static const u32_t      dir_magic_number  = 0x297E823D;
 
 /*==============================================================================
   Function definitions
@@ -496,8 +493,7 @@ DIR *vfs_opendir(const char *path)
                         sysm_sysfree(dir);
                         dir = NULL;
                 } else {
-                        dir->magic = dir_magic_number;
-                        dir->self  = dir;
+                        dir->self = dir;
                 }
         }
 
@@ -518,8 +514,7 @@ int vfs_closedir(DIR *dir)
         if (is_dir_valid(dir)) {
                 if (dir->f_closedir) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
-                                dir->magic = 0;
-                                dir->self  = NULL;
+                                dir->self = NULL;
                                 sysm_sysfree(dir);
                                 return 0;
                         }
@@ -898,8 +893,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
-                        file->magic = file_magic_number;
-                        file->this  = file;
+                        file->this = file;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -1314,8 +1308,7 @@ static int fclose(FILE *file, bool force)
         if (is_file_valid(file)) {
                 if (file->f_close) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
-                                file->magic = 0;
-                                file->this  = NULL;
+                                file->this = NULL;
                                 sysm_sysfree(file);
                                 return 0;
                         }
@@ -1341,7 +1334,7 @@ static int fclose(FILE *file, bool force)
 static bool is_file_valid(FILE *file)
 {
         if (file) {
-                if (file->magic == file_magic_number && file->this == file) {
+                if (file->this == file) {
                         return true;
                 }
         }
@@ -1364,7 +1357,7 @@ static bool is_file_valid(FILE *file)
 static bool is_dir_valid(DIR *dir)
 {
         if (dir) {
-                if (dir->magic == dir_magic_number && dir->self == dir) {
+                if (dir->self == dir) {
                         return true;
                 }
         }

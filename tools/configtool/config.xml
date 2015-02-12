@@ -343,6 +343,7 @@
             <initd_template_msg_mount_func_file>../../extra/templates/initd/msg_mount_func.c</initd_template_msg_mount_func_file>
             <initd_template_init_storage_func_file>../../extra/templates/initd/init_storage_func.c</initd_template_init_storage_func_file>
             <initd_template_start_daemon_func_file>../../extra/templates/initd/start_daemon_func.c</initd_template_start_daemon_func_file>
+            <initd_template_kernel_panic_detect_file>../../extra/templates/initd/kernel_panic_detect_func.c</initd_template_kernel_panic_detect_file>
             <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>

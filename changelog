@@ -5,6 +5,8 @@ New Features, Improvements:
 - System monitor adds programs' stack size to the used memory
 - Added time.h stub library
 - Added "b" flags to the fopen() function
+- Added Kernel Panic message from last fault session
+- Decreased RAM usage by system objects (file, mutex, semaphore, etc)
 
 Fixed Bugs:
 - Fixed kill message of "top" program (missing fflush()) 

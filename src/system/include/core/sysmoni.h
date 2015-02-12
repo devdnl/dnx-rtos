@@ -48,6 +48,9 @@ extern "C" {
 #define _stop_if(stop_condition)                (void)(stop_condition)
 #endif
 
+#define _KERNEL_PANIC_DESC_VALID1               0x7C63EE8E
+#define _KERNEL_PANIC_DESC_VALID2               0xCF4C5484
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -67,6 +70,13 @@ struct sysmoni_used_memory {
         int used_network_memory;
         int used_modules_memory;
         int used_programs_memory;
+};
+
+
+enum _kernel_panic_desc_cause {
+        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
+        _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
+        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
 };
 
 /*==============================================================================
@@ -115,6 +125,8 @@ extern void     sysm_disable_CPU_load_measurement       (void);
 extern void     sysm_enable_CPU_load_measurement        (void);
 extern void     sysm_task_switched_in                   (void);
 extern void     sysm_task_switched_out                  (void);
+extern bool     _sysm_kernel_panic_detect               (bool);
+extern void     _sysm_kernel_panic_report               (const char*, enum _kernel_panic_desc_cause);
 
 #ifdef __cplusplus
 }

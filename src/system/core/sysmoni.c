@@ -48,6 +48,13 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct kernel_panic_desc {
+        uint32_t                       valid1;
+        enum _kernel_panic_desc_cause  cause;
+        char                           task_name[CONFIG_RTOS_TASK_NAME_LEN];
+        uint32_t                       valid2;
+};
+
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
 typedef struct mem_slot_chain {
         int                    used_slots;
@@ -82,6 +89,8 @@ struct task_monitor_data {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static struct kernel_panic_desc *kernel_panic_descriptor;
+
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
@@ -186,6 +195,12 @@ static void modify_module_memory_usage(void *mod_no, i32_t size)
 //==============================================================================
 stdret_t _sysm_init(void)
 {
+#if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+        kernel_panic_descriptor = sysm_sysmalloc(sizeof(struct kernel_panic_desc));
+#else
+        kernel_panic_descriptor = _memman_malloc(sizeof(struct kernel_panic_desc), NULL, NULL);
+#endif
+
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         sysm_system_memory_usage = (i32_t)_MEMMAN_RAM_SIZE - (i32_t)_MEMMAN_HEAP_SIZE;
 #endif
@@ -1395,6 +1410,73 @@ void sysm_task_switched_out(void)
                 }
         }
 #endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if the kernel panic occurred in the last session
+ * @param  show_msg     true: show error message
+ * @return If kernel panic occured in the last session then true is returned,
+ *         otherwise false.
+ */
+//==============================================================================
+bool _sysm_kernel_panic_detect(bool show_msg)
+{
+        static const char *cause[] = {
+               "SEGFAULT",
+               "STACKOVF",
+               "UNKNOWN"
+        };
+
+        bool occurred = (  kernel_panic_descriptor->valid1 == _KERNEL_PANIC_DESC_VALID1
+                       && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
+
+        if (occurred) {
+                if (show_msg) {
+                        if (kernel_panic_descriptor->cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {
+                                kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;
+                        }
+
+                        kernel_panic_descriptor->task_name[CONFIG_RTOS_TASK_NAME_LEN - 1] = '\0';
+                        if (strlen(kernel_panic_descriptor->task_name) == 0) {
+                                strncpy(kernel_panic_descriptor->task_name, "<defected>", CONFIG_RTOS_TASK_NAME_LEN);
+                        }
+
+                        printk(FONT_COLOR_RED"*** KERNEL PANIC OCCURED! ****"RESET_ATTRIBUTES"\n");
+                        printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
+                        printk("Task : %s\n", kernel_panic_descriptor->task_name);
+                        printk("Starting system...\n\n");
+                        _sleep(2);
+                }
+
+                kernel_panic_descriptor->valid1 = 0;
+                kernel_panic_descriptor->valid2 = 0;
+        }
+
+        return occurred;
+}
+
+//==============================================================================
+/**
+ * @brief  Function report kernel panic
+ * @param  suggest_cause        suggested cause (STACKOVF has priority)
+ * @return None
+ */
+//==============================================================================
+void _sysm_kernel_panic_report(const char *task_name, enum _kernel_panic_desc_cause suggest_cause)
+{
+        strncpy(kernel_panic_descriptor->task_name, task_name, CONFIG_RTOS_TASK_NAME_LEN);
+
+        if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack() == 0) {
+                kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
+        } else {
+                kernel_panic_descriptor->cause = suggest_cause;
+        }
+
+        kernel_panic_descriptor->valid1 = _KERNEL_PANIC_DESC_VALID1;
+        kernel_panic_descriptor->valid2 = _KERNEL_PANIC_DESC_VALID2;
+
+        _cpuctl_restart_system();
 }
 
 /*==============================================================================

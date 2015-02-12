@@ -79,16 +79,10 @@ void vApplicationIdleHook(void)
  * @brief Stack overflow hook
  */
 //==============================================================================
-void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
+void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
-        (void) taskHdl;
-        (void) taskName;
-
-        if (CONFIG_SYSTEM_STOP_MACRO != 0) {
-                while (true) {
-                        __asm("nop");
-                }
-        }
+        (void)taskHdl;
+        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================
