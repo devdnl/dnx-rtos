@@ -51,7 +51,7 @@
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void  vApplicationStackOverflowHook(TaskHandle_t pxTask, signed char *pcTaskName);
+extern void  vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
 extern void  vApplicationTickHook(void);
 extern u32_t _get_uptime_counter(void);
 
