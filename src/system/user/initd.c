@@ -208,6 +208,7 @@ static int run_level_0(void)
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
         printk_enable("/dev/tty0");
+        _sysm_kernel_panic_detect(true);
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_GRAY "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
