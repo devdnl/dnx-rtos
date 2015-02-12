@@ -122,7 +122,6 @@ struct vfs_dir {
         struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
-        u32_t           magic;          /**< only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
