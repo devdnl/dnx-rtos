@@ -5,7 +5,7 @@
 
 @brief   File support creating of pipies in file systems.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014-2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -191,7 +191,7 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
  * @param count         a count of bytes to write
  * @param non_blocking  a non-blocking access mode
  *
- * @return number of read bytes, -1 if error
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
@@ -230,8 +230,8 @@ bool pipe_close(pipe_t *pipe)
         if (is_valid(pipe)) {
                 pipe->closed = true;
 
-                const u8_t null = '\0';
-                return queue_send(pipe->queue, &null, pipe_write_timeout);
+                const u8_t nul = '\0';
+                return queue_send(pipe->queue, &nul, pipe_write_timeout);
         } else {
                 return false;
         }
