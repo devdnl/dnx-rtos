@@ -557,7 +557,7 @@ int _llist_contains(_llist_t *this, const void *object)
 {
         int cnt = -1;
 
-        if (is_llist_valid(this)) {
+        if (is_llist_valid(this) && object) {
                 if (this->cmp_functor) {
                         cnt = 0;
                         for (item_t *item = this->head; item; item = item->next) {
@@ -581,7 +581,7 @@ int _llist_contains(_llist_t *this, const void *object)
 //==============================================================================
 int _llist_find_begin(_llist_t *this, const void *object)
 {
-        if (is_llist_valid(this)) {
+        if (is_llist_valid(this) && object) {
                 if (this->cmp_functor) {
                         int cnt = 0;
                         for (item_t *item = this->head; item; item = item->next, cnt++) {
@@ -605,7 +605,7 @@ int _llist_find_begin(_llist_t *this, const void *object)
 //==============================================================================
 int _llist_find_end(_llist_t *this, const void *object)
 {
-        if (is_llist_valid(this)) {
+        if (is_llist_valid(this) && object) {
                 if (this->cmp_functor) {
                         int cnt = this->count - 1;
                         for (item_t *item = this->tail; item; item = item->prev, cnt--) {
