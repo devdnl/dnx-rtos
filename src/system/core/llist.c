@@ -73,7 +73,7 @@ struct _list {
   Local function prototypes
 ==============================================================================*/
 static bool    is_iterator_valid(_llist_iterator_t *this);
-static bool    is_llist_valid    (_llist_t *this);
+static bool    is_llist_valid   (_llist_t *this);
 static int     prepend          (_llist_t *this, const void *data);
 static int     append           (_llist_t *this, const void *data);
 static int     insert_item      (_llist_t *this, int index, const void *data);
@@ -100,7 +100,10 @@ static const uint32_t magic_number = 0x6D89B264;
  * @return On success list object is returned, otherwise NULL
  */
 //==============================================================================
-_llist_t *_llist_new(_llist_malloc malloc, _llist_free free, _llist_cmp_functor_t cmp_functor, _llist_obj_dtor_t obj_dtor)
+_llist_t *_llist_new(_llist_malloc        malloc,
+                     _llist_free          free,
+                     _llist_cmp_functor_t cmp_functor,
+                     _llist_obj_dtor_t    obj_dtor)
 {
         _llist_t *this = NULL;
 

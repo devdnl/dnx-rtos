@@ -414,14 +414,12 @@ static int process_kill(task_t *taskhdl, int status)
 //==============================================================================
 static bool prog_is_valid(prog_t *prog)
 {
-        if (prog) {
-                if (prog->this == prog) {
-                        return true;
-                }
+        if (prog && prog->this == prog) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================
@@ -437,14 +435,12 @@ static bool prog_is_valid(prog_t *prog)
 //==============================================================================
 static bool thread_is_valid(thread_t *thread)
 {
-        if (thread) {
-                if (thread->this == thread) {
-                        return true;
-                }
+        if (thread && thread->this == thread) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================

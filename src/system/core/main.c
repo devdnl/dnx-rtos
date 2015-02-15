@@ -27,9 +27,11 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/thread.h>
-#include "core/fs.h"
+#include "portable/cpuctl.h"
+#include "core/memman.h"
 #include "core/sysmoni.h"
+#include "core/vfs.h"
+#include "kernel/kwrapper.h"
 #include "user/initd.h"
 
 #if (CONFIG_NETWORK_ENABLE != 0)
@@ -71,7 +73,7 @@ int main(void)
         _memman_init();
         _sysm_init();
         _vfs_init();
-        task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+        _task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 
 #if (CONFIG_NETWORK_ENABLE != 0)
         _netman_init();
