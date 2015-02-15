@@ -480,7 +480,6 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                 ttybfr_flush(tty->screen);
-                ttyedit_clear(tty->editline);
                 send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
                 mutex_unlock(tty->secure_mtx);
         }
