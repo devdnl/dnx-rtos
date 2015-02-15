@@ -35,7 +35,7 @@
 #include <sys/ioctl.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/list.h"
+#include "core/llist.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -77,7 +77,7 @@ struct thread {
   Local function prototypes
 ==============================================================================*/
 static char   **new_argument_table      (const char *str, int *argc);
-static void     delete_argument_table   (char **argv);
+static void     delete_argument_table   (int argc, char **argv);
 static void     program_startup         (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
 static void     restore_stdio_defaults  (task_t *task);
@@ -231,188 +231,104 @@ static void thread_startup(void *arg)
 //==============================================================================
 static char **new_argument_table(const char *str, int *argc)
 {
-        int     arg_count  = 0;
-        char  **arg_table  = NULL;
-        list_t *arg_list   = NULL;
-        char   *arg_string = NULL;
-        bool    first_quos = false;
-        bool    first_quod = false;
+        char **argv = NULL;
 
-        if (str == NULL || argc == NULL) {
-                errno = EINVAL;
-                goto exit_error;
-        }
+        if (str && argc && str[0] != '\0') {
+                _llist_t *args = _llist_new(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
 
-        if ((arg_list = list_new()) == NULL) {
-                goto exit_error;
-        }
+                if (args) {
+                        // parse arguments
+                        while (*str != '\0') {
+                                // skip spaces
+                                str += strspn(str, " ");
 
-        if (str[0] == '\0') {
-                errno = EINVAL;
-                goto exit_error;
-        }
-
-        const char *arg_start = str;
-        while (*arg_start == ' ') {
-                arg_start++;
-        }
-
-        if (*arg_start == '\'') {
-                arg_start++;
-                first_quos = true;
-        } else if (*arg_start == '"') {
-                arg_start++;
-                first_quod = true;
-        }
-
-        if ((arg_string = sysm_syscalloc(strlen(arg_start) + 1, sizeof(char))) == NULL) {
-                goto exit_error;
-        }
-
-        strcpy(arg_string, arg_start);
-        arg_start = arg_string;
-
-        while (*arg_string != '\0') {
-                char *arg_to_add = NULL;
-
-                if (*arg_string == '\'' || first_quos) {
-                        if (first_quos) {
-                                first_quos = false;
-                        } else {
-                                ++arg_string;
-                        }
-
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != '\0') {
-                                if ( *arg_string == '\''
-                                   && (  *(arg_string + 1) == ' '
-                                      || *(arg_string + 1) == '\0') ) {
-                                        break;
+                                // select character to find as end of argument
+                                bool quo = false;
+                                char find = ' ';
+                                if (*str == '\'' || *str == '"') {
+                                        quo = true;
+                                        find = *str;
+                                        str++;
                                 }
 
-                                arg_string++;
-                        }
+                                // find selected character
+                                const char *start = str;
+                                const char *end   = strchr(str, find);
 
-                        if (*arg_string == '\0') {
-                                goto exit_error;
-                        }
-
-                } else if (*arg_string == '"' || first_quod) {
-                        if (first_quod) {
-                                first_quod = false;
-                        } else {
-                                ++arg_string;
-                        }
-
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != '\0') {
-                                if ( *arg_string == '"'
-                                   && (  *(arg_string + 1) == ' '
-                                      || *(arg_string + 1) == '\0') ) {
-                                        break;
+                                // check if string end is reached
+                                if (!end) {
+                                        end = strchr(str, '\0');
+                                } else {
+                                        end++;
                                 }
 
-                                arg_string++;
+                                // calculate argument length (without nul character)
+                                int str_len = end - start;
+                                if (str_len == 0)
+                                        break;
+
+                                if (quo || *(end - 1) == ' ') {
+                                        str_len--;
+                                }
+
+                                // add argument to list
+                                char *arg = sysm_sysmalloc(str_len + 1);
+                                if (arg) {
+                                        strncpy(arg, start, str_len);
+                                        arg[str_len] = '\0';
+
+                                        if (_llist_push_back(args, arg) == NULL) {
+                                                _llist_delete(args);
+                                                errno = ENOMEM;
+                                                return NULL;
+                                        }
+                                } else {
+                                        _llist_delete(args);
+                                        errno = ENOMEM;
+                                        return NULL;
+                                }
+
+                                // next token
+                                str = end;
                         }
 
-                        if (*arg_string == '\0') {
-                                goto exit_error;
+                        // create table with arguments
+                        int no_of_args = _llist_size(args);
+                        *argc = no_of_args;
+
+                        argv = sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
+                        if (argv) {
+                                for (int i = 0; i < no_of_args; i++) {
+                                        argv[i] = _llist_take_front(args);
+                                }
+
+                                argv[no_of_args] = NULL;
                         }
 
-                } else if (*arg_string != ' ') {
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != ' ' && *arg_string != '\0') {
-                                arg_string++;
-                        }
-                } else {
-                        arg_string++;
-                        continue;
-                }
-
-                /* add argument to list */
-                if (arg_to_add == NULL) {
-                        goto exit_error;
-                }
-
-                if (list_add_item(arg_list, arg_count++, arg_to_add) < 0) {
-                        goto exit_error;
-                }
-
-                /* terminate argument */
-                if (*arg_string == '\0') {
-                        break;
-                } else {
-                        *arg_string++ = '\0';
+                        _llist_delete(args);
                 }
         }
 
-        /* add args to table */
-        if ((arg_table = sysm_syscalloc(arg_count + 1, sizeof(char*))) == NULL) {
-                goto exit_error;
-        }
-
-        for (int i = 0; i < arg_count; i++) {
-                arg_table[i] = list_get_nitem_data(arg_list, 0);
-
-                if (arg_table[i] == NULL) {
-                        goto exit_error;
-                }
-
-                list_unlink_nitem_data(arg_list, 0);
-                list_rm_nitem(arg_list, 0);
-        }
-
-        list_delete(arg_list);
-
-        *argc = arg_count;
-        return arg_table;
-
-
-        /* error occurred - memory/object deallocation */
-exit_error:
-        if (arg_table) {
-                sysm_sysfree(arg_table);
-        }
-
-        if (arg_list) {
-                i32_t items_in_list = list_get_item_count(arg_list);
-                while (items_in_list-- > 0) {
-                        list_unlink_nitem_data(arg_list, 0);
-                        list_rm_nitem(arg_list, 0);
-                }
-
-                list_delete(arg_list);
-        }
-
-        if (arg_string) {
-                sysm_sysfree((char *)arg_start);
-        }
-
-        *argc = 0;
-        return NULL;
+        return argv;
 }
 
 //==============================================================================
 /**
  * @brief Function remove argument table
  *
- * @param **argv        pointer to argument table
+ * @param argc          number of arguments
+ * @param argv          pointer to argument table
  */
 //==============================================================================
-static void delete_argument_table(char **argv)
+static void delete_argument_table(int argc, char **argv)
 {
-        if (argv == NULL) {
-                return;
-        }
+        if (argv) {
+                for (int i = 0; i < argc; i++) {
+                        sysm_sysfree(argv[i]);
+                }
 
-        if (argv[0]) {
-                sysm_sysfree(argv[0]);
+                sysm_sysfree(argv);
         }
-
-        sysm_sysfree(argv);
 }
 
 //==============================================================================
@@ -498,14 +414,12 @@ static int process_kill(task_t *taskhdl, int status)
 //==============================================================================
 static bool prog_is_valid(prog_t *prog)
 {
-        if (prog) {
-                if (prog->this == prog) {
-                        return true;
-                }
+        if (prog && prog->this == prog) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================
@@ -521,14 +435,12 @@ static bool prog_is_valid(prog_t *prog)
 //==============================================================================
 static bool thread_is_valid(thread_t *thread)
 {
-        if (thread) {
-                if (thread->this == thread) {
-                        return true;
-                }
+        if (thread && thread->this == thread) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================
@@ -633,7 +545,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                 errno = ENOENT;
                         }
 
-                        delete_argument_table(prog->argv);
+                        delete_argument_table(prog->argc, prog->argv);
                 }
 
                 sysm_tskfree(prog);
@@ -657,7 +569,7 @@ int _program_delete(prog_t *prog)
         if (prog_is_valid(prog)) {
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_delete(prog->exit_sem);
-                        delete_argument_table(prog->argv);
+                        delete_argument_table(prog->argc, prog->argv);
                         prog->this = NULL;
                         sysm_tskfree(prog);
                         return 0;
