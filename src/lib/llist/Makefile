@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_LIB   += llist/llist.c
+CSRC_LIB   += 
 CXXSRC_LIB += 
 HDRLOC_LIB += llist
