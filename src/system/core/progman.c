@@ -264,6 +264,9 @@ static char **new_argument_table(const char *str, int *argc)
 
                                 // calculate argument length (without nul character)
                                 int str_len = end - start;
+                                if (str_len == 0)
+                                        break;
+
                                 if (quo || *(end - 1) == ' ') {
                                         str_len--;
                                 }
