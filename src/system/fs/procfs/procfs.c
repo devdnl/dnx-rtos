@@ -5,7 +5,7 @@
 
 @brief   This file support process file system (procfs)
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012-2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 #include <string.h>
 #include "core/printx.h"
 #include "core/conv.h"
-#include "core/list.h"
+#include "core/llist.h"
 #include "core/progman.h"
 
 #if defined(ARCH_stm32f1)
@@ -66,9 +66,8 @@
   Local types, enums definitions
 ==============================================================================*/
 struct procfs {
-      list_t  *file_list;
-      mutex_t *resource_mtx;
-      u32_t    ID_counter;
+      _llist_t *file_list;
+      mutex_t  *resource_mtx;
 };
 
 struct file_info {
@@ -128,19 +127,18 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
         UNUSED_ARG(src_path);
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        list_t        *file_list = list_new();
+        _llist_t      *file_list = _llist_new(sysm_sysmalloc, sysm_sysfree, _llist_functor_cmp_pointers, NULL);
         mutex_t       *mtx       = mutex_new(MUTEX_NORMAL);
 
         if (procfs && file_list && mtx) {
                 procfs->file_list    = file_list;
                 procfs->resource_mtx = mtx;
-                procfs->ID_counter   = 0;
 
                 *fs_handle = procfs;
                 return STD_RET_OK;
         } else {
                 if (file_list) {
-                        list_delete(file_list);
+                        _llist_delete(file_list);
                 }
 
                 if (mtx) {
@@ -170,7 +168,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
         struct procfs *procfs = fs_handle;
 
         if (mutex_lock(procfs->resource_mtx, 100)) {
-                if (list_get_item_count(procfs->file_list) != 0) {
+                if (_llist_size(procfs->file_list) != 0) {
                         mutex_unlock(procfs->resource_mtx);
                         errno = EBUSY;
                         return STD_RET_ERROR;
@@ -179,7 +177,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
                 critical_section_begin();
                 mutex_unlock(procfs->resource_mtx);
                 mutex_delete(procfs->resource_mtx);
-                list_delete(procfs->file_list);
+                _llist_delete(procfs->file_list);
                 free(procfs);
                 critical_section_end();
                 return STD_RET_OK;
@@ -314,18 +312,20 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
         UNUSED_ARG(force);
 
         struct procfs *procmem = fs_handle;
-        if (procmem) {
-                mutex_force_lock(procmem->resource_mtx);
 
-                if (list_rm_iditem(procmem->file_list, fd) == STD_RET_OK) {
-                        mutex_unlock(procmem->resource_mtx);
-                        return STD_RET_OK;
-                }
+        stdret_t status = STD_RET_ERROR;
 
+        mutex_force_lock(procmem->resource_mtx);
+
+        int pos = _llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
+        if (_llist_erase(procmem->file_list, pos)) {
                 mutex_unlock(procmem->resource_mtx);
+                status = STD_RET_OK;
         }
 
-        return STD_RET_ERROR;
+        mutex_unlock(procmem->resource_mtx);
+
+        return status;
 }
 
 //==============================================================================
@@ -377,7 +377,7 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
         struct procfs *procmem = fs_handle;
 
         mutex_force_lock(procmem->resource_mtx);
-        struct file_info *file_info = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
         mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
@@ -394,8 +394,8 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
                 return -1;
         }
 
-        ssize_t n   = -1;
-        char  *data = calloc(FILE_DATA_SIZE, 1);
+        ssize_t n    = -1;
+        char   *data = calloc(FILE_DATA_SIZE, 1);
         if (data) {
                 uint data_size = get_file_content(file_info, data, FILE_DATA_SIZE);
 
@@ -483,7 +483,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         struct procfs *procmem = fs_handle;
 
         mutex_force_lock(procmem->resource_mtx);
-        struct file_info *file_info = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
         mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
@@ -931,6 +931,8 @@ static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
                 dirent.size     = 0;
 
                 dir->f_seek++;
+        } else {
+                errno = 0;
         }
 
         return dirent;
@@ -1074,26 +1076,25 @@ static inline void mutex_force_lock(mutex_t *mtx)
 static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
 {
         struct file_info *file_info = calloc(1, sizeof(struct file_info));
-        if (file_info == NULL) {
-                return STD_RET_ERROR;
-        }
+        if (file_info) {
+                file_info->taskhdl      = taskhdl;
+                file_info->file_content = file_content;
 
-        file_info->taskhdl      = taskhdl;
-        file_info->file_content = file_content;
+                mutex_force_lock(procmem->resource_mtx);
 
-        mutex_force_lock(procmem->resource_mtx);
+                if (_llist_push_back(procmem->file_list, file_info)) {
 
-        if (list_add_item(procmem->file_list, procmem->ID_counter, file_info) == 0) {
+                        *fd = (fd_t)file_info;
 
-                *fd = procmem->ID_counter++;
+                } else {
+                        free(file_info);
+                        file_info = NULL;
+                }
 
                 mutex_unlock(procmem->resource_mtx);
-                return STD_RET_OK;
         }
 
-        mutex_unlock(procmem->resource_mtx);
-        free(file_info);
-        return STD_RET_ERROR;
+        return file_info ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
