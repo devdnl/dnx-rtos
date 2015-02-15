@@ -2,7 +2,6 @@
 CSRC_CORE   += core/sysmoni.c
 CSRC_CORE   += core/progman.c
 CSRC_CORE   += core/pipe.c
-CSRC_CORE   += core/list.c
 CSRC_CORE   += core/llist.c
 CSRC_CORE   += core/main.c
 CSRC_CORE   += core/memman.c
