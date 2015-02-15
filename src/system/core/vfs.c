@@ -46,34 +46,31 @@
 ==============================================================================*/
 /** file flags */
 typedef struct file_flags {
-        bool                    eof:1;
-        bool                    error:1;
-        struct vfs_fattr        fattr;
+        bool                rd    :1;
+        bool                wr    :1;
+        bool                eof   :1;
+        bool                error :1;
+        struct vfs_fattr    fattr;
 } file_flags_t;
 
 /** file type */
 struct vfs_file
 {
-        void            *FS_hdl;
-        stdret_t       (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
-        ssize_t        (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        ssize_t        (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr);
-        int            (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
-        stdret_t       (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
-        stdret_t       (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
-        void            *f_extra_data;
-        struct vfs_file *this;
-        fd_t             fd;
-        fpos_t           f_lseek;
-        file_flags_t     f_flag;
+        void               *FS_hdl;
+        vfs_FS_interface_t *FS_if;
+        void               *f_extra_data;
+        struct vfs_file    *this;
+        fd_t                fd;
+        fpos_t              f_lseek;
+        file_flags_t        f_flag;
 };
 
 typedef struct FS_entry {
-        const char              *mount_point;
-        struct FS_entry         *parent_FS_ref;
-        void                    *handle;
-        struct vfs_FS_interface *interface;
-        u8_t                     children_cnt;
+        const char         *mount_point;
+        struct FS_entry    *parent_FS_ref;
+        void               *handle;
+        vfs_FS_interface_t *interface;
+        u8_t                children_cnt;
 } FS_entry_t;
 
 enum path_correction {
@@ -86,7 +83,7 @@ enum path_correction {
   Local function prototypes
 ==============================================================================*/
 static bool             can_be_root_FS          (const char *mount_point);
-static FS_entry_t      *new_FS_entry            (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, struct vfs_FS_interface *fs_interface);
+static FS_entry_t      *new_FS_entry            (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, vfs_FS_interface_t *fs_interface);
 static bool             delete_FS_entry         (FS_entry_t *this);
 static int              fclose                  (FILE *file, bool force);
 static bool             is_file_valid           (FILE *file);
@@ -805,19 +802,16 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                                   external_path,
                                                   flags) == STD_RET_OK) {
 
-                                file->FS_hdl  = fs->handle;
-                                file->f_close = fs->interface->fs_close;
-                                file->f_ioctl = fs->interface->fs_ioctl;
-                                file->f_stat  = fs->interface->fs_fstat;
-                                file->f_flush = fs->interface->fs_flush;
+                                file->FS_hdl = fs->handle;
+                                file->FS_if  = fs->interface;
 
                                 if (strncmp("r", mode, 2) != 0) {
-                                        file->f_write = fs->interface->fs_write;
+                                        file->f_flag.wr = true;
                                 }
 
                                 if (  strncmp("w", mode, 2) != 0
                                    && strncmp("a", mode, 2) != 0) {
-                                        file->f_read = fs->interface->fs_read;
+                                        file->f_flag.rd = true;
                                 }
 
                                 file->this = file;
@@ -910,9 +904,14 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && is_file_valid(file)) {
-                if (file->f_write) {
-                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
-                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
+                if (file->f_flag.wr) {
+                        n = file->FS_if->fs_write(file->FS_hdl,
+                                                  file->f_extra_data,
+                                                  file->fd,
+                                                  ptr,
+                                                  size * count,
+                                                  &file->f_lseek,
+                                                  file->f_flag.fattr);
 
                         if (n < 0) {
                                 file->f_flag.error = true;
@@ -953,9 +952,14 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && is_file_valid(file)) {
-                if (file->f_read) {
-                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
-                                         ptr, size * count, &file->f_lseek, file->f_flag.fattr);
+                if (file->f_flag.rd) {
+                        n = file->FS_if->fs_read(file->FS_hdl,
+                                                 file->f_extra_data,
+                                                 file->fd,
+                                                 ptr,
+                                                 size * count,
+                                                 &file->f_lseek,
+                                                 file->f_flag.fattr);
 
                         if (n < 0) {
                                 file->f_flag.error = true;
@@ -993,28 +997,28 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
 {
         struct stat stat;
 
-        if (!is_file_valid(file) || mode > VFS_SEEK_END) {
-                return -1;
-        }
-
-        if (mode == VFS_SEEK_END) {
-                stat.st_size = 0;
-                if (vfs_fstat(file, &stat) != 0) {
-                        return -1;
+        if (is_file_valid(file) && mode <= VFS_SEEK_END) {
+                if (mode == VFS_SEEK_END) {
+                        stat.st_size = 0;
+                        if (vfs_fstat(file, &stat) != 0) {
+                                return -1;
+                        }
                 }
+
+                switch (mode) {
+                case VFS_SEEK_SET: file->f_lseek  = offset; break;
+                case VFS_SEEK_CUR: file->f_lseek += offset; break;
+                case VFS_SEEK_END: file->f_lseek  = stat.st_size + offset; break;
+                default: return -1;
+                }
+
+                file->f_flag.eof   = false;
+                file->f_flag.error = false;
+
+                return 0;
         }
 
-        switch (mode) {
-        case VFS_SEEK_SET: file->f_lseek  = offset; break;
-        case VFS_SEEK_CUR: file->f_lseek += offset; break;
-        case VFS_SEEK_END: file->f_lseek  = stat.st_size + offset; break;
-        default: return -1;
-        }
-
-        file->f_flag.eof   = false;
-        file->f_flag.error = false;
-
-        return 0;
+        return -1;
 }
 
 //==============================================================================
@@ -1076,7 +1080,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 case IOCTL_VFS__DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
                 }
 
-                return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
+                return file->FS_if->fs_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
         } else {
                 return -1;
         }
@@ -1094,13 +1098,16 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
 //==============================================================================
 int vfs_fstat(FILE *file, struct stat *stat)
 {
-        if (!is_file_valid(file) || !stat || !file->f_stat) {
-                return -1;
-        }
+        int status = -1;
 
-        int priority = increase_task_priority();
-        int status   = file->f_stat(file->FS_hdl, file->f_extra_data, file->fd, stat) == STD_RET_OK ? 0 : -1;
-        restore_priority(priority);
+        if (is_file_valid(file) && stat && file->FS_if->fs_stat) {
+                int priority = increase_task_priority();
+                status = file->FS_if->fs_fstat(file->FS_hdl,
+                                               file->f_extra_data,
+                                               file->fd,
+                                               stat) == STD_RET_OK ? 0 : -1;
+                restore_priority(priority);
+        }
 
         return status;
 }
@@ -1116,13 +1123,15 @@ int vfs_fstat(FILE *file, struct stat *stat)
 //==============================================================================
 int vfs_fflush(FILE *file)
 {
-        if (!is_file_valid(file) && !file->f_flush) {
-                return -1;
-        }
+        int status = -1;
 
-        int priority = increase_task_priority();
-        int status   = file->f_flush(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK ? 0 : -1;
-        restore_priority(priority);
+        if (is_file_valid(file) && file->FS_if->fs_flush) {
+                int priority = increase_task_priority();
+                status = file->FS_if->fs_flush(file->FS_hdl,
+                                               file->f_extra_data,
+                                               file->fd) == STD_RET_OK ? 0 : -1;
+                restore_priority(priority);
+        }
 
         return status;
 }
@@ -1243,10 +1252,10 @@ static bool can_be_root_FS(const char *mount_point)
  * @return On success pointer to file system entry is returned, otherwise NULL.
  */
 //==============================================================================
-static FS_entry_t *new_FS_entry(FS_entry_t              *parent_FS,
-                                const char              *fs_mount_point,
-                                const char              *fs_src_file,
-                                struct vfs_FS_interface *fs_interface)
+static FS_entry_t *new_FS_entry(FS_entry_t         *parent_FS,
+                                const char         *fs_mount_point,
+                                const char         *fs_src_file,
+                                vfs_FS_interface_t *fs_interface)
 {
         FS_entry_t *new_FS = sysm_sysmalloc(sizeof(FS_entry_t));
         if (new_FS) {
@@ -1308,9 +1317,14 @@ static bool delete_FS_entry(FS_entry_t *this)
 //==============================================================================
 static int fclose(FILE *file, bool force)
 {
-        if (is_file_valid(file) && file->f_close) {
-                if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
-                        file->this = NULL;
+        if (is_file_valid(file) && file->FS_if->fs_close) {
+                if (file->FS_if->fs_close(file->FS_hdl,
+                                          file->f_extra_data,
+                                          file->fd, force) == STD_RET_OK) {
+
+                        file->this   = NULL;
+                        file->FS_hdl = NULL;
+                        file->FS_hdl = NULL;
                         sysm_sysfree(file);
                         return 0;
                 }
@@ -1332,8 +1346,14 @@ static int fclose(FILE *file, bool force)
 //==============================================================================
 static bool is_file_valid(FILE *file)
 {
-        if (file && file->this == file) {
+        if (  file
+           && file->this == file
+           && file->FS_hdl
+           && file->FS_if
+           && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO) {
+
                 return true;
+
         } else {
                 errno = EINVAL;
                 return false;

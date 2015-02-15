@@ -89,6 +89,9 @@ extern "C" {
 #define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
 #define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
 
+/* file system identificator */
+#define _VFS_FILE_SYSTEM_MAGIC_NO               0xD9EFD24F
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -114,7 +117,7 @@ typedef struct dirent {
 } dirent_t;
 
 /** directory type */
-struct vfs_dir {
+typedef struct vfs_dir {
         dirent_t      (*f_readdir)(void *fshdl, struct vfs_dir *dir);
         stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void           *f_dd;
@@ -122,9 +125,7 @@ struct vfs_dir {
         struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
-};
-
-typedef struct vfs_dir DIR;
+} DIR;
 
 /** file statistics */
 struct stat {
@@ -180,7 +181,7 @@ typedef enum {
 } vfs_open_flags_t;
 
 /** file system configuration */
-struct vfs_FS_interface {
+typedef struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags);
@@ -201,7 +202,8 @@ struct vfs_FS_interface {
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
         stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
         void     (*fs_sync   )(void *fshdl);
-};
+        uint32_t   fs_magic;
+} vfs_FS_interface_t;
 
 /*==============================================================================
   Exported API functions

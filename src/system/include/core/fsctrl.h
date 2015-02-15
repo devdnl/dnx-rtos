@@ -60,7 +60,8 @@ extern "C" {
              .fs_statfs  = _##fs_name##_statfs,\
              .fs_flush   = _##fs_name##_flush,\
              .fs_write   = _##fs_name##_write,\
-             .fs_sync    = _##fs_name##_sync}}
+             .fs_sync    = _##fs_name##_sync,\
+             .fs_magic   = _VFS_FILE_SYSTEM_MAGIC_NO}}
 
 #define _IMPORT_FILE_SYSTEM(fsname)                                                             \
 extern API_FS_INIT(fsname, void**, const char*);                                                \
