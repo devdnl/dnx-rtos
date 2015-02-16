@@ -44,41 +44,41 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 // list foreach iterator
-#define _llist_foreach(type, element, _llist_t__list)\
-        for (bool __loop = true; __loop && _llist_size(_llist_t__list); __loop = false)\
-                for (_llist_iterator_t _iterator = _llist_iterator(_llist_t__list); __loop; __loop = false)\
-                        for (type element = _llist_begin(&_iterator);\
+#define llist_foreach(type, element, llist_t__list)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
+                        for (type element = llist_begin(&_iterator);\
                              element;\
-                             element = _llist_iterator_next(&_iterator), __loop = false)
+                             element = llist_iterator_next(&_iterator), __loop = false)
 
 // list reversed foreach iterator
-#define _llist_foreach_reverse(type, element, _llist_t__list)\
-        for (bool __loop = true; __loop && _llist_size(_llist_t__list); __loop = false)\
-                for (_llist_iterator_t _iterator = _llist_iterator(_llist_t__list); __loop; __loop = false)\
-                        for (type element = _llist_end(&_iterator);\
+#define llist_foreach_reverse(type, element, llist_t__list)\
+        for (bool __loop = true; __loop && llist_size(llist_t__list); __loop = false)\
+                for (llist_iterator_t _iterator = llist_iterator(llist_t__list); __loop; __loop = false)\
+                        for (type element = llist_end(&_iterator);\
                              element;\
-                             element = _llist_iterator_prev(&_iterator), __loop = false)
+                             element = llist_iterator_prev(&_iterator), __loop = false)
 
 // list iterator
-#define _llist_foreach_iterator _iterator
+#define llist_foreach_iterator _iterator
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef struct _list _llist_t;
-typedef int   (*_llist_cmp_functor_t)(const void *a, const void *b);
-typedef void  (*_llist_obj_dtor_t)   (void *object);
-typedef void *(*_llist_malloc)       (size_t size);
-typedef void  (*_llist_free)         (void *mem);
+typedef struct _llist llist_t;
+typedef int   (*llist_cmp_functor_t)(const void *a, const void *b);
+typedef void  (*llist_obj_dtor_t)   (void *object);
+typedef void *(*llist_malloc)       (size_t size);
+typedef void  (*llist_free)         (void *mem);
 
 // iterator object
 typedef struct {
-        _llist_t  *list;
+        llist_t  *list;
         void     *current;
         void     *next;
         void     *to;
         uint32_t  magic;
-} _llist_iterator_t;
+} llist_iterator_t;
 
 /*==============================================================================
   Exported functions
@@ -93,7 +93,10 @@ typedef struct {
  * @return On success list object is returned, otherwise NULL
  */
 //==============================================================================
-extern _llist_t *_llist_new(_llist_malloc malloc, _llist_free free, _llist_cmp_functor_t functor, _llist_obj_dtor_t obj_dtor);
+extern llist_t *llist_new_generic(llist_malloc        malloc,
+                                  llist_free          free,
+                                  llist_cmp_functor_t functor,
+                                  llist_obj_dtor_t    obj_dtor);
 
 //==============================================================================
 /**
@@ -102,7 +105,7 @@ extern _llist_t *_llist_new(_llist_malloc malloc, _llist_free free, _llist_cmp_f
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_delete(_llist_t *list);
+extern int llist_delete(llist_t *list);
 
 //==============================================================================
 /**
@@ -111,7 +114,7 @@ extern int _llist_delete(_llist_t *list);
  * @return If list is empty then true is returned, otherwise false
  */
 //==============================================================================
-extern bool _llist_empty(_llist_t *list);
+extern bool llist_empty(llist_t *list);
 
 //==============================================================================
 /**
@@ -120,7 +123,7 @@ extern bool _llist_empty(_llist_t *list);
  * @return Number of elements of the list or -1 on error
  */
 //==============================================================================
-extern int _llist_size(_llist_t *list);
+extern int llist_size(llist_t *list);
 
 //==============================================================================
 /**
@@ -131,7 +134,7 @@ extern int _llist_size(_llist_t *list);
  * @return On success allocated memory pointer is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_push_emplace_front(_llist_t *list, size_t size, const void *data);
+extern void *llist_push_emplace_front(llist_t *list, size_t size, const void *data);
 
 //==============================================================================
 /**
@@ -141,7 +144,7 @@ extern void *_llist_push_emplace_front(_llist_t *list, size_t size, const void *
  * @return On success pointer to the object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_push_front(_llist_t *list, void *object);
+extern void *llist_push_front(llist_t *list, void *object);
 
 //==============================================================================
 /**
@@ -150,7 +153,7 @@ extern void *_llist_push_front(_llist_t *list, void *object);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_pop_front(_llist_t *list);
+extern int llist_pop_front(llist_t *list);
 
 //==============================================================================
 /**
@@ -161,7 +164,7 @@ extern int _llist_pop_front(_llist_t *list);
  * @return On success allocated memory pointer is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_push_emplace_back(_llist_t *list, size_t size, const void *data);
+extern void *llist_push_emplace_back(llist_t *list, size_t size, const void *data);
 
 //==============================================================================
 /**
@@ -170,7 +173,7 @@ extern void *_llist_push_emplace_back(_llist_t *list, size_t size, const void *d
  * @return On success pointer to the object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_push_back(_llist_t *list, void *object);
+extern void *llist_push_back(llist_t *list, void *object);
 
 //==============================================================================
 /**
@@ -179,7 +182,7 @@ extern void *_llist_push_back(_llist_t *list, void *object);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_pop_back(_llist_t *list);
+extern int llist_pop_back(llist_t *list);
 
 //==============================================================================
 /**
@@ -191,7 +194,7 @@ extern int _llist_pop_back(_llist_t *list);
  * @return On success pointer to the object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_emplace(_llist_t *list, int position, size_t size, const void *data);
+extern void *llist_emplace(llist_t *list, int position, size_t size, const void *data);
 
 //==============================================================================
 /**
@@ -202,7 +205,7 @@ extern void *_llist_emplace(_llist_t *list, int position, size_t size, const voi
  * @return On success object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_insert(_llist_t *list, int position, void *object);
+extern void *llist_insert(llist_t *list, int position, void *object);
 
 //==============================================================================
 /**
@@ -212,7 +215,7 @@ extern void *_llist_insert(_llist_t *list, int position, void *object);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_erase(_llist_t *list, int position);
+extern int llist_erase(llist_t *list, int position);
 
 //==============================================================================
 /**
@@ -222,7 +225,7 @@ extern int _llist_erase(_llist_t *list, int position);
  * @return On success taken object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_take(_llist_t *list, int position);
+extern void *llist_take(llist_t *list, int position);
 
 //==============================================================================
 /**
@@ -231,7 +234,7 @@ extern void *_llist_take(_llist_t *list, int position);
  * @return On success taken object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_take_front(_llist_t *list);
+extern void *llist_take_front(llist_t *list);
 
 //==============================================================================
 /**
@@ -240,7 +243,7 @@ extern void *_llist_take_front(_llist_t *list);
  * @return On success taken object is returned, otherwise NULL
  */
 //==============================================================================
-extern void *_llist_take_back(_llist_t *list);
+extern void *llist_take_back(llist_t *list);
 
 //==============================================================================
 /**
@@ -249,7 +252,7 @@ extern void *_llist_take_back(_llist_t *list);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_clear(_llist_t *list);
+extern int llist_clear(llist_t *list);
 
 //==============================================================================
 /**
@@ -260,7 +263,7 @@ extern int _llist_clear(_llist_t *list);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_swap(_llist_t *list, int j, int k);
+extern int llist_swap(llist_t *list, int j, int k);
 
 //==============================================================================
 /**
@@ -269,7 +272,7 @@ extern int _llist_swap(_llist_t *list, int j, int k);
  * @return None
  */
 //==============================================================================
-extern void _llist_sort(_llist_t *list);
+extern void llist_sort(llist_t *list);
 
 //==============================================================================
 /**
@@ -278,7 +281,7 @@ extern void _llist_sort(_llist_t *list);
  * @return None
  */
 //==============================================================================
-extern void _llist_unique(_llist_t *list);
+extern void llist_unique(llist_t *list);
 
 //==============================================================================
 /**
@@ -287,7 +290,7 @@ extern void _llist_unique(_llist_t *list);
  * @return None
  */
 //==============================================================================
-extern void _llist_reverse(_llist_t *list);
+extern void llist_reverse(llist_t *list);
 
 //==============================================================================
 /**
@@ -297,7 +300,7 @@ extern void _llist_reverse(_llist_t *list);
  * @return Pointer to data, or NULL on error
  */
 //==============================================================================
-extern void *_llist_at(_llist_t *list, int position);
+extern void *llist_at(llist_t *list, int position);
 
 //==============================================================================
 /**
@@ -307,7 +310,7 @@ extern void *_llist_at(_llist_t *list, int position);
  * @return Number of found objects, or -1 on error
  */
 //==============================================================================
-extern int _llist_contains(_llist_t *list, const void *object);
+extern int llist_contains(llist_t *list, const void *object);
 
 //==============================================================================
 /**
@@ -317,7 +320,7 @@ extern int _llist_contains(_llist_t *list, const void *object);
  * @return Object position, or -1 on error
  */
 //==============================================================================
-extern int _llist_find_begin(_llist_t *list, const void *object);
+extern int llist_find_begin(llist_t *list, const void *object);
 
 //==============================================================================
 /**
@@ -327,7 +330,7 @@ extern int _llist_find_begin(_llist_t *list, const void *object);
  * @return Object position, or -1 on error
  */
 //==============================================================================
-extern int _llist_find_end(_llist_t *list, const void *object);
+extern int llist_find_end(llist_t *list, const void *object);
 
 //==============================================================================
 /**
@@ -336,7 +339,7 @@ extern int _llist_find_end(_llist_t *list, const void *object);
  * @return Pointer to data, or NULL on error
  */
 //==============================================================================
-extern void *_llist_front(_llist_t *list);
+extern void *llist_front(llist_t *list);
 
 //==============================================================================
 /**
@@ -345,7 +348,7 @@ extern void *_llist_front(_llist_t *list);
  * @return Pointer to data, or NULL on error
  */
 //==============================================================================
-extern void *_llist_back(_llist_t *list);
+extern void *llist_back(llist_t *list);
 
 //==============================================================================
 /**
@@ -354,7 +357,7 @@ extern void *_llist_back(_llist_t *list);
  * @return Iterator object
  */
 //==============================================================================
-extern _llist_iterator_t _llist_iterator(_llist_t *list);
+extern llist_iterator_t llist_iterator(llist_t *list);
 
 //==============================================================================
 /**
@@ -363,7 +366,7 @@ extern _llist_iterator_t _llist_iterator(_llist_t *list);
  * @return Pointer to data object
  */
 //==============================================================================
-extern void *_llist_begin(_llist_iterator_t *iterator);
+extern void *llist_begin(llist_iterator_t *iterator);
 
 //==============================================================================
 /**
@@ -372,7 +375,7 @@ extern void *_llist_begin(_llist_iterator_t *iterator);
  * @return Pointer to data object
  */
 //==============================================================================
-extern void *_llist_end(_llist_iterator_t *iterator);
+extern void *llist_end(llist_iterator_t *iterator);
 
 //==============================================================================
 /**
@@ -383,7 +386,7 @@ extern void *_llist_end(_llist_iterator_t *iterator);
  * @return Pointer to data object
  */
 //==============================================================================
-extern void *_llist_range(_llist_iterator_t *iterator, int begin, int end);
+extern void *llist_range(llist_iterator_t *iterator, int begin, int end);
 
 //==============================================================================
 /**
@@ -392,7 +395,7 @@ extern void *_llist_range(_llist_iterator_t *iterator, int begin, int end);
  * @return Pointer to data object
  */
 //==============================================================================
-extern void *_llist_iterator_next(_llist_iterator_t *iterator);
+extern void *llist_iterator_next(llist_iterator_t *iterator);
 
 //==============================================================================
 /**
@@ -401,7 +404,7 @@ extern void *_llist_iterator_next(_llist_iterator_t *iterator);
  * @return Pointer to data object
  */
 //==============================================================================
-extern void *_llist_iterator_prev(_llist_iterator_t *iterator);
+extern void *llist_iterator_prev(llist_iterator_t *iterator);
 
 //==============================================================================
 /**
@@ -410,7 +413,7 @@ extern void *_llist_iterator_prev(_llist_iterator_t *iterator);
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-extern int _llist_erase_by_iterator(_llist_iterator_t *iterator);
+extern int llist_erase_by_iterator(llist_iterator_t *iterator);
 
 //==============================================================================
 /**
@@ -422,7 +425,7 @@ extern int _llist_erase_by_iterator(_llist_iterator_t *iterator);
  *         a < b: -1
  */
 //==============================================================================
-extern int _llist_functor_cmp_pointers(const void *a, const void *b);
+extern int llist_functor_cmp_pointers(const void *a, const void *b);
 
 //==============================================================================
 /**
@@ -434,7 +437,7 @@ extern int _llist_functor_cmp_pointers(const void *a, const void *b);
  *         a < b: -1
  */
 //==============================================================================
-extern int _llist_functor_cmp_strings(const void *a, const void *b);
+extern int llist_functor_cmp_strings(const void *a, const void *b);
 
 /*==============================================================================
   Exported inline functions
