@@ -1405,11 +1405,12 @@ void sysm_task_switched_out(void)
  *         otherwise false.
  */
 //==============================================================================
-bool _sysm_kernel_panic_detect(bool show_msg)
+bool sysm_kernel_panic_detect(bool show_msg)
 {
         static const char *cause[] = {
                "SEGFAULT",
                "STACKOVF",
+               "CPUFAULT",
                "UNKNOWN"
         };
 
@@ -1427,10 +1428,9 @@ bool _sysm_kernel_panic_detect(bool show_msg)
                                 strncpy(kernel_panic_descriptor->task_name, "<defected>", CONFIG_RTOS_TASK_NAME_LEN);
                         }
 
-                        printk(FONT_COLOR_RED"*** KERNEL PANIC OCCURRED! ****"RESET_ATTRIBUTES"\n");
+                        printk(FONT_COLOR_RED"*** KERNEL PANIC ***"RESET_ATTRIBUTES"\n");
                         printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
-                        printk("Task : %s\n", kernel_panic_descriptor->task_name);
-                        printk("Starting system...\n\n");
+                        printk("Task : %s\n\n", kernel_panic_descriptor->task_name);
                         _sleep(2);
                 }
 
@@ -1448,7 +1448,7 @@ bool _sysm_kernel_panic_detect(bool show_msg)
  * @return None
  */
 //==============================================================================
-void _sysm_kernel_panic_report(const char *task_name, enum _kernel_panic_desc_cause suggest_cause)
+void sysm_kernel_panic_report(const char *task_name, enum _kernel_panic_desc_cause suggest_cause)
 {
         strncpy(kernel_panic_descriptor->task_name, task_name, CONFIG_RTOS_TASK_NAME_LEN);
 

@@ -76,6 +76,7 @@ struct sysmoni_used_memory {
 enum _kernel_panic_desc_cause {
         _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
         _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
+        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
         _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
 };
 
@@ -125,8 +126,8 @@ extern void     sysm_disable_CPU_load_measurement       (void);
 extern void     sysm_enable_CPU_load_measurement        (void);
 extern void     sysm_task_switched_in                   (void);
 extern void     sysm_task_switched_out                  (void);
-extern bool     _sysm_kernel_panic_detect               (bool);
-extern void     _sysm_kernel_panic_report               (const char*, enum _kernel_panic_desc_cause);
+extern bool     sysm_kernel_panic_detect                (bool);
+extern void     sysm_kernel_panic_report                (const char*, enum _kernel_panic_desc_cause);
 
 #ifdef __cplusplus
 }

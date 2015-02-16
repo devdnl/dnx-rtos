@@ -61,7 +61,7 @@
 //==============================================================================
 void HardFault_Handler(void)
 {
-        _sysm_kernel_panic_report(_task_get_name(), _KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+        sysm_kernel_panic_report(_task_get_name(), _KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
 }
 
 //==============================================================================
@@ -71,7 +71,7 @@ void HardFault_Handler(void)
 //==============================================================================
 void MemManage_Handler(void)
 {
-        while (true);
+        sysm_kernel_panic_report(_task_get_name(), _KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -81,7 +81,7 @@ void MemManage_Handler(void)
 //==============================================================================
 void BusFault_Handler(void)
 {
-        while (true);
+        sysm_kernel_panic_report(_task_get_name(), _KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -91,7 +91,7 @@ void BusFault_Handler(void)
 //==============================================================================
 void UsageFault_Handler(void)
 {
-        while (true);
+        sysm_kernel_panic_report(_task_get_name(), _KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

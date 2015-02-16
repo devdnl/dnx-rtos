@@ -82,7 +82,7 @@ void vApplicationIdleHook(void)
 void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
         (void)taskHdl;
-        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================
