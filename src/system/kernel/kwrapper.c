@@ -396,7 +396,7 @@ void _semaphore_delete(sem_t *sem)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
+bool _semaphore_wait(sem_t *sem, const uint blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
                 return xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
@@ -415,7 +415,7 @@ bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
  * @retval false        semaphore not given
  */
 //==============================================================================
-bool _semaphore_give(sem_t *sem)
+bool _semaphore_signal(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 return xSemaphoreGive(sem->object);
@@ -435,7 +435,7 @@ bool _semaphore_give(sem_t *sem)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
+bool _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 signed portBASE_TYPE woken = 0;
@@ -461,7 +461,7 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
+bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 signed portBASE_TYPE woken = 0;
