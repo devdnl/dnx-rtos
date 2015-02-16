@@ -66,8 +66,8 @@
   Local types, enums definitions
 ==============================================================================*/
 struct procfs {
-      _llist_t *file_list;
-      mutex_t  *resource_mtx;
+      llist_t *file_list;
+      mutex_t *resource_mtx;
 };
 
 struct file_info {
@@ -127,7 +127,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
         UNUSED_ARG(src_path);
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        _llist_t      *file_list = _llist_new(sysm_sysmalloc, sysm_sysfree, _llist_functor_cmp_pointers, NULL);
+        llist_t       *file_list = llist_new_generic(sysm_sysmalloc, sysm_sysfree, llist_functor_cmp_pointers, NULL);
         mutex_t       *mtx       = mutex_new(MUTEX_NORMAL);
 
         if (procfs && file_list && mtx) {
@@ -138,7 +138,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
                 return STD_RET_OK;
         } else {
                 if (file_list) {
-                        _llist_delete(file_list);
+                        llist_delete(file_list);
                 }
 
                 if (mtx) {
@@ -168,7 +168,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
         struct procfs *procfs = fs_handle;
 
         if (mutex_lock(procfs->resource_mtx, 100)) {
-                if (_llist_size(procfs->file_list) != 0) {
+                if (llist_size(procfs->file_list) != 0) {
                         mutex_unlock(procfs->resource_mtx);
                         errno = EBUSY;
                         return STD_RET_ERROR;
@@ -177,7 +177,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
                 critical_section_begin();
                 mutex_unlock(procfs->resource_mtx);
                 mutex_delete(procfs->resource_mtx);
-                _llist_delete(procfs->file_list);
+                llist_delete(procfs->file_list);
                 free(procfs);
                 critical_section_end();
                 return STD_RET_OK;
@@ -313,15 +313,10 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         struct procfs *procmem = fs_handle;
 
-        stdret_t status = STD_RET_ERROR;
-
         mutex_force_lock(procmem->resource_mtx);
 
-        int pos = _llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
-        if (_llist_erase(procmem->file_list, pos)) {
-                mutex_unlock(procmem->resource_mtx);
-                status = STD_RET_OK;
-        }
+        int      pos    = llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
+        stdret_t status = llist_erase(procmem->file_list, pos) ? STD_RET_OK : STD_RET_ERROR;
 
         mutex_unlock(procmem->resource_mtx);
 
@@ -1082,8 +1077,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
 
                 mutex_force_lock(procmem->resource_mtx);
 
-                if (_llist_push_back(procmem->file_list, file_info)) {
-
+                if (llist_push_back(procmem->file_list, file_info)) {
                         *fd = (fd_t)file_info;
 
                 } else {

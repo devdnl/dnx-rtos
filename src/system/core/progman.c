@@ -234,7 +234,7 @@ static char **new_argument_table(const char *str, int *argc)
         char **argv = NULL;
 
         if (str && argc && str[0] != '\0') {
-                _llist_t *args = _llist_new(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
+                llist_t *args = llist_new_generic(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
 
                 if (args) {
                         // parse arguments
@@ -277,13 +277,13 @@ static char **new_argument_table(const char *str, int *argc)
                                         strncpy(arg, start, str_len);
                                         arg[str_len] = '\0';
 
-                                        if (_llist_push_back(args, arg) == NULL) {
-                                                _llist_delete(args);
+                                        if (llist_push_back(args, arg) == NULL) {
+                                                llist_delete(args);
                                                 errno = ENOMEM;
                                                 return NULL;
                                         }
                                 } else {
-                                        _llist_delete(args);
+                                        llist_delete(args);
                                         errno = ENOMEM;
                                         return NULL;
                                 }
@@ -293,19 +293,19 @@ static char **new_argument_table(const char *str, int *argc)
                         }
 
                         // create table with arguments
-                        int no_of_args = _llist_size(args);
+                        int no_of_args = llist_size(args);
                         *argc = no_of_args;
 
                         argv = sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
                         if (argv) {
                                 for (int i = 0; i < no_of_args; i++) {
-                                        argv[i] = _llist_take_front(args);
+                                        argv[i] = llist_take_front(args);
                                 }
 
                                 argv[no_of_args] = NULL;
                         }
 
-                        _llist_delete(args);
+                        llist_delete(args);
                 }
         }
 

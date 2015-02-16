@@ -92,8 +92,8 @@ struct task_monitor_data {
 static struct kernel_panic_desc *kernel_panic_descriptor;
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-static _llist_t *sysm_task_list;
-static mutex_t  *sysm_resource_mtx;
+static llist_t *sysm_task_list;
+static mutex_t *sysm_resource_mtx;
 #endif
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
@@ -206,7 +206,7 @@ stdret_t _sysm_init(void)
 #endif
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-        sysm_task_list    = _llist_new(sysm_sysmalloc, sysm_sysfree, _llist_functor_cmp_pointers, NULL);
+        sysm_task_list    = llist_new_generic(sysm_sysmalloc, sysm_sysfree, llist_functor_cmp_pointers, NULL);
         sysm_resource_mtx = mutex_new(MUTEX_RECURSIVE);
 #endif
 
@@ -229,7 +229,7 @@ stdret_t _sysm_init(void)
         if (!sysm_task_list || !sysm_resource_mtx) {
 #endif
                 if (sysm_task_list) {
-                        _llist_delete(sysm_task_list);
+                        llist_delete(sysm_task_list);
                 }
 
                 if (sysm_resource_mtx) {
@@ -288,7 +288,7 @@ bool sysm_is_task_exist(task_t *taskhdl)
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        bool exist = _llist_find_begin(sysm_task_list, taskhdl) >= 0;
+        bool exist = llist_find_begin(sysm_task_list, taskhdl) >= 0;
 
         if (!exist) {
                 errno = ESRCH;
@@ -327,7 +327,7 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
                 if (tmdata) {
                         tmdata->used_memory = stack_size;
 
-                        if (_llist_push_back(sysm_task_list, taskhdl)) {
+                        if (llist_push_back(sysm_task_list, taskhdl)) {
                                 _task_set_monitor_data(taskhdl, tmdata);
                                 status = STD_RET_OK;
                         } else {
@@ -412,8 +412,8 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
         sysm_sysfree(task_monitor_data);
         _task_set_monitor_data(taskhdl, NULL);
 
-        int pos = _llist_find_begin(sysm_task_list, taskhdl);
-        _llist_take(sysm_task_list, pos);
+        int pos = llist_find_begin(sysm_task_list, taskhdl);
+        llist_take(sysm_task_list, pos);
 
         mutex_unlock(sysm_resource_mtx);
         return STD_RET_OK;
@@ -516,7 +516,7 @@ stdret_t sysm_get_ntask_stat(uint item, struct sysmoni_taskstat *stat)
 
         stdret_t status = STD_RET_ERROR;
 
-        task_t *task = _llist_at(sysm_task_list, item);
+        task_t *task = llist_at(sysm_task_list, item);
 
         if (sysm_get_task_stat(task, stat) == STD_RET_OK) {
                 status = STD_RET_OK;
@@ -592,7 +592,7 @@ uint sysm_get_number_of_monitored_tasks(void)
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        int task_count = _llist_size(sysm_task_list);
+        int task_count = llist_size(sysm_task_list);
 
         mutex_unlock(sysm_resource_mtx);
 

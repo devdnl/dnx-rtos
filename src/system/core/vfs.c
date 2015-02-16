@@ -98,7 +98,7 @@ static char            *new_CWD_path            (const char *path, enum path_cor
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static _llist_t *vfs_mnt_list;
+static llist_t  *vfs_mnt_list;
 static mutex_t  *vfs_resource_mtx;
 
 /*==============================================================================
@@ -115,7 +115,7 @@ static mutex_t  *vfs_resource_mtx;
 //==============================================================================
 stdret_t _vfs_init(void)
 {
-        vfs_mnt_list     = _llist_new(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
+        vfs_mnt_list     = llist_new_generic(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
         vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
 
         if (!vfs_mnt_list || !vfs_resource_mtx)
@@ -190,7 +190,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                          * mount FS if created
                          */
                         if (new_FS) {
-                                if (_llist_push_back(vfs_mnt_list, new_FS)) {
+                                if (llist_push_back(vfs_mnt_list, new_FS)) {
                                         status = STD_RET_OK;
 
                                 } else {
@@ -243,7 +243,7 @@ stdret_t vfs_umount(const char *path)
                         if (mount_fs) {
                                 if (mount_fs->children_cnt == 0) {
                                         if (delete_FS_entry(mount_fs)) {
-                                                _llist_take(vfs_mnt_list, position);
+                                                llist_take(vfs_mnt_list, position);
                                                 status = STD_RET_OK;
                                         } else {
                                                 errno = EBUSY;
@@ -282,7 +282,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
 
         FS_entry_t *fs = NULL;
         if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-                fs = _llist_at(vfs_mnt_list, item);
+                fs = llist_at(vfs_mnt_list, item);
                 mutex_unlock(vfs_resource_mtx);
         }
 
@@ -1216,7 +1216,7 @@ void vfs_sync(void)
 {
         if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
-                _llist_foreach(FS_entry_t*, fs, vfs_mnt_list) {
+                llist_foreach(FS_entry_t*, fs, vfs_mnt_list) {
                         fs->interface->fs_sync(fs->handle);
                 }
 
@@ -1237,7 +1237,7 @@ void vfs_sync(void)
 //==============================================================================
 static bool can_be_root_FS(const char *mount_point)
 {
-        return _llist_size(vfs_mnt_list) == 0 && strcmp(mount_point, "/") == 0;
+        return llist_size(vfs_mnt_list) == 0 && strcmp(mount_point, "/") == 0;
 }
 
 //==============================================================================
@@ -1468,7 +1468,7 @@ static FS_entry_t *get_path_FS(const char *path, size_t len, int *position)
 {
         int pos = 0;
 
-        _llist_foreach(FS_entry_t*, entry, vfs_mnt_list) {
+        llist_foreach(FS_entry_t*, entry, vfs_mnt_list) {
                 if (strncmp(path, entry->mount_point, len) == 0) {
                         if (position) {
                                 *position = pos;
