@@ -73,10 +73,10 @@ struct spi_config {
 
 /* independent SPI instance */
 struct spi_virtual {
+        dev_lock_t              *file_lock;
         u8_t                     major;
         u8_t                     minor;
         struct SPI_config        config;
-        dev_lock_t               file_lock;
 };
 
 /* general module data */
@@ -406,7 +406,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
         stdret_t status = STD_RET_ERROR;
 
-        if (device_is_unlocked(hdl->file_lock)) {
+        if (_sys_device_is_unlocked(hdl->file_lock)) {
 
                 critical_section_begin();
 
@@ -472,7 +472,7 @@ API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
 
         struct spi_virtual *hdl = device_handle;
 
-        return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -490,8 +490,8 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
         struct spi_virtual *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock) || force) {
-                device_unlock(&hdl->file_lock, force);
+        if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
+                _sys_device_unlock(&hdl->file_lock, force);
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;

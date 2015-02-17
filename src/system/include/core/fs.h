@@ -36,10 +36,10 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include "core/sysmoni.h"
-#include "core/vfs.h"
-#include "core/modctrl.h"
+#include <dnx/misc.h>
 #include <errno.h>
+#include "sysfunc.h"
+#include "core/modctrl.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -110,7 +110,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
+static inline stdret_t _sys_driver_open(dev_t id, vfs_open_flags_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -126,7 +126,7 @@ static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_close(dev_t id, bool force)
+static inline stdret_t _sys_driver_close(dev_t id, bool force)
 {
         return _driver_close(id, force);
 }
@@ -144,7 +144,7 @@ static inline stdret_t driver_close(dev_t id, bool force)
  * @return number of written bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t _sys_driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_write(id, src, count, fpos, fattr);
 }
@@ -162,7 +162,7 @@ static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos
  * @return number of read bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t _sys_driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_read(id, dst, count, fpos, fattr);
 }
@@ -179,7 +179,7 @@ static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpo
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline int driver_ioctl(dev_t id, int request, void *arg)
+static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
 {
         return _driver_ioctl(id, request, arg);
 }
@@ -196,7 +196,7 @@ static inline int driver_ioctl(dev_t id, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_flush(dev_t id)
+static inline stdret_t _sys_driver_flush(dev_t id)
 {
         return _driver_flush(id);
 }
@@ -212,9 +212,22 @@ static inline stdret_t driver_flush(dev_t id)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_stat(dev_t id, struct vfs_dev_stat *stat)
+static inline stdret_t _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         return _driver_stat(id, stat);
+}
+
+//==============================================================================
+/**
+ * @brief  List constructor (for FS only)
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @return On success list object is returned, otherwise NULL
+ */
+//==============================================================================
+static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
+{
+        return _llist_new(_sysm_sysmalloc, _sysm_sysfree, functor, obj_dtor);
 }
 
 #ifdef __cplusplus

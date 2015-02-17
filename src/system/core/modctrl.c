@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
-#include <dnx/thread.h>
+#include "kernel/kwrapper.h"
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
@@ -43,7 +43,6 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Local function prototypes
@@ -521,14 +520,14 @@ bool _lock_device(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock == NULL) {
-                        *dev_lock = task_get_handle();
+                _critical_section_begin();
+                if (dev_lock == NULL) {
+                        dev_lock = _task_get_handle();
                         status = true;
                 } else {
                         errno = EBUSY;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;
@@ -545,11 +544,11 @@ bool _lock_device(dev_lock_t *dev_lock)
 void _unlock_device(dev_lock_t *dev_lock, bool force)
 {
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock == task_get_handle() || force) {
-                        *dev_lock = NULL;
+                _critical_section_begin();
+                if (dev_lock == _task_get_handle() || force) {
+                        dev_lock = NULL;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 }
 
@@ -567,11 +566,11 @@ bool _is_device_access_granted(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock == task_get_handle()) {
+                _critical_section_begin();
+                if (dev_lock == _task_get_handle()) {
                         status = true;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;
@@ -591,11 +590,11 @@ bool _is_device_locked(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock != NULL) {
+                _critical_section_begin();
+                if (dev_lock != NULL) {
                         status = true;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;

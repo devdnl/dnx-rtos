@@ -66,9 +66,9 @@
  * string is recognized, for binary "0b" is recognized, and for decimals values
  * none above.
  *
- * @param[in]  *string       string to decode
- * @param[in]   base         decode base
- * @param[out] *value        pointer to result
+ * @param[in]  string       string to decode
+ * @param[in]  base         decode base
+ * @param[out] value        pointer to result
  *
  * @return pointer in string when operation was finished
  */
@@ -146,7 +146,7 @@ char *_strtoi(const char *string, int base, i32_t *value)
 /**
  * @brief Function convert string to integer
  *
- * @param[in] *str      string
+ * @param[in] str       string
  *
  * @return converted value
  */
@@ -162,8 +162,8 @@ i32_t _atoi(const char *str)
 /**
  * @brief Function convert string to double
  *
- * @param[in]  *str             string
- * @param[out] **end            the pointer to the character when conversion was finished
+ * @param[in]  str             string
+ * @param[out] end             the pointer to the character when conversion was finished
  *
  * @return converted value
  */
@@ -230,7 +230,7 @@ double _strtod(const char *str, char **end)
 /**
  * @brief Function convert string to float
  *
- * @param[in] *str      string
+ * @param[in] str      string
  *
  * @return converted value
  */

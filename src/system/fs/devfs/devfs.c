@@ -207,7 +207,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 if (node) {
                         stdret_t open = STD_RET_ERROR;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = driver_open(node->IF.drv, flags);
+                                open = _sys_driver_open(node->IF.drv, flags);
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = STD_RET_OK;
                         }
@@ -251,7 +251,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         stdret_t close = STD_RET_ERROR;
         if (node->type == FILE_TYPE_DRV) {
-                close = driver_close(node->IF.drv, force);
+                close = _sys_driver_close(node->IF.drv, force);
         } else if (node->type == FILE_TYPE_PIPE) {
                 close = STD_RET_OK;
         }
@@ -293,7 +293,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return driver_write(node->IF.drv, src, count, fpos, fattr);
+                return _sys_driver_write(node->IF.drv, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
                 return _pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
         } else {
@@ -325,7 +325,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return driver_read(node->IF.drv, dst, count, fpos, fattr);
+                return _sys_driver_read(node->IF.drv, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
                 return _pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
         } else {
@@ -356,7 +356,7 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return driver_ioctl(node->IF.drv, request, arg);
+                return _sys_driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
                 return _pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
@@ -385,7 +385,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return driver_flush(node->IF.drv);
+                return _sys_driver_flush(node->IF.drv);
         } else {
                 return STD_RET_ERROR;
         }
@@ -416,7 +416,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         stdret_t            getfstat = STD_RET_ERROR;
 
         if (node->type == FILE_TYPE_DRV) {
-                getfstat = driver_stat(node->IF.drv, &devstat);
+                getfstat = _sys_driver_stat(node->IF.drv, &devstat);
                 if (getfstat == STD_RET_OK) {
                         stat->st_dev  = devstat.st_major << 8 | devstat.st_minor;
                         stat->st_size = devstat.st_size;
@@ -649,7 +649,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                 if (node) {
                         if (node->type == FILE_TYPE_DRV) {
                                 struct vfs_dev_stat devstat;
-                                if (driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
+                                if (_sys_driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
                                         dirent.size = devstat.st_size;
                                 } else {
                                         dirent.size = 0;

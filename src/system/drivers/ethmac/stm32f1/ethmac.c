@@ -51,11 +51,11 @@ struct ethmac {
         sem_t              *rx_data_ready;
         mutex_t            *rx_access;
         mutex_t            *tx_access;
+        dev_lock_t         *dev_lock;
         ETH_DMADESCTypeDef  DMA_tx_descriptor[NUMBER_OF_TX_BUFFERS];
         ETH_DMADESCTypeDef  DMA_rx_descriptor[NUMBER_OF_RX_BUFFERS];
         u8_t                tx_buffer[NUMBER_OF_TX_BUFFERS][ETH_MAX_PACKET_SIZE];
         u8_t                rx_buffer[NUMBER_OF_RX_BUFFERS][ETH_MAX_PACKET_SIZE];
-        dev_lock_t          dev_lock;
 };
 
 /*==============================================================================
@@ -235,7 +235,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
 
         critical_section_begin();
 
-        if (device_is_unlocked(&hdl->dev_lock)) {
+        if (_sys_device_is_unlocked(&hdl->dev_lock)) {
                 ETH_DeInit();
                 NVIC_DisableIRQ(ETH_IRQn);
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
@@ -269,7 +269,7 @@ API_MOD_OPEN(ETHMAC, void *device_handle, vfs_open_flags_t flags)
 
         struct ethmac *hdl = device_handle;
 
-        if (device_lock(&hdl->dev_lock)) {
+        if (_sys_device_lock(&hdl->dev_lock)) {
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -293,8 +293,8 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
         struct ethmac *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->dev_lock) || force) {
-                device_unlock(&hdl->dev_lock, force);
+        if (_sys_device_is_access_granted(&hdl->dev_lock) || force) {
+                _sys_device_unlock(&hdl->dev_lock, force);
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;

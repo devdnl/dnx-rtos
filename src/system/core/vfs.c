@@ -519,7 +519,7 @@ dirent_t _vfs_readdir(DIR *dir)
  * @brief Remove file
  * Removes file or directory. Removes directory if is not a mount point.
  *
- * @param[in] *patch                localization of file/directory
+ * @param[in] *path                localization of file/directory
  *
  * @return 0 on success. On error, -1 is returned
  */
@@ -1090,7 +1090,7 @@ int _vfs_vioctl(FILE *file, int rq, va_list arg)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]  *path            file/dir path
+ * @param[in]  *file            file object
  * @param[out] *stat            pointer to stat structure
  *
  * @return 0 on success. On error, -1 is returned

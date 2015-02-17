@@ -101,7 +101,7 @@ typedef struct {
 /// type defines I2C device in the runtime environment
 typedef struct {
         const I2C_dev_config_t *config;                 //!< pointer to the device configuration
-        dev_lock_t              lock;                   //!< object used to lock access to opened device
+        dev_lock_t             *lock;                   //!< object used to lock access to opened device
         u16_t                   address;                //!< device address
 } I2C_dev_t;
 
@@ -356,7 +356,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
 
         critical_section_begin();
 
-        if (device_is_unlocked(&hdl->lock)) {
+        if (_sys_device_is_unlocked(&hdl->lock)) {
 
                 I2C->periph[hdl->config->major].dev_cnt--;
                 release_resources(hdl->config->major);
@@ -390,7 +390,7 @@ API_MOD_OPEN(I2C, void *device_handle, vfs_open_flags_t flags)
 
         I2C_dev_t *hdl = device_handle;
 
-        return device_lock(&hdl->lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->lock) ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -408,8 +408,8 @@ API_MOD_CLOSE(I2C, void *device_handle, bool force)
 {
         I2C_dev_t *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->lock) || force) {
-                device_unlock(&hdl->lock, force);
+        if (_sys_device_is_access_granted(&hdl->lock) || force) {
+                _sys_device_unlock(&hdl->lock, force);
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -438,7 +438,7 @@ API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *f
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->lock)) {
+        if (_sys_device_is_access_granted(&hdl->lock)) {
                 if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
                         n = I2C_transmit(hdl, true, *fpos, src, count, true);
                         mutex_unlock(I2C->periph[hdl->config->major].lock);
@@ -471,7 +471,7 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->lock)) {
+        if (_sys_device_is_access_granted(&hdl->lock)) {
                 if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
 
                         if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
@@ -508,7 +508,7 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 {
         I2C_dev_t *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->lock)) {
+        if (_sys_device_is_access_granted(&hdl->lock)) {
                 switch (request) {
                 case IOCTL_I2C__SET_ADDRESS:
                         hdl->address = reinterpret_cast(int, arg);

@@ -489,7 +489,7 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
                 if (node->type == NODE_TYPE_DRV) {
                         struct vfs_dev_stat dev_stat;
                         dev_stat.st_size = 0;
-                        driver_stat((dev_t)node->data, &dev_stat);
+                        _sys_driver_stat((dev_t)node->data, &dev_stat);
                         node->size = dev_stat.st_size;
                         dirent.dev = (dev_t)node->data;
                 }
@@ -713,7 +713,7 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
                         if (node->type == NODE_TYPE_DRV) {
                                 struct vfs_dev_stat dev_stat;
                                 dev_stat.st_size = 0;
-                                driver_stat((dev_t)node->data, &dev_stat);
+                                _sys_driver_stat((dev_t)node->data, &dev_stat);
                                 node->size   = dev_stat.st_size;
                                 stat->st_dev = dev_stat.st_major;
                         } else {
@@ -765,7 +765,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 if (opened_file->node->type == NODE_TYPE_DRV) {
                         struct vfs_dev_stat dev_stat;
                         dev_stat.st_size = 0;
-                        driver_stat((dev_t)opened_file->node->data, &dev_stat);
+                        _sys_driver_stat((dev_t)opened_file->node->data, &dev_stat);
                         opened_file->node->size = dev_stat.st_size;
                         stat->st_dev = dev_stat.st_major;
                 } else {
@@ -896,7 +896,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                 }
 
         } else if (node->type == NODE_TYPE_DRV) {
-                if (driver_open((dev_t)node->data, flags) == STD_RET_OK) {
+                if (_sys_driver_open((dev_t)node->data, flags) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         _llist_pop_back(lfs->opended_files);
@@ -947,7 +947,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
                 /* close device if file is driver type */
                 if (node->type == NODE_TYPE_DRV) {
-                        status = driver_close((dev_t)node->data, force);
+                        status = _sys_driver_close((dev_t)node->data, force);
 
                 } else {
                         status = STD_RET_OK;
@@ -1010,7 +1010,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
 
                 if (node->type == NODE_TYPE_DRV) {
                         mutex_unlock(lfs->resource_mtx);
-                        return driver_write((dev_t)node->data, src, count, fpos, fattr);
+                        return _sys_driver_write((dev_t)node->data, src, count, fpos, fattr);
 
                 } else if (node->type == NODE_TYPE_FILE) {
                         size_t write_size  = count;
@@ -1096,7 +1096,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
 
                 if (node->type == NODE_TYPE_DRV) {
                         mutex_unlock(lfs->resource_mtx);
-                        return driver_read((dev_t)node->data, dst, count, fpos, fattr);
+                        return _sys_driver_read((dev_t)node->data, dst, count, fpos, fattr);
 
                 } else if (node->type == NODE_TYPE_FILE) {
                         size_t file_length = node->size;
@@ -1169,7 +1169,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
         if (opened_file && opened_file->node) {
                 if (opened_file->node->type == NODE_TYPE_DRV) {
                         mutex_unlock(lfs->resource_mtx);
-                        return driver_ioctl((dev_t)opened_file->node->data, request, arg);
+                        return _sys_driver_ioctl((dev_t)opened_file->node->data, request, arg);
 
                 } else if (opened_file->node->type == NODE_TYPE_PIPE) {
 
@@ -1214,7 +1214,7 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
         if (opened_file && opened_file->node) {
                 if (opened_file->node->type == NODE_TYPE_DRV) {
                         mutex_unlock(lfs->resource_mtx);
-                        return driver_flush((dev_t)opened_file->node->data);
+                        return _sys_driver_flush((dev_t)opened_file->node->data);
                 } else {
                         mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;

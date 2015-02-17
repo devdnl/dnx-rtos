@@ -150,17 +150,17 @@ int _sscanf(const char *str, const char *format, ...)
 #endif
 }
 
-//============================================================================//
+//==============================================================================
 /**
  * @brief Function scan arguments defined by format (argument list version)
  *
  * @param[in]  *str           data buffer
  * @param[in]  *format        scan format
- * @param[out]  ...           output
+ * @param[out]  args          output
  *
  * @return number of scanned elements
  */
-//============================================================================//
+//==============================================================================
 int _vsscanf(const char *str, const char *format, va_list args)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
