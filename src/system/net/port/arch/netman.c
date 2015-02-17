@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <dnx/timer.h>
 #include <dnx/misc.h>
+#include <dnx/thread.h>
+#include <unistd.h>
 #include "kernel/kwrapper.h"
 #include "lwip/tcpip.h"
 
@@ -112,7 +114,7 @@ static bool wait_for_init_done()
 {
         timer_t timer = timer_reset();
         while (!netman->ready && timer_is_not_expired(timer, init_timeout)) {
-                _sleep_ms(1);
+                sleep_ms(1);
         }
 
         return timer_is_not_expired(timer, init_timeout);
@@ -157,10 +159,10 @@ static void restore_configuration()
 
         netif_set_down(&netman->netif);
 
-        if (_mutex_lock(netman->access, MAX_DELAY_MS)) {
+        if (mutex_lock(netman->access, MAX_DELAY_MS)) {
 
                 while (!_netman_is_link_connected(netman)) {
-                        _sleep_ms(link_poll_time);
+                        sleep_ms(link_poll_time);
                 }
 
                 netman->disconnected = false;
@@ -173,7 +175,7 @@ static void restore_configuration()
                         }
                 }
 
-                _mutex_unlock(netman->access);
+                mutex_unlock(netman->access);
         }
 }
 
@@ -203,7 +205,7 @@ static void network_interface_thread(void *arg)
         /* open interface file */
         while (netman->if_file == NULL) {
                 netman->if_file = fopen(__NETWORK_ETHIF_FILE__, "r+");
-                _sleep_ms(100);
+                sleep_ms(100);
         }
 
         /* initialize interface */
@@ -227,7 +229,7 @@ static void network_interface_thread(void *arg)
                 _netman_ifmem_free(netman);
         }
 
-        _task_exit();
+        task_exit();
 }
 
 //==============================================================================
