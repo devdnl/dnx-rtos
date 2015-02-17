@@ -1,1 +1,1 @@
-        _printk_disable();
+        printk_disable();

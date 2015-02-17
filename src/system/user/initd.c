@@ -207,9 +207,9 @@ static int run_level_0(void)
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
-        _printk_enable("/dev/tty0");
-        _sysm_kernel_panic_detect(true);
-        _printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
+        printk_enable("/dev/tty0");
+        detect_kernel_panic(true);
+        printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_GRAY "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
         driver_init("tty1", "/dev/tty1");
@@ -242,26 +242,26 @@ static int run_level_1(void)
         init_storage("/dev/sda");
         msg_mount("fatfs", "/dev/sda1", "/mnt");
 
-        _printk("Configuring DHCP client... ");
+        printk("Configuring DHCP client... ");
         if (net_DHCP_start() == 0) {
-                _printk("OK\n");
+                printk("OK\n");
         } else {
-                _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
-                _printk("Configuring static IP... ");
+                printk("Configuring static IP... ");
                 net_ip_t ip      = net_IP_set(__NETWORK_IP_ADDR1__,__NETWORK_IP_ADDR2__,__NETWORK_IP_ADDR3__,__NETWORK_IP_ADDR4__);
                 net_ip_t netmask = net_IP_set(__NETWORK_IP_MASK1__,__NETWORK_IP_MASK2__,__NETWORK_IP_MASK3__,__NETWORK_IP_MASK4__);
                 net_ip_t gateway = net_IP_set(__NETWORK_IP_GW1__,__NETWORK_IP_GW2__,__NETWORK_IP_GW3__,__NETWORK_IP_GW4__);
                 if (net_ifup(&ip, &netmask, &gateway) == 0) {
-                        _printk("OK\n");
+                        printk("OK\n");
                 } else {
-                        _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
         net_config_t ifcfg;
         if (net_get_ifconfig(&ifcfg) == 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
-                _printk("  Hostname  : %s\n"
+                printk("  Hostname  : %s\n"
                        "  MAC       : %02X:%02X:%02X:%02X:%02X:%02X\n"
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
@@ -276,7 +276,7 @@ static int run_level_1(void)
                        net_IP_get_part_a(&ifcfg.gateway), net_IP_get_part_b(&ifcfg.gateway),
                        net_IP_get_part_c(&ifcfg.gateway), net_IP_get_part_d(&ifcfg.gateway));
         } else {
-                _printk("Network not configured\n");
+                printk("Network not configured\n");
         }
 
         return STD_RET_OK;
@@ -292,9 +292,9 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        _printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
-        _printk("Welcome to dnx RTOS \"%s\"!\n", get_OS_codename());
-        _printk_enable("/dev/tty3");
+        printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
+        printk("Welcome to dnx RTOS \"%s\"!\n", get_OS_codename());
+        printk_enable("/dev/tty3");
 
         /* initialize handles for applications and streams */
         prog_t *p[3];
