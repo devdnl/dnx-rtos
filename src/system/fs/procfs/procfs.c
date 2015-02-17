@@ -28,13 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/fs.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
-#include <string.h>
-#include "core/printx.h"
-#include "core/conv.h"
-#include "core/llist.h"
-#include "core/progman.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/lib/stm32f10x_rcc.h"
@@ -127,8 +120,8 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
         UNUSED_ARG(src_path);
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        llist_t       *file_list = _llist_new(_sysm_sysmalloc, _sysm_sysfree, _llist_functor_cmp_pointers, NULL);
-        mutex_t       *mtx       = mutex_new(MUTEX_NORMAL);
+        llist_t       *file_list = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
+        mutex_t       *mtx       = _sys_mutex_new(MUTEX_NORMAL);
 
         if (procfs && file_list && mtx) {
                 procfs->file_list    = file_list;
@@ -138,11 +131,11 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
                 return STD_RET_OK;
         } else {
                 if (file_list) {
-                        _llist_delete(file_list);
+                        _sys_llist_delete(file_list);
                 }
 
                 if (mtx) {
-                        mutex_delete(mtx);
+                        _sys_mutex_delete(mtx);
                 }
 
                 if (procfs) {
@@ -167,19 +160,19 @@ API_FS_RELEASE(procfs, void *fs_handle)
 {
         struct procfs *procfs = fs_handle;
 
-        if (mutex_lock(procfs->resource_mtx, 100)) {
-                if (_llist_size(procfs->file_list) != 0) {
-                        mutex_unlock(procfs->resource_mtx);
+        if (_sys_mutex_lock(procfs->resource_mtx, 100)) {
+                if (_sys_llist_size(procfs->file_list) != 0) {
+                        _sys_mutex_unlock(procfs->resource_mtx);
                         errno = EBUSY;
                         return STD_RET_ERROR;
                 }
 
-                critical_section_begin();
-                mutex_unlock(procfs->resource_mtx);
-                mutex_delete(procfs->resource_mtx);
-                _llist_delete(procfs->file_list);
+                _sys_critical_section_begin();
+                _sys_mutex_unlock(procfs->resource_mtx);
+                _sys_mutex_delete(procfs->resource_mtx);
+                _sys_llist_delete(procfs->file_list);
                 free(procfs);
-                critical_section_end();
+                _sys_critical_section_end();
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -279,8 +272,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
         } else if (strncmp(path, "/"DIR_BIN_STR"/", strlen("/"DIR_BIN_STR"/")) == 0) {
                 path += strlen("/"DIR_BIN_STR"/");
 
-                for (int i = 0; i < _get_programs_table_size(); i++) {
-                        if (strcmp(path, _get_programs_table()[i].program_name) == 0) {
+                for (int i = 0; i < _sys_get_programs_table_size(); i++) {
+                        if (strcmp(path, _sys_get_programs_table()[i].program_name) == 0) {
                                 return add_file_info_to_list(procmem, NULL, FILE_CONTENT_NONE, fd);
                         }
                 }
@@ -315,10 +308,10 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         mutex_force_lock(procmem->resource_mtx);
 
-        int      pos    = _llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
-        stdret_t status = _llist_erase(procmem->file_list, pos) ? STD_RET_OK : STD_RET_ERROR;
+        int      pos    = _sys_llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
+        stdret_t status = _sys_llist_erase(procmem->file_list, pos) ? STD_RET_OK : STD_RET_ERROR;
 
-        mutex_unlock(procmem->resource_mtx);
+        _sys_mutex_unlock(procmem->resource_mtx);
 
         return status;
 }
@@ -373,7 +366,7 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
 
         mutex_force_lock(procmem->resource_mtx);
         struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
-        mutex_unlock(procmem->resource_mtx);
+        _sys_mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
                 errno = ENOENT;
@@ -479,7 +472,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 
         mutex_force_lock(procmem->resource_mtx);
         struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
-        mutex_unlock(procmem->resource_mtx);
+        _sys_mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
                 errno = ENOENT;
@@ -618,7 +611,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_BIN_STR"/") == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _get_programs_table_size();
+                dir->f_items    = _sys_get_programs_table_size();
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
@@ -951,9 +944,9 @@ static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir->f_seek < (size_t)_get_programs_table_size()) {
+        if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
                 dirent.filetype = FILE_TYPE_PROGRAM;
-                dirent.name     = _get_programs_table()[dir->f_seek].program_name;
+                dirent.name     = _sys_get_programs_table()[dir->f_seek].program_name;
                 dirent.size     = 0;
 
                 dir->f_seek++;
@@ -983,7 +976,7 @@ static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
         if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
                 struct _sysmoni_taskstat taskdata;
                 if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
-                        _snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
+                        _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
                         dirent.filetype = FILE_TYPE_DIR;
                         dirent.name     = dir->f_dd;
@@ -1053,7 +1046,7 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================
@@ -1077,7 +1070,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
 
                 mutex_force_lock(procmem->resource_mtx);
 
-                if (_llist_push_back(procmem->file_list, file_info)) {
+                if (_sys_llist_push_back(procmem->file_list, file_info)) {
                         *fd = (fd_t)file_info;
 
                 } else {
@@ -1085,7 +1078,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
                         file_info = NULL;
                 }
 
-                mutex_unlock(procmem->resource_mtx);
+                _sys_mutex_unlock(procmem->resource_mtx);
         }
 
         return file_info ? STD_RET_OK : STD_RET_ERROR;
@@ -1113,19 +1106,19 @@ static uint get_file_content(struct file_info *file_info, char *buff, uint size)
 
         switch (file_info->file_content) {
         case FILE_CONTENT_TASK_FREESTACK:
-                return _snprintf(buff, size, "%u\n", task_info.free_stack);
+                return _sys_snprintf(buff, size, "%u\n", task_info.free_stack);
 
         case FILE_CONTENT_TASK_NAME:
-                return _snprintf(buff, size, "%s\n", task_info.task_name);
+                return _sys_snprintf(buff, size, "%s\n", task_info.task_name);
 
         case FILE_CONTENT_TASK_OPENFILES:
-                return _snprintf(buff, size, "%u\n", task_info.opened_files);
+                return _sys_snprintf(buff, size, "%u\n", task_info.opened_files);
 
         case FILE_CONTENT_TASK_PRIO:
-                return _snprintf(buff, size, "%d\n", task_info.priority);
+                return _sys_snprintf(buff, size, "%d\n", task_info.priority);
 
         case FILE_CONTENT_TASK_USEDMEM:
-                return _snprintf(buff, size, "%u\n", task_info.memory_usage);
+                return _sys_snprintf(buff, size, "%u\n", task_info.memory_usage);
 
         case FILE_CONTENT_CPUINFO: {
                 #if defined(ARCH_stm32f1)
@@ -1133,29 +1126,29 @@ static uint get_file_content(struct file_info *file_info, char *buff, uint size)
                 RCC_GetClocksFreq(&freq);
                 #endif
 
-                return _snprintf(buff, size,
+                return _sys_snprintf(buff, size,
                                     "CPU name  : %s\n"
                                     "CPU vendor: %s\n"
-                                    #if defined(ARCH_stm32f1)
-                                    "CPU    khz: %d\n"
-                                    "SYSCLK kHz: %d\n"
-                                    "PCLK1  kHz: %d\n"
-                                    "PCLK1T kHz: %d\n"
-                                    "PCLK2  kHz: %d\n"
-                                    "PCLK2T kHz: %d\n"
-                                    "ADCCLK kHz: %d\n"
-                                    #endif
+                            #if defined(ARCH_stm32f1)
+                                    "CPU     Hz: %d\n"
+                                    "SYSCLK  Hz: %d\n"
+                                    "PCLK1   Hz: %d\n"
+                                    "PCLK1T  Hz: %d\n"
+                                    "PCLK2   Hz: %d\n"
+                                    "PCLK2T  Hz: %d\n"
+                                    "ADCCLK  Hz: %d\n"
+                            #endif
                                     ,_CPUCTL_PLATFORM_NAME
                                     ,_CPUCTL_VENDOR_NAME
-                                    #if defined(ARCH_stm32f1)
-                                    ,freq.HCLK_Frequency / 1000
-                                    ,freq.SYSCLK_Frequency / 1000
-                                    ,freq.PCLK1_Frequency / 1000
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 500) : (freq.PCLK1_Frequency / 1000)
-                                    ,freq.PCLK2_Frequency / 1000
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 500) : (freq.PCLK2_Frequency / 1000)
-                                    ,freq.ADCCLK_Frequency / 1000
-                                    #endif
+                            #if defined(ARCH_stm32f1)
+                                    ,freq.HCLK_Frequency
+                                    ,freq.SYSCLK_Frequency
+                                    ,freq.PCLK1_Frequency
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency
+                                    ,freq.PCLK2_Frequency
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency
+                                    ,freq.ADCCLK_Frequency
+                            #endif
                 );
         }
 

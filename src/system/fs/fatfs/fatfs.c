@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/fs.h"
-#include <dnx/misc.h>
-#include <string.h>
 #include "libfat/libfat.h"
 
 /*==============================================================================
@@ -92,7 +90,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
         if (hdl) {
                 *fs_handle = hdl;
 
-                if ((hdl->fsfile = _vfs_fopen(src_path, "r+"))) {
+                if ((hdl->fsfile = _sys_fopen(src_path, "r+"))) {
                         if (handle_error(libfat_mount(hdl->fsfile, &hdl->fatfs)) == 0) {
                                 return STD_RET_OK;
                         }
@@ -100,7 +98,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
 
                 /* error */
                 if (hdl->fsfile) {
-                        _vfs_fclose(hdl->fsfile);
+                        _sys_fclose(hdl->fsfile);
                 }
 
                 free(hdl);
@@ -125,7 +123,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
                 if (handle_error(libfat_umount(&hdl->fatfs)) == 0) {
-                        _vfs_fclose(hdl->fsfile);
+                        _sys_fclose(hdl->fsfile);
                         free(hdl);
                         return STD_RET_OK;
                 }
@@ -729,7 +727,7 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 
         struct stat fstat;
         fstat.st_size = 0;
-        if (_vfs_fstat(hdl->fsfile, &fstat) != 0)
+        if (_sys_fstat(hdl->fsfile, &fstat) != 0)
                 return STD_RET_ERROR;
 
         if (handle_error(libfat_getfree(&hdl->fatfs, &free_clusters)) == 0) {

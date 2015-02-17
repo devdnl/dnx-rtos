@@ -28,11 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/fs.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
-#include <sys/ioctl.h>
-#include <string.h>
-#include "core/pipe.h"
 
 /*==============================================================================
   Local macros
@@ -113,7 +108,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         UNUSED_ARG(src_path);
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
-        mutex_t            *mtx   = mutex_new(MUTEX_NORMAL);
+        mutex_t            *mtx   = _sys_mutex_new(MUTEX_NORMAL);
         struct devfs_chain *chain = chain_new();
 
         if (devfs && mtx && chain) {
@@ -131,7 +126,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
                 }
 
                 if (mtx) {
-                        mutex_delete(mtx);
+                        _sys_mutex_delete(mtx);
                 }
 
                 if (chain) {
@@ -156,21 +151,21 @@ API_FS_RELEASE(devfs, void *fs_handle)
 {
         struct devfs *devfs = fs_handle;
 
-        if (mutex_lock(devfs->mutex, 100)) {
+        if (_sys_mutex_lock(devfs->mutex, 100)) {
                 if (devfs->number_of_opened_files != 0) {
-                        mutex_unlock(devfs->mutex);
+                        _sys_mutex_unlock(devfs->mutex);
                         errno = EBUSY;
                         return STD_RET_ERROR;
                 }
 
-                critical_section_begin();
-                mutex_unlock(devfs->mutex);
+                _sys_critical_section_begin();
+                _sys_mutex_unlock(devfs->mutex);
 
                 chain_delete(devfs->root_chain);
-                mutex_delete(devfs->mutex);
+                _sys_mutex_delete(devfs->mutex);
                 free(devfs);
 
-                critical_section_end();
+                _sys_critical_section_end();
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -201,7 +196,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
@@ -221,7 +216,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         }
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         } else {
                 errno = EBUSY;
         }
@@ -258,10 +253,10 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         if (close == STD_RET_OK) {
 
-                if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+                if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
                         devfs->number_of_opened_files--;
                         node->opended--;
-                        mutex_unlock(devfs->mutex);
+                        _sys_mutex_unlock(devfs->mutex);
                 }
 
                 return STD_RET_OK;
@@ -295,7 +290,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         if (node->type == FILE_TYPE_DRV) {
                 return _sys_driver_write(node->IF.drv, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
+                return _sys_pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
         } else {
                 errno = ENXIO;
                 return -1;
@@ -327,7 +322,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         if (node->type == FILE_TYPE_DRV) {
                 return _sys_driver_read(node->IF.drv, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
+                return _sys_pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
         } else {
                 errno = ENXIO;
                 return -1;
@@ -358,7 +353,7 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         if (node->type == FILE_TYPE_DRV) {
                 return _sys_driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
-                return _pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
+                return _sys_pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
                 errno = EBADRQC;
                 return STD_RET_ERROR;
@@ -423,7 +418,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                         stat->st_type = FILE_TYPE_DRV;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
-                pipelen = _pipe_get_length(node->IF.pipe);
+                pipelen = _sys_pipe_get_length(node->IF.pipe);
                 if (pipelen >= 0) {
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
@@ -486,13 +481,13 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 if (create_new_chain_if_necessary(devfs) >= 0) {
 
                         struct devnode *node = chain_get_empty_node(devfs->root_chain);
                         if (node) {
-                                node->IF.pipe = _pipe_new();
+                                node->IF.pipe = _sys_pipe_new();
                                 node->path    = malloc(strlen(path + 1) + 1);
 
                                 if (node->IF.pipe && node->path) {
@@ -507,7 +502,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                                         status = STD_RET_OK;
                                 } else {
                                         if (node->IF.pipe) {
-                                                _pipe_delete(node->IF.pipe);
+                                                _sys_pipe_delete(node->IF.pipe);
                                                 node->IF.pipe = NULL;
                                         }
 
@@ -521,7 +516,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                         }
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -544,7 +539,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 if (create_new_chain_if_necessary(devfs) >= 0) {
 
@@ -568,7 +563,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
                         }
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -643,7 +638,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
         dirent.name     = NULL;
         dirent.size     = 0;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_n_node(devfs->root_chain, dir->f_seek);
                 if (node) {
@@ -658,7 +653,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                                 dirent.filetype = FILE_TYPE_DRV;
 
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                int n = _pipe_get_length(node->IF.pipe);
+                                int n = _sys_pipe_get_length(node->IF.pipe);
                                 if (n >= 0) {
                                         dirent.size = n;
                                 } else {
@@ -674,7 +669,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                         errno = 0;
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return dirent;
@@ -696,13 +691,13 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         if (node->opended == 0) {
                                 if (node->type == FILE_TYPE_PIPE) {
-                                        _pipe_delete(node->IF.pipe);
+                                        _sys_pipe_delete(node->IF.pipe);
                                 }
                                 node->IF.generic = NULL;
 
@@ -719,7 +714,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                         }
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -742,7 +737,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, old_name);
                 if (node) {
@@ -758,7 +753,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
                         }
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -781,7 +776,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
@@ -789,7 +784,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
                         status = STD_RET_OK;
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -813,7 +808,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
@@ -823,7 +818,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                         status = STD_RET_OK;
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -846,14 +841,14 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         status = _devfs_fstat(devfs, node, 0, stat);
                 }
 
-                mutex_unlock(devfs->mutex);
+                _sys_mutex_unlock(devfs->mutex);
         }
 
         return status;

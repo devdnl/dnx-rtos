@@ -35,9 +35,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/fs.h"
 #include "libfat_user.h"
 #include "libfat_conf.h"
-#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -78,8 +78,8 @@
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _vfs_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_vfs_fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
+        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (_sys_fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
@@ -101,8 +101,8 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _vfs_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_vfs_fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
+        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (_sys_fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
@@ -128,7 +128,7 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 
         switch (cmd) {
         case CTRL_SYNC:
-                if (_vfs_fflush(srcfile) == 0)
+                if (_sys_fflush(srcfile) == 0)
                         return RES_OK;
                 else
                         return RES_ERROR;
@@ -167,7 +167,7 @@ uint32_t _libfat_get_fattime(void)
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
-                _LIBFAT_MUTEX_t mtx = mutex_new(MUTEX_NORMAL);
+                _LIBFAT_MUTEX_t mtx = _sys_mutex_new(MUTEX_NORMAL);
                 if (mtx) {
                         *sobj = mtx;
                         return 1;
@@ -190,7 +190,7 @@ int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                mutex_delete(sobj);
+                _sys_mutex_delete(sobj);
                 return 1;
         }
 
@@ -210,7 +210,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                if (mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
+                if (_sys_mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
                         return 1;
                 }
         }
@@ -228,7 +228,7 @@ int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                mutex_unlock(sobj);
+                _sys_mutex_unlock(sobj);
         }
 }
 

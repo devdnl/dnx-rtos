@@ -28,12 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/fs.h"
-#include <string.h>
-#include <dnx/thread.h>
-#include <dnx/misc.h>
-#include <sys/ioctl.h>
-#include "core/llist.h"
-#include "core/pipe.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -123,21 +117,21 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
                 return STD_RET_ERROR;
         }
 
-        lfs->resource_mtx  = mutex_new(MUTEX_RECURSIVE);
-        lfs->root_dir.data = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
-        lfs->opended_files = _llist_new(_sysm_sysmalloc, _sysm_sysfree, _llist_functor_cmp_pointers, NULL);
+        lfs->resource_mtx  = _sys_mutex_new(MUTEX_RECURSIVE);
+        lfs->root_dir.data = _sys_llist_new(NULL, NULL);
+        lfs->opended_files = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
 
         if (!lfs->resource_mtx || !lfs->root_dir.data || !lfs->opended_files) {
                 if (lfs->resource_mtx) {
-                        mutex_delete(lfs->resource_mtx);
+                        _sys_mutex_delete(lfs->resource_mtx);
                 }
 
                 if (lfs->root_dir.data) {
-                        _llist_delete(lfs->root_dir.data);
+                        _sys_llist_delete(lfs->root_dir.data);
                 }
 
                 if (lfs->opended_files) {
-                        _llist_delete(lfs->opended_files);
+                        _sys_llist_delete(lfs->opended_files);
                 }
 
                 free(lfs);
@@ -225,8 +219,8 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
                         drv_file->fd   = 0;
 
                         /* add new driver to this folder */
-                        if (_llist_push_back(node->data, drv_file)) {
-                                mutex_unlock(lfs->resource_mtx);
+                        if (_sys_llist_push_back(node->data, drv_file)) {
+                                _sys_mutex_unlock(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
@@ -240,7 +234,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
         }
 
 error:
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -294,18 +288,18 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
                         goto error;
                 }
 
-                if ((new_dir->data = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL))) {
+                if ((new_dir->data = _sys_llist_new(NULL, NULL))) {
                         new_dir->name = new_dir_name;
                         new_dir->size = sizeof(node_t);
                         new_dir->type = NODE_TYPE_DIR;
                         new_dir->mode = mode;
 
                         /* add new folder to this folder */
-                        if (_llist_push_back(base_node->data, new_dir)) {
-                                mutex_unlock(lfs->resource_mtx);
+                        if (_sys_llist_push_back(base_node->data, new_dir)) {
+                                _sys_mutex_unlock(lfs->resource_mtx);
                                 return STD_RET_OK;
                         } else {
-                                _llist_delete(new_dir->data);
+                                _sys_llist_delete(new_dir->data);
                         }
                 } else {
                         free(new_dir);
@@ -317,7 +311,7 @@ error:
                 free(new_dir_name);
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -368,7 +362,7 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                 strcpy(fifo_file_name, fifo_name);
 
                 node_t *fifo_file = calloc(1, sizeof(node_t));
-                pipe_t *pipe      = _pipe_new();
+                pipe_t *pipe      = _sys_pipe_new();
 
                 if (fifo_file && pipe) {
 
@@ -380,8 +374,8 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                         fifo_file->mode = mode;
 
                         /* add pipe to folder */
-                        if (_llist_push_back(dir_node->data, fifo_file)) {
-                                mutex_unlock(lfs->resource_mtx);
+                        if (_sys_llist_push_back(dir_node->data, fifo_file)) {
+                                _sys_mutex_unlock(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
@@ -392,14 +386,14 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                 }
 
                 if (pipe) {
-                        _pipe_delete(pipe);
+                        _sys_pipe_delete(pipe);
                 }
 
                 free(fifo_file_name);
         }
 
 error:
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -427,7 +421,7 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
         node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
         if (node) {
                 if (node->type == NODE_TYPE_DIR) {
-                        dir->f_items    = _llist_size(node->data);
+                        dir->f_items    = _sys_llist_size(node->data);
                         dir->f_readdir  = lfs_readdir;
                         dir->f_closedir = lfs_closedir;
                         dir->f_seek     = 0;
@@ -438,7 +432,7 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
                 }
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return status;
 }
@@ -483,7 +477,7 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
         mutex_force_lock(lfs->resource_mtx);
 
         node_t *from = dir->f_dd;
-        node_t *node = _llist_at(from->data, dir->f_seek++);
+        node_t *node = _sys_llist_at(from->data, dir->f_seek++);
 
         if (node) {
                 if (node->type == NODE_TYPE_DRV) {
@@ -499,7 +493,7 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
                 dirent.size     = node->size;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return dirent;
 }
@@ -537,7 +531,7 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
 
                 /* check if file is opened */
                 if (obj_node->type != NODE_TYPE_DIR) {
-                        _llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
+                        _sys_llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
                                 if (opened_file->node == obj_node) {
                                         opened_file->remove_at_close = true;
                                         remove_file = false;
@@ -554,7 +548,7 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
         }
 
 error:
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return status;
 }
 
@@ -611,7 +605,7 @@ API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
                         node->size = sizeof(node_t);
                 }
 
-                mutex_unlock(lfs->resource_mtx);
+                _sys_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
@@ -620,7 +614,7 @@ error:
                 free(new_node_name);
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -645,11 +639,11 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, mode_t mode)
         node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
         if (node) {
                 node->mode = mode;
-                mutex_unlock(lfs->resource_mtx);
+                _sys_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -678,11 +672,11 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                 node->uid = owner;
                 node->gid = group;
 
-                mutex_unlock(lfs->resource_mtx);
+                _sys_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -727,12 +721,12 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
                         stat->st_uid   = node->uid;
                         stat->st_type  = node->type;
 
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -784,7 +778,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 errno = ENOENT;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
 
         return status;
 }
@@ -899,21 +893,21 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                 if (_sys_driver_open((dev_t)node->data, flags) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
-                        _llist_pop_back(lfs->opended_files);
+                        _sys_llist_pop_back(lfs->opended_files);
                         goto exit;
                 }
         }
 
         /* everything success - load FD */
-        *fd = (fd_t)_llist_back(lfs->opended_files);
+        *fd = (fd_t)_sys_llist_back(lfs->opended_files);
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_OK;
 
 error:
         errno = ENOENT;
 exit:
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -940,7 +934,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
         mutex_force_lock(lfs->resource_mtx);
 
         struct opened_file_info *opened_file = reinterpret_cast(struct opened_file_info*, fd);
-        int pos = _llist_find_begin(lfs->opended_files, opened_file);
+        int pos = _sys_llist_find_begin(lfs->opended_files, opened_file);
 
         if (opened_file && opened_file->node && pos >= 0) {
                 node_t *node = opened_file->node;
@@ -956,7 +950,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
                         if (opened_file->remove_at_close == true) {
                                 bool remove = true;
 
-                                _llist_foreach(struct opened_file_info*, file, lfs->opended_files) {
+                                _sys_llist_foreach(struct opened_file_info*, file, lfs->opended_files) {
                                         if (file->node == node) {
                                                 remove = false;
                                         }
@@ -970,13 +964,13 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
                 /* remove file from list */
                 if (status == STD_RET_OK) {
-                        _llist_erase(lfs->opended_files, pos);
+                        _sys_llist_erase(lfs->opended_files, pos);
                 }
         } else {
                 errno = ENOENT;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return status;
 }
 
@@ -1009,7 +1003,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 node_t *node = opened_file->node;
 
                 if (node->type == NODE_TYPE_DRV) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return _sys_driver_write((dev_t)node->data, src, count, fpos, fattr);
 
                 } else if (node->type == NODE_TYPE_FILE) {
@@ -1045,12 +1039,12 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                         }
 
                 } else if (node->type == NODE_TYPE_PIPE) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
 
-                        n = _pipe_write(node->data, src, count, fattr.non_blocking_wr);
+                        n = _sys_pipe_write(node->data, src, count, fattr.non_blocking_wr);
 
                         if (n > 0) {
-                                node->size = _pipe_get_length(node->data);
+                                node->size = _sys_pipe_get_length(node->data);
                         }
 
                         return n;
@@ -1062,7 +1056,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 errno = ENOENT;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return n;
 }
 
@@ -1095,7 +1089,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 node_t *node = opened_file->node;
 
                 if (node->type == NODE_TYPE_DRV) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return _sys_driver_read((dev_t)node->data, dst, count, fpos, fattr);
 
                 } else if (node->type == NODE_TYPE_FILE) {
@@ -1122,12 +1116,12 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                         }
 
                 } else if (node->type == NODE_TYPE_PIPE) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
 
-                        n = _pipe_read(node->data, dst, count, fattr.non_blocking_rd);
+                        n = _sys_pipe_read(node->data, dst, count, fattr.non_blocking_rd);
 
                         if (n > 0) {
-                                node->size = _pipe_get_length(node->data);
+                                node->size = _sys_pipe_get_length(node->data);
                         }
 
                         return n;
@@ -1139,7 +1133,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 errno = ENOENT;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return n;
 }
 
@@ -1168,7 +1162,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
         struct opened_file_info *opened_file = reinterpret_cast(struct opened_file_info*, fd);
         if (opened_file && opened_file->node) {
                 if (opened_file->node->type == NODE_TYPE_DRV) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return _sys_driver_ioctl((dev_t)opened_file->node->data, request, arg);
 
                 } else if (opened_file->node->type == NODE_TYPE_PIPE) {
@@ -1176,8 +1170,8 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                         if (request != IOCTL_PIPE__CLOSE) {
                                 errno = EBADRQC;
                         } else {
-                                mutex_unlock(lfs->resource_mtx);
-                                return _pipe_close(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
+                                _sys_mutex_unlock(lfs->resource_mtx);
+                                return _sys_pipe_close(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
                         }
                 } else {
                         errno = EBADRQC;
@@ -1186,7 +1180,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                 errno = ENOENT;
         }
 
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -1213,16 +1207,16 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
         struct opened_file_info *opened_file = reinterpret_cast(struct opened_file_info*, fd);
         if (opened_file && opened_file->node) {
                 if (opened_file->node->type == NODE_TYPE_DRV) {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return _sys_driver_flush((dev_t)opened_file->node->data);
                 } else {
-                        mutex_unlock(lfs->resource_mtx);
+                        _sys_mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
         errno = ENOENT;
-        mutex_unlock(lfs->resource_mtx);
+        _sys_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -1269,7 +1263,7 @@ static inline char get_first_char(const char *str)
 //==============================================================================
 static void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================
@@ -1287,17 +1281,17 @@ static void mutex_force_lock(mutex_t *mtx)
 static stdret_t delete_node(node_t *base, node_t *target, u32_t position)
 {
         if (target->type == NODE_TYPE_DIR) {
-                if (_llist_size(target->data) > 0) {
+                if (_sys_llist_size(target->data) > 0) {
                         return STD_RET_ERROR;
                 } else {
-                        _llist_delete(target->data);
+                        _sys_llist_delete(target->data);
                         target->data = NULL;
                 }
 
         } else if (target->type == NODE_TYPE_PIPE) {
 
                 if (target->data) {
-                        _pipe_delete(target->data);
+                        _sys_pipe_delete(target->data);
                         target->data = NULL;
                 }
         }
@@ -1310,7 +1304,7 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t position)
                 free(target->data);
         }
 
-        _llist_erase(base->data, position);
+        _sys_llist_erase(base->data, position);
 
         return STD_RET_OK;
 }
@@ -1382,12 +1376,12 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                 uint  path_length = !path_end ? strlen(path) : (size_t)path_end - (size_t)path;
 
                 /* get number of list items */
-                int list_size = _llist_size(current_node->data);
+                int list_size = _sys_llist_size(current_node->data);
 
                 /* find that object exist ------------------------------------*/
                 int i = 0;
                 while (list_size > 0) {
-                        node_t *next_node = _llist_at(current_node->data, i++);
+                        node_t *next_node = _sys_llist_at(current_node->data, i++);
 
                         if (next_node == NULL) {
                                 dir_deep = 1 - deep;
@@ -1459,8 +1453,8 @@ static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
                 node->type  = NODE_TYPE_FILE;
                 node->uid   = 0;
 
-                if (_llist_push_back(nodebase->data, node)) {
-                        *item = _llist_size(nodebase->data) - 1;
+                if (_sys_llist_push_back(nodebase->data, node)) {
+                        *item = _sys_llist_size(nodebase->data) - 1;
                 } else {
                         free(node);
                         node  = NULL;
@@ -1495,7 +1489,7 @@ static stdret_t add_node_to_open_files_list(struct LFS_data *lfs,
                 opened_file_info->base_node       = base_node;
 
                 /* find if file shall be removed */
-                _llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
+                _sys_llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
                         if (opened_file->node == node && opened_file->remove_at_close) {
                                 opened_file_info->remove_at_close = true;
                                 break;
@@ -1503,7 +1497,7 @@ static stdret_t add_node_to_open_files_list(struct LFS_data *lfs,
                 }
 
                 /* add open file info to list */
-                if (_llist_push_back(lfs->opended_files, opened_file_info)) {
+                if (_sys_llist_push_back(lfs->opended_files, opened_file_info)) {
                         return STD_RET_OK;
                 } else {
                         free(opened_file_info);

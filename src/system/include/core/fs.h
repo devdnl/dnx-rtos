@@ -37,10 +37,12 @@ extern "C" {
 #include "config.h"
 #include <sys/types.h>
 #include <dnx/misc.h>
+#include <string.h>
 #include <errno.h>
 #include "sysfunc.h"
 #include "core/modctrl.h"
 #include "core/pipe.h"
+#include "core/progman.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -315,6 +317,34 @@ static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, b
 static inline bool _sys_pipe_close(pipe_t *pipe)
 {
         return _pipe_close(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return size of programs table (number of programs)
+ *
+ * @param  None
+ *
+ * @return Return number of programs
+ */
+//==============================================================================
+static inline int _sys_get_programs_table_size()
+{
+        return _get_programs_table_size();
+}
+
+//==============================================================================
+/**
+ * @brief  Function return pointer to beginning of programs table
+ *
+ * @param  None
+ *
+ * @return Return pointer to programs table
+ */
+//==============================================================================
+static inline const struct _prog_data *_sys_get_programs_table()
+{
+        return _get_programs_table();
 }
 
 #ifdef __cplusplus
