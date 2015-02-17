@@ -92,7 +92,7 @@ struct _driver_entry {
         const u8_t               minor;
 };
 
-typedef task_t dev_lock_t;
+typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Exported objects

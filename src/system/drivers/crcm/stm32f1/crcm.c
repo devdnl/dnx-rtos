@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
 #include "stm32f1/crcm_cfg.h"
 #include "stm32f1/crcm_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -41,10 +39,9 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef struct CRCM
-{
-        dev_lock_t              file_lock;
-        enum CRCM_input_mode    input_mode;
+typedef struct CRCM {
+        dev_lock_t             file_lock;
+        enum CRCM_input_mode   input_mode;
 } CRCM;
 
 /*==============================================================================
@@ -86,8 +83,6 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
-        llist_t *list = _sys_llist_new(NULL, NULL);
-
         CRCM *hdl = calloc(1, sizeof(CRCM));
         if (hdl) {
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
@@ -115,7 +110,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 {
         CRCM *hdl = device_handle;
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         stdret_t status = STD_RET_ERROR;
 
@@ -127,7 +122,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
                 errno = EBUSY;
         }
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return status;
 }
@@ -163,6 +158,19 @@ API_MOD_OPEN(CRCM, void *device_handle, vfs_open_flags_t flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
+API_MOD_CLOSE(CRCM, void *device_handle, bool force)
+{
+        CRCM *hdl = device_handle;
+
+        if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
+                _sys_device_unlock(&hdl->file_lock, force);
+                return STD_RET_OK;
+        } else {
+                errno = EBUSY;
+                return STD_RET_ERROR;
+        }
+}
+
 //==============================================================================
 /**
  * @brief Write data to device

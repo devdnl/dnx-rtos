@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
 #include "stm32f1/spi_cfg.h"
 #include "stm32f1/spi_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -73,7 +71,7 @@ struct spi_config {
 
 /* independent SPI instance */
 struct spi_virtual {
-        dev_lock_t              *file_lock;
+        dev_lock_t               file_lock;
         u8_t                     major;
         u8_t                     minor;
         struct SPI_config        config;
@@ -329,7 +327,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create irq semaphore */
         if (!SPIM->wait_irq_sem[major]) {
-                SPIM->wait_irq_sem[major] = semaphore_new(1, 0);
+                SPIM->wait_irq_sem[major] = _sys_semaphore_new(1, 0);
                 if (!SPIM->wait_irq_sem[major]) {
                         return STD_RET_ERROR;
                 }
@@ -337,9 +335,9 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create protection mutex and start device if initialized first time */
         if (!SPIM->device_protect_mtx[major]) {
-                SPIM->device_protect_mtx[major] = mutex_new(MUTEX_RECURSIVE);
+                SPIM->device_protect_mtx[major] = _sys_mutex_new(MUTEX_RECURSIVE);
                 if (!SPIM->device_protect_mtx[major]) {
-                        semaphore_delete(SPIM->wait_irq_sem[major]);
+                        _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
                         SPIM->wait_irq_sem[major] = NULL;
                         return STD_RET_ERROR;
                 } else {
@@ -364,9 +362,9 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                                 }
 
                         } else {
-                                semaphore_delete(SPIM->wait_irq_sem[major]);
+                                _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
                                 SPIM->wait_irq_sem[major] = NULL;
-                                mutex_delete(SPIM->device_protect_mtx[major]);
+                                _sys_mutex_delete(SPIM->device_protect_mtx[major]);
                                 SPIM->device_protect_mtx[major] = NULL;
                                 errno = EADDRINUSE;
                                 return STD_RET_ERROR;
@@ -408,15 +406,15 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
         if (_sys_device_is_unlocked(hdl->file_lock)) {
 
-                critical_section_begin();
+                _sys_critical_section_begin();
 
                 SPIM->number_of_virtual_spi[hdl->major]--;
 
                 /* deinitialize major device if all minor devices are deinitialized */
                 if (SPIM->number_of_virtual_spi[hdl->major] == 0) {
-                        mutex_delete(SPIM->device_protect_mtx[hdl->major]);
+                        _sys_mutex_delete(SPIM->device_protect_mtx[hdl->major]);
                         SPIM->device_protect_mtx[hdl->major] = NULL;
-                        semaphore_delete(SPIM->wait_irq_sem[hdl->major]);
+                        _sys_semaphore_delete(SPIM->wait_irq_sem[hdl->major]);
                         SPIM->wait_irq_sem[hdl->major] = NULL;
                         turn_off_SPI(hdl->major);
 
@@ -442,7 +440,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
                         SPIM = NULL;
                 }
 
-                critical_section_end();
+                _sys_critical_section_end();
 
                 /* free virtual spi memory */
                 free(hdl);
@@ -525,7 +523,7 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, fpos_t *f
 
         ssize_t n = -1;
 
-        if (mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
@@ -536,7 +534,7 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, fpos_t *f
                         n = count;
                 }
 
-                mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
         } else {
                 errno = ETIME;
         }
@@ -570,7 +568,7 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
 
         ssize_t n = -1;
 
-        if (mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
@@ -581,7 +579,7 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
                         n = count;
                 }
 
-                mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
         } else {
                 errno = ETIME;
         }
@@ -630,7 +628,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__SELECT:
-                if (mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
                         SPIM->RAW[hdl->major] = true;
                         apply_SPI_config(hdl);
                         deselect_slave(hdl->major);
@@ -642,12 +640,12 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__DESELECT:
-                if (mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
                         deselect_slave(hdl->major);
                         apply_SPI_safe_config(hdl->major);
                         SPIM->RAW[hdl->major] = false;
-                        mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-                        mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                        _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                        _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                         status = STD_RET_OK;
                 } else {
                         errno = EBUSY;
@@ -659,7 +657,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         struct SPI_transceive *tr = reinterpret_cast(struct SPI_transceive*, arg);
 
                         if (tr->count) {
-                                if (mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
                                         if (SPIM->RAW[hdl->major] == false) {
                                                 deselect_slave(hdl->major);
                                                 apply_SPI_config(hdl);
@@ -670,7 +668,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                                 status = STD_RET_OK;
                                         }
 
-                                        mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                                        _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                                 }
                         } else {
                                 errno = EINVAL;
@@ -684,7 +682,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         int byte = reinterpret_cast(int, arg);
 
-                        if (mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
                                 deselect_slave(hdl->major);
                                 apply_SPI_config(hdl);
 
@@ -692,7 +690,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                         status = STD_RET_OK;
                                 }
 
-                                mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
+                                _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                         }
                 } else {
                         errno = EINVAL;
@@ -931,7 +929,7 @@ static bool transceive(struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t
                 #endif
         }
 
-        return semaphore_wait(SPIM->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
+        return _sys_semaphore_wait(SPIM->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
 }
 
 //==============================================================================
@@ -1029,7 +1027,7 @@ static bool handle_DMA_IRQ(u8_t major)
         }
 
         bool woken = false;
-        semaphore_signal_from_ISR(SPIM->wait_irq_sem[major], &woken);
+        _sys_semaphore_signal_from_ISR(SPIM->wait_irq_sem[major], &woken);
         woken = woken || SPIM->count[major] > 10;
 
         return woken;
@@ -1045,7 +1043,7 @@ static bool handle_DMA_IRQ(u8_t major)
 void SPI1_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1059,7 +1057,7 @@ void SPI1_IRQHandler(void)
 void SPI2_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1073,7 +1071,7 @@ void SPI2_IRQHandler(void)
 void SPI3_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI3)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1087,7 +1085,7 @@ void SPI3_IRQHandler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1101,7 +1099,7 @@ void DMA1_Channel2_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1115,7 +1113,7 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA2_Channel1_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI3)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif

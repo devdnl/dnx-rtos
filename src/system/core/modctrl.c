@@ -521,8 +521,8 @@ bool _lock_device(dev_lock_t *dev_lock)
 
         if (dev_lock) {
                 _critical_section_begin();
-                if (dev_lock == NULL) {
-                        dev_lock = _task_get_handle();
+                if (*dev_lock == NULL) {
+                        *dev_lock = _task_get_handle();
                         status = true;
                 } else {
                         errno = EBUSY;
@@ -545,8 +545,8 @@ void _unlock_device(dev_lock_t *dev_lock, bool force)
 {
         if (dev_lock) {
                 _critical_section_begin();
-                if (dev_lock == _task_get_handle() || force) {
-                        dev_lock = NULL;
+                if (*dev_lock == _task_get_handle() || force) {
+                        *dev_lock = NULL;
                 }
                 _critical_section_end();
         }
@@ -567,7 +567,7 @@ bool _is_device_access_granted(dev_lock_t *dev_lock)
 
         if (dev_lock) {
                 _critical_section_begin();
-                if (dev_lock == _task_get_handle()) {
+                if (*dev_lock == _task_get_handle()) {
                         status = true;
                 }
                 _critical_section_end();
@@ -591,7 +591,7 @@ bool _is_device_locked(dev_lock_t *dev_lock)
 
         if (dev_lock) {
                 _critical_section_begin();
-                if (dev_lock != NULL) {
+                if (*dev_lock != NULL) {
                         status = true;
                 }
                 _critical_section_end();

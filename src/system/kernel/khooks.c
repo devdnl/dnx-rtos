@@ -33,7 +33,6 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "portable/cpuctl.h"
-#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros

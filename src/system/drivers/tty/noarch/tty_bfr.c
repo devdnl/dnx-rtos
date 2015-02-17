@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include "dnx/misc.h"
-#include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
 

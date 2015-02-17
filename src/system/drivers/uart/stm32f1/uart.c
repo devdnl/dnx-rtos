@@ -28,9 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
-#include <unistd.h>
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -172,10 +169,10 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         uart_data[major] = calloc(1, sizeof(struct UART_data));
         if (uart_data[major]) {
 
-                uart_data[major]->data_write_sem   = semaphore_new(1, 0);
-                uart_data[major]->data_read_sem    = semaphore_new(_UART_RX_BUFFER_SIZE, 0);
-                uart_data[major]->port_lock_rx_mtx = mutex_new(MUTEX_NORMAL);
-                uart_data[major]->port_lock_tx_mtx = mutex_new(MUTEX_NORMAL);
+                uart_data[major]->data_write_sem   = _sys_semaphore_new(1, 0);
+                uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
+                uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_NORMAL);
+                uart_data[major]->port_lock_tx_mtx = _sys_mutex_new(MUTEX_NORMAL);
                 stdret_t uart_clock_configured     = uart_turn_on(uart[major]);
 
                 if (  uart_data[major]->data_write_sem
@@ -200,19 +197,19 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                         }
 
                         if (uart_data[major]->data_write_sem) {
-                                semaphore_delete(uart_data[major]->data_write_sem);
+                                _sys_semaphore_delete(uart_data[major]->data_write_sem);
                         }
 
                         if (uart_data[major]->data_read_sem) {
-                                semaphore_delete(uart_data[major]->data_read_sem);
+                                _sys_semaphore_delete(uart_data[major]->data_read_sem);
                         }
 
                         if (uart_data[major]->port_lock_rx_mtx) {
-                                mutex_delete(uart_data[major]->port_lock_rx_mtx);
+                                _sys_mutex_delete(uart_data[major]->port_lock_rx_mtx);
                         }
 
                         if (uart_data[major]->port_lock_tx_mtx) {
-                                mutex_delete(uart_data[major]->port_lock_tx_mtx);
+                                _sys_mutex_delete(uart_data[major]->port_lock_tx_mtx);
                         }
 
                         free(uart_data[major]);
@@ -237,29 +234,29 @@ API_MOD_RELEASE(UART, void *device_handle)
 {
         struct UART_data *hdl = device_handle;
 
-        if (mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT)) {
-                if (mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT)) {
+        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT)) {
+                if (_sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT)) {
 
-                        critical_section_begin();
+                        _sys_critical_section_begin();
 
-                        mutex_unlock(hdl->port_lock_rx_mtx);
-                        mutex_unlock(hdl->port_lock_tx_mtx);
+                        _sys_mutex_unlock(hdl->port_lock_rx_mtx);
+                        _sys_mutex_unlock(hdl->port_lock_tx_mtx);
 
-                        mutex_delete(hdl->port_lock_rx_mtx);
-                        mutex_delete(hdl->port_lock_tx_mtx);
+                        _sys_mutex_delete(hdl->port_lock_rx_mtx);
+                        _sys_mutex_delete(hdl->port_lock_tx_mtx);
 
-                        semaphore_delete(hdl->data_write_sem);
+                        _sys_semaphore_delete(hdl->data_write_sem);
                         uart_turn_off(uart[hdl->major]);
 
                         uart_data[hdl->major] = NULL;
                         free(hdl);
 
-                        critical_section_end();
+                        _sys_critical_section_end();
 
                         return STD_RET_OK;
                 }
 
-                mutex_unlock(hdl->port_lock_rx_mtx);
+                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
         }
 
         errno = EBUSY;
@@ -325,16 +322,16 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *
         struct UART_data *hdl = device_handle;
 
         ssize_t n = 0;
-        if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
+        if (_sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
                 SET_BIT(uart[hdl->major]->CR1, USART_CR1_TXEIE);
-                semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
+                _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
 
                 n = count - hdl->Tx_buffer.data_size;
 
-                mutex_unlock(hdl->port_lock_tx_mtx);
+                _sys_mutex_unlock(hdl->port_lock_tx_mtx);
         } else {
                 errno = EBUSY;
                 n     = -1;
@@ -364,9 +361,9 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
         struct UART_data *hdl = device_handle;
 
         ssize_t n = 0;
-        if (mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT)) {
+        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT)) {
                 while (count--) {
-                        if (semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT)) {
+                        if (_sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT)) {
                                 CLEAR_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                                 if (fifo_read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
@@ -376,7 +373,7 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                         }
                 }
 
-                mutex_unlock(hdl->port_lock_rx_mtx);
+                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
         } else {
                 errno = EBUSY;
                 n     = -1;
@@ -782,8 +779,8 @@ static void handle_irq(u8_t major)
                 u8_t DR = UART->DR;
 
                 if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
-                        semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
-                        task_yield_from_ISR();
+                        _sys_semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
+                        _sys_task_yield_from_ISR();
                 }
         }
 
@@ -802,13 +799,13 @@ static void handle_irq(u8_t major)
                 } else {
                         /* this shall never happen */
                         CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
-                        semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                        _sys_semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
                 }
         } else if ((UART->CR1 & USART_CR1_TCIE) && (UART->SR & USART_SR_TC)) {
 
                 CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
-                semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
-                task_yield_from_ISR();
+                _sys_semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                _sys_task_yield_from_ISR();
         }
 }
 

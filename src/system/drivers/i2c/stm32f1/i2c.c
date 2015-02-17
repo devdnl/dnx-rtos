@@ -30,8 +30,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/misc.h>
-#include <dnx/thread.h>
 #include "stm32f1/i2c_cfg.h"
 #include "stm32f1/i2c_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -101,7 +99,7 @@ typedef struct {
 /// type defines I2C device in the runtime environment
 typedef struct {
         const I2C_dev_config_t *config;                 //!< pointer to the device configuration
-        dev_lock_t             *lock;                   //!< object used to lock access to opened device
+        dev_lock_t              lock;                   //!< object used to lock access to opened device
         u16_t                   address;                //!< device address
 } I2C_dev_t;
 
@@ -302,14 +300,14 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (I2C->periph[major].lock == NULL) {
-                I2C->periph[major].lock  = mutex_new(MUTEX_NORMAL);
+                I2C->periph[major].lock  = _sys_mutex_new(MUTEX_NORMAL);
                 if (!I2C->periph[major].lock) {
                         goto error;
                 }
         }
 
         if (I2C->periph[major].event == NULL) {
-                I2C->periph[major].event = semaphore_new(1, 0);
+                I2C->periph[major].event = _sys_semaphore_new(1, 0);
                 if (!I2C->periph[major].event) {
                         goto error;
                 }
@@ -354,7 +352,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
         I2C_dev_t *hdl = device_handle;
         stdret_t status;
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         if (_sys_device_is_unlocked(&hdl->lock)) {
 
@@ -368,7 +366,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
                 status = STD_RET_ERROR;
         }
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return status;
 }
@@ -439,9 +437,9 @@ API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *f
         ssize_t n = -1;
 
         if (_sys_device_is_access_granted(&hdl->lock)) {
-                if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+                if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
                         n = I2C_transmit(hdl, true, *fpos, src, count, true);
-                        mutex_unlock(I2C->periph[hdl->config->major].lock);
+                        _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
                 } else {
                         errno = ETIME;
                 }
@@ -472,7 +470,7 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
         ssize_t n = -1;
 
         if (_sys_device_is_access_granted(&hdl->lock)) {
-                if (mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+                if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
 
                         if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
 
@@ -483,7 +481,7 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
                                 }
                         }
 
-                        mutex_unlock(I2C->periph[hdl->config->major].lock);
+                        _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
                 } else {
                         errno = ETIME;
                 }
@@ -574,12 +572,12 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 static void release_resources(u8_t major)
 {
         if (I2C->periph[major].dev_cnt == 0 && I2C->periph[major].lock) {
-                mutex_delete(I2C->periph[major].lock);
+                _sys_mutex_delete(I2C->periph[major].lock);
                 I2C->periph[major].lock = NULL;
         }
 
         if (I2C->periph[major].dev_cnt == 0 && I2C->periph[major].event) {
-                semaphore_delete(I2C->periph[major].event);
+                _sys_semaphore_delete(I2C->periph[major].event);
                 I2C->periph[major].event = NULL;
         }
 
@@ -760,7 +758,7 @@ static bool wait_for_event(I2C_dev_t *hdl)
         I2C->periph[hdl->config->major].error = false;
         SET_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN);
 
-        if (!semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout)) {
+        if (!_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout)) {
                 CLEAR_BIT(get_I2C(hdl)->CR2, I2C_CR2_ITERREN | I2C_CR2_ITBUFEN | I2C_CR2_ITEVTEN);
                 I2C->periph[hdl->config->major].error = true;
                 errno = ETIME;
@@ -864,7 +862,7 @@ static bool IRQ_EV_handler(u8_t major)
                 if (per->stop)
                         SET_BIT(i2c->CR1, I2C_CR1_STOP);
 
-                semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
+                _sys_semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
         }
 
 
@@ -1062,7 +1060,7 @@ static bool IRQ_ER_handler(u8_t major)
         SET_BIT(i2c->CR1, I2C_CR1_STOP);
 
         bool woken = false;
-        semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
+        _sys_semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
 
         return woken;
 }
@@ -1093,7 +1091,7 @@ static bool IRQ_DMA_handler(u8_t major)
                 if (per->stop)
                         SET_BIT(i2c->CR1, I2C_CR1_STOP);
 
-                semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
+                _sys_semaphore_signal_from_ISR(I2C->periph[major].event, &woken);
 
         } else if (DMA1->ISR & ((DMA_ISR_TEIF1 << (4 * txno)) | (DMA_ISR_TEIF1 << (4 * rxno)))) {
                 woken = IRQ_ER_handler(major);
@@ -1116,7 +1114,7 @@ static bool IRQ_DMA_handler(u8_t major)
 void I2C1_EV_IRQHandler(void)
 {
         if (IRQ_EV_handler(_I2C1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1132,7 +1130,7 @@ void I2C1_EV_IRQHandler(void)
 void I2C1_ER_IRQHandler(void)
 {
         if (IRQ_ER_handler(_I2C1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1148,7 +1146,7 @@ void I2C1_ER_IRQHandler(void)
 void I2C2_EV_IRQHandler(void)
 {
         if (IRQ_EV_handler(_I2C2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1164,7 +1162,7 @@ void I2C2_EV_IRQHandler(void)
 void I2C2_ER_IRQHandler(void)
 {
         if (IRQ_ER_handler(_I2C2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1180,7 +1178,7 @@ void I2C2_ER_IRQHandler(void)
 void DMA1_Channel6_IRQHandler(void)
 {
         if (IRQ_DMA_handler(_I2C1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1196,7 +1194,7 @@ void DMA1_Channel6_IRQHandler(void)
 void DMA1_Channel7_IRQHandler(void)
 {
         if (IRQ_DMA_handler(_I2C1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1213,7 +1211,7 @@ void DMA1_Channel7_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
         if (IRQ_DMA_handler(_I2C2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif
@@ -1229,7 +1227,7 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA1_Channel5_IRQHandler(void)
 {
         if (IRQ_DMA_handler(_I2C2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 #endif

@@ -38,6 +38,7 @@ extern "C" {
 #include <sys/types.h>
 #include <dnx/misc.h>
 #include <errno.h>
+#include <string.h>
 #include "sysfunc.h"
 #include "core/modctrl.h"
 

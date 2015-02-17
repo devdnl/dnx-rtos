@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   System function that must be used in drivers (modules) and file systems.
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -41,6 +41,7 @@
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/scanx.h"
+#include "portable/cpuctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1211,6 +1212,761 @@ static inline int _sys_vfscanf(FILE *stream, const char *format, va_list args)
 static inline int _sys_vsscanf(const char *str, const char *format, va_list args)
 {
         return _vsscanf(str, format, args);
+}
+
+//==============================================================================
+/**
+ * @brief Function get time reference
+ *
+ * @param None
+ *
+ * @return Synchronized timer object
+ */
+//==============================================================================
+static inline uint _sys_time_get_reference()
+{
+        return _kernel_get_time_ms();
+}
+
+//==============================================================================
+/**
+ * @brief Check if time expired
+ *
+ * @param time_ref      time reference
+ * @param time          time to check
+ *
+ * @return If time expired then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool _sys_time_is_expired(uint time_ref, uint time)
+{
+        return (_kernel_get_time_ms() - time_ref >= time);
+}
+
+//==============================================================================
+/**
+ * @brief Set time reference as expired
+ *
+ * @param None
+ *
+ * @return Timer object with expired value.
+ */
+//==============================================================================
+static inline uint _sys_time_set_expired()
+{
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Calculate difference between time 1 and time 2
+ *
+ * @param time1        time reference 1
+ * @param time2        time reference 2
+ *
+ * @return Returns difference between timer1 and timer2.
+ */
+//==============================================================================
+static inline int _sys_time_diff(uint time1, uint time2)
+{
+        return time1 - time2;
+}
+
+//==============================================================================
+/**
+ * @brief Function create new task and if enabled add to monitor list
+ *
+ * Function by default allocate memory for task data (localized in task tag)
+ * which is used to cpu load calculation and standard IO and etc.
+ *
+ * @param[in ] *func            task code
+ * @param[in ] *name            task name
+ * @param[in ]  stack_depth     stack deep
+ * @param[in ] *argv            argument pointer
+ *
+ * @return task object pointer or NULL if error
+ */
+//==============================================================================
+static inline task_t *_sys_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv)
+{
+        return _task_new(func, name, stack_depth, argv);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete task
+ * Function remove task from monitoring list, and next delete the task from OS
+ * list. Function resume the parent task before delete.
+ *
+ * @param *taskHdl       task handle
+ */
+//==============================================================================
+static inline void _sys_task_delete(task_t *taskhdl)
+{
+        return _task_delete(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for task exit
+ */
+//==============================================================================
+static inline void _sys_task_exit()
+{
+        _task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief Function suspend selected task
+ *
+ * @param[in] *taskhdl          task handle
+ */
+//==============================================================================
+static inline void _sys_task_suspend(task_t *taskhdl)
+{
+        return _task_suspend(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function resume selected task
+ *
+ * @param[in] *taskhdl          task handle
+ */
+//==============================================================================
+static inline void _sys_task_resume(task_t *taskhdl)
+{
+        return _task_resume(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function resume selected task from ISR
+ *
+ * @param[in] *taskhdl          task handle
+ *
+ * @retval true                 if yield required
+ * @retval false                if yield not required
+ */
+//==============================================================================
+static inline bool _sys_task_resume_from_ISR(task_t *taskhdl)
+{
+        return _task_resume_from_ISR(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function create binary semaphore
+ *
+ * @param cnt_max       max count value (1 for binary)
+ * @param cnt_init      initial value (0 or 1 for binary)
+ *
+ * @return binary semaphore object
+ */
+//==============================================================================
+static inline sem_t *_sys_semaphore_new(const uint cnt_max, const uint cnt_init)
+{
+        return _semaphore_new(cnt_max, cnt_init);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete semaphore
+ *
+ * @param[in] *sem      semaphore object
+ */
+//==============================================================================
+static inline void _sys_semaphore_delete(sem_t *sem)
+{
+        return _semaphore_delete(sem);
+}
+
+//==============================================================================
+/**
+ * @brief Function take semaphore
+ *
+ * @param[in] *sem              semaphore object
+ * @param[in]  timeout          semaphore polling time
+ *
+ * @retval true         semaphore taken
+ * @retval false        semaphore not taken
+ */
+//==============================================================================
+static inline bool _sys_semaphore_wait(sem_t *sem, const uint timeout)
+{
+        return _semaphore_wait(sem, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief Function give semaphore
+ *
+ * @param[in] *sem      semaphore object
+ *
+ * @retval true         semaphore given
+ * @retval false        semaphore not given
+ */
+//==============================================================================
+static inline bool _sys_semaphore_signal(sem_t *sem)
+{
+        return _semaphore_signal(sem);
+}
+
+//==============================================================================
+/**
+ * @brief Function take semaphore from ISR
+ *
+ * @param[in]  *sem              semaphore object
+ * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
+ *
+ * @retval true         semaphore taken
+ * @retval false        semaphore not taken
+ */
+//==============================================================================
+static inline bool _sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+{
+        return _semaphore_wait_from_ISR(sem, task_woken);
+}
+
+//==============================================================================
+/**
+ * @brief Function give semaphore from ISR
+ *
+ * @param[in]  *sem              semaphore object
+ * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
+ *
+ * @retval true         semaphore taken
+ * @retval false        semaphore not taken
+ */
+//==============================================================================
+static inline bool _sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+{
+        return _semaphore_signal_from_ISR(sem, task_woken);
+}
+
+//==============================================================================
+/**
+ * @brief Function create new mutex
+ *
+ * @param type          mutex type
+ *
+ * @return pointer to mutex object, otherwise NULL if error
+ */
+//==============================================================================
+static inline mutex_t *_sys_mutex_new(enum mutex_type type)
+{
+        return _mutex_new(type);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete mutex
+ *
+ * @param[in] *mutex    mutex object
+ */
+//==============================================================================
+static inline void _sys_mutex_delete(mutex_t *mutex)
+{
+        return _mutex_delete(mutex);
+}
+
+//==============================================================================
+/**
+ * @brief Function lock mutex
+ *
+ * @param[in] mutex             mutex object
+ * @param[in] timeout           polling time
+ *
+ * @retval true                 mutex locked
+ * @retval false                mutex not locked
+ */
+//==============================================================================
+static inline bool _sys_mutex_lock(mutex_t *mutex, const uint timeout)
+{
+        return _mutex_lock(mutex, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief Function unlock mutex
+ *
+ * @param[in] *mutex            mutex object
+ *
+ * @retval true         mutex unlocked
+ * @retval false        mutex still locked
+ */
+//==============================================================================
+static inline bool _sys_mutex_unlock(mutex_t *mutex)
+{
+        return _mutex_unlock(mutex);
+}
+
+//==============================================================================
+/**
+ * @brief Function create new queue
+ *
+ * @param[in] length            queue length
+ * @param[in] item_size         queue item size
+ *
+ * @return pointer to queue object, otherwise NULL if error
+ */
+//==============================================================================
+static inline queue_t*_sys_queue_new(const uint length, const uint item_size)
+{
+        return _queue_new(length, item_size);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete queue
+ *
+ * @param[in] *queue            queue object
+ */
+//==============================================================================
+static inline void _sys_queue_delete(queue_t *queue)
+{
+        return _queue_delete(queue);
+}
+
+//==============================================================================
+/**
+ * @brief Function reset queue
+ *
+ * @param[in] *queue            queue object
+ */
+//==============================================================================
+static inline void _sys_queue_reset(queue_t *queue)
+{
+        return _queue_reset(queue);
+}
+
+//==============================================================================
+/**
+ * @brief Function send queue
+ *
+ * @param[in] *queue            queue object
+ * @param[in] *item             item
+ * @param[in]  waittime_ms      wait time
+ *
+ * @retval true         item posted
+ * @retval false        item not posted
+ */
+//==============================================================================
+static inline bool _sys_queue_send(queue_t *queue, const void *item, const uint waittime_ms)
+{
+        return _queue_send(queue, item, waittime_ms);
+}
+
+//==============================================================================
+/**
+ * @brief Function send queue
+ *
+ * @param[in]  *queue            queue object
+ * @param[in]  *item             item
+ * @param[out] *task_woken       1 if higher priority task woken, otherwise 0 (can be NULL)
+ *
+ * @retval true         item posted
+ * @retval false        item not posted
+ */
+//==============================================================================
+static inline bool _sys_queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+{
+        return _queue_send_from_ISR(queue, item, task_woken);
+}
+
+//==============================================================================
+/**
+ * @brief Function send queue
+ *
+ * @param[in]  *queue            queue object
+ * @param[out] *item             item
+ * @param[in]   waittime_ms      wait time
+ *
+ * @retval true         item received
+ * @retval false        item not received
+ */
+//==============================================================================
+static inline bool _sys_queue_receive(queue_t *queue, void *item, const uint waittime_ms)
+{
+        return _queue_receive(queue, item, waittime_ms);
+}
+
+//==============================================================================
+/**
+ * @brief Function receive queue from ISR
+ *
+ * @param[in]  queue            queue object
+ * @param[out] item             item
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ *
+ * @retval true                 item received
+ * @retval false                item not received
+ */
+//==============================================================================
+static inline bool _sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
+{
+        return _queue_receive_from_ISR(queue, item, task_woken);
+}
+
+//==============================================================================
+/**
+ * @brief Function peek queue
+ *
+ * @param[in]  *queue            queue object
+ * @param[out] *item             item
+ * @param[in]   waittime_ms      wait time
+ *
+ * @retval true         item received
+ * @retval false        item not received
+ */
+//==============================================================================
+static inline bool _sys_queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
+{
+        return _queue_receive_peek(queue, item, waittime_ms);
+}
+
+//==============================================================================
+/**
+ * @brief Function gets number of items in queue
+ *
+ * @param[in] *queue            queue object
+ *
+ * @return a number of items in queue, -1 if error
+ */
+//==============================================================================
+static inline int _sys_queue_get_number_of_items(queue_t *queue)
+{
+        return _queue_get_number_of_items(queue);
+}
+
+//==============================================================================
+/**
+ * @brief Function gets number of items in queue from ISR
+ *
+ * @param[in] *queue            queue object
+ *
+ * @return a number of items in queue, -1 if error
+ */
+//==============================================================================
+static inline int _sys_queue_get_number_of_items_from_ISR(queue_t *queue)
+{
+        return _queue_get_number_of_items_from_ISR(queue);
+}
+
+//==============================================================================
+/**
+ * @brief Function gets number of items in queue from ISR
+ *
+ * @param[in] *queue            queue object
+ *
+ * @return a number of items in queue, -1 if error
+ */
+//==============================================================================
+static inline int _sys_queue_get_space_available(queue_t *queue)
+{
+        return _queue_get_space_available(queue);
+}
+
+//==============================================================================
+/**
+ * @brief Function return OS time in milliseconds
+ *
+ * @return a OS time in milliseconds
+ */
+//==============================================================================
+static inline uint _sys_get_time_ms()
+{
+        return _kernel_get_time_ms();
+}
+
+//==============================================================================
+/**
+ * @brief Function return tick counter
+ *
+ * @return a tick counter value
+ */
+//==============================================================================
+static inline uint _sys_get_tick_counter()
+{
+        return _kernel_get_tick_counter();
+}
+
+//==============================================================================
+/**
+ * @brief Function return a number of task
+ *
+ * @return a number of tasks
+ */
+//==============================================================================
+static inline int _sys_get_number_of_tasks()
+{
+        return _kernel_get_number_of_tasks();
+}
+
+//==============================================================================
+/**
+ * @brief Function suspend current task
+ */
+//==============================================================================
+static inline void _sys_task_suspend_now()
+{
+        _task_suspend_now();
+}
+
+//==============================================================================
+/**
+ * @brief Function yield task
+ */
+//==============================================================================
+static inline void _sys_task_yield()
+{
+        _task_yield();
+}
+
+//==============================================================================
+/**
+ * @brief Function yield task from ISR
+ */
+//==============================================================================
+static inline void _sys_task_yield_from_ISR()
+{
+        _task_yield_from_ISR();
+}
+
+//==============================================================================
+/**
+ * @brief Function return name of current task
+ *
+ * @return name of current task
+ */
+//==============================================================================
+static inline char *_sys_task_get_name()
+{
+        return _task_get_name();
+}
+
+//==============================================================================
+/**
+ * @brief Function return current task handle object address
+ *
+ * @return current task handle
+ */
+//==============================================================================
+static inline task_t *_sys_task_get_handle()
+{
+        return _task_get_handle();
+}
+
+//==============================================================================
+/**
+ * @brief Function set priority of current task
+ *
+ * @param[in]  priority         priority
+ */
+//==============================================================================
+static inline void _sys_task_set_priority(const int priority)
+{
+        _task_set_priority(priority);
+}
+
+//==============================================================================
+/**
+ * @brief Function return priority of current task
+ *
+ * @return current task priority
+ */
+//==============================================================================
+static inline int _sys_task_get_priority()
+{
+        return _task_get_priority();
+}
+
+//==============================================================================
+/**
+ * @brief Function return a free stack level of current task
+ *
+ * @return free stack level
+ */
+//==============================================================================
+static inline int _sys_task_get_free_stack()
+{
+        return _task_get_free_stack();
+}
+
+//==============================================================================
+/**
+ * @brief Function return parent task handle
+ *
+ * @return parent task handle
+ */
+//==============================================================================
+static inline task_t *_sys_task_get_parent_handle()
+{
+        return _task_get_parent_handle();
+}
+
+//==============================================================================
+/**
+ * @brief Function set global variables address
+ *
+ * @param[in] *mem
+ */
+//==============================================================================
+static inline void _sys_task_set_memory_address(void *mem)
+{
+        _task_set_memory_address(mem);
+}
+
+//==============================================================================
+/**
+ * @brief Function set stdin file
+ *
+ * @param[in] *file
+ */
+//==============================================================================
+static inline void _sys_task_set_stdin(FILE *file)
+{
+        _task_set_stdin(file);
+}
+
+//==============================================================================
+/**
+ * @brief Function set stdout file
+ *
+ * @param[in] *file
+ */
+//==============================================================================
+static inline void _sys_task_set_stdout(FILE *file)
+{
+        _task_set_stdout(file);
+}
+
+//==============================================================================
+/**
+ * @brief Function set stderr file
+ *
+ * @param[in] *file
+ */
+//==============================================================================
+static inline void _sys_task_set_stderr(FILE *file)
+{
+        _task_set_stderr(file);
+}
+
+//==============================================================================
+/**
+ * @brief Function set cwd path
+ *
+ * @param str           cwd string
+ */
+//==============================================================================
+static inline void _sys_task_set_cwd(const char *str)
+{
+        _task_set_cwd(str);
+}
+
+//==============================================================================
+/**
+ * @brief Function enter to critical section
+ */
+//==============================================================================
+static inline void _sys_critical_section_begin()
+{
+        _critical_section_begin();
+}
+
+//==============================================================================
+/**
+ * @brief Function exit from critical section
+ */
+//==============================================================================
+static inline void _sys_critical_section_end()
+{
+        _critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief Function disable interrupts
+ */
+//==============================================================================
+static inline void _sys_ISR_disable()
+{
+        _ISR_disable();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable interrupts
+ */
+//==============================================================================
+static inline void _sys_ISR_enable()
+{
+        _sys_ISR_enable();
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in milliseconds
+ *
+ * @param[in] milliseconds
+ */
+//==============================================================================
+static inline void _sys_sleep_ms(const uint milliseconds)
+{
+        _sleep_ms(milliseconds);
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in seconds
+ *
+ * @param[in] seconds
+ */
+//==============================================================================
+static inline void _sys_sleep(const uint seconds)
+{
+        _sleep(seconds);
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void _sys_sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+{
+        _sleep_until_ms(milliseconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void _sys_sleep_until(const uint seconds, int *ref_time_ticks)
+{
+        _sleep_until(seconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function update all system clock after CPU frequency change
+ *
+ * Function shall update all devices which base on main clock oscillator.
+ * Function is called after clock/frequency change from clock management driver.
+ */
+//==============================================================================
+static inline void _sys_update_system_clocks()
+{
+        _cpuctl_update_system_clocks();
 }
 
 #ifdef __cplusplus
