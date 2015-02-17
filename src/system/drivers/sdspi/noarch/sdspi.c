@@ -203,7 +203,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 
                 struct card *hdl  = calloc(1, sizeof(struct card));
                 mutex_t     *mtx  = mutex_new(MUTEX_NORMAL);
-                FILE        *fspi = vfs_fopen(card_cfg[major].filepath, "r+");
+                FILE        *fspi = _vfs_fopen(card_cfg[major].filepath, "r+");
 
                 if (hdl && mtx && fspi) {
                         hdl->SPI_file      = fspi;
@@ -211,15 +211,15 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                         SDSPI->card[major] = hdl;
 
                         struct SPI_config cfg;
-                        vfs_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        _vfs_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
                         cfg.dummy_byte = 0xFF;
                         cfg.mode       = SPI_MODE_0;
                         cfg.msb_first  = true;
-                        vfs_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                        _vfs_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
                 } else {
                         if (fspi)
-                                vfs_fclose(fspi);
+                                _vfs_fclose(fspi);
 
                         if (mtx)
                                 mutex_delete(mtx);
@@ -293,7 +293,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_3] == NULL
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_4] == NULL  ) {
 
-                vfs_fclose(SDSPI->card[part->major]->SPI_file);
+                _vfs_fclose(SDSPI->card[part->major]->SPI_file);
                 mutex_delete(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
@@ -550,7 +550,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void SPI_select_card(sdpart_t *hdl)
 {
-        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
+        _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
 }
 
 //==============================================================================
@@ -564,7 +564,7 @@ static void SPI_select_card(sdpart_t *hdl)
 //==============================================================================
 static void SPI_deselect_card(sdpart_t *hdl)
 {
-        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
+        _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
 }
 
 //==============================================================================
@@ -584,7 +584,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
         desc.rx_buffer = &out;
         desc.tx_buffer = &out;
 
-        if (vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
+        if (_vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
                 return out;
         } else {
                 return 0x00;
@@ -604,7 +604,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 //==============================================================================
 static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 {
-        vfs_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _vfs_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -620,7 +620,7 @@ static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 //==============================================================================
 static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 {
-        vfs_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _vfs_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -1019,7 +1019,7 @@ static stdret_t card_initialize(sdpart_t *hdl)
 {
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
+                _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
         }
 
         SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;

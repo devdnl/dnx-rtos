@@ -295,7 +295,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         if (node->type == FILE_TYPE_DRV) {
                 return driver_write(node->IF.drv, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
+                return _pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
         } else {
                 errno = ENXIO;
                 return -1;
@@ -327,7 +327,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         if (node->type == FILE_TYPE_DRV) {
                 return driver_read(node->IF.drv, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
+                return _pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
         } else {
                 errno = ENXIO;
                 return -1;
@@ -358,7 +358,7 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         if (node->type == FILE_TYPE_DRV) {
                 return driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
-                return pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
+                return _pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
                 errno = EBADRQC;
                 return STD_RET_ERROR;
@@ -423,7 +423,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                         stat->st_type = FILE_TYPE_DRV;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
-                pipelen = pipe_get_length(node->IF.pipe);
+                pipelen = _pipe_get_length(node->IF.pipe);
                 if (pipelen >= 0) {
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
@@ -492,7 +492,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 
                         struct devnode *node = chain_get_empty_node(devfs->root_chain);
                         if (node) {
-                                node->IF.pipe = pipe_new();
+                                node->IF.pipe = _pipe_new();
                                 node->path    = malloc(strlen(path + 1) + 1);
 
                                 if (node->IF.pipe && node->path) {
@@ -507,7 +507,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                                         status = STD_RET_OK;
                                 } else {
                                         if (node->IF.pipe) {
-                                                pipe_delete(node->IF.pipe);
+                                                _pipe_delete(node->IF.pipe);
                                                 node->IF.pipe = NULL;
                                         }
 
@@ -658,7 +658,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                                 dirent.filetype = FILE_TYPE_DRV;
 
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                int n = pipe_get_length(node->IF.pipe);
+                                int n = _pipe_get_length(node->IF.pipe);
                                 if (n >= 0) {
                                         dirent.size = n;
                                 } else {
@@ -702,7 +702,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                 if (node) {
                         if (node->opended == 0) {
                                 if (node->type == FILE_TYPE_PIPE) {
-                                        pipe_delete(node->IF.pipe);
+                                        _pipe_delete(node->IF.pipe);
                                 }
                                 node->IF.generic = NULL;
 

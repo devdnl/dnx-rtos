@@ -77,19 +77,19 @@ static int run_level_exit(void);
 //==============================================================================
 static void msg_mount(const char *filesystem, const char *src_file, const char *mount_point)
 {
-        printk("Mounting ");
+        _printk("Mounting ");
         if (src_file != NULL && strlen(src_file) > 0) {
-                printk("%s ", src_file);
+                _printk("%s ", src_file);
         } else {
-                printk("%s ", filesystem);
+                _printk("%s ", filesystem);
         }
-        printk("to %s... ", mount_point);
+        _printk("to %s... ", mount_point);
 
         errno = 0;
         if (mount(filesystem, src_file, mount_point) == STD_RET_OK) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
+                _printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
         }
 }
 
@@ -102,22 +102,22 @@ static void msg_mount(const char *filesystem, const char *src_file, const char *
 //==============================================================================
 static void init_storage(const char *storage)
 {
-        printk("Initializing %s... ", storage);
+        _printk("Initializing %s... ", storage);
         FILE *st = fopen(storage, "r+");
         if (st) {
                 if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
                         switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
-                                case 1 : printk("OK\n"); break;
-                                case 0 : printk("OK (no MBR)\n"); break;
-                                default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
+                                case 1 : _printk("OK\n"); break;
+                                case 0 : _printk("OK (no MBR)\n"); break;
+                                default: _printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
                         }
                 } else {
-                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                        _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
 
                 fclose(st);
         } else {
-                printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
         }
 }
 
@@ -131,11 +131,11 @@ static void init_storage(const char *storage)
 //==============================================================================
 static void start_daemon(const char *name, const char *cwd)
 {
-        printk("Starting '%s' daemon... ", name);
+        _printk("Starting '%s' daemon... ", name);
         if (program_new(name, cwd, NULL, NULL, NULL)) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
         }
 }
 
@@ -207,9 +207,9 @@ static int run_level_0(void)
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
-        printk_enable("/dev/tty0");
-        sysm_kernel_panic_detect(true);
-        printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
+        _printk_enable("/dev/tty0");
+        _sysm_kernel_panic_detect(true);
+        _printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_GRAY "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
         driver_init("tty1", "/dev/tty1");
@@ -242,26 +242,26 @@ static int run_level_1(void)
         init_storage("/dev/sda");
         msg_mount("fatfs", "/dev/sda1", "/mnt");
 
-        printk("Configuring DHCP client... ");
+        _printk("Configuring DHCP client... ");
         if (net_DHCP_start() == 0) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
 
-                printk("Configuring static IP... ");
+                _printk("Configuring static IP... ");
                 net_ip_t ip      = net_IP_set(__NETWORK_IP_ADDR1__,__NETWORK_IP_ADDR2__,__NETWORK_IP_ADDR3__,__NETWORK_IP_ADDR4__);
                 net_ip_t netmask = net_IP_set(__NETWORK_IP_MASK1__,__NETWORK_IP_MASK2__,__NETWORK_IP_MASK3__,__NETWORK_IP_MASK4__);
                 net_ip_t gateway = net_IP_set(__NETWORK_IP_GW1__,__NETWORK_IP_GW2__,__NETWORK_IP_GW3__,__NETWORK_IP_GW4__);
                 if (net_ifup(&ip, &netmask, &gateway) == 0) {
-                        printk("OK\n");
+                        _printk("OK\n");
                 } else {
-                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                        _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
         net_config_t ifcfg;
         if (net_get_ifconfig(&ifcfg) == 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
-                printk("  Hostname  : %s\n"
+                _printk("  Hostname  : %s\n"
                        "  MAC       : %02X:%02X:%02X:%02X:%02X:%02X\n"
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
@@ -276,7 +276,7 @@ static int run_level_1(void)
                        net_IP_get_part_a(&ifcfg.gateway), net_IP_get_part_b(&ifcfg.gateway),
                        net_IP_get_part_c(&ifcfg.gateway), net_IP_get_part_d(&ifcfg.gateway));
         } else {
-                printk("Network not configured\n");
+                _printk("Network not configured\n");
         }
 
         return STD_RET_OK;
@@ -292,9 +292,9 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
-        printk("Welcome to dnx RTOS \"%s\"!\n", get_OS_codename());
-        printk_enable("/dev/tty3");
+        _printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
+        _printk("Welcome to dnx RTOS \"%s\"!\n", get_OS_codename());
+        _printk_enable("/dev/tty3");
 
         /* initialize handles for applications and streams */
         prog_t *p[3];

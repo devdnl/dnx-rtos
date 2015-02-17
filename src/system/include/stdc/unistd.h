@@ -291,7 +291,7 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-        return vfs_chown(pathname, owner, group);
+        return _vfs_chown(pathname, owner, group);
 }
 
 //==============================================================================
@@ -315,7 +315,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-        vfs_sync();
+        _vfs_sync();
 }
 
 #ifdef __cplusplus

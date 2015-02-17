@@ -115,7 +115,7 @@ static mutex_t  *vfs_resource_mtx;
 //==============================================================================
 stdret_t _vfs_init(void)
 {
-        vfs_mnt_list     = llist_new_generic(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
+        vfs_mnt_list     = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
         vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
 
         if (!vfs_mnt_list || !vfs_resource_mtx)
@@ -136,7 +136,7 @@ stdret_t _vfs_init(void)
  * @retval STD_RET_ERROR        mount error
  */
 //==============================================================================
-stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
+stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
 {
         if (  !mount_point
            || !src_path
@@ -183,14 +183,14 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                                 errno = ENOENT;
                         }
 
-                        sysm_sysfree(cwd_src_path);
+                        _sysm_sysfree(cwd_src_path);
                         cwd_src_path = NULL;
 
                         /*
                          * mount FS if created
                          */
                         if (new_FS) {
-                                if (llist_push_back(vfs_mnt_list, new_FS)) {
+                                if (_llist_push_back(vfs_mnt_list, new_FS)) {
                                         status = STD_RET_OK;
 
                                 } else {
@@ -204,10 +204,10 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         }
 
         if (status == STD_RET_ERROR && cwd_mount_point)
-                sysm_sysfree(cwd_mount_point);
+                _sysm_sysfree(cwd_mount_point);
 
         if (cwd_src_path)
-                sysm_sysfree(cwd_src_path);
+                _sysm_sysfree(cwd_src_path);
 
         return status;
 }
@@ -222,7 +222,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
  * @retval STD_RET_ERROR        mount error
  */
 //==============================================================================
-stdret_t vfs_umount(const char *path)
+stdret_t _vfs_umount(const char *path)
 {
         if (!path) {
                 errno = EINVAL;
@@ -238,12 +238,12 @@ stdret_t vfs_umount(const char *path)
                         int position;
                         FS_entry_t *mount_fs = get_path_FS(cwd_path, PATH_MAX_LEN, &position);
 
-                        sysm_sysfree(cwd_path);
+                        _sysm_sysfree(cwd_path);
 
                         if (mount_fs) {
                                 if (mount_fs->children_cnt == 0) {
                                         if (delete_FS_entry(mount_fs)) {
-                                                llist_take(vfs_mnt_list, position);
+                                                _llist_take(vfs_mnt_list, position);
                                                 status = STD_RET_OK;
                                         } else {
                                                 errno = EBUSY;
@@ -273,7 +273,7 @@ stdret_t vfs_umount(const char *path)
  * @return 0 if success, 1 if all items read, -1 on error
  */
 //==============================================================================
-int vfs_getmntentry(int item, struct mntent *mntent)
+int _vfs_getmntentry(int item, struct mntent *mntent)
 {
         if (!mntent) {
                 errno = EINVAL;
@@ -282,7 +282,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
 
         FS_entry_t *fs = NULL;
         if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-                fs = llist_at(vfs_mnt_list, item);
+                fs = _llist_at(vfs_mnt_list, item);
                 mutex_unlock(vfs_resource_mtx);
         }
 
@@ -322,7 +322,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mknod(const char *path, dev_t dev)
+int _vfs_mknod(const char *path, dev_t dev)
 {
         if (!path || dev < 0) {
                 errno = EINVAL;
@@ -340,7 +340,7 @@ int vfs_mknod(const char *path, dev_t dev)
                         status = fs->interface->fs_mknod(fs->handle, external_path, dev) == STD_RET_OK ? 0 : -1;
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -356,7 +356,7 @@ int vfs_mknod(const char *path, dev_t dev)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mkdir(const char *path, mode_t mode)
+int _vfs_mkdir(const char *path, mode_t mode)
 {
         if (!path) {
                 errno = EINVAL;
@@ -376,7 +376,7 @@ int vfs_mkdir(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -392,7 +392,7 @@ int vfs_mkdir(const char *path, mode_t mode)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mkfifo(const char *path, mode_t mode)
+int _vfs_mkfifo(const char *path, mode_t mode)
 {
         if (!path) {
                 errno = EINVAL;
@@ -412,7 +412,7 @@ int vfs_mkfifo(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -427,14 +427,14 @@ int vfs_mkfifo(const char *path, mode_t mode)
  * @return directory object
  */
 //==============================================================================
-DIR *vfs_opendir(const char *path)
+DIR *_vfs_opendir(const char *path)
 {
         if (!path) {
                 errno = EINVAL;
                 return NULL;
         }
 
-        DIR *dir = sysm_sysmalloc(sizeof(DIR));
+        DIR *dir = _sysm_sysmalloc(sizeof(DIR));
         if (dir) {
                 stdret_t status = STD_RET_ERROR;
 
@@ -451,11 +451,11 @@ DIR *vfs_opendir(const char *path)
                                 restore_priority(priority);
                         }
 
-                        sysm_sysfree(cwd_path);
+                        _sysm_sysfree(cwd_path);
                 }
 
                 if (status == STD_RET_ERROR) {
-                        sysm_sysfree(dir);
+                        _sysm_sysfree(dir);
                         dir = NULL;
                 } else {
                         dir->self = dir;
@@ -474,12 +474,12 @@ DIR *vfs_opendir(const char *path)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_closedir(DIR *dir)
+int _vfs_closedir(DIR *dir)
 {
         if (is_dir_valid(dir) && dir->f_closedir) {
                 if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
                         dir->self = NULL;
-                        sysm_sysfree(dir);
+                        _sysm_sysfree(dir);
                         return 0;
                 }
         }
@@ -497,7 +497,7 @@ int vfs_closedir(DIR *dir)
  * @return element attributes
  */
 //==============================================================================
-dirent_t vfs_readdir(DIR *dir)
+dirent_t _vfs_readdir(DIR *dir)
 {
         dirent_t direntry;
         direntry.name = NULL;
@@ -524,7 +524,7 @@ dirent_t vfs_readdir(DIR *dir)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_remove(const char *path)
+int _vfs_remove(const char *path)
 {
         if (!path) {
                 errno = EINVAL;
@@ -554,7 +554,7 @@ int vfs_remove(const char *path)
                         errno = EBUSY;
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -572,7 +572,7 @@ int vfs_remove(const char *path)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_rename(const char *old_name, const char *new_name)
+int _vfs_rename(const char *old_name, const char *new_name)
 {
         if (!old_name || !new_name) {
                 errno = EINVAL;
@@ -605,11 +605,11 @@ int vfs_rename(const char *old_name, const char *new_name)
         }
 
         if (cwd_old_name) {
-                sysm_sysfree(cwd_old_name);
+                _sysm_sysfree(cwd_old_name);
         }
 
         if (cwd_new_name) {
-                sysm_sysfree(cwd_new_name);
+                _sysm_sysfree(cwd_new_name);
         }
 
         return status;
@@ -625,7 +625,7 @@ int vfs_rename(const char *old_name, const char *new_name)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chmod(const char *path, mode_t mode)
+int _vfs_chmod(const char *path, mode_t mode)
 {
         if (!path) {
                 errno = EINVAL;
@@ -645,7 +645,7 @@ int vfs_chmod(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -662,7 +662,7 @@ int vfs_chmod(const char *path, mode_t mode)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chown(const char *path, uid_t owner, gid_t group)
+int _vfs_chown(const char *path, uid_t owner, gid_t group)
 {
         if (!path) {
                 errno = EINVAL;
@@ -682,7 +682,7 @@ int vfs_chown(const char *path, uid_t owner, gid_t group)
                         restore_priority(priority);
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -698,7 +698,7 @@ int vfs_chown(const char *path, uid_t owner, gid_t group)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_stat(const char *path, struct stat *stat)
+int _vfs_stat(const char *path, struct stat *stat)
 {
         if (!path || !stat) {
                 errno = EINVAL;
@@ -718,7 +718,7 @@ int vfs_stat(const char *path, struct stat *stat)
                         restore_priority(priority);
                 }
 
-                sysm_sysfree(cwd_path);
+                _sysm_sysfree(cwd_path);
         }
 
         return status;
@@ -734,7 +734,7 @@ int vfs_stat(const char *path, struct stat *stat)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_statfs(const char *path, struct statfs *statfs)
+int _vfs_statfs(const char *path, struct statfs *statfs)
 {
         if (!path || !statfs) {
                 errno = EINVAL;
@@ -768,7 +768,7 @@ int vfs_statfs(const char *path, struct statfs *statfs)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-FILE *vfs_fopen(const char *path, const char *mode)
+FILE *_vfs_fopen(const char *path, const char *mode)
 {
         if (!path || !mode) {
                 errno = EINVAL;
@@ -786,7 +786,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
         }
 
         char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        FILE *file     = sysm_syscalloc(1, sizeof(FILE));
+        FILE *file     = _sysm_syscalloc(1, sizeof(FILE));
 
         if (cwd_path && file) {
                 const char *external_path = NULL;
@@ -823,10 +823,10 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
         if (!cwd_path || !file || !file->this) {
                 if (cwd_path)
-                        sysm_sysfree(cwd_path);
+                        _sysm_sysfree(cwd_path);
 
                 if (file)
-                        sysm_sysfree(file);
+                        _sysm_sysfree(file);
 
                 file = NULL;
         }
@@ -845,11 +845,11 @@ FILE *vfs_fopen(const char *path, const char *mode)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
+FILE *_vfs_freopen(const char *name, const char *mode, FILE *file)
 {
         if (name || mode || file) {
-                if (vfs_fclose(file) == STD_RET_OK) {
-                        return vfs_fopen(name, mode);
+                if (_vfs_fclose(file) == STD_RET_OK) {
+                        return _vfs_fopen(name, mode);
                 }
         } else {
                 errno = EINVAL;
@@ -867,7 +867,7 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose(FILE *file)
+int _vfs_fclose(FILE *file)
 {
         return fclose(file, false);
 }
@@ -881,7 +881,7 @@ int vfs_fclose(FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file)
+int _vfs_fclose_force(FILE *file)
 {
         return fclose(file, true);
 }
@@ -899,7 +899,7 @@ int vfs_fclose_force(FILE *file)
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
+size_t _vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
@@ -947,7 +947,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
+size_t _vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
@@ -993,14 +993,14 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fseek(FILE *file, i64_t offset, int mode)
+int _vfs_fseek(FILE *file, i64_t offset, int mode)
 {
         struct stat stat;
 
         if (is_file_valid(file) && mode <= VFS_SEEK_END) {
                 if (mode == VFS_SEEK_END) {
                         stat.st_size = 0;
-                        if (vfs_fstat(file, &stat) != 0) {
+                        if (_vfs_fstat(file, &stat) != 0) {
                                 return -1;
                         }
                 }
@@ -1030,7 +1030,7 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
  * @return -1 if error, otherwise correct value
  */
 //==============================================================================
-i64_t vfs_ftell(FILE *file)
+i64_t _vfs_ftell(FILE *file)
 {
         if (is_file_valid(file)) {
                 return file->f_lseek;
@@ -1050,11 +1050,11 @@ i64_t vfs_ftell(FILE *file)
  * @return 0 on success. On error, different from 0 is returned
  */
 //==============================================================================
-int vfs_ioctl(FILE *file, int rq, ...)
+int _vfs_ioctl(FILE *file, int rq, ...)
 {
         va_list arg;
         va_start(arg, rq);
-        int status = vfs_vioctl(file, rq, arg);
+        int status = _vfs_vioctl(file, rq, arg);
         va_end(arg);
         return status;
 }
@@ -1070,7 +1070,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
  * @return 0 on success. On error, different from 0 is returned
  */
 //==============================================================================
-int vfs_vioctl(FILE *file, int rq, va_list arg)
+int _vfs_vioctl(FILE *file, int rq, va_list arg)
 {
         if (is_file_valid(file)) {
                 switch (rq) {
@@ -1096,7 +1096,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fstat(FILE *file, struct stat *stat)
+int _vfs_fstat(FILE *file, struct stat *stat)
 {
         int status = -1;
 
@@ -1121,7 +1121,7 @@ int vfs_fstat(FILE *file, struct stat *stat)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fflush(FILE *file)
+int _vfs_fflush(FILE *file)
 {
         int status = -1;
 
@@ -1145,7 +1145,7 @@ int vfs_fflush(FILE *file)
  * @return 0 if there is not a file end, otherwise greater than 0
  */
 //==============================================================================
-int vfs_feof(FILE *file)
+int _vfs_feof(FILE *file)
 {
         if (is_file_valid(file)) {
                 return file->f_flag.eof ? 1 : 0;
@@ -1161,7 +1161,7 @@ int vfs_feof(FILE *file)
  * @param[in] *file     file
  */
 //==============================================================================
-void vfs_clearerr(FILE *file)
+void _vfs_clearerr(FILE *file)
 {
         if (is_file_valid(file)) {
                 file->f_flag.eof   = false;
@@ -1178,7 +1178,7 @@ void vfs_clearerr(FILE *file)
  * @return nonzero value if the file stream has errors occurred, 0 otherwise
  */
 //==============================================================================
-int vfs_ferror(FILE *file)
+int _vfs_ferror(FILE *file)
 {
         if (is_file_valid(file)) {
                 return file->f_flag.error ? 1 : 0;
@@ -1196,9 +1196,9 @@ int vfs_ferror(FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_rewind(FILE *file)
+int _vfs_rewind(FILE *file)
 {
-        return vfs_fseek(file, 0, VFS_SEEK_SET);
+        return _vfs_fseek(file, 0, VFS_SEEK_SET);
 }
 
 //==============================================================================
@@ -1212,11 +1212,11 @@ int vfs_rewind(FILE *file)
  * @return None
  */
 //==============================================================================
-void vfs_sync(void)
+void _vfs_sync(void)
 {
         if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
-                llist_foreach(FS_entry_t*, fs, vfs_mnt_list) {
+                _llist_foreach(FS_entry_t*, fs, vfs_mnt_list) {
                         fs->interface->fs_sync(fs->handle);
                 }
 
@@ -1237,7 +1237,7 @@ void vfs_sync(void)
 //==============================================================================
 static bool can_be_root_FS(const char *mount_point)
 {
-        return llist_size(vfs_mnt_list) == 0 && strcmp(mount_point, "/") == 0;
+        return _llist_size(vfs_mnt_list) == 0 && strcmp(mount_point, "/") == 0;
 }
 
 //==============================================================================
@@ -1257,7 +1257,7 @@ static FS_entry_t *new_FS_entry(FS_entry_t         *parent_FS,
                                 const char         *fs_src_file,
                                 vfs_FS_interface_t *fs_interface)
 {
-        FS_entry_t *new_FS = sysm_sysmalloc(sizeof(FS_entry_t));
+        FS_entry_t *new_FS = _sysm_sysmalloc(sizeof(FS_entry_t));
         if (new_FS) {
                 new_FS->interface = fs_interface;
 
@@ -1266,7 +1266,7 @@ static FS_entry_t *new_FS_entry(FS_entry_t         *parent_FS,
                         new_FS->parent_FS_ref = parent_FS;
                         new_FS->children_cnt  = 0;
                 } else {
-                        sysm_sysfree(new_FS);
+                        _sysm_sysfree(new_FS);
                         new_FS = NULL;
                 }
         }
@@ -1294,10 +1294,10 @@ static bool delete_FS_entry(FS_entry_t *this)
                         }
 
                         if (this->mount_point) {
-                                sysm_sysfree(const_cast(char*, this->mount_point));
+                                _sysm_sysfree(const_cast(char*, this->mount_point));
                         }
 
-                        sysm_sysfree(this);
+                        _sysm_sysfree(this);
                         status = true;
                 }
         }
@@ -1325,7 +1325,7 @@ static int fclose(FILE *file, bool force)
                         file->this   = NULL;
                         file->FS_hdl = NULL;
                         file->FS_hdl = NULL;
-                        sysm_sysfree(file);
+                        _sysm_sysfree(file);
                         return 0;
                 }
         }
@@ -1468,7 +1468,7 @@ static FS_entry_t *get_path_FS(const char *path, size_t len, int *position)
 {
         int pos = 0;
 
-        llist_foreach(FS_entry_t*, entry, vfs_mnt_list) {
+        _llist_foreach(FS_entry_t*, entry, vfs_mnt_list) {
                 if (strncmp(path, entry->mount_point, len) == 0) {
                         if (position) {
                                 *position = pos;
@@ -1570,7 +1570,7 @@ static char *new_CWD_path(const char *path, enum path_correction corr)
                 }
         }
 
-        new_path = sysm_syscalloc(new_path_len + 1, sizeof(char));
+        new_path = _sysm_syscalloc(new_path_len + 1, sizeof(char));
         if (new_path) {
                 if (cwd_len && cwd) {
                         strcpy(new_path, cwd);

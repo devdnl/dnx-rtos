@@ -1,1 +1,1 @@
-        sysm_kernel_panic_detect(true);
+        _sysm_kernel_panic_detect(true);

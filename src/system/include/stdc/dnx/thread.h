@@ -983,7 +983,7 @@ static inline void task_set_cwd(const char *str)
 //==============================================================================
 static inline bool task_is_exist(task_t *taskhdl)
 {
-        return sysm_is_task_exist(taskhdl);
+        return _sysm_is_task_exist(taskhdl);
 }
 
 //==============================================================================

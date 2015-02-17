@@ -45,13 +45,13 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
+#define calloc(size_t__nmemb, size_t__msize)    _sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
+#define malloc(size_t__size)                    _sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
 
 #undef  free
-#define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
+#define free(void__pmem)                        _sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \
@@ -167,6 +167,10 @@ static inline bool device_is_unlocked(dev_lock_t *dev_lock)
         extern bool _is_device_locked(dev_lock_t*);
         return !_is_device_locked(dev_lock);
 }
+
+
+// TODO _sys_ definitions
+
 
 #ifdef __cplusplus
 }

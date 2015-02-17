@@ -54,7 +54,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-struct sysmoni_taskstat {
+struct _sysmoni_taskstat {
         u32_t   memory_usage;
         u32_t   opened_files;
         u32_t   cpu_usage;
@@ -64,7 +64,7 @@ struct sysmoni_taskstat {
         i16_t   priority;
 };
 
-struct sysmoni_used_memory {
+struct _sysmoni_used_memory {
         int used_kernel_memory;
         int used_system_memory;
         int used_network_memory;
@@ -87,47 +87,47 @@ enum _kernel_panic_desc_cause {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdret_t _sysm_init                              (void);
-extern void     sysm_lock_access                        (void);
-extern void     sysm_unlock_access                      (void);
-extern bool     sysm_is_task_exist                      (task_t*);
-extern stdret_t sysm_start_task_monitoring              (task_t*, size_t);
-extern stdret_t sysm_stop_task_monitoring               (task_t*);
-extern stdret_t sysm_get_task_stat                      (task_t*, struct sysmoni_taskstat*);
-extern stdret_t sysm_get_ntask_stat                     (uint, struct sysmoni_taskstat*);
-extern stdret_t sysm_get_used_memory                    (struct sysmoni_used_memory*);
-extern uint     sysm_get_number_of_monitored_tasks      (void);
-extern void    *sysm_kmalloc                            (size_t);
-extern void    *sysm_kcalloc                            (size_t, size_t);
-extern void     sysm_kfree                              (void*);
-extern void    *sysm_sysmalloc                          (size_t);
-extern void    *sysm_syscalloc                          (size_t, size_t);
-extern void     sysm_sysfree                            (void*);
-extern void    *sysm_netmalloc                          (size_t);
-extern void    *sysm_netcalloc                          (size_t, size_t);
-extern void     sysm_netfree                            (void*);
-extern void    *sysm_modmalloc                          (size_t, uint);
-extern void    *sysm_modcalloc                          (size_t, size_t, uint);
-extern void     sysm_modfree                            (void*, uint);
-extern i32_t    sysm_get_used_memory_by_module          (uint);
-extern void    *sysm_tskmalloc_as                       (task_t*, size_t);
-extern void    *sysm_tskcalloc_as                       (task_t*, size_t, size_t);
-extern void     sysm_tskfree_as                         (task_t*, void*);
-extern void    *sysm_tskmalloc                          (size_t);
-extern void    *sysm_tskcalloc                          (size_t, size_t);
-extern void     sysm_tskfree                            (void*);
-extern FILE    *sysm_fopen                              (const char*, const char*);
-extern FILE    *sysm_freopen                            (const char*, const char*, FILE*);
-extern int      sysm_fclose                             (FILE*);
-extern DIR     *sysm_opendir                            (const char*);
-extern int      sysm_closedir                           (DIR*);
-extern u32_t    sysm_get_total_CPU_usage                (void);
-extern void     sysm_disable_CPU_load_measurement       (void);
-extern void     sysm_enable_CPU_load_measurement        (void);
-extern void     sysm_task_switched_in                   (void);
-extern void     sysm_task_switched_out                  (void);
-extern bool     sysm_kernel_panic_detect                (bool);
-extern void     sysm_kernel_panic_report                (const char*, enum _kernel_panic_desc_cause);
+extern stdret_t _sysm_init                         (void);
+extern void     _sysm_lock_access                  (void);
+extern void     _sysm_unlock_access                (void);
+extern bool     _sysm_is_task_exist                (task_t*);
+extern stdret_t _sysm_start_task_monitoring        (task_t*, size_t);
+extern stdret_t _sysm_stop_task_monitoring         (task_t*);
+extern stdret_t _sysm_get_task_stat                (task_t*, struct _sysmoni_taskstat*);
+extern stdret_t _sysm_get_ntask_stat               (uint, struct _sysmoni_taskstat*);
+extern stdret_t _sysm_get_used_memory              (struct _sysmoni_used_memory*);
+extern uint     _sysm_get_number_of_monitored_tasks(void);
+extern void    *_sysm_kmalloc                      (size_t);
+extern void    *_sysm_kcalloc                      (size_t, size_t);
+extern void     _sysm_kfree                        (void*);
+extern void    *_sysm_sysmalloc                    (size_t);
+extern void    *_sysm_syscalloc                    (size_t, size_t);
+extern void     _sysm_sysfree                      (void*);
+extern void    *_sysm_netmalloc                    (size_t);
+extern void    *_sysm_netcalloc                    (size_t, size_t);
+extern void     _sysm_netfree                      (void*);
+extern void    *_sysm_modmalloc                    (size_t, uint);
+extern void    *_sysm_modcalloc                    (size_t, size_t, uint);
+extern void     _sysm_modfree                      (void*, uint);
+extern i32_t    _sysm_get_used_memory_by_module    (uint);
+extern void    *_sysm_tskmalloc_as                 (task_t*, size_t);
+extern void    *_sysm_tskcalloc_as                 (task_t*, size_t, size_t);
+extern void     _sysm_tskfree_as                   (task_t*, void*);
+extern void    *_sysm_tskmalloc                    (size_t);
+extern void    *_sysm_tskcalloc                    (size_t, size_t);
+extern void     _sysm_tskfree                      (void*);
+extern FILE    *_sysm_fopen                        (const char*, const char*);
+extern FILE    *_sysm_freopen                      (const char*, const char*, FILE*);
+extern int      _sysm_fclose                       (FILE*);
+extern DIR     *_sysm_opendir                      (const char*);
+extern int      _sysm_closedir                     (DIR*);
+extern u32_t    _sysm_get_total_CPU_usage          (void);
+extern void     _sysm_disable_CPU_load_measurement (void);
+extern void     _sysm_enable_CPU_load_measurement  (void);
+extern void     _sysm_task_switched_in             (void);
+extern void     _sysm_task_switched_out            (void);
+extern bool     _sysm_kernel_panic_detect          (bool);
+extern void     _sysm_kernel_panic_report          (const char*, enum _kernel_panic_desc_cause);
 
 #ifdef __cplusplus
 }

@@ -75,8 +75,8 @@
  *-----------------------------------------------------------*/
 extern void  vApplicationSwitchedIn (void);
 extern void  vApplicationSwitchedOut(void);
-extern void *sysm_kmalloc           (size_t);
-extern void  sysm_kfree             (void*);
+extern void *_sysm_kmalloc          (size_t);
+extern void  _sysm_kfree            (void*);
 
 /* Application specific definitions */
 #define configUSE_PREEMPTION                    1
@@ -152,8 +152,8 @@ extern void  sysm_kfree             (void*);
 #define INCLUDE_xTimerPendFunctionCall          0
 
 /* dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
-#define malloc(size)                            sysm_kmalloc(size)
-#define free(mem)                               sysm_kfree(mem)
+#define malloc(size)                            _sysm_kmalloc(size)
+#define free(mem)                               _sysm_kfree(mem)
 
 /* required functions by sysmoni */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)

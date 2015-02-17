@@ -80,9 +80,9 @@
 /**
  * Memory allocation functions
  */
-#define mem_free                                sysm_netfree
-#define mem_malloc                              sysm_netmalloc
-#define mem_calloc                              sysm_netcalloc
+#define mem_free                                _sysm_netfree
+#define mem_malloc                              _sysm_netmalloc
+#define mem_calloc                              _sysm_netcalloc
 
 /*
    ------------------------------------

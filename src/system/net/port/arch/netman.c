@@ -242,7 +242,7 @@ static void network_interface_thread(void *arg)
 //==============================================================================
 void _netman_init()
 {
-        netman = sysm_netcalloc(1, sizeof(netman_t));
+        netman = _sysm_netcalloc(1, sizeof(netman_t));
         if (netman) {
                 netman->access    = mutex_new(MUTEX_RECURSIVE);
                 netman->if_thread = task_new(network_interface_thread, "netifd", STACK_DEPTH_LOW, NULL);
@@ -265,7 +265,7 @@ void _netman_init()
                         if (netman->if_thread)
                                 task_delete(netman->if_thread);
 
-                        sysm_netfree(netman);
+                        _sysm_netfree(netman);
                         netman = NULL;
                 }
         }

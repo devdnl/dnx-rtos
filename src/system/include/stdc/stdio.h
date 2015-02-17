@@ -148,7 +148,7 @@ extern "C" {
 //==============================================================================
 static inline FILE *fopen(const char *path, const char *mode)
 {
-        return sysm_fopen(path, mode);
+        return _sysm_fopen(path, mode);
 }
 
 //==============================================================================
@@ -184,7 +184,7 @@ static inline FILE *fopen(const char *path, const char *mode)
 //==============================================================================
 static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 {
-        return sysm_freopen(path, mode, file);
+        return _sysm_freopen(path, mode, file);
 }
 
 //==============================================================================
@@ -215,7 +215,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 //==============================================================================
 static inline int fclose(FILE *file)
 {
-        return sysm_fclose(file);
+        return _sysm_fclose(file);
 }
 
 //==============================================================================
@@ -254,7 +254,7 @@ static inline int fclose(FILE *file)
 //==============================================================================
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
-        return vfs_fwrite(ptr, size, count, file);
+        return _vfs_fwrite(ptr, size, count, file);
 }
 
 //==============================================================================
@@ -293,7 +293,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 //==============================================================================
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
-        return vfs_fread(ptr, size, count, file);
+        return _vfs_fread(ptr, size, count, file);
 }
 
 //==============================================================================
@@ -330,7 +330,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 static inline int fsetpos(FILE *file, const fpos_t *pos)
 {
         if (pos) {
-                return vfs_fseek(file, *pos, SEEK_SET);
+                return _vfs_fseek(file, *pos, SEEK_SET);
         } else {
                 return EOF;
         }
@@ -375,7 +375,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 //==============================================================================
 static inline int fseek(FILE *file, i64_t offset, int mode)
 {
-        return vfs_fseek(file, offset, mode);
+        return _vfs_fseek(file, offset, mode);
 }
 
 //==============================================================================
@@ -409,7 +409,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 static inline void rewind(FILE *file)
 {
-        vfs_rewind(file);
+        _vfs_rewind(file);
 }
 
 //==============================================================================
@@ -446,7 +446,7 @@ static inline void rewind(FILE *file)
 //==============================================================================
 static inline i64_t ftell(FILE *file)
 {
-        return vfs_ftell(file);
+        return _vfs_ftell(file);
 }
 
 //==============================================================================
@@ -486,7 +486,7 @@ static inline i64_t ftell(FILE *file)
 static inline int fgetpos(FILE *file, fpos_t *pos)
 {
         if (pos) {
-                *pos = (fpos_t)vfs_ftell(file);
+                *pos = (fpos_t)_vfs_ftell(file);
                 return 0;
         } else {
                 return EOF;
@@ -528,7 +528,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 //==============================================================================
 static inline int fflush(FILE *file)
 {
-        return vfs_fflush(file);
+        return _vfs_fflush(file);
 }
 
 //==============================================================================
@@ -565,7 +565,7 @@ static inline int fflush(FILE *file)
 //==============================================================================
 static inline int feof(FILE *file)
 {
-        return vfs_feof(file);
+        return _vfs_feof(file);
 }
 
 //==============================================================================
@@ -604,7 +604,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        return vfs_clearerr(file);
+        return _vfs_clearerr(file);
 }
 
 //==============================================================================
@@ -645,7 +645,7 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        return vfs_ferror(file);
+        return _vfs_ferror(file);
 }
 
 //==============================================================================
@@ -677,7 +677,7 @@ static inline int ferror(FILE *file)
 //==============================================================================
 static inline void perror(const char *s)
 {
-        sys_perror(s);
+        _perror(s);
 }
 
 //==============================================================================
@@ -829,7 +829,7 @@ static inline char *tmpnam(char *str)
 //==============================================================================
 static inline int remove(const char *path)
 {
-        return vfs_remove(path);
+        return _vfs_remove(path);
 }
 
 //==============================================================================
@@ -855,7 +855,7 @@ static inline int remove(const char *path)
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
-        return vfs_rename(old_name, new_name);
+        return _vfs_rename(old_name, new_name);
 }
 
 //==============================================================================
@@ -901,7 +901,7 @@ static inline int printf(const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vfprintf(stdout, format, arg);
+        int status = _vfprintf(stdout, format, arg);
         va_end(arg);
         return status;
 }
@@ -948,7 +948,7 @@ static inline int printf(const char *format, ...)
 //==============================================================================
 static inline int vprintf(const char *format, va_list arg)
 {
-        return sys_vfprintf(stdout, format, arg);
+        return _vfprintf(stdout, format, arg);
 }
 
 //==============================================================================
@@ -995,7 +995,7 @@ static inline int fprintf(FILE *stream, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vfprintf(stream, format, arg);
+        int status = _vfprintf(stream, format, arg);
         va_end(arg);
         return status;
 }
@@ -1043,7 +1043,7 @@ static inline int fprintf(FILE *stream, const char *format, ...)
 //==============================================================================
 static inline int vfprintf(FILE *stream, const char *format, va_list arg)
 {
-        return sys_vfprintf(stream, format, arg);
+        return _vfprintf(stream, format, arg);
 }
 
 //==============================================================================
@@ -1092,7 +1092,7 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vsnprintf(s, n, format, arg);
+        int status = _vsnprintf(s, n, format, arg);
         va_end(arg);
         return status;
 }
@@ -1142,7 +1142,7 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
 //==============================================================================
 static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
 {
-        return sys_vsnprintf(bfr, size, format, args);
+        return _vsnprintf(bfr, size, format, args);
 }
 
 //==============================================================================
@@ -1191,7 +1191,7 @@ static inline int sprintf(char *s, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vsnprintf(s, UINT16_MAX, format, arg);
+        int status = _vsnprintf(s, UINT16_MAX, format, arg);
         va_end(arg);
         return status;
 }
@@ -1240,7 +1240,7 @@ static inline int sprintf(char *s, const char *format, ...)
 //==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
 {
-        return sys_vsnprintf(s, UINT16_MAX, format, arg);
+        return _vsnprintf(s, UINT16_MAX, format, arg);
 }
 
 //==============================================================================
@@ -1294,7 +1294,7 @@ static inline int scanf(const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vfscanf(stdin, format, arg);
+        int status = _vfscanf(stdin, format, arg);
         va_end(arg);
         return status;
 }
@@ -1350,7 +1350,7 @@ static inline int scanf(const char *format, ...)
 //==============================================================================
 static inline int vscanf(const char *format, va_list arg)
 {
-        return sys_vfscanf(stdin, format, arg);
+        return _vfscanf(stdin, format, arg);
 }
 
 //==============================================================================
@@ -1405,7 +1405,7 @@ static inline int fscanf(FILE *stream, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vfscanf(stream, format, arg);
+        int status = _vfscanf(stream, format, arg);
         va_end(arg);
         return status;
 }
@@ -1462,7 +1462,7 @@ static inline int fscanf(FILE *stream, const char *format, ...)
 //==============================================================================
 static inline int vfscanf(FILE *stream, const char *format, va_list arg)
 {
-        return sys_vfscanf(stream, format, arg);
+        return _vfscanf(stream, format, arg);
 }
 
 //==============================================================================
@@ -1518,7 +1518,7 @@ static inline int sscanf(const char *s, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        int status = sys_vsscanf(s, format, arg);
+        int status = _vsscanf(s, format, arg);
         va_end(arg);
         return status;
 }
@@ -1575,7 +1575,7 @@ static inline int sscanf(const char *s, const char *format, ...)
 //==============================================================================
 static inline int vsscanf(const char *s, const char *format, va_list args)
 {
-        return sys_vsscanf(s, format, args);
+        return _vsscanf(s, format, args);
 }
 
 //==============================================================================
@@ -1599,7 +1599,7 @@ static inline int vsscanf(const char *s, const char *format, va_list args)
 //==============================================================================
 static inline int putc(int c, FILE *stream)
 {
-        return sys_fputc(c, stream);
+        return _fputc(c, stream);
 }
 
 //==============================================================================
@@ -1622,7 +1622,7 @@ static inline int putc(int c, FILE *stream)
 //==============================================================================
 static inline int putchar(int c)
 {
-        return sys_fputc(c, stdout);
+        return _fputc(c, stdout);
 }
 
 //==============================================================================
@@ -1647,7 +1647,7 @@ static inline int putchar(int c)
 //==============================================================================
 static inline int fputc(int c, FILE *stream)
 {
-        return sys_fputc(c, stream);
+        return _fputc(c, stream);
 }
 
 //==============================================================================
@@ -1671,7 +1671,7 @@ static inline int fputc(int c, FILE *stream)
 //==============================================================================
 static inline int fputs(const char *s, FILE *stream)
 {
-        return sys_f_puts(s, stream, false);
+        return _f_puts(s, stream, false);
 }
 
 //==============================================================================
@@ -1694,7 +1694,7 @@ static inline int fputs(const char *s, FILE *stream)
 //==============================================================================
 static inline int puts(const char *s)
 {
-        return sys_f_puts(s, stdout, true);
+        return _f_puts(s, stdout, true);
 }
 
 //==============================================================================
@@ -1717,7 +1717,7 @@ static inline int puts(const char *s)
 //==============================================================================
 static inline int getchar(void)
 {
-        return sys_getc(stdin);
+        return _getc(stdin);
 }
 
 //==============================================================================
@@ -1740,7 +1740,7 @@ static inline int getchar(void)
 //==============================================================================
 static inline int getc(FILE *stream)
 {
-        return sys_getc(stream);
+        return _getc(stream);
 }
 
 //==============================================================================
@@ -1764,7 +1764,7 @@ static inline int getc(FILE *stream)
 //==============================================================================
 static inline int fgetc(FILE *stream)
 {
-        return sys_getc(stream);
+        return _getc(stream);
 }
 
 //==============================================================================
@@ -1831,7 +1831,7 @@ static inline int ungetc(int c, FILE *stream)
 //==============================================================================
 static inline char *fgets(char *str, int size, FILE *stream)
 {
-        return sys_fgets(str, size, stream);
+        return _fgets(str, size, stream);
 }
 
 #ifdef __cplusplus

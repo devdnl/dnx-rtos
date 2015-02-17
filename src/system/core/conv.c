@@ -73,7 +73,7 @@
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-char *sys_strtoi(const char *string, int base, i32_t *value)
+char *_strtoi(const char *string, int base, i32_t *value)
 {
         *value = 0;
 
@@ -151,10 +151,10 @@ char *sys_strtoi(const char *string, int base, i32_t *value)
  * @return converted value
  */
 //==============================================================================
-i32_t sys_atoi(const char *str)
+i32_t _atoi(const char *str)
 {
         i32_t result;
-        sys_strtoi(str, 10, &result);
+        _strtoi(str, 10, &result);
         return result;
 }
 
@@ -168,7 +168,7 @@ i32_t sys_atoi(const char *str)
  * @return converted value
  */
 //==============================================================================
-double sys_strtod(const char *str, char **end)
+double _strtod(const char *str, char **end)
 {
         double sign    = 1;
         double div     = 1;
@@ -235,9 +235,9 @@ double sys_strtod(const char *str, char **end)
  * @return converted value
  */
 //==============================================================================
-double sys_atof(const char *str)
+double _atof(const char *str)
 {
-        return sys_strtod(str, NULL);
+        return _strtod(str, NULL);
 }
 
 /*==============================================================================

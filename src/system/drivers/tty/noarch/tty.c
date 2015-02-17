@@ -131,8 +131,8 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 if (!tty_module)
                         return STD_RET_ERROR;
 
-                tty_module->infile      = vfs_fopen(_TTY_IN_FILE, "r");
-                tty_module->outfile     = vfs_fopen(_TTY_OUT_FILE, "w");
+                tty_module->infile      = _vfs_fopen(_TTY_IN_FILE, "r");
+                tty_module->outfile     = _vfs_fopen(_TTY_OUT_FILE, "w");
                 tty_module->service_in  = task_new(service_in, service_in_name, service_in_stack_depth, NULL);
                 tty_module->service_out = task_new(service_out, service_out_name, service_out_stack_depth, NULL);
                 tty_module->queue_cmd   = queue_new(queue_cmd_len, sizeof(tty_cmd_t));
@@ -141,10 +141,10 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                    || !tty_module->service_in || !tty_module->service_out) {
 
                         if (tty_module->infile)
-                                vfs_fclose(tty_module->infile);
+                                _vfs_fclose(tty_module->infile);
 
                         if (tty_module->outfile)
-                                vfs_fclose(tty_module->outfile);
+                                _vfs_fclose(tty_module->outfile);
 
                         if (tty_module->queue_cmd)
                                 queue_delete(tty_module->queue_cmd);
@@ -234,8 +234,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 if (release_TTY) {
                         task_delete(tty_module->service_in);
                         task_delete(tty_module->service_out);
-                        vfs_fclose(tty_module->infile);
-                        vfs_fclose(tty_module->outfile);
+                        _vfs_fclose(tty_module->infile);
+                        _vfs_fclose(tty_module->outfile);
                         queue_delete(tty_module->queue_cmd);
 
                         free(tty_module);
@@ -522,7 +522,7 @@ static void service_in(void *arg)
 
         for (;;) {
                 char c;
-                if (vfs_fread(&c, 1, 1, tty_module->infile) > 0) {
+                if (_vfs_fread(&c, 1, 1, tty_module->infile) > 0) {
                         task_set_priority(HIGHEST_PRIORITY);
                         send_cmd(CMD_INPUT, c);
                         task_set_priority(service_in_priority);
@@ -582,8 +582,8 @@ static void service_out(void *arg)
                                         if (mutex_lock(tty->secure_mtx, 100)) {
                                                 const char *str;
                                                 while ((str = ttybfr_get_fresh_line(tty->screen))) {
-                                                        vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
-                                                        vfs_fwrite(str, 1, strlen(str), tty_module->outfile);
+                                                        _vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
+                                                        _vfs_fwrite(str, 1, strlen(str), tty_module->outfile);
                                                 }
 
                                                 mutex_unlock(tty->secure_mtx);
@@ -597,13 +597,13 @@ static void service_out(void *arg)
 
                                 if (rq.arg == tty_module->current_tty && mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                         const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) ERASE_LINE;
-                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
+                                        _vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
 
                                         const char *last_line = ttybfr_get_line(tty->screen, 0);
-                                        vfs_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
+                                        _vfs_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
 
                                         const char *editline = ttyedit_get_value(tty->editline);
-                                        vfs_fwrite(editline, sizeof(char), strlen(editline), tty_module->outfile);
+                                        _vfs_fwrite(editline, sizeof(char), strlen(editline), tty_module->outfile);
 
                                         mutex_unlock(tty->secure_mtx);
                                 }
@@ -646,7 +646,7 @@ static void vt100_init()
                           VT100_DISABLE_LINE_WRAP
                           VT100_CURSOR_HOME;
 
-        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
+        _vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
 }
 
 //==============================================================================
@@ -675,7 +675,7 @@ static void vt100_analyze(const char c)
 
                         if (ttyedit_is_echo_enabled(tty->editline)) {
                                 const char *crlf = "\r\n";
-                                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
+                                _vfs_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
                         }
 
                         copy_string_to_queue(str, tty->queue_out, true, 0);
@@ -782,12 +782,12 @@ static void switch_terminal(int term_no)
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
-                                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
+                                                _vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
                                         }
                                 }
 
                                 str = ttyedit_get_value(tty->editline);
-                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
+                                _vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
                                 ttybfr_clear_fresh_line_counter(tty->screen);
 
                                 mutex_unlock(tty->secure_mtx);

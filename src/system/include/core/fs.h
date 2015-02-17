@@ -45,19 +45,19 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_syscalloc(size_t__nmemb, size_t__msize)
+#define calloc(size_t__nmemb, size_t__msize)    _sysm_syscalloc(size_t__nmemb, size_t__msize)
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_sysmalloc(size_t__size)
+#define malloc(size_t__size)                    _sysm_sysmalloc(size_t__size)
 
 #undef  free
-#define free(void__pmem)                        sysm_sysfree(void__pmem)
+#define free(void__pmem)                        _sysm_sysfree(void__pmem)
 
 #ifdef __cplusplus
-        inline void* operator new     (size_t size) {return sysm_sysmalloc(size);}\
-        inline void* operator new[]   (size_t size) {return sysm_sysmalloc(size);}\
-        inline void  operator delete  (void* ptr  ) {sysm_sysfree(ptr);}\
-        inline void  operator delete[](void* ptr  ) {sysm_sysfree(ptr);}
+        inline void* operator new     (size_t size) {return _sysm_sysmalloc(size);}\
+        inline void* operator new[]   (size_t size) {return _sysm_sysmalloc(size);}\
+        inline void  operator delete  (void* ptr  ) {_sysm_sysfree(ptr);}\
+        inline void  operator delete[](void* ptr  ) {_sysm_sysfree(ptr);}
 #       define _FS_EXTERN_C extern "C"
 #else
 #       define _FS_EXTERN_C

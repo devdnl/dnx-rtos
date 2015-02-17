@@ -88,9 +88,9 @@ static bool is_valid(pipe_t *this)
  * @return pointer to pipe object
  */
 //==============================================================================
-pipe_t *pipe_new()
+pipe_t *_pipe_new()
 {
-        pipe_t  *pipe  = sysm_sysmalloc(sizeof(pipe_t));
+        pipe_t  *pipe  = _sysm_sysmalloc(sizeof(pipe_t));
         queue_t *queue = queue_new(CONFIG_PIPE_LENGTH, sizeof(u8_t));
 
         if (pipe && queue) {
@@ -105,7 +105,7 @@ pipe_t *pipe_new()
                 }
 
                 if (pipe) {
-                        sysm_sysfree(pipe);
+                        _sysm_sysfree(pipe);
                         pipe = NULL;
                 }
         }
@@ -120,7 +120,7 @@ pipe_t *pipe_new()
  * @param pipe          a pipe object
  */
 //==============================================================================
-void pipe_delete(pipe_t *pipe)
+void _pipe_delete(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 queue_delete(pipe->queue);
@@ -137,7 +137,7 @@ void pipe_delete(pipe_t *pipe)
  * @return length or -1 if error
  */
 //==============================================================================
-int pipe_get_length(pipe_t *pipe)
+int _pipe_get_length(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 return queue_get_number_of_items(pipe->queue);
@@ -158,7 +158,7 @@ int pipe_get_length(pipe_t *pipe)
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
+int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 {
         if (is_valid(pipe) && buf && count) {
 
@@ -194,7 +194,7 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
+int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 {
         if (is_valid(pipe) && buf && count) {
 
@@ -225,7 +225,7 @@ int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
  * @return true if pipe closed, otherwise false
  */
 //==============================================================================
-bool pipe_close(pipe_t *pipe)
+bool _pipe_close(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 pipe->closed = true;

@@ -71,12 +71,12 @@
  * @return number of scanned elements
  */
 //==============================================================================
-int sys_fscanf(FILE *stream, const char *format, ...)
+int _fscanf(FILE *stream, const char *format, ...)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
         va_list arg;
         va_start(arg, format);
-        int n = sys_vfscanf(stream, format, arg);
+        int n = _vfscanf(stream, format, arg);
         va_end(arg);
         return n;
 #else
@@ -97,24 +97,24 @@ int sys_fscanf(FILE *stream, const char *format, ...)
  * @return number of scanned elements
  */
 //==============================================================================
-int sys_vfscanf(FILE *stream, const char *format, va_list arg)
+int _vfscanf(FILE *stream, const char *format, va_list arg)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
-        char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
+        char *str = _sysm_syscalloc(BUFSIZ, sizeof(char));
         if (!str)
                 return 0;
 
         int n = 0;
-        if (sys_fgets(str, BUFSIZ, stream) == str) {
+        if (_fgets(str, BUFSIZ, stream) == str) {
                 char *lf;
                 if ((lf = strchr(str, '\n')) != NULL) {
                         *lf = '\0';
                 }
 
-                n = sys_vsscanf(str, format, arg);
+                n = _vsscanf(str, format, arg);
         }
 
-        sysm_sysfree(str);
+        _sysm_sysfree(str);
         return n;
 #else
         UNUSED_ARG(stream);
@@ -135,12 +135,12 @@ int sys_vfscanf(FILE *stream, const char *format, va_list arg)
  * @return number of scanned elements
  */
 //==============================================================================
-int sys_sscanf(const char *str, const char *format, ...)
+int _sscanf(const char *str, const char *format, ...)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
         va_list args;
         va_start(args, format);
-        int n = sys_vsscanf(str, format, args);
+        int n = _vsscanf(str, format, args);
         va_end(args);
         return n;
 #else
@@ -161,7 +161,7 @@ int sys_sscanf(const char *str, const char *format, ...)
  * @return number of scanned elements
  */
 //============================================================================//
-int sys_vsscanf(const char *str, const char *format, va_list args)
+int _vsscanf(const char *str, const char *format, va_list args)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
         int    read_fields = 0;
@@ -359,7 +359,7 @@ int sys_vsscanf(const char *str, const char *format, va_list args)
                                         double *value = va_arg(args, double*);
                                         if (value) {
                                                 char *end;
-                                                *value = sys_strtod(str, &end);
+                                                *value = _strtod(str, &end);
                                                 str += ((int)end - (int)str);
 
                                                 if (*end != '\0')

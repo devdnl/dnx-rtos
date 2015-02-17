@@ -208,39 +208,39 @@ typedef struct vfs_FS_interface {
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
-extern stdret_t         _vfs_init               (void);
-extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
-extern stdret_t         vfs_umount              (const char*);
-extern int              vfs_getmntentry         (int, struct mntent*);
-extern int              vfs_mknod               (const char*, dev_t);
-extern int              vfs_mkdir               (const char*, mode_t);
-extern int              vfs_mkfifo              (const char*, mode_t);
-extern DIR             *vfs_opendir             (const char*);
-extern int              vfs_closedir            (DIR*);
-extern dirent_t         vfs_readdir             (DIR*);
-extern int              vfs_remove              (const char*);
-extern int              vfs_rename              (const char*, const char*);
-extern int              vfs_chmod               (const char*, mode_t);
-extern int              vfs_chown               (const char*, uid_t, gid_t);
-extern int              vfs_stat                (const char*, struct stat*);
-extern int              vfs_statfs              (const char*, struct statfs*);
-extern FILE            *vfs_fopen               (const char*, const char*);
-extern FILE            *vfs_freopen             (const char*, const char*, FILE*);
-extern int              vfs_fclose              (FILE*);
-extern int              vfs_fclose_force        (FILE*);
-extern size_t           vfs_fwrite              (const void*, size_t, size_t, FILE*);
-extern size_t           vfs_fread               (void*, size_t, size_t, FILE*);
-extern int              vfs_fseek               (FILE*, i64_t, int);
-extern i64_t            vfs_ftell               (FILE*);
-extern int              vfs_ioctl               (FILE*, int, ...);
-extern int              vfs_vioctl              (FILE*, int, va_list arg);
-extern int              vfs_fstat               (FILE*, struct stat*);
-extern int              vfs_fflush              (FILE*);
-extern int              vfs_feof                (FILE*);
-extern void             vfs_clearerr            (FILE*);
-extern int              vfs_ferror              (FILE*);
-extern int              vfs_rewind              (FILE*);
-extern void             vfs_sync                (void);
+extern stdret_t  _vfs_init        (void);
+extern stdret_t  _vfs_mount       (const char*, const char*, struct vfs_FS_interface*);
+extern stdret_t  _vfs_umount      (const char*);
+extern int       _vfs_getmntentry (int, struct mntent*);
+extern int       _vfs_mknod       (const char*, dev_t);
+extern int       _vfs_mkdir       (const char*, mode_t);
+extern int       _vfs_mkfifo      (const char*, mode_t);
+extern DIR      *_vfs_opendir     (const char*);
+extern int       _vfs_closedir    (DIR*);
+extern dirent_t  _vfs_readdir     (DIR*);
+extern int       _vfs_remove      (const char*);
+extern int       _vfs_rename      (const char*, const char*);
+extern int       _vfs_chmod       (const char*, mode_t);
+extern int       _vfs_chown       (const char*, uid_t, gid_t);
+extern int       _vfs_stat        (const char*, struct stat*);
+extern int       _vfs_statfs      (const char*, struct statfs*);
+extern FILE     *_vfs_fopen       (const char*, const char*);
+extern FILE     *_vfs_freopen     (const char*, const char*, FILE*);
+extern int       _vfs_fclose      (FILE*);
+extern int       _vfs_fclose_force(FILE*);
+extern size_t    _vfs_fwrite      (const void*, size_t, size_t, FILE*);
+extern size_t    _vfs_fread       (void*, size_t, size_t, FILE*);
+extern int       _vfs_fseek       (FILE*, i64_t, int);
+extern i64_t     _vfs_ftell       (FILE*);
+extern int       _vfs_ioctl       (FILE*, int, ...);
+extern int       _vfs_vioctl      (FILE*, int, va_list arg);
+extern int       _vfs_fstat       (FILE*, struct stat*);
+extern int       _vfs_fflush      (FILE*);
+extern int       _vfs_feof        (FILE*);
+extern void      _vfs_clearerr    (FILE*);
+extern int       _vfs_ferror      (FILE*);
+extern int       _vfs_rewind      (FILE*);
+extern void      _vfs_sync        (void);
 
 /*==============================================================================
   Exported inline functions

@@ -106,7 +106,7 @@ static inline int ioctl(FILE *stream, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
-        int status = vfs_vioctl(stream, request, arg);
+        int status = _vfs_vioctl(stream, request, arg);
         va_end(arg);
         return status;
 }

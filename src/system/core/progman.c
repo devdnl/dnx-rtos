@@ -145,7 +145,7 @@ static void program_startup(void *arg)
         if (arg) {
                 prog_t *prog = arg;
 
-                prog->mem = sysm_tskcalloc(1, prog->mem_size);
+                prog->mem = _sysm_tskcalloc(1, prog->mem_size);
                 if (prog->mem || prog->mem_size == 0) {
 
                         _task_data_t *task_data = _task_get_data();
@@ -170,7 +170,7 @@ static void program_startup(void *arg)
 
                         if (prog->mem) {
                                 memset(prog->mem, 0, prog->mem_size);
-                                sysm_tskfree(prog->mem);
+                                _sysm_tskfree(prog->mem);
                         }
 
                         make_RAW_task(prog->task);
@@ -234,7 +234,7 @@ static char **new_argument_table(const char *str, int *argc)
         char **argv = NULL;
 
         if (str && argc && str[0] != '\0') {
-                llist_t *args = llist_new_generic(sysm_sysmalloc, sysm_sysfree, NULL, NULL);
+                llist_t *args = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
 
                 if (args) {
                         // parse arguments
@@ -272,18 +272,18 @@ static char **new_argument_table(const char *str, int *argc)
                                 }
 
                                 // add argument to list
-                                char *arg = sysm_sysmalloc(str_len + 1);
+                                char *arg = _sysm_sysmalloc(str_len + 1);
                                 if (arg) {
                                         strncpy(arg, start, str_len);
                                         arg[str_len] = '\0';
 
-                                        if (llist_push_back(args, arg) == NULL) {
-                                                llist_delete(args);
+                                        if (_llist_push_back(args, arg) == NULL) {
+                                                _llist_delete(args);
                                                 errno = ENOMEM;
                                                 return NULL;
                                         }
                                 } else {
-                                        llist_delete(args);
+                                        _llist_delete(args);
                                         errno = ENOMEM;
                                         return NULL;
                                 }
@@ -293,19 +293,19 @@ static char **new_argument_table(const char *str, int *argc)
                         }
 
                         // create table with arguments
-                        int no_of_args = llist_size(args);
+                        int no_of_args = _llist_size(args);
                         *argc = no_of_args;
 
-                        argv = sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
+                        argv = _sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
                         if (argv) {
                                 for (int i = 0; i < no_of_args; i++) {
-                                        argv[i] = llist_take_front(args);
+                                        argv[i] = _llist_take_front(args);
                                 }
 
                                 argv[no_of_args] = NULL;
                         }
 
-                        llist_delete(args);
+                        _llist_delete(args);
                 }
         }
 
@@ -324,10 +324,10 @@ static void delete_argument_table(int argc, char **argv)
 {
         if (argv) {
                 for (int i = 0; i < argc; i++) {
-                        sysm_sysfree(argv[i]);
+                        _sysm_sysfree(argv[i]);
                 }
 
-                sysm_sysfree(argv);
+                _sysm_sysfree(argv);
         }
 }
 
@@ -379,9 +379,9 @@ static int process_kill(task_t *taskhdl, int status)
                         if (taskhdl == task_get_handle()) {
                                 _task_delete(taskhdl);
                         } else {
-                                sysm_lock_access();
+                                _sysm_lock_access();
                                 _task_delete(taskhdl);
-                                sysm_unlock_access();
+                                _sysm_unlock_access();
                         }
                         break;
                 case TASK_TYPE_PROCESS: {
@@ -474,17 +474,17 @@ static void restore_stdio_defaults(task_t *task)
 {
         struct _task_data *data = _task_get_data_of(task);
 
-        vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
+        _vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
 
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
-        sys_getc(data->f_stdin);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
+        _getc(data->f_stdin);
 
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
-        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
-        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
 }
 
 //==============================================================================
@@ -508,7 +508,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                 return NULL;
         }
 
-        prog_t *prog = sysm_tskcalloc(1, sizeof(prog_t));
+        prog_t *prog = _sysm_tskcalloc(1, sizeof(prog_t));
         if (prog) {
 
                 prog->argv = new_argument_table(cmd, &prog->argc);
@@ -548,7 +548,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                         delete_argument_table(prog->argc, prog->argv);
                 }
 
-                sysm_tskfree(prog);
+                _sysm_tskfree(prog);
                 prog = NULL;
         }
 
@@ -571,7 +571,7 @@ int _program_delete(prog_t *prog)
                         semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argc, prog->argv);
                         prog->this = NULL;
-                        sysm_tskfree(prog);
+                        _sysm_tskfree(prog);
                         return 0;
                 } else {
                         errno = EAGAIN;
@@ -598,7 +598,7 @@ int _program_kill(prog_t *prog)
                         semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
-                        sysm_lock_access();
+                        _sysm_lock_access();
 
                         if (prog->task != task_get_handle()) {
                                 _task_get_data_of(prog->task)->f_task_kill = true;
@@ -607,14 +607,14 @@ int _program_kill(prog_t *prog)
                         }
 
                         if (prog->mem) {
-                                sysm_tskfree_as(prog->task, prog->mem);
+                                _sysm_tskfree_as(prog->task, prog->mem);
                                 prog->mem = NULL;
                         }
 
                         restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
                         semaphore_signal(prog->exit_sem);
-                        sysm_unlock_access();
+                        _sysm_unlock_access();
                         _task_delete(prog->task);
                         return 0;
                 }
@@ -704,7 +704,7 @@ void _exit(int status)
 //==============================================================================
 void _abort(void)
 {
-        sys_fprintf(stdout, "Aborted\n");
+        _fprintf(stdout, "Aborted\n");
 
         process_kill(task_get_handle(), -1);
 
@@ -765,7 +765,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 return NULL;
         }
 
-        thread_t *thread = sysm_tskmalloc(sizeof(thread_t));
+        thread_t *thread = _sysm_tskmalloc(sizeof(thread_t));
         sem_t    *sem    = semaphore_new(1, 0);
         if (thread && sem) {
                 _task_data_t *task_data = _task_get_data();
@@ -790,7 +790,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
         }
 
         if (thread) {
-                sysm_tskfree(thread);
+                _sysm_tskfree(thread);
                 thread = NULL;
         }
 
@@ -835,7 +835,7 @@ int _thread_cancel(thread_t *thread)
                         semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
-                        sysm_lock_access();
+                        _sysm_lock_access();
 
                         if (thread->task != task_get_handle()) {
                                 _task_get_data_of(thread->task)->f_task_kill = true;
@@ -846,7 +846,7 @@ int _thread_cancel(thread_t *thread)
                         restore_stdio_defaults(thread->task);
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
-                        sysm_unlock_access();
+                        _sysm_unlock_access();
                         _task_delete(thread->task);
                         return 0;
                 }
@@ -890,7 +890,7 @@ int _thread_delete(thread_t *thread)
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_delete(thread->exit_sem);
                         thread->this = NULL;
-                        sysm_tskfree(thread);
+                        _sysm_tskfree(thread);
                         return 0;
                 } else {
                         errno = EAGAIN;
