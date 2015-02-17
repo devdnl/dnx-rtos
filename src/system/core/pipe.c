@@ -30,7 +30,7 @@
 #include "config.h"
 #include <stdbool.h>
 #include <sys/types.h>
-#include <dnx/thread.h>
+#include "kernel/kwrapper.h"
 #include "core/pipe.h"
 #include "core/sysmoni.h"
 
@@ -91,7 +91,7 @@ static bool is_valid(pipe_t *this)
 pipe_t *_pipe_new()
 {
         pipe_t  *pipe  = _sysm_sysmalloc(sizeof(pipe_t));
-        queue_t *queue = queue_new(CONFIG_PIPE_LENGTH, sizeof(u8_t));
+        queue_t *queue = _queue_new(CONFIG_PIPE_LENGTH, sizeof(u8_t));
 
         if (pipe && queue) {
 
@@ -101,7 +101,7 @@ pipe_t *_pipe_new()
 
         } else {
                 if (queue) {
-                        queue_delete(queue);
+                        _queue_delete(queue);
                 }
 
                 if (pipe) {
@@ -123,7 +123,7 @@ pipe_t *_pipe_new()
 void _pipe_delete(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
-                queue_delete(pipe->queue);
+                _queue_delete(pipe->queue);
                 pipe->self = NULL;
         }
 }
@@ -140,7 +140,7 @@ void _pipe_delete(pipe_t *pipe)
 int _pipe_get_length(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
-                return queue_get_number_of_items(pipe->queue);
+                return _queue_get_number_of_items(pipe->queue);
         } else {
                 return -1;
         }
@@ -165,13 +165,13 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
                 int n = 0;
                 for (; n < (int)count; n++) {
 
-                        if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                        if (_queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
                                 u8_t null = '\0';
-                                queue_send(pipe->queue, &null, pipe_write_timeout);
+                                _queue_send(pipe->queue, &null, pipe_write_timeout);
                                 break;
                         }
 
-                        if (!queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : pipe_read_timeout)) {
+                        if (!_queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : pipe_read_timeout)) {
                                 break;
                         }
                 }
@@ -201,11 +201,11 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
                 int n = 0;
                 for (; n < (int)count; n++) {
 
-                        if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                        if (_queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
                                 break;
                         }
 
-                        if (!queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout)) {
+                        if (!_queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout)) {
                                 break;
                         }
                 }
@@ -231,7 +231,7 @@ bool _pipe_close(pipe_t *pipe)
                 pipe->closed = true;
 
                 const u8_t nul = '\0';
-                return queue_send(pipe->queue, &nul, pipe_write_timeout);
+                return _queue_send(pipe->queue, &nul, pipe_write_timeout);
         } else {
                 return false;
         }

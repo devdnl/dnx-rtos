@@ -40,6 +40,7 @@ extern "C" {
 #include <errno.h>
 #include "sysfunc.h"
 #include "core/modctrl.h"
+#include "core/pipe.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -228,6 +229,92 @@ static inline stdret_t _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
 {
         return _llist_new(_sysm_sysmalloc, _sysm_sysfree, functor, obj_dtor);
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe object
+ *
+ * @return pointer to pipe object
+ */
+//==============================================================================
+static inline pipe_t *_sys_pipe_new()
+{
+        return _pipe_new();
+}
+
+//==============================================================================
+/**
+ * @brief Destroy pipe object
+ *
+ * @param pipe          a pipe object
+ */
+//==============================================================================
+static inline void _sys_pipe_delete(pipe_t *pipe)
+{
+        return _pipe_delete(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief Return length of pipe
+ *
+ * @param pipe          a pipe object
+ *
+ * @return length or -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_get_length(pipe_t *pipe)
+{
+        return _pipe_get_length(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief Read data from pipe
+ *
+ * @param pipe          a pipe object
+ * @param buf           a destination buffer
+ * @param count         a count of bytes to read
+ * @param non_blocking  a non-blocking access mode
+ *
+ * @return number of read bytes, -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
+{
+        return _pipe_read(pipe, buf, count, non_blocking);
+}
+
+//==============================================================================
+/**
+ * @brief Read data from pipe
+ *
+ * @param pipe          a pipe object
+ * @param buf           a destination buffer
+ * @param count         a count of bytes to read
+ * @param non_blocking  a non-blocking access mode
+ *
+ * @return number of read bytes, -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
+{
+        return _pipe_write(pipe, buf, count, non_blocking);
+}
+
+//==============================================================================
+/**
+ * @brief Close pipe
+ *
+ * @param pipe          a pipe object
+ *
+ * @return true if pipe closed, otherwise false
+ */
+//==============================================================================
+static inline bool _sys_pipe_close(pipe_t *pipe)
+{
+        return _pipe_close(pipe);
 }
 
 #ifdef __cplusplus
