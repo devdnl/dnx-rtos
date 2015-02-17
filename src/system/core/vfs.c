@@ -27,7 +27,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/thread.h>
 #include <dnx/misc.h>
 #include <unistd.h>
 #include <errno.h>
@@ -35,6 +34,7 @@
 #include "core/vfs.h"
 #include "core/llist.h"
 #include "core/sysmoni.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -116,7 +116,7 @@ static mutex_t  *vfs_resource_mtx;
 stdret_t _vfs_init(void)
 {
         vfs_mnt_list     = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
-        vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
+        vfs_resource_mtx = _mutex_new(MUTEX_RECURSIVE);
 
         if (!vfs_mnt_list || !vfs_resource_mtx)
                 return STD_RET_ERROR;
@@ -157,7 +157,7 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
 
         if (cwd_mount_point && cwd_src_path) {
 
-                if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
                         FS_entry_t *mounted_fs = get_path_FS(cwd_mount_point, PATH_MAX_LEN, NULL);
                         const char *ext_path   = NULL;
@@ -199,7 +199,7 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
                                 }
                         }
 
-                        mutex_unlock(vfs_resource_mtx);
+                        _mutex_unlock(vfs_resource_mtx);
                 }
         }
 
@@ -233,7 +233,7 @@ stdret_t _vfs_umount(const char *path)
 
         char *cwd_path = new_CWD_path(path, ADD_SLASH);
         if (cwd_path) {
-                if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
                         int position;
                         FS_entry_t *mount_fs = get_path_FS(cwd_path, PATH_MAX_LEN, &position);
@@ -255,7 +255,7 @@ stdret_t _vfs_umount(const char *path)
                                 errno = ENOENT;
                         }
 
-                        mutex_unlock(vfs_resource_mtx);
+                        _mutex_unlock(vfs_resource_mtx);
                 }
         }
 
@@ -281,9 +281,9 @@ int _vfs_getmntentry(int item, struct mntent *mntent)
         }
 
         FS_entry_t *fs = NULL;
-        if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+        if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
                 fs = _llist_at(vfs_mnt_list, item);
-                mutex_unlock(vfs_resource_mtx);
+                _mutex_unlock(vfs_resource_mtx);
         }
 
         if (fs) {
@@ -538,11 +538,11 @@ int _vfs_remove(const char *path)
                 const char *external_path = NULL;
                 FS_entry_t *mount_fs      = NULL;
                 FS_entry_t *base_fs       = NULL;
-                if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
                         mount_fs = get_path_FS(cwd_path, PATH_MAX_LEN, NULL);
                         LAST_CHARACTER(cwd_path) = '\0';        // remove slash at the end
                         base_fs  = get_path_base_FS(cwd_path, &external_path);
-                        mutex_unlock(vfs_resource_mtx);
+                        _mutex_unlock(vfs_resource_mtx);
                 }
 
                 if (base_fs && !mount_fs) {
@@ -589,10 +589,10 @@ int _vfs_rename(const char *old_name, const char *new_name)
                 const char *old_extern_path = NULL;
                 const char *new_extern_path = NULL;
 
-                if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
                         old_fs = get_path_base_FS(cwd_old_name, &old_extern_path);
                         new_fs = get_path_base_FS(cwd_new_name, &new_extern_path);
-                        mutex_unlock(vfs_resource_mtx);
+                        _mutex_unlock(vfs_resource_mtx);
                 }
 
                 if (old_fs && new_fs && old_fs == new_fs && old_fs->interface->fs_rename) {
@@ -1214,13 +1214,13 @@ int _vfs_rewind(FILE *file)
 //==============================================================================
 void _vfs_sync(void)
 {
-        if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+        if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
                 _llist_foreach(FS_entry_t*, fs, vfs_mnt_list) {
                         fs->interface->fs_sync(fs->handle);
                 }
 
-                mutex_unlock(vfs_resource_mtx);
+                _mutex_unlock(vfs_resource_mtx);
         }
 }
 
@@ -1390,10 +1390,10 @@ static bool is_dir_valid(DIR *dir)
 //==============================================================================
 static int increase_task_priority(void)
 {
-        int priority = task_get_priority();
+        int priority = _task_get_priority();
 
         if (priority < HIGHEST_PRIORITY) {
-                task_set_priority(priority + 1);
+                _task_set_priority(priority + 1);
         }
 
         return priority;
@@ -1408,7 +1408,7 @@ static int increase_task_priority(void)
 //==============================================================================
 static inline void restore_priority(int priority)
 {
-        task_set_priority(priority);
+        _task_set_priority(priority);
 }
 
 //==============================================================================
@@ -1505,7 +1505,7 @@ static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
         }
 
         FS_entry_t *FS_entry = NULL;
-        if (mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+        if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
                 while (path_tail >= path) {
                         FS_entry_t *entry = get_path_FS(path, path_tail - path + 1, NULL);
@@ -1517,7 +1517,7 @@ static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
                         }
                 }
 
-                mutex_unlock(vfs_resource_mtx);
+                _mutex_unlock(vfs_resource_mtx);
         }
 
         if (FS_entry && ext_path) {
