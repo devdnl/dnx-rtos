@@ -30,9 +30,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <dnx/thread.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include "core/vfs.h"
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/llist.h"
@@ -178,10 +178,10 @@ static void program_startup(void *arg)
                         prog->exit_code = EXIT_FAILURE;
                 }
 
-                semaphore_signal(prog->exit_sem);
+                _semaphore_signal(prog->exit_sem);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
@@ -213,10 +213,10 @@ static void thread_startup(void *arg)
                 thread->func(thread->arg);
 
                 make_RAW_task(thread->task);
-                semaphore_signal(thread->exit_sem);
+                _semaphore_signal(thread->exit_sem);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
@@ -376,7 +376,7 @@ static int process_kill(task_t *taskhdl, int status)
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 default:
                 case TASK_TYPE_RAW:
-                        if (taskhdl == task_get_handle()) {
+                        if (taskhdl == _task_get_handle()) {
                                 _task_delete(taskhdl);
                         } else {
                                 _sysm_lock_access();
@@ -517,7 +517,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                         struct _prog_data prog_data;
                         if (get_program_data(prog->argv[0], &prog_data) == STD_RET_OK) {
 
-                                prog->exit_sem = semaphore_new(1, 0);
+                                prog->exit_sem = _semaphore_new(1, 0);
                                 if (prog->exit_sem) {
 
                                         prog->mem      = NULL;
@@ -528,10 +528,10 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->func     = *prog_data.main_function;
                                         prog->mem_size = *prog_data.globals_size;
                                         prog->this     = prog;
-                                        prog->task     = task_new(program_startup,
-                                                                  prog_data.program_name,
-                                                                  *prog_data.stack_depth,
-                                                                  prog);
+                                        prog->task     = _task_new(program_startup,
+                                                                   prog_data.program_name,
+                                                                   *prog_data.stack_depth,
+                                                                   prog);
 
                                         if (prog->task) {
                                                 return prog;
@@ -539,7 +539,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                                 prog->this  = NULL;
                                         }
 
-                                        semaphore_delete(prog->exit_sem);
+                                        _semaphore_delete(prog->exit_sem);
                                 }
                         } else {
                                 errno = ENOENT;
@@ -567,8 +567,8 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
 int _program_delete(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_delete(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argc, prog->argv);
                         prog->this = NULL;
                         _sysm_tskfree(prog);
@@ -594,16 +594,16 @@ int _program_delete(prog_t *prog)
 int _program_kill(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
                         _sysm_lock_access();
 
-                        if (prog->task != task_get_handle()) {
+                        if (prog->task != _task_get_handle()) {
                                 _task_get_data_of(prog->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
-                                task_suspend(prog->task);
+                                _task_suspend(prog->task);
                         }
 
                         if (prog->mem) {
@@ -613,7 +613,7 @@ int _program_kill(prog_t *prog)
 
                         restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
-                        semaphore_signal(prog->exit_sem);
+                        _semaphore_signal(prog->exit_sem);
                         _sysm_unlock_access();
                         _task_delete(prog->task);
                         return 0;
@@ -637,8 +637,8 @@ int _program_kill(prog_t *prog)
 int _program_wait_for_close(prog_t *prog, const uint timeout)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, timeout)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, timeout)) {
+                        _semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
                         errno = ETIME;
@@ -661,8 +661,8 @@ int _program_wait_for_close(prog_t *prog, const uint timeout)
 bool _program_is_closed(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_signal(prog->exit_sem);
                         return true;
                 }
         }
@@ -691,7 +691,7 @@ void _task_kill(task_t *taskhdl)
 //==============================================================================
 void _exit(int status)
 {
-        process_kill(task_get_handle(), status);
+        process_kill(_task_get_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -706,7 +706,7 @@ void _abort(void)
 {
         _fprintf(stdout, "Aborted\n");
 
-        process_kill(task_get_handle(), -1);
+        process_kill(_task_get_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -766,7 +766,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
         }
 
         thread_t *thread = _sysm_tskmalloc(sizeof(thread_t));
-        sem_t    *sem    = semaphore_new(1, 0);
+        sem_t    *sem    = _semaphore_new(1, 0);
         if (thread && sem) {
                 _task_data_t *task_data = _task_get_data();
 
@@ -777,7 +777,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->stdout   = task_data->f_stdout;
                 thread->stderr   = task_data->f_stderr;
                 thread->func     = func;
-                thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
+                thread->task     = _task_new(thread_startup, _task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
                         thread->this = thread;
@@ -786,7 +786,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
         }
 
         if (sem) {
-                semaphore_delete(sem);
+                _semaphore_delete(sem);
         }
 
         if (thread) {
@@ -809,8 +809,8 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
 int _thread_join(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
+                        _semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
                         errno = ETIME;
@@ -831,21 +831,21 @@ int _thread_join(thread_t *thread)
 int _thread_cancel(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
                         _sysm_lock_access();
 
-                        if (thread->task != task_get_handle()) {
+                        if (thread->task != _task_get_handle()) {
                                 _task_get_data_of(thread->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
-                                task_suspend(thread->task);
+                                _task_suspend(thread->task);
                         }
 
                         restore_stdio_defaults(thread->task);
                         make_RAW_task(thread->task);
-                        semaphore_signal(thread->exit_sem);
+                        _semaphore_signal(thread->exit_sem);
                         _sysm_unlock_access();
                         _task_delete(thread->task);
                         return 0;
@@ -867,8 +867,8 @@ int _thread_cancel(thread_t *thread)
 bool _thread_is_finished(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_signal(thread->exit_sem);
                         return true;
                 }
         }
@@ -887,8 +887,8 @@ bool _thread_is_finished(thread_t *thread)
 int _thread_delete(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_delete(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_delete(thread->exit_sem);
                         thread->this = NULL;
                         _sysm_tskfree(thread);
                         return 0;
