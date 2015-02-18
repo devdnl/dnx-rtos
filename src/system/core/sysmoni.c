@@ -341,6 +341,7 @@ stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
         return status;
 #else
         UNUSED_ARG(taskhdl);
+        UNUSED_ARG(stack_size);
         return STD_RET_OK;
 #endif
 }
@@ -1158,7 +1159,7 @@ FILE *_sysm_freopen(const char *path, const char *mode, FILE *file)
                 return NULL;
         }
 #else
-        return vfs_freopen(path, mode, file);
+        return _vfs_freopen(path, mode, file);
 #endif
 }
 
@@ -1407,12 +1408,14 @@ void _sysm_task_switched_out(void)
 //==============================================================================
 bool _sysm_kernel_panic_detect(bool show_msg)
 {
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         static const char *cause[] = {
                "SEGFAULT",
                "STACKOVF",
                "CPUFAULT",
                "UNKNOWN"
         };
+#endif
 
         bool occurred = (  kernel_panic_descriptor->valid1 == _KERNEL_PANIC_DESC_VALID1
                        && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
@@ -1428,9 +1431,11 @@ bool _sysm_kernel_panic_detect(bool show_msg)
                                 strncpy(kernel_panic_descriptor->task_name, "<defected>", CONFIG_RTOS_TASK_NAME_LEN);
                         }
 
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
                         _printk(FONT_COLOR_RED"*** KERNEL PANIC ***"RESET_ATTRIBUTES"\n");
                         _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
                         _printk("Task : %s\n\n", kernel_panic_descriptor->task_name);
+#endif
                         _sleep(2);
                 }
 
