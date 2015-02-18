@@ -51,8 +51,8 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef struct sysmoni_taskstat taskstat_t;
-typedef struct sysmoni_used_memory memstat_t;
+typedef struct _sysmoni_taskstat taskstat_t;
+typedef struct _sysmoni_used_memory memstat_t;
 
 /*==============================================================================
   Exported object declarations
@@ -225,7 +225,7 @@ static inline u32_t get_memory_size(void)
 //==============================================================================
 static inline stdret_t get_detailed_memory_usage(memstat_t *stat)
 {
-        return sysm_get_used_memory(stat);
+        return _sysm_get_used_memory(stat);
 }
 
 //==============================================================================
@@ -256,7 +256,7 @@ static inline stdret_t get_detailed_memory_usage(memstat_t *stat)
 //==============================================================================
 static inline i32_t get_module_memory_usage(uint module_number)
 {
-        return sysm_get_used_memory_by_module(module_number);
+        return _sysm_get_used_memory_by_module(module_number);
 }
 
 //==============================================================================
@@ -383,7 +383,7 @@ static inline uint get_time_ms(void)
 //==============================================================================
 static inline stdret_t get_task_stat(uint ntask, taskstat_t *stat)
 {
-        return sysm_get_ntask_stat(ntask, stat);
+        return _sysm_get_ntask_stat(ntask, stat);
 }
 
 //==============================================================================
@@ -416,7 +416,7 @@ static inline stdret_t get_task_stat(uint ntask, taskstat_t *stat)
 //==============================================================================
 static inline uint get_number_of_monitored_tasks(void)
 {
-        return sysm_get_number_of_monitored_tasks();
+        return _sysm_get_number_of_monitored_tasks();
 }
 
 //==============================================================================
@@ -480,7 +480,7 @@ static inline int get_number_of_tasks(void)
 //==============================================================================
 static inline u32_t get_total_CPU_usage(void)
 {
-        return sysm_get_total_CPU_usage();
+        return _sysm_get_total_CPU_usage();
 }
 
 //==============================================================================
@@ -1018,7 +1018,7 @@ static inline bool is_driver_active(uint n)
 //==============================================================================
 static inline void disable_CPU_load_measurement(void)
 {
-        sysm_disable_CPU_load_measurement();
+        _sysm_disable_CPU_load_measurement();
 }
 
 //==============================================================================
@@ -1059,7 +1059,7 @@ static inline void disable_CPU_load_measurement(void)
 //==============================================================================
 static inline void enable_CPU_load_measurement(void)
 {
-        sysm_enable_CPU_load_measurement();
+        _sysm_enable_CPU_load_measurement();
 }
 
 //==============================================================================

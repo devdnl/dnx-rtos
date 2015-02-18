@@ -51,10 +51,10 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern double   sys_strtod      (const char*, char**);
-extern i32_t    sys_atoi        (const char*);
-extern char    *sys_strtoi      (const char*, int, i32_t*);
-extern double   sys_atof        (const char*);
+extern double _strtod(const char*, char**);
+extern i32_t  _atoi  (const char*);
+extern char  *_strtoi(const char*, int, i32_t*);
+extern double _atof  (const char*);
 
 /*==============================================================================
   Exported inline functions

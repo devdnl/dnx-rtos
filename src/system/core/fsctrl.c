@@ -84,7 +84,7 @@ stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_poi
 
         for (uint i = 0; i < _FS_table_size; i++) {
                 if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
-                        return vfs_mount(src_path, mount_point,
+                        return _vfs_mount(src_path, mount_point,
                                          (struct vfs_FS_interface *)&_FS_table[i].FS_if);
                 }
         }
@@ -107,7 +107,7 @@ stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_poi
 stdret_t _umount(const char *mount_point)
 {
         if (mount_point) {
-                return vfs_umount(mount_point);
+                return _vfs_umount(mount_point);
         } else {
                 errno = EINVAL;
                 return STD_RET_ERROR;

@@ -983,7 +983,7 @@ static inline void task_set_cwd(const char *str)
 //==============================================================================
 static inline bool task_is_exist(task_t *taskhdl)
 {
-        return sysm_is_task_exist(taskhdl);
+        return _sysm_is_task_exist(taskhdl);
 }
 
 //==============================================================================
@@ -1413,7 +1413,7 @@ static inline void semaphore_delete(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 {
-        return _semaphore_take(sem, timeout);
+        return _semaphore_wait(sem, timeout);
 }
 
 //==============================================================================
@@ -1463,7 +1463,7 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
 {
-        return _semaphore_give(sem);
+        return _semaphore_signal(sem);
 }
 
 //==============================================================================
@@ -1520,7 +1520,7 @@ static inline bool semaphore_signal(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
-        return _semaphore_take_from_ISR(sem, task_woken);
+        return _semaphore_wait_from_ISR(sem, task_woken);
 }
 
 //==============================================================================
@@ -1574,7 +1574,7 @@ static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
-        return _semaphore_give_from_ISR(sem, task_woken);
+        return _semaphore_signal_from_ISR(sem, task_woken);
 }
 
 //==============================================================================

@@ -739,7 +739,7 @@ extern size_t strnlen(const char *s, size_t maxlen);
 //==============================================================================
 static inline char *strerror(int errnum)
 {
-        return (char *)sys_strerror(errnum);
+        return (char *)_strerror(errnum);
 }
 
 #ifdef __cplusplus

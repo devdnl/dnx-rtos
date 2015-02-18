@@ -26,8 +26,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _LLIST_H_
-#define _LLIST_H_
+#ifndef _APP_LLIST_H_
+#define _APP_LLIST_H_
 
 /*==============================================================================
   Include files
@@ -54,10 +54,6 @@ static inline "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef _llist_t             llist_t;
-typedef _llist_cmp_functor_t llist_cmp_functor_t;
-typedef _llist_obj_dtor_t    llist_obj_dtor_t;
-typedef _llist_iterator_t    llist_iterator_t;
 
 /*==============================================================================
   Exported functions
@@ -521,15 +517,11 @@ static inline int llist_functor_cmp_strings(const void *a, const void *b)
         return _llist_functor_cmp_strings(a, b);
 }
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _LLIST_H_ */
+#endif /* _APP_LLIST_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

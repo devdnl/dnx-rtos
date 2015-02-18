@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/misc.h>
-#include <dnx/thread.h>
 #include "stm32f1/irq_cfg.h"
 #include "stm32f1/irq_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -139,13 +137,13 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                 if (default_config[i].mode != _IRQ_MODE_DISABLED) {
                                         set_EXTI_IRQ_priority(i, default_config[i].priority);
 
-                                        hdl->irqsem[i] = semaphore_new(1, 0);
+                                        hdl->irqsem[i] = _sys_semaphore_new(1, 0);
                                         if (hdl->irqsem[i] == NULL) {
                                                 for (int s = 0; s < NUMBER_OF_IRQs; s++) {
                                                         disable_EXTI_IRQ(s);
 
                                                         if (hdl->irqsem[s]) {
-                                                                semaphore_delete(hdl->irqsem[s]);
+                                                                _sys_semaphore_delete(hdl->irqsem[s]);
                                                                 hdl->irqsem[s] = NULL;
                                                         }
                                                 }
@@ -181,13 +179,13 @@ API_MOD_RELEASE(IRQ, void *device_handle)
 {
         IRQ_t *hdl = device_handle;
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
                 disable_EXTI_IRQ(i);
 
                 if (hdl->irqsem[i]) {
-                        semaphore_delete(hdl->irqsem[i]);
+                        _sys_semaphore_delete(hdl->irqsem[i]);
                         hdl->irqsem[i] = NULL;
                 }
         }
@@ -195,7 +193,7 @@ API_MOD_RELEASE(IRQ, void *device_handle)
         free(hdl);
         IRQ = NULL;
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return STD_RET_OK;
 }
@@ -314,7 +312,7 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         const IRQ_catch_t *irqn = arg;
                         if (irqn->irq_number < NUMBER_OF_IRQs) {
                                 if (hdl->irqsem[irqn->irq_number]) {
-                                        return semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
+                                        return _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
                                 }
                         }
 
@@ -338,12 +336,12 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                                         disable_EXTI_IRQ(cfg->irq_number);
 
                                         if (hdl->irqsem[cfg->irq_number]) {
-                                                semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                                _sys_semaphore_delete(hdl->irqsem[cfg->irq_number]);
                                                 hdl->irqsem[cfg->irq_number] = NULL;
                                         }
                                 } else {
                                         if (hdl->irqsem[cfg->irq_number] == NULL) {
-                                                hdl->irqsem[cfg->irq_number] = semaphore_new(1, 0);
+                                                hdl->irqsem[cfg->irq_number] = _sys_semaphore_new(1, 0);
                                                 if (hdl->irqsem[cfg->irq_number] == NULL)
                                                         break;
                                         }
@@ -594,7 +592,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
         }
 
         bool woken = false;
-        semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
+        _sys_semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
 
         return woken;
 }
@@ -607,7 +605,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
 void EXTI0_IRQHandler(void)
 {
         if (IRQ_handler(0)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -619,7 +617,7 @@ void EXTI0_IRQHandler(void)
 void EXTI1_IRQHandler(void)
 {
         if (IRQ_handler(1)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -631,7 +629,7 @@ void EXTI1_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
         if (IRQ_handler(2)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -643,7 +641,7 @@ void EXTI2_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
         if (IRQ_handler(3)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -655,7 +653,7 @@ void EXTI3_IRQHandler(void)
 void EXTI4_IRQHandler(void)
 {
         if (IRQ_handler(4)) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -673,7 +671,7 @@ void EXTI9_5_IRQHandler(void)
         }
 
         if (woken) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 
@@ -691,7 +689,7 @@ void EXTI15_10_IRQHandler(void)
         }
 
         if (woken) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 

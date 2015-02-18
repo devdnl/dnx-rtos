@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
 #include "stm32f1/wdg_cfg.h"
 #include "stm32f1/wdg_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -138,7 +136,7 @@ API_MOD_OPEN(WDG, void *device_handle, vfs_open_flags_t flags)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+                return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
         } else {
                 return STD_RET_OK;
         }
@@ -160,8 +158,8 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                if (device_is_access_granted(&hdl->file_lock) || force) {
-                        device_unlock(&hdl->file_lock, force);
+                if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
+                        _sys_device_unlock(&hdl->file_lock, force);
                         return STD_RET_OK;
                 } else {
                         errno = EBUSY;
@@ -240,7 +238,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 
         WDG_t *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (_sys_device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
                 case IOCTL_WDG__RESET:
                         reset_wdg();

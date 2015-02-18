@@ -122,7 +122,7 @@ static bool is_queue_valid(queue_t *queue)
 //==============================================================================
 task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv)
 {
-        struct _task_data *data = sysm_kcalloc(1, sizeof(struct _task_data));
+        struct _task_data *data = _sysm_kcalloc(1, sizeof(struct _task_data));
         if (!data) {
                 return NULL;
         }
@@ -146,16 +146,16 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
                 taskEXIT_CRITICAL();
                 vTaskSetApplicationTaskTag(task, (void *)data);
 
-                if (sysm_start_task_monitoring(task, sizeof(StackType_t) * stack_depth) == STD_RET_OK) {
+                if (_sysm_start_task_monitoring(task, sizeof(StackType_t) * stack_depth) == STD_RET_OK) {
                         vTaskResume(task);
                 } else {
                         vTaskDelete(task);
-                        sysm_kfree(data);
+                        _sysm_kfree(data);
                         task = NULL;
                 }
         } else {
                 taskEXIT_CRITICAL();
-                sysm_kfree(data);
+                _sysm_kfree(data);
                 task = NULL;
         }
 
@@ -173,15 +173,15 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
 //==============================================================================
 void _task_delete(task_t *taskHdl)
 {
-        if (sysm_is_task_exist(taskHdl)) {
-                sysm_stop_task_monitoring(taskHdl);
+        if (_sysm_is_task_exist(taskHdl)) {
+                _sysm_stop_task_monitoring(taskHdl);
 
                 taskENTER_CRITICAL();
                 struct _task_data *data;
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
                         vTaskSetApplicationTaskTag(taskHdl, NULL);
-                        sysm_kfree(data);
+                        _sysm_kfree(data);
                 }
 
                 vTaskDelete(taskHdl);
@@ -339,7 +339,7 @@ _task_data_t *_task_get_data(void)
 sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 {
         if (cnt_max > 0) {
-                sem_t *sem = sysm_kcalloc(1, sizeof(struct sem));
+                sem_t *sem = _sysm_kcalloc(1, sizeof(struct sem));
                 if (sem) {
                         if (cnt_max == 1) {
                                 vSemaphoreCreateBinary(sem->object);
@@ -357,7 +357,7 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
                         if (sem->object) {
                                 sem->this = sem;
                         } else {
-                                sysm_kfree(sem);
+                                _sysm_kfree(sem);
                                 sem = NULL;
                         }
                 }
@@ -381,7 +381,7 @@ void _semaphore_delete(sem_t *sem)
                 vSemaphoreDelete(sem->object);
                 sem->object = NULL;
                 sem->this   = NULL;
-                sysm_kfree(sem);
+                _sysm_kfree(sem);
         }
 }
 
@@ -396,7 +396,7 @@ void _semaphore_delete(sem_t *sem)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
+bool _semaphore_wait(sem_t *sem, const uint blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
                 return xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
@@ -415,7 +415,7 @@ bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
  * @retval false        semaphore not given
  */
 //==============================================================================
-bool _semaphore_give(sem_t *sem)
+bool _semaphore_signal(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 return xSemaphoreGive(sem->object);
@@ -435,7 +435,7 @@ bool _semaphore_give(sem_t *sem)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
+bool _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 signed portBASE_TYPE woken = 0;
@@ -461,7 +461,7 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
  * @retval false        semaphore not taken
  */
 //==============================================================================
-bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
+bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 signed portBASE_TYPE woken = 0;
@@ -487,7 +487,7 @@ bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 mutex_t *_mutex_new(enum mutex_type type)
 {
-        mutex_t *mtx = sysm_kcalloc(1, sizeof(struct mutex));
+        mutex_t *mtx = _sysm_kcalloc(1, sizeof(struct mutex));
         if (mtx) {
                 if (type == MUTEX_RECURSIVE) {
                         mtx->object    = xSemaphoreCreateRecursiveMutex();
@@ -500,7 +500,7 @@ mutex_t *_mutex_new(enum mutex_type type)
                 if (mtx->object) {
                         mtx->this = mtx;
                 } else {
-                        sysm_kfree(mtx);
+                        _sysm_kfree(mtx);
                         mtx = NULL;
                 }
         }
@@ -521,7 +521,7 @@ void _mutex_delete(mutex_t *mutex)
                 vSemaphoreDelete(mutex->object);
                 mutex->object = NULL;
                 mutex->this   = NULL;
-                sysm_kfree(mutex);
+                _sysm_kfree(mutex);
         }
 }
 
@@ -606,13 +606,13 @@ bool _mutex_unlock(mutex_t *mutex)
 //==============================================================================
 queue_t *_queue_new(const uint length, const uint item_size)
 {
-        queue_t *queue = sysm_kcalloc(1, sizeof(struct queue));
+        queue_t *queue = _sysm_kcalloc(1, sizeof(struct queue));
         if (queue) {
                 queue->object = xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
                 if (queue->object) {
                         queue->this = queue;
                 } else {
-                        sysm_kfree(queue);
+                        _sysm_kfree(queue);
                         queue = NULL;
                 }
         }
@@ -633,7 +633,7 @@ void _queue_delete(queue_t *queue)
                 vQueueDelete(queue->object);
                 queue->object = NULL;
                 queue->this   = NULL;
-                sysm_kfree(queue);
+                _sysm_kfree(queue);
         }
 }
 

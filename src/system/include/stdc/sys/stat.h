@@ -82,7 +82,7 @@ extern "C" {
 //==============================================================================
 static inline int mknod(const char *pathname, dev_t dev)
 {
-        return vfs_mknod(pathname, dev);
+        return _vfs_mknod(pathname, dev);
 }
 
 //==============================================================================
@@ -109,7 +109,7 @@ static inline int mknod(const char *pathname, dev_t dev)
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-        return vfs_mkdir(pathname, mode);
+        return _vfs_mkdir(pathname, mode);
 }
 
 //==============================================================================
@@ -139,7 +139,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
-        return vfs_mkfifo(pathname, mode);
+        return _vfs_mkfifo(pathname, mode);
 }
 
 //==============================================================================
@@ -165,7 +165,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
-        return vfs_chmod(pathname, mode);
+        return _vfs_chmod(pathname, mode);
 }
 
 //==============================================================================
@@ -213,7 +213,7 @@ static inline int chmod(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
-        return vfs_stat(pathname, buf);
+        return _vfs_stat(pathname, buf);
 }
 
 //==============================================================================
@@ -253,7 +253,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 static inline int fstat(FILE *file, struct stat *stat)
 {
-        return vfs_fstat(file, stat);
+        return _vfs_fstat(file, stat);
 }
 
 #ifdef __cplusplus

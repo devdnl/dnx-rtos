@@ -121,7 +121,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
 
-                struct sysmoni_used_memory mem;
+                memstat_t mem;
                 get_detailed_memory_usage(&mem);
 
                 int mem_total = get_memory_size();

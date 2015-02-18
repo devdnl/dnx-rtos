@@ -33,7 +33,6 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "portable/cpuctl.h"
-#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -106,7 +105,7 @@ void vApplicationTickHook(void)
 void vApplicationSwitchedIn(void)
 {
         _copy_task_context_to_standard_variables();
-        sysm_task_switched_in();
+        _sysm_task_switched_in();
 }
 
 //==============================================================================
@@ -117,7 +116,7 @@ void vApplicationSwitchedIn(void)
 void vApplicationSwitchedOut(void)
 {
         _copy_standard_variables_to_task_context();
-        sysm_task_switched_out();
+        _sysm_task_switched_out();
 }
 
 //==============================================================================

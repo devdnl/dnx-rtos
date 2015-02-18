@@ -289,18 +289,18 @@ static int dtoa(double value, char* str, int prec, int n)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void printk_enable(char *filename)
+void _printk_enable(char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
         if (sys_printk_file) {
-                vfs_fclose(sys_printk_file);
+                _vfs_fclose(sys_printk_file);
                 sys_printk_file = NULL;
         }
 
         /* open new file */
         if (sys_printk_file == NULL) {
-                sys_printk_file = vfs_fopen(filename, "w");
+                sys_printk_file = _vfs_fopen(filename, "w");
         }
 #else
         UNUSED_ARG(filename);
@@ -312,11 +312,11 @@ void printk_enable(char *filename)
  * @brief Disable printk functionality
  */
 //==============================================================================
-void printk_disable(void)
+void _printk_disable(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (sys_printk_file) {
-                vfs_fclose(sys_printk_file);
+                _vfs_fclose(sys_printk_file);
                 sys_printk_file = NULL;
         }
 #endif
@@ -330,29 +330,29 @@ void printk_disable(void)
  * @param ...                 format arguments
  */
 //==============================================================================
-void printk(const char *format, ...)
+void _printk(const char *format, ...)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         va_list args;
 
         if (sys_printk_file) {
                 va_start(args, format);
-                int size = sys_vsnprintf(NULL, 0, format, args) + 1;
+                int size = _vsnprintf(NULL, 0, format, args) + 1;
                 va_end(args);
 
-                char *buffer = sysm_syscalloc(size, sizeof(char));
+                char *buffer = _sysm_syscalloc(size, sizeof(char));
                 if (buffer) {
                         va_start(args, format);
-                        int n = sys_vsnprintf(buffer, size, format, args);
+                        int n = _vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
+                        _vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
 
                         if (LAST_CHARACTER(buffer) != '\n') {
-                                vfs_fflush(sys_printk_file);
+                                _vfs_fflush(sys_printk_file);
                         }
 
-                        sysm_sysfree(buffer);
+                        _sysm_sysfree(buffer);
                 }
         }
 #else
@@ -370,12 +370,12 @@ void printk(const char *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int sys_fputc(int c, FILE *stream)
+int _fputc(int c, FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (stream) {
                 char ch = (char)c;
-                if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
+                if (_vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
         }
@@ -397,14 +397,14 @@ int sys_fputc(int c, FILE *stream)
  * @return number of characters written to the stream
  */
 //==============================================================================
-int sys_f_puts(const char *s, FILE *file, bool puts)
+int _f_puts(const char *s, FILE *file, bool puts)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (file) {
-                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
+                int n = _vfs_fwrite(s, sizeof(char), strlen(s), file);
 
                 if (puts) {
-                        n += vfs_fwrite("\n", sizeof(char), 1, file);
+                        n += _vfs_fwrite("\n", sizeof(char), 1, file);
                 }
 
                 if (n != 0)
@@ -427,7 +427,7 @@ int sys_f_puts(const char *s, FILE *file, bool puts)
  * @retval character
  */
 //==============================================================================
-int sys_getc(FILE *stream)
+int _getc(FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (!stream) {
@@ -435,8 +435,8 @@ int sys_getc(FILE *stream)
         }
 
         int chr = 0;
-        if (vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
-                if (vfs_ferror(stream) || vfs_feof(stream)) {
+        if (_vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
+                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                         return EOF;
                 }
         } else {
@@ -461,7 +461,7 @@ int sys_getc(FILE *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-char *sys_fgets(char *str, int size, FILE *stream)
+char *_fgets(char *str, int size, FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (!str || size < 2 || !stream) {
@@ -469,11 +469,11 @@ char *sys_fgets(char *str, int size, FILE *stream)
         }
 
         struct stat file_stat;
-        if (vfs_fstat(stream, &file_stat) == 0) {
+        if (_vfs_fstat(stream, &file_stat) == 0) {
                 if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
                         int n = 0;
                         for (int i = 0; i < size - 1; i++) {
-                                int m = vfs_fread(str + i, sizeof(char), 1, stream);
+                                int m = _vfs_fread(str + i, sizeof(char), 1, stream);
                                 if (m == 0) {
                                         str[i] = '\0';
                                         return str;
@@ -481,7 +481,7 @@ char *sys_fgets(char *str, int size, FILE *stream)
                                         n += m;
                                 }
 
-                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                                         if (n == 0) {
                                                 return NULL;
                                         } else {
@@ -498,11 +498,11 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                         return str;
                 } else {
-                        u64_t fpos = vfs_ftell(stream);
+                        u64_t fpos = _vfs_ftell(stream);
 
                         int n;
-                        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
-                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                        while ((n = _vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                                         return NULL;
                                 }
                         }
@@ -517,13 +517,13 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                         int len = strlen(str);
 
-                        if (len != 0 && len < n && vfs_feof(stream))
-                                vfs_clearerr(stream);
+                        if (len != 0 && len < n && _vfs_feof(stream))
+                                _vfs_clearerr(stream);
 
                         if (len == 0)
                                 len = 1;
 
-                        vfs_fseek(stream, fpos + len, SEEK_SET);
+                        _vfs_fseek(stream, fpos + len, SEEK_SET);
 
                         return str;
                 }
@@ -548,7 +548,7 @@ char *sys_fgets(char *str, int size, FILE *stream)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_snprintf(char *bfr, size_t size, const char *format, ...)
+int _snprintf(char *bfr, size_t size, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
@@ -556,7 +556,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
         if (bfr && size && format) {
                 va_start(args, format);
-                n = sys_vsnprintf(bfr, size, format, args);
+                n = _vsnprintf(bfr, size, format, args);
                 va_end(args);
         }
 
@@ -580,7 +580,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_fprintf(FILE *file, const char *format, ...)
+int _fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         int n = 0;
@@ -588,7 +588,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
         if (file && format) {
                 va_list args;
                 va_start(args, format);
-                n = sys_vfprintf(file, format, args);
+                n = _vfprintf(file, format, args);
                 va_end(args);
         }
 
@@ -611,7 +611,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_vfprintf(FILE *file, const char *format, va_list arg)
+int _vfprintf(FILE *file, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         int n = 0;
@@ -619,13 +619,13 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
         if (file && format) {
                 va_list carg;
                 va_copy(carg, arg);
-                u32_t size = sys_vsnprintf(NULL, 0, format, carg) + 1;
+                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
 
-                char *str = sysm_syscalloc(1, size);
+                char *str = _sysm_syscalloc(1, size);
                 if (str) {
-                        n = sys_vsnprintf(str, size, format, arg);
-                        vfs_fwrite(str, sizeof(char), n, file);
-                        sysm_sysfree(str);
+                        n = _vsnprintf(str, size, format, arg);
+                        _vfs_fwrite(str, sizeof(char), n, file);
+                        _sysm_sysfree(str);
                 }
         }
 
@@ -647,7 +647,7 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
  * @return error number string
  */
 //==============================================================================
-const char *sys_strerror(int errnum)
+const char *_strerror(int errnum)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         static const char *errstr[] = {
@@ -789,13 +789,13 @@ const char *sys_strerror(int errnum)
  * @param str           string to print or NULL
  */
 //==============================================================================
-void sys_perror(const char *str)
+void _perror(const char *str)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (str) {
-                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(errno));
+                _fprintf(stderr, "%s: %s\n", str, _strerror(errno));
         } else {
-                sys_fprintf(stderr, "%s\n", sys_strerror(errno));
+                _fprintf(stderr, "%s\n", _strerror(errno));
         }
 #else
         (void) str;
@@ -854,7 +854,7 @@ void sys_perror(const char *str)
  *                printf("Pointer: %p", main); => Pointer: 0x4028B4
  */
 //==============================================================================
-int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
+int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         char   chr;

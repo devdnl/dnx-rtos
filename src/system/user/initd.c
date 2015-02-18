@@ -77,19 +77,19 @@ static int run_level_exit(void);
 //==============================================================================
 static void msg_mount(const char *filesystem, const char *src_file, const char *mount_point)
 {
-        printk("Mounting ");
+        _printk("Mounting ");
         if (src_file != NULL && strlen(src_file) > 0) {
-                printk("%s ", src_file);
+                _printk("%s ", src_file);
         } else {
-                printk("%s ", filesystem);
+                _printk("%s ", filesystem);
         }
-        printk("to %s... ", mount_point);
+        _printk("to %s... ", mount_point);
 
         errno = 0;
         if (mount(filesystem, src_file, mount_point) == STD_RET_OK) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
+                _printk(FONT_COLOR_RED" fail (%d)"RESET_ATTRIBUTES"\n", errno);
         }
 }
 
@@ -102,22 +102,22 @@ static void msg_mount(const char *filesystem, const char *src_file, const char *
 //==============================================================================
 static void init_storage(const char *storage)
 {
-        printk("Initializing %s... ", storage);
+        _printk("Initializing %s... ", storage);
         FILE *st = fopen(storage, "r+");
         if (st) {
                 if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
                         switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
-                                case 1 : printk("OK\n"); break;
-                                case 0 : printk("OK (no MBR)\n"); break;
-                                default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
+                                case 1 : _printk("OK\n"); break;
+                                case 0 : _printk("OK (no MBR)\n"); break;
+                                default: _printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
                         }
                 } else {
-                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                        _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
 
                 fclose(st);
         } else {
-                printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"no such file"RESET_ATTRIBUTES"\n");
         }
 }
 
@@ -131,11 +131,11 @@ static void init_storage(const char *storage)
 //==============================================================================
 static void start_daemon(const char *name, const char *cwd)
 {
-        printk("Starting '%s' daemon... ", name);
+        _printk("Starting '%s' daemon... ", name);
         if (program_new(name, cwd, NULL, NULL, NULL)) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
         }
 }
 
@@ -208,7 +208,7 @@ static int run_level_0(void)
         driver_init("uart1", "/dev/ttyS0");
         driver_init("tty0", "/dev/tty0");
         printk_enable("/dev/tty0");
-        _sysm_kernel_panic_detect(true);
+        detect_kernel_panic(true);
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_GRAY "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());

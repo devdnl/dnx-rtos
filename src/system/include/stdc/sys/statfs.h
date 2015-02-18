@@ -97,7 +97,7 @@ extern "C" {
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)
 {
-        return vfs_statfs(path, statfs);
+        return _vfs_statfs(path, statfs);
 }
 
 #ifdef __cplusplus

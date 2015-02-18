@@ -50,6 +50,11 @@ extern "C" {
 /** arguments */
 #define INITD_ARGS                      NULL
 
+#define printk                          _printk
+#define printk_enable                   _printk_enable
+#define printk_disable                  _printk_disable
+#define detect_kernel_panic             _sysm_kernel_panic_detect
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

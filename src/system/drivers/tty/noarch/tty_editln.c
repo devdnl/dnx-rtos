@@ -28,7 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
 
@@ -204,10 +203,10 @@ void ttyedit_set_value(ttyedit_t *this, const char *str, bool show)
                         this->cursor_position = this->length;
 
                         if (show) {
-                                vfs_fwrite(str, sizeof(char), strlen(str), this->out_file);
+                                _sys_fwrite(str, sizeof(char), strlen(str), this->out_file);
 
                                 static const char *erase_line_end = ERASE_LINE_END;
-                                vfs_fwrite(erase_line_end, sizeof(char), strlen(erase_line_end), this->out_file);
+                                _sys_fwrite(erase_line_end, sizeof(char), strlen(erase_line_end), this->out_file);
                         }
                 }
         }
@@ -254,20 +253,20 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
 
                         if (this->echo_enabled) {
                                 const char *cmd = VT100_SAVE_CURSOR_POSITION;
-                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
                                 cmd = &this->buffer[this->cursor_position - 1];
-                                vfs_fwrite(cmd, sizeof(char), this->length - (this->cursor_position - 1), this->out_file);
+                                _sys_fwrite(cmd, sizeof(char), this->length - (this->cursor_position - 1), this->out_file);
 
                                 cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
-                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
                         }
                 } else {
                         this->buffer[this->cursor_position++] = c;
                         this->length++;
 
                         if (this->echo_enabled) {
-                                vfs_fwrite(&c, sizeof(char), 1, this->out_file);
+                                _sys_fwrite(&c, sizeof(char), 1, this->out_file);
                         }
                 }
         }
@@ -296,13 +295,13 @@ void ttyedit_remove_char(ttyedit_t *this)
                 this->length--;
 
                 const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
                 cmd = &this->buffer[this->cursor_position];
-                vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+                _sys_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
 
                 cmd = VT100_RESTORE_CURSOR_POSITION;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -327,13 +326,13 @@ void ttyedit_delete_char(ttyedit_t *this)
                 this->length--;
 
                 const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
                 cmd = &this->buffer[this->cursor_position];
-                vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+                _sys_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
 
                 cmd = VT100_RESTORE_CURSOR_POSITION;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -348,7 +347,7 @@ void ttyedit_move_cursor_left(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 if (this->cursor_position > 0) {
-                        vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                        _sys_fwrite("\b", sizeof(char), 1, this->out_file);
                         this->cursor_position--;
                 }
         }
@@ -366,7 +365,7 @@ void ttyedit_move_cursor_right(ttyedit_t *this)
         if (is_valid(this)) {
                 if (this->cursor_position < this->length) {
                         const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                        _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
                         this->cursor_position++;
                 }
         }
@@ -383,15 +382,15 @@ void ttyedit_move_cursor_home(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 const char *cmd = VT100_CURSOR_OFF;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
                 while (this->cursor_position > 0) {
-                        vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                        _sys_fwrite("\b", sizeof(char), 1, this->out_file);
                         this->cursor_position--;
                 }
 
                 cmd = VT100_CURSOR_ON;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 
@@ -406,16 +405,16 @@ void ttyedit_move_cursor_end(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 const char *cmd = VT100_CURSOR_OFF;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
                 while (this->cursor_position < this->length) {
                         char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                        _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
                         this->cursor_position++;
                 }
 
                 cmd = VT100_CURSOR_ON;
-                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                _sys_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
         }
 }
 

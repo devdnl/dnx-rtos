@@ -27,9 +27,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/misc.h>
-#include <dnx/thread.h>
-#include <unistd.h>
 #include "core/module.h"
 #include "stm32f1/stm32f10x.h"
 #include "usbd_cfg.h"
@@ -113,10 +110,10 @@ typedef struct {
         sem_t                  *tx;                     /* interrupt/setup transfer completed semaphore */
         sem_t                  *rx;                     /* interrupt/setup transfer completed semaphore */
         sem_t                  *setup;                  /* setup transfer completed semaphore */
+        dev_lock_t              dev_lock;               /* device lock object */
         volatile bool           setup_in_progress :1;   /* flag that indicate setup in progress */
         volatile bool           read_in_progress  :1;   /* flag that indicate read in progress */
         volatile bool           write_in_progress :1;   /* flag that indicate write in progress */
-        dev_lock_t              dev_lock;               /* device lock object */
         u8_t                    minor;                  /* endpoint number */
 } USB_ep_t;
 
@@ -243,15 +240,15 @@ API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor)
 
                 /* allocate Endpoint memory */
                 if (usb_mem != NULL) {
-                        sem_t    *setup_sem = (minor == USB_EP_NUM__ENDP0 ? semaphore_new(1, 0) : NULL);
-                        sem_t    *rx_sem    = semaphore_new(1, 0);
-                        sem_t    *tx_sem    = semaphore_new(1, 0);
+                        sem_t    *setup_sem = (minor == USB_EP_NUM__ENDP0 ? _sys_semaphore_new(1, 0) : NULL);
+                        sem_t    *rx_sem    = _sys_semaphore_new(1, 0);
+                        sem_t    *tx_sem    = _sys_semaphore_new(1, 0);
                         USB_ep_t *ep_hdl    = calloc(1, sizeof(USB_ep_t));
 
                         if (ep_hdl && tx_sem && rx_sem && (setup_sem || minor != USB_EP_NUM__ENDP0)) {
 
                                 if (minor == USB_EP_NUM__ENDP0) {
-                                        semaphore_wait(setup_sem, 0);
+                                        _sys_semaphore_wait(setup_sem, 0);
                                 }
 
                                 ep_hdl->minor        = minor;
@@ -264,15 +261,15 @@ API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor)
                                 return STD_RET_OK;
                         } else {
                                 if (rx_sem) {
-                                        semaphore_delete(rx_sem);
+                                        _sys_semaphore_delete(rx_sem);
                                 }
 
                                 if (tx_sem) {
-                                        semaphore_delete(tx_sem);
+                                        _sys_semaphore_delete(tx_sem);
                                 }
 
                                 if (setup_sem) {
-                                        semaphore_delete(setup_sem);
+                                        _sys_semaphore_delete(setup_sem);
                                 }
 
                                 if (ep_hdl) {
@@ -302,14 +299,14 @@ API_MOD_RELEASE(USBD, void *device_handle)
 
                 disable_endpoint(ep_hdl->minor);
 
-                semaphore_delete(ep_hdl->rx);
+                _sys_semaphore_delete(ep_hdl->rx);
                 ep_hdl->rx = NULL;
 
-                semaphore_delete(ep_hdl->tx);
+                _sys_semaphore_delete(ep_hdl->tx);
                 ep_hdl->tx = NULL;
 
                 if (ep_hdl->setup) {
-                        semaphore_delete(ep_hdl->setup);
+                        _sys_semaphore_delete(ep_hdl->setup);
                         ep_hdl->setup = NULL;
                 }
 
@@ -360,7 +357,7 @@ API_MOD_OPEN(USBD, void *device_handle, vfs_open_flags_t flags)
 
         USB_ep_t *hdl = device_handle;
 
-        return device_lock(&hdl->dev_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->dev_lock) ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -378,8 +375,8 @@ API_MOD_CLOSE(USBD, void *device_handle, bool force)
 {
         USB_ep_t *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->dev_lock) || force) {
-                device_unlock(&hdl->dev_lock, force);
+        if (_sys_device_is_access_granted(&hdl->dev_lock) || force) {
+                _sys_device_unlock(&hdl->dev_lock, force);
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -409,7 +406,7 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->dev_lock) && usb_mem->activated) {
+        if (_sys_device_is_access_granted(&hdl->dev_lock) && usb_mem->activated) {
                 bool   IN_enabled = false;
                 size_t ep_size    = 0;
 
@@ -435,8 +432,8 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
                                         len = (count > ep_size) ? ep_size : count;
 
                                         /* check if send or status stage are skipped by SETUP packet*/
-                                        if (semaphore_wait(hdl->setup, 0) == true) {
-                                                semaphore_signal(hdl->setup);
+                                        if (_sys_semaphore_wait(hdl->setup, 0) == true) {
+                                                _sys_semaphore_signal(hdl->setup);
                                                 goto write_end;
                                         }
 
@@ -447,7 +444,7 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
                                         set_ep_rx_status(hdl->minor, USB_EP_STATUS__VALID);
 
                                         /* wait for data sent */
-                                        if (semaphore_wait(hdl->tx, ep0_data_stage_transmit_timeout_ms) != true) {
+                                        if (_sys_semaphore_wait(hdl->tx, ep0_data_stage_transmit_timeout_ms) != true) {
                                                 set_ep_tx_status(hdl->minor, USB_EP_STATUS__STALL);
                                                 set_ep_rx_status(hdl->minor, USB_EP_STATUS__VALID);
                                                 goto write_end;
@@ -462,11 +459,11 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
                                         count -= len;
 
                                         /* check Status Stage */
-                                        if (semaphore_wait(hdl->rx, ep0_status_stage_timeout_ms) == true) {
+                                        if (_sys_semaphore_wait(hdl->rx, ep0_status_stage_timeout_ms) == true) {
                                                 goto write_end;
                                         } else {
-                                                if (semaphore_wait(hdl->setup, 0) == true) {
-                                                        semaphore_signal(hdl->setup);
+                                                if (_sys_semaphore_wait(hdl->setup, 0) == true) {
+                                                        _sys_semaphore_signal(hdl->setup);
                                                         goto write_end;
                                                 }
                                         }
@@ -484,7 +481,7 @@ API_MOD_WRITE(USBD, void *device_handle, const u8_t *src, size_t count, fpos_t *
                                         USB_PMA->EP[hdl->minor].SBF.COUNT_TX = len;
                                         set_ep_tx_status(hdl->minor, USB_EP_STATUS__VALID);
 
-                                        if (semaphore_wait(hdl->tx, MAX_DELAY_MS) != true) {
+                                        if (_sys_semaphore_wait(hdl->tx, MAX_DELAY_MS) != true) {
                                                 set_ep_tx_status(hdl->minor, USB_EP_STATUS__NAK);
                                                 break;
                                         } else {
@@ -534,7 +531,7 @@ API_MOD_READ(USBD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->dev_lock) && usb_mem->activated) {
+        if (_sys_device_is_access_granted(&hdl->dev_lock) && usb_mem->activated) {
                 bool   OUT_enabled = false;
                 size_t ep_size     = 0;
 
@@ -559,7 +556,7 @@ API_MOD_READ(USBD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                         set_ep_tx_status(hdl->minor, USB_EP_STATUS__VALID);
                                         set_ep_rx_status(hdl->minor, USB_EP_STATUS__VALID);
 
-                                        if (semaphore_wait(hdl->rx, ep0_data_stage_receive_timeout_ms) != true) {
+                                        if (_sys_semaphore_wait(hdl->rx, ep0_data_stage_receive_timeout_ms) != true) {
                                                 break;
                                         } else {
                                                 if (hdl->read_in_progress == false) {
@@ -581,7 +578,7 @@ API_MOD_READ(USBD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                         n     += len;
 
                                         /* check status stage */
-                                        if (semaphore_wait(hdl->tx, ep0_status_stage_timeout_ms) == true) {
+                                        if (_sys_semaphore_wait(hdl->tx, ep0_status_stage_timeout_ms) == true) {
                                                 break;
                                         }
                                 }
@@ -590,7 +587,7 @@ API_MOD_READ(USBD, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                         /* wait for OUT token */
                                         set_ep_rx_status(hdl->minor, USB_EP_STATUS__VALID);
 
-                                        if (semaphore_wait(hdl->rx, MAX_DELAY_MS) != true) {
+                                        if (_sys_semaphore_wait(hdl->rx, MAX_DELAY_MS) != true) {
                                                 break;
                                         } else {
                                                 if (hdl->read_in_progress == false) {
@@ -654,7 +651,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
                         /* enable USB transceiver */
                         CLEAR_BIT(USB->CNTR, USB_CNTR_PDWN | USB_CNTR_FRES);
-                        sleep_ms(1);
+                        _sys_sleep_ms(1);
 
                         /* clear USB IRQ flags */
                         USB->ISTR = 0;
@@ -667,11 +664,11 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
                         enable_usb_visible_pullup();
 
                         while (usb_mem->reset != true) {
-                                sleep_ms(5);
+                                _sys_sleep_ms(5);
                         }
 
-                        if (semaphore_wait(usb_mem->ep[USB_EP_NUM__ENDP0]->setup, 1000) == true) {
-                                semaphore_signal(usb_mem->ep[USB_EP_NUM__ENDP0]->setup);
+                        if (_sys_semaphore_wait(usb_mem->ep[USB_EP_NUM__ENDP0]->setup, 1000) == true) {
+                                _sys_semaphore_signal(usb_mem->ep[USB_EP_NUM__ENDP0]->setup);
                         }
 
                         usb_mem->reset = false;
@@ -696,15 +693,15 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
                         for (usb_ep_num_t ep = USB_EP_NUM__ENDP0; ep < NUMBER_OF_ENDPOINTS; ep++) {
                                 if (usb_mem->ep[ep]) {
                                         if (usb_mem->ep[ep]->rx) {
-                                                semaphore_wait(usb_mem->ep[ep]->rx, 0);
+                                                _sys_semaphore_wait(usb_mem->ep[ep]->rx, 0);
                                         }
 
                                         if (usb_mem->ep[ep]->tx) {
-                                                semaphore_wait(usb_mem->ep[ep]->tx, 0);
+                                                _sys_semaphore_wait(usb_mem->ep[ep]->tx, 0);
                                         }
 
                                         if (usb_mem->ep[ep]->setup) {
-                                                semaphore_wait(usb_mem->ep[ep]->setup, 0);
+                                                _sys_semaphore_wait(usb_mem->ep[ep]->setup, 0);
                                         }
 
                                         usb_mem->ep[ep]->read_in_progress  = false;
@@ -793,10 +790,10 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
         case IOCTL_USBD__WAS_RESET:
                 if (usb_mem->activated) {
-                        critical_section_begin();
+                        _sys_critical_section_begin();
                         bool reset     = usb_mem->reset;
                         usb_mem->reset = false;
-                        critical_section_end();
+                        _sys_critical_section_end();
                         return reset;
                 } else {
                         errno = ECANCELED;
@@ -822,7 +819,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
                         set_setup_in_progress(hdl->minor, true);
 
                         usbd_setup_container_t *setup = arg;
-                        if (semaphore_wait(hdl->setup, setup->timeout) == true) {
+                        if (_sys_semaphore_wait(hdl->setup, setup->timeout) == true) {
 
                                 if (hdl->setup_in_progress == true) {
                                         set_setup_in_progress(hdl->minor, false);
@@ -846,10 +843,10 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
         case IOCTL_USBD__GET_ERROR_COUNTER:
                 if (arg) {
-                        critical_section_begin();
+                        _sys_critical_section_begin();
                         *reinterpret_cast(int*, arg) = usb_mem->error_cnt;
                         usb_mem->error_cnt = 0;
-                        critical_section_end();
+                        _sys_critical_section_end();
                         return STD_RET_OK;
                 } else {
                         errno = EINVAL;
@@ -943,10 +940,10 @@ static inline void disable_usb_visible_pullup()
 //==============================================================================
 static void set_ep_tx_status(usb_ep_num_t ep, usb_ep_status_t status)
 {
-        critical_section_begin();
+        _sys_critical_section_begin();
         USB->EPxR[ep] = ((USB->EPxR[ep] & (USB_EPR_EP_TYPE | USB_EPR_EP_KIND | USB_EPR_EA | USB_EPR_STAT_TX))
                          | USB_EPR_CTR_RX | USB_EPR_CTR_TX) ^ ep_tx_status_reg[status];
-        critical_section_end();
+        _sys_critical_section_end();
 }
 
 //==============================================================================
@@ -959,10 +956,10 @@ static void set_ep_tx_status(usb_ep_num_t ep, usb_ep_status_t status)
 //==============================================================================
 static void set_ep_rx_status(usb_ep_num_t ep, usb_ep_status_t status)
 {
-        critical_section_begin();
+        _sys_critical_section_begin();
         USB->EPxR[ep] = ((USB->EPxR[ep] & (USB_EPR_EP_TYPE | USB_EPR_EP_KIND | USB_EPR_EA | USB_EPR_STAT_RX))
                          | USB_EPR_CTR_RX | USB_EPR_CTR_TX) ^ ep_rx_status_reg[status];
-        critical_section_end();
+        _sys_critical_section_end();
 }
 
 //==============================================================================
@@ -1047,7 +1044,7 @@ static bool configure_endpoints_1_7()
         bool status          = true;
         u8_t buf_start_index = BTABLE_SIZE + (2 * _USBD_ENDPOINT0_SIZE);
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         for (usb_ep_num_t ep = USB_EP_NUM__ENDP1; ep < NUMBER_OF_ENDPOINTS; ep++) {
                 if (usb_mem->ep[ep]) {
@@ -1103,7 +1100,7 @@ static bool configure_endpoints_1_7()
                 }
         }
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return status;
 }
@@ -1196,21 +1193,21 @@ static bool send_ZLP(usb_ep_num_t ep)
         bool result = false;
 
         if (ep == USB_EP_NUM__ENDP0) {
-                if (semaphore_wait(usb_mem->ep[ep]->setup, 0) == true) {
-                        semaphore_signal(usb_mem->ep[ep]->setup);
+                if (_sys_semaphore_wait(usb_mem->ep[ep]->setup, 0) == true) {
+                        _sys_semaphore_signal(usb_mem->ep[ep]->setup);
 
                 } else {
                         USB_PMA->EP[ep].SBF.COUNT_TX = 0;
                         set_ep_rx_status(ep, USB_EP_STATUS__VALID);
                         set_ep_tx_status(ep, USB_EP_STATUS__VALID);
 
-                        result = semaphore_wait(usb_mem->ep[ep]->tx, ep0_data_stage_transmit_timeout_ms);
+                        result = _sys_semaphore_wait(usb_mem->ep[ep]->tx, ep0_data_stage_transmit_timeout_ms);
                         if (result == true) {
 
                                 /* check Status Stage (if exist) */
-                                if (semaphore_wait(usb_mem->ep[ep]->rx, ep0_status_stage_timeout_ms) == false) {
-                                        if (semaphore_wait(usb_mem->ep[ep]->setup, ep0_status_stage_timeout_ms) == true) {
-                                                semaphore_signal(usb_mem->ep[ep]->setup);
+                                if (_sys_semaphore_wait(usb_mem->ep[ep]->rx, ep0_status_stage_timeout_ms) == false) {
+                                        if (_sys_semaphore_wait(usb_mem->ep[ep]->setup, ep0_status_stage_timeout_ms) == true) {
+                                                _sys_semaphore_signal(usb_mem->ep[ep]->setup);
                                         }
                                 }
                         } else {
@@ -1221,7 +1218,7 @@ static bool send_ZLP(usb_ep_num_t ep)
         } else {
                 USB_PMA->EP[ep].SBF.COUNT_TX = 0;
                 set_ep_tx_status(ep, USB_EP_STATUS__VALID);
-                result = semaphore_wait(usb_mem->ep[ep]->tx, ep1_7_data_stage_transmit_timeout_ms);
+                result = _sys_semaphore_wait(usb_mem->ep[ep]->tx, ep1_7_data_stage_transmit_timeout_ms);
         }
 
         return result;
@@ -1276,9 +1273,9 @@ static size_t get_ep_received_size(usb_ep_num_t ep)
 //==============================================================================
 static void set_setup_in_progress(usb_ep_num_t ep, bool state)
 {
-        critical_section_begin();
+        _sys_critical_section_begin();
         usb_mem->ep[ep]->setup_in_progress = state;
-        critical_section_end();
+        _sys_critical_section_end();
 }
 
 //==============================================================================
@@ -1288,9 +1285,9 @@ static void set_setup_in_progress(usb_ep_num_t ep, bool state)
 //==============================================================================
 static void set_write_in_progress(usb_ep_num_t ep, bool state)
 {
-        critical_section_begin();
+        _sys_critical_section_begin();
         usb_mem->ep[ep]->write_in_progress = state;
-        critical_section_end();
+        _sys_critical_section_end();
 }
 
 //==============================================================================
@@ -1300,9 +1297,9 @@ static void set_write_in_progress(usb_ep_num_t ep, bool state)
 //==============================================================================
 static void set_read_in_progress(usb_ep_num_t ep, bool state)
 {
-        critical_section_begin();
+        _sys_critical_section_begin();
         usb_mem->ep[ep]->read_in_progress = state;
-        critical_section_end();
+        _sys_critical_section_end();
 }
 
 //==============================================================================
@@ -1335,19 +1332,19 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
                         clear_EPR_CTR_RX(ep_id);
                         if (ep_id == USB_EP_NUM__ENDP0) {
-                                semaphore_signal_from_ISR(usb_mem->ep[ep_id]->setup, &setup_woken);
+                                _sys_semaphore_signal_from_ISR(usb_mem->ep[ep_id]->setup, &setup_woken);
                         }
 
                 } else if (ep_flags & USB_EPR_CTR_RX) {
 
                         clear_EPR_CTR_RX(ep_id);
-                        semaphore_signal_from_ISR(usb_mem->ep[ep_id]->rx, &rx_woken);
+                        _sys_semaphore_signal_from_ISR(usb_mem->ep[ep_id]->rx, &rx_woken);
                         rx_woken = true;
 
                 } else if (ep_flags & USB_EPR_CTR_TX) {
 
                         clear_EPR_CTR_TX(ep_id);
-                        semaphore_signal_from_ISR(usb_mem->ep[ep_id]->tx, &tx_woken);
+                        _sys_semaphore_signal_from_ISR(usb_mem->ep[ep_id]->tx, &tx_woken);
                         tx_woken = true;
                 }
         }
@@ -1381,24 +1378,24 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
                         if (usb_mem->ep[i]) {
                                 if (usb_mem->ep[i]->write_in_progress) {
                                         usb_mem->ep[i]->write_in_progress = false;
-                                        semaphore_signal_from_ISR(usb_mem->ep[i]->tx, &tx_woken);
+                                        _sys_semaphore_signal_from_ISR(usb_mem->ep[i]->tx, &tx_woken);
                                 } else {
-                                        semaphore_wait_from_ISR(usb_mem->ep[i]->tx, &tx_woken);
+                                        _sys_semaphore_wait_from_ISR(usb_mem->ep[i]->tx, &tx_woken);
                                 }
 
                                 if (usb_mem->ep[i]->read_in_progress) {
                                         usb_mem->ep[i]->read_in_progress = false;
-                                        semaphore_signal_from_ISR(usb_mem->ep[i]->rx, &rx_woken);
+                                        _sys_semaphore_signal_from_ISR(usb_mem->ep[i]->rx, &rx_woken);
                                 } else {
-                                        semaphore_wait_from_ISR(usb_mem->ep[i]->rx, &rx_woken);
+                                        _sys_semaphore_wait_from_ISR(usb_mem->ep[i]->rx, &rx_woken);
                                 }
 
                                 if (usb_mem->ep[i]->setup) {
                                         if (usb_mem->ep[i]->setup_in_progress) {
                                                 usb_mem->ep[i]->setup_in_progress = false;
-                                                semaphore_signal_from_ISR(usb_mem->ep[i]->setup, &setup_woken);
+                                                _sys_semaphore_signal_from_ISR(usb_mem->ep[i]->setup, &setup_woken);
                                         } else {
-                                                semaphore_wait_from_ISR(usb_mem->ep[i]->setup, &setup_woken);
+                                                _sys_semaphore_wait_from_ISR(usb_mem->ep[i]->setup, &setup_woken);
                                         }
                                 }
                         }
@@ -1414,7 +1411,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
         }
 
         if (rx_woken || tx_woken || setup_woken) {
-                task_yield_from_ISR();
+                _sys_task_yield_from_ISR();
         }
 }
 

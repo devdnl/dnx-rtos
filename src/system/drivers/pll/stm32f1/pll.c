@@ -28,13 +28,10 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/timer.h>
-#include <dnx/misc.h>
 #include "stm32f1/pll_cfg.h"
 #include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
-#include "stm32f1/cpuctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -148,7 +145,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         RCC_SYSCLKConfig(_PLL_CFG__SYSCLK_SRC);
         RCC_MCOConfig(_PLL_CFG__MCO_SRC);
 
-        _cpuctl_update_system_clocks();
+        _sys_update_system_clocks();
 
         return STD_RET_OK;
 }
@@ -168,7 +165,7 @@ API_MOD_RELEASE(PLL, void *device_handle)
         UNUSED_ARG(device_handle);
 
         RCC_DeInit();
-        _cpuctl_update_system_clocks();
+        _sys_update_system_clocks();
 
         return STD_RET_OK;
 }
@@ -410,9 +407,9 @@ static void enable_prefetch_buffer(void)
 //==============================================================================
 static stdret_t wait_for_flag(u32_t flag)
 {
-        timer_t timer = timer_reset();
+        uint timer = _sys_time_get_reference();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (timer_is_expired(timer, TIMEOUT_MS)) {
+                if (_sys_time_is_expired(timer, TIMEOUT_MS)) {
                         errno = EIO;
                         return STD_RET_ERROR;
                 }

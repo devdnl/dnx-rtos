@@ -9,10 +9,10 @@
 //==============================================================================
 static void start_daemon(const char *name, const char *cwd)
 {
-        printk("Starting '%s' daemon... ", name);
+        _printk("Starting '%s' daemon... ", name);
         if (program_new(name, cwd, NULL, NULL, NULL)) {
-                printk("OK\n");
+                _printk("OK\n");
         } else {
-                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                _printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
         }
 }

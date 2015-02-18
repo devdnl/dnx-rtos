@@ -36,28 +36,31 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include "core/sysmoni.h"
-#include "core/vfs.h"
-#include "core/modctrl.h"
+#include <dnx/misc.h>
+#include <string.h>
 #include <errno.h>
+#include "sysfunc.h"
+#include "core/modctrl.h"
+#include "core/pipe.h"
+#include "core/progman.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_syscalloc(size_t__nmemb, size_t__msize)
+#define calloc(size_t__nmemb, size_t__msize)    _sysm_syscalloc(size_t__nmemb, size_t__msize)
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_sysmalloc(size_t__size)
+#define malloc(size_t__size)                    _sysm_sysmalloc(size_t__size)
 
 #undef  free
-#define free(void__pmem)                        sysm_sysfree(void__pmem)
+#define free(void__pmem)                        _sysm_sysfree(void__pmem)
 
 #ifdef __cplusplus
-        inline void* operator new     (size_t size) {return sysm_sysmalloc(size);}\
-        inline void* operator new[]   (size_t size) {return sysm_sysmalloc(size);}\
-        inline void  operator delete  (void* ptr  ) {sysm_sysfree(ptr);}\
-        inline void  operator delete[](void* ptr  ) {sysm_sysfree(ptr);}
+        inline void* operator new     (size_t size) {return _sysm_sysmalloc(size);}\
+        inline void* operator new[]   (size_t size) {return _sysm_sysmalloc(size);}\
+        inline void  operator delete  (void* ptr  ) {_sysm_sysfree(ptr);}\
+        inline void  operator delete[](void* ptr  ) {_sysm_sysfree(ptr);}
 #       define _FS_EXTERN_C extern "C"
 #else
 #       define _FS_EXTERN_C
@@ -110,7 +113,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
+static inline stdret_t _sys_driver_open(dev_t id, vfs_open_flags_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -126,7 +129,7 @@ static inline stdret_t driver_open(dev_t id, vfs_open_flags_t flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_close(dev_t id, bool force)
+static inline stdret_t _sys_driver_close(dev_t id, bool force)
 {
         return _driver_close(id, force);
 }
@@ -144,7 +147,7 @@ static inline stdret_t driver_close(dev_t id, bool force)
  * @return number of written bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t _sys_driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_write(id, src, count, fpos, fattr);
 }
@@ -162,7 +165,7 @@ static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, fpos
  * @return number of read bytes, -1 on error
  */
 //==============================================================================
-static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline ssize_t _sys_driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return _driver_read(id, dst, count, fpos, fattr);
 }
@@ -179,7 +182,7 @@ static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpo
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline int driver_ioctl(dev_t id, int request, void *arg)
+static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
 {
         return _driver_ioctl(id, request, arg);
 }
@@ -196,7 +199,7 @@ static inline int driver_ioctl(dev_t id, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_flush(dev_t id)
+static inline stdret_t _sys_driver_flush(dev_t id)
 {
         return _driver_flush(id);
 }
@@ -212,9 +215,136 @@ static inline stdret_t driver_flush(dev_t id)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t driver_stat(dev_t id, struct vfs_dev_stat *stat)
+static inline stdret_t _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         return _driver_stat(id, stat);
+}
+
+//==============================================================================
+/**
+ * @brief  List constructor (for FS only)
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @return On success list object is returned, otherwise NULL
+ */
+//==============================================================================
+static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
+{
+        return _llist_new(_sysm_sysmalloc, _sysm_sysfree, functor, obj_dtor);
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe object
+ *
+ * @return pointer to pipe object
+ */
+//==============================================================================
+static inline pipe_t *_sys_pipe_new()
+{
+        return _pipe_new();
+}
+
+//==============================================================================
+/**
+ * @brief Destroy pipe object
+ *
+ * @param pipe          a pipe object
+ */
+//==============================================================================
+static inline void _sys_pipe_delete(pipe_t *pipe)
+{
+        return _pipe_delete(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief Return length of pipe
+ *
+ * @param pipe          a pipe object
+ *
+ * @return length or -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_get_length(pipe_t *pipe)
+{
+        return _pipe_get_length(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief Read data from pipe
+ *
+ * @param pipe          a pipe object
+ * @param buf           a destination buffer
+ * @param count         a count of bytes to read
+ * @param non_blocking  a non-blocking access mode
+ *
+ * @return number of read bytes, -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
+{
+        return _pipe_read(pipe, buf, count, non_blocking);
+}
+
+//==============================================================================
+/**
+ * @brief Read data from pipe
+ *
+ * @param pipe          a pipe object
+ * @param buf           a destination buffer
+ * @param count         a count of bytes to read
+ * @param non_blocking  a non-blocking access mode
+ *
+ * @return number of read bytes, -1 if error
+ */
+//==============================================================================
+static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
+{
+        return _pipe_write(pipe, buf, count, non_blocking);
+}
+
+//==============================================================================
+/**
+ * @brief Close pipe
+ *
+ * @param pipe          a pipe object
+ *
+ * @return true if pipe closed, otherwise false
+ */
+//==============================================================================
+static inline bool _sys_pipe_close(pipe_t *pipe)
+{
+        return _pipe_close(pipe);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return size of programs table (number of programs)
+ *
+ * @param  None
+ *
+ * @return Return number of programs
+ */
+//==============================================================================
+static inline int _sys_get_programs_table_size()
+{
+        return _get_programs_table_size();
+}
+
+//==============================================================================
+/**
+ * @brief  Function return pointer to beginning of programs table
+ *
+ * @param  None
+ *
+ * @return Return pointer to programs table
+ */
+//==============================================================================
+static inline const struct _prog_data *_sys_get_programs_table()
+{
+        return _get_programs_table();
 }
 
 #ifdef __cplusplus

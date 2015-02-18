@@ -28,11 +28,8 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/timer.h>
-#include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
-#include "core/scanx.h"
 
 /*==============================================================================
   Local macros
@@ -47,7 +44,7 @@ struct ttycmd {
         void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
-        timer_t         timer;
+        uint            timer;
 };
 
 /*==============================================================================
@@ -144,7 +141,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         memset(this->token, 0, VT100_TOKEN_LEN);
                         this->token[0]  = c;
                         this->token_cnt = 1;
-                        this->timer     = timer_reset();
+                        this->timer     = _sys_time_get_reference();
                         return TTYCMD_BUSY;
 
                 } else if (this->token_cnt) {
@@ -177,7 +174,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 else if (strcmp(VT100_F12        , this->token) == 0) return TTYCMD_KEY_F12;
                                 else return TTYCMD_BUSY;
                         } else {
-                                if (  timer_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                if (  _sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
                                    || this->token_cnt >= VT100_TOKEN_LEN ) {
 
                                         this->token_cnt = 0;
