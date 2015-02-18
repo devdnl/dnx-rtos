@@ -1126,13 +1126,13 @@ local function create_runlevel_boot_widgets(parent)
                 ui.Button_RLB_other_FS_up = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RLB_other_FS_up:SetToolTip("Move up")
                 ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RLB_other_FS_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(-1, 3) end)
+                ui.Button_RLB_other_FS_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(-1, 3) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RLB_other_FS_down = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RLB_other_FS_down:SetToolTip("Move down")
                 ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RLB_other_FS_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(1, 3) end)
+                ui.Button_RLB_other_FS_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(1, 3) modified:yes() end)
 
                 -- add: sizer
                 ui.FlexGridSizer_other_FS_1:Add(ui.FlexGridSizer_other_FS_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -1289,13 +1289,13 @@ local function create_runlevel_0_widgets(parent)
                 ui.Button_RL0_drv_init_up = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL0_drv_init_up:SetToolTip("Move up")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) end)
+                ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL0_drv_init_down = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL0_drv_init_down:SetToolTip("Move down")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL0_drv_init_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(1, 2) end)
+                ui.Button_RL0_drv_init_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(1, 2) modified:yes() end)
 
                 -- add: driver selection, driver node path, and add button to the group
                 ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1463,13 +1463,13 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_daemons_up = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL1_daemons_up:SetToolTip("Move up")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_daemons_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(-1, 2) end)
+                ui.Button_RL1_daemons_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL1_daemons_down = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL1_daemons_down:SetToolTip("Move down")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_daemons_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(1, 2) end)
+                ui.Button_RL1_daemons_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(1, 2) modified:yes() end)
 
                 -- add buttons to group
                 ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1572,13 +1572,13 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_FS_mount_up = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL1_FS_mount_up:SetToolTip("Move up")
                 ui.FlexGridSizer_FS_mount_buttons:Add(ui.Button_RL1_FS_mount_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_FS_mount_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(-1, 2) end)
+                ui.Button_RL1_FS_mount_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL1_FS_mount_down = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL1_FS_mount_down:SetToolTip("Move down")
                 ui.FlexGridSizer_FS_mount_buttons:Add(ui.Button_RL1_FS_mount_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_FS_mount_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(1, 2) end)
+                ui.Button_RL1_FS_mount_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(1, 2) modified:yes() end)
 
                 -- add buttons to group
                 ui.FlexGridSizer_FS_mount:Add(ui.FlexGridSizer_FS_mount_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1781,13 +1781,13 @@ local function create_runlevel_2_widgets(parent)
                 ui.Button_RL2_app_start_up = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL2_app_start_up:SetToolTip("Move up")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 2) end)
+                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL2_app_start_down = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL2_app_start_down:SetToolTip("Move down")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 2) end)
+                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 2) modified:yes() end)
 
                 -- add fields to group
                 ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
