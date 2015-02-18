@@ -991,7 +991,7 @@ static bool handle_SPI_IRQ(u8_t major)
 
                         CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
                         CLEAR_BIT(SPI->CR2, SPI_CR2_TXEIE);
-                        semaphore_signal_from_ISR(SPIM->wait_irq_sem[major], &woken);
+                        _sys_semaphore_signal_from_ISR(SPIM->wait_irq_sem[major], &woken);
                 }
         }
 

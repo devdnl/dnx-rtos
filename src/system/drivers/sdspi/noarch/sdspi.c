@@ -89,7 +89,7 @@ typedef struct {
         bool block : 1;
 } card_type;
 
-/** card configuartion structure */
+/** card configuration structure */
 typedef struct {
         const char *filepath;
         int         timeout;
@@ -545,7 +545,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void SPI_select_card(sdpart_t *hdl)
 {
-        _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
+        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
 }
 
 //==============================================================================
@@ -559,7 +559,7 @@ static void SPI_select_card(sdpart_t *hdl)
 //==============================================================================
 static void SPI_deselect_card(sdpart_t *hdl)
 {
-        _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
+        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
 }
 
 //==============================================================================
@@ -579,7 +579,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
         desc.rx_buffer = &out;
         desc.tx_buffer = &out;
 
-        if (_vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
+        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
                 return out;
         } else {
                 return 0x00;
@@ -599,7 +599,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 //==============================================================================
 static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 {
-        _vfs_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _sys_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -615,7 +615,7 @@ static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 //==============================================================================
 static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 {
-        _vfs_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _sys_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -1014,7 +1014,7 @@ static stdret_t card_initialize(sdpart_t *hdl)
 {
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                _vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
+                _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
         }
 
         SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
