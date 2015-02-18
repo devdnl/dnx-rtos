@@ -44,27 +44,6 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-/** file flags */
-typedef struct file_flags {
-        bool                rd    :1;
-        bool                wr    :1;
-        bool                eof   :1;
-        bool                error :1;
-        struct vfs_fattr    fattr;
-} file_flags_t;
-
-/** file type */
-struct vfs_file
-{
-        void               *FS_hdl;
-        vfs_FS_interface_t *FS_if;
-        void               *f_extra_data;
-        struct vfs_file    *this;
-        fd_t                fd;
-        fpos_t              f_lseek;
-        file_flags_t        f_flag;
-};
-
 typedef struct FS_entry {
         const char         *mount_point;
         struct FS_entry    *parent_FS_ref;
@@ -814,14 +793,14 @@ FILE *_vfs_fopen(const char *path, const char *mode)
                                         file->f_flag.rd = true;
                                 }
 
-                                file->this = file;
+                                file->self = file;
                         }
 
                         restore_priority(priority);
                 }
         }
 
-        if (!cwd_path || !file || !file->this) {
+        if (!cwd_path || !file || !file->self) {
                 if (cwd_path)
                         _sysm_sysfree(cwd_path);
 
@@ -1322,7 +1301,7 @@ static int fclose(FILE *file, bool force)
                                           file->f_extra_data,
                                           file->fd, force) == STD_RET_OK) {
 
-                        file->this   = NULL;
+                        file->self   = NULL;
                         file->FS_hdl = NULL;
                         file->FS_hdl = NULL;
                         _sysm_sysfree(file);
@@ -1347,7 +1326,7 @@ static int fclose(FILE *file, bool force)
 static bool is_file_valid(FILE *file)
 {
         if (  file
-           && file->this == file
+           && file->self == file
            && file->FS_hdl
            && file->FS_if
            && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO) {

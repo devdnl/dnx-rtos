@@ -95,9 +95,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** file object */
-typedef struct vfs_file FILE;
-
 /** file type */
 typedef enum tfile {
         FILE_TYPE_REGULAR,
@@ -117,7 +114,7 @@ typedef struct dirent {
 } dirent_t;
 
 /** directory type */
-typedef struct vfs_dir {
+struct vfs_dir {
         dirent_t      (*f_readdir)(void *fshdl, struct vfs_dir *dir);
         stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void           *f_dd;
@@ -125,7 +122,10 @@ typedef struct vfs_dir {
         struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
-} DIR;
+};
+
+typedef struct vfs_dir DIR;
+#define __DIR_TYPE_DEFINED__
 
 /** file statistics */
 struct stat {
@@ -204,6 +204,30 @@ typedef struct vfs_FS_interface {
         void     (*fs_sync   )(void *fshdl);
         uint32_t   fs_magic;
 } vfs_FS_interface_t;
+
+/** file flags */
+typedef struct file_flags {
+        bool                rd    :1;
+        bool                wr    :1;
+        bool                eof   :1;
+        bool                error :1;
+        struct vfs_fattr    fattr;
+} file_flags_t;
+
+/** file type */
+struct vfs_file
+{
+        void               *FS_hdl;
+        vfs_FS_interface_t *FS_if;
+        void               *f_extra_data;
+        struct vfs_file    *self;
+        fd_t                fd;
+        fpos_t              f_lseek;
+        file_flags_t        f_flag;
+};
+
+typedef struct vfs_file FILE;
+#define __FILE_TYPE_DEFINED__
 
 /*==============================================================================
   Exported API functions

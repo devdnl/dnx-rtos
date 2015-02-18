@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
+#include "core/vfs.h"
 #include "core/sysmoni.h"
 #include "core/printx.h"
 #include "core/scanx.h"
@@ -82,6 +83,9 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifndef __FILE_TYPE_DEFINED__
+typedef struct vfs_file FILE;
+#endif
 
 /*==============================================================================
   Exported objects
