@@ -112,17 +112,17 @@ typedef struct {
         struct I2C_per {
                 mutex_t            *lock;               //!< mutex used to lock access to the particular peripheral
                 sem_t              *event;              //!< semaphore used to indicate event (operation finished)
-                I2C_dev_t          *dev;                //!< pointer to the currently handling device
-                u8_t               *data;               //!< pointer to the data input/output buffer
-                u32_t               sub_addr;           //!< sub-address value
-                size_t              data_size;          //!< input/output buffer data_size
-                state_t             state;              //!< state of I2C peripheral
+//                I2C_dev_t          *dev;                //!< pointer to the currently handling device
+//                u8_t               *data;               //!< pointer to the data input/output buffer
+//                u32_t               sub_addr;           //!< sub-address value
+//                size_t              data_size;          //!< input/output buffer data_size
+//                state_t             state;              //!< state of I2C peripheral
                 u8_t                dev_cnt;            //!< number of initialized devices
-                I2C_sub_addr_mode_t sub_addr_mode:2;    //!< sub-address mode and byte counter
-                bool                addr10rd:1;         //!< enabled 10-bit addressing mode
-                bool                write:1;            //!< indicates write transaction
-                bool                error:1;            //!< indicates error event
-                bool                stop:1;             //!< indicates stop sequence after current transaction
+//                I2C_sub_addr_mode_t sub_addr_mode:2;    //!< sub-address mode and byte counter
+//                bool                addr10rd:1;         //!< enabled 10-bit addressing mode
+//                bool                write:1;            //!< indicates write transaction
+//                bool                error:1;            //!< indicates error event
+//                bool                stop:1;             //!< indicates stop sequence after current transaction
                 bool                initialized:1;      //!< indicates that module for this peripheral is initialized
         } periph[_I2C_NUMBER_OF_PERIPHERALS];
 } I2C_mem_t;
@@ -135,11 +135,18 @@ static void release_resources(u8_t major);
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
 static bool enable_I2C(u8_t major);
 static void disable_I2C(u8_t major);
-static bool wait_for_event(I2C_dev_t *hdl);
-static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
-static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
-static bool IRQ_EV_handler(u8_t major);
-static bool IRQ_ER_handler(u8_t major);
+static bool start(I2C_t *i2c);
+static void stop(I2C_t *i2c);
+static bool send_address_7bit(I2C_t *i2c, uint16_t address);
+static void clear_send_address_7bit_event(I2C_t *i2c);
+static bool send_subaddress(I2C_t *i2c, u32_t address, I2C_sub_addr_mode_t mode);
+static void set_ACK_according_to_reception_size(I2C_t *i2c, size_t count);
+static ssize_t receive(I2C_t *i2c, u8_t *dst, size_t count);
+//static bool wait_for_event(I2C_dev_t *hdl);
+//static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop);
+//static ssize_t I2C_receive(I2C_dev_t *hdl, u8_t *dst, size_t size, bool stop);
+//static bool IRQ_EV_handler(u8_t major);
+//static bool IRQ_ER_handler(u8_t major);
 
 /*==============================================================================
   Local object definitions
@@ -440,13 +447,11 @@ API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *f
 
         ssize_t n = -1;
 
-        if (_sys_device_is_access_granted(&hdl->lock)) {
-                if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
 //                        n = I2C_transmit(hdl, true, *fpos, src, count, true);
-                        _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
-                } else {
-                        errno = ETIME;
-                }
+                _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
+        } else {
+                errno = ETIME;
         }
 
         return n;
@@ -473,106 +478,38 @@ API_MOD_READ(I2C, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
 
         ssize_t n = -1;
 
-        if (_sys_device_is_access_granted(&hdl->lock)) {
-                if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
 
-//                        if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+                n = 0;
 
-                                n = 0;
+                I2C_t *i2c = get_I2C(hdl);
 
-                                I2C_t *i2c = get_I2C(hdl);
+                if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+                        if (!start(i2c))
+                                goto error;
 
-                                // start
-                                SET_BIT(i2c->CR1, I2C_CR1_START);
-                                while (!(i2c->SR1 & I2C_SR1_SB));
-//                                _sys_printk("S ");
+                        if (!send_address_7bit(i2c, hdl->address & 0xFE))
+                                goto error;
+                        else
+                                clear_send_address_7bit_event(i2c);
 
-                                // send address
-                                i2c->DR = hdl->config->addr & 0xFE;
-                                while (!(i2c->SR1 & I2C_SR1_ADDR));
-                                u16_t tmp = i2c->SR2;
-                                (void)tmp;
-//                                _sys_printk("A+W ");
-
-                                // send sub-address
-                                i2c->DR = *fpos;
-                                while (!(i2c->SR1 & I2C_SR1_BTF));
-//                                _sys_printk("Sub ");
-
-                                // repeated start
-                                SET_BIT(i2c->CR1, I2C_CR1_START);
-                                while (!(i2c->SR1 & I2C_SR1_SB));
-//                                _sys_printk("R ");
-
-                                // send address
-                                if (count == 2) {
-                                        SET_BIT(i2c->CR1, I2C_CR1_POS | I2C_CR1_ACK);
-                                } else {
-                                        SET_BIT(i2c->CR1, I2C_CR1_ACK);
-                                }
-
-                                i2c->DR = hdl->config->addr | 0x01;
-                                while (!(i2c->SR1 & I2C_SR1_ADDR));
-
-                                // receive bytes
-                                if (count >= 3) {
-                                        tmp = i2c->SR1;
-                                        tmp = i2c->SR2;
-
-                                        while (count) {
-                                                if (count == 3) {
-                                GPIO_SET_PIN(PB15);
-                                                        while (!(i2c->SR1 & I2C_SR1_RXNE));
-                                                        while (!(i2c->SR1 & I2C_SR1_BTF));
-                                                        CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
-                                                        *dst++ = i2c->DR;
-                                GPIO_CLEAR_PIN(PB15);
-                                GPIO_SET_PIN(PB15);
-                                                        while (!(i2c->SR1 & I2C_SR1_RXNE));
-                                                        SET_BIT(i2c->CR1, I2C_CR1_STOP);
-                                                        *dst++ = i2c->DR;
-                                GPIO_CLEAR_PIN(PB15);
-                                GPIO_SET_PIN(PB15);
-                                                        while (!(i2c->SR1 & I2C_SR1_RXNE));
-                                                        *dst++ = i2c->DR;
-                                                        count = 0;
-                                                        n    += 3;
-                                GPIO_CLEAR_PIN(PB15);
-                                                } else {
-                                GPIO_SET_PIN(PB14);
-                                                        while (!(i2c->SR1 & I2C_SR1_RXNE));
-                                                        *dst++ = i2c->DR;
-                                GPIO_CLEAR_PIN(PB14);
-                                                        count--;
-                                                        n++;
-                                                }
-                                        }
-
-                                } else if (count == 2) {
-                                        tmp = i2c->SR1;
-                                        tmp = i2c->SR2;
-                                        CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
-                                        while (!(i2c->SR1 & I2C_SR1_BTF));
-                                        SET_BIT(i2c->CR1, I2C_CR1_STOP);
-                                        *dst++ = i2c->DR;
-                                        *dst++ = i2c->DR;
-                                        n     += 2;
-
-                                } else if (count == 1) {
-                                        CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
-                                        tmp = i2c->SR1;
-                                        tmp = i2c->SR2;
-                                        SET_BIT(i2c->CR1, I2C_CR1_STOP);
-                                        while (!(i2c->SR1 & I2C_SR1_RXNE));
-                                        *dst++ = i2c->DR;
-                                        n     += 1;
-                                }
-//                        }
-
-                        _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
-                } else {
-                        errno = ETIME;
+                        if (!send_subaddress(i2c, *fpos, hdl->config->sub_addr_mode))
+                                goto error;
                 }
+
+                if (!start(i2c))
+                        goto error;
+
+                set_ACK_according_to_reception_size(i2c, count);
+                if (!send_address_7bit(i2c, hdl->address | 0x01))
+                        goto error;
+
+                n = receive(i2c, dst, count);
+
+                error:
+                _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
+        } else {
+                errno = ETIME;
         }
 
         return n;
@@ -594,18 +531,14 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 {
         I2C_dev_t *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->lock)) {
-                switch (request) {
-                case IOCTL_I2C__SET_ADDRESS:
-                        hdl->address = reinterpret_cast(int, arg);
-                        return 0;
+        switch (request) {
+        case IOCTL_I2C__SET_ADDRESS:
+                hdl->address = reinterpret_cast(int, arg);
+                return 0;
 
-                default:
-                        errno = EBADRQC;
-                        break;
-                }
-        } else {
-                errno = EBUSY;
+        default:
+                errno = EBADRQC;
+                break;
         }
 
         return -1;
@@ -832,6 +765,169 @@ static void disable_I2C(u8_t major)
         CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
 
         I2C->periph[major].initialized = false;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static bool start(I2C_t *i2c)
+{
+        SET_BIT(i2c->CR1, I2C_CR1_START);
+        while (!(i2c->SR1 & I2C_SR1_SB));
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void stop(I2C_t *i2c)
+{
+        SET_BIT(i2c->CR1, I2C_CR1_STOP);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static bool send_address_7bit(I2C_t *i2c, uint16_t address)
+{
+        i2c->DR = address;
+        while (!(i2c->SR1 & I2C_SR1_ADDR));
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void clear_send_address_7bit_event(I2C_t *i2c)
+{
+        _sys_critical_section_begin();
+        u16_t tmp;
+        tmp = i2c->SR1;
+        tmp = i2c->SR2;
+        (void)tmp;
+        _sys_critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static bool send_subaddress(I2C_t *i2c, u32_t address, I2C_sub_addr_mode_t mode)
+{
+        switch (mode) {
+        case I2C_SUB_ADDR_MODE__3_BYTES:
+                i2c->DR = address >> 16;
+                while (!(i2c->SR1 & I2C_SR1_BTF));
+
+        case I2C_SUB_ADDR_MODE__2_BYTES:
+                i2c->DR = address >> 8;
+                while (!(i2c->SR1 & I2C_SR1_BTF));
+
+        case I2C_SUB_ADDR_MODE__1_BYTE:
+                i2c->DR = address & 0xFF;
+                while (!(i2c->SR1 & I2C_SR1_BTF));
+
+        default:
+                break;
+        }
+
+        return true;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void set_ACK_according_to_reception_size(I2C_t *i2c, size_t count)
+{
+        if (count == 2) {
+                SET_BIT(i2c->CR1, I2C_CR1_POS | I2C_CR1_ACK);
+        } else {
+                SET_BIT(i2c->CR1, I2C_CR1_ACK);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static ssize_t receive(I2C_t *i2c, u8_t *dst, size_t count)
+{
+        ssize_t n = 0;
+
+        if (count >= 3) {
+                clear_send_address_7bit_event(i2c);
+
+                while (count) {
+                        if (count == 3) {
+                                while (!(i2c->SR1 & I2C_SR1_RXNE));
+                                while (!(i2c->SR1 & I2C_SR1_BTF));
+                                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+                                *dst++ = i2c->DR;
+
+                                while (!(i2c->SR1 & I2C_SR1_RXNE));
+                                stop(i2c);
+                                *dst++ = i2c->DR;
+
+                                while (!(i2c->SR1 & I2C_SR1_RXNE));
+                                *dst++ = i2c->DR;
+                                count = 0;
+                                n    += 3;
+                        } else {
+                                while (!(i2c->SR1 & I2C_SR1_RXNE));
+                                *dst++ = i2c->DR;
+                                count--;
+                                n++;
+                        }
+                }
+
+        } else if (count == 2) {
+                _sys_critical_section_begin();
+                clear_send_address_7bit_event(i2c);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+                _sys_critical_section_end();
+
+                while (!(i2c->SR1 & I2C_SR1_BTF));
+                stop(i2c);
+                *dst++ = i2c->DR;
+                *dst++ = i2c->DR;
+                n     += 2;
+
+        } else if (count == 1) {
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+                clear_send_address_7bit_event(i2c);
+                stop(i2c);
+                while (!(i2c->SR1 & I2C_SR1_RXNE));
+                *dst++ = i2c->DR;
+                n     += 1;
+        }
+
+        return n;
 }
 
 //==============================================================================
