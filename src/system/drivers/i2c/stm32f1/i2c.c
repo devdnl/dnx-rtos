@@ -793,7 +793,7 @@ static void error(I2C_dev_t *hdl)
 
         errno = I2C->periph[hdl->config->major].error;
 
-        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN);
+        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
 
         u8_t tmp = i2c->SR1;
              tmp = i2c->SR2;
@@ -801,7 +801,10 @@ static void error(I2C_dev_t *hdl)
              tmp = i2c->DR;
         (void) tmp;
 
+        i2c->SR1 = 0;
+
         stop(hdl);
+        _sys_sleep_ms(1);
 
         if (I2C->periph[hdl->config->major].error == EIO) {
                 enable_I2C(hdl->config->major);
@@ -826,7 +829,6 @@ static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
         if (SR1_event_mask & (I2C_SR1_RXNE | I2C_SR1_TXE)) {
                 CR2 |= I2C_CR2_ITBUFEN;
         }
-
         SET_BIT(get_I2C(hdl)->CR2, CR2);
 
         if (_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout)) {
@@ -881,7 +883,11 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
 //==============================================================================
 static bool start(I2C_dev_t *hdl)
 {
-        SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
+        I2C_t *i2c = get_I2C(hdl);
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
+        SET_BIT(i2c->CR1, I2C_CR1_START);
+
         return wait_for_I2C_event(hdl, I2C_SR1_SB);
 }
 
@@ -894,7 +900,10 @@ static bool start(I2C_dev_t *hdl)
 //==============================================================================
 static void stop(I2C_dev_t *hdl)
 {
-        SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_STOP);
+        I2C_t *i2c = get_I2C(hdl);
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_START);
+        SET_BIT(i2c->CR1, I2C_CR1_STOP);
 }
 
 //==============================================================================
@@ -937,7 +946,8 @@ static bool send_address(I2C_dev_t *hdl, bool write)
                 return wait_for_I2C_event(hdl, I2C_SR1_ADDR);
 
         } else {
-                i2c->DR = write ? hdl->address & 0xFE : hdl->address | 0x01;
+                u16_t tmp = i2c->SR1;
+                (void)tmp;  i2c->DR = write ? hdl->address & 0xFE : hdl->address | 0x01;
                 return wait_for_I2C_event(hdl, I2C_SR1_ADDR);
         }
 }
@@ -1122,8 +1132,9 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
 //==============================================================================
 static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
 {
-        ssize_t n   = 0;
-        I2C_t  *i2c = get_I2C(hdl);
+        ssize_t n    = 0;
+        I2C_t  *i2c  = get_I2C(hdl);
+        bool    succ = false;
 
         clear_send_address_event(hdl);
 
@@ -1137,16 +1148,19 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
                 DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE | DMA_CCR1_DIR;
 
                 if (wait_for_DMA_event(hdl, DMA)) {
-                        n = count;
+                        n    = count;
+                        succ = true;
                 }
         } else {
 #else
         {
 #endif
+                succ = true;
                 while (count) {
                         if (wait_for_I2C_event(hdl, I2C_SR1_TXE)) {
                                 i2c->DR = *src++;
                         } else {
+                                succ = false;
                                 break;
                         }
 
@@ -1155,46 +1169,15 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
                 }
         }
 
-        if (n) {
+        if (n && succ) {
                 if (!wait_for_I2C_event(hdl, I2C_SR1_BTF))
-                        return n;
+                        return n - 1;
         }
 
         stop(hdl);
 
         return n;
 }
-
-//==============================================================================
-/**
- * @brief  Configure IRQ's state machine to perform data transmission
- * @param  hdl                  device's handle
- * @param  sub_addr_mode        sub-address send enabled (details read from configuration)
- * @param  sub_addr             sub-address value
- * @param  src                  data source
- * @param  size                 size of data
- * @param  stop                 send STOP sequence after transaction (true)
- * @return On success returns number of transfered bytes, otherwise -1 and
- *         appropriate error is set
- */
-//==============================================================================
-//static ssize_t I2C_transmit(I2C_dev_t *hdl, bool sub_addr_mode, u32_t sub_addr, const u8_t *src, size_t size, bool stop)
-//{
-//        struct I2C_per *per = &I2C->periph[hdl->config->major];
-//
-//        per->data          = const_cast(u8_t*, src);
-//        per->data_size     = size;
-//        per->stop          = stop;
-//        per->write         = true;
-//        per->sub_addr      = sub_addr;
-//        per->sub_addr_mode = sub_addr_mode ? hdl->config->sub_addr_mode : I2C_SUB_ADDR_MODE__DISABLED;
-//        per->dev           = hdl;
-//        per->state         = STATE_START;
-//
-//        SET_BIT(get_I2C(hdl)->CR1, I2C_CR1_START);
-//
-//        return wait_for_event(hdl) ? static_cast(ssize_t, size - per->data_size) : -1;
-//}
 
 //==============================================================================
 /**
@@ -1206,6 +1189,7 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
 static void IRQ_EV_handler(u8_t major)
 {
         GPIO_SET_PIN(PB15); // TEST
+
         if (I2C1->SR1 & I2C->periph[major].SR1_mask) {
                 _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
                 CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
@@ -1224,6 +1208,7 @@ static void IRQ_EV_handler(u8_t major)
         }
 
         _sys_task_yield_from_ISR();
+
         GPIO_CLEAR_PIN(PB15); // TEST
 }
 
@@ -1236,15 +1221,20 @@ static void IRQ_EV_handler(u8_t major)
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
+        GPIO_SET_PIN(PB15); // TEST
+
         I2C_t *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
-        if (i2c->SR1 & (I2C_SR1_ARLO)) {
+        if (i2c->SR1 & I2C_SR1_ARLO) {
                 I2C->periph[major].error = EAGAIN;
-        } else if (i2c->SR1 & (I2C_SR1_AF)) {
+
+        } else if (i2c->SR1 & I2C_SR1_AF) {
+                GPIO_SET_PIN(PB14); // TEST
                 if (I2C->periph[major].SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
                         I2C->periph[major].error = ENXIO;
                 else
-                        I2C->periph[major].error = EFBIG;
+                        I2C->periph[major].error = EIO;
+                GPIO_CLEAR_PIN(PB14); // TEST
         } else {
                 I2C->periph[major].error = EIO;
         }
@@ -1255,6 +1245,8 @@ static void IRQ_ER_handler(u8_t major)
         _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         _sys_task_yield_from_ISR();
+
+        GPIO_CLEAR_PIN(PB15); // TEST
 }
 
 //==============================================================================
