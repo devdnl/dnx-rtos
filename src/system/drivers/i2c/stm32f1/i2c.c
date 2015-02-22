@@ -138,6 +138,7 @@ static void clear_send_address_event(I2C_dev_t *hdl);
 static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode);
 static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count);
 static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count);
+static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count);
 static void IRQ_EV_handler(u8_t major);
 static void IRQ_ER_handler(u8_t major);
 
@@ -445,7 +446,23 @@ API_MOD_WRITE(I2C, void *device_handle, const u8_t *src, size_t count, fpos_t *f
         ssize_t n = -1;
 
         if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
-//                        n = I2C_transmit(hdl, true, *fpos, src, count, true);
+
+                if (!start(hdl))
+                        goto error;
+
+                if (!send_address(hdl, true))
+                        goto error;
+                else
+                        clear_send_address_event(hdl);
+
+                if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+                        if (!send_subaddress(hdl, *fpos, hdl->config->sub_addr_mode))
+                                goto error;
+                }
+
+                n = transmit(hdl, src, count);
+
+                error:
                 _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
         } else {
                 errno = ETIME;
@@ -1098,6 +1115,58 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
 
 //==============================================================================
 /**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
+{
+        ssize_t n   = 0;
+        I2C_t  *i2c = get_I2C(hdl);
+
+        clear_send_address_event(hdl);
+
+#if ((_I2C1_ENABLE > 0) && (_I2C1_USE_DMA > 0)) || ((_I2C2_ENABLE > 0) && (_I2C2_USE_DMA > 0))
+        if (count >= 3 && I2C->periph[hdl->config->major].use_DMA) {
+                DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, I2C_cfg[hdl->config->major].DMA_tx);
+
+                DMA->CPAR  = reinterpret_cast(u32_t, &i2c->DR);
+                DMA->CMAR  = reinterpret_cast(u32_t, src);
+                DMA->CNDTR = count;
+                DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE | DMA_CCR1_DIR;
+
+                if (wait_for_DMA_event(hdl, DMA)) {
+                        n = count;
+                }
+        } else {
+#else
+        {
+#endif
+                while (count) {
+                        if (wait_for_I2C_event(hdl, I2C_SR1_TXE)) {
+                                i2c->DR = *src++;
+                        } else {
+                                break;
+                        }
+
+                        n++;
+                        count--;
+                }
+        }
+
+        if (n) {
+                if (!wait_for_I2C_event(hdl, I2C_SR1_BTF))
+                        return n;
+        }
+
+        stop(hdl);
+
+        return n;
+}
+
+//==============================================================================
+/**
  * @brief  Configure IRQ's state machine to perform data transmission
  * @param  hdl                  device's handle
  * @param  sub_addr_mode        sub-address send enabled (details read from configuration)
@@ -1172,7 +1241,10 @@ static void IRQ_ER_handler(u8_t major)
         if (i2c->SR1 & (I2C_SR1_ARLO)) {
                 I2C->periph[major].error = EAGAIN;
         } else if (i2c->SR1 & (I2C_SR1_AF)) {
-                I2C->periph[major].error = ENXIO;
+                if (I2C->periph[major].SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
+                        I2C->periph[major].error = ENXIO;
+                else
+                        I2C->periph[major].error = EFBIG;
         } else {
                 I2C->periph[major].error = EIO;
         }
@@ -1302,7 +1374,7 @@ void DMA1_Channel7_IRQHandler(void)
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
 void DMA1_Channel4_IRQHandler(void)
 {
-        IRQ_DMA_handler(_I2C2);
+        IRQ_DMA_handler(I2C_cfg[_I2C2].DMA_tx_number, _I2C2);
 }
 #endif
 
@@ -1316,7 +1388,7 @@ void DMA1_Channel4_IRQHandler(void)
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0) && (_I2C2_USE_DMA > 0)
 void DMA1_Channel5_IRQHandler(void)
 {
-        IRQ_DMA_handler(_I2C2);
+        IRQ_DMA_handler(I2C_cfg[_I2C2].DMA_rx_number, _I2C2);
 }
 #endif
 
