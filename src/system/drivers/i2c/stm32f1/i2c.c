@@ -5,7 +5,7 @@
 
 @brief   This driver support I2C peripherals.
 
-@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014-2015  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,10 +34,6 @@
 #include "stm32f1/i2c_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "lib/stm32f10x_rcc.h"
-
-
-#include "stm32f1/gpio_macros.h"
-#include "stm32f1/gpio_cfg.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -85,41 +81,41 @@ typedef struct {
 /// type defines configuration of single I2C peripheral
 typedef struct {
         #if ((_I2C1_ENABLE > 0) && (_I2C1_USE_DMA > 0)) || ((_I2C2_ENABLE > 0) && (_I2C2_USE_DMA > 0))
-        const bool              use_DMA;                //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
-        const DMA_Channel_t    *const DMA_tx;           //!< pointer to the DMA Tx channel peripheral
-        const DMA_Channel_t    *const DMA_rx;           //!< pointer to the DMA Rx channel peripheral
-        const u8_t              DMA_tx_number:4;        //!< number of channel of DMA Tx
-        const u8_t              DMA_rx_number:4;        //!< number of channel of DMA Rx
-        const IRQn_Type         DMA_tx_IRQ_n;           //!< number of interrupt in the vector table
-        const IRQn_Type         DMA_rx_IRQ_n;           //!< number of interrupt in the vector table
+        const bool                use_DMA;              //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
+        const DMA_Channel_t      *const DMA_tx;         //!< pointer to the DMA Tx channel peripheral
+        const DMA_Channel_t      *const DMA_rx;         //!< pointer to the DMA Rx channel peripheral
+        const u8_t                DMA_tx_number:4;      //!< number of channel of DMA Tx
+        const u8_t                DMA_rx_number:4;      //!< number of channel of DMA Rx
+        const IRQn_Type           DMA_tx_IRQ_n;         //!< number of interrupt in the vector table
+        const IRQn_Type           DMA_rx_IRQ_n;         //!< number of interrupt in the vector table
         #endif
-        const I2C_t            *const I2C;              //!< pointer to the I2C peripheral
-        const I2C_dev_config_t *const devices;          //!< pointer to devices' configuration table
-        const u32_t             freq;                   //!< peripheral SCL frequency [Hz]
-        const u32_t             APB1ENR_clk_mask;       //!< mask used to enable I2C clock in the APB1ENR register
-        const u8_t              IRQ_prio;               //!< priority of IRQ (event, error, and DMA)
-        const IRQn_Type         IRQ_EV_n;               //!< number of event IRQ vector
-        const IRQn_Type         IRQ_ER_n;               //!< number of error IRQ vector
+        const I2C_t              *const I2C;            //!< pointer to the I2C peripheral
+        const I2C_dev_config_t   *const devices;        //!< pointer to devices' configuration table
+        const u32_t               freq;                 //!< peripheral SCL frequency [Hz]
+        const u32_t               APB1ENR_clk_mask;     //!< mask used to enable I2C clock in the APB1ENR register
+        const u8_t                IRQ_prio;             //!< priority of IRQ (event, error, and DMA)
+        const IRQn_Type           IRQ_EV_n;             //!< number of event IRQ vector
+        const IRQn_Type           IRQ_ER_n;             //!< number of error IRQ vector
 } I2C_config_t;
 
 /// type defines I2C device in the runtime environment
 typedef struct {
-        const I2C_dev_config_t *config;                 //!< pointer to the device configuration
-        dev_lock_t              lock;                   //!< object used to lock access to opened device
-        u16_t                   address;                //!< device address
+        const I2C_dev_config_t   *config;               //!< pointer to the device configuration
+        dev_lock_t                lock;                 //!< object used to lock access to opened device
+        u16_t                     address;              //!< device address
 } I2C_dev_t;
 
 /// type defines main memory of this module
 typedef struct {
         struct I2C_per {
-                mutex_t            *lock;               //!< mutex used to lock access to the particular peripheral
-                sem_t              *event;              //!< semaphore used to indicate event (operation finished)
-                u16_t               SR1_mask;           //!< SR1 register mask (to catch specified event in IRQ)
-                bool                use_DMA:1;          //!< true if peripheral use DMA channels
-                bool                initialized:1;      //!< indicates that module for this peripheral is initialized
-                u8_t                dev_cnt;            //!< number of initialized devices
-                u8_t                error;              //!< error number (errno)
-                u8_t                unexp_event_cnt;    //!< number of unexpected events
+                mutex_t          *lock;                 //!< mutex used to lock access to the particular peripheral
+                sem_t            *event;                //!< semaphore used to indicate event (operation finished)
+                u16_t             SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
+                bool              use_DMA:1;            //!< true if peripheral use DMA channels
+                bool              initialized:1;        //!< indicates that module for this peripheral is initialized
+                u8_t              dev_cnt;              //!< number of initialized devices
+                u8_t              error;                //!< error number (errno)
+                u8_t              unexp_event_cnt;      //!< number of unexpected events
         } periph[_I2C_NUMBER_OF_PERIPHERALS];
 } I2C_mem_t;
 
@@ -780,15 +776,13 @@ static void disable_I2C(u8_t major)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function handle error (try make the interface working)
+ * @param  hdl          device handle
+ * @return None
  */
 //==============================================================================
 static void error(I2C_dev_t *hdl)
 {
-        GPIO_SET_PIN(PB14); // TEST
-
         I2C_t *i2c = get_I2C(hdl);
 
         errno = I2C->periph[hdl->config->major].error;
@@ -809,15 +803,14 @@ static void error(I2C_dev_t *hdl)
         if (I2C->periph[hdl->config->major].error == EIO) {
                 enable_I2C(hdl->config->major);
         }
-
-        GPIO_CLEAR_PIN(PB14); // TEST
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function wait for selected event (IRQ)
+ * @param  hdl                  device handle
+ * @param  SR1_event_mask       event mask (bits from SR1 register)
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
@@ -845,9 +838,10 @@ static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function wait for DMA event (IRQ)
+ * @param  hdl                  device handle
+ * @param  DMA                  DMA channel
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 #if ((_I2C1_ENABLE > 0) && (_I2C1_USE_DMA > 0)) || ((_I2C2_ENABLE > 0) && (_I2C2_USE_DMA > 0))
@@ -876,9 +870,9 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function generate START sequence on I2C bus
+ * @param  hdl                  device handle
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 static bool start(I2C_dev_t *hdl)
@@ -893,9 +887,9 @@ static bool start(I2C_dev_t *hdl)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function generate STOP sequence on I2C bus
+ * @param  hdl                  device handle
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 static void stop(I2C_dev_t *hdl)
@@ -908,9 +902,10 @@ static void stop(I2C_dev_t *hdl)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function send I2C address sequence
+ * @param  hdl                  device handle
+ * @param  write                true: compose write address
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 static bool send_address(I2C_dev_t *hdl, bool write)
@@ -954,9 +949,9 @@ static bool send_address(I2C_dev_t *hdl, bool write)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Clear event of send address
+ * @param  hdl                  device handle
+ * @return None
  */
 //==============================================================================
 static void clear_send_address_event(I2C_dev_t *hdl)
@@ -973,9 +968,11 @@ static void clear_send_address_event(I2C_dev_t *hdl)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function send subaddress to I2C device
+ * @param  hdl                  device handle
+ * @param  address              subaddress
+ * @param  mode                 size of subaddress
+ * @return On success true is returned, otherwise false
  */
 //==============================================================================
 static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
@@ -1009,9 +1006,10 @@ static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t m
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function set ACK/NACK status according to transfer size
+ * @param  hdl                  device handle
+ * @param  count                transfer size (bytes)
+ * @return None
  */
 //==============================================================================
 static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count)
@@ -1027,9 +1025,11 @@ static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function receive bytes from I2C bus (master-receiver)
+ * @param  hdl                  device handle
+ * @param  dst                  destination buffer
+ * @param  count                number of bytes to receive
+ * @return Number of received bytes
  */
 //==============================================================================
 static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
@@ -1059,9 +1059,6 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
 #endif
                         while (count) {
                                 if (count == 3) {
-//                                        if (!wait_for_I2C_event(hdl, I2C_SR1_RXNE)) // TEST
-//                                                break;
-
                                         if (!wait_for_I2C_event(hdl, I2C_SR1_BTF))
                                                 break;
 
@@ -1125,9 +1122,11 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function transmit selected amount bytes to I2C bus
+ * @param  hdl                  device handle
+ * @param  src                  data source
+ * @param  count                number of bytes to transfer
+ * @return Number of written bytes
  */
 //==============================================================================
 static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
@@ -1188,8 +1187,6 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
 //==============================================================================
 static void IRQ_EV_handler(u8_t major)
 {
-        GPIO_SET_PIN(PB15); // TEST
-
         if (I2C1->SR1 & I2C->periph[major].SR1_mask) {
                 _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
                 CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
@@ -1208,8 +1205,6 @@ static void IRQ_EV_handler(u8_t major)
         }
 
         _sys_task_yield_from_ISR();
-
-        GPIO_CLEAR_PIN(PB15); // TEST
 }
 
 //==============================================================================
@@ -1221,20 +1216,16 @@ static void IRQ_EV_handler(u8_t major)
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
-        GPIO_SET_PIN(PB15); // TEST
-
         I2C_t *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
 
         if (i2c->SR1 & I2C_SR1_ARLO) {
                 I2C->periph[major].error = EAGAIN;
 
         } else if (i2c->SR1 & I2C_SR1_AF) {
-                GPIO_SET_PIN(PB14); // TEST
                 if (I2C->periph[major].SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
                         I2C->periph[major].error = ENXIO;
                 else
                         I2C->periph[major].error = EIO;
-                GPIO_CLEAR_PIN(PB14); // TEST
         } else {
                 I2C->periph[major].error = EIO;
         }
@@ -1245,13 +1236,12 @@ static void IRQ_ER_handler(u8_t major)
         _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         _sys_task_yield_from_ISR();
-
-        GPIO_CLEAR_PIN(PB15); // TEST
 }
 
 //==============================================================================
 /**
  * @brief  DMA IRQ handler
+ * @param  DMA_ch_no    DMA channel number
  * @param  major        number of peripheral
  * @return If IRQ was woken then true is returned, otherwise false
  */
@@ -1259,8 +1249,6 @@ static void IRQ_ER_handler(u8_t major)
 #if ((_I2C1_ENABLE > 0) && (_I2C1_USE_DMA > 0)) || ((_I2C2_ENABLE > 0) && (_I2C2_USE_DMA > 0))
 static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
 {
-        GPIO_SET_PIN(PB15); // TEST
-
         if (DMA1->ISR & (DMA_ISR_TEIF1 << (4 * (DMA_ch_no - 1)))) {
                 I2C->periph[major].error = EIO;
         }
@@ -1268,7 +1256,6 @@ static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
         _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
         clear_DMA_IRQ_flags(major);
         _sys_task_yield_from_ISR();
-        GPIO_CLEAR_PIN(PB15); // TEST
 }
 #endif
 
