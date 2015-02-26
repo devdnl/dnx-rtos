@@ -54,8 +54,8 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static const int pipe_read_timeout  = MAX_DELAY_MS;
-static const int pipe_write_timeout = MAX_DELAY_MS;
+static const uint pipe_read_timeout  = MAX_DELAY_MS;
+static const uint pipe_write_timeout = MAX_DELAY_MS;
 
 /*==============================================================================
   Exported objects

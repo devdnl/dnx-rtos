@@ -800,13 +800,11 @@ FILE *_vfs_fopen(const char *path, const char *mode)
                 }
         }
 
-        if (!cwd_path || !file || !file->self) {
-                if (cwd_path)
-                        _sysm_sysfree(cwd_path);
+        if (cwd_path)
+                _sysm_sysfree(cwd_path);
 
-                if (file)
-                        _sysm_sysfree(file);
-
+        if (file && !file->self) {
+                _sysm_sysfree(file);
                 file = NULL;
         }
 
