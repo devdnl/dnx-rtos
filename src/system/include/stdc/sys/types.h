@@ -53,6 +53,7 @@ typedef int32_t         i32_t;
 typedef uint64_t        u64_t;
 typedef int64_t         i64_t;
 typedef unsigned int    uint;
+typedef unsigned long   ulong;
 
 /* special types */
 typedef uint64_t        fpos_t;

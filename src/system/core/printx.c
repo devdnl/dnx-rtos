@@ -926,6 +926,7 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                 {
                         *buf++ = c;
                         _do    = (--size != 0);
+                        n++;
                 }
 
                 bool get_fch()
@@ -994,7 +995,7 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         break;
 
                                 case 'd':
-                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mon);
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mday);
                                         break;
 
                                 case 'p':
@@ -1006,7 +1007,7 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         break;
 
                                 case 'm':
-                                        m = _snprintf(buf, size, "%d", timeptr->tm_mon + 1);
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mon + 1);
                                         break;
 
                                 case 'X':
