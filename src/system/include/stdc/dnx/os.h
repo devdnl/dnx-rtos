@@ -1247,6 +1247,48 @@ static inline int program_wait_for_close(prog_t *prog, const uint timeout)
 
 //==============================================================================
 /**
+ * @brief int program_get_exit_code(prog_t *prog)
+ * The function <b>program_get_exit_code</b>() return program's exit code.
+ *
+ * @param prog                  program object
+ *
+ * @errors EINVAL
+ *
+ * @return On success return exit code value. On error the -EINVAL value is
+ * returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         program_wait_for_close(prog, MAX_DELAY_MS);
+ *         int exit_code = program_get_exit_code(prog);
+ *         program_delete(prog);
+ *
+ *         if (exit_code == ...) {
+ *                ...
+ *         }
+ *
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int program_get_exit_code(prog_t *prog)
+{
+        return _program_get_exit_code(prog);
+}
+
+//==============================================================================
+/**
  * @brief bool program_is_closed(prog_t *prog)
  * The function <b>program_is_closed</b>() check if program is closed. This
  * function can be used to poll program status.

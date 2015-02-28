@@ -626,6 +626,25 @@ int _program_kill(prog_t *prog)
 
 //==============================================================================
 /**
+ * @brief  Return exit code of program
+ *
+ * @param prog                  program object
+ *
+ * @return On success exit code is returned, otherwise -EINVAL
+ */
+//==============================================================================
+int _program_get_exit_code(prog_t *prog)
+{
+        if (prog_is_valid(prog)) {
+                return prog->exit_code;
+        } else {
+                errno = EINVAL;
+                return -EINVAL;
+        }
+}
+
+//==============================================================================
+/**
  * @brief Wait for program close
  *
  * @param prog                  program object
