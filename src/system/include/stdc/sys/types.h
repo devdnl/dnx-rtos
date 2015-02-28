@@ -80,6 +80,28 @@ typedef int gid_t;
 /** device */
 typedef int dev_t;
 
+/** time type */
+struct tm {
+        int tm_sec;       //!> seconds after the minute        0-60*
+        int tm_min;       //!> minutes after the hour          0-59
+        int tm_hour;      //!> hours since midnight            0-23
+        int tm_mday;      //!> day of the month                1-31
+        int tm_mon;       //!> months since January            0-11
+        int tm_year;      //!> years since                     1900
+        int tm_wday;      //!> days since Sunday               0-6
+        int tm_yday;      //!> days since January 1            0-365
+        int tm_isdst;     //!> Daylight Saving Time flag
+};
+#define __TM_STRUCT_DEFINED__
+
+/** clock type */
+typedef u32_t clock_t;
+#define __CLOCK_TYPE_DEFINED__
+
+/** time type */
+typedef u32_t time_t;
+#define __TIME_TYPE_DEFINED__
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/

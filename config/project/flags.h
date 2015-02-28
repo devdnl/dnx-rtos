@@ -113,6 +113,7 @@
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
+#define __OS_RTC_FILE_PATH__ "/dev/rtc"
 #define __OS_SYSTEM_STOP_MACRO__ _YES_
 
 /* network configuration */

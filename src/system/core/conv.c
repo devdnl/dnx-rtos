@@ -36,6 +36,14 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define YEAR0                   1900
+#define DAY0                    4       // day 0 was Thursday
+#define EPOCH_YR                1970
+#define SECS_MIN                60
+#define SECS_HOUR               3600
+#define SECS_DAY                86400
+#define SECS_YEAR               31536000
+#define YEARSIZE(year)          (is_leap_year(year) ? 366 : 365)
 
 /*==============================================================================
   Local object types
@@ -48,14 +56,33 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+/** number of days in months for leap and normal years */
+static const uint8_t _ytab[2][12] = {
+        {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+        {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+};
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+/** statically allocated time structure */
+struct tm _tmbuf;
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Function check that given year is leap year or not
+ * @param  year         year
+ * @return If year is leap then true is returned, otherwise false
+ */
+//==============================================================================
+static bool is_leap_year(int year)
+{
+        return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+}
+
 //==============================================================================
 /**
  * @brief Function convert ASCII to the number
@@ -238,6 +265,94 @@ double _strtod(const char *str, char **end)
 double _atof(const char *str)
 {
         return _strtod(str, NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert date to UNIX time (Epoch)
+ *
+ * @param  day          month day (1-31)
+ * @param  month        month (1-12)
+ * @param  year         year
+ * @param  hour         hour (0-23)
+ * @param  min          minutes (0-59)
+ * @param  sec          seconds (0-59)
+ *
+ * @return UNIX time value (Epoch)
+ */
+//==============================================================================
+u32_t _date_to_epoch(u8_t day, u8_t month, u16_t year, u8_t hour,u8_t min,u8_t sec)
+{
+        if (  day   >= 1
+           && day   <= 31
+           && month >= 1
+           && month <= 12
+           && year  >= YEAR0
+           && hour  <= 23
+           && min   <= 59
+           && sec   <= 59  ) {
+
+                uint16_t yday = 0;
+                for (int i = 0; i < month - 1; i++) {
+                        yday += _ytab[is_leap_year(year)][i];
+                }
+
+                yday += day - 1;
+                year -= YEAR0;
+
+                return sec + min * SECS_MIN + hour * SECS_HOUR
+                       + yday * SECS_DAY + (year - 70) * SECS_YEAR + ((year - 69) / 4) * SECS_DAY
+                       - ((year - 1) / 100) * SECS_DAY + ((year + 299) / 400) * SECS_DAY;
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Convert UNIX time (Epoch) to date
+ *
+ * @param[in]  timer        time value (Epoch)
+ * @param[out] tmbuf        user's tm buffer
+ *
+ * @return On success return tmpbuf, otherwise NULL.
+ */
+//==============================================================================
+struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
+{
+        if (timer && tmbuf) {
+                time_t time = *timer;
+                u32_t  year = EPOCH_YR;
+
+                u32_t dayclock = (u32_t)time % SECS_DAY;
+                u32_t dayno    = (u32_t)time / SECS_DAY;
+
+                tmbuf->tm_sec  = dayclock % SECS_MIN;
+                tmbuf->tm_min  = (dayclock % SECS_HOUR) / SECS_MIN;
+                tmbuf->tm_hour = dayclock / SECS_HOUR;
+                tmbuf->tm_wday = (dayno + DAY0) % 7;
+
+                while (dayno >= (u32_t)YEARSIZE(year)) {
+                        dayno -= YEARSIZE(year);
+                        year++;
+                }
+
+                tmbuf->tm_year = year - YEAR0;
+                tmbuf->tm_yday = dayno;
+                tmbuf->tm_mon  = 0;
+
+                while (dayno >= (u32_t)_ytab[is_leap_year(year)][tmbuf->tm_mon]) {
+                        dayno -= _ytab[is_leap_year(year)][tmbuf->tm_mon];
+                        tmbuf->tm_mon++;
+                }
+
+                tmbuf->tm_mday  = dayno + 1;
+                tmbuf->tm_isdst = 0;
+
+                return tmbuf;
+        } else {
+                return NULL;
+        }
 }
 
 /*==============================================================================

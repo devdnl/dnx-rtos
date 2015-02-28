@@ -47,14 +47,17 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern struct tm _tmbuf;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern double _strtod(const char*, char**);
-extern i32_t  _atoi  (const char*);
-extern char  *_strtoi(const char*, int, i32_t*);
-extern double _atof  (const char*);
+extern double     _strtod        (const char*, char**);
+extern i32_t      _atoi          (const char*);
+extern char      *_strtoi        (const char*, int, i32_t*);
+extern double     _atof          (const char*);
+extern u32_t      _date_to_epoch (u8_t, u8_t, u16_t, u8_t, u8_t, u8_t);
+extern struct tm *_gmtime_r      (const time_t*, struct tm*);
 
 /*==============================================================================
   Exported inline functions
