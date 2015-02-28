@@ -349,6 +349,7 @@ function project:create_window(parent)
                 this:Connect(ID.CHOICE_CPU_NAME,         wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_name_selected )
                 this:Connect(ID.CHOICE_DEFAULT_IRQ_PRIO, wx.wxEVT_COMMAND_CHOICE_SELECTED,  choice_cpu_prio_selected )
                 this:Connect(ID.SPINCTRL_OSC_FREQ,       wx.wxEVT_COMMAND_SPINCTRL_UPDATED, spinctrl_osc_freq_updated)
+                this:Connect(ID.SPINCTRL_OSC_FREQ,       wx.wxEVT_COMMAND_TEXT_UPDATED,     spinctrl_osc_freq_updated)
 
                 load_configuration()
         end

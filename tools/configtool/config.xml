@@ -67,6 +67,7 @@
             <OS_MONITOR_NETWORK_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE__</key></OS_MONITOR_NETWORK_MEMORY_USAGE>
             <OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__</key></OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT>
             <OS_HOSTNAME><path>../../config/project/flags.h</path><key>__OS_HOSTNAME__</key></OS_HOSTNAME>
+            <OS_RTC_FILE_PATH><path>../../config/project/flags.h</path><key>__OS_RTC_FILE_PATH__</key></OS_RTC_FILE_PATH>
             <OS_SYSTEM_STOP_MACRO><path>../../config/project/flags.h</path><key>__OS_SYSTEM_STOP_MACRO__</key></OS_SYSTEM_STOP_MACRO>
             <ENABLE_NETWORK_H><path>../../config/project/flags.h</path><key>__NETWORK_ENABLE__</key></ENABLE_NETWORK_H>
             <NETWORK_MAC_ADDR_0><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_0__</key></NETWORK_MAC_ADDR_0>
