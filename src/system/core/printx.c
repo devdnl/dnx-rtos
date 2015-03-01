@@ -897,7 +897,6 @@ char *_ctime(const time_t *timer, const struct tm *tm)
  *       a - Abbreviated weekday name
  *       B - Full month name - supported only abbreviated version
  *       h - Abbreviated month name
- *       B - Full month name
  *       C - Year divided by 100 and truncated to integer (00-99) (century)
  *       y - Year, last two digits (00-99)
  *       Y - Year
