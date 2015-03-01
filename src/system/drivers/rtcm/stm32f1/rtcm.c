@@ -88,25 +88,7 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
         SET_BIT(PWR->CR, PWR_CR_DBP);
 
-        if ((RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) == RCC_BDCR_RTCSEL_NOCLOCK) {
-
-                if (_RTCM_CFG__LSE_ON && _RTCM_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE) {
-                        if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
-                                RCC_LSEConfig(_RTCM_CFG__LSE_ON);
-
-                                uint timer = _sys_time_get_reference();
-                                while (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
-                                        if (_sys_time_is_expired(timer, TIMEOUT_LSE)) {
-                                                errno = EIO;
-                                                return STD_RET_ERROR;
-                                        }
-                                }
-                        }
-                }
-
-                CLEAR_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
-                RCC_RTCCLKConfig(_RTCM_CFG__RTCCLK_SRC);
-                SET_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
+        if (!(RCC->BDCR & RCC_BDCR_RTCEN)) {
 
                 _sys_critical_section_begin();
                 {
@@ -130,6 +112,9 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
 
                         while (!(RTC->CRL & RTC_CRL_RTOFF) && attempts--);
                 }
+
+                SET_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
+
                 _sys_critical_section_end();
         }
 

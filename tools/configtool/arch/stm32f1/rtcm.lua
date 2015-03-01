@@ -125,7 +125,7 @@ end
 -- @return Module name
 --------------------------------------------------------------------------------
 function rtcm:get_window_name()
-        return "RTCM"
+        return "RTC"
 end
 
 
