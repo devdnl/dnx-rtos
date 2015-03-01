@@ -38,6 +38,21 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/*
+ * RTC Clock source
+ * RCC_RTCCLKSource_LSE       : LSE selected as RTC clock
+ * RCC_RTCCLKSource_LSI       : LSI selected as RTC clock
+ * RCC_RTCCLKSource_HSE_Div128: HSE clock divided by 128 selected as RTC clock
+ */
+#define _RTCM_CFG__RTCCLK_SRC           __PLL_RTC_CLK_SRC__
+
+/*
+ * LSE
+ * RCC_LSE_OFF   : LSE oscillator OFF
+ * RCC_LSE_ON    : LSE oscillator ON
+ * RCC_LSE_Bypass: LSE oscillator bypassed with external clock
+ */
+#define _RTCM_CFG__LSE_ON               __PLL_LSE_ON__
 
 /*==============================================================================
   Exported object types
