@@ -92,11 +92,11 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                         return STD_RET_ERROR;
         }
 
-        if (_PLL_CFG__LSE_ON) {
-                RCC_LSEConfig(_PLL_CFG__LSE_ON);
-                wait_for_flag(RCC_FLAG_LSERDY);
-                // this oscillator not causes an error because is not a main osc.
-        }
+//        if (_PLL_CFG__LSE_ON) {
+//                RCC_LSEConfig(_PLL_CFG__LSE_ON);
+//                wait_for_flag(RCC_FLAG_LSERDY);
+//                 this oscillator not causes an error because is not a main osc.
+//        }
 
         if (_PLL_CFG__HSE_ON) {
                 RCC_HSEConfig(_PLL_CFG__HSE_ON);
@@ -104,7 +104,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                         return STD_RET_ERROR;
         }
 
-        RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
+//        RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
 
 #ifdef STM32F10X_CL
         RCC_PREDIV2Config(_PLL_CFG__PLL_PREDIV2_VAL);

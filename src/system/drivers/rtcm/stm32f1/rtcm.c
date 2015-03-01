@@ -38,7 +38,7 @@
   Local macros
 ==============================================================================*/
 #define RTC_WRITE_ATTEMPTS      10000
-#define TIMEOUT_LSE             250
+#define TIMEOUT_LSE             5000
 
 /*==============================================================================
   Local object types
@@ -91,13 +91,15 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
         if ((RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) == RCC_BDCR_RTCSEL_NOCLOCK) {
 
                 if (_RTCM_CFG__LSE_ON && _RTCM_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE) {
-                        RCC_LSEConfig(_RTCM_CFG__LSE_ON);
+                        if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
+                                RCC_LSEConfig(_RTCM_CFG__LSE_ON);
 
-                        uint timer = _sys_time_get_reference();
-                        while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET) {
-                                if (_sys_time_is_expired(timer, TIMEOUT_LSE)) {
-                                        errno = EIO;
-                                        return STD_RET_ERROR;
+                                uint timer = _sys_time_get_reference();
+                                while (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
+                                        if (_sys_time_is_expired(timer, TIMEOUT_LSE)) {
+                                                errno = EIO;
+                                                return STD_RET_ERROR;
+                                        }
                                 }
                         }
                 }
@@ -119,7 +121,7 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
 
                         SET_BIT(RTC->CRL, RTC_CRL_CNF);
 
-                        int osc = (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8;
+                        int osc = (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) >> 8;
 
                         WRITE_REG(RTC->PRLH, PRE[osc] >> 16);
                         WRITE_REG(RTC->PRLL, PRE[osc]);
@@ -207,7 +209,8 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
         UNUSED_ARG(device_handle);
         UNUSED_ARG(fattr);
 
-        if (*fpos == 0 && count <= sizeof(time_t)) {
+        if (*fpos == 0) {
+                count = count > sizeof(time_t) ? sizeof(time_t) : count;
 
                 time_t t = 0;
                 memcpy(&t, src, count);
@@ -224,24 +227,17 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
                         }
 
                         SET_BIT(RTC->CRL, RTC_CRL_CNF);
-
-                        int osc = (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8;
-                        WRITE_REG(RTC->PRLH, PRE[osc] >> 16);
-                        WRITE_REG(RTC->PRLL, PRE[osc]);
-
                         WRITE_REG(RTC->CNTH, t >> 16);
                         WRITE_REG(RTC->CNTL, t);
-
                         CLEAR_BIT(RTC->CRL, RTC_CRL_CNF);
-
                         while (!(RTC->CRL & RTC_CRL_RTOFF) && attempts--);
-
                 }
                 _sys_critical_section_end();
 
                 return count;
         } else {
-                return 0;
+                errno = ESPIPE;
+                return -1;
         }
 }
 
@@ -263,9 +259,9 @@ API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
         UNUSED_ARG(device_handle);
         UNUSED_ARG(fattr);
 
-        _sys_printk("OSC: %d\n", (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8);
+        if (*fpos == 0) {
+                count = count > sizeof(time_t) ? sizeof(time_t) : count;
 
-        if (*fpos == 0 && count <= sizeof(time_t)) {
                 _sys_critical_section_begin();
                 u32_t cnt = (RTC->CNTH << 16) + RTC->CNTL;
                 _sys_critical_section_end();
@@ -274,7 +270,8 @@ API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
 
                 return count;
         } else {
-                return 0;
+                errno = ESPIPE;
+                return -1;
         }
 }
 
