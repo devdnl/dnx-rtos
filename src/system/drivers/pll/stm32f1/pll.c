@@ -37,6 +37,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define TIMEOUT_MS                      250
+#define LSE_TIMEOUT_MS                  5000
 
 /*==============================================================================
   Local types, enums definitions
@@ -47,7 +48,7 @@
 ==============================================================================*/
 static void     set_flash_latency       (u32_t latency);
 static void     enable_prefetch_buffer  (void);
-static stdret_t wait_for_flag           (u32_t flag);
+static stdret_t wait_for_flag           (u32_t flag, uint timeout);
 static bool     is_APB1_divided         (void);
 static bool     is_APB2_divided         (void);
 
@@ -88,23 +89,37 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         if (_PLL_CFG__LSI_ON) {
                 RCC_LSICmd(_PLL_CFG__LSI_ON);
-                if (wait_for_flag(RCC_FLAG_LSIRDY) == STD_RET_ERROR)
+                if (wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS) == STD_RET_ERROR)
                         return STD_RET_ERROR;
         }
 
         if (_PLL_CFG__LSE_ON) {
-                RCC_LSEConfig(_PLL_CFG__LSE_ON);
-                if (wait_for_flag(RCC_FLAG_LSERDY) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
+                SET_BIT(PWR->CR, PWR_CR_DBP);
+
+                if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
+                        RCC_LSEConfig(_PLL_CFG__LSE_ON);
+                        wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS);
+                        // this oscillator not causes an error because is not a main osc.
+                }
         }
 
         if (_PLL_CFG__HSE_ON) {
                 RCC_HSEConfig(_PLL_CFG__HSE_ON);
-                if (wait_for_flag(RCC_FLAG_HSERDY) == STD_RET_ERROR)
+                if (wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS) == STD_RET_ERROR)
                         return STD_RET_ERROR;
         }
 
-        RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
+        if (  (  (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _PLL_CFG__LSE_ON)
+              || (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI        && _PLL_CFG__LSI_ON)
+              || (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_HSE_Div128 && _PLL_CFG__HSE_ON) )
+           && (RCC->BDCR & RCC_BDCR_RTCEN) == 0
+           && (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) == RCC_BDCR_RTCSEL_NOCLOCK) {
+
+                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
+                SET_BIT(PWR->CR, PWR_CR_DBP);
+                RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
+        }
 
 #ifdef STM32F10X_CL
         RCC_PREDIV2Config(_PLL_CFG__PLL_PREDIV2_VAL);
@@ -112,14 +127,14 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         if (_PLL_CFG__PLL2_ON) {
                 RCC_PLL2Config(_PLL_CFG__PLL2_MUL);
                 RCC_PLL2Cmd(_PLL_CFG__PLL2_ON);
-                if (wait_for_flag(RCC_FLAG_PLL2RDY) == STD_RET_ERROR)
+                if (wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS) == STD_RET_ERROR)
                         return STD_RET_ERROR;
         }
 
         if (_PLL_CFG__PLL3_ON) {
                 RCC_PLL3Config(_PLL_CFG__PLL3_MUL);
                 RCC_PLL3Cmd(_PLL_CFG__PLL3_ON);
-                if (wait_for_flag(RCC_FLAG_PLL3RDY) == STD_RET_ERROR)
+                if (wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS) == STD_RET_ERROR)
                         return STD_RET_ERROR;
         }
 
@@ -134,7 +149,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         RCC_PLLConfig(_PLL_CFG__PLL_SRC, _PLL_CFG__PLL_MUL);
         RCC_PLLCmd(_PLL_CFG__PLL_ON);
-        if (wait_for_flag(RCC_FLAG_PLLRDY) == STD_RET_ERROR)
+        if (wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS) == STD_RET_ERROR)
                 return STD_RET_ERROR;
 
         RCC_ADCCLKConfig(_PLL_CFG__ADC_PRE);
@@ -405,11 +420,11 @@ static void enable_prefetch_buffer(void)
  * @return STD_RET_OK if success, STD_RET_ERROR on error
  */
 //==============================================================================
-static stdret_t wait_for_flag(u32_t flag)
+static stdret_t wait_for_flag(u32_t flag, uint timeout)
 {
         uint timer = _sys_time_get_reference();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (_sys_time_is_expired(timer, TIMEOUT_MS)) {
+                if (_sys_time_is_expired(timer, timeout)) {
                         errno = EIO;
                         return STD_RET_ERROR;
                 }

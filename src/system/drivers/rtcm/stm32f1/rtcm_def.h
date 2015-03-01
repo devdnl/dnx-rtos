@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    conv.h
+@file    rtcm_def.h
 
 @author  Daniel Zorychta
 
-@brief   Module with calculation and convert functions.
+@brief   Real-Time Clock Module
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,21 +24,23 @@
 
 *//*==========================================================================*/
 
-#ifndef _CONV_H_
-#define _CONV_H_
+#ifndef _RTCM_DEF_H_
+#define _RTCM_DEF_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "stm32f1/rtcm_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <sys/types.h>
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _RTCM_MAJOR_NUMBER               0
+#define _RTCM_MINOR_NUMBER               0
 
 /*==============================================================================
   Exported object types
@@ -47,19 +49,10 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern struct tm _tmbuf;
-extern int       _ltimeoff;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern double     _strtod        (const char*, char**);
-extern i32_t      _atoi          (const char*);
-extern char      *_strtoi        (const char*, int, i32_t*);
-extern double     _atof          (const char*);
-extern u32_t      _date_to_epoch (u8_t, u8_t, u16_t, u8_t, u8_t, u8_t);
-extern struct tm *_gmtime_r      (const time_t*, struct tm*);
-extern struct tm *_lotime_r      (const time_t *timer, struct tm *tmbuf);
 
 /*==============================================================================
   Exported inline functions
@@ -69,7 +62,7 @@ extern struct tm *_lotime_r      (const time_t *timer, struct tm *tmbuf);
 }
 #endif
 
-#endif /* _CONV_H_ */
+#endif /* _RTCM_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

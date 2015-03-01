@@ -31,6 +31,7 @@
 #include "core/printx.h"
 #include "core/sysmoni.h"
 #include "core/progman.h"
+#include "core/conv.h"
 #include "kernel/kwrapper.h"
 #include "dnx/misc.h"
 #include <unistd.h>
@@ -56,6 +57,22 @@
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 static FILE *sys_printk_file;
+#endif
+
+#if (CONFIG_PRINTF_ENABLE > 0)
+/** buffer used to store converted time to string */
+static char timestr[26];
+
+/** days of week */
+static const char *week_day[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+/** month names */
+static const char *month[] = {
+        "Jan", "Feb", "Mar",
+        "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep",
+        "Oct", "Nov", "Dec"
+};
 #endif
 
 /*==============================================================================
@@ -799,6 +816,232 @@ void _perror(const char *str)
         }
 #else
         (void) str;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss yyyy
+ *
+ * @param  timer        UNIX time value (can be NULL)
+ * @param  tm           time structure (can be NULL)
+ *
+ * @return Pointer to statically allocated string buffer. This function is not
+ *         thread safe.
+ */
+//==============================================================================
+char *_ctime(const time_t *timer, const struct tm *tm)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (timer || tm) {
+                struct tm t;
+
+                if (!timer) {
+                        t = *tm;
+                } else {
+                        _gmtime_r(timer, &t);
+                }
+
+                _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %4d\n",
+                          week_day[t.tm_wday],
+                          month[t.tm_mon],
+                          t.tm_mday,
+                          t.tm_hour,
+                          t.tm_min,
+                          t.tm_sec,
+                          t.tm_year+1900);
+        }
+
+        return timestr;
+#else
+        UNUSED_ARG(timer);
+        UNUSED_ARG(tm);
+        return "";
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Format time as string
+ *
+ * Copies into ptr the content of format, expanding its format specifiers into
+ * the corresponding values that represent the time described in timeptr, with
+ * a limit of maxsize characters.
+ *
+ * @param  buf          Pointer to the destination array where the resulting
+ *                      C string is copied.
+ * @param  size         Maximum number of characters to be copied to buf,
+ *                      including the terminating null-character.
+ * @param  format       C string containing any combination of regular characters
+ *                      and special format specifiers. These format specifiers
+ *                      are replaced by the function to the corresponding values
+ *                      to represent the time specified in timeptr.
+ * @param timeptr       Pointer to a tm structure that contains a calendar time
+ *                      broken down into its components (see struct tm).
+ *
+ * @return If the length of the resulting C string, including the terminating
+ *         null-character, doesn't exceed maxsize, the function returns the
+ *         total number of characters copied to buf (not including the terminating
+ *         null-character).
+ *         Otherwise, it returns zero, and the contents of the array pointed by
+ *         buf are indeterminate.
+ *
+ * @note Supported flags:
+ *       % - % character
+ *       n - new line
+ *       H - Hour in 24h format (00-23)
+ *       I - Hour in 12h format (01-12)
+ *       M - Minute (00-59)
+ *       S - Second (00-61)
+ *       A - Full weekday name - supported only abbreviated version
+ *       a - Abbreviated weekday name
+ *       B - Full month name - supported only abbreviated version
+ *       h - Abbreviated month name
+ *       C - Year divided by 100 and truncated to integer (00-99) (century)
+ *       y - Year, last two digits (00-99)
+ *       Y - Year
+ *       d - Day of the month, zero-padded (01-31)
+ *       p - AM or PM designation
+ *       j - Day of the year (001-366)
+ *       m - Month as a decimal number (01-12)
+ *       X - Time representation                                14:55:02
+ *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
+ *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ */
+//==============================================================================
+size_t _strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        size_t n = 0;
+
+        if (buf && size && format && timeptr) {
+                size--;
+
+                bool _do = true;
+                char ch  = '\0';
+
+                void put_ch(const char c)
+                {
+                        *buf++ = c;
+                        _do    = (--size != 0);
+                        n++;
+                }
+
+                bool get_fch()
+                {
+                        ch  = *format++;
+                        _do = (ch != '\0');
+                        return _do;
+                }
+
+                while (_do && size) {
+                        if (!get_fch())
+                                break;
+
+                        if (ch == '%') {
+                                if (!get_fch())
+                                        break;
+
+                                size_t m = 0;
+
+                                switch (ch) {
+                                case '%':
+                                        put_ch(ch);
+                                        break;
+
+                                case 'n':
+                                        put_ch('\n');
+                                        break;
+
+                                case 'H':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_hour);
+                                        break;
+
+                                case 'I':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_hour > 12 ? timeptr->tm_hour - 12 : timeptr->tm_hour);
+                                        break;
+
+                                case 'M':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_min);
+                                        break;
+
+                                case 'S':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_sec);
+                                        break;
+
+                                case 'a':
+                                case 'A':
+                                        m = _snprintf(buf, size, "%s", week_day[timeptr->tm_wday]);
+                                        break;
+
+                                case 'b':
+                                case 'h':
+                                case 'B':
+                                        m = _snprintf(buf, size, "%s", month[timeptr->tm_mon]);
+                                        break;
+
+                                case 'C':
+                                        m = _snprintf(buf, size, "%02d", (timeptr->tm_year + 1900) / 100);
+                                        break;
+
+                                case 'y':
+                                        m = _snprintf(buf, size, "%02d", (timeptr->tm_year + 1900) % 100);
+                                        break;
+
+                                case 'Y':
+                                        m = _snprintf(buf, size, "%d", timeptr->tm_year + 1900);
+                                        break;
+
+                                case 'd':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mday);
+                                        break;
+
+                                case 'p':
+                                        m = _snprintf(buf, size, "%s", timeptr->tm_hour > 12 ? "PM" : "AM");
+                                        break;
+
+                                case 'j':
+                                        m = _snprintf(buf, size, "%d", timeptr->tm_yday);
+                                        break;
+
+                                case 'm':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mon + 1);
+                                        break;
+
+                                case 'X':
+                                        m = _snprintf(buf, size, "%02d:%02d:%02d", timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+                                        break;
+
+                                case 'F':
+                                        m = _snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year+1900, timeptr->tm_mon+1, timeptr->tm_mday);
+                                        break;
+
+                                case 'D':
+                                case 'x':
+                                        m = _snprintf(buf, size, "%02d/%02d/%02d", timeptr->tm_mon+1, timeptr->tm_mday, (timeptr->tm_year+1900) % 100);
+                                        break;
+                                }
+
+                                n    += m;
+                                buf  += m;
+                                size -= m;
+
+                        } else {
+                                put_ch(ch);
+                        }
+                }
+
+                *buf = '\0';
+        }
+
+        return n;
+#else
+        UNUSED_ARG(ptr);
+        UNUSED_ARG(maxsize);
+        UNUSED_ARG(format);
+        UNUSED_ARG(timeptr);
+        return 0;
 #endif
 }
 

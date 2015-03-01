@@ -57,6 +57,7 @@
 #       include "../noarch/sdspi_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
+#       include "../stm32f1/rtcm_flags.h"
 #       include "../stm32f1/cpu.h"
 #       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
@@ -113,6 +114,7 @@
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
+#define __OS_RTC_FILE_PATH__ "/dev/rtc"
 #define __OS_SYSTEM_STOP_MACRO__ _YES_
 
 /* network configuration */
@@ -128,6 +130,7 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
+#define __ENABLE_RTCM__ _YES_
 #define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIOM__ _YES_

@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Time standard library (stub)
+@brief   Time standard library
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -32,6 +32,8 @@
 ==============================================================================*/
 #include <sys/types.h>
 #include <stddef.h>
+#include "kernel/kwrapper.h"
+#include "core/conv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +49,7 @@ extern "C" {
  * as those returned by function clock.
  * Dividing a count of clock ticks by this expression yields the number of seconds.
  */
-#define CLOCKS_PER_SEC          1000000
+#define CLOCKS_PER_SEC          1000
 
 /*==============================================================================
   Exported object types
@@ -58,7 +60,9 @@ extern "C" {
  * those returned by function clock.
  * This is the type returned by clock.
  */
-typedef uint clock_t;
+#ifndef __CLOCK_TYPE_DEFINED__
+typedef u32_t clock_t;
+#endif
 
 /**
  * Alias of a fundamental arithmetic type capable of representing times, as those
@@ -70,12 +74,15 @@ typedef uint clock_t;
  * Portable programs should not use values of this type directly, but always rely
  * on calls to elements of the standard library to translate them to portable types.
  */
-typedef uint time_t;
+#ifndef __TIME_TYPE_DEFINED__
+typedef u32_t time_t;
+#endif
 
 /**
  * Structure containing a calendar date and time broken down into its components.
  * The structure contains nine members of type int (in any order), which are:
  */
+#ifndef __TM_STRUCT_DEFINED__
 struct tm {
         int tm_sec;       //!> seconds after the minute        0-60*
         int tm_min;       //!> minutes after the hour          0-59
@@ -87,6 +94,7 @@ struct tm {
         int tm_yday;      //!> days since January 1            0-365
         int tm_isdst;     //!> Daylight Saving Time flag
 };
+#endif
 
 /*==============================================================================
   Exported objects
@@ -121,7 +129,7 @@ struct tm {
 //==============================================================================
 static inline clock_t clock(void)
 {
-        return 0;
+        return _kernel_get_time_ms();
 }
 
 //==============================================================================
@@ -165,8 +173,12 @@ static inline double difftime(time_t end, time_t beginning)
 //==============================================================================
 static inline time_t mktime(struct tm *timeptr)
 {
-        (void)timeptr;
-        return 0;
+        return _date_to_epoch(timeptr->tm_mday,
+                              timeptr->tm_mon+1,
+                              timeptr->tm_year+1900,
+                              timeptr->tm_hour,
+                              timeptr->tm_min,
+                              timeptr->tm_sec);
 }
 
 //==============================================================================
@@ -197,10 +209,58 @@ static inline time_t mktime(struct tm *timeptr)
 //==============================================================================
 static inline time_t time(time_t *timer)
 {
-        if (timer)
-                *timer = 0;
+        time_t t   = -1;
+        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r");
+        if (rtc) {
+                if (_vfs_fread(&t, sizeof(time_t), 1, rtc) == 1) {
+                        if (timer) {
+                                *timer = t;
+                        }
+                }
+                _vfs_fclose(rtc);
+        }
 
-        return 0;
+        return t;
+}
+
+//==============================================================================
+/**
+ * @brief  Set system's time
+ *
+ * stime() sets the system's idea of the time and date. The time, pointed to by
+ * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+ *
+ * @param  timer        pointer to an object of type time_t, where the time
+ *                      value is stored.
+ *
+ * @return On success 0 is returned.
+ *         On error -1 is returned.
+ */
+//==============================================================================
+static inline int stime(time_t *timer)
+{
+        int    ret = -1;
+        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w");
+        if (rtc) {
+                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
+                _vfs_fclose(rtc);
+        }
+
+        return ret;
+}
+
+//==============================================================================
+/**
+ * @brief  Set local time difference
+ *
+ * @param  tdiff        time difference in seconds (can be negative)
+ *
+ * @return None
+ */
+//==============================================================================
+static inline void slocaltime(int tdiff)
+{
+        _ltimeoff = tdiff;
 }
 
 //==============================================================================
@@ -231,8 +291,7 @@ static inline time_t time(time_t *timer)
 //==============================================================================
 static inline char *asctime(const struct tm *timeptr)
 {
-        (void)timeptr;
-        return "";
+        return _ctime(NULL, timeptr);
 }
 
 //==============================================================================
@@ -268,8 +327,7 @@ static inline char *asctime(const struct tm *timeptr)
 //==============================================================================
 static inline char *ctime(const time_t *timer)
 {
-        (void)timer;
-        return "";
+        return _ctime(timer, NULL);
 }
 
 //==============================================================================
@@ -290,21 +348,7 @@ static inline char *ctime(const time_t *timer)
 //==============================================================================
 static inline struct tm *gmtime(const time_t *timer)
 {
-        static struct tm gm = {
-                .tm_sec = 0,
-                .tm_min = 0,
-                .tm_hour = 0,
-                .tm_mday = 1,
-                .tm_mon = 0,
-                .tm_year = 1900,
-                .tm_wday = 0,
-                .tm_yday = 0,
-                .tm_isdst = 0
-        };
-
-        (void)timer;
-
-        return &gm;
+        return _gmtime_r(timer, &_tmbuf);
 }
 
 //==============================================================================
@@ -324,7 +368,7 @@ static inline struct tm *gmtime(const time_t *timer)
 //==============================================================================
 static inline struct tm *localtime(const time_t *timer)
 {
-        return gmtime(timer);
+        return _lotime_r(timer, &_tmbuf);
 }
 
 //==============================================================================
@@ -352,15 +396,34 @@ static inline struct tm *localtime(const time_t *timer)
  *         null-character).
  *         Otherwise, it returns zero, and the contents of the array pointed by
  *         ptr are indeterminate.
+ *
+ * @note Supported flags:
+ *       % - % character
+ *       n - new line
+ *       H - Hour in 24h format (00-23)
+ *       I - Hour in 12h format (01-12)
+ *       M - Minute (00-59)
+ *       S - Second (00-61)
+ *       A - Full weekday name - supported only abbreviated version
+ *       a - Abbreviated weekday name
+ *       B - Full month name - supported only abbreviated version
+ *       h - Abbreviated month name
+ *       C - Year divided by 100 and truncated to integer (00-99) (century)
+ *       y - Year, last two digits (00-99)
+ *       Y - Year
+ *       d - Day of the month, zero-padded (01-31)
+ *       p - AM or PM designation
+ *       j - Day of the year (001-366)
+ *       m - Month as a decimal number (01-12)
+ *       X - Time representation                                14:55:02
+ *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
+ *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
  */
 //==============================================================================
-static inline size_t strftime (char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
+static inline size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
 {
-        (void)ptr;
-        (void)maxsize;
-        (void)format;
-        (void)timeptr;
-        return 0;
+        return _strftime(ptr, maxsize, format, timeptr);
 }
 
 #ifdef __cplusplus

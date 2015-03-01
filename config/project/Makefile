@@ -17,6 +17,7 @@ __ENABLE_PROCFS__=_YES_
 __ENABLE_FATFS__=_YES_
 
 # modules enable flags
+__ENABLE_RTCM__=_YES_
 __ENABLE_LOOP__=_NO_
 __ENABLE_GPIO__=_YES_
 __ENABLE_AFIOM__=_YES_

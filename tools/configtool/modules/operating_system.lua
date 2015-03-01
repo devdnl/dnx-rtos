@@ -81,7 +81,7 @@ ID.STATICTEXT13 = wx.wxNewId()
 ID.STATICTEXT14 = wx.wxNewId()
 ID.STATICTEXT_TOTAL_STACK_SIZE = wx.wxNewId()
 ID.TEXTCTRL_HOSTNAME = wx.wxNewId()
-
+ID.TEXTCTRL_RTCPATH = wx.wxNewId()
 
 --==============================================================================
 -- LOCAL FUNCTIONS
@@ -130,6 +130,7 @@ local function load_configuration()
         ui.SpinCtrl_mem_block:SetValue(tonumber(ct:key_read(config.project.key.HEAP_BLOCK_SIZE)))
         ui.Choice_errno_size:SetSelection(tonumber(ct:key_read(config.project.key.OS_ERRNO_STRING_LEN)))
         ui.TextCtrl_hostname:SetValue(ct:key_read(config.project.key.OS_HOSTNAME):gsub('"', ''))
+        ui.TextCtrl_RTC_path:SetValue(ct:key_read(config.project.key.OS_RTC_FILE_PATH):gsub('"', ''))
 end
 
 
@@ -165,6 +166,7 @@ local function save_configuration()
         ct:key_write(config.project.key.HEAP_BLOCK_SIZE, tostring(ui.SpinCtrl_mem_block:GetValue()))
         ct:key_write(config.project.key.OS_ERRNO_STRING_LEN, tostring(ui.Choice_errno_size:GetSelection()))
         ct:key_write(config.project.key.OS_HOSTNAME, '"'..ui.TextCtrl_hostname:GetValue()..'"')
+        ct:key_write(config.project.key.OS_RTC_FILE_PATH, '"'..ui.TextCtrl_RTC_path:GetValue()..'"')
 
         modified:no()
 end
@@ -386,6 +388,13 @@ function operating_system:create_window(parent)
                 ui.StaticBoxSizer7:Add(ui.TextCtrl_hostname, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer7, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- RTC group box
+                ui.StaticBoxSizer8 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "RTC device path")
+                ui.TextCtrl_RTC_path = wx.wxTextCtrl(this, ID.TEXTCTRL_RTCPATH, "", wx.wxDefaultPosition, wx.wxSize(ct.CONTROL_X_SIZE, -1))
+                ui.TextCtrl_RTC_path:SetToolTip("This is RTC device path. By using this file (device) the system will read the time.")
+                ui.StaticBoxSizer8:Add(ui.TextCtrl_RTC_path, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer1:Add(ui.StaticBoxSizer8, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
                 -- layout configuration
                 this:SetSizer(ui.FlexGridSizer1)
                 this:SetScrollRate(50, 50)
@@ -417,6 +426,7 @@ function operating_system:create_window(parent)
                 this:Connect(ID.SPINCTRL_MEM_BLOCK,            wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
                 this:Connect(ID.CHOICE_ERRNO_SIZE,             wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
                 this:Connect(ID.TEXTCTRL_HOSTNAME,             wx.wxEVT_COMMAND_TEXT_UPDATED,     value_changed       )
+                this:Connect(ID.TEXTCTRL_RTCPATH,              wx.wxEVT_COMMAND_TEXT_UPDATED,     value_changed       )
         end
 
         return ui.window
