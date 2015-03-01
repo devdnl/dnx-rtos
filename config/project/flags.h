@@ -57,6 +57,7 @@
 #       include "../noarch/sdspi_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
+#       include "../stm32f1/rtcm_flags.h"
 #       include "../stm32f1/cpu.h"
 #       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
@@ -129,6 +130,7 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
+#define __ENABLE_RTCM__ _YES_
 #define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIOM__ _YES_

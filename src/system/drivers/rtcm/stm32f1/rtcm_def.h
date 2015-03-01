@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl_macros.h
+@file    rtcm_def.h
 
 @author  Daniel Zorychta
 
-@brief   ioctl build macros.
+@brief   Real Time Clock Module
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,65 +24,23 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_MACROS_H_
-#define _IOCTL_MACROS_H_
+#ifndef _RTCM_DEF_H_
+#define _RTCM_DEF_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "stm32f1/rtcm_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _IO(g, n)               (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOR(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOW(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOWR(g, n, t)          (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-
-/* CT: IO group list */
-enum _IO_GROUP {
-        _IO_GROUP_PIPE,
-        _IO_GROUP_STORAGE,
-        _IO_GROUP_VFS,
-        _IO_GROUP_AFIO,
-        _IO_GROUP_CRCM,
-        _IO_GROUP_ETHMAC,
-        _IO_GROUP_GPIO,
-        _IO_GROUP_PLL,
-        _IO_GROUP_SDSPI,
-        _IO_GROUP_SPI,
-        _IO_GROUP_TTY,
-        _IO_GROUP_UART,
-        _IO_GROUP_WDG,
-        _IO_GROUP_I2C,
-        _IO_GROUP_USBD,
-        _IO_GROUP_IRQ,
-        _IO_GROUP_LOOP,
-        _IO_GROUP_RTCM,
-};
-
-/* predefined requests*/
-/**
- *  @brief  Initialize storage device
- *  @param  None
- *  @return On success (device initialized) 1 is returned.
- *          On failure (device not initialized) 0 is returned.
- *          On error -1 is returned and errno is set.
- */
-#define IOCTL_STORAGE__INITIALIZE       _IO(STORAGE, 0x00)
-
-/**
- *  @brief  Read storage's MBR sector and detect partitions
- *  @param  None
- *  @return On success (MBR detected) 1 is returned.
- *          On failure (MBR not exist) 0 is returned.
- *          On error -1 is returned and errno is set.
- */
-#define IOCTL_STORAGE__READ_MBR         _IO(STORAGE, 0x01)
+#define _RTCM_MAJOR_NUMBER               0
+#define _RTCM_MINOR_NUMBER               0
 
 /*==============================================================================
   Exported object types
@@ -104,7 +62,7 @@ enum _IO_GROUP {
 }
 #endif
 
-#endif /* _IOCTL_MACROS_H_ */
+#endif /* _RTCM_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
