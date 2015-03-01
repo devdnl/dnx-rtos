@@ -48,6 +48,7 @@ extern "C" {
   Exported objects
 ==============================================================================*/
 extern struct tm _tmbuf;
+extern int       _ltimeoff;
 
 /*==============================================================================
   Exported functions
@@ -58,6 +59,7 @@ extern char      *_strtoi        (const char*, int, i32_t*);
 extern double     _atof          (const char*);
 extern u32_t      _date_to_epoch (u8_t, u8_t, u16_t, u8_t, u8_t, u8_t);
 extern struct tm *_gmtime_r      (const time_t*, struct tm*);
+extern struct tm *_lotime_r      (const time_t *timer, struct tm *tmbuf);
 
 /*==============================================================================
   Exported inline functions

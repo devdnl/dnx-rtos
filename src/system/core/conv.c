@@ -68,6 +68,9 @@ static const uint8_t _ytab[2][12] = {
 /** statically allocated time structure */
 struct tm _tmbuf;
 
+/** local time offset */
+int _ltimeoff;
+
 /*==============================================================================
   Function definitions
 ==============================================================================*/
@@ -350,6 +353,26 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
                 tmbuf->tm_isdst = 0;
 
                 return tmbuf;
+        } else {
+                return NULL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Convert UNIX time (Epoch) to date (local time)
+ *
+ * @param[in]  timer        time value (Epoch)
+ * @param[out] tmbuf        user's tm buffer
+ *
+ * @return On success return tmpbuf, otherwise NULL.
+ */
+//==============================================================================
+struct tm *_lotime_r(const time_t *timer, struct tm *tmbuf)
+{
+        if (timer) {
+                time_t localtime = *timer + _ltimeoff;
+                return _gmtime_r(&localtime, tmbuf);
         } else {
                 return NULL;
         }

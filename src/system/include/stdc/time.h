@@ -251,6 +251,20 @@ static inline int stime(time_t *t)
 
 //==============================================================================
 /**
+ * @brief  Set local time difference
+ *
+ * @param  tdiff        time difference in seconds (can be negative)
+ *
+ * @return None
+ */
+//==============================================================================
+static inline void slocaltime(int tdiff)
+{
+        _ltimeoff = tdiff;
+}
+
+//==============================================================================
+/**
  * @brief  Convert tm structure to string
  *
  * Interprets the contents of the tm structure pointed by timeptr as a calendar
@@ -350,13 +364,11 @@ static inline struct tm *gmtime(const time_t *timer)
  *
  * @return A pointer to a tm structure with its members filled with the values
  *         that correspond to the local time representation of timer.
- *
- * @note This implementation return always time in UTC.
  */
 //==============================================================================
 static inline struct tm *localtime(const time_t *timer)
 {
-        return _gmtime_r(timer, &_tmbuf);
+        return _lotime_r(timer, &_tmbuf);
 }
 
 //==============================================================================
