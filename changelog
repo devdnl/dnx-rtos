@@ -3,7 +3,8 @@ dnx RTOS 1.5.5
 New Features, Improvements:
 - Added lua library (with lua and luac programs)
 - System monitor adds programs' stack size to the used memory
-- Added time.h stub library
+- Added time.h library
+- Added RTC module
 - Added "b" flags to the fopen() function
 - Added Kernel Panic message from last fault session
 - Decreased RAM usage by system objects (file, mutex, semaphore, etc)

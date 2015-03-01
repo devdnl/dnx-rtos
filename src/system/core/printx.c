@@ -876,7 +876,7 @@ char *_ctime(const time_t *timer, const struct tm *tm)
  *                      and special format specifiers. These format specifiers
  *                      are replaced by the function to the corresponding values
  *                      to represent the time specified in timeptr.
- * @param timeptr       Pointer to a tm structure that contains a calendar time
+ * @param  timeptr      Pointer to a tm structure that contains a calendar time
  *                      broken down into its components (see struct tm).
  *
  * @return If the length of the resulting C string, including the terminating
@@ -1037,8 +1037,8 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
 
         return n;
 #else
-        UNUSED_ARG(ptr);
-        UNUSED_ARG(maxsize);
+        UNUSED_ARG(buf);
+        UNUSED_ARG(size);
         UNUSED_ARG(format);
         UNUSED_ARG(timeptr);
         return 0;
