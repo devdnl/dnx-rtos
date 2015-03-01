@@ -43,6 +43,7 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+static const u32_t PRE[] = {1, 32767, 39999, (CONFIG_CPU_OSC_FREQ / 128) - 1};
 
 /*==============================================================================
   Local function prototypes
@@ -84,51 +85,51 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(minor);
         UNUSED_ARG(_module_name_);
 
-        u32_t PRL = 1;
-        switch (_RTCM_CFG__RTCCLK_SRC) {
-        case RCC_RTCCLKSource_LSE:        PRL = 32768 - 1; break;
-        case RCC_RTCCLKSource_LSI:        PRL = 40000 - 1; break;
-        case RCC_RTCCLKSource_HSE_Div128: PRL = (CONFIG_CPU_OSC_FREQ / 128) - 1; break;
-        }
-
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
         SET_BIT(PWR->CR, PWR_CR_DBP);
-        CLEAR_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
-        CLEAR_BIT(RCC->BDCR, RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0);
-        RCC_RTCCLKConfig(_RTCM_CFG__RTCCLK_SRC);
-        SET_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
 
-        if (_RTCM_CFG__LSE_ON) {
-                RCC_LSEConfig(_RTCM_CFG__LSE_ON);
+        if ((RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) == RCC_BDCR_RTCSEL_NOCLOCK) {
 
-                uint timer = _sys_time_get_reference();
-                while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET) {
-                        if (_sys_time_is_expired(timer, TIMEOUT_LSE)) {
-                                errno = EIO;
-                                return STD_RET_ERROR;
-                        }
-                }
-        }
+                if (_RTCM_CFG__LSE_ON && _RTCM_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE) {
+                        RCC_LSEConfig(_RTCM_CFG__LSE_ON);
 
-        _sys_critical_section_begin();
-        {
-                uint attempts = RTC_WRITE_ATTEMPTS;
-                while (!(RTC->CRL & RTC_CRL_RTOFF)) {
-                        if (--attempts == 0) {
-                                _sys_critical_section_end();
-                                errno = EIO;
-                                return STD_RET_ERROR;
+                        uint timer = _sys_time_get_reference();
+                        while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET) {
+                                if (_sys_time_is_expired(timer, TIMEOUT_LSE)) {
+                                        errno = EIO;
+                                        return STD_RET_ERROR;
+                                }
                         }
                 }
 
-                SET_BIT(RTC->CRL, RTC_CRL_CNF);
-                WRITE_REG(RTC->PRLH, PRL >> 16);
-                WRITE_REG(RTC->PRLL, PRL);
-                CLEAR_BIT(RTC->CRL, RTC_CRL_CNF);
-                while (!(RTC->CRL & RTC_CRL_RTOFF) && attempts--);
+                CLEAR_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
+                RCC_RTCCLKConfig(_RTCM_CFG__RTCCLK_SRC);
+                SET_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
 
+                _sys_critical_section_begin();
+                {
+                        uint attempts = RTC_WRITE_ATTEMPTS;
+                        while (!(RTC->CRL & RTC_CRL_RTOFF)) {
+                                if (--attempts == 0) {
+                                        _sys_critical_section_end();
+                                        errno = EIO;
+                                        return STD_RET_ERROR;
+                                }
+                        }
+
+                        SET_BIT(RTC->CRL, RTC_CRL_CNF);
+
+                        int osc = (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8;
+
+                        WRITE_REG(RTC->PRLH, PRE[osc] >> 16);
+                        WRITE_REG(RTC->PRLL, PRE[osc]);
+
+                        CLEAR_BIT(RTC->CRL, RTC_CRL_CNF);
+
+                        while (!(RTC->CRL & RTC_CRL_RTOFF) && attempts--);
+                }
+                _sys_critical_section_end();
         }
-        _sys_critical_section_end();
 
         return STD_RET_OK;
 }
@@ -223,9 +224,16 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
                         }
 
                         SET_BIT(RTC->CRL, RTC_CRL_CNF);
+
+                        int osc = (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8;
+                        WRITE_REG(RTC->PRLH, PRE[osc] >> 16);
+                        WRITE_REG(RTC->PRLL, PRE[osc]);
+
                         WRITE_REG(RTC->CNTH, t >> 16);
                         WRITE_REG(RTC->CNTL, t);
+
                         CLEAR_BIT(RTC->CRL, RTC_CRL_CNF);
+
                         while (!(RTC->CRL & RTC_CRL_RTOFF) && attempts--);
 
                 }
@@ -255,12 +263,15 @@ API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
         UNUSED_ARG(device_handle);
         UNUSED_ARG(fattr);
 
+        _sys_printk("OSC: %d\n", (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_1)) >> 8);
+
         if (*fpos == 0 && count <= sizeof(time_t)) {
                 _sys_critical_section_begin();
                 u32_t cnt = (RTC->CNTH << 16) + RTC->CNTL;
                 _sys_critical_section_end();
 
                 memcpy(dst, &cnt, count);
+
                 return count;
         } else {
                 return 0;

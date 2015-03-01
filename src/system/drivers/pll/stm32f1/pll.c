@@ -94,8 +94,8 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         if (_PLL_CFG__LSE_ON) {
                 RCC_LSEConfig(_PLL_CFG__LSE_ON);
-                if (wait_for_flag(RCC_FLAG_LSERDY) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                wait_for_flag(RCC_FLAG_LSERDY);
+                // this oscillator not causes an error because is not a main osc.
         }
 
         if (_PLL_CFG__HSE_ON) {
