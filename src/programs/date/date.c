@@ -52,6 +52,8 @@
 GLOBAL_VARIABLES_SECTION {
 };
 
+static const char *wrong_time_fm = "Wrong time format!";
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -71,7 +73,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 puts("Options:");
                 puts("  --help                      this help");
                 puts("  --set=DD/MM/YYYY,HH:MM:SS   set date and time (UTC)");
-                puts("  --set-tz=TIMEOFFSET         set timezone offset e.g. +04:00 or -01:00\n");
+                puts("  --set-tz=TIMEOFFSET         set timezone offset e.g. +0400, -0100\n");
                 puts("Formats start with % character:");
                 puts("  %nHIJMSAaBhCyYdpjmXxFD");
 
@@ -85,7 +87,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 if (  day  > 31 || month  > 12 || month  < 1  ||year < 1970
                    || hour > 23 || minute > 59 || second > 59) {
 
-                        puts("Wrong time format");
+                        puts(wrong_time_fm);
                         return EXIT_FAILURE;
                 }
 
@@ -106,14 +108,18 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
         } else if (argc == 2 && strncmp("--set-tz=", argv[1], 9) == 0) {
+                if (strlen(&argv[1][9]) != 5) {
+                        puts(wrong_time_fm);
+                        return EXIT_FAILURE;
+                }
+
                 uint sign, hour, minute;
                 sign = hour = minute = 0xFF;
 
-                sscanf(&argv[1][9], "%c%d:%d", &sign, &hour, &minute);
+                sscanf(&argv[1][9], "%c%2d%2d", &sign, &hour, &minute);
 
                 if (!(sign == '-' || sign == '+') || hour > 23 || minute > 59) {
-
-                        puts("Wrong time format");
+                        puts(wrong_time_fm);
                         return EXIT_FAILURE;
                 }
 

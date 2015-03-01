@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Real Time Clock Module
+@brief   Real-Time Clock Module
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 

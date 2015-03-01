@@ -227,22 +227,22 @@ static inline time_t time(time_t *timer)
 /**
  * @brief  Set system's time
  *
- * stime() sets the system's idea of the time and date. The time, pointed to by t,
- * is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+ * stime() sets the system's idea of the time and date. The time, pointed to by
+ * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
  *
- * @param  t            pointer to an object of type time_t, where the time
+ * @param  timer        pointer to an object of type time_t, where the time
  *                      value is stored.
  *
  * @return On success 0 is returned.
  *         On error -1 is returned.
  */
 //==============================================================================
-static inline int stime(time_t *t)
+static inline int stime(time_t *timer)
 {
         int    ret = -1;
         FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w");
         if (rtc) {
-                ret = _vfs_fwrite(t, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
+                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
                 _vfs_fclose(rtc);
         }
 
