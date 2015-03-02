@@ -1031,7 +1031,7 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         break;
 
                                 case 'j':
-                                        m = _snprintf(buf, size, "%03d", timeptr->tm_yday);
+                                        m = _snprintf(buf, size, "%03d", timeptr->tm_yday + 1);
                                         break;
 
                                 case 'm':

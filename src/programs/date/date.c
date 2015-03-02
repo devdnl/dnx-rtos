@@ -138,7 +138,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
 
         } else {
                 time_t t = time(NULL);
-                printf(asctime(localtime(&t)));
+                printf(ctime(&t));
         }
 
         return EXIT_SUCCESS;
