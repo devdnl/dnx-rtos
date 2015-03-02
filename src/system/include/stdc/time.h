@@ -318,7 +318,7 @@ static inline char *asctime(const struct tm *timeptr)
  *
  * The returned string has the following format:
  *
- *      Www Mmm dd hh:mm:ss yyyy
+ *      Www Mmm dd hh:mm:ss zzzzz yyyy
  *
  * Where Www is the weekday, Mmm the month (in letters), dd the day of the month,
  * hh:mm:ss the time, and yyyy the year.
@@ -434,6 +434,7 @@ static inline struct tm *localtime(const time_t *timer)
  *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
  *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
  *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
  */
 //==============================================================================
 static inline size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)

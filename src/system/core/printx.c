@@ -61,7 +61,7 @@ static FILE *sys_printk_file;
 
 #if (CONFIG_PRINTF_ENABLE > 0)
 /** buffer used to store converted time to string */
-static char timestr[25];
+static char timestr[32];
 
 /** days of week */
 static const char *week_day_abbr[] = {
@@ -839,7 +839,7 @@ void _perror(const char *str)
 
 //==============================================================================
 /**
- * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss yyyy
+ * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss zzzzz yyyy
  *
  * @param  timer        UNIX time value (can be NULL)
  * @param  tm           time structure (can be NULL)
@@ -860,13 +860,16 @@ char *_ctime(const time_t *timer, const struct tm *tm)
                         _lotime_r(timer, &t);
                 }
 
-                _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %4d\n",
+                _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %c%02d%02d %4d\n",
                           week_day_abbr[t.tm_wday],
                           month_abbr[t.tm_mon],
                           t.tm_mday,
                           t.tm_hour,
                           t.tm_min,
                           t.tm_sec,
+                          (_ltimeoff < 0 ? '-'  : '+'),
+                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 3600,
+                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 60 % 60,
                           t.tm_year+1900);
         }
 
@@ -927,6 +930,7 @@ char *_ctime(const time_t *timer, const struct tm *tm)
  *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
  *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
  *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
  */
 //==============================================================================
 size_t _strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
@@ -1040,6 +1044,13 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
 
                                 case 'F':
                                         m = _snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year+1900, timeptr->tm_mon+1, timeptr->tm_mday);
+                                        break;
+
+                                case 'z':
+                                        m = _snprintf(buf, size, "%c%02d%02d",
+                                                      (_ltimeoff < 0 ? '-':'+'),
+                                                      (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 3600,
+                                                      (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 60 % 60);
                                         break;
 
                                 case 'D':
