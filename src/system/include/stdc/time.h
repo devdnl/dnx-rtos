@@ -251,16 +251,30 @@ static inline int stime(time_t *timer)
 
 //==============================================================================
 /**
- * @brief  Set local time difference
+ * @brief  Setup time zone by setting difference between UTC and local time
  *
  * @param  tdiff        time difference in seconds (can be negative)
  *
  * @return None
  */
 //==============================================================================
-static inline void slocaltime(int tdiff)
+static inline void stimezone(int tdiff)
 {
         _ltimeoff = tdiff;
+}
+
+//==============================================================================
+/**
+ * @brief  Return difference in seconds between UTC and local time
+ *
+ * @param  None
+ *
+ * @return Difference between UTC and local time in seconds.
+ */
+//==============================================================================
+static inline int timezone()
+{
+        return _ltimeoff;
 }
 
 //==============================================================================

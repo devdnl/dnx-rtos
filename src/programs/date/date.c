@@ -75,7 +75,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 puts("  --set=DD/MM/YYYY,HH:MM:SS   set date and time (UTC)");
                 puts("  --set-tz=TIMEOFFSET         set timezone offset e.g. +0400, -0100\n");
                 puts("Formats start with % character:");
-                puts("  %nHIJMSAaBhCyYdpjmXxFD");
+                puts("  %nHIJMSAaBbhCYydpjmXxFD");
 
         } else if (argc == 2 && strncmp("--set=", argv[1], 6) == 0) {
                 uint day, month, year, hour, minute, second;
@@ -124,7 +124,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
                 int diff = (hour * 3600 + minute * 60) * (sign == '-' ? -1 : 1);
-                slocaltime(diff);
+                stimezone(diff);
 
         } else if (argc == 2 && argv[1][0] == '+') {
                 char *buf = calloc(1, TIME_FORMAT_BUF_LEN);
