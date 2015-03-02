@@ -839,7 +839,7 @@ char *_ctime(const time_t *timer, const struct tm *tm)
                 if (!timer) {
                         t = *tm;
                 } else {
-                        _gmtime_r(timer, &t);
+                        _lotime_r(timer, &t);
                 }
 
                 _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %4d\n",
