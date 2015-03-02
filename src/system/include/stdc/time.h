@@ -404,9 +404,10 @@ static inline struct tm *localtime(const time_t *timer)
  *       I - Hour in 12h format (01-12)
  *       M - Minute (00-59)
  *       S - Second (00-61)
- *       A - Full weekday name - supported only abbreviated version
+ *       A - Full weekday name
  *       a - Abbreviated weekday name
- *       B - Full month name - supported only abbreviated version
+ *       B - Full month name
+ *       b - Abbreviated month name
  *       h - Abbreviated month name
  *       C - Year divided by 100 and truncated to integer (00-99) (century)
  *       y - Year, last two digits (00-99)

@@ -61,18 +61,36 @@ static FILE *sys_printk_file;
 
 #if (CONFIG_PRINTF_ENABLE > 0)
 /** buffer used to store converted time to string */
-static char timestr[26];
+static char timestr[25];
 
 /** days of week */
-static const char *week_day[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+static const char *week_day_abbr[] = {
+        "Sun", "Mon", "Tue",
+        "Wed", "Thu", "Fri",
+        "Sat"
+};
+
+static const char *week_day_full[] = {
+        "Sunday",    "Monday", "Tuesday",
+        "Wednesday", "Thrusday",
+        "Friday",    "Saturday"
+};
 
 /** month names */
-static const char *month[] = {
+static const char *month_abbr[] = {
         "Jan", "Feb", "Mar",
         "Apr", "May", "Jun",
         "Jul", "Aug", "Sep",
         "Oct", "Nov", "Dec"
 };
+
+static const char *month_full[] = {
+        "January", "February", "March",
+        "April",   "May",      "June",
+        "July",    "August",   "September",
+        "October", "November", "December"
+};
+
 #endif
 
 /*==============================================================================
@@ -843,8 +861,8 @@ char *_ctime(const time_t *timer, const struct tm *tm)
                 }
 
                 _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %4d\n",
-                          week_day[t.tm_wday],
-                          month[t.tm_mon],
+                          week_day_abbr[t.tm_wday],
+                          month_abbr[t.tm_mon],
                           t.tm_mday,
                           t.tm_hour,
                           t.tm_min,
@@ -893,9 +911,10 @@ char *_ctime(const time_t *timer, const struct tm *tm)
  *       I - Hour in 12h format (01-12)
  *       M - Minute (00-59)
  *       S - Second (00-61)
- *       A - Full weekday name - supported only abbreviated version
+ *       A - Full weekday name
  *       a - Abbreviated weekday name
- *       B - Full month name - supported only abbreviated version
+ *       B - Full month name
+ *       b - Abbreviated month name
  *       h - Abbreviated month name
  *       C - Year divided by 100 and truncated to integer (00-99) (century)
  *       y - Year, last two digits (00-99)
@@ -971,14 +990,20 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         break;
 
                                 case 'a':
+                                        m = _snprintf(buf, size, "%s", week_day_abbr[timeptr->tm_wday]);
+                                        break;
+
                                 case 'A':
-                                        m = _snprintf(buf, size, "%s", week_day[timeptr->tm_wday]);
+                                        m = _snprintf(buf, size, "%s", week_day_full[timeptr->tm_wday]);
                                         break;
 
                                 case 'b':
                                 case 'h':
+                                        m = _snprintf(buf, size, "%s", month_abbr[timeptr->tm_mon]);
+                                        break;
+
                                 case 'B':
-                                        m = _snprintf(buf, size, "%s", month[timeptr->tm_mon]);
+                                        m = _snprintf(buf, size, "%s", month_full[timeptr->tm_mon]);
                                         break;
 
                                 case 'C':
@@ -1002,7 +1027,7 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         break;
 
                                 case 'j':
-                                        m = _snprintf(buf, size, "%d", timeptr->tm_yday);
+                                        m = _snprintf(buf, size, "%03d", timeptr->tm_yday);
                                         break;
 
                                 case 'm':
