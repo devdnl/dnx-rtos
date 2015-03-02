@@ -321,6 +321,20 @@ static inline bool _sys_pipe_close(pipe_t *pipe)
 
 //==============================================================================
 /**
+ * @brief  Clear pipe
+ *
+ * @param  pipe         a pipe object
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool _sys_pipe_clear(pipe_t *pipe)
+{
+        return _pipe_clear(pipe);
+}
+
+//==============================================================================
+/**
  * @brief  Function return size of programs table (number of programs)
  *
  * @param  None

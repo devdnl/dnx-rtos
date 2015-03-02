@@ -1167,12 +1167,17 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 
                 } else if (opened_file->node->type == NODE_TYPE_PIPE) {
 
-                        if (request != IOCTL_PIPE__CLOSE) {
-                                errno = EBADRQC;
-                        } else {
+                        switch (request) {
+                        case IOCTL_PIPE__CLOSE:
                                 _sys_mutex_unlock(lfs->resource_mtx);
                                 return _sys_pipe_close(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
+
+                        case IOCTL_PIPE__CLEAR:
+                                _sys_mutex_unlock(lfs->resource_mtx);
+                                return _sys_pipe_clear(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
                         }
+
+                        errno = EBADRQC;
                 } else {
                         errno = EBADRQC;
                 }

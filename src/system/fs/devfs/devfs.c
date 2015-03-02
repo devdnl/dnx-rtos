@@ -354,6 +354,8 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
                 return _sys_driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
                 return _sys_pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
+        } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLEAR) {
+                return _sys_pipe_clear(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
                 errno = EBADRQC;
                 return STD_RET_ERROR;

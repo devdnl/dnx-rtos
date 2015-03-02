@@ -57,6 +57,7 @@ extern int     _pipe_get_length(pipe_t*);
 extern int     _pipe_read      (pipe_t*, u8_t*, size_t, bool);
 extern int     _pipe_write     (pipe_t*, const u8_t*, size_t, bool);
 extern bool    _pipe_close     (pipe_t*);
+extern bool    _pipe_clear     (pipe_t*);
 
 /*==============================================================================
   Exported inline functions
