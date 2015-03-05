@@ -1781,13 +1781,13 @@ local function create_runlevel_2_widgets(parent)
                 ui.Button_RL2_app_start_up = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL2_app_start_up:SetToolTip("Move up")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 2) modified:yes() end)
+                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 5) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL2_app_start_down = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL2_app_start_down:SetToolTip("Move down")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 2) modified:yes() end)
+                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 5) modified:yes() end)
 
                 -- add fields to group
                 ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
