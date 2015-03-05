@@ -1145,13 +1145,13 @@
  * LWIP_SO_SNDTIMEO==1: Enable send timeout for sockets/netconns and
  * SO_SNDTIMEO processing.
  */
-#define LWIP_SO_SNDTIMEO                        0
+#define LWIP_SO_SNDTIMEO                        1
 
 /**
  * LWIP_SO_RCVTIMEO==1: Enable receive timeout for sockets/netconns and
  * SO_RCVTIMEO processing.
  */
-#define LWIP_SO_RCVTIMEO                        0
+#define LWIP_SO_RCVTIMEO                        1
 
 /**
  * LWIP_SO_RCVBUF==1: Enable SO_RCVBUF processing.
