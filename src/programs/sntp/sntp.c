@@ -234,6 +234,22 @@ GLOBAL_VARIABLES_SECTION {
 ==============================================================================*/
 //==============================================================================
 /**
+ * @brief  Function select next host if current fail
+ * @param  argc         argument count
+ * @return None
+ */
+//==============================================================================
+static void select_next_host(int argc)
+{
+        if (global->current_host_arg >= argc - 1) {
+                global->current_host_arg = 2;
+        } else {
+                global->current_host_arg++;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Sent request to SNTP server
  * @param  conn         connection
  * @return Operation status (one of net_err_t's values)
@@ -327,11 +343,7 @@ static net_err_t get_SNTP_host_IP(bool once, int argc, char *argv[], net_ip_t *i
                         clock() / CLOCKS_PER_SEC,
                         argv[global->current_host_arg]);
 
-                if (global->current_host_arg >= argc - 1) {
-                        global->current_host_arg = 2;
-                } else {
-                        global->current_host_arg++;
-                }
+                select_next_host(argc);
 
                 appends--;
                 if (once && appends == 0) {
@@ -391,6 +403,8 @@ int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
                                                 time_t timestamp = 0;
                                                 if (sntp_receive_response(conn, &timestamp) == NET_ERR_OK) {
                                                         stime(&timestamp);
+                                                } else {
+                                                        select_next_host(argc);
                                                 }
                                         }
 

@@ -176,7 +176,8 @@ static inline int prepare_sleep_until(void)
  * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
- * @param microseconds      number of microseconds to sleep
+ * @param milliseconds      number of milliseconds to sleep
+ * @param ref_time_ticks    time reference
  *
  * @errors None
  *
@@ -187,7 +188,7 @@ static inline int prepare_sleep_until(void)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = get_tick_counter();
+ * int ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
@@ -208,7 +209,8 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * The <b>sleep_until</b>() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
- * @param seconds       number of seconds to sleep
+ * @param seconds               number of seconds to sleep
+ * @param ref_time_ticks        time reference
  *
  * @errors None
  *
@@ -219,7 +221,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = get_tick_counter();
+ * int ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
