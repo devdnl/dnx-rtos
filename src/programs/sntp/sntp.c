@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <time.h>
 #include <dnx/net.h>
 #include <dnx/misc.h>
 
@@ -52,6 +54,7 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+// Leap Indicator
 enum LI {
         LI_No_warning                      = 0,
         LI_Last_minute_has_61_sec          = 1,
@@ -59,6 +62,7 @@ enum LI {
         LI_Alarm_condition                 = 3,
 };
 
+// Version Number
 enum VN {
         VN_none_0                          = 0,
         VN_none_1                          = 1,
@@ -70,6 +74,7 @@ enum VN {
         VN_none_7                          = 7
 };
 
+// Mode
 enum Mode{
         Mode_Reserved                      = 0,
         Mode_Symetric_active               = 1,
@@ -81,6 +86,7 @@ enum Mode{
         Mode_Reserved_for_private_use      = 7
 };
 
+// Stratum
 enum Stratum {
         Stratum_Unspecified_or_unavailable = 0,
         Stratum_Primary_reference          = 1,
@@ -101,7 +107,9 @@ enum Stratum {
         Startum_Reserved                   = 16,
 };
 
+/** SNTP request/response packet structure */
 typedef struct {
+        // Packet settings
         union {
                 struct {
                         // Precision. 8 bits, signed
@@ -214,6 +222,7 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        int current_host_arg;
 };
 
 /*==============================================================================
@@ -225,105 +234,183 @@ GLOBAL_VARIABLES_SECTION {
 ==============================================================================*/
 //==============================================================================
 /**
+ * @brief  Sent request to SNTP server
+ * @param  conn         connection
+ * @return Operation status (one of net_err_t's values)
+ */
+//==============================================================================
+static net_err_t sntp_send_request(net_conn_t *conn)
+{
+        net_err_t   err          = NET_ERR_OUT_OF_MEMORY;
+        net_buf_t  *tx_UDP_buf   = net_buf_new();
+        sntp_msg_t *sntp_request = net_buf_alloc(tx_UDP_buf, sizeof(sntp_msg_t));
+
+        if (tx_UDP_buf && sntp_request) {
+                memset(sntp_request, 0, sizeof(sntp_msg_t));
+                sntp_request->settings.field.LI        = LI_No_warning;
+                sntp_request->settings.field.VN        = VN_IPv4_IPv6_OSI;
+                sntp_request->settings.field.Mode      = Mode_Client;
+                sntp_request->settings.field.Poll      = 0;
+                sntp_request->settings.field.Precision = 0;
+                sntp_request->settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
+                sntp_request->settings.word            = htonl(sntp_request->settings.word);
+
+                err = net_conn_send(conn, tx_UDP_buf);
+        }
+
+        // delete both buffer and allocated memory
+        net_buf_delete(tx_UDP_buf);
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Receive response from SNTP server
+ * @param  conn         connection
+ * @param  timestamp    timestamp value
+ * @return Operation status (one of net_err_t's values)
+ */
+//==============================================================================
+static net_err_t sntp_receive_response(net_conn_t *conn, time_t *timestamp)
+{
+        net_buf_t *rx_UDP_buf = NULL;
+        net_err_t  err        = net_conn_receive(conn, &rx_UDP_buf);
+
+        if (err == NET_ERR_OK) {
+                sntp_msg_t *sntp_response;
+                u16_t       sntp_response_len;
+
+                err = net_buf_data(rx_UDP_buf, (void**)&sntp_response, &sntp_response_len);
+                if (err == NET_ERR_OK) {
+
+                        if (sntp_response_len == sizeof(sntp_msg_t)) {
+                                sntp_response->settings.word = ntohl(sntp_response->settings.word);
+
+                                if (  sntp_response->settings.field.Mode == Mode_Server
+                                   || sntp_response->settings.field.Mode == Mode_Broadcast) {
+
+                                        time_t ts = 0;
+                                        memcpy(&ts, &sntp_response->receive_timestamp, sizeof(time_t));
+                                        ts         = ntohl(ts) - DIFF_SEC_1900_1970;
+                                        *timestamp = ts;
+                                } else {
+                                        err = NET_ERR_ILLEGAL_VALUE;
+                                }
+                        }
+
+                        net_buf_delete(rx_UDP_buf);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Get IP address from given host names (find in DNS)
+ * @param[in]  once         only one try (program started not as daemon)
+ * @param[in]  argc         number of arguments (used to obtain host names)
+ * @param[in]  argv         program arguments
+ * @param[out] ip           found IP address
+ * @return Operation status (one of net_err_t's values)
+ */
+//==============================================================================
+static net_err_t get_SNTP_host_IP(bool once, int argc, char *argv[], net_ip_t *ip)
+{
+        int appends = argc - 2;
+
+        net_err_t err;
+        while ((err = net_conn_get_host_by_name(argv[global->current_host_arg], ip)) != NET_ERR_OK) {
+
+                fprintf(stderr, "[%d] %s: no host\n",
+                        clock() / CLOCKS_PER_SEC,
+                        argv[global->current_host_arg]);
+
+                if (global->current_host_arg >= argc - 1) {
+                        global->current_host_arg = 2;
+                } else {
+                        global->current_host_arg++;
+                }
+
+                appends--;
+                if (once && appends == 0) {
+                        break;
+                } else {
+                        sleep(1);
+                        continue;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief Program main function
+ * @param argc          number of arguments
+ * @param argv          argument list
  */
 //==============================================================================
 int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        if (argc == 1) {
-                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3] \n", argv[0]);
+        if (argc < 3) {
+                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3]\n", argv[0]);
                 return EXIT_FAILURE;
         }
 
-        net_ip_t ntp_ip;
-        if (net_conn_get_host_by_name(argv[1], &ntp_ip) != NET_ERR_OK) {
-                fprintf(stderr, "No host\n");
+        int interval = -1;
+        sscanf(argv[1], "%d", &interval);
+
+        if (interval < 0) {
+                fprintf(stderr, "Invalid interval value\n");
                 return EXIT_FAILURE;
-        } else {
-                printf("%s: %d.%d.%d.%d\n", argv[1],
-                                            net_IP_get_part_a(&ntp_ip),
-                                            net_IP_get_part_b(&ntp_ip),
-                                            net_IP_get_part_c(&ntp_ip),
-                                            net_IP_get_part_d(&ntp_ip));
         }
 
+        global->current_host_arg = 2;
 
-        net_conn_t *conn         = net_conn_new(NET_CONN_TYPE_UDP);
-        net_buf_t  *tx_UDP_buf   = net_buf_new();
-        sntp_msg_t *sntp_request = net_buf_alloc(tx_UDP_buf, sizeof(sntp_msg_t));
-        net_buf_t  *rx_UDP_buf   = NULL;
+        int tref = prepare_sleep_until();
 
-        if (conn && tx_UDP_buf && sntp_request) {
-                puts("Connection created");
+        do {
+                net_ip_t  ntp_ip;
+                net_err_t err = get_SNTP_host_IP(interval == 0, argc, argv, &ntp_ip);
 
-                net_err_t err = net_conn_connect(conn, &ntp_ip, SNTP_PORT);
                 if (err == NET_ERR_OK) {
-                        memset(sntp_request, 0, sizeof(sntp_msg_t));
-                        sntp_request->settings.field.LI          = LI_No_warning;
-                        sntp_request->settings.field.VN          = VN_IPv4_IPv6_OSI;
-                        sntp_request->settings.field.Mode        = Mode_Client;
-                        sntp_request->settings.field.Poll        = 0;
-                        sntp_request->settings.field.Precision   = 0;
-                        sntp_request->settings.field.Stratum     = Stratum_Unspecified_or_unavailable;
-                        sntp_request->settings.word              = htonl(sntp_request->settings.word);
-                        sntp_request->originate_timestamp        = 0;
-                        sntp_request->receive_timestamp          = 0;
-                        sntp_request->reference_identifier       = 0;
-                        sntp_request->reference_timestamp        = 0;
-                        sntp_request->root_delay                 = 0;
-                        sntp_request->root_dispersion            = 0;
-                        sntp_request->transmit_timestamp         = 0;
 
-                        net_conn_set_send_timeout(conn, SNTP_SEND_TIMEOUT);
-                        err = net_conn_send(conn, tx_UDP_buf);
-                        if (err == NET_ERR_OK) {
+                        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_UDP);
+                        net_err_t   err  = NET_ERR_OUT_OF_MEMORY;
 
+                        if (conn) {
+                                net_conn_set_send_timeout(conn, SNTP_SEND_TIMEOUT);
                                 net_conn_set_receive_timeout(conn, SNTP_RECV_TIMEOUT);
-                                err = net_conn_receive(conn, &rx_UDP_buf);
-                                if (err == NET_ERR_OK) {
-                                        sntp_msg_t *sntp_response;
-                                        u16_t       sntp_response_len;
-                                        err = net_buf_data(rx_UDP_buf, (void**)&sntp_response, &sntp_response_len);
-                                        if (err == NET_ERR_OK && sntp_response_len == sizeof(sntp_msg_t)) {
 
-                                                sntp_response->settings.word = ntohl(sntp_response->settings.word);
+                                if ((err = net_conn_connect(conn, &ntp_ip, SNTP_PORT)) == NET_ERR_OK) {
 
-                                                if (  sntp_response->settings.field.Mode == Mode_Server
-                                                   || sntp_response->settings.field.Mode == Mode_Broadcast) {
+                                        if (sntp_send_request(conn) == NET_ERR_OK) {
 
-                                                        u32_t timestamp = 0;
-        //                                                memcpy(&timestamp, sntp_response + SNTP_RCV_TIME_OFS, sizeof(timestamp));
-                                                        memcpy(&timestamp, &sntp_response->receive_timestamp, sizeof(timestamp));
-                                                        timestamp = ntohl(timestamp) - DIFF_SEC_1900_1970;
-                                                        printf("Received timestamp: %d\n", timestamp);
-                                                } else {
-                                                        puts("Not valid SNTP response");
+                                                time_t timestamp = 0;
+                                                if (sntp_receive_response(conn, &timestamp) == NET_ERR_OK) {
+                                                        stime(&timestamp);
                                                 }
-
-                                        } else {
-                                                printf("Net recv buf: %d\n", err);
                                         }
-                                } else {
-                                        printf("Net recv error: %d\n", err);
+
+                                        net_conn_close(conn);
                                 }
-                        } else {
-                                printf("Net send error: %d\n", err);
                         }
-                } else {
-                        printf("Net conn error: %d\n", err);
+
+                        if (conn)
+                                net_conn_delete(conn);
+
+                        sleep_until(interval, &tref);
                 }
-        }
 
-        if (rx_UDP_buf)
-                net_buf_delete(rx_UDP_buf);
+                if (err != NET_ERR_OK) {
+                        fprintf(stderr, "[%d] error %d\n", clock() / CLOCKS_PER_SEC, err);
+                }
 
-        if (tx_UDP_buf)
-                net_buf_delete(tx_UDP_buf);
+        } while (interval);
 
-        if (conn)
-                net_conn_delete(conn);
-
-        return 0;
+        return interval ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 /*==============================================================================
