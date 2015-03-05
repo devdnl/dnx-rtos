@@ -9,6 +9,7 @@ New Features, Improvements:
 - Added Kernel Panic message from last fault session
 - Decreased RAM usage by system objects (file, mutex, semaphore, etc)
 - Better seperation of software layers
+- Implemented SNTP daemon
 
 Fixed Bugs:
 - Fixed kill message of "top" program (missing fflush()) 
