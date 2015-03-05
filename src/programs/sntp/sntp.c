@@ -46,55 +46,42 @@
 /** SNTP receive timeout - in milliseconds */
 #define SNTP_RECV_TIMEOUT           3000
 
-/** SNTP update delay - in milliseconds */
-#define SNTP_UPDATE_DELAY           60000
-
-/* SNTP protocol defines */
-#define SNTP_MAX_DATA_LEN           48
-#define SNTP_RCV_TIME_OFS           32
-#define SNTP_LI_NO_WARNING          0x00
-#define SNTP_VERSION                (4/* NTP Version 4*/<<3)
-#define SNTP_MODE_CLIENT            0x03
-#define SNTP_MODE_SERVER            0x04
-#define SNTP_MODE_BROADCAST         0x05
-#define SNTP_MODE_MASK              0x07
-
-/* number of seconds between 1900 and 1970 */
-#define DIFF_SEC_1900_1970         (2208988800)
+/** number of seconds between 1900 and 1970 */
+#define DIFF_SEC_1900_1970          2208988800
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-enum {
-        LI_No_warning             = 0,
-        LI_Last_minute_has_61_sec = 1,
-        LI_Last_minute_has_59_sec = 2,
-        LI_Alarm_condition        = 3,
+enum LI {
+        LI_No_warning                      = 0,
+        LI_Last_minute_has_61_sec          = 1,
+        LI_Last_minute_has_59_sec          = 2,
+        LI_Alarm_condition                 = 3,
 };
 
-enum {
-        VN_none_0        = 0,
-        VN_none_1        = 1,
-        VN_none_2        = 2,
-        VN_IPv4_only     = 3,
-        VN_IPv4_IPv6_OSI = 4,
-        VN_none_5        = 5,
-        VN_none_6        = 6,
-        VN_none_7        = 7
+enum VN {
+        VN_none_0                          = 0,
+        VN_none_1                          = 1,
+        VN_none_2                          = 2,
+        VN_IPv4_only                       = 3,
+        VN_IPv4_IPv6_OSI                   = 4,
+        VN_none_5                          = 5,
+        VN_none_6                          = 6,
+        VN_none_7                          = 7
 };
 
-enum {
-        Mode_Reserved                 = 0,
-        Mode_Symetric_active          = 1,
-        Mode_Symetric_passive         = 2,
-        Mode_Client                   = 3,
-        Mode_Server                   = 4,
-        Mode_Broadcast                = 5,
-        Mode_Reserved_NTP_ctrl_msg    = 6,
-        Mode_Reserved_for_private_use = 7
+enum Mode{
+        Mode_Reserved                      = 0,
+        Mode_Symetric_active               = 1,
+        Mode_Symetric_passive              = 2,
+        Mode_Client                        = 3,
+        Mode_Server                        = 4,
+        Mode_Broadcast                     = 5,
+        Mode_Reserved_NTP_ctrl_msg         = 6,
+        Mode_Reserved_for_private_use      = 7
 };
 
-enum {
+enum Stratum {
         Stratum_Unspecified_or_unavailable = 0,
         Stratum_Primary_reference          = 1,
         Stratum_Secondary_reference_2      = 2,
@@ -244,7 +231,7 @@ GLOBAL_VARIABLES_SECTION {
 int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
-                fprintf(stderr, "%s <interval_sec> <ntp_host_1> [ntp_host_2] [ntp_host_3] \n", argv[0]);
+                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3] \n", argv[0]);
                 return EXIT_FAILURE;
         }
 
@@ -260,7 +247,6 @@ int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
                                             net_IP_get_part_d(&ntp_ip));
         }
 
-        printf("sntp_msg_t: %d\n", sizeof(sntp_msg_t));
 
         net_conn_t *conn         = net_conn_new(NET_CONN_TYPE_UDP);
         net_buf_t  *tx_UDP_buf   = net_buf_new();
@@ -272,7 +258,7 @@ int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 net_err_t err = net_conn_connect(conn, &ntp_ip, SNTP_PORT);
                 if (err == NET_ERR_OK) {
-                        memset(sntp_request, 0, SNTP_MAX_DATA_LEN);
+                        memset(sntp_request, 0, sizeof(sntp_msg_t));
                         sntp_request->settings.field.LI          = LI_No_warning;
                         sntp_request->settings.field.VN          = VN_IPv4_IPv6_OSI;
                         sntp_request->settings.field.Mode        = Mode_Client;
