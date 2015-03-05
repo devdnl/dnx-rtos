@@ -9,7 +9,13 @@
 //==============================================================================
 static void start_daemon(const char *name, const char *cwd)
 {
-        printk("Starting '%s' daemon... ", name);
+        uint  name_len  = strlen(name);
+        char *arg_start = strchr(name, ' ');
+        if (arg_start) {
+                name_len = arg_start - name;
+        }
+
+        printk("Starting '%.*s' daemon... ", name_len, name);
         if (program_new(name, cwd, NULL, NULL, NULL)) {
                 printk("OK\n");
         } else {

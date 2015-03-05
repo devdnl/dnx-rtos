@@ -1928,6 +1928,90 @@ static inline net_err_t net_conn_get_error(net_conn_t *conn)
 
 //==============================================================================
 /**
+ * @brief void net_conn_set_receive_timeout(net_conn_t *conn, int timeout)
+ * The function <b>net_conn_set_receive_timeout</b>() set receive timeout in
+ * milliseconds passed by <i>timeout</i> of connection pointed by <i>conn</i>.
+ *
+ * @param conn          connection
+ * @param timeout       timeout value
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_conn_set_receive_timeout(conn, 1000);
+ *
+ *         // ...
+ *
+ *         net_conn_delete(conn);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline void net_conn_set_receive_timeout(net_conn_t *conn, int timeout)
+{
+#if (CONFIG_NETWORK_ENABLE > 0)
+        netconn_set_recvtimeout(conn, timeout);
+#else
+        (void) conn;
+        (void) timeout;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief void net_conn_set_send_timeout(net_conn_t *conn, int timeout)
+ * The function <b>net_conn_set_send_timeout</b>() set send timeout in
+ * milliseconds passed by <i>timeout</i> of connection pointed by <i>conn</i>.
+ *
+ * @param conn          connection
+ * @param timeout       timeout value
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/net.h>
+ *
+ * // ...
+ *
+ * net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
+ * if (conn) {
+ *         // ...
+ *
+ *         net_conn_set_send_timeout(conn, 1000);
+ *
+ *         // ...
+ *
+ *         net_conn_delete(conn);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline void net_conn_set_send_timeout(net_conn_t *conn, int timeout)
+{
+#if (CONFIG_NETWORK_ENABLE > 0)
+        netconn_set_sendtimeout(conn, timeout);
+#else
+        (void) conn;
+        (void) timeout;
+#endif
+}
+
+//==============================================================================
+/**
  * @brief net_buf_t *net_buf_new(void)
  * The function <b>net_buf_new</b>() create and initialize a new network buffer.
  * The buffer does not yet contain a packet buffer!
@@ -2749,6 +2833,8 @@ static inline u16_t net_buf_get_port(net_buf_t *buf)
 #undef netconn_listen
 #undef netconn_write
 #undef netconn_err
+#undef netconn_set_recvtimeout
+#undef netconn_set_sendtimeout
 #undef netbuf_copy_partial
 #undef netbuf_copy
 #undef netbuf_take
