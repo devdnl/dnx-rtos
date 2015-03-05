@@ -40,6 +40,9 @@
 /** SNTP server port */
 #define SNTP_PORT                   123
 
+/** SNTP send timeout - in milliseconds */
+#define SNTP_SEND_TIMEOUT           1000
+
 /** SNTP receive timeout - in milliseconds */
 #define SNTP_RECV_TIMEOUT           3000
 
@@ -112,37 +115,41 @@ enum {
 };
 
 typedef struct {
-        struct {
-                // Leap Indicator.
-                // This code warns of an impending leap second
-                // to be inserted/deleted in the last minute of the current day.
-                uint32_t LI:2;
+        union {
+                struct {
+                        // Precision. 8 bits, signed
+                        // The precision of the local clock, in seconds to the nearest
+                        // power of two. The values that normally appear in this field
+                        // range from -6 for mains-frequency clocks to -20 for microsecond
+                        // clocks found in some workstations.
+                        uint32_t Precision:8;
 
-                // Version Number.
-                // The NTP/SNTP version number. If necessary to distinguish between
-                // IPv4, IPv6 and OSI, the encapsulating context must be inspected.
-                uint32_t VN:3;
+                        // Poll.
+                        // The maximum interval between successive messages, in seconds
+                        // to the nearest power of two. The values that can appear in this
+                        // field presently range from 4 (16 s) to 14 (16284 s); however,
+                        // most applications use only the sub-range 6 (64 s) to 10 (1024 s).
+                        uint32_t Poll:8;
 
-                // Mode
-                uint32_t Mode:3;
+                        // Stratum
+                        // Stratum level of the local clock.
+                        uint32_t Stratum:8;
 
-                // Stratum
-                // Stratum level of the local clock.
-                uint32_t Stratum:8;
+                        // Mode
+                        uint32_t Mode:3;
 
-                // Poll.
-                // The maximum interval between successive messages, in seconds
-                // to the nearest power of two. The values that can appear in this
-                // field presently range from 4 (16 s) to 14 (16284 s); however,
-                // most applications use only the sub-range 6 (64 s) to 10 (1024 s).
-                uint32_t Poll:8;
+                        // Version Number.
+                        // The NTP/SNTP version number. If necessary to distinguish between
+                        // IPv4, IPv6 and OSI, the encapsulating context must be inspected.
+                        uint32_t VN:3;
 
-                // Precision. 8 bits, signed
-                // The precision of the local clock, in seconds to the nearest
-                // power of two. The values that normally appear in this field
-                // range from -6 for mains-frequency clocks to -20 for microsecond
-                // clocks found in some workstations.
-                uint32_t Precision:8;
+                        // Leap Indicator.
+                        // This code warns of an impending leap second
+                        // to be inserted/deleted in the last minute of the current day.
+                        uint32_t LI:2;
+
+                } field;
+                uint32_t word;
         } settings;
 
         // Root Delay. 32 bits, signed fixed point.
@@ -210,15 +217,6 @@ typedef struct {
         // Transmit Timestamp. 64 bits.
         // The time at which the reply departed the server for the client.
         uint64_t transmit_timestamp;
-
-        // Key Identifier. 32 bits.
-        // Optional.
-        uint32_t key_identifier;
-
-        // Message Digest. 128 bits.
-        // Optional.
-        uint64_t message_digest_L;
-        uint64_t message_digest_H;
 } sntp_msg_t;
 
 /*==============================================================================
@@ -246,7 +244,7 @@ GLOBAL_VARIABLES_SECTION {
 int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
-                fprintf(stderr, "%s <ntp_domain>\n", argv[0]);
+                fprintf(stderr, "%s <interval_sec> <ntp_host_1> [ntp_host_2] [ntp_host_3] \n", argv[0]);
                 return EXIT_FAILURE;
         }
 
@@ -262,52 +260,60 @@ int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
                                             net_IP_get_part_d(&ntp_ip));
         }
 
-//        sntp_msg_t *msg = malloc(sizeof(sntp_msg_t));
-//        if (msg) {
-//                msg->settings.LI = LI_No_warning;
-//                msg->settings.VN = VN_IPv4_only;
-//                msg->settings.Mode = Mode_Client;
-//                msg->settings.Stratum = Stratum_Unspecified_or_unavailable,
-//                msg->settings.Poll = 4;
-//                msg->settings.Precision = -6;
-//                msg->root_delay = 0;
-//                msg->root_dispersion = 0;
-//                msg->reference_identifier = 0;
-//                msg->reference_timestamp = 0;
-//                msg->originate_timestamp = 0;
-//                msg->receive_timestamp = 0;
-//                msg->transmit_timestamp = 0;
-//                msg->key_identifier = 0;
-//                msg->message_digest_L = 0;
-//                msg->message_digest_H = 0;
-//        }
+        printf("sntp_msg_t: %d\n", sizeof(sntp_msg_t));
 
         net_conn_t *conn         = net_conn_new(NET_CONN_TYPE_UDP);
-        net_buf_t  *UDP_buf      = net_buf_new();
-        char       *sntp_request = net_buf_alloc(UDP_buf, SNTP_MAX_DATA_LEN);
+        net_buf_t  *tx_UDP_buf   = net_buf_new();
+        sntp_msg_t *sntp_request = net_buf_alloc(tx_UDP_buf, sizeof(sntp_msg_t));
+        net_buf_t  *rx_UDP_buf   = NULL;
 
-        if (conn && UDP_buf && sntp_request) {
+        if (conn && tx_UDP_buf && sntp_request) {
                 puts("Connection created");
 
                 net_err_t err = net_conn_connect(conn, &ntp_ip, SNTP_PORT);
                 if (err == NET_ERR_OK) {
                         memset(sntp_request, 0, SNTP_MAX_DATA_LEN);
-                        sntp_request[0] = SNTP_LI_NO_WARNING | SNTP_VERSION | SNTP_MODE_CLIENT;
+                        sntp_request->settings.field.LI          = LI_No_warning;
+                        sntp_request->settings.field.VN          = VN_IPv4_IPv6_OSI;
+                        sntp_request->settings.field.Mode        = Mode_Client;
+                        sntp_request->settings.field.Poll        = 0;
+                        sntp_request->settings.field.Precision   = 0;
+                        sntp_request->settings.field.Stratum     = Stratum_Unspecified_or_unavailable;
+                        sntp_request->settings.word              = htonl(sntp_request->settings.word);
+                        sntp_request->originate_timestamp        = 0;
+                        sntp_request->receive_timestamp          = 0;
+                        sntp_request->reference_identifier       = 0;
+                        sntp_request->reference_timestamp        = 0;
+                        sntp_request->root_delay                 = 0;
+                        sntp_request->root_dispersion            = 0;
+                        sntp_request->transmit_timestamp         = 0;
 
-                        err = net_conn_send(conn, UDP_buf);
+                        net_conn_set_send_timeout(conn, SNTP_SEND_TIMEOUT);
+                        err = net_conn_send(conn, tx_UDP_buf);
                         if (err == NET_ERR_OK) {
-                                net_buf_t *receive_UDP_buf;
-                                err = net_conn_receive(conn, &receive_UDP_buf);
-                                if (err == NET_ERR_OK) {
-                                        void *sntp_response;
-                                        u16_t sntp_response_len;
-                                        err = net_buf_data(receive_UDP_buf, &sntp_response, &sntp_response_len);
-                                        if (err == NET_ERR_OK) {
-                                                u32_t timestamp = 0;
-                                                memcpy(&timestamp, sntp_response + SNTP_RCV_TIME_OFS, sizeof(timestamp));
-                                                timestamp = ntohl(timestamp) - DIFF_SEC_1900_1970;
 
-                                                printf("Received timestamp: %d\n", timestamp);
+                                net_conn_set_receive_timeout(conn, SNTP_RECV_TIMEOUT);
+                                err = net_conn_receive(conn, &rx_UDP_buf);
+                                if (err == NET_ERR_OK) {
+                                        sntp_msg_t *sntp_response;
+                                        u16_t       sntp_response_len;
+                                        err = net_buf_data(rx_UDP_buf, (void**)&sntp_response, &sntp_response_len);
+                                        if (err == NET_ERR_OK && sntp_response_len == sizeof(sntp_msg_t)) {
+
+                                                sntp_response->settings.word = ntohl(sntp_response->settings.word);
+
+                                                if (  sntp_response->settings.field.Mode == Mode_Server
+                                                   || sntp_response->settings.field.Mode == Mode_Broadcast) {
+
+                                                        u32_t timestamp = 0;
+        //                                                memcpy(&timestamp, sntp_response + SNTP_RCV_TIME_OFS, sizeof(timestamp));
+                                                        memcpy(&timestamp, &sntp_response->receive_timestamp, sizeof(timestamp));
+                                                        timestamp = ntohl(timestamp) - DIFF_SEC_1900_1970;
+                                                        printf("Received timestamp: %d\n", timestamp);
+                                                } else {
+                                                        puts("Not valid SNTP response");
+                                                }
+
                                         } else {
                                                 printf("Net recv buf: %d\n", err);
                                         }
@@ -322,6 +328,14 @@ int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
         }
 
+        if (rx_UDP_buf)
+                net_buf_delete(rx_UDP_buf);
+
+        if (tx_UDP_buf)
+                net_buf_delete(tx_UDP_buf);
+
+        if (conn)
+                net_conn_delete(conn);
 
         return 0;
 }
