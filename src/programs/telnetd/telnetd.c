@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    telnet.c
+@file    telnetd.c
 
 @author  Daniel Zorychta
 
 @brief   Telnet example program
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ static void telnet_thread(void *arg)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(telnet, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

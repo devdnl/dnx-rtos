@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    storage.c
+@file    usbdevstorage.c
 
 @author  Daniel Zorychta
 
 @brief   USB storage example
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -550,7 +550,7 @@ static void ep1_handler(void *arg)
  * @brief Storage main function
  */
 //==============================================================================
-PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

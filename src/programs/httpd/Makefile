@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += storage/storage.c
+CSRC_PROGRAMS   += httpd/httpd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

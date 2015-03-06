@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mouse.c
+@file    usbdevkbrd.c
 
 @author  Daniel Zorychta
 
-@brief   USB mouse example
+@brief   USB device keyboard example
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -39,8 +39,11 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define tostring(a)     #a
-#define USB_mA(mA)      (mA / 2)
+#define tostring(a)                     #a
+#define USB_mA(mA)                      (mA / 2)
+#define USB_KEY_CHARACTER_CODE(c)       (4  + ((c) - 'A'))
+#define USB_KEY_NUMBER_CODE(n)          (30 + ((n) - '0'))
+#define USB_KEY_FX_CODE(f)              (58 + ((f) - '1'))
 
 /*==============================================================================
   Local types, enums definitions
@@ -76,7 +79,7 @@ static const usb_device_descriptor_t device_descriptor = {
         .bDeviceProtocol    = USB_PROTOCOL__SPECIFIED_AT_INTERFACE_LEVEL,
         .bMaxPacketSize0    = USBD_EP0_SIZE,
         .idVendor           = HTOUSBS(0x0483),
-        .idProduct          = HTOUSBS(0x5753),
+        .idProduct          = HTOUSBS(0x5752),
         .bcdDevice          = HTOUSBS(0x0001),
         .iManufacturer      = 1,
         .iProduct           = 2,
@@ -85,33 +88,38 @@ static const usb_device_descriptor_t device_descriptor = {
 };
 
 static const u8_t hid_report_descriptor[] = {
-        0x05, 0x01,
-        0x09, 0x02,
-        0xA1, 0x01,
-        0x09, 0x01,
-        0xA1, 0x00,
-        0x05, 0x09,
-        0x19, 0x01,
-        0x29, 0x05,
-        0x15, 0x00,
-        0x25, 0x01,
-        0x95, 0x05,
-        0x75, 0x01,
-        0x81, 0x02,
-        0x95, 0x01,
-        0x75, 0x03,
-        0x81, 0x01,
-        0x05, 0x01,
-        0x09, 0x30,
-        0x09, 0x31,
-        0x09, 0x38,
-        0x15, 0x81,
-        0x25, 0x7F,
-        0x75, 0x08,
-        0x95, 0x03,
-        0x81, 0x06,
-        0xC0,
-        0xC0
+        0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+        0x09, 0x06,                    // USAGE (Keyboard)
+        0xa1, 0x01,                    // COLLECTION (Application)
+        0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+        0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
+        0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+        0x75, 0x01,                    //   REPORT_SIZE (1)
+        0x95, 0x08,                    //   REPORT_COUNT (8)
+        0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+        0x95, 0x01,                    //   REPORT_COUNT (1)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
+        0x95, 0x05,                    //   REPORT_COUNT (5)
+        0x75, 0x01,                    //   REPORT_SIZE (1)
+        0x05, 0x08,                    //   USAGE_PAGE (LEDs)
+        0x19, 0x01,                    //   USAGE_MINIMUM (Num Lock)
+        0x29, 0x05,                    //   USAGE_MAXIMUM (Kana)
+        0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)
+        0x95, 0x01,                    //   REPORT_COUNT (1)
+        0x75, 0x03,                    //   REPORT_SIZE (3)
+        0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
+        0x95, 0x06,                    //   REPORT_COUNT (6)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x25, 0x65,                    //   LOGICAL_MAXIMUM (101)
+        0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+        0x19, 0x00,                    //   USAGE_MINIMUM (Reserved (no event indicated))
+        0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
+        0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
+        0xc0                           // END_COLLECTION
 };
 
 typedef struct config {
@@ -142,7 +150,7 @@ static const usb_hid_configuration_t hid_cfg = {
                 .bNumEndpoints       = 1,
                 .bInterfaceClass     = USB_CLASS__HUMAN_INTERFACE_DEVICE,
                 .bInterfaceSubClass  = USB_SUBCLASS__BOOT_INTERFACE,
-                .bInterfaceProtocol  = USB_PROTOCOL__MOUSE,
+                .bInterfaceProtocol  = USB_PROTOCOL__KEYBOARD,
                 .iInterface          = 0
         },
 
@@ -190,10 +198,10 @@ static const usb_string_descriptor_t(7) string_manufacturer = {
         .bString         = {HTOUSBS('d'), HTOUSBS('n'), HTOUSBS('x'), HTOUSBS('R'), HTOUSBS('T'), HTOUSBS('O'), HTOUSBS('S')}
 };
 
-static const usb_string_descriptor_t(5) string_product = {
-        .bLength         = sizeof(usb_string_descriptor_t(5)),
+static const usb_string_descriptor_t(8) string_product = {
+        .bLength         = sizeof(usb_string_descriptor_t(8)),
         .bDescriptorType = STRING_DESCRIPTOR,
-        .bString         = {HTOUSBS('M'), HTOUSBS('o'), HTOUSBS('u'), HTOUSBS('s'), HTOUSBS('e')}
+        .bString         = {HTOUSBS('K'), HTOUSBS('e'), HTOUSBS('y'), HTOUSBS('b'), HTOUSBS('o'), HTOUSBS('a'), HTOUSBS('r'), HTOUSBS('d')}
 };
 
 static const usb_string_descriptor_t(5) string_serial = {
@@ -208,6 +216,10 @@ static const usb_max_string_descriptor_t *string[] = {
         reinterpret_cast(usb_max_string_descriptor_t*, &string_product),
         reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
 };
+
+static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__NONE);
 
 /*==============================================================================
   Exported object definitions
@@ -241,59 +253,87 @@ static void print_setup(usb_setup_packet_t *setup)
 
 //==============================================================================
 /**
- * @brief Mouse main function
+ * @brief Keyboard main function
  */
 //==============================================================================
-PROGRAM_MAIN(mouse, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;
 
-        int test_cnt = 0;
-        int ch       = EOF;
-
-start:
-        printf("Test number: %d\n", ++test_cnt);
-
-        FILE *ep0 = fopen("/dev/usbd-ep0", "r+");
-        FILE *ep1 = fopen("/dev/usbd-ep1", "r+");
-        if (ep0 && ep1) {
+        FILE *ep0  = fopen("/dev/usbd-ep0", "r+");
+        FILE *ep1  = fopen("/dev/usbd-ep1", "r+");
+        FILE *gpio = fopen("/dev/gpio", "r+");
+        if (ep0 && ep1 && gpio) {
                 usbd_setup_container_t setup     = {.timeout = 25};
                 bool                  configured = false;
+                int                   operation  = -1;
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 ioctl(ep0, IOCTL_USBD__START);
 
                 while (true) {
-                        ch = getchar();
-                        if (ch == 'q') {
+                        int ch = getchar();
+                        if (ch == 'q')
                                 break;
-                        }
 
                         if (configured) {
-                                usb_hid_mouse_boot_report_t report = {0, 0, 0, 0};
+                                usb_hid_keyboard_boot_report_t report;
+                                memset(&report, 0, sizeof(report));
 
                                 if (ch != EOF) {
                                         switch (ch) {
-                                        case '8': report.y = -10; break;
-                                        case '5':
-                                        case '2': report.y = 10; break;
-                                        case '4': report.x = -10; break;
-                                        case '6': report.x = 10; break;
-                                        case '7': report.buttons = USB_MOUSE_LEFT_BUTTON; break;
-                                        case '9': report.buttons = USB_MOUSE_RIGHT_BUTTON; break;
-                                        case '-': report.wheel = 1; break;
-                                        case '+': report.wheel = -1; break;
+                                        case 'f':
+                                                report.key[0] = 69;
+                                                break;
+
+                                        case 'x':
+                                                report.modifiers = USB_KEYBOARD_LEFT_ALT;
+                                                report.key[0] = 59;
+                                                operation     = 0;
+                                                break;
+
+                                        case 'w':
+                                                report.modifiers = USB_KEYBOARD_LEFT_GUI;
+                                                break;
+
+                                        case 'c':
+                                        case 'C':
+                                                report.key[0] = USB_KEYBOARD_CAPS_LOCK_CODE;
+                                                break;
+
+                                        case 'n':
+                                                report.key[0] = USB_KEYBOARD_NUM_LOCK_CODE;
+                                                break;
+
+                                        case 'r':
+                                                report.modifiers = USB_KEYBOARD_LEFT_GUI;
+                                                report.key[0]    = USB_KEY_CHARACTER_CODE('R');
+                                                operation        = 0;
+                                                break;
+
+                                        }
+                                } else {
+                                        switch (operation) {
+                                        case  0: operation++; break;
+                                        case  1: operation++; break;
+                                        case  2: report.key[0] = USB_KEY_CHARACTER_CODE('F'); operation++; break;
+                                        case  3: report.key[0] = USB_KEY_CHARACTER_CODE('O'); operation++; break;
+                                        case  4: report.key[0] = USB_KEY_CHARACTER_CODE('R'); operation++; break;
+                                        case  5: report.key[0] = USB_KEY_CHARACTER_CODE('M'); operation++; break;
+                                        case  6: report.key[0] = USB_KEY_CHARACTER_CODE('A'); operation++; break;
+                                        case  7: report.key[0] = USB_KEY_CHARACTER_CODE('T'); operation++; break;
+                                        case  8: report.key[0] = 44; operation++; break;
+                                        case  9: report.key[0] = USB_KEY_CHARACTER_CODE('C'); operation++; break;
+                                        case 10: report.key[0] = 51; report.modifiers = USB_KEYBOARD_LEFT_SHIFT; operation++; break;
+                                        case 11: operation = -1; break;
+                                        default: operation = -1; break;
                                         }
                                 }
 
                                 printf("REPORT (%d/%d)\n",
                                        fwrite(&report, 1, sizeof(report), ep1),
                                        sizeof(report));
-
-                                if (strcmp(argv[1], "-r") == 0) {
-                                        break;
-                                }
                         }
 
                         if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
@@ -340,7 +380,7 @@ start:
 
                                 if (operation == 0) {
                                         if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
-                                                puts(FONT_COLOR_RED" ERROR"RESET_ATTRIBUTES);
+                                                puts(" ERROR");
                                         } else {
                                                 puts(" OK");
                                         }
@@ -400,13 +440,7 @@ start:
                                 }
 
                                 if (size && data) {
-                                        size_t n = fwrite(data, 1, size, ep0);
-                                        if (n == 0) {
-                                                printf(FONT_COLOR_RED" (%d/%d)"RESET_ATTRIBUTES"\n", n, size);
-                                        } else {
-                                                printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
-                                        }
-
+                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), static_cast(int, size));
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
@@ -414,15 +448,40 @@ start:
                                 }
 
                         } else {
-                                puts("UNKNOWN REQUEST [OUT]");
-                                print_setup(&setup.packet);
-                                ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                switch (setup.packet.bRequest) {
+                                case SET_REPORT:
+                                        printf(tostring(SET_REPORT)":");
+                                        uint8_t report = 0;
+                                        printf("(%d/1)\n", fread(&report, 1, 1, ep0));
+
+                                        if (report & USB_KEYBOARD_CAPS_LOCK_LED) {
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_white);
+                                        } else {
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_white);
+                                        }
+
+                                        if (report & USB_KEYBOARD_NUM_LOCK_LED) {
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_green);
+                                        } else {
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_green);
+                                        }
+
+                                        if (report & USB_KEYBOARD_SCROLL_LOCK_LED) {
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_red);
+                                        } else {
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_red);
+                                        }
+                                        break;
+
+                                default:
+                                        puts("UNKNOWN REQUEST [OUT]");
+                                        print_setup(&setup.packet);
+                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                }
                         }
                 }
 
                 ioctl(ep0, IOCTL_USBD__STOP);
-        } else {
-                ch = 'q';
         }
 
         if (ep0)
@@ -431,11 +490,10 @@ start:
         if (ep1)
                 fclose(ep1);
 
-        puts("Exit.");
+        if (gpio)
+                fclose(gpio);
 
-        if (strcmp(argv[1], "-r") == 0 && ch != 'q') {
-                goto start;
-        }
+        puts("Exit.");
 
         return 0;
 }

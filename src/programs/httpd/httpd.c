@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    httpserver.c
+@file    httpd.c
 
 @author  Daniel Zorychta
 
-@brief   The httpserver example
+@brief   The HTTP server example
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -52,8 +52,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
@@ -152,7 +152,7 @@ static void serve(net_conn_t *conn)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(httpserver, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
