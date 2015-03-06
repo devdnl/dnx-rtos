@@ -796,11 +796,13 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->stdout   = task_data->f_stdout;
                 thread->stderr   = task_data->f_stderr;
                 thread->func     = func;
+                thread->this     = thread;
                 thread->task     = _task_new(thread_startup, _task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->this = thread;
                         return thread;
+                } else {
+                        thread->this  = NULL;
                 }
         }
 
