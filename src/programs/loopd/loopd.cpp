@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   Realize loop virtual device (transparent file operations)
+@brief   Realize the virtual loop device (transparent file operations example)
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,11 +34,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define min(a, b)       (a > b ? b : a)
 #define BUFSIZE         1024
 
 /*==============================================================================

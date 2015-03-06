@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   Clear terminal
+@brief   Clear a terminal in which program is started
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -46,9 +46,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -62,7 +61,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(clear, STACK_DEPTH_MINIMAL, int argc, char *argv[])
+int_main(clear, STACK_DEPTH_MINIMAL, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

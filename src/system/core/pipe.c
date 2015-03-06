@@ -250,6 +250,9 @@ bool _pipe_clear(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 _queue_reset(pipe->queue);
+                return true;
+        } else {
+                return false;
         }
 }
 

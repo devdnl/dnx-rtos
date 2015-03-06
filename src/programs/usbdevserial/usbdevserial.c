@@ -75,11 +75,11 @@ typedef struct {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-usb_cdc_line_coding_t           line_coding;
-u8_t                            buffer[BULK_BUF_SIZE];
-bool                            configured;
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+        usb_cdc_line_coding_t           line_coding;
+        u8_t                            buffer[BULK_BUF_SIZE];
+        bool                            configured;
+};
 
 static const usbd_ep_config_t ep_cfg = {
         .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
@@ -346,7 +346,7 @@ static void ep1_handler(void *arg)
  * @brief Serial main function
  */
 //==============================================================================
-PROGRAM_MAIN(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

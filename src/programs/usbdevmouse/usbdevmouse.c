@@ -53,8 +53,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 static const usbd_ep_config_t ep_cfg = {
         .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
@@ -244,7 +244,7 @@ static void print_setup(usb_setup_packet_t *setup)
  * @brief Mouse main function
  */
 //==============================================================================
-PROGRAM_MAIN(usbdevmouse, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(usbdevmouse, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

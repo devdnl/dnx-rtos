@@ -50,9 +50,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -114,7 +113,7 @@ static void telnet_thread(void *arg)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

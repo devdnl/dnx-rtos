@@ -152,7 +152,7 @@ static void serve(net_conn_t *conn)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
