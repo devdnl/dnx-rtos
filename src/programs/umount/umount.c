@@ -5,7 +5,7 @@
 
 @brief   Umount selected file system
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -46,9 +46,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -62,7 +61,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(umount, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(umount, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [mount point]\n", argv[0]);

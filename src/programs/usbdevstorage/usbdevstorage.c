@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    storage.c
+@file    usbdevstorage.c
 
 @author  Daniel Zorychta
 
 @brief   USB storage example
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -75,19 +75,16 @@ typedef struct {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
+GLOBAL_VARIABLES_SECTION {
+        union {
+                u8_t              buffer[BUFFER_SIZE];
+                usb_msc_bot_cbw_t CBW;
+                usb_msc_bot_csw_t CSW;
+        } msc;
 
-union {
-        u8_t              buffer[BUFFER_SIZE];
-        usb_msc_bot_cbw_t CBW;
-        usb_msc_bot_csw_t CSW;
-} msc;
-
-bool configured;
-
-GLOBAL_VARIABLES_SECTION_END
-
-static u32_t LB_COUNT = 0;
+        bool  configured;
+        u32_t LB_COUNT;
+};
 
 /* USB constants */
 static const usbd_ep_config_t ep_cfg = {
@@ -291,7 +288,7 @@ static void ep1_handler(void *arg)
         if (sda) {
                 struct stat stat;
                 if (fstat(sda, &stat) == 0) {
-                        LB_COUNT = stat.st_size / LB_SIZE;
+                        global->LB_COUNT = stat.st_size / LB_SIZE;
                 }
         }
 
@@ -405,7 +402,7 @@ static void ep1_handler(void *arg)
                         case SCSI_REQUEST__READ_CAPACITY_10:
                                 puts("READ CAPACITY (10)");
                                 scsi_capacity_data_t capacity = {
-                                        .last_lba       = REVERSE_UINT32(LB_COUNT - 1),
+                                        .last_lba       = REVERSE_UINT32(global->LB_COUNT - 1),
                                         .block_length   = REVERSE_UINT32(LB_SIZE)
                                 };
                                 fwrite(&capacity, 1, sizeof(capacity), ep1);
@@ -417,7 +414,7 @@ static void ep1_handler(void *arg)
                                 scsi_format_capacity_data_t format_capacity = {
                                         .reserved               = {0, 0, 0},
                                         .capacity_list_length   = sizeof(scsi_format_capacity_data_t) - 4,
-                                        .lba_count              = REVERSE_UINT32(LB_COUNT),
+                                        .lba_count              = REVERSE_UINT32(global->LB_COUNT),
                                         .descriptor_code        = 1,
                                         .block_length_msb       = 0,
                                         .block_length           = REVERSE_UINT16(LB_SIZE)
@@ -550,7 +547,7 @@ static void ep1_handler(void *arg)
  * @brief Storage main function
  */
 //==============================================================================
-PROGRAM_MAIN(storage, STACK_DEPTH_LOW, int argc, char *argv[])
+PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;

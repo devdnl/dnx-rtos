@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += sntp/sntp.c
+CSRC_PROGRAMS   += sntpd/sntpd.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS +=

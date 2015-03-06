@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    sntp.c
+@file    sntpd.c
 
 @author  Daniel Zorychta
 
@@ -364,7 +364,7 @@ static net_err_t get_SNTP_host_IP(bool once, int argc, char *argv[], net_ip_t *i
  * @param argv          argument list
  */
 //==============================================================================
-int_main(sntp, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc < 3) {
                 fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3]\n", argv[0]);

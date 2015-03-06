@@ -28,12 +28,10 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
-
-
-#include "stdlib.h"
 
 /*==============================================================================
   Local symbolic constants/macros

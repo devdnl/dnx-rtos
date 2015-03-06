@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    card_init.c
+@file    storinit.c
 
 @author  Daniel Zorychta
 
-@brief   Initialize card
+@brief   Storage initialization (SD cards, HDD, etc)
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -35,8 +35,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define INIT_REQUEST                    IOCTL_STORAGE__INITIALIZE
-#define MBR_READ_REQUEST                IOCTL_STORAGE__READ_MBR
 
 /*==============================================================================
   Local types, enums definitions
@@ -64,7 +62,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Main function
  */
 //==============================================================================
-int_main(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(storinit, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         int status = EXIT_FAILURE;
 
@@ -74,18 +72,18 @@ int_main(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
         }
 
         errno = 0;
-        FILE *sd = fopen(argv[1], "r");
-        if (sd) {
-                switch (ioctl(sd, INIT_REQUEST)) {
+        FILE *stor = fopen(argv[1], "r");
+        if (stor) {
+                switch (ioctl(stor, IOCTL_STORAGE__INITIALIZE)) {
                 case 1:
-                        switch (ioctl(sd, MBR_READ_REQUEST)) {
+                        switch (ioctl(stor, IOCTL_STORAGE__READ_MBR)) {
                         case 1:
-                                puts("Card initialized.");
+                                puts("Storage initialized.");
                                 status = EXIT_SUCCESS;
                                 break;
 
                         case 0:
-                                puts("Card initialized. MBR not exist.");
+                                puts("Storage initialized. MBR not exist.");
                                 status = EXIT_SUCCESS;
                                 break;
 
@@ -100,7 +98,7 @@ int_main(card_init, STACK_DEPTH_LOW, int argc, char *argv[])
                         break;
                 }
 
-                fclose(sd);
+                fclose(stor);
         } else {
                 perror(argv[1]);
         }

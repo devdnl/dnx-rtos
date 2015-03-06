@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Program to copy files
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -53,9 +53,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -70,7 +69,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 {
         if (argc != 3) {
                 printf("Usage: %s <source file> <destination file>\n", argv[0]);

@@ -10,12 +10,15 @@ New Features, Improvements:
 - Decreased RAM usage by system objects (file, mutex, semaphore, etc)
 - Better seperation of software layers
 - Implemented SNTP daemon
+- New implementation of Telnet daemon (allow to start any program)
+- Applied new list implementation for core components (core, fs)
 
 Fixed Bugs:
 - Fixed kill message of "top" program (missing fflush()) 
 - Fixed _program_new() function (invalid initialized object)
 - Fixed realloc() function (old implementation works out of standard)
 - TTY: fixed REFRESH_LAST_LINE and flush() requests
+- Fixed memory leak in pipe implementation
 
 dnx RTOS 1.5.4
 ==============

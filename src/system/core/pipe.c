@@ -125,6 +125,7 @@ void _pipe_delete(pipe_t *pipe)
         if (is_valid(pipe)) {
                 _queue_delete(pipe->queue);
                 pipe->self = NULL;
+                _sysm_sysfree(pipe);
         }
 }
 
@@ -165,7 +166,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
                 int n = 0;
                 for (; n < (int)count; n++) {
 
-                        if (_queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                        if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
                                 u8_t null = '\0';
                                 _queue_send(pipe->queue, &null, pipe_write_timeout);
                                 break;
@@ -201,7 +202,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
                 int n = 0;
                 for (; n < (int)count; n++) {
 
-                        if (_queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                        if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
                                 break;
                         }
 
@@ -250,6 +251,9 @@ bool _pipe_clear(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 _queue_reset(pipe->queue);
+                return true;
+        } else {
+                return false;
         }
 }
 
