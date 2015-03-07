@@ -175,12 +175,7 @@ static inline double difftime(time_t end, time_t beginning)
 //==============================================================================
 static inline time_t mktime(struct tm *timeptr)
 {
-        return _date_to_epoch(timeptr->tm_mday,
-                              timeptr->tm_mon+1,
-                              timeptr->tm_year+1900,
-                              timeptr->tm_hour,
-                              timeptr->tm_min,
-                              timeptr->tm_sec);
+        return _mktime(timeptr);
 }
 
 //==============================================================================

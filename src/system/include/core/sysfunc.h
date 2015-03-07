@@ -1993,12 +1993,7 @@ static inline void _sys_update_system_clocks()
 //==============================================================================
 static inline time_t _sys_mktime(struct tm *timeptr)
 {
-        return _date_to_epoch(timeptr->tm_mday,
-                              timeptr->tm_mon+1,
-                              timeptr->tm_year+1900,
-                              timeptr->tm_hour,
-                              timeptr->tm_min,
-                              timeptr->tm_sec);
+        return _mktime(timeptr);
 }
 
 //==============================================================================

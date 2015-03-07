@@ -57,9 +57,9 @@ extern double     _strtod        (const char*, char**);
 extern i32_t      _atoi          (const char*);
 extern char      *_strtoi        (const char*, int, i32_t*);
 extern double     _atof          (const char*);
-extern u32_t      _date_to_epoch (u8_t, u8_t, u16_t, u8_t, u8_t, u8_t);
+extern u32_t      _mktime        (struct tm*);
 extern struct tm *_gmtime_r      (const time_t*, struct tm*);
-extern struct tm *_localtime_r   (const time_t *timer, struct tm *tmbuf);
+extern struct tm *_localtime_r   (const time_t*, struct tm*);
 
 /*==============================================================================
   Exported inline functions
