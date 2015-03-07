@@ -114,7 +114,8 @@ static inline void sleep_ms(const uint milliseconds)
  * The <b>usleep</b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
- * Function is not supported by dnx RTOS. Function sleep task at least 1ms.
+ * Function is not full supported by dnx RTOS. The task falls asleep for at least
+ * 1ms if the delay is lower than or equal to 1000 microseconds.
  *
  * @param microseconds      number of microseconds to sleep
  *
@@ -127,15 +128,16 @@ static inline void sleep_ms(const uint milliseconds)
  *
  * // ...
  * usleep(10);
- * // code here will be executed at least after 1ms sleep (shall be 10us)
+ * // code here will be executed after at least 1ms
+ * usleep(10000);
+ * // code here will be executed after at least 10ms
  * // ...
  */
 //==============================================================================
 static inline void usleep(const uint microseconds)
 {
-        (void) microseconds;
-
-        vTaskDelay(1);
+        uint ms = microseconds / 1000;
+        _sleep_ms(ms ? ms : 1);
 }
 
 //==============================================================================
