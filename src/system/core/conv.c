@@ -368,7 +368,7 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
  * @return On success return tmpbuf, otherwise NULL.
  */
 //==============================================================================
-struct tm *_lotime_r(const time_t *timer, struct tm *tmbuf)
+struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer) {
                 time_t localtime = *timer + _ltimeoff;

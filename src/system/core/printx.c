@@ -857,20 +857,10 @@ char *_ctime(const time_t *timer, const struct tm *tm)
                 if (!timer) {
                         t = *tm;
                 } else {
-                        _lotime_r(timer, &t);
+                        _localtime_r(timer, &t);
                 }
 
-                _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %c%02d%02d %4d\n",
-                          week_day_abbr[t.tm_wday],
-                          month_abbr[t.tm_mon],
-                          t.tm_mday,
-                          t.tm_hour,
-                          t.tm_min,
-                          t.tm_sec,
-                          (_ltimeoff < 0 ? '-'  : '+'),
-                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 3600,
-                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 60 % 60,
-                          t.tm_year+1900);
+                _strftime(timestr, sizeof(timestr), "%a %b %d %X %z %Y", &t);
         }
 
         return timestr;

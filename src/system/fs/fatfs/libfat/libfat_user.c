@@ -38,7 +38,6 @@
 #include "core/fs.h"
 #include "libfat_user.h"
 #include "libfat_conf.h"
-#include <time.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -152,14 +151,16 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 //==============================================================================
 uint32_t _libfat_get_fattime(void)
 {
-        time_t     t  = time(NULL);
-        struct tm *tm = gmtime(&t);
+        time_t t = _sys_time(NULL);
 
-        uint32_t fattime = ((tm->tm_sec  / 2) & 0x1F)
-                         | ((tm->tm_min  & 0x3F) << 5)
-                         | ((tm->tm_hour & 0x1F) << 11)
-                         | (((tm->tm_mon  + 1 ) & 0x1F) << 16)
-                         | (((tm->tm_year - 80) & 0x7F) << 25);
+        struct tm tm;
+        _sys_gmtime_r(&t, &tm);
+
+        uint32_t fattime = ((tm.tm_sec  / 2) & 0x1F)
+                         | ((tm.tm_min  & 0x3F) << 5)
+                         | ((tm.tm_hour & 0x1F) << 11)
+                         | (((tm.tm_mon  + 1 ) & 0x1F) << 16)
+                         | (((tm.tm_year - 80) & 0x7F) << 25);
 
         return fattime;
 }

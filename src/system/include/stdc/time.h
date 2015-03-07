@@ -34,6 +34,8 @@
 #include <stddef.h>
 #include "kernel/kwrapper.h"
 #include "core/conv.h"
+#include "core/env.h"
+#include "core/printx.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -209,18 +211,7 @@ static inline time_t mktime(struct tm *timeptr)
 //==============================================================================
 static inline time_t time(time_t *timer)
 {
-        time_t t   = -1;
-        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r");
-        if (rtc) {
-                if (_vfs_fread(&t, sizeof(time_t), 1, rtc) == 1) {
-                        if (timer) {
-                                *timer = t;
-                        }
-                }
-                _vfs_fclose(rtc);
-        }
-
-        return t;
+        return _time(timer);
 }
 
 //==============================================================================
@@ -239,14 +230,7 @@ static inline time_t time(time_t *timer)
 //==============================================================================
 static inline int stime(time_t *timer)
 {
-        int    ret = -1;
-        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w");
-        if (rtc) {
-                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
-                _vfs_fclose(rtc);
-        }
-
-        return ret;
+        return _stime(timer);
 }
 
 //==============================================================================
@@ -367,6 +351,30 @@ static inline struct tm *gmtime(const time_t *timer)
 
 //==============================================================================
 /**
+ * @brief  Convert time_t to tm as UTC time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
+ */
+//==============================================================================
+static inline struct tm *gmtime_r(const time_t *timer, struct tm *tm)
+{
+        return _gmtime_r(timer, tm);
+}
+
+//==============================================================================
+/**
  * @brief  Convert time_t to tm as local time
  *
  * Uses the value pointed by timer to fill a tm structure with the values that
@@ -382,7 +390,30 @@ static inline struct tm *gmtime(const time_t *timer)
 //==============================================================================
 static inline struct tm *localtime(const time_t *timer)
 {
-        return _lotime_r(timer, &_tmbuf);
+        return _localtime_r(timer, &_tmbuf);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as local time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
+ */
+//==============================================================================
+static inline struct tm *localtime_r(const time_t *timer, struct tm *tm)
+{
+        return _localtime_r(timer, tm);
 }
 
 //==============================================================================
