@@ -2055,7 +2055,7 @@ static inline int _sys_stime(time_t *timer)
  * @return None
  */
 //==============================================================================
-static inline void _sys_stimezone(int tdiff)
+static inline void _sys_tzset(int tdiff)
 {
         _ltimeoff = tdiff;
 }

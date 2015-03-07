@@ -237,7 +237,7 @@ static inline int stime(time_t *timer)
  * @return None
  */
 //==============================================================================
-static inline void stimezone(int tdiff)
+static inline void tzset(int tdiff)
 {
         _ltimeoff = tdiff;
 }
@@ -284,7 +284,41 @@ static inline int timezone()
 //==============================================================================
 static inline char *asctime(const struct tm *timeptr)
 {
-        return _ctime(NULL, timeptr);
+        return _ctime_r(NULL, timeptr, NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert tm structure to string
+ *
+ * Interprets the contents of the tm structure pointed by timeptr as a calendar
+ * time and converts it to a C-string containing a human-readable version of the
+ * corresponding date and time.
+ * The returned string has the following format:
+ *
+ *      Www Mmm dd hh:mm:ss yyyy
+ *
+ * Where Www is the weekday, Mmm the month (in letters), dd the day of the month,
+ * hh:mm:ss the time, and yyyy the year.
+ *
+ * The string is followed by a new-line character ('\n') and terminated with
+ * a null-character.
+ *
+ * @param  timeptr      Pointer to a tm structure that contains a calendar time
+ *                      broken down into its components (see struct tm).
+ *
+ * @param  buf          Pointer to the buffer where generated string is stored.
+ *                      The size of the buffer must be at least 32 bytes long.
+ *
+ * @return A C-string containing the date and time information in a human-readable
+ *         format.
+ *         The returned value points to an internal array whose validity or value
+ *         may be altered by any subsequent call to asctime or ctime.
+ */
+//==============================================================================
+static inline char *asctime_r(const struct tm *timeptr, char *buf)
+{
+        return _ctime_r(NULL, timeptr, buf);
 }
 
 //==============================================================================
@@ -320,7 +354,46 @@ static inline char *asctime(const struct tm *timeptr)
 //==============================================================================
 static inline char *ctime(const time_t *timer)
 {
-        return _ctime(timer, NULL);
+        return _ctime_r(timer, NULL, NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t value to string
+ *
+ * Interprets the value pointed by timer as a calendar time and converts it to
+ * a C-string containing a human-readable version of the corresponding time and
+ * date, in terms of local time.
+ *
+ * The returned string has the following format:
+ *
+ *      Www Mmm dd hh:mm:ss zzzzz yyyy
+ *
+ * Where Www is the weekday, Mmm the month (in letters), dd the day of the month,
+ * hh:mm:ss the time, and yyyy the year.
+ *
+ * The string is followed by a new-line character ('\n') and terminated with
+ * a null-character.
+ *
+ * This function is equivalent to:
+ *
+ *      asctime(localtime(timer))
+ *
+ * @param  timer        Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param  buf          Pointer to the buffer where generated string is stored.
+ *                      The size of the buffer must be at least 32 bytes long.
+ *
+ * @return A C-string containing the date and time information in a human-readable format.
+ *         The returned value points to an internal array whose validity or
+ *         value may be altered by any subsequent call to asctime or ctime.
+ */
+//==============================================================================
+static inline char *ctime_r(const time_t *timer, char *buf)
+{
+        return _ctime_r(timer, NULL, buf);
 }
 
 //==============================================================================

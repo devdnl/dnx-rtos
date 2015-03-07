@@ -344,6 +344,7 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
 
                 tmbuf->tm_mday  = dayno + 1;
                 tmbuf->tm_isdst = 0;
+                tmbuf->tm_isutc = 1;
 
                 return tmbuf;
         } else {
@@ -365,7 +366,9 @@ struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer) {
                 time_t localtime = *timer + _ltimeoff;
-                return _gmtime_r(&localtime, tmbuf);
+                struct tm *tm = _gmtime_r(&localtime, tmbuf);
+                tmbuf->tm_isutc = 0;
+                return tm;
         } else {
                 return NULL;
         }
