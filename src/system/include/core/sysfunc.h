@@ -41,6 +41,7 @@
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/scanx.h"
+#include "core/env.h"
 #include "portable/cpuctl.h"
 
 #ifdef __cplusplus
@@ -1967,6 +1968,214 @@ static inline void _sys_sleep_until(const uint seconds, int *ref_time_ticks)
 static inline void _sys_update_system_clocks()
 {
         _cpuctl_update_system_clocks();
+}
+
+//==============================================================================
+/**
+ * @brief  Convert tm structure to time_t
+ *
+ * This function performs the reverse translation that localtime does.
+ * The values of the members tm_wday and tm_yday of timeptr are ignored, and
+ * the values of the other members are interpreted even if out of their valid
+ * ranges (see struct tm). For example, tm_mday may contain values above 31,
+ * which are interpreted accordingly as the days that follow the last day of
+ * the selected month.
+ * A call to this function automatically adjusts the values of the members of
+ * timeptr if they are off-range or -in the case of tm_wday and tm_yday- if they
+ * have values that do not match the date described by the other members.
+ *
+ * @param  timeptr      Pointer to a tm structure that contains a calendar time
+ *                      broken down into its components (see struct tm)
+ *
+ * @return A time_t value corresponding to the calendar time passed as argument.
+ *         If the calendar time cannot be represented, a value of -1 is returned.
+ */
+//==============================================================================
+static inline time_t _sys_mktime(struct tm *timeptr)
+{
+        return _mktime(timeptr);
+}
+
+//==============================================================================
+/**
+ * @brief  Get current time
+ *
+ * The function returns this value, and if the argument is not a null pointer,
+ * it also sets this value to the object pointed by timer.
+ * The value returned generally represents the number of seconds since 00:00
+ * hours, Jan 1, 1970 UTC (i.e., the current unix timestamp). Although libraries
+ * may use a different representation of time: Portable programs should not use
+ * the value returned by this function directly, but always rely on calls to
+ * other elements of the standard library to translate them to portable types
+ * (such as localtime, gmtime or difftime).
+ *
+ * @param  timer        Pointer to an object of type time_t, where the time
+ *                      value is stored.
+ *                      Alternatively, this parameter can be a null pointer,
+ *                      in which case the parameter is not used (the function
+ *                      still returns a value of type time_t with the result).
+ *
+ * @return The current calendar time as a time_t object.
+ *         If the argument is not a null pointer, the return value is the same
+ *         as the one stored in the location pointed by argument timer.
+ *         If the function could not retrieve the calendar time, it returns
+ *         a value of -1.
+ */
+//==============================================================================
+static inline time_t _sys_time(time_t *timer)
+{
+        return _time(timer);
+}
+
+//==============================================================================
+/**
+ * @brief  Set system's time
+ *
+ * stime() sets the system's idea of the time and date. The time, pointed to by
+ * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+ *
+ * @param  timer        pointer to an object of type time_t, where the time
+ *                      value is stored.
+ *
+ * @return On success 0 is returned.
+ *         On error -1 is returned.
+ */
+//==============================================================================
+static inline int _sys_stime(time_t *timer)
+{
+        return _stime(timer);
+}
+
+//==============================================================================
+/**
+ * @brief  Setup time zone by setting difference between UTC and local time
+ *
+ * @param  tdiff        time difference in seconds (can be negative)
+ *
+ * @return None
+ */
+//==============================================================================
+static inline void _sys_tzset(int tdiff)
+{
+        _ltimeoff = tdiff;
+}
+
+//==============================================================================
+/**
+ * @brief  Return difference in seconds between UTC and local time
+ *
+ * @param  None
+ *
+ * @return Difference between UTC and local time in seconds.
+ */
+//==============================================================================
+static inline int _sys_timezone()
+{
+        return _ltimeoff;
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as UTC time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
+ */
+//==============================================================================
+static inline struct tm *_sys_gmtime_r(const time_t *timer, struct tm *tm)
+{
+        return _gmtime_r(timer, tm);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as local time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
+ */
+//==============================================================================
+static inline struct tm *_sys_localtime_r(const time_t *timer, struct tm *tm)
+{
+        return _localtime_r(timer, tm);
+}
+
+//==============================================================================
+/**
+ * @brief  Format time as string
+ *
+ * Copies into ptr the content of format, expanding its format specifiers into
+ * the corresponding values that represent the time described in timeptr, with
+ * a limit of maxsize characters.
+ *
+ * @param  ptr          Pointer to the destination array where the resulting
+ *                      C string is copied.
+ * @param  maxsize      Maximum number of characters to be copied to ptr,
+ *                      including the terminating null-character.
+ * @param  format       C string containing any combination of regular characters
+ *                      and special format specifiers. These format specifiers
+ *                      are replaced by the function to the corresponding values
+ *                      to represent the time specified in timeptr.
+ * @param timeptr       Pointer to a tm structure that contains a calendar time
+ *                      broken down into its components (see struct tm).
+ *
+ * @return If the length of the resulting C string, including the terminating
+ *         null-character, doesn't exceed maxsize, the function returns the
+ *         total number of characters copied to ptr (not including the terminating
+ *         null-character).
+ *         Otherwise, it returns zero, and the contents of the array pointed by
+ *         ptr are indeterminate.
+ *
+ * @note Supported flags:
+ *       % - % character
+ *       n - new line
+ *       H - Hour in 24h format (00-23)
+ *       I - Hour in 12h format (01-12)
+ *       M - Minute (00-59)
+ *       S - Second (00-61)
+ *       A - Full weekday name
+ *       a - Abbreviated weekday name
+ *       B - Full month name
+ *       b - Abbreviated month name
+ *       h - Abbreviated month name
+ *       C - Year divided by 100 and truncated to integer (00-99) (century)
+ *       y - Year, last two digits (00-99)
+ *       Y - Year
+ *       d - Day of the month, zero-padded (01-31)
+ *       p - AM or PM designation
+ *       j - Day of the year (001-366)
+ *       m - Month as a decimal number (01-12)
+ *       X - Time representation                                14:55:02
+ *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
+ *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
+ */
+//==============================================================================
+static inline size_t _sys_strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
+{
+        return _strftime(ptr, maxsize, format, timeptr);
 }
 
 #ifdef __cplusplus

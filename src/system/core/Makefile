@@ -11,6 +11,7 @@ CSRC_CORE   += core/vfs.c
 CSRC_CORE   += core/modctrl.c
 CSRC_CORE   += core/fsctrl.c
 CSRC_CORE   += core/conv.c
+CSRC_CORE   += core/env.c
 CSRC_CORE   += user/initd.c
 CSRC_CORE   += drivers/driver_registration.c
 CSRC_CORE   += fs/fs_registration.c

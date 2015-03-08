@@ -139,7 +139,7 @@ extern int         _fputc          (int, FILE*);
 extern int         _f_puts         (const char*, FILE*, bool);
 extern int         _getc           (FILE*);
 extern char       *_fgets          (char*, int, FILE*);
-extern char       *_ctime          (const time_t*, const struct tm*);
+extern char       *_ctime_r        (const time_t *timer, const struct tm *tm, char *buf);
 extern size_t      _strftime       (char*, size_t, const char*, const struct tm*);
 
 /*==============================================================================

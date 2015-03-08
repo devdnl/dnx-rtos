@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    conv.h
+@file    env.h
 
 @author  Daniel Zorychta
 
-@brief   Module with calculation and convert functions.
+@brief   dnx RTOS environment functions
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,17 +24,18 @@
 
 *//*==========================================================================*/
 
-#ifndef _CONV_H_
-#define _CONV_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _ENV_H_
+#define _ENV_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include "core/vfs.h"
+#include "sys/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
   Exported macros
@@ -47,19 +48,12 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern struct tm _tmbuf;
-extern int       _ltimeoff;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern double     _strtod        (const char*, char**);
-extern i32_t      _atoi          (const char*);
-extern char      *_strtoi        (const char*, int, i32_t*);
-extern double     _atof          (const char*);
-extern u32_t      _mktime        (struct tm*);
-extern struct tm *_gmtime_r      (const time_t*, struct tm*);
-extern struct tm *_localtime_r   (const time_t*, struct tm*);
+extern time_t _time(time_t *timer);
+extern int    _stime(time_t *timer);
 
 /*==============================================================================
   Exported inline functions
@@ -69,7 +63,7 @@ extern struct tm *_localtime_r   (const time_t*, struct tm*);
 }
 #endif
 
-#endif /* _CONV_H_ */
+#endif /* _ENV_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

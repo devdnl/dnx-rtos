@@ -274,38 +274,31 @@ double _atof(const char *str)
 /**
  * @brief  Convert date to UNIX time (Epoch)
  *
- * @param  day          month day (1-31)
- * @param  month        month (1-12)
- * @param  year         year
- * @param  hour         hour (0-23)
- * @param  min          minutes (0-59)
- * @param  sec          seconds (0-59)
+ * @param  tm           pointer to struct tm object
  *
  * @return UNIX time value (Epoch)
  */
 //==============================================================================
-u32_t _date_to_epoch(u8_t day, u8_t month, u16_t year, u8_t hour,u8_t min,u8_t sec)
+u32_t _mktime(struct tm *tm)
 {
-        if (  day   >= 1
-           && day   <= 31
-           && month >= 1
-           && month <= 12
-           && year  >= YEAR0
-           && hour  <= 23
-           && min   <= 59
-           && sec   <= 59  ) {
+        if (  tm->tm_mday >= 1
+           && tm->tm_mday <= 31
+           && tm->tm_mon  >= 0
+           && tm->tm_mon  <= 11
+           && tm->tm_hour <= 23
+           && tm->tm_min  <= 59
+           && tm->tm_sec  <= 59  ) {
 
                 uint16_t yday = 0;
-                for (int i = 0; i < month - 1; i++) {
-                        yday += _ytab[is_leap_year(year)][i];
+                for (int i = 0; i < tm->tm_mon; i++) {
+                        yday += _ytab[is_leap_year(tm->tm_year)][i];
                 }
 
-                yday += day - 1;
-                year -= YEAR0;
+                yday += tm->tm_mday - 1;
 
-                return sec + min * SECS_MIN + hour * SECS_HOUR
-                       + yday * SECS_DAY + (year - 70) * SECS_YEAR + ((year - 69) / 4) * SECS_DAY
-                       - ((year - 1) / 100) * SECS_DAY + ((year + 299) / 400) * SECS_DAY;
+                return tm->tm_sec + tm->tm_min * SECS_MIN + tm->tm_hour * SECS_HOUR
+                       + yday * SECS_DAY + (tm->tm_year - 70) * SECS_YEAR + ((tm->tm_year - 69) / 4) * SECS_DAY
+                       - ((tm->tm_year - 1) / 100) * SECS_DAY + ((tm->tm_year + 299) / 400) * SECS_DAY;
         } else {
                 return -1;
         }
@@ -351,6 +344,7 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
 
                 tmbuf->tm_mday  = dayno + 1;
                 tmbuf->tm_isdst = 0;
+                tmbuf->tm_isutc = 1;
 
                 return tmbuf;
         } else {
@@ -368,11 +362,13 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
  * @return On success return tmpbuf, otherwise NULL.
  */
 //==============================================================================
-struct tm *_lotime_r(const time_t *timer, struct tm *tmbuf)
+struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer) {
                 time_t localtime = *timer + _ltimeoff;
-                return _gmtime_r(&localtime, tmbuf);
+                struct tm *tm = _gmtime_r(&localtime, tmbuf);
+                tmbuf->tm_isutc = 0;
+                return tm;
         } else {
                 return NULL;
         }

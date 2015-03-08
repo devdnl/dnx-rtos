@@ -843,41 +843,39 @@ void _perror(const char *str)
  *
  * @param  timer        UNIX time value (can be NULL)
  * @param  tm           time structure (can be NULL)
+ * @param  buf          buffer where string is filled (at least 32 bytes)
  *
  * @return Pointer to statically allocated string buffer. This function is not
  *         thread safe.
  */
 //==============================================================================
-char *_ctime(const time_t *timer, const struct tm *tm)
+char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (timer || tm) {
+                if (buf == NULL) {
+                        buf = timestr;
+                }
+
                 struct tm t;
 
                 if (!timer) {
                         t = *tm;
                 } else {
-                        _lotime_r(timer, &t);
+                        _localtime_r(timer, &t);
                 }
 
-                _snprintf(timestr, sizeof(timestr), "%s %s %02d %02d:%02d:%02d %c%02d%02d %4d\n",
-                          week_day_abbr[t.tm_wday],
-                          month_abbr[t.tm_mon],
-                          t.tm_mday,
-                          t.tm_hour,
-                          t.tm_min,
-                          t.tm_sec,
-                          (_ltimeoff < 0 ? '-'  : '+'),
-                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 3600,
-                          (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 60 % 60,
-                          t.tm_year+1900);
-        }
+                _strftime(buf, sizeof(timestr), "%a %b %d %X %z %Y%n", &t);
 
-        return timestr;
+                return buf;
+        } else {
+                return NULL;
+        }
 #else
         UNUSED_ARG(timer);
         UNUSED_ARG(tm);
-        return "";
+        UNUSED_ARG(buf);
+        return NULL;
 #endif
 }
 
@@ -1046,12 +1044,14 @@ size_t _strftime(char *buf, size_t size, const char *format, const struct tm *ti
                                         m = _snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year+1900, timeptr->tm_mon+1, timeptr->tm_mday);
                                         break;
 
-                                case 'z':
+                                case 'z': {
+                                        i32_t timeoff = timeptr->tm_isutc ? 0 : _ltimeoff;
                                         m = _snprintf(buf, size, "%c%02d%02d",
-                                                      (_ltimeoff < 0 ? '-':'+'),
-                                                      (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 3600,
-                                                      (_ltimeoff < 0 ? -_ltimeoff : _ltimeoff) / 60 % 60);
+                                                      (timeoff < 0 ? '-':'+'),
+                                                      (timeoff < 0 ? -timeoff : timeoff) / 3600,
+                                                      (timeoff < 0 ? -timeoff : timeoff) / 60 % 60);
                                         break;
+                                }
 
                                 case 'D':
                                 case 'x':
