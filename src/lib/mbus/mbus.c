@@ -71,7 +71,8 @@ typedef enum {
         CMD_SIGNAL_DELETE,
         CMD_SIGNAL_SET,
         CMD_SIGNAL_GET,
-        CMD_SIGNAL_IS_EXIST
+        CMD_SIGNAL_IS_EXIST,
+        CMD_SIGNAL_GET_SIZE
 } cmd_t;
 
 typedef struct {
@@ -107,6 +108,10 @@ typedef struct {
                 struct RQ_CMD_IS_SIGNAL_EXIST {
                         const char *name;
                 } CMD_SIGNAL_IS_EXIST;
+
+                struct RQ_CMD_SIGNAL_GET_SIZE {
+                        const char *name;
+                } CMD_SIGNAL_GET_SIZE;
         } arg;
 
         queue_t          *response;
@@ -131,6 +136,10 @@ typedef struct {
                 struct RES_CMD_IS_SIGNAL_EXIST {
                         bool exist;
                 } CMD_SIGNAL_IS_EXIST;
+
+                struct RES_CMD_SIGNAL_GET_SIZE {
+                        size_t size;
+                } CMD_SIGNAL_GET_SIZE;
         } of;
 
         mbus_errno_t errorno;
@@ -192,13 +201,13 @@ static bool request_action(mbus_t *this, request_t *request, response_t *respons
 
 //==============================================================================
 /**
- * @brief  Function send response to request
+ * @brief  Function send response of request
  * @param  request              request to response
  * @param  response             response
  * @return None
  */
 //==============================================================================
-static void send_response(request_t *request, response_t *response)
+static void return_response(request_t *request, response_t *response)
 {
         queue_send(request->response, response, REQUEST_ACTION_TIMEOUT);
 }
@@ -217,7 +226,7 @@ static void realize_CMD_GET_NUMBER_OF_SIGNALS(request_t *request)
         response_t response;
         response.of.CMD_GET_NUMBER_OF_SIGNALS.number_of_signals = count;
         response.errorno = count == -1 ? MBUS_ERRNO__INTERNAL_ERROR : MBUS_ERRNO__NO_ERROR;
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -242,7 +251,7 @@ static void realize_CMD_GET_SIGNAL_INFO(request_t *request)
                 response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -258,10 +267,10 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
         response.errorno = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
 
         _mbus_signal_t *sig = _mbus_signal_new(request->arg.CMD_SIGNAL_CREATE.name,
-                                         request->owner_ID,
-                                         request->arg.CMD_SIGNAL_CREATE.size,
-                                         request->arg.CMD_SIGNAL_CREATE.perm,
-                                         request->arg.CMD_SIGNAL_CREATE.type);
+                                               request->owner_ID,
+                                               request->arg.CMD_SIGNAL_CREATE.size,
+                                               request->arg.CMD_SIGNAL_CREATE.perm,
+                                               request->arg.CMD_SIGNAL_CREATE.type);
         if (sig) {
                 if (llist_find_begin(mbus->signals, sig) == -1) {
                         if (llist_push_back(mbus->signals, sig)) {
@@ -276,7 +285,7 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
                 }
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -322,7 +331,7 @@ static void realize_CMD_SIGNAL_DELETE(request_t *request)
                 }
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -353,7 +362,7 @@ static void realize_CMD_SIGNAL_SET(request_t *request)
                 }
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -402,7 +411,7 @@ static void realize_CMD_SIGNAL_GET(request_t *request)
                 }
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -426,7 +435,31 @@ static void realize_CMD_SIGNAL_IS_EXIST(request_t *request)
                 }
         }
 
-        send_response(request, &response);
+        return_response(request, &response);
+}
+
+//==============================================================================
+/**
+ * @brief  Function realize CMD_SIGNAL_GET_SIZE command
+ * @param  request              request data
+ * @return None
+ */
+//==============================================================================
+static void realize_CMD_SIGNAL_GET_SIZE(request_t *request)
+{
+        response_t response;
+        response.errorno = MBUS_ERRNO__SIGNAL_NOT_EXIST;
+        response.of.CMD_SIGNAL_GET_SIZE.size = 0;
+
+        llist_foreach(_mbus_signal_t*, sig, mbus->signals) {
+                if (strcmp(_mbus_signal_get_name(sig), request->arg.CMD_SIGNAL_GET_SIZE.name) == 0) {
+                        response.errorno = MBUS_ERRNO__NO_ERROR;
+                        response.of.CMD_SIGNAL_GET_SIZE.size = _mbus_signal_get_size(sig);
+                        break;
+                }
+        }
+
+        return_response(request, &response);
 }
 
 //==============================================================================
@@ -530,6 +563,10 @@ mbus_errno_t mbus_daemon()
 
                         case CMD_SIGNAL_IS_EXIST:
                                 realize_CMD_SIGNAL_IS_EXIST(&request);
+                                break;
+
+                        case CMD_SIGNAL_GET_SIZE:
+                                realize_CMD_SIGNAL_GET_SIZE(&request);
                                 break;
 
                         default:
@@ -823,23 +860,25 @@ bool mbus_signal_set(mbus_t *this, const char *name, const void *data)
  * @param  this                 mbus object
  * @param  name                 name of signal
  * @param  data                 data destination
+ * @param  size                 signal size (protect buffer overflow if signal is longer)
  * @return On success true is returned. On error false and error number is set.
  */
 //==============================================================================
-bool mbus_signal_get(mbus_t *this, const char *name, void *data)
+bool mbus_signal_get(mbus_t *this, const char *name, void *data, size_t size)
 {
         bool status = false;
 
         if (mbus_is_valid(this)) {
-                if (name && data) {
+                if (name && data && size) {
                         response_t response;
                         request_t  request;
                         request.cmd = CMD_SIGNAL_GET;
                         request.arg.CMD_SIGNAL_GET.name = name;
                         if (request_action(this, &request, &response)) {
                                 if (response.of.CMD_SIGNAL_GET.data) {
-                                        memcpy(data, response.of.CMD_SIGNAL_GET.data,
-                                               response.of.CMD_SIGNAL_GET.size);
+                                        size_t sz = min(size, response.of.CMD_SIGNAL_GET.size);
+
+                                        memcpy(data, response.of.CMD_SIGNAL_GET.data, sz);
 
                                         status = true;
                                 }
@@ -885,6 +924,38 @@ int mbus_signal_is_exist(mbus_t *this, const char *name)
         }
 
         return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Get data size of signal
+ * @param  this                 mbus context
+ * @param  name                 name of signal
+ * @return On success positive non-zero value of data size is returned (bytes).
+ *         On error 0 and appropriate error number is set.
+ */
+//==============================================================================
+size_t mbus_signal_get_size(mbus_t *this, const char *name)
+{
+        int size = 0;
+
+        if (mbus_is_valid(this)) {
+                if (name) {
+                        response_t response;
+                        request_t  request;
+                        request.cmd = CMD_SIGNAL_GET_SIZE;
+                        request.arg.CMD_SIGNAL_GET_SIZE.name = name;
+                        if (request_action(this, &request, &response)) {
+                                if (response.errorno == MBUS_ERRNO__NO_ERROR) {
+                                        size = response.of.CMD_SIGNAL_GET_SIZE.size;
+                                }
+                        }
+                } else {
+                        this->errorno = MBUS_ERRNO__INVALID_ARGUMENT;
+                }
+        }
+
+        return size;
 }
 
 /*==============================================================================

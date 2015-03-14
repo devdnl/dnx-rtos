@@ -211,11 +211,12 @@ extern bool mbus_signal_set(mbus_t *mbus, const char *name, const void *data);
  * @param  mbus                 mbus context
  * @param  name                 name of signal
  * @param  data                 data destination
+ * @param  size                 signal size (protect buffer overflow if signal is longer)
  * @return On success true is returned. On error false and appropriate error
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_get(mbus_t *mbus, const char *name, void *data);
+extern bool mbus_signal_get(mbus_t *mbus, const char *name, void *data, size_t size);
 
 //==============================================================================
 /**
@@ -228,6 +229,17 @@ extern bool mbus_signal_get(mbus_t *mbus, const char *name, void *data);
  */
 //==============================================================================
 extern int mbus_signal_is_exist(mbus_t *mbus, const char *name);
+
+//==============================================================================
+/**
+ * @brief  Get data size of signal
+ * @param  mbus                 mbus context
+ * @param  name                 name of signal
+ * @return On success positive non-zero value of data size is returned (bytes).
+ *         On error 0 and appropriate error number is set.
+ */
+//==============================================================================
+extern size_t mbus_signal_get_size(mbus_t *mbus, const char *name);
 
 /*==============================================================================
   Exported inline functions
