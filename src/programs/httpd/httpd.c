@@ -29,17 +29,13 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <dnx/os.h>
 #include <dnx/net.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CACHE_LEN               1460
-#define PATH_LEN                100
 
 /*==============================================================================
   Local types, enums definitions
@@ -57,6 +53,52 @@ GLOBAL_VARIABLES_SECTION {
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
+static const char index_html[] =
+        "<!DOCTYPE html>"
+        "<html>"
+                "<head>"
+                        "<meta charset=\"utf-8\">"
+                        "<title>Welcome to dnx RTOS HTTP server!</title>"
+
+                        "<style>"
+                        "body {"
+                                "background-image: url(\"http://www.socwall.com/images/wallpapers/10022-1920x1200.jpg\");"
+                                "background-repeat: no-repeat;"
+                                "background-attachment: fixed;}"
+                        "</style>"
+                "</head>"
+                "<body>"
+                        "<img src=\"http://www.dnx-rtos.org/wp-content/uploads/2014/02/dnx_logo.png\""
+                        "style=\"opacity: 0.5; position: absolute; right: 20px; bottom: 20px;\">"
+
+                        "<div style=\"width:800px;"
+                                     "height:500px;"
+                                     "position:absolute;"
+                                     "background: white;"
+                                     "opacity: 0.8;"
+                                     "padding:10px;"
+                                     "margin-top:-250px;"
+                                     "margin-left:-400px;"
+                                     "border-top-left-radius: 10px;"
+                                     "border-top-right-radius: 10px;"
+                                     "border-bottom-left-radius: 10px;"
+                                     "border-bottom-right-radius: 10px;"
+                                     "top:50%;"
+                                     "left:50%;\">"
+
+                                "<font size=\"5\">"
+                                "<p><center>Welcome to dnx RTOS HTTP server!</center><p>"
+                                "</font>"
+
+                                "Visit dnx RTOS pages:<p>"
+                                "<ul>"
+                                        "<li><a href=\"http://www.dnx-rtos.org\">dnx RTOS Homepage</a></li>"
+                                        "<li><a href=\"http://www.dnx-rtos.org/forum\">dnx RTOS Forum</a></li>"
+                                        "<li><a href=\"https://www.youtube.com/channel/UCRLYrTTz0OUfRp_eaCgXlvA/feed\">dnx RTOS YouTube Channel</a></li>"
+                                "</ul>"
+                        "</div>"
+                "</body>"
+        "</html>";
 
 /*==============================================================================
   Exported object definitions
@@ -68,13 +110,13 @@ static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\
 
 //==============================================================================
 /**
- * @brief HTTP server
+ * @brief  HTTP server
+ * @param  conn  connection
+ * @return None
  */
 //==============================================================================
 static void serve(net_conn_t *conn)
 {
-        errno = 0;
-
         net_buf_t *inbuf;
         if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
 
@@ -83,54 +125,8 @@ static void serve(net_conn_t *conn)
                 net_buf_data(inbuf, (void**)&buf, &buf_len);
 
                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
-
-                        char *path = calloc(1, PATH_LEN);
-                        if (path) {
-                                getcwd(path, PATH_LEN);
-                                uint cwd_len = strlen(path);
-
-                                char *path_end = strchr(buf + 4, ' ');
-                                if (path_end) {
-                                        *path_end = '\0';
-
-                                        strcat(path, buf + 4);
-
-                                        printf("Requested: %s\n", path);
-
-                                        if (strlen(path) - 1 == cwd_len) {
-                                                strcat(path, "index.html");
-                                        }
-
-                                        FILE *file = fopen(path, "r");
-                                        if (file) {
-                                                net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
-
-                                                char *cache = malloc(CACHE_LEN);
-                                                if (cache) {
-                                                        size_t n;
-                                                        while ((n = fread(cache, 1, CACHE_LEN, file))) {
-                                                                net_conn_write(conn, cache, n, NET_CONN_FLAG_COPY);
-                                                        }
-
-                                                        if (ferror(file)) {
-                                                                perror(path);
-                                                        }
-
-                                                        free(cache);
-                                                } else {
-                                                        perror(NULL);
-                                                }
-
-                                                fclose(file);
-                                        } else {
-                                                perror(path);
-                                        }
-                                }
-
-                                free(path);
-                        } else {
-                                perror(NULL);
-                        }
+                        net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
+                        net_conn_write(conn, index_html, sizeof(index_html) - 1, NET_CONN_FLAG_NOCOPY);
                 }
 
                 puts("Connection closed");

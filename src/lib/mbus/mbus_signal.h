@@ -54,7 +54,7 @@ typedef struct _mbus_signal _mbus_signal_t;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern _mbus_signal_t  *_mbus_signal_new(const char*, _mbus_owner_ID_t, size_t, mbus_sig_perm_t, mbus_sig_type_t);
+extern _mbus_signal_t  *_mbus_signal_new(const char*, _mbus_owner_ID_t, size_t, size_t, mbus_sig_perm_t, mbus_sig_type_t);
 extern  void            _mbus_signal_delete(_mbus_signal_t*);
 extern  char           *_mbus_signal_get_name(_mbus_signal_t*);
 extern  mbus_sig_type_t _mbus_signal_get_type(_mbus_signal_t*);

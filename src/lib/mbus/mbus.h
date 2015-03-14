@@ -149,27 +149,41 @@ extern int mbus_get_number_of_signals(mbus_t *mbus);
  * @brief  Return information of selected signal
  * @param  mbus                 mbus context
  * @param  n                    n-element to get
- * @param  info                 pointer to the signal info object
+ * @param  info                 pointer to the signal info object (out)
  * @return On success true is returned. On error false and appropriate error
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_get_signal_info(mbus_t *mbus, size_t n, mbus_sig_info_t *info);
+extern bool mbus_get_signal_info(mbus_t          *mbus,
+                                 size_t           n,
+                                 mbus_sig_info_t *info);
 
 //==============================================================================
 /**
  * @brief  Create a new signal
+ *
+ * The meaning of "size" and "count" arguments according to signal types:
+ *      MBUS_SIG_TYPE__MBOX: create a queue of 'count' elements of 'size' size.
+ *                           Used memory depends on pushed elements.
+ *
+ *      MBUS_SIG_TYPE__VALUE: create one big signal of total size = size * count
+ *
  * @param  mbus                 mbus context
  * @param  name                 signal name
  * @param  size                 signal size
+ * @param  count                count of elements
  * @param  type                 signal type
  * @param  permissions          signal permissions
  * @return On success true is returned. On error false and appropriate error
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_create(mbus_t *mbus, const char *name, size_t size,
-                               mbus_sig_type_t type, mbus_sig_perm_t permissions);
+extern bool mbus_signal_create(mbus_t         *mbus,
+                               const char     *name,
+                               size_t          size,
+                               size_t          count,
+                               mbus_sig_type_t type,
+                               mbus_sig_perm_t permissions);
 
 //==============================================================================
 /**
@@ -180,7 +194,8 @@ extern bool mbus_signal_create(mbus_t *mbus, const char *name, size_t size,
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_delete(mbus_t *mbus, const char *name);
+extern bool mbus_signal_delete(mbus_t     *mbus,
+                               const char *name);
 
 //==============================================================================
 /**
@@ -191,7 +206,8 @@ extern bool mbus_signal_delete(mbus_t *mbus, const char *name);
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_force_delete(mbus_t *mbus, const char *name);
+extern bool mbus_signal_force_delete(mbus_t     *mbus,
+                                     const char *name);
 
 //==============================================================================
 /**
@@ -203,7 +219,9 @@ extern bool mbus_signal_force_delete(mbus_t *mbus, const char *name);
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_set(mbus_t *mbus, const char *name, const void *data);
+extern bool mbus_signal_set(mbus_t     *mbus,
+                            const char *name,
+                            const void *data);
 
 //==============================================================================
 /**
@@ -211,11 +229,15 @@ extern bool mbus_signal_set(mbus_t *mbus, const char *name, const void *data);
  * @param  mbus                 mbus context
  * @param  name                 name of signal
  * @param  data                 data destination
+ * @param  size                 signal size (protect buffer overflow if signal is longer)
  * @return On success true is returned. On error false and appropriate error
  *         number is set.
  */
 //==============================================================================
-extern bool mbus_signal_get(mbus_t *mbus, const char *name, void *data);
+extern bool mbus_signal_get(mbus_t     *mbus,
+                            const char *name,
+                            void       *data,
+                            size_t      size);
 
 //==============================================================================
 /**
@@ -227,7 +249,20 @@ extern bool mbus_signal_get(mbus_t *mbus, const char *name, void *data);
  *         On error -1 is returned and appropriate error number is set.
  */
 //==============================================================================
-extern int mbus_signal_is_exist(mbus_t *mbus, const char *name);
+extern int mbus_signal_is_exist(mbus_t     *mbus,
+                                const char *name);
+
+//==============================================================================
+/**
+ * @brief  Get data size of signal
+ * @param  mbus                 mbus context
+ * @param  name                 name of signal
+ * @return On success positive non-zero value of data size is returned (bytes).
+ *         On error 0 and appropriate error number is set.
+ */
+//==============================================================================
+extern size_t mbus_signal_get_size(mbus_t     *mbus,
+                                   const char *name);
 
 /*==============================================================================
   Exported inline functions

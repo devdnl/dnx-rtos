@@ -34,7 +34,7 @@
 #ifndef _PLL_FLAGS_H_
 #define _PLL_FLAGS_H_
 
-#define __PLL_LSI_ON__ ENABLE
+#define __PLL_LSI_ON__ DISABLE
 #define __PLL_LSE_ON__ RCC_LSE_OFF
 #define __PLL_HSE_ON__ RCC_HSE_ON
 #define __PLL_RTC_CLK_SRC__ RCC_RTCCLKSource_LSI
@@ -59,7 +59,7 @@
 #define __PLL_PLL3_MUL__ RCC_PLL3Mul_8
 #define __PLL_AHB_PRE__ RCC_SYSCLK_Div1
 #define __PLL_APB1_PRE__ RCC_HCLK_Div2
-#define __PLL_APB2_PRE__ RCC_HCLK_Div1
+#define __PLL_APB2_PRE__ RCC_HCLK_Div2
 #define __PLL_ADC_PRE__ RCC_PCLK2_Div8
 #define __PLL_FLASH_LATENCY__ 2
 

@@ -72,7 +72,7 @@ static int print_help(const char *name)
         printf("Usage: %s [options]\n", name);
         puts(  "  -h, --help    this help");
         puts(  "  -l            signal list");
-        puts(  "  -a, --add     add signal (-a [name] [mbox|val] [size] [r|w|rw|prv])");
+        puts(  "  -a, --add     add signal (-a [name] [mbox|val] [size] [count] [r|w|rw|prv])");
         puts(  "  -d, --del     delete signal (-d [name])");
 
         return EXIT_SUCCESS;
@@ -136,11 +136,12 @@ static int print_signal_list()
 //==============================================================================
 static int add_signal(int n, char *argv[])
 {
-        char           *signal_name = NULL;
-        int             signal_size = 0;
-        mbus_sig_type_t signal_type = MBUS_SIG_TYPE__INVALID;
-        mbus_sig_perm_t signal_perm = MBUS_SIG_PERM__INVALID;
-        int             status      = EXIT_FAILURE;
+        char           *signal_name  = NULL;
+        int             signal_size  = 0;
+        int             signal_count = 0;
+        mbus_sig_type_t signal_type  = MBUS_SIG_TYPE__INVALID;
+        mbus_sig_perm_t signal_perm  = MBUS_SIG_PERM__INVALID;
+        int             status       = EXIT_FAILURE;
 
         mbus_t *mbus = mbus_new();
         if (mbus) {
@@ -177,6 +178,17 @@ static int add_signal(int n, char *argv[])
                 }
 
                 if (argv[++n]) {
+                        sscanf(argv[n], "%d", &signal_count);
+                        if (signal_count <= 0) {
+                                goto invalid_signal_count;
+                        }
+                } else {
+                        invalid_signal_count:
+                        fputs("Invalid signal count\n", stderr);
+                        goto exit;
+                }
+
+                if (argv[++n]) {
                         if (strcmp(argv[n], "r") == 0) {
                                 signal_perm = MBUS_SIG_PERM__READ;
                         } else if (strcmp(argv[n], "w") == 0) {
@@ -194,7 +206,7 @@ static int add_signal(int n, char *argv[])
                         goto exit;
                 }
 
-                if (mbus_signal_create(mbus, signal_name, signal_size, signal_type, signal_perm)) {
+                if (mbus_signal_create(mbus, signal_name, signal_size, signal_count, signal_type, signal_perm)) {
                         status = EXIT_SUCCESS;
                 } else {
                         fprintf(stderr, "Signal not created (%d)\n", mbus_get_errno(mbus));
