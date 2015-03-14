@@ -85,7 +85,8 @@ typedef struct {
 
                 struct RQ_CMD_SIGNAL_CREATE {
                         const char     *name;
-                        size_t          size:16;
+                        size_t          size;
+                        size_t          count;
                         mbus_sig_perm_t perm:8;
                         mbus_sig_type_t type:8;
                 } CMD_SIGNAL_CREATE;
@@ -269,6 +270,7 @@ static void realize_CMD_SIGNAL_CREATE(request_t *request)
         _mbus_signal_t *sig = _mbus_signal_new(request->arg.CMD_SIGNAL_CREATE.name,
                                                request->owner_ID,
                                                request->arg.CMD_SIGNAL_CREATE.size,
+                                               request->arg.CMD_SIGNAL_CREATE.count,
                                                request->arg.CMD_SIGNAL_CREATE.perm,
                                                request->arg.CMD_SIGNAL_CREATE.type);
         if (sig) {
@@ -728,28 +730,36 @@ bool mbus_get_signal_info(mbus_t *this, size_t n, mbus_sig_info_t *info)
 
 //==============================================================================
 /**
- * @brief  Create new signal
- * @param  this                 mbus object
+ * @brief  Create a new signal
+ * @param  this                 mbus context
  * @param  name                 signal name
  * @param  size                 signal size
+ * @param  count                count of elements
  * @param  type                 signal type
  * @param  permissions          signal permissions
- * @return On success true is returned. On error false and error number is set.
+ * @return On success true is returned. On error false and appropriate error
+ *         number is set.
  */
 //==============================================================================
-bool mbus_signal_create(mbus_t *this, const char *name, size_t size, mbus_sig_type_t type, mbus_sig_perm_t permissions)
+bool mbus_signal_create(mbus_t         *this,
+                        const char     *name,
+                        size_t          size,
+                        size_t          count,
+                        mbus_sig_type_t type,
+                        mbus_sig_perm_t permissions)
 {
         bool status = false;
 
         if (mbus_is_valid(this)) {
-                if (name && size > 0 && type < MBUS_SIG_TYPE__INVALID) {
+                if (name && size && count && type < MBUS_SIG_TYPE__INVALID) {
                         response_t response;
                         request_t  request;
                         request.cmd = CMD_SIGNAL_CREATE;
-                        request.arg.CMD_SIGNAL_CREATE.name = name;
-                        request.arg.CMD_SIGNAL_CREATE.size = size;
-                        request.arg.CMD_SIGNAL_CREATE.perm = permissions;
-                        request.arg.CMD_SIGNAL_CREATE.type = type;
+                        request.arg.CMD_SIGNAL_CREATE.name  = name;
+                        request.arg.CMD_SIGNAL_CREATE.size  = size;
+                        request.arg.CMD_SIGNAL_CREATE.count = count;
+                        request.arg.CMD_SIGNAL_CREATE.perm  = permissions;
+                        request.arg.CMD_SIGNAL_CREATE.type  = type;
                         if (request_action(this, &request, &response)) {
                                 status = response.errorno == MBUS_ERRNO__NO_ERROR;
                         }
