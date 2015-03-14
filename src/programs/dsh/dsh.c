@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   Dnx's Shell interpreter
+@brief   dnx RTOS Shell interpreter
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -56,20 +56,20 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void             clear_prompt            ();
-static void             print_prompt            ();
-static bool             read_input              ();
-static bool             history_request         ();
-static bool             command_hint            ();
-static char            *find_cmd_begin          ();
-static bool             is_cd_cmd               (const char *cmd);
-static bool             is_exit_cmd             (const char *cmd);
-static char            *find_arg                (char *cmd);
-static void             change_directory        (char *str);
-static char            *remove_leading_spaces   (char *str);
-static void             print_fail_message      (char *cmd);
-static bool             start_program           (char *master, char *slave, char *file);
-static bool             analyze_line            (char *cmd);
+static void  clear_prompt         ();
+static void  print_prompt         ();
+static bool  read_input           ();
+static bool  history_request      ();
+static bool  command_hint         ();
+static char *find_cmd_begin       ();
+static bool  is_cd_cmd            (const char *cmd);
+static bool  is_exit_cmd          (const char *cmd);
+static char *find_arg             (char *cmd);
+static void  change_directory     (char *str);
+static char *remove_leading_spaces(char *str);
+static void  print_fail_message   (char *cmd);
+static bool  start_program        (char *master, char *slave, char *file);
+static bool  analyze_line         (char *cmd);
 
 /*==============================================================================
   Local object definitions

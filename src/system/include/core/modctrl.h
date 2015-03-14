@@ -92,6 +92,8 @@ struct _driver_entry {
         const u8_t               minor;
 };
 
+typedef task_t *dev_lock_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -116,6 +118,10 @@ extern const char *_get_driver_name             (uint);
 extern int         _get_driver_ID               (const char*);
 extern const char *_get_driver_module_name      (uint);
 extern bool        _is_driver_active            (uint);
+extern bool        _lock_device                 (dev_lock_t*);
+extern void        _unlock_device               (dev_lock_t*, bool);
+extern bool        _is_device_access_granted    (dev_lock_t*);
+extern bool        _is_device_locked            (dev_lock_t*);
 
 #ifdef __cplusplus
 }

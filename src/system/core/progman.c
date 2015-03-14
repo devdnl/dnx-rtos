@@ -30,12 +30,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <dnx/thread.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include "core/vfs.h"
 #include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/list.h"
+#include "core/llist.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -59,7 +59,6 @@ struct prog {
         int              argc;
         uint             mem_size;
         int              exit_code;
-        u32_t            magic;
 };
 
 struct thread {
@@ -72,14 +71,13 @@ struct thread {
         sem_t           *exit_sem;
         task_t          *task;
         struct thread   *this;
-        u32_t            magic;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static char   **new_argument_table      (const char *str, int *argc);
-static void     delete_argument_table   (char **argv);
+static void     delete_argument_table   (int argc, char **argv);
 static void     program_startup         (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
 static void     restore_stdio_defaults  (task_t *task);
@@ -87,8 +85,6 @@ static void     restore_stdio_defaults  (task_t *task);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const u32_t prog_magic_number   = 0x3B6BF19D;
-static const u32_t thread_magic_number = 0x8843D463;
 static const uint  mutex_wait_attempts = 10;
 
 /*==============================================================================
@@ -149,7 +145,7 @@ static void program_startup(void *arg)
         if (arg) {
                 prog_t *prog = arg;
 
-                prog->mem = sysm_tskcalloc(1, prog->mem_size);
+                prog->mem = _sysm_tskcalloc(1, prog->mem_size);
                 if (prog->mem || prog->mem_size == 0) {
 
                         _task_data_t *task_data = _task_get_data();
@@ -174,7 +170,7 @@ static void program_startup(void *arg)
 
                         if (prog->mem) {
                                 memset(prog->mem, 0, prog->mem_size);
-                                sysm_tskfree(prog->mem);
+                                _sysm_tskfree(prog->mem);
                         }
 
                         make_RAW_task(prog->task);
@@ -182,10 +178,10 @@ static void program_startup(void *arg)
                         prog->exit_code = EXIT_FAILURE;
                 }
 
-                semaphore_signal(prog->exit_sem);
+                _semaphore_signal(prog->exit_sem);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
@@ -217,10 +213,10 @@ static void thread_startup(void *arg)
                 thread->func(thread->arg);
 
                 make_RAW_task(thread->task);
-                semaphore_signal(thread->exit_sem);
+                _semaphore_signal(thread->exit_sem);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
@@ -235,188 +231,104 @@ static void thread_startup(void *arg)
 //==============================================================================
 static char **new_argument_table(const char *str, int *argc)
 {
-        int     arg_count  = 0;
-        char  **arg_table  = NULL;
-        list_t *arg_list   = NULL;
-        char   *arg_string = NULL;
-        bool    first_quos = false;
-        bool    first_quod = false;
+        char **argv = NULL;
 
-        if (str == NULL || argc == NULL) {
-                errno = EINVAL;
-                goto exit_error;
-        }
+        if (str && argc && str[0] != '\0') {
+                llist_t *args = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
 
-        if ((arg_list = list_new()) == NULL) {
-                goto exit_error;
-        }
+                if (args) {
+                        // parse arguments
+                        while (*str != '\0') {
+                                // skip spaces
+                                str += strspn(str, " ");
 
-        if (str[0] == '\0') {
-                errno = EINVAL;
-                goto exit_error;
-        }
-
-        const char *arg_start = str;
-        while (*arg_start == ' ') {
-                arg_start++;
-        }
-
-        if (*arg_start == '\'') {
-                arg_start++;
-                first_quos = true;
-        } else if (*arg_start == '"') {
-                arg_start++;
-                first_quod = true;
-        }
-
-        if ((arg_string = sysm_syscalloc(strlen(arg_start) + 1, sizeof(char))) == NULL) {
-                goto exit_error;
-        }
-
-        strcpy(arg_string, arg_start);
-        arg_start = arg_string;
-
-        while (*arg_string != '\0') {
-                char *arg_to_add = NULL;
-
-                if (*arg_string == '\'' || first_quos) {
-                        if (first_quos) {
-                                first_quos = false;
-                        } else {
-                                ++arg_string;
-                        }
-
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != '\0') {
-                                if ( *arg_string == '\''
-                                   && (  *(arg_string + 1) == ' '
-                                      || *(arg_string + 1) == '\0') ) {
-                                        break;
+                                // select character to find as end of argument
+                                bool quo = false;
+                                char find = ' ';
+                                if (*str == '\'' || *str == '"') {
+                                        quo = true;
+                                        find = *str;
+                                        str++;
                                 }
 
-                                arg_string++;
-                        }
+                                // find selected character
+                                const char *start = str;
+                                const char *end   = strchr(str, find);
 
-                        if (*arg_string == '\0') {
-                                goto exit_error;
-                        }
-
-                } else if (*arg_string == '"' || first_quod) {
-                        if (first_quod) {
-                                first_quod = false;
-                        } else {
-                                ++arg_string;
-                        }
-
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != '\0') {
-                                if ( *arg_string == '"'
-                                   && (  *(arg_string + 1) == ' '
-                                      || *(arg_string + 1) == '\0') ) {
-                                        break;
+                                // check if string end is reached
+                                if (!end) {
+                                        end = strchr(str, '\0');
+                                } else {
+                                        end++;
                                 }
 
-                                arg_string++;
+                                // calculate argument length (without nul character)
+                                int str_len = end - start;
+                                if (str_len == 0)
+                                        break;
+
+                                if (quo || *(end - 1) == ' ') {
+                                        str_len--;
+                                }
+
+                                // add argument to list
+                                char *arg = _sysm_sysmalloc(str_len + 1);
+                                if (arg) {
+                                        strncpy(arg, start, str_len);
+                                        arg[str_len] = '\0';
+
+                                        if (_llist_push_back(args, arg) == NULL) {
+                                                _llist_delete(args);
+                                                errno = ENOMEM;
+                                                return NULL;
+                                        }
+                                } else {
+                                        _llist_delete(args);
+                                        errno = ENOMEM;
+                                        return NULL;
+                                }
+
+                                // next token
+                                str = end;
                         }
 
-                        if (*arg_string == '\0') {
-                                goto exit_error;
+                        // create table with arguments
+                        int no_of_args = _llist_size(args);
+                        *argc = no_of_args;
+
+                        argv = _sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
+                        if (argv) {
+                                for (int i = 0; i < no_of_args; i++) {
+                                        argv[i] = _llist_take_front(args);
+                                }
+
+                                argv[no_of_args] = NULL;
                         }
 
-                } else if (*arg_string != ' ') {
-                        arg_to_add = arg_string;
-
-                        while (*arg_string != ' ' && *arg_string != '\0') {
-                                arg_string++;
-                        }
-                } else {
-                        arg_string++;
-                        continue;
-                }
-
-                /* add argument to list */
-                if (arg_to_add == NULL) {
-                        goto exit_error;
-                }
-
-                if (list_add_item(arg_list, arg_count++, arg_to_add) < 0) {
-                        goto exit_error;
-                }
-
-                /* terminate argument */
-                if (*arg_string == '\0') {
-                        break;
-                } else {
-                        *arg_string++ = '\0';
+                        _llist_delete(args);
                 }
         }
 
-        /* add args to table */
-        if ((arg_table = sysm_syscalloc(arg_count + 1, sizeof(char*))) == NULL) {
-                goto exit_error;
-        }
-
-        for (int i = 0; i < arg_count; i++) {
-                arg_table[i] = list_get_nitem_data(arg_list, 0);
-
-                if (arg_table[i] == NULL) {
-                        goto exit_error;
-                }
-
-                list_unlink_nitem_data(arg_list, 0);
-                list_rm_nitem(arg_list, 0);
-        }
-
-        list_delete(arg_list);
-
-        *argc = arg_count;
-        return arg_table;
-
-
-        /* error occurred - memory/object deallocation */
-exit_error:
-        if (arg_table) {
-                sysm_sysfree(arg_table);
-        }
-
-        if (arg_list) {
-                i32_t items_in_list = list_get_item_count(arg_list);
-                while (items_in_list-- > 0) {
-                        list_unlink_nitem_data(arg_list, 0);
-                        list_rm_nitem(arg_list, 0);
-                }
-
-                list_delete(arg_list);
-        }
-
-        if (arg_string) {
-                sysm_sysfree((char *)arg_start);
-        }
-
-        *argc = 0;
-        return NULL;
+        return argv;
 }
 
 //==============================================================================
 /**
  * @brief Function remove argument table
  *
- * @param **argv        pointer to argument table
+ * @param argc          number of arguments
+ * @param argv          pointer to argument table
  */
 //==============================================================================
-static void delete_argument_table(char **argv)
+static void delete_argument_table(int argc, char **argv)
 {
-        if (argv == NULL) {
-                return;
-        }
+        if (argv) {
+                for (int i = 0; i < argc; i++) {
+                        _sysm_sysfree(argv[i]);
+                }
 
-        if (argv[0]) {
-                sysm_sysfree(argv[0]);
+                _sysm_sysfree(argv);
         }
-
-        sysm_sysfree(argv);
 }
 
 //==============================================================================
@@ -464,12 +376,12 @@ static int process_kill(task_t *taskhdl, int status)
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 default:
                 case TASK_TYPE_RAW:
-                        if (taskhdl == task_get_handle()) {
+                        if (taskhdl == _task_get_handle()) {
                                 _task_delete(taskhdl);
                         } else {
-                                sysm_lock_access();
+                                _sysm_lock_access();
                                 _task_delete(taskhdl);
-                                sysm_unlock_access();
+                                _sysm_unlock_access();
                         }
                         break;
                 case TASK_TYPE_PROCESS: {
@@ -502,14 +414,12 @@ static int process_kill(task_t *taskhdl, int status)
 //==============================================================================
 static bool prog_is_valid(prog_t *prog)
 {
-        if (prog) {
-                if (prog->magic == prog_magic_number && prog->this == prog) {
-                        return true;
-                }
+        if (prog && prog->this == prog) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================
@@ -525,14 +435,12 @@ static bool prog_is_valid(prog_t *prog)
 //==============================================================================
 static bool thread_is_valid(thread_t *thread)
 {
-        if (thread) {
-                if (thread->magic == thread_magic_number && thread->this == thread) {
-                        return true;
-                }
+        if (thread && thread->this == thread) {
+                return true;
+        } else {
+                errno = EINVAL;
+                return false;
         }
-
-        errno = EINVAL;
-        return false;
 }
 
 //==============================================================================
@@ -566,17 +474,17 @@ static void restore_stdio_defaults(task_t *task)
 {
         struct _task_data *data = _task_get_data_of(task);
 
-        vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
+        _vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON);
 
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
-        sys_getc(data->f_stdin);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE);
+        _getc(data->f_stdin);
 
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
-        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
-        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
-        vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE);
+        _vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE);
+        _vfs_ioctl(data->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE);
 }
 
 //==============================================================================
@@ -600,7 +508,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                 return NULL;
         }
 
-        prog_t *prog = sysm_tskcalloc(1, sizeof(prog_t));
+        prog_t *prog = _sysm_tskcalloc(1, sizeof(prog_t));
         if (prog) {
 
                 prog->argv = new_argument_table(cmd, &prog->argc);
@@ -609,7 +517,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                         struct _prog_data prog_data;
                         if (get_program_data(prog->argv[0], &prog_data) == STD_RET_OK) {
 
-                                prog->exit_sem = semaphore_new(1, 0);
+                                prog->exit_sem = _semaphore_new(1, 0);
                                 if (prog->exit_sem) {
 
                                         prog->mem      = NULL;
@@ -619,27 +527,28 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->stderr   = sterr;
                                         prog->func     = *prog_data.main_function;
                                         prog->mem_size = *prog_data.globals_size;
-                                        prog->task     = task_new(program_startup,
-                                                                  prog_data.program_name,
-                                                                  *prog_data.stack_depth,
-                                                                  prog);
+                                        prog->this     = prog;
+                                        prog->task     = _task_new(program_startup,
+                                                                   prog_data.program_name,
+                                                                   *prog_data.stack_depth,
+                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->magic = prog_magic_number;
-                                                prog->this  = prog;
                                                 return prog;
+                                        } else {
+                                                prog->this  = NULL;
                                         }
 
-                                        semaphore_delete(prog->exit_sem);
+                                        _semaphore_delete(prog->exit_sem);
                                 }
                         } else {
                                 errno = ENOENT;
                         }
 
-                        delete_argument_table(prog->argv);
+                        delete_argument_table(prog->argc, prog->argv);
                 }
 
-                sysm_tskfree(prog);
+                _sysm_tskfree(prog);
                 prog = NULL;
         }
 
@@ -658,12 +567,11 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
 int _program_delete(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_delete(prog->exit_sem);
-                        delete_argument_table(prog->argv);
-                        prog->magic = 0;
-                        prog->this  = NULL;
-                        sysm_tskfree(prog);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_delete(prog->exit_sem);
+                        delete_argument_table(prog->argc, prog->argv);
+                        prog->this = NULL;
+                        _sysm_tskfree(prog);
                         return 0;
                 } else {
                         errno = EAGAIN;
@@ -686,27 +594,27 @@ int _program_delete(prog_t *prog)
 int _program_kill(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
-                        sysm_lock_access();
+                        _sysm_lock_access();
 
-                        if (prog->task != task_get_handle()) {
+                        if (prog->task != _task_get_handle()) {
                                 _task_get_data_of(prog->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
-                                task_suspend(prog->task);
+                                _task_suspend(prog->task);
                         }
 
                         if (prog->mem) {
-                                sysm_tskfree_as(prog->task, prog->mem);
+                                _sysm_tskfree_as(prog->task, prog->mem);
                                 prog->mem = NULL;
                         }
 
                         restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
-                        semaphore_signal(prog->exit_sem);
-                        sysm_unlock_access();
+                        _semaphore_signal(prog->exit_sem);
+                        _sysm_unlock_access();
                         _task_delete(prog->task);
                         return 0;
                 }
@@ -714,6 +622,25 @@ int _program_kill(prog_t *prog)
 
         errno = EINVAL;
         return -EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief  Return exit code of program
+ *
+ * @param prog                  program object
+ *
+ * @return On success exit code is returned, otherwise -EINVAL
+ */
+//==============================================================================
+int _program_get_exit_code(prog_t *prog)
+{
+        if (prog_is_valid(prog)) {
+                return prog->exit_code;
+        } else {
+                errno = EINVAL;
+                return -EINVAL;
+        }
 }
 
 //==============================================================================
@@ -729,8 +656,8 @@ int _program_kill(prog_t *prog)
 int _program_wait_for_close(prog_t *prog, const uint timeout)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, timeout)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, timeout)) {
+                        _semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
                         errno = ETIME;
@@ -753,8 +680,8 @@ int _program_wait_for_close(prog_t *prog, const uint timeout)
 bool _program_is_closed(prog_t *prog)
 {
         if (prog_is_valid(prog)) {
-                if (semaphore_wait(prog->exit_sem, 0)) {
-                        semaphore_signal(prog->exit_sem);
+                if (_semaphore_wait(prog->exit_sem, 0)) {
+                        _semaphore_signal(prog->exit_sem);
                         return true;
                 }
         }
@@ -783,7 +710,7 @@ void _task_kill(task_t *taskhdl)
 //==============================================================================
 void _exit(int status)
 {
-        process_kill(task_get_handle(), status);
+        process_kill(_task_get_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -796,9 +723,9 @@ void _exit(int status)
 //==============================================================================
 void _abort(void)
 {
-        sys_fprintf(stdout, "Aborted\n");
+        _fprintf(stdout, "Aborted\n");
 
-        process_kill(task_get_handle(), -1);
+        process_kill(_task_get_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -857,8 +784,8 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 return NULL;
         }
 
-        thread_t *thread = sysm_tskmalloc(sizeof(thread_t));
-        sem_t    *sem    = semaphore_new(1, 0);
+        thread_t *thread = _sysm_tskmalloc(sizeof(thread_t));
+        sem_t    *sem    = _semaphore_new(1, 0);
         if (thread && sem) {
                 _task_data_t *task_data = _task_get_data();
 
@@ -869,21 +796,22 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->stdout   = task_data->f_stdout;
                 thread->stderr   = task_data->f_stderr;
                 thread->func     = func;
-                thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
+                thread->this     = thread;
+                thread->task     = _task_new(thread_startup, _task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->magic = thread_magic_number;
-                        thread->this  = thread;
                         return thread;
+                } else {
+                        thread->this  = NULL;
                 }
         }
 
         if (sem) {
-                semaphore_delete(sem);
+                _semaphore_delete(sem);
         }
 
         if (thread) {
-                sysm_tskfree(thread);
+                _sysm_tskfree(thread);
                 thread = NULL;
         }
 
@@ -902,8 +830,8 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
 int _thread_join(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
+                        _semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
                         errno = ETIME;
@@ -924,22 +852,22 @@ int _thread_join(thread_t *thread)
 int _thread_cancel(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {
-                        sysm_lock_access();
+                        _sysm_lock_access();
 
-                        if (thread->task != task_get_handle()) {
+                        if (thread->task != _task_get_handle()) {
                                 _task_get_data_of(thread->task)->f_task_kill = true;
                                 wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
-                                task_suspend(thread->task);
+                                _task_suspend(thread->task);
                         }
 
                         restore_stdio_defaults(thread->task);
                         make_RAW_task(thread->task);
-                        semaphore_signal(thread->exit_sem);
-                        sysm_unlock_access();
+                        _semaphore_signal(thread->exit_sem);
+                        _sysm_unlock_access();
                         _task_delete(thread->task);
                         return 0;
                 }
@@ -960,8 +888,8 @@ int _thread_cancel(thread_t *thread)
 bool _thread_is_finished(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_signal(thread->exit_sem);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_signal(thread->exit_sem);
                         return true;
                 }
         }
@@ -980,11 +908,10 @@ bool _thread_is_finished(thread_t *thread)
 int _thread_delete(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, 0)) {
-                        semaphore_delete(thread->exit_sem);
-                        thread->magic = 0;
-                        thread->this  = NULL;
-                        sysm_tskfree(thread);
+                if (_semaphore_wait(thread->exit_sem, 0)) {
+                        _semaphore_delete(thread->exit_sem);
+                        thread->this = NULL;
+                        _sysm_tskfree(thread);
                         return 0;
                 } else {
                         errno = EAGAIN;

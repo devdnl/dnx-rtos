@@ -47,14 +47,19 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern struct tm _tmbuf;
+extern int       _ltimeoff;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern double   sys_strtod      (const char*, char**);
-extern i32_t    sys_atoi        (const char*);
-extern char    *sys_strtoi      (const char*, int, i32_t*);
-extern double   sys_atof        (const char*);
+extern double     _strtod        (const char*, char**);
+extern i32_t      _atoi          (const char*);
+extern char      *_strtoi        (const char*, int, i32_t*);
+extern double     _atof          (const char*);
+extern u32_t      _mktime        (struct tm*);
+extern struct tm *_gmtime_r      (const time_t*, struct tm*);
+extern struct tm *_localtime_r   (const time_t*, struct tm*);
 
 /*==============================================================================
   Exported inline functions

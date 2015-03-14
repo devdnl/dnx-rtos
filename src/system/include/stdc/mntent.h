@@ -91,7 +91,7 @@ extern "C" {
 //==============================================================================
 static inline int getmntentry(int item, struct mntent *mntent)
 {
-        return vfs_getmntentry(item, mntent);
+        return _vfs_getmntentry(item, mntent);
 }
 
 #ifdef __cplusplus

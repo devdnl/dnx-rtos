@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Program test how many file system use stack. Diagnose program.
+@brief   Program test how many stack a file system use. Diagnose program.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -48,9 +48,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-char buffer[100];
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+        char buffer[100];
+};
 
 static const char *file_name = "__test_x__";
 static const char *dir_name  = "__dir_x__";
@@ -212,7 +212,7 @@ static void test_remove_fifo()
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(fsstack, STACK_DEPTH_LARGE, int argc, char *argv[])
+int_main(fsstack, STACK_DEPTH_LARGE, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

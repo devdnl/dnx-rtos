@@ -5,7 +5,7 @@
 
 @brief   The simple example program
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -47,9 +47,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+        /* put here global variables */
+};
 
 /*==============================================================================
   Exported object definitions
@@ -69,7 +69,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(helloworld, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int_main(helloworld, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         puts("Hello world!");
         printf("Free stack: %d\n", task_get_free_stack());

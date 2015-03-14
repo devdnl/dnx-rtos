@@ -84,17 +84,18 @@ extern "C" {
 
 /* IO operations on files */
 #define IOCTL_PIPE__CLOSE                       _IO(PIPE, 0x00)
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x01)
-#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x02)
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
-#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
+#define IOCTL_PIPE__CLEAR                       _IO(PIPE, 0x01)
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x00)
+#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x01)
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x02)
+#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x03)
+
+/* file system identificator */
+#define _VFS_FILE_SYSTEM_MAGIC_NO               0xD9EFD24F
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** file object */
-typedef struct vfs_file FILE;
-
 /** file type */
 typedef enum tfile {
         FILE_TYPE_REGULAR,
@@ -122,10 +123,10 @@ struct vfs_dir {
         struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
-        u32_t           magic;          /**< only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
+#define __DIR_TYPE_DEFINED__
 
 /** file statistics */
 struct stat {
@@ -181,7 +182,7 @@ typedef enum {
 } vfs_open_flags_t;
 
 /** file system configuration */
-struct vfs_FS_interface {
+typedef struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags);
@@ -202,44 +203,69 @@ struct vfs_FS_interface {
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
         stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
         void     (*fs_sync   )(void *fshdl);
+        uint32_t   fs_magic;
+} vfs_FS_interface_t;
+
+/** file flags */
+typedef struct file_flags {
+        bool                rd    :1;
+        bool                wr    :1;
+        bool                eof   :1;
+        bool                error :1;
+        struct vfs_fattr    fattr;
+} file_flags_t;
+
+/** file type */
+struct vfs_file
+{
+        void               *FS_hdl;
+        vfs_FS_interface_t *FS_if;
+        void               *f_extra_data;
+        struct vfs_file    *self;
+        fd_t                fd;
+        fpos_t              f_lseek;
+        file_flags_t        f_flag;
 };
+
+typedef struct vfs_file FILE;
+#define __FILE_TYPE_DEFINED__
 
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
-extern stdret_t         _vfs_init               (void);
-extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
-extern stdret_t         vfs_umount              (const char*);
-extern int              vfs_getmntentry         (int, struct mntent*);
-extern int              vfs_mknod               (const char*, dev_t);
-extern int              vfs_mkdir               (const char*, mode_t);
-extern int              vfs_mkfifo              (const char*, mode_t);
-extern DIR             *vfs_opendir             (const char*);
-extern int              vfs_closedir            (DIR*);
-extern dirent_t         vfs_readdir             (DIR*);
-extern int              vfs_remove              (const char*);
-extern int              vfs_rename              (const char*, const char*);
-extern int              vfs_chmod               (const char*, mode_t);
-extern int              vfs_chown               (const char*, uid_t, gid_t);
-extern int              vfs_stat                (const char*, struct stat*);
-extern int              vfs_statfs              (const char*, struct statfs*);
-extern FILE            *vfs_fopen               (const char*, const char*);
-extern FILE            *vfs_freopen             (const char*, const char*, FILE*);
-extern int              vfs_fclose              (FILE*);
-extern int              vfs_fclose_force        (FILE*);
-extern size_t           vfs_fwrite              (const void*, size_t, size_t, FILE*);
-extern size_t           vfs_fread               (void*, size_t, size_t, FILE*);
-extern int              vfs_fseek               (FILE*, i64_t, int);
-extern i64_t            vfs_ftell               (FILE*);
-extern int              vfs_ioctl               (FILE*, int, ...);
-extern int              vfs_vioctl              (FILE*, int, va_list arg);
-extern int              vfs_fstat               (FILE*, struct stat*);
-extern int              vfs_fflush              (FILE*);
-extern int              vfs_feof                (FILE*);
-extern void             vfs_clearerr            (FILE*);
-extern int              vfs_ferror              (FILE*);
-extern int              vfs_rewind              (FILE*);
-extern void             vfs_sync                (void);
+extern stdret_t  _vfs_init        (void);
+extern stdret_t  _vfs_mount       (const char*, const char*, struct vfs_FS_interface*);
+extern stdret_t  _vfs_umount      (const char*);
+extern int       _vfs_getmntentry (int, struct mntent*);
+extern int       _vfs_mknod       (const char*, dev_t);
+extern int       _vfs_mkdir       (const char*, mode_t);
+extern int       _vfs_mkfifo      (const char*, mode_t);
+extern DIR      *_vfs_opendir     (const char*);
+extern int       _vfs_closedir    (DIR*);
+extern dirent_t  _vfs_readdir     (DIR*);
+extern int       _vfs_remove      (const char*);
+extern int       _vfs_rename      (const char*, const char*);
+extern int       _vfs_chmod       (const char*, mode_t);
+extern int       _vfs_chown       (const char*, uid_t, gid_t);
+extern int       _vfs_stat        (const char*, struct stat*);
+extern int       _vfs_statfs      (const char*, struct statfs*);
+extern FILE     *_vfs_fopen       (const char*, const char*);
+extern FILE     *_vfs_freopen     (const char*, const char*, FILE*);
+extern int       _vfs_fclose      (FILE*);
+extern int       _vfs_fclose_force(FILE*);
+extern size_t    _vfs_fwrite      (const void*, size_t, size_t, FILE*);
+extern size_t    _vfs_fread       (void*, size_t, size_t, FILE*);
+extern int       _vfs_fseek       (FILE*, i64_t, int);
+extern i64_t     _vfs_ftell       (FILE*);
+extern int       _vfs_ioctl       (FILE*, int, ...);
+extern int       _vfs_vioctl      (FILE*, int, va_list arg);
+extern int       _vfs_fstat       (FILE*, struct stat*);
+extern int       _vfs_fflush      (FILE*);
+extern int       _vfs_feof        (FILE*);
+extern void      _vfs_clearerr    (FILE*);
+extern int       _vfs_ferror      (FILE*);
+extern int       _vfs_rewind      (FILE*);
+extern void      _vfs_sync        (void);
 
 /*==============================================================================
   Exported inline functions

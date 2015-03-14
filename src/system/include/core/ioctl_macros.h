@@ -62,6 +62,7 @@ enum _IO_GROUP {
         _IO_GROUP_USBD,
         _IO_GROUP_IRQ,
         _IO_GROUP_LOOP,
+        _IO_GROUP_RTCM,
 };
 
 /* predefined requests*/

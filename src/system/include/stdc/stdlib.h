@@ -402,7 +402,7 @@ extern _VOID srand(unsigned __seed);
 //==============================================================================
 static inline void *malloc(size_t size)
 {
-        return sysm_tskmalloc(size);
+        return _sysm_tskmalloc(size);
 }
 
 //==============================================================================
@@ -430,7 +430,7 @@ static inline void *malloc(size_t size)
 //==============================================================================
 static inline void *calloc(size_t n, size_t size)
 {
-        return sysm_tskcalloc(n, size);
+        return _sysm_tskcalloc(n, size);
 }
 
 //==============================================================================
@@ -459,7 +459,7 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-        sysm_tskfree(ptr);
+        _sysm_tskfree(ptr);
 }
 
 //==============================================================================
@@ -501,16 +501,21 @@ static inline void free(void *ptr)
 //==============================================================================
 static inline void *realloc(void *ptr, size_t size)
 {
-        if (!ptr) {
-                return sysm_tskmalloc(size);
-        } else {
-                if (size == 0) {
-                        sysm_tskfree(ptr);
-                        return NULL;
-                } else {
-                        return ptr;
+        extern _PTR memcpy(_PTR dest, const _PTR src, size_t n);
+
+        if (size) {
+                void *mem = _sysm_tskmalloc(size);
+                if (ptr == NULL)
+                        return mem;
+
+                if (mem) {
+                        memcpy(mem, ptr, size);
+                        _sysm_tskfree(ptr);
+                        return mem;
                 }
         }
+
+        return NULL;
 }
 
 //==============================================================================
@@ -660,7 +665,7 @@ static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 //==============================================================================
 static inline int atoi(const char *str)
 {
-        return sys_atoi(str);
+        return _atoi(str);
 }
 
 //==============================================================================
@@ -684,7 +689,7 @@ static inline int atoi(const char *str)
 //==============================================================================
 static inline int atol(const char *str)
 {
-        return sys_atoi(str);
+        return _atoi(str);
 }
 
 //==============================================================================
@@ -749,7 +754,7 @@ static inline int atol(const char *str)
 static inline i32_t strtol(const char *nptr, char **endptr, int base)
 {
         i32_t result;
-        char *end = sys_strtoi(nptr, base, &result);
+        char *end = _strtoi(nptr, base, &result);
         if (endptr)
                 *endptr = end;
         return result;
@@ -777,7 +782,7 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 static inline double atof(const char *nptr)
 {
-        return sys_atof(nptr);
+        return _atof(nptr);
 }
 
 //==============================================================================
@@ -801,7 +806,7 @@ static inline double atof(const char *nptr)
 //==============================================================================
 static inline double strtod(const char *nptr, char **endptr)
 {
-        return sys_strtod(nptr, endptr);
+        return _strtod(nptr, endptr);
 }
 
 //==============================================================================
@@ -825,7 +830,7 @@ static inline double strtod(const char *nptr, char **endptr)
 //==============================================================================
 static inline float strtof(const char *nptr, char **endptr)
 {
-        return (float)sys_strtod(nptr, endptr);
+        return (float)_strtod(nptr, endptr);
 }
 
 #ifdef __cplusplus

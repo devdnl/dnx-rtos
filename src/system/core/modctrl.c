@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
-#include <dnx/thread.h>
+#include "kernel/kwrapper.h"
 #include "core/modctrl.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
@@ -43,7 +43,6 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Local function prototypes
@@ -129,7 +128,7 @@ int _driver_init(const char *drv_name, const char *node_path)
         }
 
         if (!driver_memory_region) {
-                driver_memory_region = sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
+                driver_memory_region = _sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
                         return -1;
                 }
@@ -142,19 +141,19 @@ int _driver_init(const char *drv_name, const char *node_path)
                 }
 
                 if (driver_memory_region[drvid]) {
-                        printk(drv_already_init_str, drv_name);
+                        _printk(drv_already_init_str, drv_name);
                         errno = EADDRINUSE;
                         return -1;
                 }
 
-                printk(drv_initializing_str, drv_name);
+                _printk(drv_initializing_str, drv_name);
 
                 if (_regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
                                                                     _regdrv_driver_table[drvid].major,
                                                                     _regdrv_driver_table[drvid].minor)
                                                                     != STD_RET_OK) {
 
-                        printk(drv_error_str, drv_name);
+                        _printk(drv_error_str, drv_name);
                         return -1;
                 }
 
@@ -162,22 +161,22 @@ int _driver_init(const char *drv_name, const char *node_path)
                         driver_memory_region[drvid] = (void*)(size_t)-1;
 
                 if (node_path) {
-                        if (vfs_mknod(node_path, drvid) == STD_RET_OK) {
-                                printk(drv_node_created_str, node_path);
+                        if (_vfs_mknod(node_path, drvid) == STD_RET_OK) {
+                                _printk(drv_node_created_str, node_path);
                                 return drvid;
                         } else {
                                 _regdrv_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
-                                printk(drv_node_fail_str, node_path);
+                                _printk(drv_node_fail_str, node_path);
                                 return -1;
                         }
 
                 } else {
-                        printk(drv_initialized_str);
+                        _printk(drv_initialized_str);
                         return drvid;
                 }
         }
 
-        printk(drv_not_exist_str, drv_name);
+        _printk(drv_not_exist_str, drv_name);
         errno = EINVAL;
         return -1;
 }
@@ -403,7 +402,7 @@ int _get_module_number(const char *module_name)
                 }
         }
 
-        printk(mod_not_exist_str, module_name);
+        _printk(mod_not_exist_str, module_name);
         return -1;
 }
 
@@ -521,14 +520,14 @@ bool _lock_device(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
+                _critical_section_begin();
                 if (*dev_lock == NULL) {
-                        *dev_lock = task_get_handle();
+                        *dev_lock = _task_get_handle();
                         status = true;
                 } else {
                         errno = EBUSY;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;
@@ -545,11 +544,11 @@ bool _lock_device(dev_lock_t *dev_lock)
 void _unlock_device(dev_lock_t *dev_lock, bool force)
 {
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock == task_get_handle() || force) {
+                _critical_section_begin();
+                if (*dev_lock == _task_get_handle() || force) {
                         *dev_lock = NULL;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 }
 
@@ -567,11 +566,11 @@ bool _is_device_access_granted(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
-                if (*dev_lock == task_get_handle()) {
+                _critical_section_begin();
+                if (*dev_lock == _task_get_handle()) {
                         status = true;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;
@@ -591,11 +590,11 @@ bool _is_device_locked(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                critical_section_begin();
+                _critical_section_begin();
                 if (*dev_lock != NULL) {
                         status = true;
                 }
-                critical_section_end();
+                _critical_section_end();
         }
 
         return status;

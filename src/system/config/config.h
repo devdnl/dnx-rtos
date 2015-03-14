@@ -204,6 +204,11 @@
 #define CONFIG_HOSTNAME                                 __OS_HOSTNAME__
 
 
+/**
+ * RTC file
+ */
+#define CONFIG_RTC_FILE_PATH                            __OS_RTC_FILE_PATH__
+
 /**=== DEVELOPMENT OPTIONS ===================================================*/
 /**
  * Enable (1) or disable (0) system assert macro (stops system if condition met)

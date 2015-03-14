@@ -57,6 +57,7 @@
 #       include "../noarch/sdspi_flags.h"
 #endif
 #if (__CPU_ARCH__ == stm32f1)
+#       include "../stm32f1/rtcm_flags.h"
 #       include "../stm32f1/cpu.h"
 #       include "../stm32f1/crcm_flags.h"
 #       include "../stm32f1/gpio_flags.h"
@@ -110,37 +111,39 @@
 #define __OS_MONITOR_MODULE_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_CPU_LOAD__ _YES_
-#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _YES_
+#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _NO_
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
-#define __OS_SYSTEM_STOP_MACRO__ _YES_
+#define __OS_RTC_FILE_PATH__ "/dev/rtc"
+#define __OS_SYSTEM_STOP_MACRO__ _NO_
 
 /* network configuration */
-#define __NETWORK_ENABLE__ _YES_
+#define __NETWORK_ENABLE__ _NO_
 #include "network_flags.h"
 
 /* file systems */
-#define __ENABLE_DEVFS__ _YES_
+#define __ENABLE_DEVFS__ _NO_
 #define __ENABLE_LFS__ _YES_
-#define __ENABLE_FATFS__ _YES_
-#define __ENABLE_PROCFS__ _YES_
+#define __ENABLE_FATFS__ _NO_
+#define __ENABLE_PROCFS__ _NO_
 #define __FATFS_LFN_ENABLE__ _YES_
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
+#define __ENABLE_RTCM__ _NO_
 #define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
-#define __ENABLE_AFIOM__ _YES_
+#define __ENABLE_AFIOM__ _NO_
 #define __ENABLE_CRCM__ _NO_
-#define __ENABLE_ETHMAC__ _YES_
-#define __ENABLE_PLL__ _YES_
-#define __ENABLE_SDSPI__ _YES_
-#define __ENABLE_SPI__ _YES_
+#define __ENABLE_ETHMAC__ _NO_
+#define __ENABLE_PLL__ _NO_
+#define __ENABLE_SDSPI__ _NO_
+#define __ENABLE_SPI__ _NO_
 #define __ENABLE_TTY__ _YES_
 #define __ENABLE_UART__ _YES_
 #define __ENABLE_WDG__ _NO_
 #define __ENABLE_USBD__ _NO_
-#define __ENABLE_I2C__ _YES_
+#define __ENABLE_I2C__ _NO_
 #define __ENABLE_IRQ__ _NO_
 
 #endif /* _FLAGS_H_ */

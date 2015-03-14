@@ -2,7 +2,7 @@
 CSRC_CORE   += core/sysmoni.c
 CSRC_CORE   += core/progman.c
 CSRC_CORE   += core/pipe.c
-CSRC_CORE   += core/list.c
+CSRC_CORE   += core/llist.c
 CSRC_CORE   += core/main.c
 CSRC_CORE   += core/memman.c
 CSRC_CORE   += core/scanx.c
@@ -11,6 +11,7 @@ CSRC_CORE   += core/vfs.c
 CSRC_CORE   += core/modctrl.c
 CSRC_CORE   += core/fsctrl.c
 CSRC_CORE   += core/conv.c
+CSRC_CORE   += core/env.c
 CSRC_CORE   += user/initd.c
 CSRC_CORE   += drivers/driver_registration.c
 CSRC_CORE   += fs/fs_registration.c

@@ -29,11 +29,11 @@
 ==============================================================================*/
 #include <errno.h>
 #include <string.h>
-#include <dnx/thread.h>
 #include <dnx/misc.h>
 #include "core/sysmoni.h"
-#include "core/list.h"
+#include "core/llist.h"
 #include "core/printx.h"
+#include "core/progman.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"
 
@@ -48,6 +48,13 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct kernel_panic_desc {
+        uint32_t                       valid1;
+        enum _kernel_panic_desc_cause  cause;
+        char                           task_name[CONFIG_RTOS_TASK_NAME_LEN];
+        uint32_t                       valid2;
+};
+
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
 typedef struct mem_slot_chain {
         int                    used_slots;
@@ -82,8 +89,10 @@ struct task_monitor_data {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static struct kernel_panic_desc *kernel_panic_descriptor;
+
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-static list_t  *sysm_task_list;
+static llist_t *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
 #endif
 
@@ -138,7 +147,7 @@ extern const uint _regdrv_number_of_modules;
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 #endif
 
@@ -187,12 +196,18 @@ static void modify_module_memory_usage(void *mod_no, i32_t size)
 stdret_t _sysm_init(void)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+        kernel_panic_descriptor = _sysm_sysmalloc(sizeof(struct kernel_panic_desc));
+#else
+        kernel_panic_descriptor = _memman_malloc(sizeof(struct kernel_panic_desc), NULL, NULL);
+#endif
+
+#if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         sysm_system_memory_usage = (i32_t)_MEMMAN_RAM_SIZE - (i32_t)_MEMMAN_HEAP_SIZE;
 #endif
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-        sysm_task_list    = list_new();
-        sysm_resource_mtx = mutex_new(MUTEX_RECURSIVE);
+        sysm_task_list    = _llist_new(_sysm_sysmalloc, _sysm_sysfree, _llist_functor_cmp_pointers, NULL);
+        sysm_resource_mtx = _mutex_new(MUTEX_RECURSIVE);
 #endif
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
@@ -200,7 +215,7 @@ stdret_t _sysm_init(void)
 #endif
 
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
-        sysm_module_memory_usage = sysm_syscalloc(_regdrv_number_of_modules, sizeof(i32_t));
+        sysm_module_memory_usage = _sysm_syscalloc(_regdrv_number_of_modules, sizeof(i32_t));
 #endif
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
@@ -208,17 +223,17 @@ stdret_t _sysm_init(void)
         if (!sysm_task_list || !sysm_resource_mtx || !sysm_module_memory_usage) {
 
                 if (sysm_module_memory_usage) {
-                        sysm_sysfree(sysm_module_memory_usage);
+                        _sysm_sysfree(sysm_module_memory_usage);
                 }
 #else
         if (!sysm_task_list || !sysm_resource_mtx) {
 #endif
                 if (sysm_task_list) {
-                        list_delete(sysm_task_list);
+                        _llist_delete(sysm_task_list);
                 }
 
                 if (sysm_resource_mtx) {
-                        mutex_delete(sysm_resource_mtx);
+                        _mutex_delete(sysm_resource_mtx);
                 }
 
                 return STD_RET_ERROR;
@@ -236,7 +251,7 @@ stdret_t _sysm_init(void)
  * @return None
  */
 //==============================================================================
-void sysm_lock_access(void)
+void _sysm_lock_access(void)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -251,10 +266,10 @@ void sysm_lock_access(void)
  * @return None
  */
 //==============================================================================
-void sysm_unlock_access(void)
+void _sysm_unlock_access(void)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
 #endif
 }
 
@@ -268,27 +283,18 @@ void sysm_unlock_access(void)
  * @retval false        task does not exist
  */
 //==============================================================================
-bool sysm_is_task_exist(task_t *taskhdl)
+bool _sysm_is_task_exist(task_t *taskhdl)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
-        bool exist = false;
-
         mutex_force_lock(sysm_resource_mtx);
 
-        if (taskhdl) {
-                i32_t item = -1;
-                if (list_get_iditem_No(sysm_task_list, (u32_t)taskhdl, &item) == STD_RET_OK) {
-                        if (item >= 0) {
-                                exist = true;
-                        }
-                }
-        }
+        bool exist = _llist_find_begin(sysm_task_list, taskhdl) >= 0;
 
         if (!exist) {
                 errno = ESRCH;
         }
 
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
 
         return exist;
 #else
@@ -309,35 +315,33 @@ bool sysm_is_task_exist(task_t *taskhdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_start_task_monitoring(task_t *taskhdl)
+stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        if (sysm_is_task_exist(taskhdl) == true) {
-                goto exit_error;
-        }
+        stdret_t status = STD_RET_ERROR;
 
-        struct task_monitor_data *tmdata = sysm_syscalloc(1, sizeof(struct task_monitor_data));
-        if (tmdata) {
+        if (_sysm_is_task_exist(taskhdl) == false) {
+                struct task_monitor_data *tmdata = _sysm_syscalloc(1, sizeof(struct task_monitor_data));
+                if (tmdata) {
+                        tmdata->used_memory = stack_size;
 
-                if (list_add_item(sysm_task_list, (u32_t)taskhdl, NULL) < 0) {
-                        sysm_sysfree(tmdata);
-                        _task_set_monitor_data(taskhdl, NULL);
-                        goto exit_error;
-                } else {
-                        _task_set_monitor_data(taskhdl, tmdata);
-                        mutex_unlock(sysm_resource_mtx);
-                        return STD_RET_OK;
+                        if (_llist_push_back(sysm_task_list, taskhdl)) {
+                                _task_set_monitor_data(taskhdl, tmdata);
+                                status = STD_RET_OK;
+                        } else {
+                                _sysm_sysfree(tmdata);
+                                _task_set_monitor_data(taskhdl, NULL);
+                        }
                 }
         }
 
-exit_error:
-        mutex_unlock(sysm_resource_mtx);
-        return STD_RET_ERROR;
-
+        _mutex_unlock(sysm_resource_mtx);
+        return status;
 #else
         UNUSED_ARG(taskhdl);
+        UNUSED_ARG(stack_size);
         return STD_RET_OK;
 #endif
 }
@@ -352,12 +356,12 @@ exit_error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
+stdret_t _sysm_stop_task_monitoring(task_t *taskhdl)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        if (sysm_is_task_exist(taskhdl) == false) {
+        if (_sysm_is_task_exist(taskhdl) == false) {
                 goto exit_error;
         }
 
@@ -395,25 +399,28 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
                 if (task_monitor_data->file_slot[slot]) {
-                        vfs_fclose_force(task_monitor_data->file_slot[slot]);
+                        _vfs_fclose_force(task_monitor_data->file_slot[slot]);
                 }
         }
 
         for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
                 if (task_monitor_data->dir_slot[slot]) {
-                        vfs_closedir(task_monitor_data->dir_slot[slot]);
+                        _vfs_closedir(task_monitor_data->dir_slot[slot]);
                 }
         }
 #endif
 
-        sysm_sysfree(task_monitor_data);
+        _sysm_sysfree(task_monitor_data);
         _task_set_monitor_data(taskhdl, NULL);
-        list_rm_iditem(sysm_task_list, (u32_t)taskhdl);
-        mutex_unlock(sysm_resource_mtx);
+
+        int pos = _llist_find_begin(sysm_task_list, taskhdl);
+        _llist_take(sysm_task_list, pos);
+
+        _mutex_unlock(sysm_resource_mtx);
         return STD_RET_OK;
 
 exit_error:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return STD_RET_ERROR;
 
 #else
@@ -433,7 +440,7 @@ exit_error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
+stdret_t _sysm_get_task_stat(task_t *taskhdl, struct _sysmoni_taskstat *stat)
 {
         if (!stat)
                 return STD_RET_ERROR;
@@ -441,7 +448,7 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        if (sysm_is_task_exist(taskhdl) == false) {
+        if (_sysm_is_task_exist(taskhdl) == false) {
                 goto exit_error;
         }
 
@@ -450,12 +457,12 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
                 goto exit_error;
         }
 
-        critical_section_begin();
+        _critical_section_begin();
         stat->cpu_usage = _task_get_data_of(taskhdl)->f_cpu_usage;
         _task_get_data_of(taskhdl)->f_cpu_usage = 0;
-        critical_section_end();
+        _critical_section_end();
 
-        stat->free_stack   = task_get_free_stack_of(taskhdl);
+        stat->free_stack   = _task_get_free_stack_of(taskhdl);
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         stat->memory_usage = tmdata->used_memory;
@@ -469,25 +476,25 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
         stat->opened_files = 0;
 #endif
 
-        stat->priority     = task_get_priority_of(taskhdl);
+        stat->priority     = _task_get_priority_of(taskhdl);
         stat->task_handle  = taskhdl;
-        stat->task_name    = task_get_name_of(taskhdl);
+        stat->task_name    = _task_get_name_of(taskhdl);
 
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return STD_RET_OK;
 
 exit_error:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return STD_RET_ERROR;
 
 #else
         stat->cpu_usage    = 0;
-        stat->free_stack   = task_get_free_stack_of(taskhdl);
+        stat->free_stack   = _task_get_free_stack_of(taskhdl);
         stat->memory_usage = 0;
         stat->opened_files = 0;
-        stat->priority     = task_get_priority_of(taskhdl);
+        stat->priority     = _task_get_priority_of(taskhdl);
         stat->task_handle  = taskhdl;
-        stat->task_name    = task_get_name_of(taskhdl);
+        stat->task_name    = _task_get_name_of(taskhdl);
         return STD_RET_OK;
 #endif
 }
@@ -503,27 +510,21 @@ exit_error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_get_ntask_stat(uint item, struct sysmoni_taskstat *stat)
+stdret_t _sysm_get_ntask_stat(uint item, struct _sysmoni_taskstat *stat)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        task_t *task;
-        if (list_get_nitem_ID(sysm_task_list, (i32_t)item, (u32_t *)&task) != STD_RET_OK) {
-                goto exit_error;
+        stdret_t status = STD_RET_ERROR;
+
+        task_t *task = _llist_at(sysm_task_list, item);
+
+        if (_sysm_get_task_stat(task, stat) == STD_RET_OK) {
+                status = STD_RET_OK;
         }
 
-        if (sysm_get_task_stat(task, stat) != STD_RET_OK) {
-                goto exit_error;
-        }
-
-        mutex_unlock(sysm_resource_mtx);
-        return STD_RET_OK;
-
-exit_error:
-        mutex_unlock(sysm_resource_mtx);
-        return STD_RET_ERROR;
-
+        _mutex_unlock(sysm_resource_mtx);
+        return status;
 #else
         UNUSED_ARG(item);
         UNUSED_ARG(stat);
@@ -541,7 +542,7 @@ exit_error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
+stdret_t _sysm_get_used_memory(struct _sysmoni_used_memory *mem_info)
 {
         if (!mem_info) {
                 errno = EINVAL;
@@ -587,14 +588,14 @@ stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
  * @return number of monitor tasks
  */
 //==============================================================================
-uint sysm_get_number_of_monitored_tasks(void)
+uint _sysm_get_number_of_monitored_tasks(void)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        int task_count = list_get_item_count(sysm_task_list);
+        int task_count = _llist_size(sysm_task_list);
 
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
 
         return task_count;
 #else
@@ -611,7 +612,7 @@ uint sysm_get_number_of_monitored_tasks(void)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_kmalloc(size_t size)
+void *_sysm_kmalloc(size_t size)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         return _memman_malloc(size, modify_memory_usage, &sysm_kernel_memory_usage);
@@ -630,7 +631,7 @@ void *sysm_kmalloc(size_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_kcalloc(size_t count, size_t size)
+void *_sysm_kcalloc(size_t count, size_t size)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         return _memman_calloc(count, size, modify_memory_usage, &sysm_kernel_memory_usage);
@@ -646,7 +647,7 @@ void *sysm_kcalloc(size_t count, size_t size)
  * @param *mem          block to free
  */
 //==============================================================================
-void sysm_kfree(void *mem)
+void _sysm_kfree(void *mem)
 {
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         _memman_free(mem, modify_memory_usage, &sysm_kernel_memory_usage);
@@ -664,7 +665,7 @@ void sysm_kfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_sysmalloc(size_t size)
+void *_sysm_sysmalloc(size_t size)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         return _memman_malloc(size, modify_memory_usage, &sysm_system_memory_usage);
@@ -683,7 +684,7 @@ void *sysm_sysmalloc(size_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_syscalloc(size_t count, size_t size)
+void *_sysm_syscalloc(size_t count, size_t size)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         return _memman_calloc(count, size, modify_memory_usage, &sysm_system_memory_usage);
@@ -699,7 +700,7 @@ void *sysm_syscalloc(size_t count, size_t size)
  * @param *mem          block to free
  */
 //==============================================================================
-void sysm_sysfree(void *mem)
+void _sysm_sysfree(void *mem)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         _memman_free(mem, modify_memory_usage, &sysm_system_memory_usage);
@@ -717,7 +718,7 @@ void sysm_sysfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_netmalloc(size_t size)
+void *_sysm_netmalloc(size_t size)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
 
@@ -742,7 +743,7 @@ void *sysm_netmalloc(size_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_netcalloc(size_t count, size_t size)
+void *_sysm_netcalloc(size_t count, size_t size)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
 
@@ -764,7 +765,7 @@ void *sysm_netcalloc(size_t count, size_t size)
  * @param *mem          block to free
  */
 //==============================================================================
-void sysm_netfree(void *mem)
+void _sysm_netfree(void *mem)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
         _memman_free(mem, modify_memory_usage, &sysm_network_memory_usage);
@@ -783,7 +784,7 @@ void sysm_netfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modmalloc(size_t size, uint module_number)
+void *_sysm_modmalloc(size_t size, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -808,7 +809,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modcalloc(size_t count, size_t size, uint module_number)
+void *_sysm_modcalloc(size_t count, size_t size, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -831,7 +832,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
  * @param  module_number        module number
  */
 //==============================================================================
-void sysm_modfree(void *mem, uint module_number)
+void _sysm_modfree(void *mem, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -852,7 +853,7 @@ void sysm_modfree(void *mem, uint module_number)
  * @return used memory by selected driver, or -1 on error
  */
 //==============================================================================
-i32_t sysm_get_used_memory_by_module(uint module_number)
+i32_t _sysm_get_used_memory_by_module(uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number >= _regdrv_number_of_modules)
@@ -875,7 +876,7 @@ i32_t sysm_get_used_memory_by_module(uint module_number)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
+void *_sysm_tskmalloc_as(task_t *taskhdl, size_t size)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         void *mem = NULL;
@@ -886,7 +887,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
                 goto exit;
         }
 
-        if (sysm_is_task_exist(taskhdl) == false) {
+        if (_sysm_is_task_exist(taskhdl) == false) {
                 goto exit;
         }
 
@@ -920,10 +921,10 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
                 }
         } while ((chain = chain->next) != NULL);
 
-        printk("%s: malloc(): cannot create next memory slot chain!\n", task_get_name());
+        _printk("%s: malloc(): cannot create next memory slot chain!\n", _task_get_name());
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return mem;
 #else
         UNUSED_ARG(taskhdl);
@@ -940,10 +941,10 @@ exit:
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_tskmalloc(size_t size)
+void *_sysm_tskmalloc(size_t size)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
-        return sysm_tskmalloc_as(task_get_handle(), size);
+        return _sysm_tskmalloc_as(_task_get_handle(), size);
 #else
         return _memman_malloc(size, NULL, NULL);
 #endif
@@ -960,10 +961,10 @@ void *sysm_tskmalloc(size_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_tskcalloc_as(task_t *taskhdl, size_t nmemb, size_t msize)
+void *_sysm_tskcalloc_as(task_t *taskhdl, size_t nmemb, size_t msize)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
-        void *ptr = sysm_tskmalloc_as(taskhdl, nmemb * msize);
+        void *ptr = _sysm_tskmalloc_as(taskhdl, nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -986,10 +987,10 @@ void *sysm_tskcalloc_as(task_t *taskhdl, size_t nmemb, size_t msize)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_tskcalloc(size_t nmemb, size_t msize)
+void *_sysm_tskcalloc(size_t nmemb, size_t msize)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
-        void *ptr = sysm_tskmalloc_as(task_get_handle(), nmemb * msize);
+        void *ptr = _sysm_tskmalloc_as(_task_get_handle(), nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -1009,7 +1010,7 @@ void *sysm_tskcalloc(size_t nmemb, size_t msize)
  * @param *mem          block to free
  */
 //==============================================================================
-void sysm_tskfree_as(task_t *taskhdl, void *mem)
+void _sysm_tskfree_as(task_t *taskhdl, void *mem)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -1018,7 +1019,7 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
-        if (sysm_is_task_exist(taskhdl) == false) {
+        if (_sysm_is_task_exist(taskhdl) == false) {
                 goto exit;
         }
 
@@ -1053,12 +1054,12 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
         } while ((chain = chain->next) != NULL);
 
         /* block not found */
-        sys_fprintf(stdout, "*** Error in %s: double free or corruption: 0x%x ***\n", task_get_name(), mem);
-        mutex_unlock(sysm_resource_mtx);
+        _fprintf(stdout, "*** Error in %s: double free or corruption: 0x%x ***\n", _task_get_name(), mem);
+        _mutex_unlock(sysm_resource_mtx);
         _abort();
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
 #else
         UNUSED_ARG(taskhdl);
         _memman_free(mem, NULL, NULL);
@@ -1072,10 +1073,10 @@ exit:
  * @param *mem          block to free
  */
 //==============================================================================
-void sysm_tskfree(void *mem)
+void _sysm_tskfree(void *mem)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0)
-        sysm_tskfree_as(task_get_handle(), mem);
+        _sysm_tskfree_as(_task_get_handle(), mem);
 #else
         _memman_free(mem, NULL, NULL);
 #endif
@@ -1091,16 +1092,16 @@ void sysm_tskfree(void *mem)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-FILE *sysm_fopen(const char *path, const char *mode)
+FILE *_sysm_fopen(const char *path, const char *mode)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         FILE *file = NULL;
 
         mutex_force_lock(sysm_resource_mtx);
 
-        task_t *task = task_get_handle();
+        task_t *task = _task_get_handle();
 
-        if (sysm_is_task_exist(task) == false) {
+        if (_sysm_is_task_exist(task) == false) {
                 goto exit;
         }
 
@@ -1112,7 +1113,7 @@ FILE *sysm_fopen(const char *path, const char *mode)
 
         for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
                 if (task_monitor_data->file_slot[slot] == NULL) {
-                        file = vfs_fopen(path, mode);
+                        file = _vfs_fopen(path, mode);
 
                         if (file) {
                                 task_monitor_data->file_slot[slot] = file;
@@ -1126,10 +1127,10 @@ FILE *sysm_fopen(const char *path, const char *mode)
         errno = EMFILE;
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return file;
 #else
-        return vfs_fopen(path, mode);
+        return _vfs_fopen(path, mode);
 #endif
 }
 
@@ -1144,7 +1145,7 @@ exit:
  * @retval NULL if file can't be created
  */
 //==============================================================================
-FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
+FILE *_sysm_freopen(const char *path, const char *mode, FILE *file)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         if (!path || !mode || !file) {
@@ -1152,13 +1153,13 @@ FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
                 return NULL;
         }
 
-        if (sysm_fclose(file) == STD_RET_OK) {
-                return sysm_fopen(path, mode);
+        if (_sysm_fclose(file) == STD_RET_OK) {
+                return _sysm_fopen(path, mode);
         } else {
                 return NULL;
         }
 #else
-        return vfs_freopen(path, mode, file);
+        return _vfs_freopen(path, mode, file);
 #endif
 }
 
@@ -1172,7 +1173,7 @@ FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
  * @retval -1                 file not closed
  */
 //==============================================================================
-int sysm_fclose(FILE *file)
+int _sysm_fclose(FILE *file)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         if (!file) {
@@ -1186,9 +1187,9 @@ int sysm_fclose(FILE *file)
 
         mutex_force_lock(sysm_resource_mtx);
 
-        task = task_get_handle();
+        task = _task_get_handle();
 
-        if (sysm_is_task_exist(task) == false) {
+        if (_sysm_is_task_exist(task) == false) {
                 goto exit;
         }
 
@@ -1199,7 +1200,7 @@ int sysm_fclose(FILE *file)
 
         for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
                 if (task_monitor_data->file_slot[slot] == file) {
-                        status = vfs_fclose(file);
+                        status = _vfs_fclose(file);
 
                         if (status == STD_RET_OK) {
                                 task_monitor_data->file_slot[slot] = NULL;
@@ -1213,10 +1214,10 @@ int sysm_fclose(FILE *file)
         errno = ENOENT;
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return status;
 #else
-        return vfs_fclose(file);
+        return _vfs_fclose(file);
 #endif
 }
 
@@ -1229,16 +1230,16 @@ exit:
  * @retval NULL if file can't be created
  */
 //==============================================================================
-DIR *sysm_opendir(const char *path)
+DIR *_sysm_opendir(const char *path)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         DIR *dir = NULL;
 
         mutex_force_lock(sysm_resource_mtx);
 
-        task_t *task = task_get_handle();
+        task_t *task = _task_get_handle();
 
-        if (sysm_is_task_exist(task) == false) {
+        if (_sysm_is_task_exist(task) == false) {
                 goto exit;
         }
 
@@ -1250,7 +1251,7 @@ DIR *sysm_opendir(const char *path)
 
         for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
                 if (task_monitor_data->dir_slot[slot] == NULL) {
-                        dir = vfs_opendir(path);
+                        dir = _vfs_opendir(path);
 
                         if (dir) {
                                 task_monitor_data->dir_slot[slot] = dir;
@@ -1264,10 +1265,10 @@ DIR *sysm_opendir(const char *path)
         errno = EMFILE;
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return dir;
 #else
-        return vfs_opendir(path);
+        return _vfs_opendir(path);
 #endif
 }
 
@@ -1281,16 +1282,16 @@ exit:
  * @retval -1                 file not closed
  */
 //==============================================================================
-int sysm_closedir(DIR *dir)
+int _sysm_closedir(DIR *dir)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         stdret_t status = EOF;
 
         mutex_force_lock(sysm_resource_mtx);
 
-        task_t *task = task_get_handle();
+        task_t *task = _task_get_handle();
 
-        if (sysm_is_task_exist(task) == false) {
+        if (_sysm_is_task_exist(task) == false) {
                 goto exit;
         }
 
@@ -1302,7 +1303,7 @@ int sysm_closedir(DIR *dir)
 
         for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
                 if (task_monitor_data->dir_slot[slot] == dir) {
-                        status = vfs_closedir(dir);
+                        status = _vfs_closedir(dir);
 
                         if (status == STD_RET_OK) {
                                 task_monitor_data->dir_slot[slot] = NULL;
@@ -1316,10 +1317,10 @@ int sysm_closedir(DIR *dir)
         errno = ENOENT;
 
 exit:
-        mutex_unlock(sysm_resource_mtx);
+        _mutex_unlock(sysm_resource_mtx);
         return status;
 #else
-        return vfs_closedir(dir);
+        return _vfs_closedir(dir);
 #endif
 }
 
@@ -1330,7 +1331,7 @@ exit:
  * @return CPU total time
  */
 //==============================================================================
-u32_t sysm_get_total_CPU_usage(void)
+u32_t _sysm_get_total_CPU_usage(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         u32_t time     = CPU_total_time;
@@ -1346,7 +1347,7 @@ u32_t sysm_get_total_CPU_usage(void)
  * @brief Function disable CPU load measurement
  */
 //==============================================================================
-void sysm_disable_CPU_load_measurement(void)
+void _sysm_disable_CPU_load_measurement(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         CPU_load_enabled = false;
@@ -1358,7 +1359,7 @@ void sysm_disable_CPU_load_measurement(void)
  * @brief Function enable CPU load measurement
  */
 //==============================================================================
-void sysm_enable_CPU_load_measurement(void)
+void _sysm_enable_CPU_load_measurement(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         CPU_load_enabled = true;
@@ -1370,7 +1371,7 @@ void sysm_enable_CPU_load_measurement(void)
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-void sysm_task_switched_in(void)
+void _sysm_task_switched_in(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         _cpuctl_reset_CPU_load_counter();
@@ -1382,7 +1383,7 @@ void sysm_task_switched_in(void)
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-void sysm_task_switched_out(void)
+void _sysm_task_switched_out(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         if (CPU_load_enabled) {
@@ -1395,6 +1396,77 @@ void sysm_task_switched_out(void)
                 }
         }
 #endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if the kernel panic occurred in the last session
+ * @param  show_msg     true: show error message
+ * @return If kernel panic occured in the last session then true is returned,
+ *         otherwise false.
+ */
+//==============================================================================
+bool _sysm_kernel_panic_detect(bool show_msg)
+{
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+        static const char *cause[] = {
+               "SEGFAULT",
+               "STACKOVF",
+               "CPUFAULT",
+               "UNKNOWN"
+        };
+#endif
+
+        bool occurred = (  kernel_panic_descriptor->valid1 == _KERNEL_PANIC_DESC_VALID1
+                       && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
+
+        if (occurred) {
+                if (show_msg) {
+                        if (kernel_panic_descriptor->cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {
+                                kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;
+                        }
+
+                        kernel_panic_descriptor->task_name[CONFIG_RTOS_TASK_NAME_LEN - 1] = '\0';
+                        if (strlen(kernel_panic_descriptor->task_name) == 0) {
+                                strncpy(kernel_panic_descriptor->task_name, "<defected>", CONFIG_RTOS_TASK_NAME_LEN);
+                        }
+
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+                        _printk(FONT_COLOR_RED"*** KERNEL PANIC ***"RESET_ATTRIBUTES"\n");
+                        _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
+                        _printk("Task : %s\n\n", kernel_panic_descriptor->task_name);
+#endif
+                        _sleep(2);
+                }
+
+                kernel_panic_descriptor->valid1 = 0;
+                kernel_panic_descriptor->valid2 = 0;
+        }
+
+        return occurred;
+}
+
+//==============================================================================
+/**
+ * @brief  Function report kernel panic
+ * @param  suggest_cause        suggested cause (STACKOVF has priority)
+ * @return None
+ */
+//==============================================================================
+void _sysm_kernel_panic_report(const char *task_name, enum _kernel_panic_desc_cause suggest_cause)
+{
+        strncpy(kernel_panic_descriptor->task_name, task_name, CONFIG_RTOS_TASK_NAME_LEN);
+
+        if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack() == 0) {
+                kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
+        } else {
+                kernel_panic_descriptor->cause = suggest_cause;
+        }
+
+        kernel_panic_descriptor->valid1 = _KERNEL_PANIC_DESC_VALID1;
+        kernel_panic_descriptor->valid2 = _KERNEL_PANIC_DESC_VALID2;
+
+        _cpuctl_restart_system();
 }
 
 /*==============================================================================

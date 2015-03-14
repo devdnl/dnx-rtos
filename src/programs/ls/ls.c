@@ -5,7 +5,7 @@
 
 @brief   List files in specified directory
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -57,9 +57,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -73,12 +72,12 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(ls, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         char *path = malloc(100);
         if (!path) {
                 perror(NULL);
-                abort();
+                return EXIT_FAILURE;
         }
 
         if (argc == 1 || (argc == 2 && strcmp(argv[1], ".") == 0)) {
@@ -97,11 +96,11 @@ PROGRAM_MAIN(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         switch (dirent.filetype) {
                         case FILE_TYPE_DIR:     type = FONT_COLOR_LIGHT_BLUE"d";  break;
-                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"c"; break;
-                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
-                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;
-                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";          break;
-                        case FILE_TYPE_PIPE:    type = FONT_COLOR_BROWN"p";   break;
+                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"c";     break;
+                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";        break;
+                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";       break;
+                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";              break;
+                        case FILE_TYPE_PIPE:    type = FONT_COLOR_BROWN"p";       break;
                         default: type = "?";
                         }
 

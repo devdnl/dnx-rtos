@@ -5,7 +5,7 @@
 
 @brief   Read network configuration
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -51,9 +51,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported object definitions
@@ -65,7 +64,9 @@ GLOBAL_VARIABLES_SECTION_END
 
 //==============================================================================
 /**
- * @brief Convert string to IP
+ * @brief  Convert string to IP
+ * @param  str          string IP
+ * @return String converted to IP address
  */
 //==============================================================================
 static net_ip_t strtoip(const char *str)
@@ -79,9 +80,9 @@ static net_ip_t strtoip(const char *str)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Select unit according to value size
+ * @param  val          value
+ * @return Selected unit. Value is changed according to selected unit.
  */
 //==============================================================================
 static const char *convert_unit(u64_t *val)
@@ -99,7 +100,9 @@ static const char *convert_unit(u64_t *val)
 
 //==============================================================================
 /**
- * @brief Shows connection details
+ * @brief  Shows connection details
+ * @param  None
+ * @return None
  */
 //==============================================================================
 static void show_details()
@@ -174,7 +177,7 @@ static void print_help_msg(const char *prog_name)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 show_details();

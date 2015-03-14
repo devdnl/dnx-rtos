@@ -28,14 +28,9 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/os.h>
-#include <dnx/timer.h>
-#include <dnx/misc.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include "noarch/sdspi_cfg.h"
 #include "noarch/sdspi_def.h"
+#include <sys/ioctl.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -94,7 +89,7 @@ typedef struct {
         bool block : 1;
 } card_type;
 
-/** card configuartion structure */
+/** card configuration structure */
 typedef struct {
         const char *filepath;
         int         timeout;
@@ -202,8 +197,8 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         if (SDSPI->card[major] == NULL) {
 
                 struct card *hdl  = calloc(1, sizeof(struct card));
-                mutex_t     *mtx  = mutex_new(MUTEX_NORMAL);
-                FILE        *fspi = vfs_fopen(card_cfg[major].filepath, "r+");
+                mutex_t     *mtx  = _sys_mutex_new(MUTEX_NORMAL);
+                FILE        *fspi = _sys_fopen(card_cfg[major].filepath, "r+");
 
                 if (hdl && mtx && fspi) {
                         hdl->SPI_file      = fspi;
@@ -211,18 +206,18 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                         SDSPI->card[major] = hdl;
 
                         struct SPI_config cfg;
-                        vfs_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        _sys_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
                         cfg.dummy_byte = 0xFF;
                         cfg.mode       = SPI_MODE_0;
                         cfg.msb_first  = true;
-                        vfs_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                        _sys_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
                 } else {
                         if (fspi)
-                                vfs_fclose(fspi);
+                                _sys_fclose(fspi);
 
                         if (mtx)
-                                mutex_delete(mtx);
+                                _sys_mutex_delete(mtx);
 
                         if (hdl)
                                 free(hdl);
@@ -264,17 +259,17 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 {
         sdpart_t *part = device_handle;
 
-        timer_t timer = timer_reset();
+        uint timer = _sys_time_get_reference();
         while (part->used) {
-                if (timer_is_expired(timer, RELEASE_TIMEOUT_MS)) {
+                if (_sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
                         errno = EBUSY;
                         return STD_RET_ERROR;
                 }
 
-                sleep_ms(10);
+                _sys_sleep_ms(10);
         }
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         // release allocated memory by partition
         SDSPI->card[part->major]->part[part->minor] = NULL;
@@ -293,8 +288,8 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_3] == NULL
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_4] == NULL  ) {
 
-                vfs_fclose(SDSPI->card[part->major]->SPI_file);
-                mutex_delete(SDSPI->card[part->major]->protect_mtx);
+                _sys_fclose(SDSPI->card[part->major]->SPI_file);
+                _sys_mutex_delete(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
                 free(SDSPI->card[part->major]);
@@ -313,7 +308,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
                 SDSPI = NULL;
         }
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return STD_RET_OK;
 }
@@ -386,10 +381,10 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, fpos_t 
 
         ssize_t n = -1;
         if (part->size > 0) {
-                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
                         n = card_write(part, src, count, lseek);
-                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno = EBUSY;
                 }
@@ -421,10 +416,10 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
 
         ssize_t n = -1;
         if (part->size > 0) {
-                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
                         n = card_read(part, dst, count, lseek);
-                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno = EBUSY;
                 }
@@ -457,14 +452,14 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
-                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
                         if (card_initialize(part) == STD_RET_OK) {
                                 status = 1;
                         } else {
                                 errno  = ENOMEDIUM;
                                 status = 0;
                         }
-                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno  = EBUSY;
                         status = STD_RET_ERROR;
@@ -472,7 +467,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SDSPI__READ_MBR:
-                if (mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
                         if (SDSPI->card[part->major]->initialized) {
                                 if (MBR_detect_partitions(part) == STD_RET_OK) {
                                         status = 1;
@@ -481,7 +476,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                                 errno  = EMEDIUMTYPE;
                                 status = 0;
                         }
-                        mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         errno  = EBUSY;
                         status = STD_RET_ERROR;
@@ -550,7 +545,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void SPI_select_card(sdpart_t *hdl)
 {
-        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
+        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
 }
 
 //==============================================================================
@@ -564,7 +559,7 @@ static void SPI_select_card(sdpart_t *hdl)
 //==============================================================================
 static void SPI_deselect_card(sdpart_t *hdl)
 {
-        vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
+        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
 }
 
 //==============================================================================
@@ -584,7 +579,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
         desc.rx_buffer = &out;
         desc.tx_buffer = &out;
 
-        if (vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
+        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
                 return out;
         } else {
                 return 0x00;
@@ -604,7 +599,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 //==============================================================================
 static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 {
-        vfs_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _sys_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -620,7 +615,7 @@ static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 //==============================================================================
 static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 {
-        vfs_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        _sys_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -634,11 +629,11 @@ static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 //==============================================================================
 static u8_t card_wait_ready(sdpart_t *hdl)
 {
-        u8_t    response;
-        timer_t timer = timer_reset();
+        u8_t response;
+        uint timer = _sys_time_get_reference();
 
         while ((response = SPI_transive(hdl, 0xFF)) != 0xFF
-              && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
+              && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
         return response;
 }
@@ -716,10 +711,10 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
 //==============================================================================
 static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
 {
-        u8_t    token;
-        timer_t timer = timer_reset();
+        u8_t token;
+        uint timer = _sys_time_get_reference();
         while ((token = SPI_transive(hdl, 0xFF)) == 0xFF
-              && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
+              && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
         if (token != 0xFE) {
                 errno = EIO;
@@ -1019,14 +1014,14 @@ static stdret_t card_initialize(sdpart_t *hdl)
 {
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                vfs_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
+                _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
         }
 
         SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
         SDSPI->card[hdl->major]->type.block  = false;
         SDSPI->card[hdl->major]->initialized = false;
 
-        timer_t timer = timer_reset();
+        uint timer = _sys_time_get_reference();
 
         if (card_send_cmd(hdl, CMD0, 0) == 0x01) {
                 if (card_send_cmd(hdl, CMD8, 0x1AA) == 0x01) { /* check SDHC card */
@@ -1035,13 +1030,13 @@ static stdret_t card_initialize(sdpart_t *hdl)
                         SPI_receive_block(hdl, OCR, sizeof(OCR));
 
                         if (OCR[2] == 0x01 && OCR[3] == 0xAA) {
-                                while ( timer_is_not_expired(timer, card_cfg[hdl->major].timeout)
+                                while ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                                       && card_send_cmd(hdl, ACMD41, 1UL << 30) ) {
 
-                                        sleep_ms(1);
+                                        _sys_sleep_ms(1);
                                 }
 
-                                if ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
+                                if ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                                    && card_send_cmd(hdl, CMD58, 0) == 0 ) {
 
                                         SPI_receive_block(hdl, OCR, sizeof(OCR));
@@ -1062,14 +1057,14 @@ static stdret_t card_initialize(sdpart_t *hdl)
                         }
 
                         /* Wait for leaving idle state */
-                        while ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
+                        while ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                               && card_send_cmd(hdl, cmd, 0)) {
 
-                                sleep_ms(1);
+                                _sys_sleep_ms(1);
                         }
 
                         /* set R/W block length to 512 */
-                        if ( !timer_is_expired(timer, card_cfg[hdl->major].timeout)
+                        if ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                            || card_send_cmd(hdl, CMD16, sector_size) != 0) {
 
                                 SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
@@ -1091,9 +1086,9 @@ static stdret_t card_initialize(sdpart_t *hdl)
                 u8_t csd[16];
                 u8_t token;
 
-                timer_t timer = timer_reset();
+                uint timer = _sys_time_get_reference();
                 while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
-                      && timer_is_not_expired(timer, card_cfg[hdl->major].timeout));
+                      && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
                 if (token == 0xFE) {
                         SPI_receive_block(hdl, csd, sizeof(csd));

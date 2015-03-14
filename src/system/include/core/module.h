@@ -36,22 +36,23 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include "core/vfs.h"
-#include "core/sysmoni.h"
-#include "core/modctrl.h"
+#include <dnx/misc.h>
 #include <errno.h>
+#include <string.h>
+#include "sysfunc.h"
+#include "core/modctrl.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
+#define calloc(size_t__nmemb, size_t__msize)    _sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
+#define malloc(size_t__size)                    _sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
 
 #undef  free
-#define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
+#define free(void__pmem)                        _sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \
@@ -62,7 +63,8 @@ extern "C" {
         inline void  operator delete[](void* ptr  ) {free(ptr);}
 #       define _MODULE_EXTERN_C extern "C"
 #else
-#       define MODULE_NAME(modname) static const char *_module_name_ = #modname
+#       define MODULE_NAME(modname) \
+        static const char *_module_name_ = #modname
 #       define _MODULE_EXTERN_C
 #endif
 
@@ -79,7 +81,6 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Exported object declarations
@@ -103,9 +104,8 @@ typedef task_t *dev_lock_t;
  * @return true if device is successfully locked, otherwise false
  */
 //==============================================================================
-static inline bool device_lock(dev_lock_t *dev_lock)
+static inline bool _sys_device_lock(dev_lock_t *dev_lock)
 {
-        extern bool _lock_device(dev_lock_t*);
         return _lock_device(dev_lock);
 }
 
@@ -117,9 +117,8 @@ static inline bool device_lock(dev_lock_t *dev_lock)
  * @param  force        true: force unlock
  */
 //==============================================================================
-static inline void device_unlock(dev_lock_t *dev_lock, bool force)
+static inline void _sys_device_unlock(dev_lock_t *dev_lock, bool force)
 {
-        extern void _unlock_device(dev_lock_t*, bool);
         _unlock_device(dev_lock, force);
 }
 
@@ -132,9 +131,8 @@ static inline void device_unlock(dev_lock_t *dev_lock, bool force)
  * @return true if access granted, otherwise false
  */
 //==============================================================================
-static inline bool device_is_access_granted(dev_lock_t *dev_lock)
+static inline bool _sys_device_is_access_granted(dev_lock_t *dev_lock)
 {
-        extern bool _is_device_access_granted(dev_lock_t*);
         return _is_device_access_granted(dev_lock);
 }
 
@@ -147,9 +145,8 @@ static inline bool device_is_access_granted(dev_lock_t *dev_lock)
  * @return true if locked, otherwise false
  */
 //==============================================================================
-static inline bool device_is_locked(dev_lock_t *dev_lock)
+static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
 {
-        extern bool _is_device_locked(dev_lock_t*);
         return _is_device_locked(dev_lock);
 }
 
@@ -162,10 +159,26 @@ static inline bool device_is_locked(dev_lock_t *dev_lock)
  * @return true if locked, otherwise false
  */
 //==============================================================================
-static inline bool device_is_unlocked(dev_lock_t *dev_lock)
+static inline bool _sys_device_is_unlocked(dev_lock_t *dev_lock)
 {
-        extern bool _is_device_locked(dev_lock_t*);
         return !_is_device_locked(dev_lock);
+}
+
+//==============================================================================
+/**
+ * @brief  List constructor (for modules only)
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @return On success list object is returned, otherwise NULL
+ */
+//==============================================================================
+static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
+{
+        /*
+         * FIXME: this list should use _sysm_modmalloc() instead of _sysm_sysmalloc.
+         *        Module identification function is required.
+         */
+        return _llist_new(_sysm_sysmalloc, _sysm_sysfree, functor, obj_dtor);
 }
 
 #ifdef __cplusplus

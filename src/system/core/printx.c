@@ -31,6 +31,7 @@
 #include "core/printx.h"
 #include "core/sysmoni.h"
 #include "core/progman.h"
+#include "core/conv.h"
 #include "kernel/kwrapper.h"
 #include "dnx/misc.h"
 #include <unistd.h>
@@ -56,6 +57,40 @@
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 static FILE *sys_printk_file;
+#endif
+
+#if (CONFIG_PRINTF_ENABLE > 0)
+/** buffer used to store converted time to string */
+static char timestr[32];
+
+/** days of week */
+static const char *week_day_abbr[] = {
+        "Sun", "Mon", "Tue",
+        "Wed", "Thu", "Fri",
+        "Sat"
+};
+
+static const char *week_day_full[] = {
+        "Sunday",    "Monday", "Tuesday",
+        "Wednesday", "Thrusday",
+        "Friday",    "Saturday"
+};
+
+/** month names */
+static const char *month_abbr[] = {
+        "Jan", "Feb", "Mar",
+        "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep",
+        "Oct", "Nov", "Dec"
+};
+
+static const char *month_full[] = {
+        "January", "February", "March",
+        "April",   "May",      "June",
+        "July",    "August",   "September",
+        "October", "November", "December"
+};
+
 #endif
 
 /*==============================================================================
@@ -289,18 +324,18 @@ static int dtoa(double value, char* str, int prec, int n)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void printk_enable(char *filename)
+void _printk_enable(char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
         if (sys_printk_file) {
-                vfs_fclose(sys_printk_file);
+                _vfs_fclose(sys_printk_file);
                 sys_printk_file = NULL;
         }
 
         /* open new file */
         if (sys_printk_file == NULL) {
-                sys_printk_file = vfs_fopen(filename, "w");
+                sys_printk_file = _vfs_fopen(filename, "w");
         }
 #else
         UNUSED_ARG(filename);
@@ -312,11 +347,11 @@ void printk_enable(char *filename)
  * @brief Disable printk functionality
  */
 //==============================================================================
-void printk_disable(void)
+void _printk_disable(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (sys_printk_file) {
-                vfs_fclose(sys_printk_file);
+                _vfs_fclose(sys_printk_file);
                 sys_printk_file = NULL;
         }
 #endif
@@ -330,29 +365,29 @@ void printk_disable(void)
  * @param ...                 format arguments
  */
 //==============================================================================
-void printk(const char *format, ...)
+void _printk(const char *format, ...)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         va_list args;
 
         if (sys_printk_file) {
                 va_start(args, format);
-                int size = sys_vsnprintf(NULL, 0, format, args) + 1;
+                int size = _vsnprintf(NULL, 0, format, args) + 1;
                 va_end(args);
 
-                char *buffer = sysm_syscalloc(size, sizeof(char));
+                char *buffer = _sysm_syscalloc(size, sizeof(char));
                 if (buffer) {
                         va_start(args, format);
-                        int n = sys_vsnprintf(buffer, size, format, args);
+                        int n = _vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
+                        _vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
 
                         if (LAST_CHARACTER(buffer) != '\n') {
-                                vfs_fflush(sys_printk_file);
+                                _vfs_fflush(sys_printk_file);
                         }
 
-                        sysm_sysfree(buffer);
+                        _sysm_sysfree(buffer);
                 }
         }
 #else
@@ -370,12 +405,12 @@ void printk(const char *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int sys_fputc(int c, FILE *stream)
+int _fputc(int c, FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (stream) {
                 char ch = (char)c;
-                if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
+                if (_vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
         }
@@ -397,14 +432,14 @@ int sys_fputc(int c, FILE *stream)
  * @return number of characters written to the stream
  */
 //==============================================================================
-int sys_f_puts(const char *s, FILE *file, bool puts)
+int _f_puts(const char *s, FILE *file, bool puts)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (file) {
-                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
+                int n = _vfs_fwrite(s, sizeof(char), strlen(s), file);
 
                 if (puts) {
-                        n += vfs_fwrite("\n", sizeof(char), 1, file);
+                        n += _vfs_fwrite("\n", sizeof(char), 1, file);
                 }
 
                 if (n != 0)
@@ -427,7 +462,7 @@ int sys_f_puts(const char *s, FILE *file, bool puts)
  * @retval character
  */
 //==============================================================================
-int sys_getc(FILE *stream)
+int _getc(FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (!stream) {
@@ -435,8 +470,8 @@ int sys_getc(FILE *stream)
         }
 
         int chr = 0;
-        if (vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
-                if (vfs_ferror(stream) || vfs_feof(stream)) {
+        if (_vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
+                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                         return EOF;
                 }
         } else {
@@ -461,7 +496,7 @@ int sys_getc(FILE *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-char *sys_fgets(char *str, int size, FILE *stream)
+char *_fgets(char *str, int size, FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (!str || size < 2 || !stream) {
@@ -469,11 +504,11 @@ char *sys_fgets(char *str, int size, FILE *stream)
         }
 
         struct stat file_stat;
-        if (vfs_fstat(stream, &file_stat) == 0) {
+        if (_vfs_fstat(stream, &file_stat) == 0) {
                 if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
                         int n = 0;
                         for (int i = 0; i < size - 1; i++) {
-                                int m = vfs_fread(str + i, sizeof(char), 1, stream);
+                                int m = _vfs_fread(str + i, sizeof(char), 1, stream);
                                 if (m == 0) {
                                         str[i] = '\0';
                                         return str;
@@ -481,7 +516,7 @@ char *sys_fgets(char *str, int size, FILE *stream)
                                         n += m;
                                 }
 
-                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                                         if (n == 0) {
                                                 return NULL;
                                         } else {
@@ -498,11 +533,11 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                         return str;
                 } else {
-                        u64_t fpos = vfs_ftell(stream);
+                        u64_t fpos = _vfs_ftell(stream);
 
                         int n;
-                        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
-                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                        while ((n = _vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
                                         return NULL;
                                 }
                         }
@@ -517,13 +552,13 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                         int len = strlen(str);
 
-                        if (len != 0 && len < n && vfs_feof(stream))
-                                vfs_clearerr(stream);
+                        if (len != 0 && len < n && _vfs_feof(stream))
+                                _vfs_clearerr(stream);
 
                         if (len == 0)
                                 len = 1;
 
-                        vfs_fseek(stream, fpos + len, SEEK_SET);
+                        _vfs_fseek(stream, fpos + len, SEEK_SET);
 
                         return str;
                 }
@@ -548,7 +583,7 @@ char *sys_fgets(char *str, int size, FILE *stream)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_snprintf(char *bfr, size_t size, const char *format, ...)
+int _snprintf(char *bfr, size_t size, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
@@ -556,7 +591,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
         if (bfr && size && format) {
                 va_start(args, format);
-                n = sys_vsnprintf(bfr, size, format, args);
+                n = _vsnprintf(bfr, size, format, args);
                 va_end(args);
         }
 
@@ -580,7 +615,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_fprintf(FILE *file, const char *format, ...)
+int _fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         int n = 0;
@@ -588,7 +623,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
         if (file && format) {
                 va_list args;
                 va_start(args, format);
-                n = sys_vfprintf(file, format, args);
+                n = _vfprintf(file, format, args);
                 va_end(args);
         }
 
@@ -611,7 +646,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int sys_vfprintf(FILE *file, const char *format, va_list arg)
+int _vfprintf(FILE *file, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         int n = 0;
@@ -619,13 +654,13 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
         if (file && format) {
                 va_list carg;
                 va_copy(carg, arg);
-                u32_t size = sys_vsnprintf(NULL, 0, format, carg) + 1;
+                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
 
-                char *str = sysm_syscalloc(1, size);
+                char *str = _sysm_syscalloc(1, size);
                 if (str) {
-                        n = sys_vsnprintf(str, size, format, arg);
-                        vfs_fwrite(str, sizeof(char), n, file);
-                        sysm_sysfree(str);
+                        n = _vsnprintf(str, size, format, arg);
+                        _vfs_fwrite(str, sizeof(char), n, file);
+                        _sysm_sysfree(str);
                 }
         }
 
@@ -647,7 +682,7 @@ int sys_vfprintf(FILE *file, const char *format, va_list arg)
  * @return error number string
  */
 //==============================================================================
-const char *sys_strerror(int errnum)
+const char *_strerror(int errnum)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         static const char *errstr[] = {
@@ -789,16 +824,260 @@ const char *sys_strerror(int errnum)
  * @param str           string to print or NULL
  */
 //==============================================================================
-void sys_perror(const char *str)
+void _perror(const char *str)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (str) {
-                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(errno));
+                _fprintf(stderr, "%s: %s\n", str, _strerror(errno));
         } else {
-                sys_fprintf(stderr, "%s\n", sys_strerror(errno));
+                _fprintf(stderr, "%s\n", _strerror(errno));
         }
 #else
         (void) str;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss zzzzz yyyy
+ *
+ * @param  timer        UNIX time value (can be NULL)
+ * @param  tm           time structure (can be NULL)
+ * @param  buf          buffer where string is filled (at least 32 bytes)
+ *
+ * @return Pointer to statically allocated string buffer. This function is not
+ *         thread safe.
+ */
+//==============================================================================
+char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (timer || tm) {
+                if (buf == NULL) {
+                        buf = timestr;
+                }
+
+                struct tm t;
+
+                if (!timer) {
+                        t = *tm;
+                } else {
+                        _localtime_r(timer, &t);
+                }
+
+                _strftime(buf, sizeof(timestr), "%a %b %d %X %z %Y%n", &t);
+
+                return buf;
+        } else {
+                return NULL;
+        }
+#else
+        UNUSED_ARG(timer);
+        UNUSED_ARG(tm);
+        UNUSED_ARG(buf);
+        return NULL;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Format time as string
+ *
+ * Copies into ptr the content of format, expanding its format specifiers into
+ * the corresponding values that represent the time described in timeptr, with
+ * a limit of maxsize characters.
+ *
+ * @param  buf          Pointer to the destination array where the resulting
+ *                      C string is copied.
+ * @param  size         Maximum number of characters to be copied to buf,
+ *                      including the terminating null-character.
+ * @param  format       C string containing any combination of regular characters
+ *                      and special format specifiers. These format specifiers
+ *                      are replaced by the function to the corresponding values
+ *                      to represent the time specified in timeptr.
+ * @param  timeptr      Pointer to a tm structure that contains a calendar time
+ *                      broken down into its components (see struct tm).
+ *
+ * @return If the length of the resulting C string, including the terminating
+ *         null-character, doesn't exceed maxsize, the function returns the
+ *         total number of characters copied to buf (not including the terminating
+ *         null-character).
+ *         Otherwise, it returns zero, and the contents of the array pointed by
+ *         buf are indeterminate.
+ *
+ * @note Supported flags:
+ *       % - % character
+ *       n - new line
+ *       H - Hour in 24h format (00-23)
+ *       I - Hour in 12h format (01-12)
+ *       M - Minute (00-59)
+ *       S - Second (00-61)
+ *       A - Full weekday name
+ *       a - Abbreviated weekday name
+ *       B - Full month name
+ *       b - Abbreviated month name
+ *       h - Abbreviated month name
+ *       C - Year divided by 100 and truncated to integer (00-99) (century)
+ *       y - Year, last two digits (00-99)
+ *       Y - Year
+ *       d - Day of the month, zero-padded (01-31)
+ *       p - AM or PM designation
+ *       j - Day of the year (001-366)
+ *       m - Month as a decimal number (01-12)
+ *       X - Time representation                                14:55:02
+ *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
+ *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
+ *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
+ */
+//==============================================================================
+size_t _strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        size_t n = 0;
+
+        if (buf && size && format && timeptr) {
+                size--;
+
+                bool _do = true;
+                char ch  = '\0';
+
+                void put_ch(const char c)
+                {
+                        *buf++ = c;
+                        _do    = (--size != 0);
+                        n++;
+                }
+
+                bool get_fch()
+                {
+                        ch  = *format++;
+                        _do = (ch != '\0');
+                        return _do;
+                }
+
+                while (_do && size) {
+                        if (!get_fch())
+                                break;
+
+                        if (ch == '%') {
+                                if (!get_fch())
+                                        break;
+
+                                size_t m = 0;
+
+                                switch (ch) {
+                                case '%':
+                                        put_ch(ch);
+                                        break;
+
+                                case 'n':
+                                        put_ch('\n');
+                                        break;
+
+                                case 'H':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_hour);
+                                        break;
+
+                                case 'I':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_hour > 12 ? timeptr->tm_hour - 12 : timeptr->tm_hour);
+                                        break;
+
+                                case 'M':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_min);
+                                        break;
+
+                                case 'S':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_sec);
+                                        break;
+
+                                case 'a':
+                                        m = _snprintf(buf, size, "%s", week_day_abbr[timeptr->tm_wday]);
+                                        break;
+
+                                case 'A':
+                                        m = _snprintf(buf, size, "%s", week_day_full[timeptr->tm_wday]);
+                                        break;
+
+                                case 'b':
+                                case 'h':
+                                        m = _snprintf(buf, size, "%s", month_abbr[timeptr->tm_mon]);
+                                        break;
+
+                                case 'B':
+                                        m = _snprintf(buf, size, "%s", month_full[timeptr->tm_mon]);
+                                        break;
+
+                                case 'C':
+                                        m = _snprintf(buf, size, "%02d", (timeptr->tm_year + 1900) / 100);
+                                        break;
+
+                                case 'y':
+                                        m = _snprintf(buf, size, "%02d", (timeptr->tm_year + 1900) % 100);
+                                        break;
+
+                                case 'Y':
+                                        m = _snprintf(buf, size, "%d", timeptr->tm_year + 1900);
+                                        break;
+
+                                case 'd':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mday);
+                                        break;
+
+                                case 'p':
+                                        m = _snprintf(buf, size, "%s", timeptr->tm_hour > 12 ? "PM" : "AM");
+                                        break;
+
+                                case 'j':
+                                        m = _snprintf(buf, size, "%03d", timeptr->tm_yday + 1);
+                                        break;
+
+                                case 'm':
+                                        m = _snprintf(buf, size, "%02d", timeptr->tm_mon + 1);
+                                        break;
+
+                                case 'X':
+                                        m = _snprintf(buf, size, "%02d:%02d:%02d", timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+                                        break;
+
+                                case 'F':
+                                        m = _snprintf(buf, size, "%d-%02d-%02d", timeptr->tm_year+1900, timeptr->tm_mon+1, timeptr->tm_mday);
+                                        break;
+
+                                case 'z': {
+                                        i32_t timeoff = timeptr->tm_isutc ? 0 : _ltimeoff;
+                                        m = _snprintf(buf, size, "%c%02d%02d",
+                                                      (timeoff < 0 ? '-':'+'),
+                                                      (timeoff < 0 ? -timeoff : timeoff) / 3600,
+                                                      (timeoff < 0 ? -timeoff : timeoff) / 60 % 60);
+                                        break;
+                                }
+
+                                case 'D':
+                                case 'x':
+                                        m = _snprintf(buf, size, "%02d/%02d/%02d", timeptr->tm_mon+1, timeptr->tm_mday, (timeptr->tm_year+1900) % 100);
+                                        break;
+                                }
+
+                                n    += m;
+                                buf  += m;
+                                size -= m;
+
+                        } else {
+                                put_ch(ch);
+                        }
+                }
+
+                *buf = '\0';
+        }
+
+        return n;
+#else
+        UNUSED_ARG(buf);
+        UNUSED_ARG(size);
+        UNUSED_ARG(format);
+        UNUSED_ARG(timeptr);
+        return 0;
 #endif
 }
 
@@ -854,7 +1133,7 @@ void sys_perror(const char *str)
  *                printf("Pointer: %p", main); => Pointer: 0x4028B4
  */
 //==============================================================================
-int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
+int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         char   chr;

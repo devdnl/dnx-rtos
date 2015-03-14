@@ -20,6 +20,7 @@
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_MK>
             <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_MK>
             <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
+            <ENABLE_RTCM_MK><path>../../config/project/Makefile</path><key>__ENABLE_RTCM__</key></ENABLE_RTCM_MK>
             <ENABLE_A_MK><path>../../config/project/Makefile</path><key>__ENABLE_A__</key></ENABLE_A_MK>
             <ENABLE_LOOP_MK><path>../../config/project/Makefile</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_MK>
             <ENABLE_GPIO_MK><path>../../config/project/Makefile</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_MK>
@@ -67,6 +68,7 @@
             <OS_MONITOR_NETWORK_MEMORY_USAGE><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE__</key></OS_MONITOR_NETWORK_MEMORY_USAGE>
             <OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT><path>../../config/project/flags.h</path><key>__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__</key></OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT>
             <OS_HOSTNAME><path>../../config/project/flags.h</path><key>__OS_HOSTNAME__</key></OS_HOSTNAME>
+            <OS_RTC_FILE_PATH><path>../../config/project/flags.h</path><key>__OS_RTC_FILE_PATH__</key></OS_RTC_FILE_PATH>
             <OS_SYSTEM_STOP_MACRO><path>../../config/project/flags.h</path><key>__OS_SYSTEM_STOP_MACRO__</key></OS_SYSTEM_STOP_MACRO>
             <ENABLE_NETWORK_H><path>../../config/project/flags.h</path><key>__NETWORK_ENABLE__</key></ENABLE_NETWORK_H>
             <NETWORK_MAC_ADDR_0><path>../../config/project/network_flags.h</path><key>__NETWORK_MAC_ADDR_0__</key></NETWORK_MAC_ADDR_0>
@@ -251,6 +253,7 @@
             <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
             <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
             <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
+            <ENABLE_RTCM_H><path>../../config/project/flags.h</path><key>__ENABLE_RTCM__</key></ENABLE_RTCM_H>
             <ENABLE_LOOP_H><path>../../config/project/flags.h</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_H>
             <ENABLE_GPIO_H><path>../../config/project/flags.h</path><key>__ENABLE_GPIO__</key></ENABLE_GPIO_H>
             <ENABLE_AFIOM_H><path>../../config/project/flags.h</path><key>__ENABLE_AFIOM__</key></ENABLE_AFIOM_H>
@@ -272,6 +275,7 @@
             <DEFAULT_IRQ_PRIORITY>CONFIG_USER_IRQ_PRIORITY</DEFAULT_IRQ_PRIORITY>
         </def>
         <modules>
+            <module noarch="false"><name>RTCM</name><description>Real Time Clock Module</description></module>
             <module noarch="true"><name>LOOP</name><description>Universal virtual device that allow to connect applications together</description></module>
             <module noarch="false"><name>GPIO</name><description>This module handles General Purpose Input Output peripherals.</description></module>
             <module noarch="false"><name>AFIOM</name><description>This module handles Alternative Function Input Output peripheral.</description></module>
@@ -343,6 +347,7 @@
             <initd_template_msg_mount_func_file>../../extra/templates/initd/msg_mount_func.c</initd_template_msg_mount_func_file>
             <initd_template_init_storage_func_file>../../extra/templates/initd/init_storage_func.c</initd_template_init_storage_func_file>
             <initd_template_start_daemon_func_file>../../extra/templates/initd/start_daemon_func.c</initd_template_start_daemon_func_file>
+            <initd_template_kernel_panic_detect_file>../../extra/templates/initd/kernel_panic_detect_func.c</initd_template_kernel_panic_detect_file>
             <initd_src_file>../../src/system/user/initd.c</initd_src_file>
         </path>
     </project>
@@ -3376,6 +3381,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RBxx</name>
@@ -3413,6 +3419,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100RExx</name>
@@ -3453,6 +3460,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100VBxx</name>
@@ -3491,6 +3499,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F100ZCxx</name>
@@ -3534,6 +3543,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101C8xx</name>
@@ -3571,6 +3581,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101CBxx</name>
@@ -3608,6 +3619,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101R8xx</name>
@@ -3645,6 +3657,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101RBxx</name>
@@ -3682,6 +3695,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101V8xx</name>
@@ -3720,6 +3734,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F101VBxx</name>
@@ -3758,6 +3773,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C6xx</name>
@@ -3793,6 +3809,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103C8xx</name>
@@ -3831,6 +3848,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103CBxx</name>
@@ -3869,6 +3887,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R6xx</name>
@@ -3904,6 +3923,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103R8xx</name>
@@ -3942,6 +3962,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RBxx</name>
@@ -3980,6 +4001,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RCxx</name>
@@ -4021,6 +4043,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RDxx</name>
@@ -4062,6 +4085,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RExx</name>
@@ -4103,6 +4127,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103RGxx</name>
@@ -4144,6 +4169,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103T8xx</name>
@@ -4178,6 +4204,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103V8xx</name>
@@ -4217,6 +4244,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VBxx</name>
@@ -4256,6 +4284,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VCxx</name>
@@ -4298,6 +4327,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VDxx</name>
@@ -4340,6 +4370,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VExx</name>
@@ -4382,6 +4413,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103VGxx</name>
@@ -4424,6 +4456,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZCxx</name>
@@ -4468,6 +4501,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZExx</name>
@@ -4512,6 +4546,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F103ZGxx</name>
@@ -4556,6 +4591,7 @@
                         </I2C>
                         <USBD></USBD>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RBxx</name>
@@ -4596,6 +4632,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105RCxx</name>
@@ -4636,6 +4673,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VBxx</name>
@@ -4677,6 +4715,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F105VCxx</name>
@@ -4718,6 +4757,7 @@
                             <port><name>2</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107RCxx</name>
@@ -4758,6 +4798,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VBxx</name>
@@ -4799,6 +4840,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
                 <cpu><name>STM32F107VCxx</name>
@@ -4840,6 +4882,7 @@
                             <port><name>1</name></port>
                         </I2C>
                         <LOOP></LOOP>
+                        <RTCM></RTCM>
                     </peripherals>
                 </cpu>
             </cpulist>

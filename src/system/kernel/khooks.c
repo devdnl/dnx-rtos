@@ -33,7 +33,6 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "portable/cpuctl.h"
-#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -79,16 +78,10 @@ void vApplicationIdleHook(void)
  * @brief Stack overflow hook
  */
 //==============================================================================
-void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
+void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
-        (void) taskHdl;
-        (void) taskName;
-
-        if (CONFIG_SYSTEM_STOP_MACRO != 0) {
-                while (true) {
-                        __asm("nop");
-                }
-        }
+        (void)taskHdl;
+        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================
@@ -112,7 +105,7 @@ void vApplicationTickHook(void)
 void vApplicationSwitchedIn(void)
 {
         _copy_task_context_to_standard_variables();
-        sysm_task_switched_in();
+        _sysm_task_switched_in();
 }
 
 //==============================================================================
@@ -123,7 +116,7 @@ void vApplicationSwitchedIn(void)
 void vApplicationSwitchedOut(void)
 {
         _copy_standard_variables_to_task_context();
-        sysm_task_switched_out();
+        _sysm_task_switched_out();
 }
 
 //==============================================================================

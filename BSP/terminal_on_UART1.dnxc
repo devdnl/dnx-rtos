@@ -18,7 +18,7 @@
 			};
 			[4.000000]={
 				["key"]="__TTY_NUMBER_OF_TERM__";
-				["value"]="4";
+				["value"]="3";
 			};
 			[5.000000]={
 				["key"]="__TTY_TERM_IN_FILE__";
@@ -59,62 +59,66 @@
 				["value"]="_NO_";
 			};
 			[8.000000]={
-				["key"]="__ENABLE_LOOP__";
+				["key"]="__ENABLE_RTCM__";
 				["value"]="_NO_";
 			};
 			[9.000000]={
+				["key"]="__ENABLE_LOOP__";
+				["value"]="_NO_";
+			};
+			[10.000000]={
 				["key"]="__ENABLE_GPIO__";
 				["value"]="_YES_";
 			};
-			[10.000000]={
+			[11.000000]={
 				["key"]="__ENABLE_AFIOM__";
 				["value"]="_NO_";
 			};
-			[11.000000]={
+			[12.000000]={
 				["key"]="__ENABLE_CRCM__";
 				["value"]="_NO_";
 			};
-			[12.000000]={
+			[13.000000]={
 				["key"]="__ENABLE_ETHMAC__";
 				["value"]="_NO_";
 			};
-			[13.000000]={
-				["key"]="__ENABLE_PLL__";
-				["value"]="_YES_";
-			};
 			[14.000000]={
-				["key"]="__ENABLE_SDSPI__";
+				["key"]="__ENABLE_PLL__";
 				["value"]="_NO_";
 			};
 			[15.000000]={
-				["key"]="__ENABLE_SPI__";
+				["key"]="__ENABLE_SDSPI__";
 				["value"]="_NO_";
 			};
 			[16.000000]={
+				["key"]="__ENABLE_SPI__";
+				["value"]="_NO_";
+			};
+			[17.000000]={
 				["key"]="__ENABLE_TTY__";
 				["value"]="_YES_";
 			};
-			[17.000000]={
+			[18.000000]={
 				["key"]="__ENABLE_UART__";
 				["value"]="_YES_";
 			};
-			[18.000000]={
+			[19.000000]={
 				["key"]="__ENABLE_WDG__";
 				["value"]="_NO_";
 			};
-			[19.000000]={
+			[20.000000]={
 				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
-			[20.000000]={
+			[21.000000]={
 				["key"]="__ENABLE_I2C__";
 				["value"]="_NO_";
 			};
-			[21.000000]={
+			[22.000000]={
 				["key"]="__ENABLE_IRQ__";
 				["value"]="_NO_";
 			};
-			[22.000000]={
+			[23.000000]={
 				["key"]="__ENABLE_NETWORK__";
 				["value"]="_NO_";
 			};
@@ -233,90 +237,98 @@
 				["value"]="\"localhost\"";
 			};
 			[29.000000]={
+				["key"]="__OS_RTC_FILE_PATH__";
+				["value"]="\"/dev/rtc\"";
+			};
+			[30.000000]={
 				["key"]="__OS_SYSTEM_STOP_MACRO__";
 				["value"]="_NO_";
 			};
-			[30.000000]={
+			[31.000000]={
 				["key"]="__NETWORK_ENABLE__";
 				["value"]="_NO_";
 			};
-			[31.000000]={
+			[32.000000]={
 				["key"]="__ENABLE_DEVFS__";
 				["value"]="_NO_";
 			};
-			[32.000000]={
+			[33.000000]={
 				["key"]="__ENABLE_LFS__";
 				["value"]="_YES_";
 			};
-			[33.000000]={
+			[34.000000]={
 				["key"]="__ENABLE_FATFS__";
 				["value"]="_NO_";
 			};
-			[34.000000]={
+			[35.000000]={
 				["key"]="__ENABLE_PROCFS__";
 				["value"]="_NO_";
 			};
-			[35.000000]={
+			[36.000000]={
 				["key"]="__FATFS_LFN_ENABLE__";
 				["value"]="_YES_";
 			};
-			[36.000000]={
+			[37.000000]={
 				["key"]="__FATFS_LFN_CODEPAGE__";
 				["value"]="852";
 			};
-			[37.000000]={
+			[38.000000]={
+				["key"]="__ENABLE_RTCM__";
+				["value"]="_NO_";
+			};
+			[39.000000]={
 				["key"]="__ENABLE_LOOP__";
 				["value"]="_NO_";
 			};
-			[38.000000]={
+			[40.000000]={
 				["key"]="__ENABLE_GPIO__";
 				["value"]="_YES_";
 			};
-			[39.000000]={
+			[41.000000]={
 				["key"]="__ENABLE_AFIOM__";
 				["value"]="_NO_";
 			};
-			[40.000000]={
+			[42.000000]={
 				["key"]="__ENABLE_CRCM__";
 				["value"]="_NO_";
 			};
-			[41.000000]={
+			[43.000000]={
 				["key"]="__ENABLE_ETHMAC__";
 				["value"]="_NO_";
 			};
-			[42.000000]={
-				["key"]="__ENABLE_PLL__";
-				["value"]="_YES_";
-			};
-			[43.000000]={
-				["key"]="__ENABLE_SDSPI__";
-				["value"]="_NO_";
-			};
 			[44.000000]={
-				["key"]="__ENABLE_SPI__";
+				["key"]="__ENABLE_PLL__";
 				["value"]="_NO_";
 			};
 			[45.000000]={
+				["key"]="__ENABLE_SDSPI__";
+				["value"]="_NO_";
+			};
+			[46.000000]={
+				["key"]="__ENABLE_SPI__";
+				["value"]="_NO_";
+			};
+			[47.000000]={
 				["key"]="__ENABLE_TTY__";
 				["value"]="_YES_";
 			};
-			[46.000000]={
+			[48.000000]={
 				["key"]="__ENABLE_UART__";
 				["value"]="_YES_";
 			};
-			[47.000000]={
+			[49.000000]={
 				["key"]="__ENABLE_WDG__";
 				["value"]="_NO_";
 			};
-			[48.000000]={
+			[50.000000]={
 				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
-			[49.000000]={
+			[51.000000]={
 				["key"]="__ENABLE_I2C__";
 				["value"]="_NO_";
 			};
-			[50.000000]={
+			[52.000000]={
 				["key"]="__ENABLE_IRQ__";
 				["value"]="_NO_";
 			};
@@ -1022,17 +1034,17 @@
 		["../../config/stm32f1/Makefile"]={
 			[1.000000]={
 				["key"]="__CPUCONFIG_CPUNAME__";
-				["value"]="STM32F103R8xx";
+				["value"]="STM32F103RCxx";
 			};
 		};
 		["../../config/stm32f1/cpu.h"]={
 			[1.000000]={
 				["key"]="__CPU_NAME__";
-				["value"]="STM32F103R8xx";
+				["value"]="STM32F103RCxx";
 			};
 			[2.000000]={
 				["key"]="__CPU_FAMILY__";
-				["value"]="_STM32F10X_MD_";
+				["value"]="_STM32F10X_HD_";
 			};
 		};
 		["../../config/stm32f1/gpio_flags.h"]={
@@ -2409,120 +2421,6 @@
 				["value"]="_FLOAT";
 			};
 		};
-		["../../config/stm32f1/pll_flags.h"]={
-			[1.000000]={
-				["key"]="__PLL_LSI_ON__";
-				["value"]="DISABLE";
-			};
-			[2.000000]={
-				["key"]="__PLL_LSE_ON__";
-				["value"]="RCC_LSE_OFF";
-			};
-			[3.000000]={
-				["key"]="__PLL_HSE_ON__";
-				["value"]="RCC_HSE_ON";
-			};
-			[4.000000]={
-				["key"]="__PLL_RTC_CLK_SRC__";
-				["value"]="RCC_RTCCLKSource_LSI";
-			};
-			[5.000000]={
-				["key"]="__PLL_SYS_CLK_SRC__";
-				["value"]="RCC_SYSCLKSource_PLLCLK";
-			};
-			[6.000000]={
-				["key"]="__PLL_MCO_SRC_CL__";
-				["value"]="RCC_MCO_NoClock";
-			};
-			[7.000000]={
-				["key"]="__PLL_MCO_SRC__";
-				["value"]="RCC_MCO_NoClock";
-			};
-			[8.000000]={
-				["key"]="__PLL_I2S2_SRC__";
-				["value"]="RCC_I2S2CLKSource_SYSCLK";
-			};
-			[9.000000]={
-				["key"]="__PLL_I2S3_SRC__";
-				["value"]="RCC_I2S3CLKSource_SYSCLK";
-			};
-			[10.000000]={
-				["key"]="__PLL_PLL_ON__";
-				["value"]="ENABLE";
-			};
-			[11.000000]={
-				["key"]="__PLL_PLL_SRC_CL__";
-				["value"]="RCC_PLLSource_PREDIV1";
-			};
-			[12.000000]={
-				["key"]="__PLL_PLL_SRC__";
-				["value"]="RCC_PLLSource_HSE_Div1";
-			};
-			[13.000000]={
-				["key"]="__PLL_PLL_MUL_CL__";
-				["value"]="RCC_PLLMul_9";
-			};
-			[14.000000]={
-				["key"]="__PLL_PLL_MUL__";
-				["value"]="RCC_PLLMul_9";
-			};
-			[15.000000]={
-				["key"]="__PLL_USB_DIV_CL__";
-				["value"]="RCC_OTGFSCLKSource_PLLVCO_Div3";
-			};
-			[16.000000]={
-				["key"]="__PLL_USB_DIV__";
-				["value"]="RCC_USBCLKSource_PLLCLK_1Div5";
-			};
-			[17.000000]={
-				["key"]="__PLL_PREDIV1_SRC__";
-				["value"]="RCC_PREDIV1_Source_HSE";
-			};
-			[18.000000]={
-				["key"]="__PLL_PREDIV1_VAL__";
-				["value"]="RCC_PREDIV1_Div1";
-			};
-			[19.000000]={
-				["key"]="__PLL_PREDIV2_VAL__";
-				["value"]="RCC_PREDIV2_Div1";
-			};
-			[20.000000]={
-				["key"]="__PLL_PLL2_ON__";
-				["value"]="DISABLE";
-			};
-			[21.000000]={
-				["key"]="__PLL_PLL2_MUL__";
-				["value"]="RCC_PLL2Mul_8";
-			};
-			[22.000000]={
-				["key"]="__PLL_PLL3_ON__";
-				["value"]="DISABLE";
-			};
-			[23.000000]={
-				["key"]="__PLL_PLL3_MUL__";
-				["value"]="RCC_PLL3Mul_8";
-			};
-			[24.000000]={
-				["key"]="__PLL_AHB_PRE__";
-				["value"]="RCC_SYSCLK_Div1";
-			};
-			[25.000000]={
-				["key"]="__PLL_APB1_PRE__";
-				["value"]="RCC_HCLK_Div2";
-			};
-			[26.000000]={
-				["key"]="__PLL_APB2_PRE__";
-				["value"]="RCC_HCLK_Div2";
-			};
-			[27.000000]={
-				["key"]="__PLL_ADC_PRE__";
-				["value"]="RCC_PCLK2_Div8";
-			};
-			[28.000000]={
-				["key"]="__PLL_FLASH_LATENCY__";
-				["value"]="2";
-			};
-		};
 		["../../config/stm32f1/uart_flags.h"]={
 			[1.000000]={
 				["key"]="__UART_UART1_ENABLE__";
@@ -2614,28 +2512,20 @@
 					["node"]="/dev/gpio";
 				};
 				[2.000000]={
-					["name"]="pll";
-					["node"]="/dev/pll";
-				};
-				[3.000000]={
 					["name"]="uart1";
 					["node"]="/dev/ttyS0";
 				};
-				[4.000000]={
+				[3.000000]={
 					["name"]="tty0";
 					["node"]="/dev/tty0";
 				};
-				[5.000000]={
+				[4.000000]={
 					["name"]="tty1";
 					["node"]="/dev/tty1";
 				};
-				[6.000000]={
+				[5.000000]={
 					["name"]="tty2";
 					["node"]="/dev/tty2";
-				};
-				[7.000000]={
-					["name"]="tty3";
-					["node"]="/dev/tty3";
 				};
 			};
 			["system_messages"]={
@@ -2674,16 +2564,9 @@
 					["stdin"]="/dev/tty1";
 					["stdout"]="/dev/tty1";
 				};
-				[3.000000]={
-					["CWD"]="/";
-					["name"]="dsh";
-					["stderr"]="/dev/tty2";
-					["stdin"]="/dev/tty2";
-					["stdout"]="/dev/tty2";
-				};
 			};
 			["system_messages"]={
-				["file"]="/dev/tty3";
+				["file"]="/dev/tty2";
 				["show"]=true;
 			};
 		};

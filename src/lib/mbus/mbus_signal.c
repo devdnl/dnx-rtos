@@ -38,7 +38,6 @@
  Local macros
  ==============================================================================*/
 #define MAX_NAME_LENGTH         128
-#define MBOX_QUEUE_LENGTH       8
 
 /*==============================================================================
  Local object types
@@ -49,6 +48,7 @@ struct _mbus_signal {
         void            *self;
         _mbus_owner_ID_t owner_ID;
         size_t           size;
+        size_t           count;
         mbus_sig_perm_t  perm;
         mbus_sig_type_t  type;
 };
@@ -94,23 +94,28 @@ static bool signal_is_valid(_mbus_signal_t *this)
  * @param  name                 name of signal
  * @param  owner_ID             signal owner
  * @param  size                 signal size
+ * @param  count                count elements
  * @param  perm                 signal permissions
  * @param  type                 signal type
  * @return Created object or NULL on error.
  */
 //==============================================================================
-_mbus_signal_t *_mbus_signal_new(const char *name, _mbus_owner_ID_t owner_ID, size_t size,
-                                 mbus_sig_perm_t perm, mbus_sig_type_t type)
+_mbus_signal_t *_mbus_signal_new(const char      *name,
+                                 _mbus_owner_ID_t owner_ID,
+                                 size_t           size,
+                                 size_t           count,
+                                 mbus_sig_perm_t  perm,
+                                 mbus_sig_type_t  type)
 {
-        _mbus_signal_t *this  = malloc(sizeof(_mbus_signal_t));
-        char     *signal_name = malloc(strnlen(name, MAX_NAME_LENGTH) + 1);
-        void     *data        = NULL;
+        _mbus_signal_t *this        = malloc(sizeof(_mbus_signal_t));
+        char           *signal_name = malloc(strnlen(name, MAX_NAME_LENGTH) + 1);
+        void           *data        = NULL;
 
         if (type == MBUS_SIG_TYPE__MBOX) {
-                data = queue_new(MBOX_QUEUE_LENGTH, sizeof(void*));
+                data = queue_new(count, sizeof(void*));
 
         } else if (type == MBUS_SIG_TYPE__VALUE) {
-                data = calloc(1, size);
+                data = calloc(1, size * count);
         }
 
         if (this && signal_name && data) {
@@ -121,6 +126,7 @@ _mbus_signal_t *_mbus_signal_new(const char *name, _mbus_owner_ID_t owner_ID, si
                 this->owner_ID = owner_ID;
                 this->perm     = perm;
                 this->size     = size;
+                this->count    = count;
                 this->type     = type;
                 this->self     = this;
 
@@ -153,15 +159,9 @@ void _mbus_signal_delete(_mbus_signal_t *this)
 {
         if (signal_is_valid(this)) {
                 free(this->name);
-                this->name     = NULL;
-                this->self     = NULL;
-                this->owner_ID = 0;
-                this->size     = 0;
-                this->perm     = MBUS_SIG_PERM__INVALID;
-                this->type     = MBUS_SIG_TYPE__INVALID;
 
                 if (this->type == MBUS_SIG_TYPE__MBOX) {
-                        for (int i = 0; i < MBOX_QUEUE_LENGTH; i++) {
+                        for (size_t i = 0; i < this->count; i++) {
                                 void *data = NULL;
                                 if (queue_receive(this->data, &data, 0)) {
                                         if (data) {
@@ -173,14 +173,21 @@ void _mbus_signal_delete(_mbus_signal_t *this)
                         }
 
                         queue_delete(this->data);
-                        this->data = NULL;
 
                 } else if (this->type == MBUS_SIG_TYPE__VALUE) {
-                        if (this->data) {
-                                free(this->data);
-                                this->data = NULL;
-                        }
+                        free(this->data);
                 }
+
+                this->name     = NULL;
+                this->data     = NULL;
+                this->self     = NULL;
+                this->owner_ID = 0;
+                this->size     = 0;
+                this->count    = 0;
+                this->perm     = MBUS_SIG_PERM__INVALID;
+                this->type     = MBUS_SIG_TYPE__INVALID;
+
+                free(this);
         }
 }
 
@@ -226,7 +233,11 @@ mbus_sig_type_t _mbus_signal_get_type(_mbus_signal_t *this)
 size_t _mbus_signal_get_size(_mbus_signal_t *this)
 {
         if (signal_is_valid(this)) {
-                return this->size;
+                switch (this->type) {
+                case MBUS_SIG_TYPE__MBOX : return this->size;
+                case MBUS_SIG_TYPE__VALUE: return this->size * this->count;
+                default                  : return 0;
+                }
         } else {
                 return 0;
         }
@@ -293,7 +304,7 @@ mbus_errno_t _mbus_signal_set_data(_mbus_signal_t *this, const void *data)
                         }
 
                 } else if (this->type == MBUS_SIG_TYPE__VALUE) {
-                        memcpy(this->data, data, this->size);
+                        memcpy(this->data, data, this->size * this->count);
                 }
         }
 

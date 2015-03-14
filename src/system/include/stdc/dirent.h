@@ -43,6 +43,9 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifndef __DIR_TYPE_DEFINED__
+typedef struct vfs_dir DIR;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -80,7 +83,7 @@ extern "C" {
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-        return sysm_opendir(name);
+        return _sysm_opendir(name);
 }
 
 //==============================================================================
@@ -109,7 +112,7 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-        return sysm_closedir(dir);
+        return _sysm_closedir(dir);
 }
 
 //==============================================================================
@@ -156,7 +159,7 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline dirent_t readdir(DIR *dir)
 {
-        return vfs_readdir(dir);
+        return _vfs_readdir(dir);
 }
 
 #ifdef __cplusplus

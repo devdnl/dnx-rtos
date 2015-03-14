@@ -35,6 +35,11 @@
   Modules include files
 ==============================================================================*/
 /* CT: module definition includes */
+#if (__ENABLE_RTCM__)
+#       ifdef ARCH_stm32f1
+#               include "stm32f1/rtcm_def.h"
+#       endif
+#endif
 #if (__ENABLE_LOOP__)
 #       ifdef ARCH_noarch
 #               include "noarch/loop_def.h"
@@ -114,6 +119,9 @@
   Modules interfaces
 ==============================================================================*/
 /* CT: import of module interface */
+#if (__ENABLE_RTCM__)
+        _IMPORT_MODULE_INTERFACE(RTCM);
+#endif
 #if (__ENABLE_LOOP__)
         _IMPORT_MODULE_INTERFACE(LOOP);
 #endif
@@ -165,6 +173,9 @@
  * only 1 time.
  */
 const char *const _regdrv_module_name[] = {
+        #if (__ENABLE_RTCM__)
+        _MODULE_NAME(RTCM),
+        #endif
         #if (__ENABLE_LOOP__)
         _MODULE_NAME(LOOP),
         #endif
@@ -215,6 +226,11 @@ const char *const _regdrv_module_name[] = {
  * connected to its module.
  */
 const struct _driver_entry _regdrv_driver_table[] = {
+        /* RTCM */
+        #if (__ENABLE_RTCM__)
+        _DRIVER_INTERFACE(RTCM, "rtcm", _RTCM_MAJOR_NUMBER, _RTCM_MINOR_NUMBER),
+        #endif
+
         /* LOOP ============================================================= */
         #if (__ENABLE_LOOP__ && _LOOP_NUMBER_OF_DEVICES > 0)
         _DRIVER_INTERFACE(LOOP, "loop0", _LOOP0, _LOOP_MINOR_NUMBER),

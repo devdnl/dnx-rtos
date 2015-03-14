@@ -1,0 +1,37 @@
+# Makefile for GNU make
+
+CSRC_LIB   += lua/lapi.c
+CSRC_LIB   += lua/lauxlib.c
+CSRC_LIB   += lua/lbaselib.c
+CSRC_LIB   += lua/lbitlib.c
+CSRC_LIB   += lua/lcode.c
+CSRC_LIB   += lua/lcorolib.c
+CSRC_LIB   += lua/lctype.c
+CSRC_LIB   += lua/ldblib.c
+CSRC_LIB   += lua/ldebug.c
+CSRC_LIB   += lua/ldo.c
+CSRC_LIB   += lua/ldump.c
+CSRC_LIB   += lua/lfunc.c
+CSRC_LIB   += lua/lgc.c
+CSRC_LIB   += lua/linit.c
+CSRC_LIB   += lua/liolib.c
+CSRC_LIB   += lua/llex.c
+CSRC_LIB   += lua/lmathlib.c
+CSRC_LIB   += lua/lmem.c
+CSRC_LIB   += lua/loadlib.c
+CSRC_LIB   += lua/lobject.c
+CSRC_LIB   += lua/lopcodes.c
+CSRC_LIB   += lua/loslib.c
+CSRC_LIB   += lua/lparser.c
+CSRC_LIB   += lua/lstate.c
+CSRC_LIB   += lua/lstring.c
+CSRC_LIB   += lua/lstrlib.c
+CSRC_LIB   += lua/ltable.c
+CSRC_LIB   += lua/ltablib.c
+CSRC_LIB   += lua/ltm.c
+CSRC_LIB   += lua/lundump.c
+CSRC_LIB   += lua/lutf8lib.c
+CSRC_LIB   += lua/lvm.c
+CSRC_LIB   += lua/lzio.c
+CXXSRC_LIB += 
+HDRLOC_LIB += lua

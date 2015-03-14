@@ -47,10 +47,10 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
 #ifdef __cplusplus
-        inline void* operator new     (size_t size) {return sysm_tskmalloc(size);}
-        inline void* operator new[]   (size_t size) {return sysm_tskmalloc(size);}
-        inline void  operator delete  (void* ptr  ) {sysm_tskfree(ptr);}
-        inline void  operator delete[](void* ptr  ) {sysm_tskfree(ptr);}
+        inline void* operator new     (size_t size) {return _sysm_tskmalloc(size);}
+        inline void* operator new[]   (size_t size) {return _sysm_tskmalloc(size);}
+        inline void  operator delete  (void* ptr  ) {_sysm_tskfree(ptr);}
+        inline void  operator delete[](void* ptr  ) {_sysm_tskfree(ptr);}
 #       define _PROGMAN_CXX extern "C"
 #       define _PROGMAN_EXTERN_C extern "C"
 #else
@@ -110,6 +110,7 @@ extern prog_t   *_program_new                                   (const char*, co
 extern int       _program_kill                                  (prog_t*);
 extern int       _program_delete                                (prog_t*);
 extern int       _program_wait_for_close                        (prog_t*, const uint);
+extern int       _program_get_exit_code                         (prog_t*);
 extern bool      _program_is_closed                             (prog_t*);
 extern void      _task_kill                                     (task_t*);
 extern thread_t *_thread_new                                    (void (*)(void*), const int, void*);

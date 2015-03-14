@@ -43,7 +43,7 @@
 #define __AFIOM_REMAP_SPI1__ 0
 #define __AFIOM_REMAP_I2C1__ 0
 #define __AFIOM_REMAP_USART1__ 0
-#define __AFIOM_REMAP_USART2__ 0
+#define __AFIOM_REMAP_USART2__ 1
 #define __AFIOM_REMAP_USART3__ 0
 #define __AFIOM_REMAP_TIM1__ 0
 #define __AFIOM_REMAP_TIM2__ 0
@@ -57,10 +57,10 @@
 #define __AFIOM_REMAP_ADC2_ETRGINJ__ 0
 #define __AFIOM_REMAP_ADC2_ETRGREG__ 0
 #define __AFIOM_REMAP_SWJ_CFG__ 0
-#define __AFIOM_REMAP_ETH__ 0
+#define __AFIOM_REMAP_ETH__ 1
 #define __AFIOM_REMAP_CAN2__ 0
-#define __AFIOM_REMAP_MII_RMII_SEL__ 0
-#define __AFIOM_REMAP_SPI3__ 1
+#define __AFIOM_REMAP_MII_RMII_SEL__ 1
+#define __AFIOM_REMAP_SPI3__ 0
 #define __AFIOM_REMAP_TIM2ITR1__ 0
 #define __AFIOM_REMAP_PTP_PPS__ 0
 

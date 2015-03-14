@@ -5,7 +5,7 @@
 
 @brief   Check execution time of selected program
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -51,10 +51,10 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-char cwd[CWD_LEN];
-char cmd[CMD_LEN];
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+        char cwd[CWD_LEN];
+        char cmd[CMD_LEN];
+};
 
 /*==============================================================================
   Exported object definitions
@@ -68,7 +68,7 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [program]\n", argv[0]);
@@ -99,7 +99,7 @@ PROGRAM_MAIN(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
         }
 
         u32_t stop_time = get_time_ms() - start_time;
-        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, (stop_time / 1000) % 60, stop_time % 1000);
+        printf("\nreal\t%dm%d.%03ds\n", stop_time / 60000, (stop_time / 1000) % 60, stop_time % 1000);
 
         return EXIT_SUCCESS;
 }

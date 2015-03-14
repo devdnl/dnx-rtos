@@ -269,28 +269,29 @@ local INITD_CFG_FILE = config.project.path.initd_cfg_file:GetValue()
 -- @return None
 --------------------------------------------------------------------------------
 local function generate_init_code(cfg)
-        local INITD_TEMPLATE_FILE              = config.project.path.initd_template_entire_file:GetValue()
-        local INITD_TEMPLATE_MOUNT             = config.project.path.initd_template_mount_file:GetValue()
-        local INITD_TEMPLATE_MKDIR             = config.project.path.initd_template_mkdir_file:GetValue()
-        local INITD_TEMPLATE_DRVINIT           = config.project.path.initd_template_driverinit_file:GetValue()
-        local INITD_TEMPLATE_PRINTKEN          = config.project.path.initd_template_printken_file:GetValue()
-        local INITD_TEMPLATE_PRINTKDIS         = config.project.path.initd_template_printkdis_file:GetValue()
-        local INITD_TEMPLATE_INVMSG            = config.project.path.initd_template_ivitationmsg_file:GetValue()
-        local INITD_TEMPLATE_DAEMON_START      = config.project.path.initd_template_daemonstart_file:GetValue()
-        local INITD_TEMPLATE_STORAGE_INIT      = config.project.path.initd_template_storage_init_file:GetValue()
-        local INITD_TEMPLATE_DHCP_OR_STATIC_IP = config.project.path.initd_template_dhcp_or_static_ip_file:GetValue()
-        local INITD_TEMPLATE_DHCP_IP           = config.project.path.initd_template_dhcp_ip_file:GetValue()
-        local INITD_TEMPLATE_STATIC_IP         = config.project.path.initd_template_static_ip_file:GetValue()
-        local INITD_TEMPLATE_IP_SUMMARY        = config.project.path.initd_template_ip_summary_file:GetValue()
-        local INITD_TEMPLATE_SUMMARY           = config.project.path.initd_template_summary_file:GetValue()
-        local INITD_TEMPLATE_APP_PREPARE       = config.project.path.initd_template_app_prepare_file:GetValue()
-        local INITD_TEMPLATE_APP_START         = config.project.path.initd_template_app_start_file:GetValue()
-        local INITD_TEMPLATE_APP_FINISH        = config.project.path.initd_template_app_finish_file:GetValue()
-        local INITD_TEMPLATE_APP_STREAM_OPEN   = config.project.path.initd_template_app_stream_open_file:GetValue()
-        local INITD_TEMPLATE_FUNC_MSG_MOUNT    = config.project.path.initd_template_msg_mount_func_file:GetValue()
-        local INITD_TEMPLATE_FUNC_INIT_STORAGE = config.project.path.initd_template_init_storage_func_file:GetValue()
-        local INITD_TEMPLATE_FUNC_START_DAEMON = config.project.path.initd_template_start_daemon_func_file:GetValue()
-        local INITD_SRC_FILE                   = config.project.path.initd_src_file:GetValue()
+        local INITD_TEMPLATE_FILE                = config.project.path.initd_template_entire_file:GetValue()
+        local INITD_TEMPLATE_MOUNT               = config.project.path.initd_template_mount_file:GetValue()
+        local INITD_TEMPLATE_MKDIR               = config.project.path.initd_template_mkdir_file:GetValue()
+        local INITD_TEMPLATE_DRVINIT             = config.project.path.initd_template_driverinit_file:GetValue()
+        local INITD_TEMPLATE_PRINTKEN            = config.project.path.initd_template_printken_file:GetValue()
+        local INITD_TEMPLATE_PRINTKDIS           = config.project.path.initd_template_printkdis_file:GetValue()
+        local INITD_TEMPLATE_INVMSG              = config.project.path.initd_template_ivitationmsg_file:GetValue()
+        local INITD_TEMPLATE_DAEMON_START        = config.project.path.initd_template_daemonstart_file:GetValue()
+        local INITD_TEMPLATE_STORAGE_INIT        = config.project.path.initd_template_storage_init_file:GetValue()
+        local INITD_TEMPLATE_DHCP_OR_STATIC_IP   = config.project.path.initd_template_dhcp_or_static_ip_file:GetValue()
+        local INITD_TEMPLATE_DHCP_IP             = config.project.path.initd_template_dhcp_ip_file:GetValue()
+        local INITD_TEMPLATE_STATIC_IP           = config.project.path.initd_template_static_ip_file:GetValue()
+        local INITD_TEMPLATE_IP_SUMMARY          = config.project.path.initd_template_ip_summary_file:GetValue()
+        local INITD_TEMPLATE_SUMMARY             = config.project.path.initd_template_summary_file:GetValue()
+        local INITD_TEMPLATE_APP_PREPARE         = config.project.path.initd_template_app_prepare_file:GetValue()
+        local INITD_TEMPLATE_APP_START           = config.project.path.initd_template_app_start_file:GetValue()
+        local INITD_TEMPLATE_APP_FINISH          = config.project.path.initd_template_app_finish_file:GetValue()
+        local INITD_TEMPLATE_APP_STREAM_OPEN     = config.project.path.initd_template_app_stream_open_file:GetValue()
+        local INITD_TEMPLATE_FUNC_MSG_MOUNT      = config.project.path.initd_template_msg_mount_func_file:GetValue()
+        local INITD_TEMPLATE_FUNC_INIT_STORAGE   = config.project.path.initd_template_init_storage_func_file:GetValue()
+        local INITD_TEMPLATE_FUNC_START_DAEMON   = config.project.path.initd_template_start_daemon_func_file:GetValue()
+        local INITD_TEMPLATE_KERNEL_PANIC_DETECT = config.project.path.initd_template_kernel_panic_detect_file:GetValue()
+        local INITD_SRC_FILE                     = config.project.path.initd_src_file:GetValue()
 
         -- append specified functions templates to initd code and when asked again then don't add a new instance
         local function_added_to_code = {}
@@ -385,6 +386,9 @@ local function generate_init_code(cfg)
                                                 local tags = {}
                                                 table.insert(tags, {tag = "<!node!>", to = cfg.runlevel_0.system_messages.file})
                                                 n = n + ct:apply_template(INITD_TEMPLATE_PRINTKEN, INITD_SRC_FILE, tags, n)
+
+                                                local tags = {}
+                                                n = n + ct:apply_template(INITD_TEMPLATE_KERNEL_PANIC_DETECT, INITD_SRC_FILE, tags, n)
 
                                                 if cfg.runlevel_0.system_messages.invitation == true then
                                                         local tags = {}
@@ -1122,13 +1126,13 @@ local function create_runlevel_boot_widgets(parent)
                 ui.Button_RLB_other_FS_up = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RLB_other_FS_up:SetToolTip("Move up")
                 ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RLB_other_FS_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(-1, 3) end)
+                ui.Button_RLB_other_FS_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(-1, 3) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RLB_other_FS_down = wx.wxBitmapButton(ui.Panel_boot, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RLB_other_FS_down:SetToolTip("Move down")
                 ui.FlexGridSizer_other_FS_2:Add(ui.Button_RLB_other_FS_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RLB_other_FS_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(1, 3) end)
+                ui.Button_RLB_other_FS_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RLB_other_FS:MoveItem(1, 3) modified:yes() end)
 
                 -- add: sizer
                 ui.FlexGridSizer_other_FS_1:Add(ui.FlexGridSizer_other_FS_2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
@@ -1285,13 +1289,13 @@ local function create_runlevel_0_widgets(parent)
                 ui.Button_RL0_drv_init_up = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL0_drv_init_up:SetToolTip("Move up")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) end)
+                ui.Button_RL0_drv_init_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL0_drv_init_down = wx.wxBitmapButton(ui.Panel_runlevel_0, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL0_drv_init_down:SetToolTip("Move down")
                 ui.FlexGridSizer_drv_init_buttons:Add(ui.Button_RL0_drv_init_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL0_drv_init_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(1, 2) end)
+                ui.Button_RL0_drv_init_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL0_drv_list:MoveItem(1, 2) modified:yes() end)
 
                 -- add: driver selection, driver node path, and add button to the group
                 ui.FlexGridSizer_drv_init:Add(ui.FlexGridSizer_drv_init_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1459,13 +1463,13 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_daemons_up = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL1_daemons_up:SetToolTip("Move up")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_daemons_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(-1, 2) end)
+                ui.Button_RL1_daemons_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL1_daemons_down = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL1_daemons_down:SetToolTip("Move down")
                 ui.FlexGridSizer_daemons_buttons:Add(ui.Button_RL1_daemons_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_daemons_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(1, 2) end)
+                ui.Button_RL1_daemons_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_daemons:MoveItem(1, 2) modified:yes() end)
 
                 -- add buttons to group
                 ui.FlexGridSizer_daemons:Add(ui.FlexGridSizer_daemons_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1568,13 +1572,13 @@ local function create_runlevel_1_widgets(parent)
                 ui.Button_RL1_FS_mount_up = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL1_FS_mount_up:SetToolTip("Move up")
                 ui.FlexGridSizer_FS_mount_buttons:Add(ui.Button_RL1_FS_mount_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_FS_mount_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(-1, 2) end)
+                ui.Button_RL1_FS_mount_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(-1, 2) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL1_FS_mount_down = wx.wxBitmapButton(ui.Panel_runlevel_1, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL1_FS_mount_down:SetToolTip("Move down")
                 ui.FlexGridSizer_FS_mount_buttons:Add(ui.Button_RL1_FS_mount_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL1_FS_mount_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(1, 2) end)
+                ui.Button_RL1_FS_mount_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL1_FS_mount:MoveItem(1, 2) modified:yes() end)
 
                 -- add buttons to group
                 ui.FlexGridSizer_FS_mount:Add(ui.FlexGridSizer_FS_mount_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)
@@ -1777,13 +1781,13 @@ local function create_runlevel_2_widgets(parent)
                 ui.Button_RL2_app_start_up = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_up_16x16)
                 ui.Button_RL2_app_start_up:SetToolTip("Move up")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_up, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 2) end)
+                ui.Button_RL2_app_start_up:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(-1, 5) modified:yes() end)
 
                 -- add: arrow down button
                 ui.Button_RL2_app_start_down = wx.wxBitmapButton(ui.Panel_runlevel_2, wx.wxNewId(), ct.icon.arrow_down_16x16)
                 ui.Button_RL2_app_start_down:SetToolTip("Move down")
                 ui.FlexGridSizer_RL2_app_start_buttons:Add(ui.Button_RL2_app_start_down, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 2)
-                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 2) end)
+                ui.Button_RL2_app_start_down:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() ui.ListView_RL2_app_start:MoveItem(1, 5) modified:yes() end)
 
                 -- add fields to group
                 ui.FlexGridSizer_RL2_app_start:Add(ui.FlexGridSizer_RL2_app_start_buttons, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_TOP), 0)

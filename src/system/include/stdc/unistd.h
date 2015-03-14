@@ -114,7 +114,8 @@ static inline void sleep_ms(const uint milliseconds)
  * The <b>usleep</b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
- * Function is not supported by dnx RTOS. Function sleep task at least 1ms.
+ * Function is not full supported by dnx RTOS. The task falls asleep for at least
+ * 1ms if the delay is lower than or equal to 1000 microseconds.
  *
  * @param microseconds      number of microseconds to sleep
  *
@@ -127,15 +128,16 @@ static inline void sleep_ms(const uint milliseconds)
  *
  * // ...
  * usleep(10);
- * // code here will be executed at least after 1ms sleep (shall be 10us)
+ * // code here will be executed after at least 1ms
+ * usleep(10000);
+ * // code here will be executed after at least 10ms
  * // ...
  */
 //==============================================================================
 static inline void usleep(const uint microseconds)
 {
-        (void) microseconds;
-
-        vTaskDelay(1);
+        uint ms = microseconds / 1000;
+        _sleep_ms(ms ? ms : 1);
 }
 
 //==============================================================================
@@ -176,7 +178,8 @@ static inline int prepare_sleep_until(void)
  * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
- * @param microseconds      number of microseconds to sleep
+ * @param milliseconds      number of milliseconds to sleep
+ * @param ref_time_ticks    time reference
  *
  * @errors None
  *
@@ -187,7 +190,7 @@ static inline int prepare_sleep_until(void)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = get_tick_counter();
+ * int ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
@@ -208,7 +211,8 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * The <b>sleep_until</b>() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
- * @param seconds       number of seconds to sleep
+ * @param seconds               number of seconds to sleep
+ * @param ref_time_ticks        time reference
  *
  * @errors None
  *
@@ -219,7 +223,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = get_tick_counter();
+ * int ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
@@ -291,7 +295,7 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-        return vfs_chown(pathname, owner, group);
+        return _vfs_chown(pathname, owner, group);
 }
 
 //==============================================================================
@@ -315,7 +319,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-        vfs_sync();
+        _vfs_sync();
 }
 
 #ifdef __cplusplus

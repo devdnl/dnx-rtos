@@ -27,8 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/os.h>
-#include <dnx/thread.h>
+#include "kernel/kwrapper.h"
 #include "sys_arch.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -93,7 +92,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 
         (void)prio;
 
-        return task_new(thread, name, stacksize, arg);
+        return _task_new(thread, name, stacksize, arg);
 }
 
 //==============================================================================
@@ -116,7 +115,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 //==============================================================================
 sys_prot_t sys_arch_protect()
 {
-        critical_section_begin();
+        _critical_section_begin();
         return 1;
 }
 
@@ -137,7 +136,7 @@ sys_prot_t sys_arch_protect()
 void sys_arch_unprotect(sys_prot_t lev)
 {
         (void) lev;
-        critical_section_end();
+        _critical_section_end();
 }
 
 //==============================================================================
@@ -156,7 +155,7 @@ void sys_arch_unprotect(sys_prot_t lev)
 //==============================================================================
 u32_t sys_now()
 {
-        return get_time_ms();
+        return _kernel_get_time_ms();
 }
 
 //==============================================================================
@@ -174,7 +173,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                *sem = semaphore_new(1, count);
+                *sem = _semaphore_new(1, count);
                 if (*sem) {
                         return ERR_OK;
                 } else {
@@ -199,7 +198,7 @@ void sys_sem_free(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem && *sem) {
-                semaphore_delete(*sem);
+                _semaphore_delete(*sem);
         }
 }
 
@@ -217,7 +216,7 @@ void sys_sem_signal(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem && *sem) {
-                semaphore_signal(*sem);
+                _semaphore_signal(*sem);
         }
 }
 
@@ -236,17 +235,17 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem && *sem) {
-                u32_t start_time = get_time_ms();
+                u32_t start_time = _kernel_get_time_ms();
                 bool  sem_status = false;
 
                 if (timeout) {
-                        sem_status = semaphore_wait(*sem, timeout);
+                        sem_status = _semaphore_wait(*sem, timeout);
                 } else {
-                        sem_status = semaphore_wait(*sem, MAX_DELAY_MS);
+                        sem_status = _semaphore_wait(*sem, MAX_DELAY_MS);
                 }
 
                 if (sem_status) {
-                        return (u32_t)get_time_ms() - start_time;
+                        return (u32_t)_kernel_get_time_ms() - start_time;
                 }
         }
 
@@ -306,7 +305,7 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox && size) {
-                *mbox = queue_new(size, sizeof(void*));
+                *mbox = _queue_new(size, sizeof(void*));
                 if (*mbox) {
                         return ERR_OK;
                 } else {
@@ -331,7 +330,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox && *mbox) {
-                queue_delete(*mbox);
+                _queue_delete(*mbox);
         }
 }
 
@@ -351,7 +350,7 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox && *mbox) {
-                queue_send(*mbox, &msg, MAX_DELAY_MS);
+                _queue_send(*mbox, &msg, MAX_DELAY_MS);
         }
 }
 
@@ -370,7 +369,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox && *mbox) {
-                if (queue_send(*mbox, &msg, 0)) {
+                if (_queue_send(*mbox, &msg, 0)) {
                         return ERR_OK;
                 } else {
                         return ERR_MEM;
@@ -399,10 +398,10 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
         if (mbox && *mbox) {
-                u32_t start_time = get_time_ms();
+                u32_t start_time = _kernel_get_time_ms();
 
-                if (queue_receive(*mbox, &(*msg), timeout ? timeout : MAX_DELAY_MS)) {
-                        return (u32_t)get_time_ms() - start_time;
+                if (_queue_receive(*mbox, &(*msg), timeout ? timeout : MAX_DELAY_MS)) {
+                        return (u32_t)_kernel_get_time_ms() - start_time;
                 }
         }
 
@@ -426,7 +425,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
         if (mbox && *mbox) {
-                if (queue_receive(*mbox, &(*msg), 0)) {
+                if (_queue_receive(*mbox, &(*msg), 0)) {
                         return 0;
                 }
         }

@@ -28,7 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/misc.h>
 #include "stm32f1/afiom_cfg.h"
 #include "stm32f1/afiom_def.h"
 #include "stm32f1/stm32f10x.h"

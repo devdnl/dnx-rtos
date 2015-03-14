@@ -28,8 +28,6 @@
   Include files
 ==============================================================================*/
 #include "core/module.h"
-#include <dnx/thread.h>
-#include <dnx/misc.h>
 #include "stm32f1/crcm_cfg.h"
 #include "stm32f1/crcm_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -41,10 +39,9 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef struct CRCM
-{
-        dev_lock_t              file_lock;
-        enum CRCM_input_mode    input_mode;
+typedef struct CRCM {
+        dev_lock_t             file_lock;
+        enum CRCM_input_mode   input_mode;
 } CRCM;
 
 /*==============================================================================
@@ -113,11 +110,11 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 {
         CRCM *hdl = device_handle;
 
-        critical_section_begin();
+        _sys_critical_section_begin();
 
         stdret_t status = STD_RET_ERROR;
 
-        if (device_is_unlocked(hdl->file_lock)) {
+        if (_sys_device_is_unlocked(hdl->file_lock)) {
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
                 free(hdl);
                 status = STD_RET_OK;
@@ -125,7 +122,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
                 errno = EBUSY;
         }
 
-        critical_section_end();
+        _sys_critical_section_end();
 
         return status;
 }
@@ -147,7 +144,7 @@ API_MOD_OPEN(CRCM, void *device_handle, vfs_open_flags_t flags)
 
         CRCM *hdl = device_handle;
 
-        return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -165,8 +162,8 @@ API_MOD_CLOSE(CRCM, void *device_handle, bool force)
 {
         CRCM *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock) || force) {
-                device_unlock(&hdl->file_lock, force);
+        if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
+                _sys_device_unlock(&hdl->file_lock, force);
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
@@ -196,7 +193,7 @@ API_MOD_WRITE(CRCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (_sys_device_is_access_granted(&hdl->file_lock)) {
                 reset_CRC();
 
                 if (hdl->input_mode == CRCM_INPUT_MODE_BYTE) {
@@ -256,7 +253,7 @@ API_MOD_READ(CRCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
 
         ssize_t n = -1;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (_sys_device_is_access_granted(&hdl->file_lock)) {
 
                 u8_t  crc[4] = {CRC->DR, CRC->DR >> 8, CRC->DR >> 16, CRC->DR >> 24};
 
@@ -293,7 +290,7 @@ API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
 {
         CRCM *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (_sys_device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
                 case IOCTL_CRCM__SET_INPUT_MODE:
                         if (arg) {

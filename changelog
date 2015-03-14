@@ -1,3 +1,30 @@
+dnx RTOS 1.6.0
+==============
+New Features, Improvements:
+- Added lua library (with lua and luac programs)
+- Added time.h library
+- Added RTC module
+- Added "b" flags to the fopen() function
+- Added Kernel Panic message from last fault session
+- Added new interface function: program_get_exit_code()
+- Added new network library functions: net_conn_set_receive_timeout() and net_conn_set_send_timeout()
+- System monitor adds programs' stack size to the used memory
+- Decreased RAM usage by system objects (file, mutex, semaphore, etc)
+- Better seperation of software layers
+- Implemented SNTP daemon
+- Reimplemented Telnet daemon (allow to run any program)
+- Reimplemented HTTP daemon (simple HTTP server)
+- Applied new list implementation for core components (core, fs)
+- Renamed programs
+
+Fixed Bugs:
+- Fixed kill message of "top" program (missing fflush()) 
+- Fixed _program_new() function (invalid initialized object)
+- Fixed realloc() function (old implementation works out of standard)
+- TTY: fixed REFRESH_LAST_LINE and flush() requests
+- Fixed memory leak in pipe implementation
+- Fixed memory leak in mbus library
+
 dnx RTOS 1.5.4
 ==============
 New Features, Improvements:

@@ -126,19 +126,21 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void             printk                  (const char*, ...);
-extern void             printk_enable           (char*);
-extern void             printk_disable          (void);
-extern int              sys_snprintf            (char*, size_t, const char*, ...);
-extern int              sys_fprintf             (FILE*, const char*, ...);
-extern int              sys_vfprintf            (FILE*, const char*, va_list);
-extern int              sys_vsnprintf           (char*, size_t, const char*, va_list);
-extern const char      *sys_strerror            (int);
-extern void             sys_perror              (const char*);
-extern int              sys_fputc               (int, FILE*);
-extern int              sys_f_puts              (const char*, FILE*, bool);
-extern int              sys_getc                (FILE*);
-extern char            *sys_fgets               (char*, int, FILE*);
+extern void        _printk         (const char*, ...);
+extern void        _printk_enable  (char*);
+extern void        _printk_disable (void);
+extern int         _snprintf       (char*, size_t, const char*, ...);
+extern int         _fprintf        (FILE*, const char*, ...);
+extern int         _vfprintf       (FILE*, const char*, va_list);
+extern int         _vsnprintf      (char*, size_t, const char*, va_list);
+extern const char *_strerror       (int);
+extern void        _perror         (const char*);
+extern int         _fputc          (int, FILE*);
+extern int         _f_puts         (const char*, FILE*, bool);
+extern int         _getc           (FILE*);
+extern char       *_fgets          (char*, int, FILE*);
+extern char       *_ctime_r        (const time_t *timer, const struct tm *tm, char *buf);
+extern size_t      _strftime       (char*, size_t, const char*, const struct tm*);
 
 /*==============================================================================
   Exported inline functions

@@ -5,7 +5,7 @@
 
 @brief   Application show CPU load
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -52,9 +52,9 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-int term_row;
-GLOBAL_VARIABLES_SECTION_END
+GLOBAL_VARIABLES_SECTION {
+        int term_row;
+};
 
 /*==============================================================================
   Exported object definitions
@@ -84,7 +84,7 @@ static void println(const char *fmt, ...)
  * @brief Main function
  */
 //==============================================================================
-PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
@@ -121,7 +121,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
 
-                struct sysmoni_used_memory mem;
+                memstat_t mem;
                 get_detailed_memory_usage(&mem);
 
                 int mem_total = get_memory_size();
@@ -136,7 +136,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 println("Modules : %d\n", mem.used_modules_memory);
                 println("Network : %d\n", mem.used_network_memory);
                 println("Programs: %d\n", mem.used_programs_memory);
-                println("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
+                println("\x1B[30;47mTSKHDL    PRI   FRSTK   ST+MEM  OPFI    %%CPU    NAME \x1B[0m\n");
 
                 if (key == '.') {
                         if (shift + global->term_row < task_number) {
@@ -181,6 +181,7 @@ PROGRAM_MAIN(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         int task_handle = 0;
 
                         printf("Enter task handle: 0x");
+                        fflush(stdout);
                         scanf("%8X", &task_handle);
 
                         task_t *task = (task_t *)task_handle;

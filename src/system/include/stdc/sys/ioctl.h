@@ -44,6 +44,7 @@ extern "C" {
 #       include "noarch/sdspi_ioctl.h"
 #endif
 #ifdef ARCH_stm32f1
+#       include "stm32f1/rtcm_ioctl.h"
 #       include "stm32f1/afiom_ioctl.h"
 #       include "stm32f1/crcm_ioctl.h"
 #       include "stm32f1/ethmac_ioctl.h"
@@ -106,7 +107,7 @@ static inline int ioctl(FILE *stream, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
-        int status = vfs_vioctl(stream, request, arg);
+        int status = _vfs_vioctl(stream, request, arg);
         va_end(arg);
         return status;
 }
