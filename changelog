@@ -1,4 +1,4 @@
-dnx RTOS 1.5.5
+dnx RTOS 1.6.0
 ==============
 New Features, Improvements:
 - Added lua library (with lua and luac programs)
