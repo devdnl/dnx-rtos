@@ -3,7 +3,7 @@ dnx RTOS 1.6.1
 New Features, Improvements:
 
 Fixed Bugs:
-
+- fopen(): incorrect behavior of "a" and "a+" modes (issue #156)
 
 dnx RTOS 1.6.0
 ==============
