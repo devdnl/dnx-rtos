@@ -207,24 +207,25 @@ typedef struct vfs_FS_interface {
 } vfs_FS_interface_t;
 
 /** file flags */
-typedef struct file_flags {
-        bool                rd    :1;
-        bool                wr    :1;
-        bool                eof   :1;
-        bool                error :1;
+typedef struct vfs_file_flags {
+        bool                rd     :1;          //! file read mode
+        bool                wr     :1;          //! file write mode
+        bool                append :1;          //! file append mode (one of rd/wr is set)
+        bool                eof    :1;          //! end of file
+        bool                error  :1;          //! error occurred
+        bool                seekmod:1;          //! file position modified
         struct vfs_fattr    fattr;
-} file_flags_t;
+} vfs_file_flags_t;
 
 /** file type */
-struct vfs_file
-{
+struct vfs_file {
         void               *FS_hdl;
         vfs_FS_interface_t *FS_if;
         void               *f_extra_data;
         struct vfs_file    *self;
         fd_t                fd;
         fpos_t              f_lseek;
-        file_flags_t        f_flag;
+        vfs_file_flags_t    f_flag;
 };
 
 typedef struct vfs_file FILE;

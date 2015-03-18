@@ -69,7 +69,7 @@ static bool             is_file_valid           (FILE *file);
 static bool             is_dir_valid            (DIR *dir);
 static int              increase_task_priority  (void);
 static inline void      restore_priority        (int priority);
-static vfs_open_flags_t file_mode_str_to_flags  (const char *str);
+static vfs_open_flags_t file_mode_str_to_flags  (const char *str, vfs_file_flags_t *fflags);
 static FS_entry_t      *get_path_FS             (const char *path, size_t len, int *position);
 static FS_entry_t      *get_path_base_FS        (const char *path, const char **extPath);
 static char            *new_CWD_path            (const char *path, enum path_correction corr);
@@ -759,7 +759,17 @@ FILE *_vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        vfs_open_flags_t flags = file_mode_str_to_flags(mode);
+        vfs_file_flags_t fflags;
+        fflags.rd                    = false;
+        fflags.wr                    = false;
+        fflags.eof                   = false;
+        fflags.error                 = false;
+        fflags.append                = false;
+        fflags.seekmod               = false;
+        fflags.fattr.non_blocking_rd = false;
+        fflags.fattr.non_blocking_wr = false;
+
+        vfs_open_flags_t flags = file_mode_str_to_flags(mode, &fflags);
         if (flags == 0) {
                 return NULL;
         }
@@ -775,25 +785,16 @@ FILE *_vfs_fopen(const char *path, const char *mode)
                         int priority = increase_task_priority();
 
                         if (fs->interface->fs_open(fs->handle,
-                                                  &file->f_extra_data,
-                                                  &file->fd,
-                                                  &file->f_lseek,
-                                                  external_path,
-                                                  flags) == STD_RET_OK) {
+                                                   &file->f_extra_data,
+                                                   &file->fd,
+                                                   &file->f_lseek,
+                                                   external_path,
+                                                   flags) == STD_RET_OK) {
 
                                 file->FS_hdl = fs->handle;
                                 file->FS_if  = fs->interface;
-
-                                if (strncmp("r", mode, 2) != 0) {
-                                        file->f_flag.wr = true;
-                                }
-
-                                if (  strncmp("w", mode, 2) != 0
-                                   && strncmp("a", mode, 2) != 0) {
-                                        file->f_flag.rd = true;
-                                }
-
-                                file->self = file;
+                                file->f_flag = fflags;
+                                file->self   = file;
                         }
 
                         restore_priority(priority);
@@ -882,6 +883,12 @@ size_t _vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 
         if (ptr && size && count && is_file_valid(file)) {
                 if (file->f_flag.wr) {
+                        // move seek to the end of file if "a+" (wr+rd+app) mode is using
+                        if (file->f_flag.append && file->f_flag.rd && file->f_flag.seekmod) {
+                                _vfs_fseek(file, 0, VFS_SEEK_END);
+                                file->f_flag.seekmod = false;
+                        }
+
                         n = file->FS_if->fs_write(file->FS_hdl,
                                                   file->f_extra_data,
                                                   file->fd,
@@ -975,6 +982,10 @@ int _vfs_fseek(FILE *file, i64_t offset, int mode)
         struct stat stat;
 
         if (is_file_valid(file) && mode <= VFS_SEEK_END) {
+                if (file->f_flag.append && file->f_flag.wr && !file->f_flag.rd) {
+                        return 0;
+                }
+
                 if (mode == VFS_SEEK_END) {
                         stat.st_size = 0;
                         if (_vfs_fstat(file, &stat) != 0) {
@@ -989,8 +1000,9 @@ int _vfs_fseek(FILE *file, i64_t offset, int mode)
                 default: return -1;
                 }
 
-                file->f_flag.eof   = false;
-                file->f_flag.error = false;
+                file->f_flag.eof     = false;
+                file->f_flag.error   = false;
+                file->f_flag.seekmod = true;
 
                 return 0;
         }
@@ -1393,34 +1405,46 @@ static inline void restore_priority(int priority)
  * @brief Function convert file open mode string to flags
  *        Function set errno: EINVAL
  *
- * @param[in] *str      file open mode string
+ * @param[in]  str      file open mode string
+ * @param[out] fflags   file flags (for internal file use)
  *
  * @return file open flags, 0 if error
  */
 //==============================================================================
-static vfs_open_flags_t file_mode_str_to_flags(const char *str)
+static vfs_open_flags_t file_mode_str_to_flags(const char *str, vfs_file_flags_t *fflags)
 {
         if (strcmp("r", str) == 0 || strcmp("rb", str) == 0) {
+                fflags->rd = true;
                 return (O_RDONLY);
         }
 
         if (strcmp("r+", str) == 0 || strcmp("rb+", str) == 0) {
+                fflags->rd = true;
+                fflags->wr = true;
                 return (O_RDWR);
         }
 
         if (strcmp("w", str) == 0 || strcmp("wb", str) == 0) {
+                fflags->wr = true;
                 return (O_WRONLY | O_CREATE);
         }
 
         if (strcmp("w+", str) == 0 || strcmp("wb+", str) == 0) {
+                fflags->rd = true;
+                fflags->wr = true;
                 return (O_RDWR | O_CREATE);
         }
 
         if (strcmp("a", str) == 0 || strcmp("ab", str) == 0) {
+                fflags->wr     = true;
+                fflags->append = true;
                 return (O_WRONLY | O_CREATE | O_APPEND);
         }
 
         if (strcmp("a+", str) == 0 || strcmp("ab+", str) == 0) {
+                fflags->rd     = true;
+                fflags->wr     = true;
+                fflags->append = true;
                 return (O_RDWR | O_CREATE | O_APPEND);
         }
 
