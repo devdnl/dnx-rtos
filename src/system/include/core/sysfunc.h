@@ -670,7 +670,7 @@ static inline int _sys_closedir(DIR *dir)
  * @return element attributes
  */
 //==============================================================================
-static inline dirent_t _sys_readdir(DIR *dir)
+static inline dirent_t *_sys_readdir(DIR *dir)
 {
         return _vfs_readdir(dir);
 }

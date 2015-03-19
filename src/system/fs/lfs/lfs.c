@@ -86,7 +86,7 @@ static node_t      *new_node                   (node_t *nodebase, char *filename
 static stdret_t     delete_node                (node_t *base, node_t *target, u32_t position);
 static node_t      *get_node                   (const char *path, node_t *startnode, i32_t deep, i32_t *item);
 static uint         get_path_deep              (const char *path);
-static dirent_t     lfs_readdir                (void *fs_handle, DIR *dir);
+static dirent_t    *lfs_readdir                (void *fs_handle, DIR *dir);
 static stdret_t     lfs_closedir               (void *fs_handle, DIR *dir);
 static stdret_t     add_node_to_open_files_list(struct LFS_data *lfs, node_t *base_node, node_t *node);
 
@@ -463,16 +463,14 @@ static stdret_t lfs_closedir(void *fs_handle, DIR *dir)
  * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory object
  *
- * @return element attributes
+ * @return Pointer element attributes
  */
 //==============================================================================
-static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
+static dirent_t *lfs_readdir(void *fs_handle, DIR *dir)
 {
         struct LFS_data *lfs = fs_handle;
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         mutex_force_lock(lfs->resource_mtx);
 
@@ -485,12 +483,13 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
                         dev_stat.st_size = 0;
                         _sys_driver_stat((dev_t)node->data, &dev_stat);
                         node->size = dev_stat.st_size;
-                        dirent.dev = (dev_t)node->data;
+                        dir->dirent.dev = (dev_t)node->data;
                 }
 
-                dirent.filetype = node->type;
-                dirent.name     = node->name;
-                dirent.size     = node->size;
+                dir->dirent.filetype = node->type;
+                dir->dirent.name     = node->name;
+                dir->dirent.size     = node->size;
+                dirent               = &dir->dirent;
         }
 
         _sys_mutex_unlock(lfs->resource_mtx);

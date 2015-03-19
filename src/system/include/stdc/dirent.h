@@ -146,8 +146,8 @@ static inline int closedir(DIR *dir)
  * DIR *dir = opendir(path);
  * if (dir) {
  *         errno = 0;
- *         dirent_t dirent = readdir(dir);
- *         while (dirent.name != NULL) {
+ *         dirent_t *dirent = readdir(dir);
+ *         while (dirent->name != NULL) {
  *                 // ...
  *         }
  *
@@ -157,7 +157,7 @@ static inline int closedir(DIR *dir)
  * // ...
  */
 //==============================================================================
-static inline dirent_t readdir(DIR *dir)
+static inline dirent_t *readdir(DIR *dir)
 {
         return _vfs_readdir(dir);
 }
