@@ -46,6 +46,9 @@ _IMPORT_FILE_SYSTEM(fatfs);
 #if (__ENABLE_DEVFS__)
 _IMPORT_FILE_SYSTEM(devfs);
 #endif
+#if (__ENABLE_EXT4FS__)
+_IMPORT_FILE_SYSTEM(ext4fs);
+#endif
 
 /*==============================================================================
   Exported objects
@@ -62,6 +65,9 @@ const struct _FS_entry _FS_table[] = {
         #endif
         #if (__ENABLE_DEVFS__)
         _FILE_SYSTEM_INTERFACE(devfs),
+        #endif
+        #if (__ENABLE_EXT4FS__)
+        _FILE_SYSTEM_INTERFACE(ext4fs),
         #endif
 };
 
