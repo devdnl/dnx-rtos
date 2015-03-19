@@ -83,11 +83,11 @@ struct file_info {
 ==============================================================================*/
 static stdret_t    procfs_closedir_freedd  (void *fs_handle, DIR *dir);
 static stdret_t    procfs_closedir_generic (void *fs_handle, DIR *dir);
-static dirent_t    procfs_readdir_root     (void *fs_handle, DIR *dir);
-static dirent_t    procfs_readdir_taskname (void *fs_handle, DIR *dir);
-static dirent_t    procfs_readdir_bin      (void *fs_handle, DIR *dir);
-static dirent_t    procfs_readdir_taskid   (void *fs_handle, DIR *dir);
-static dirent_t    procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
+static dirent_t   *procfs_readdir_root     (void *fs_handle, DIR *dir);
+static dirent_t   *procfs_readdir_taskname (void *fs_handle, DIR *dir);
+static dirent_t   *procfs_readdir_bin      (void *fs_handle, DIR *dir);
+static dirent_t   *procfs_readdir_taskid   (void *fs_handle, DIR *dir);
+static dirent_t   *procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
 static inline void mutex_force_lock        (mutex_t *mtx);
 static stdret_t    add_file_info_to_list   (struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd);
 static uint        get_file_content        (struct file_info *file_info, char *buff, uint size);
@@ -849,45 +849,47 @@ API_FS_SYNC(procfs, void *fs_handle)
  * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
- * @return directory entry
+ * @return Pointer to directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
+static dirent_t *procfs_readdir_root(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t dirent;
-        dirent.name     = NULL;
-        dirent.filetype = FILE_TYPE_DIR;
-        dirent.size     = 0;
+        dirent_t *dirent = &dir->dirent;
+
+        dir->dirent.filetype = FILE_TYPE_DIR;
+        dir->dirent.size     = 0;
 
         switch (dir->f_seek++) {
-        case 0: dirent.name = DIR_TASKID_STR;
+        case 0:
+                dir->dirent.name = DIR_TASKID_STR;
                 break;
 
         case 1:
-                dirent.name = DIR_TASKNAME_STR;
+                dir->dirent.name = DIR_TASKNAME_STR;
                 break;
 
-        case  2:
-                dirent.name = DIR_BIN_STR;
+        case 2:
+                dir->dirent.name = DIR_BIN_STR;
                 break;
 
-        case  3: {
+        case 3: {
                 char *data = calloc(FILE_DATA_SIZE, 1);
                 if (data) {
                         struct file_info file_info;
                         file_info.file_content = FILE_CONTENT_CPUINFO;
-                        dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                        dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
                         free(data);
                 }
 
-                dirent.name     = FILE_CPUINFO_STR;
-                dirent.filetype = FILE_TYPE_REGULAR;
+                dir->dirent.name     = FILE_CPUINFO_STR;
+                dir->dirent.filetype = FILE_TYPE_REGULAR;
                 break;
         }
 
         default:
+                dirent = NULL;
                 break;
         }
 
@@ -904,21 +906,21 @@ static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
+static dirent_t *procfs_readdir_taskname(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         struct _sysmoni_taskstat taskdata;
         if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
-                dirent.filetype = FILE_TYPE_REGULAR;
-                dirent.name     = taskdata.task_name;
-                dirent.size     = 0;
+                dir->dirent.filetype = FILE_TYPE_REGULAR;
+                dir->dirent.name     = taskdata.task_name;
+                dir->dirent.size     = 0;
 
                 dir->f_seek++;
+
+                dirent = &dir->dirent;
         } else {
                 errno = 0;
         }
@@ -936,20 +938,20 @@ static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
+static dirent_t *procfs_readdir_bin(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
-                dirent.filetype = FILE_TYPE_PROGRAM;
-                dirent.name     = _sys_get_programs_table()[dir->f_seek].program_name;
-                dirent.size     = 0;
+                dir->dirent.filetype = FILE_TYPE_PROGRAM;
+                dir->dirent.name     = _sys_get_programs_table()[dir->f_seek].program_name;
+                dir->dirent.size     = 0;
 
                 dir->f_seek++;
+
+                dirent = &dir->dirent;
         }
 
         return dirent;
@@ -965,24 +967,24 @@ static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
+static dirent_t *procfs_readdir_taskid(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
                 struct _sysmoni_taskstat taskdata;
                 if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
                         _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
-                        dirent.filetype = FILE_TYPE_DIR;
-                        dirent.name     = dir->f_dd;
-                        dirent.size     = 0;
+                        dir->dirent.filetype = FILE_TYPE_DIR;
+                        dir->dirent.name     = dir->f_dd;
+                        dir->dirent.size     = 0;
 
                         dir->f_seek++;
+
+                        dirent = &dir->dirent;
                 }
         }
 
@@ -999,26 +1001,24 @@ static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
+static dirent_t *procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         if (dir->f_seek >= FILE_CONTENT_COUNT) {
-                return dirent;
+                return NULL;
         }
 
-        dirent.filetype = FILE_TYPE_REGULAR;
+        dir->dirent.filetype = FILE_TYPE_REGULAR;
 
         switch (dir->f_seek) {
-        case FILE_CONTENT_TASK_NAME     : dirent.name = FILE_TASK_NAME_STR; break;
-        case FILE_CONTENT_TASK_PRIO     : dirent.name = FILE_TASK_PRIO_STR; break;
-        case FILE_CONTENT_TASK_FREESTACK: dirent.name = FILE_TASK_FREESTACK_STR; break;
-        case FILE_CONTENT_TASK_USEDMEM  : dirent.name = FILE_TASK_USEDMEM_STR; break;
-        case FILE_CONTENT_TASK_OPENFILES: dirent.name = FILE_TASK_OPENFILES_STR; break;
+        case FILE_CONTENT_TASK_NAME     : dir->dirent.name = FILE_TASK_NAME_STR; break;
+        case FILE_CONTENT_TASK_PRIO     : dir->dirent.name = FILE_TASK_PRIO_STR; break;
+        case FILE_CONTENT_TASK_FREESTACK: dir->dirent.name = FILE_TASK_FREESTACK_STR; break;
+        case FILE_CONTENT_TASK_USEDMEM  : dir->dirent.name = FILE_TASK_USEDMEM_STR; break;
+        case FILE_CONTENT_TASK_OPENFILES: dir->dirent.name = FILE_TASK_OPENFILES_STR; break;
         }
 
         char *data = calloc(FILE_DATA_SIZE, 1);
@@ -1027,10 +1027,13 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
                 file_info.file_content = dir->f_seek;
                 file_info.taskhdl      = dir->f_dd;
 
-                dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+
+                dirent = &dir->dirent;
+
                 free(data);
         } else {
-                dirent.size = 0;
+                dir->dirent.size = 0;
         }
 
         dir->f_seek++;

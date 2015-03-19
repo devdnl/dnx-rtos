@@ -4,6 +4,7 @@ New Features, Improvements:
 
 Fixed Bugs:
 - fopen(): incorrect behavior of "a" and "a+" modes (issue #156)
+- readdir(): return object instead of pointer to object (issue #157)
 
 dnx RTOS 1.6.0
 ==============
