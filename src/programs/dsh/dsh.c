@@ -191,13 +191,13 @@ static bool command_hint()
                         *tabstart = '\0';
 
                         if (strlen(global->line) != 0) {
-                                dirent_t dirent;
+                                dirent_t *dirent;
                                 int cnt  = 0;
 
                                 DIR *dir = opendir("/proc/bin");
                                 if (dir) {
-                                        while ((dirent = readdir(dir)).name != NULL) {
-                                                if (strncmp(dirent.name, global->line, strlen(global->line)) == 0) {
+                                        while ((dirent = readdir(dir))) {
+                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
                                                         cnt++;
                                                 }
                                         }
@@ -211,13 +211,13 @@ static bool command_hint()
                                                 puts("");
                                         }
 
-                                        while ((dirent = readdir(dir)).name != NULL) {
+                                        while ((dirent = readdir(dir))) {
 
-                                                if (strncmp(dirent.name, global->line, strlen(global->line)) == 0) {
+                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
                                                         if (cnt > 1) {
-                                                                printf("%s ", dirent.name);
+                                                                printf("%s ", dirent->name);
                                                         } else  {
-                                                                ioctl(global->input, IOCTL_TTY__SET_EDITLINE, dirent.name);
+                                                                ioctl(global->input, IOCTL_TTY__SET_EDITLINE, dirent->name);
                                                                 break;
                                                         }
                                                 }

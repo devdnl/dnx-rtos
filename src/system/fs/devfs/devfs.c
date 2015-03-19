@@ -68,7 +68,7 @@ struct devfs {
   Local function prototypes
 ==============================================================================*/
 static stdret_t            closedir                     (void *fs_handle, DIR *dir);
-static dirent_t            readdir                      (void *fs_handle, DIR *dir);
+static dirent_t           *readdir                      (void *fs_handle, DIR *dir);
 static struct devfs_chain *chain_new                    (void);
 static void                chain_delete                 (struct devfs_chain *chain);
 static struct devnode     *chain_get_node_by_path       (struct devfs_chain *chain, const char *path);
@@ -628,17 +628,14 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
  *
- * @return directory entry description object
+ * @return Pointer to directory entry description object
  */
 //==============================================================================
-static dirent_t readdir(void *fs_handle, DIR *dir)
+static dirent_t *readdir(void *fs_handle, DIR *dir)
 {
         struct devfs *devfs = fs_handle;
 
-        dirent_t dirent;
-        dirent.filetype = FILE_TYPE_REGULAR;
-        dirent.name     = NULL;
-        dirent.size     = 0;
+        dirent_t *dirent = NULL;
 
         if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
@@ -647,26 +644,30 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                         if (node->type == FILE_TYPE_DRV) {
                                 struct vfs_dev_stat devstat;
                                 if (_sys_driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
-                                        dirent.size = devstat.st_size;
+                                        dir->dirent.size = devstat.st_size;
                                 } else {
-                                        dirent.size = 0;
+                                        dir->dirent.size = 0;
                                 }
-                                dirent.dev      = node->IF.drv;
-                                dirent.filetype = FILE_TYPE_DRV;
+                                dir->dirent.dev      = node->IF.drv;
+                                dir->dirent.filetype = FILE_TYPE_DRV;
 
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 int n = _sys_pipe_get_length(node->IF.pipe);
                                 if (n >= 0) {
-                                        dirent.size = n;
+                                        dir->dirent.size = n;
                                 } else {
-                                        dirent.size = 0;
+                                        dir->dirent.size = 0;
                                 }
 
-                                dirent.filetype = FILE_TYPE_PIPE;
+                                dir->dirent.filetype = FILE_TYPE_PIPE;
+                        } else {
+                                dir->dirent.filetype = FILE_TYPE_REGULAR;
                         }
 
-                        dirent.name = node->path;
+                        dir->dirent.name = node->path;
                         dir->f_seek++;
+
+                        dirent = &dir->dirent;
                 } else {
                         errno = 0;
                 }

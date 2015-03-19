@@ -56,9 +56,9 @@ struct fatfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t fatfs_closedir  (void *fs_handle, DIR *dir);
-static dirent_t fatfs_readdir   (void *fs_handle, DIR *dir);
-static int      handle_error    (FRESULT fresult);
+static stdret_t  fatfs_closedir  (void *fs_handle, DIR *dir);
+static dirent_t *fatfs_readdir   (void *fs_handle, DIR *dir);
+static int       handle_error    (FRESULT fresult);
 
 /*==============================================================================
   Local object definitions
@@ -543,19 +543,16 @@ static stdret_t fatfs_closedir(void *fs_handle, DIR *dir)
  * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory info
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return Pointer to object descriptor (or NULL if error or no objects)
  */
 //==============================================================================
-static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
+static dirent_t *fatfs_readdir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
         struct fatdir *fatdir = dir->f_dd;
 
-        dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent_t *dirent = NULL;
 
         FILEINFO fat_file_info;
 #if _LIBFAT_USE_LFN != 0
@@ -571,9 +568,11 @@ static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
 #else
                         memcpy(fatdir->name, fat_file_info.fname, 13);
 #endif
-                        dirent.name     = &fatdir->name[0];
-                        dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
-                        dirent.size     = fat_file_info.fsize;
+                        dir->dirent.name     = &fatdir->name[0];
+                        dir->dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                        dir->dirent.size     = fat_file_info.fsize;
+
+                        dirent = &dir->dirent;
                 }
         }
 

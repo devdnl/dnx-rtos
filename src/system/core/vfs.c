@@ -473,14 +473,12 @@ int _vfs_closedir(DIR *dir)
  *
  * @param[in] *dir                  directory object
  *
- * @return element attributes
+ * @return Pointer to element attributes
  */
 //==============================================================================
-dirent_t _vfs_readdir(DIR *dir)
+dirent_t *_vfs_readdir(DIR *dir)
 {
-        dirent_t direntry;
-        direntry.name = NULL;
-        direntry.size = 0;
+        dirent_t *direntry = NULL;
 
         if (is_dir_valid(dir) && dir->f_readdir) {
                 int priority = increase_task_priority();

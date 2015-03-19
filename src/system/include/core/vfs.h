@@ -116,13 +116,14 @@ typedef struct dirent {
 
 /** directory type */
 struct vfs_dir {
-        dirent_t      (*f_readdir)(void *fshdl, struct vfs_dir *dir);
+        dirent_t     *(*f_readdir)(void *fshdl, struct vfs_dir *dir);
         stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void           *f_dd;
         void           *f_handle;
         struct vfs_dir *self;
         size_t          f_items;
         size_t          f_seek;
+        dirent_t        dirent;
 };
 
 typedef struct vfs_dir DIR;
@@ -243,7 +244,7 @@ extern int       _vfs_mkdir       (const char*, mode_t);
 extern int       _vfs_mkfifo      (const char*, mode_t);
 extern DIR      *_vfs_opendir     (const char*);
 extern int       _vfs_closedir    (DIR*);
-extern dirent_t  _vfs_readdir     (DIR*);
+extern dirent_t *_vfs_readdir     (DIR*);
 extern int       _vfs_remove      (const char*);
 extern int       _vfs_rename      (const char*, const char*);
 extern int       _vfs_chmod       (const char*, mode_t);

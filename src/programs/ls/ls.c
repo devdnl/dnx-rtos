@@ -89,12 +89,12 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
         DIR *dir = opendir(path);
         if (dir) {
                 errno = 0;
-                dirent_t dirent = readdir(dir);
-                while (dirent.name != NULL) {
+                dirent_t *dirent = readdir(dir);
+                while (dirent) {
 
                         const char *type;
 
-                        switch (dirent.filetype) {
+                        switch (dirent->filetype) {
                         case FILE_TYPE_DIR:     type = FONT_COLOR_LIGHT_BLUE"d";  break;
                         case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"c";     break;
                         case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";        break;
@@ -106,27 +106,27 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         u32_t size;
                         const char *unit;
-                        if (dirent.size >= (u64_t)(10*GiB)) {
-                                size = CONVERT_TO_GiB(dirent.size);
+                        if (dirent->size >= (u64_t)(10*GiB)) {
+                                size = CONVERT_TO_GiB(dirent->size);
                                 unit = "GiB";
-                        } else if (dirent.size >= 10*MiB) {
-                                size = CONVERT_TO_MiB(dirent.size);
+                        } else if (dirent->size >= 10*MiB) {
+                                size = CONVERT_TO_MiB(dirent->size);
                                 unit = "MiB";
-                        } else if (dirent.size >= 10*KiB) {
-                                size = CONVERT_TO_KiB(dirent.size);
+                        } else if (dirent->size >= 10*KiB) {
+                                size = CONVERT_TO_KiB(dirent->size);
                                 unit = "KiB";
                         } else {
-                                size = dirent.size;
+                                size = dirent->size;
                                 unit = "B";
                         }
 
-                        if (dirent.filetype == FILE_TYPE_DRV) {
+                        if (dirent->filetype == FILE_TYPE_DRV) {
                                 printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%i"
                                        CURSOR_BACKWARD(100)CURSOR_FORWARD(15)"%s"RESET_ATTRIBUTES"\n",
-                                       type, size, unit, dirent.dev, dirent.name);
+                                       type, size, unit, dirent->dev, dirent->name);
                         } else {
                                 printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(15)"%s"RESET_ATTRIBUTES"\n",
-                                       type, size, unit, dirent.name);
+                                       type, size, unit, dirent->name);
                         }
 
                         errno  = 0;
