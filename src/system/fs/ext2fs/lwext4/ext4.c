@@ -195,6 +195,19 @@ static int ext4_link(ext4_fs_t *ctx, struct ext4_inode_ref *parent,
     return EOK;
 }
 
+static const char *correct_path(const char *path)
+{
+    if (path[0] == '/') {
+        if (strlen(path) == 1) {
+            path = ".";
+        } else {
+            path += 1;
+        }
+    }
+
+    return path;
+}
+
 static int ext4_unlink(ext4_fs_t *ctx,
     struct ext4_inode_ref *parent, struct ext4_inode_ref *child_inode_ref,
     const char *name, uint32_t name_len)
@@ -369,13 +382,7 @@ static int ext4_generic_open(ext4_fs_t *ctx, ext4_file *f, const char *path,
     if(parent_inode)
         *parent_inode = ref.index;
 
-    if (path[0] == '/') {
-        if (strlen(path) == 1) {
-            path = ".";
-        } else {
-            path += 1;
-        }
-    }
+    path = correct_path(path);
 
     int len = ext4_path_check(path, &is_goal);
 
@@ -522,6 +529,8 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
 
     if(!ctx)
         return ENOENT;
+
+    path = correct_path(path);
 
     lock(ctx);
     r = ext4_generic_open(ctx, &f, path, O_RDONLY, true, &parent_inode);
@@ -1064,6 +1073,8 @@ int ext4_dir_rm(ext4_fs_t *ctx, const char *path)
     if (!ctx || !path)
         return EINVAL;
 
+    path = correct_path(path);
+
     lock(ctx);
 
     /*Check if exist.*/
@@ -1253,7 +1264,7 @@ int ext4_dir_open(ext4_fs_t *ctx, ext4_dir *d, const char *path)
         return EINVAL;
 
     lock(ctx);
-    int r = ext4_generic_open(ctx, &d->f, path, O_RDONLY, false, 0);
+    int r = ext4_generic_open(ctx, &d->f, path, O_RDONLY, false, NULL);
     unlock(ctx);
     return r;
 }

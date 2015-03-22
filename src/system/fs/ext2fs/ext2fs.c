@@ -42,6 +42,7 @@ typedef struct {
         ext4_fs_t *fsctx;
         mutex_t   *mtx;
         FILE      *srcfile;
+        uint       openfiles; // TODO
 } ext2fs_t;
 
 /*==============================================================================
@@ -112,8 +113,11 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
                         hdl->srcfile = srcfile;
                         hdl->fsctx   = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
                         if (hdl->fsctx) {
+//                                ext4_cache_write_back(hdl->fsctx, true); TEST
                                 *fs_handle = hdl;
                                 return STD_RET_OK;
+                        } else {
+                                errno = ENOMEM;
                         }
 
                         _sys_mutex_delete(hdl->mtx);
@@ -141,6 +145,7 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
+//        ext4_cache_write_back(hdl->fsctx, false); TEST
         ext4_umount(hdl->fsctx);
         _sys_mutex_delete(hdl->mtx);
         _sys_fclose(hdl->srcfile);
@@ -166,12 +171,25 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(path);
-        UNUSED_ARG(flags);
+
+        ext2fs_t *hdl = fs_handle;
+
+        ext4_file *file = malloc(sizeof(ext4_file));
+        if (file) {
+                int r = ext4_fopen(hdl->fsctx, file, path, flags);
+                if (r == EOK) {
+                        *fpos  = ext4_ftell(hdl->fsctx, file);
+                        *extra = file;
+                        hdl->openfiles++;
+                        return STD_RET_OK;
+                } else {
+                        errno = r;
+                }
+
+                free(file);
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -190,10 +208,19 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 //==============================================================================
 API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
         UNUSED_ARG(fd);
         UNUSED_ARG(force);
+
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_fclose(hdl->fsctx, extra);
+        if (r == EOK) {
+                free(extra);
+                return STD_RET_OK;
+        } else {
+                errno = r;
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -214,14 +241,25 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(ext2fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-        UNUSED_ARG(count);
-        UNUSED_ARG(src);
-        return 0;
+
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
+        if (r != EOK) {
+                errno = r;
+                return -1;
+        }
+
+        u32_t wrcnt = 0;
+        r = ext4_fwrite(hdl->fsctx, extra, src, count, &wrcnt);
+        if (r == EOK) {
+                return wrcnt;
+        } else {
+                errno = r;
+                return -1;
+        }
 }
 
 //==============================================================================
@@ -241,14 +279,25 @@ API_FS_WRITE(ext2fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
 //==============================================================================
 API_FS_READ(ext2fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
-        UNUSED_ARG(count);
-        UNUSED_ARG(dst);
-        return 0;
+
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
+        if (r != EOK) {
+                errno = r;
+                return -1;
+        }
+
+        u32_t rdcnt = 0;
+        r = ext4_fread(hdl->fsctx, extra, dst, count, &rdcnt);
+        if (r == EOK) {
+                return rdcnt;
+        } else {
+                errno = r;
+                return -1;
+        }
 }
 
 //==============================================================================
@@ -271,6 +320,8 @@ API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
         UNUSED_ARG(fd);
         UNUSED_ARG(request);
         UNUSED_ARG(arg);
+
+        errno = EPERM;
         return STD_RET_ERROR;
 }
 
@@ -291,7 +342,8 @@ API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        return STD_RET_ERROR;
+
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -309,11 +361,26 @@ API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        UNUSED_ARG(stat);
-        return STD_RET_OK;
+
+        ext2fs_t *hdl = fs_handle;
+
+        struct ext4_filestat filestat; // FIXME allocate to use less stack
+        int r = ext4_fstat(hdl->fsctx, extra, &filestat);
+        if (r == EOK) {
+
+                stat->st_dev   = filestat.st_dev;
+                stat->st_gid   = filestat.st_gid;
+                stat->st_uid   = filestat.st_uid;
+                stat->st_mode  = filestat.st_mode;
+                stat->st_mtime = filestat.st_mtime;
+                stat->st_size  = filestat.st_size;
+
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -330,10 +397,16 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
-        return STD_RET_ERROR;
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_dir_mk(hdl->fsctx, path);
+        if (r == EOK) {
+                ext4_chmod(hdl->fsctx, path, mode);
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -353,6 +426,8 @@ API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
+
+        errno = EPERM;
         return STD_RET_ERROR;
 }
 
@@ -373,6 +448,8 @@ API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
         UNUSED_ARG(dev);
+
+        errno = EPERM;
         return STD_RET_ERROR;
 }
 
@@ -394,7 +471,8 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
 
         ext4_dir *ext4dir = malloc(sizeof(ext4_dir));
         if (ext4dir) {
-                if (ext4_dir_open(hdl->fsctx, ext4dir, path) == EOK) {
+                int r = ext4_dir_open(hdl->fsctx, ext4dir, path);
+                if (r == EOK) {
                         dir->f_handle   = hdl;
                         dir->f_closedir = closedir;
                         dir->f_readdir  = readdir;
@@ -402,6 +480,8 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
                         dir->f_seek     = 0;
                         dir->f_items    = 0;
                         return STD_RET_OK;
+                } else {
+                        errno = r;
                 }
 
                 free(ext4dir);
@@ -425,10 +505,12 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
 
-        if (ext4_dir_close(hdl->fsctx, dir->f_dd) == EOK) {
+        int r = ext4_dir_close(hdl->fsctx, dir->f_dd);
+        if (r == EOK) {
                 free(dir->f_dd);
                 return STD_RET_OK;
         } else {
+                errno = r;
                 return STD_RET_ERROR;
         }
 }
@@ -468,7 +550,7 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
                 dir->dirent.dev      = 0;
                 dir->dirent.filetype = vfsft[ext4_dirent->inode_type];
                 dir->dirent.name     = static_cast(char*, ext4_dirent->name);
-                dir->dirent.size     = 0; // FIXME
+                dir->dirent.size     = ((ext4_dir*)(dir->f_dd))->f.fsize; // FIXME
 
                 return &dir->dirent;
         } else {
@@ -489,8 +571,19 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_fremove(hdl->fsctx, path);
+        if (r == EOK) {
+                return STD_RET_OK;
+        }
+
+        r = ext4_dir_rm(hdl->fsctx, path);
+        if (r == EOK) {
+                return STD_RET_OK;
+        }
+
+        errno = r;
         return STD_RET_ERROR;
 }
 
@@ -508,9 +601,9 @@ API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(old_name);
-        UNUSED_ARG(new_name);
+        ext2fs_t *hdl = fs_handle;
+
+        // TODO ?
         return STD_RET_ERROR;
 }
 
@@ -528,10 +621,15 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
 //==============================================================================
 API_FS_CHMOD(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
-        return STD_RET_ERROR;
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_chmod(hdl->fsctx, path, mode);
+        if (r == EOK) {
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -549,11 +647,15 @@ API_FS_CHMOD(ext2fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_CHOWN(ext2fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(owner);
-        UNUSED_ARG(group);
-        return STD_RET_ERROR;
+        ext2fs_t *hdl = fs_handle;
+
+        int r = ext4_chown(hdl->fsctx, path, owner, group);
+        if (r == EOK) {
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -570,17 +672,24 @@ API_FS_CHOWN(ext2fs, void *fs_handle, const char *path, uid_t owner, gid_t group
 //==============================================================================
 API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        ext2fs_t *hdl = fs_handle;
 
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
-        stat->st_mtime = 0;
-        stat->st_size  = 0;
-        stat->st_uid   = 0;
+        struct ext4_filestat filestat; // FIXME allocate to use less stack
+        int r = ext4_stat(hdl->fsctx, path, &filestat);
+        if (r == EOK) {
 
-        return STD_RET_OK;
+                stat->st_dev   = filestat.st_dev;
+                stat->st_gid   = filestat.st_gid;
+                stat->st_uid   = filestat.st_uid;
+                stat->st_mode  = filestat.st_mode;
+                stat->st_mtime = filestat.st_mtime;
+                stat->st_size  = filestat.st_size;
+
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -596,17 +705,25 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(statfs);
+        ext2fs_t *hdl = fs_handle;
 
-        statfs->f_bfree  = 0;
-        statfs->f_blocks = 0;
-        statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
-        statfs->f_type   = 1;
-        statfs->f_fsname = "ext4fs";
+        struct ext4_fs_stats stat; // FIXME allocate to use less stack
+        int r = ext4_statfs(hdl->fsctx, &stat);
+        if (r == EOK) {
 
-        return STD_RET_OK;
+                statfs->f_bfree  = stat.free_blocks_count;
+                statfs->f_blocks = stat.blocks_count;
+                statfs->f_bsize  = stat.block_size;
+                statfs->f_ffree  = stat.free_inodes_count;
+                statfs->f_files  = stat.inodes_count;
+                statfs->f_type   = 2;
+                statfs->f_fsname = "ext2fs";
+
+                return STD_RET_OK;
+        } else {
+                errno = r;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -620,7 +737,10 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(ext2fs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+//        ext2fs_t *hdl = fs_handle;
+//
+//        ext4_cache_write_back(hdl->fsctx, false); TEST
+//        ext4_cache_write_back(hdl->fsctx, true);
 }
 
 //==============================================================================
