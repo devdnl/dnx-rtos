@@ -127,6 +127,7 @@ extern "C" {
 ==============================================================================*/
 /** file type */
 typedef enum tfile {
+        FILE_TYPE_UNKNOWN,
         FILE_TYPE_REGULAR,
         FILE_TYPE_DIR,
         FILE_TYPE_DRV,
@@ -147,12 +148,12 @@ typedef struct dirent {
 struct vfs_dir {
         dirent_t     *(*f_readdir)(void *fshdl, struct vfs_dir *dir);
         stdret_t      (*f_closedir)(void *fshdl, struct vfs_dir *dir);
-        void           *f_dd;
-        void           *f_handle;
-        struct vfs_dir *self;
-        size_t          f_items;
-        size_t          f_seek;
-        dirent_t        dirent;
+        void           *f_dd;           //!< Directory descriptor (FS object)
+        void           *f_handle;       //!< File System handle
+        struct vfs_dir *self;           //!< object validation pointer
+        size_t          f_items;        //!< number of items
+        size_t          f_seek;         //!< seek
+        dirent_t        dirent;         //!< directory entry data
 };
 
 typedef struct vfs_dir DIR;
