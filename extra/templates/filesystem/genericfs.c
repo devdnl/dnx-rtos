@@ -99,13 +99,13 @@ API_FS_RELEASE(<!fs_name!>, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags
+ * @param[in]            flags                  file open flags (O_...)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         return STD_RET_ERROR;
 }

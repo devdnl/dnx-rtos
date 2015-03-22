@@ -73,7 +73,8 @@ static dirent_t *readdir (void *fs_handle, DIR *dir);
 //==============================================================================
 API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
 {
-
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(src_path);
 
         return STD_RET_ERROR;
 }
@@ -90,6 +91,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(ext4fs, void *fs_handle)
 {
+        UNUSED_ARG(fs_handle);
         return STD_RET_OK;
 }
 
@@ -108,8 +110,14 @@ API_FS_RELEASE(ext4fs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(ext4fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(ext4fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(fpos);
+        UNUSED_ARG(path);
+        UNUSED_ARG(flags);
         return STD_RET_ERROR;
 }
 
@@ -128,6 +136,10 @@ API_FS_OPEN(ext4fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 //==============================================================================
 API_FS_CLOSE(ext4fs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(force);
         return STD_RET_ERROR;
 }
 
@@ -148,6 +160,13 @@ API_FS_CLOSE(ext4fs, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(ext4fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
+        UNUSED_ARG(count);
+        UNUSED_ARG(src);
         return 0;
 }
 
@@ -168,6 +187,13 @@ API_FS_WRITE(ext4fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
 //==============================================================================
 API_FS_READ(ext4fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
+        UNUSED_ARG(count);
+        UNUSED_ARG(dst);
         return 0;
 }
 
@@ -186,6 +212,11 @@ API_FS_READ(ext4fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
 //==============================================================================
 API_FS_IOCTL(ext4fs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(request);
+        UNUSED_ARG(arg);
         return STD_RET_ERROR;
 }
 
@@ -203,6 +234,9 @@ API_FS_IOCTL(ext4fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
 //==============================================================================
 API_FS_FLUSH(ext4fs, void *fs_handle, void *extra, fd_t fd)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
         return STD_RET_ERROR;
 }
 
@@ -221,6 +255,10 @@ API_FS_FLUSH(ext4fs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(ext4fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(stat);
         return STD_RET_OK;
 }
 
@@ -238,6 +276,9 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
         return STD_RET_ERROR;
 }
 
@@ -255,6 +296,9 @@ API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(ext4fs, void *fs_handle, const char *path, mode_t mode)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
         return STD_RET_ERROR;
 }
 
@@ -272,6 +316,9 @@ API_FS_MKFIFO(ext4fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(dev);
         return STD_RET_ERROR;
 }
 
@@ -289,6 +336,10 @@ API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(dir);
+
         dir->f_closedir = closedir;
         dir->f_readdir  = readdir;
         // ...
@@ -309,6 +360,8 @@ API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static stdret_t closedir(void *fs_handle, DIR *dir)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
         return STD_RET_OK;
 }
 
@@ -326,6 +379,8 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static dirent_t *readdir(void *fs_handle, DIR *dir)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
         return NULL;
 }
 
@@ -342,6 +397,8 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
         return STD_RET_ERROR;
 }
 
@@ -359,6 +416,9 @@ API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_name)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(old_name);
+        UNUSED_ARG(new_name);
         return STD_RET_ERROR;
 }
 
@@ -376,6 +436,9 @@ API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_nam
 //==============================================================================
 API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
         return STD_RET_ERROR;
 }
 
@@ -394,6 +457,10 @@ API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_CHOWN(ext4fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(owner);
+        UNUSED_ARG(group);
         return STD_RET_ERROR;
 }
 
@@ -411,6 +478,9 @@ API_FS_CHOWN(ext4fs, void *fs_handle, const char *path, uid_t owner, gid_t group
 //==============================================================================
 API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+
         stat->st_dev   = 0;
         stat->st_gid   = 0;
         stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
@@ -434,6 +504,9 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
 {
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(statfs);
+
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
@@ -455,7 +528,7 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(ext4fs, void *fs_handle)
 {
-
+        UNUSED_ARG(fs_handle);
 }
 
 /*==============================================================================

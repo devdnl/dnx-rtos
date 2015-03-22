@@ -66,6 +66,35 @@ extern "C" {
 #define SEEK_END                                VFS_SEEK_END
 #endif
 
+/* file access flags */
+#ifndef O_RDONLY
+#define O_RDONLY                                00
+#endif
+
+#ifndef O_WRONLY
+#define O_WRONLY                                01
+#endif
+
+#ifndef O_RDWR
+#define O_RDWR                                  02
+#endif
+
+#ifndef O_CREAT
+#define O_CREAT                                 0100
+#endif
+
+#ifndef O_EXCL
+#define O_EXCL                                  0200
+#endif
+
+#ifndef O_TRUNC
+#define O_TRUNC                                 01000
+#endif
+
+#ifndef O_APPEND
+#define O_APPEND                                02000
+#endif
+
 /* modes */
 #define S_IRUSR                                 (4 << 0)
 #define S_IWUSR                                 (2 << 0)
@@ -173,20 +202,11 @@ struct vfs_fattr {
         bool non_blocking_wr:1;         /**< non-blocking file write access */
 };
 
-/** file open flags */
-typedef enum {
-        O_RDONLY = (1 << 0),            /**< read only                    */
-        O_WRONLY = (1 << 1),            /**< write only                   */
-        O_RDWR   = (1 << 2),            /**< read write                   */
-        O_CREATE = (1 << 3),            /**< create file (not for device) */
-        O_APPEND = (1 << 4)             /**< append data (not for device) */
-} vfs_open_flags_t;
-
 /** file system configuration */
 typedef struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
-        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags);
+        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
         ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
         ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
@@ -284,9 +304,9 @@ extern void      _vfs_sync        (void);
  * @return Filtered flags
  */
 //==============================================================================
-static inline vfs_open_flags_t vfs_filter_open_flags_for_device(vfs_open_flags_t flags)
+static inline u32_t vfs_filter_flags_for_device(u32_t flags)
 {
-        return (vfs_open_flags_t)(flags & (O_RDONLY | O_WRONLY | O_RDWR));
+        return (flags & (O_RDONLY | O_WRONLY | O_RDWR));
 }
 
 #ifdef __cplusplus

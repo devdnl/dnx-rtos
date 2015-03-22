@@ -51,7 +51,7 @@ extern "C" {
 #define _IMPORT_MODULE_INTERFACE(_modname)                                              \
 extern API_MOD_INIT(_modname, void**, u8_t, u8_t);                                      \
 extern API_MOD_RELEASE(_modname, void*);                                                \
-extern API_MOD_OPEN(_modname, void*, vfs_open_flags_t);                                 \
+extern API_MOD_OPEN(_modname, void*, u32_t);                                            \
 extern API_MOD_CLOSE(_modname, void*, bool);                                            \
 extern API_MOD_WRITE(_modname, void*, const u8_t*, size_t, fpos_t*, struct vfs_fattr);  \
 extern API_MOD_READ(_modname, void*, u8_t*, size_t, fpos_t*, struct vfs_fattr);         \
@@ -75,7 +75,7 @@ static const struct _driver_if _regdrv_##_modname##_interface = {               
 struct _driver_if {
         stdret_t (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
         stdret_t (*drv_release)(void *drvhdl);
-        stdret_t (*drv_open   )(void *drvhdl, vfs_open_flags_t flags);
+        stdret_t (*drv_open   )(void *drvhdl, u32_t flags);
         stdret_t (*drv_close  )(void *drvhdl, bool force);
         ssize_t  (*drv_write  )(void *drvhdl, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
         ssize_t  (*drv_read   )(void *drvhdl, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
@@ -103,7 +103,7 @@ typedef task_t *dev_lock_t;
 ==============================================================================*/
 extern int         _driver_init                 (const char*, const char*);
 extern int         _driver_release              (const char*);
-extern stdret_t    _driver_open                 (dev_t, vfs_open_flags_t);
+extern stdret_t    _driver_open                 (dev_t, u32_t);
 extern stdret_t    _driver_close                (dev_t, bool);
 extern ssize_t     _driver_write                (dev_t, const u8_t*, size_t, fpos_t*, struct vfs_fattr);
 extern ssize_t     _driver_read                 (dev_t, u8_t*, size_t, fpos_t*, struct vfs_fattr);

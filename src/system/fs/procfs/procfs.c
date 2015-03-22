@@ -195,7 +195,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         UNUSED_ARG(extra);
 

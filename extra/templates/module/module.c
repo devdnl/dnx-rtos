@@ -104,7 +104,7 @@ API_MOD_RELEASE(<!MODULE_NAME!>, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, u32_t flags)
 {
         return STD_RET_OK;
 }
