@@ -64,10 +64,10 @@ struct ext4_os_if {
     int (*bwrite)(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
 
     /**@brief   Lock access to mount point (should be recursive) */
-    void (*lock)(void *lockobj);
+    void (*lock)(void *ctx);
 
     /**@brief   Unlock access to mount point (should be recursive)*/
-    void (*unlock)(void *lockobj);
+    void (*unlock)(void *ctx);
 };
 
 /**@brief   Definiton of the simple block device.*/

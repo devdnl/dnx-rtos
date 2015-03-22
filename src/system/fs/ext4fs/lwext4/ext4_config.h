@@ -51,7 +51,7 @@
 
 /**@brief   File system support selection */
 #ifndef EXT4_CONFIG_EXT_FEATURE_SET_LVL
-#define EXT4_CONFIG_EXT_FEATURE_SET_LVL  EXT4_F_SET_EXT2
+#define EXT4_CONFIG_EXT_FEATURE_SET_LVL         EXT4_F_SET_EXT2
 #endif
 
 /**@brief   Memory allocation function (e.g. void *malloc(size_t size)) */
@@ -112,9 +112,9 @@
 #define EXT4_CONFIG_DEBUG_ASSERT                0
 #endif
 
-/**@brief   Cache size of block device. (number of blocks of size read from superblock)*/
+/**@brief   Cache size of block device. (number of blocks in cache (block size: 1KiB - 32KiB))*/
 #ifndef EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE
-#define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        8
+#define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        4
 #endif
 
 /**@brief   CPU Byte order */

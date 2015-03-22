@@ -33,20 +33,36 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define BLOCK_SIZE      512
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef struct {
+        ext4_fs_t *fsctx;
+        mutex_t   *mtx;
+        FILE      *srcfile;
+} ext4fs_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t  closedir(void *fs_handle, DIR *dir);
+static stdret_t closedir(void *fs_handle, DIR *dir);
 static dirent_t *readdir (void *fs_handle, DIR *dir);
+static void ext4_lock(void *obj);
+static void ext4_unlock(void *obj);
+static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
+static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const struct ext4_os_if osif = {
+        .lock   = ext4_lock,
+        .unlock = ext4_unlock,
+        .bread  = ext4_bread,
+        .bwrite = ext4_bwrite
+};
 
 /*==============================================================================
   Exported objects
@@ -73,8 +89,40 @@ static dirent_t *readdir (void *fs_handle, DIR *dir);
 //==============================================================================
 API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(src_path);
+        // open file system source file
+        FILE *srcfile = _sys_fopen(src_path, "r+");
+        if (!srcfile) {
+                return STD_RET_ERROR;
+        }
+
+        // read number of file blocks
+        struct stat stat;
+        if (_sys_fstat(srcfile, &stat) != 0) {
+                _sys_fclose(srcfile);
+                return STD_RET_ERROR;
+        }
+
+        u64_t block_count = stat.st_size / BLOCK_SIZE;
+
+        // create FS context
+        ext4fs_t *hdl = malloc(sizeof(ext4fs_t));
+        if (hdl) {
+                hdl->mtx = _sys_mutex_new(MUTEX_RECURSIVE);
+                if (hdl->mtx) {
+                        hdl->srcfile = srcfile;
+                        hdl->fsctx   = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
+                        if (hdl->fsctx) {
+                                *fs_handle = hdl;
+                                return STD_RET_OK;
+                        }
+
+                        _sys_mutex_delete(hdl->mtx);
+                }
+
+                free(hdl);
+        }
+
+        _sys_fclose(srcfile);
 
         return STD_RET_ERROR;
 }
@@ -91,7 +139,13 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(ext4fs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        ext4fs_t *hdl = fs_handle;
+
+        ext4_umount(hdl->fsctx);
+        _sys_mutex_delete(hdl->mtx);
+        _sys_fclose(hdl->srcfile);
+        free(hdl);
+
         return STD_RET_OK;
 }
 
@@ -336,13 +390,22 @@ API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(dir);
+        ext4fs_t *hdl = fs_handle;
 
-        dir->f_closedir = closedir;
-        dir->f_readdir  = readdir;
-        // ...
+        ext4_dir *ext4dir = malloc(sizeof(ext4_dir));
+        if (ext4dir) {
+                if (ext4_dir_open(hdl->fsctx, ext4dir, path) == EOK) {
+                        dir->f_handle   = hdl;
+                        dir->f_closedir = closedir;
+                        dir->f_readdir  = readdir;
+                        dir->f_dd       = ext4dir;
+                        dir->f_seek     = 0;
+                        dir->f_items    = 0;
+                        return STD_RET_OK;
+                }
+
+                free(ext4dir);
+        }
 
         return STD_RET_ERROR;
 }
@@ -360,9 +423,14 @@ API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static stdret_t closedir(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
-        return STD_RET_OK;
+        ext4fs_t *hdl = fs_handle;
+
+        if (ext4_dir_close(hdl->fsctx, dir->f_dd) == EOK) {
+                free(dir->f_dd);
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -379,9 +447,33 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static dirent_t *readdir(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
-        return NULL;
+        static const uint8_t vfsft[] = {
+                [EXT4_DIRENTRY_UNKNOWN ] = FILE_TYPE_UNKNOWN,
+                [EXT4_DIRENTRY_REG_FILE] = FILE_TYPE_REGULAR,
+                [EXT4_DIRENTRY_DIR     ] = FILE_TYPE_DIR,
+                [EXT4_DIRENTRY_CHRDEV  ] = FILE_TYPE_DRV,
+                [EXT4_DIRENTRY_BLKDEV  ] = FILE_TYPE_DRV,
+                [EXT4_DIRENTRY_FIFO    ] = FILE_TYPE_PIPE,
+                [EXT4_DIRENTRY_SOCK    ] = FILE_TYPE_PIPE,
+                [EXT4_DIRENTRY_SYMLINK ] = FILE_TYPE_LINK,
+        };
+
+        ext4fs_t *hdl = fs_handle;
+
+        ext4_direntry *ext4_dirent = ext4_dir_entry_get(hdl->fsctx, dir->f_dd, dir->f_seek++);
+        if (ext4_dirent) {
+                int nlen = ext4_dirent->name_length == 255 ? 254 : ext4_dirent->name_length;
+                ext4_dirent->name[nlen] = '\0';
+
+                dir->dirent.dev      = 0;
+                dir->dirent.filetype = vfsft[ext4_dirent->inode_type];
+                dir->dirent.name     = static_cast(char*, ext4_dirent->name);
+                dir->dirent.size     = 0; // FIXME
+
+                return &dir->dirent;
+        } else {
+                return NULL;
+        }
 }
 
 //==============================================================================
@@ -529,6 +621,70 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
 API_FS_SYNC(ext4fs, void *fs_handle)
 {
         UNUSED_ARG(fs_handle);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void ext4_lock(void *ctx)
+{
+        ext4fs_t *hdl = ctx;
+        _sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void ext4_unlock(void *ctx)
+{
+        ext4fs_t *hdl = ctx;
+        _sys_mutex_unlock(hdl->mtx);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
+{
+        ext4fs_t *hdl = bdev->usr_ctx;
+
+        _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        size_t n = _sys_fread(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
+        if (n == blk_cnt)
+                return EOK;
+        else
+                return errno;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
+{
+        ext4fs_t *hdl = bdev->usr_ctx;
+
+        _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        size_t n = _sys_fwrite(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
+        if (n == blk_cnt)
+                return EOK;
+        else
+                return errno;
 }
 
 /*==============================================================================
