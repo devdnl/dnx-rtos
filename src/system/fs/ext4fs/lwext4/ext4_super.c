@@ -137,6 +137,8 @@ static inline int is_multiple(uint32_t a, uint32_t b)
             return 0;
         a = a / b;
     }
+
+    return 0;
 }
 
 static int ext4_sb_sparse(uint32_t group)

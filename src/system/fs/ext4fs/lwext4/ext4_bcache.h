@@ -71,19 +71,19 @@ struct ext4_bcache {
     uint32_t lru_ctr;
 
     /**@brief   Reference count table (cnt).*/
-    uint32_t refctr[CONFIG_BLOCK_DEV_CACHE_SIZE];
+    uint32_t refctr[EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE];
 
     /**@brief   Last recently used ID table (cnt)*/
-    uint32_t lru_id[CONFIG_BLOCK_DEV_CACHE_SIZE];
+    uint32_t lru_id[EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE];
 
     /**@brief   Writeback free delay mode table (cnt)*/
-    uint8_t free_delay[CONFIG_BLOCK_DEV_CACHE_SIZE];
+    uint8_t free_delay[EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE];
 
     /**@brief   Logical block table (cnt).*/
-    uint64_t lba[CONFIG_BLOCK_DEV_CACHE_SIZE];
+    uint64_t lba[EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE];
 
     /**@brief   Dirty mark (cnt).*/
-    bool dirty[CONFIG_BLOCK_DEV_CACHE_SIZE];
+    bool dirty[EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE];
 
     /**@brief   Cache data buffers (cnt * itemsize)*/
     uint8_t *data;

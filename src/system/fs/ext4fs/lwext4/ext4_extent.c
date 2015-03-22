@@ -47,8 +47,6 @@
 #include <ext4_balloc.h>
 
 #include <string.h>
-//#include <stdlib.h>
-#include "core/fs.h"
 
 uint32_t ext4_extent_get_first_block(struct ext4_extent *extent)
 {
@@ -345,7 +343,7 @@ static int ext4_extent_find_extent(struct ext4_inode_ref *inode_ref,
     struct ext4_extent_path *tmp_path;
 
     /* Added 2 for possible tree growing */
-    tmp_path = malloc(sizeof(struct ext4_extent_path) * (depth + 2));
+    tmp_path = ext4_malloc(sizeof(struct ext4_extent_path) * (depth + 2));
     if (tmp_path == NULL)
         return ENOMEM;
 
@@ -405,7 +403,7 @@ cleanup:
     }
 
     /* Destroy temporary data structure */
-    free(tmp_path);
+    ext4_free(tmp_path);
 
     return rc;
 }
@@ -610,7 +608,7 @@ cleanup:
     }
 
     /* Destroy temporary data structure */
-    free(path);
+    ext4_free(path);
 
     return rc;
 }
@@ -947,7 +945,7 @@ finish:
     }
 
     /* Destroy temporary data structure */
-    free(path);
+    ext4_free(path);
 
     return rc;
 }

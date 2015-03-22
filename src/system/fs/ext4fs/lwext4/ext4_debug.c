@@ -40,6 +40,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#if EXT4_CONFIG_DEBUG_PRINTF
 static uint32_t __dbg_mask__;
 
 
@@ -52,6 +53,7 @@ uint32_t ext4_dmask_get(void)
 {
     return __dbg_mask__;
 }
+#endif
 
 /**
  * @}

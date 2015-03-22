@@ -38,7 +38,7 @@
 
 #include <ext4_config.h>
 
-#if !CONFIG_HAVE_OWN_ERRNO
+#if !EXT4_CONFIG_HAVE_OWN_ERRNO
 #include <errno.h>
 #else
 #define EPERM        1 /* Operation not permitted */

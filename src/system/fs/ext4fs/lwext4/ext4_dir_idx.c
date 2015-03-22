@@ -43,8 +43,6 @@
 #include <ext4_hash.h>
 
 #include <string.h>
-//#include <stdlib.h>
-#include "core/fs.h"
 
 /**@brief Get hash version used in directory index.
  * @param root_info Pointer to root info structure of index
@@ -617,7 +615,7 @@ cleanup:
     return rc;
 }
 
-#if CONFIG_DIR_INDEX_COMB_SORT
+#if EXT4_CONFIG_DIR_INDEX_COMB_SORT
 #define  SWAP_ENTRY(se1, se2) do {			\
 	struct ext4_dx_sort_entry tmp = se1;	\
 	se1 = se2;								\
@@ -724,7 +722,7 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
     uint32_t block_size =
             ext4_sb_get_block_size(&inode_ref->fs->sb);
 
-    uint8_t *entry_buffer = malloc(block_size);
+    uint8_t *entry_buffer = ext4_malloc(block_size);
     if (entry_buffer == NULL)
         return ENOMEM;
 
@@ -734,10 +732,10 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
 
     /* Allocate sort entry */
     struct ext4_dx_sort_entry *sort_array =
-            malloc(max_entry_count * sizeof(struct ext4_dx_sort_entry));
+            ext4_malloc(max_entry_count * sizeof(struct ext4_dx_sort_entry));
 
     if (sort_array == NULL) {
-        free(entry_buffer);
+        ext4_free(entry_buffer);
         return ENOMEM;
     }
 
@@ -759,8 +757,8 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
 
             rc = ext4_dir_dx_hash_string(&tmp_hinfo, len, (char*)dentry->name);
             if(rc != EOK) {
-                free(sort_array);
-                free(entry_buffer);
+                ext4_free(sort_array);
+                ext4_free(entry_buffer);
                 return rc;
             }
 
@@ -785,10 +783,10 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
     }
 
     /* Sort all entries */
-#if CONFIG_DIR_INDEX_COMB_SORT
+#if EXT4_CONFIG_DIR_INDEX_COMB_SORT
     comb_sort(sort_array, idx);
 #else
-    qsort(sort_array, idx, sizeof(struct ext4_dx_sort_entry),
+    ext4_qsort(sort_array, idx, sizeof(struct ext4_dx_sort_entry),
         ext4_dir_dx_entry_comparator);
 #endif
     /* Allocate new block for store the second part of entries */
@@ -797,8 +795,8 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
     rc = ext4_fs_append_inode_block(inode_ref, &new_fblock,
             &new_iblock);
     if (rc != EOK) {
-        free(sort_array);
-        free(entry_buffer);
+        ext4_free(sort_array);
+        ext4_free(entry_buffer);
         return rc;
     }
 
@@ -807,8 +805,8 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
     rc = ext4_block_get(inode_ref->fs->bdev, &new_data_block_tmp,
             new_fblock);
     if (rc != EOK) {
-        free(sort_array);
-        free(entry_buffer);
+        ext4_free(sort_array);
+        ext4_free(entry_buffer);
         return rc;
     }
 
@@ -875,8 +873,8 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
     old_data_block->dirty = true;
     new_data_block_tmp.dirty = true;
 
-    free(sort_array);
-    free(entry_buffer);
+    ext4_free(sort_array);
+    ext4_free(entry_buffer);
 
     ext4_dir_dx_insert_entry(index_block, new_hash + continued,
         new_iblock);

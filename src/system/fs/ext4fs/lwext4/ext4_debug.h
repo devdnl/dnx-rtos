@@ -80,6 +80,7 @@
 /**@brief   All debug printf enabled.*/
 #define EXT4_DEBUG_ALL              (0xFFFFFFFF)
 
+#if EXT4_CONFIG_DEBUG_PRINTF
 /**@brief   Global mask debug settings.
  * @brief   m new debug mask.*/
 void ext4_dmask_set(uint32_t m);
@@ -87,9 +88,10 @@ void ext4_dmask_set(uint32_t m);
 /**@brief   Global debug mask get.
  * @return  debug mask*/
 uint32_t ext4_dmask_get(void);
+#endif
 
 
-#if CONFIG_DEBUG_PRINTF
+#if EXT4_CONFIG_DEBUG_PRINTF
 /**@brief   Debug printf.*/
 #define ext4_dprintf(m, ...)    do {                            \
         if(m & ext4_dmask_get())  printf(__VA_ARGS__); 			\
@@ -101,7 +103,7 @@ uint32_t ext4_dmask_get(void);
 
 
 
-#if CONFIG_DEBUG_ASSERT
+#if EXT4_CONFIG_DEBUG_ASSERT
 /**@brief   Debug asseration.*/
 #define ext4_assert(_v) do {                                                \
         if(!(_v)){                                                          \

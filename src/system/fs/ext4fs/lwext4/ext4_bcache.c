@@ -40,18 +40,15 @@
 #include <ext4_errno.h>
 
 #include <string.h>
-//#include <stdlib.h>
-#include "core/fs.h"
 
 
-int ext4_bcache_init_dynamic(struct ext4_bcache *bc, uint32_t cnt,
-    uint32_t itemsize)
+int ext4_bcache_init_dynamic(struct ext4_bcache *bc, uint32_t cnt, uint32_t itemsize)
 {
     ext4_assert(bc && cnt && itemsize);
 
     memset(bc, 0, sizeof(struct ext4_bcache));
 
-    bc->data = malloc(cnt * itemsize);
+    bc->data = ext4_malloc(cnt * itemsize);
     if(!bc->data)
         goto error;
 
@@ -64,8 +61,10 @@ int ext4_bcache_init_dynamic(struct ext4_bcache *bc, uint32_t cnt,
 
     error:
 
-    if(bc->data)
-        free(bc->data);
+    if(bc->data) {
+        ext4_free(bc->data);
+        bc->data = NULL;
+    }
 
     memset(bc, 0, sizeof(struct ext4_bcache));
 
@@ -74,8 +73,12 @@ int ext4_bcache_init_dynamic(struct ext4_bcache *bc, uint32_t cnt,
 
 int ext4_bcache_fini_dynamic(struct ext4_bcache *bc)
 {
-    if(bc->data)
-        free(bc->data);
+    ext4_assert(bc);
+
+    if(bc->data) {
+        ext4_free(bc->data);
+        bc->data = NULL;
+    }
 
     memset(bc, 0, sizeof(struct ext4_bcache));
 

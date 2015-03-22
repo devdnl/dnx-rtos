@@ -47,32 +47,38 @@
 /**@brief   Initialization status flag*/
 #define EXT4_BDEV_INITIALIZED   (1 << 0)
 
+/** @brief block device interface. */
+struct ext4_blockdev;
+struct ext4_blockdev_if {
+        /**@brief   Open device function
+         * @param   bdev block device.*/
+        int (*open)(struct ext4_blockdev *bdev);
+
+        /**@brief   Block read function.
+         * @param   bdev block device
+         * @param   buf output buffer
+         * @param   blk_id block id
+         * @param   blk_cnt block count*/
+        int (*bread)(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
+
+        /**@brief   Block write function.
+         * @param   buf input buffer
+         * @param   blk_id block id
+         * @param   blk_cnt block count*/
+        int (*bwrite)(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
+
+        /**@brief   Close device function.
+         * @param   bdev block device.*/
+        int (*close)(struct ext4_blockdev *bdev);
+};
 
 /**@brief   Definiton of the simple block device.*/
-struct ext4_blockdev  {
+struct ext4_blockdev {
 
-    /**@brief   Open device function
-     * @param   bdev block device.*/
-    int         (*open)(struct ext4_blockdev *bdev);
+    void        *handle;
 
-    /**@brief   Block read function.
-     * @param   bdev block device
-     * @param   buf output buffer
-     * @param   blk_id block id
-     * @param   blk_cnt block count*/
-    int         (*bread)(struct ext4_blockdev *bdev, void *buf,
-            uint64_t blk_id, uint32_t blk_cnt);
-
-    /**@brief   Block write function.
-     * @param   buf input buffer
-     * @param   blk_id block id
-     * @param   blk_cnt block count*/
-    int         (*bwrite)(struct ext4_blockdev *bdev, const void *buf,
-            uint64_t blk_id, uint32_t blk_cnt);
-
-    /**@brief   Close device function.
-     * @param   bdev block device.*/
-    int         (*close)(struct ext4_blockdev *bdev);
+    /**@brief   OS Interface */
+    const struct ext4_blockdev_if *bdif;
 
     /**@brief   Block cache.*/
     struct  ext4_bcache *bc;
@@ -92,9 +98,6 @@ struct ext4_blockdev  {
     /**@brief   Block count: phisical.*/
     uint64_t    lg_bcnt;
 
-    /**@brief   Flags of te block device.*/
-    uint32_t    flags;
-
     /**@brief   Cache write back mode refference counter.*/
     uint32_t    cache_write_back;
 
@@ -105,56 +108,40 @@ struct ext4_blockdev  {
     uint32_t    bwrite_ctr;
 };
 
-
-/**@brief   Static initialization fo the block device.*/
-#define EXT4_BLOCKDEV_STATIC_INSTANCE(__name, __bsize, __bcnt, __open,  \
-        __bread, __bwrite, __close)                                     \
-        static uint8_t  __name##_ph_bbuf[(__bsize)];                    \
-        static struct   ext4_blockdev __name = {                        \
-                .open   = __open,                                       \
-                .bread  = __bread,                                      \
-                .bwrite = __bwrite,                                     \
-                .close  = __close,                                      \
-                .ph_bsize  = __bsize,                                   \
-                .ph_bcnt   = __bcnt,                                    \
-                .ph_bbuf   = __name##_ph_bbuf,                          \
-        }
-
 /**@brief   Block device initialization.
  * @param   bdev block device descriptor
  * @param   bg_bsize logical block size
  * @param   bdev block device descriptor
  * @return  standard error code*/
-int ext4_block_init(struct ext4_blockdev *bdev);
-
+int ext4_block_init(struct ext4_blockdev          *bdev,
+                    const struct ext4_blockdev_if *bdif,
+                    uint32_t                       ph_bsize,
+                    uint64_t                       ph_bcnt);
 
 /**@brief   Binds a bcache to block device.
  * @param   bdev block device descriptor
  * @param   bc block cache descriptor
  * @return  standard error code*/
-int ext4_block_bind_bcache(struct ext4_blockdev *bdev,
-    struct ext4_bcache *bc);
+int ext4_block_bind_bcache(struct ext4_blockdev *bdev, struct ext4_bcache *bc);
 
 /**@brief   Close block device
  * @param   bdev block device descriptor
  * @return  standard error code*/
 int ext4_block_fini(struct ext4_blockdev *bdev);
 
-
 /**@brief   Set logical block size in block device.
  * @param   bdev block device descriptor
  * @param   lb_size ligical block size (in bytes)
  * @return  standard error code*/
 void ext4_block_set_lb_size(struct ext4_blockdev *bdev,
-    uint64_t lb_bsize);
+ uint64_t lb_bsize);
 
 /**@brief   Block get function (through cache).
  * @param   bdev block device descriptor
  * @param   b block descriptor
  * @param   lba logical block address
  * @return  standard error code*/
-int ext4_block_get(struct ext4_blockdev *bdev, struct ext4_block *b,
-    uint64_t lba);
+int ext4_block_get(struct ext4_blockdev *bdev, struct ext4_block *b, uint64_t lba);
 
 /**@brief   Block set procedure (through cache).
  * @param   bdev block device descriptor
@@ -168,8 +155,7 @@ int ext4_block_set(struct ext4_blockdev *bdev, struct ext4_block *b);
  * @param   buf output buffer
  * @param   lba logical block adderss
  * @return  standard error code*/
-int ext4_blocks_get_direct(struct   ext4_blockdev *bdev, void *buf,
-    uint64_t lba, uint32_t cnt);
+int ext4_blocks_get_direct(struct   ext4_blockdev *bdev, void *buf, uint64_t lba, uint32_t cnt);
 
 
 /**@brief   Block write procedure (without cache)
@@ -177,8 +163,7 @@ int ext4_blocks_get_direct(struct   ext4_blockdev *bdev, void *buf,
  * @param   buf output buffer
  * @param   lba logical block address
  * @return  standard error code*/
-int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf,
-    uint64_t lba, uint32_t cnt);
+int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf, uint64_t lba, uint32_t cnt);
 
 /**@brief   Write to block device (by direct adress).
  * @param   bdev block device descriptor
@@ -186,8 +171,7 @@ int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf,
  * @param   buf input buffer
  * @param   len length of the write nuffer
  * @return  EOK when sucess*/
-int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
-    const void *buf, uint32_t len);
+int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off, const void *buf, uint32_t len);
 
 
 
@@ -197,8 +181,7 @@ int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
  * @param   buf input buffer
  * @param   len length of the write nuffer
  * @return  EOK when sucess*/
-int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off,
-    void *buf, uint32_t len);
+int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off, void *buf, uint32_t len);
 
 /**@brief   Enable/disable write back cache mode
  * @param   bdev block device descriptor

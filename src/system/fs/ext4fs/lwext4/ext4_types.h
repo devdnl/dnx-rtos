@@ -146,7 +146,7 @@ struct ext4_sblock {
     uint8_t last_error_func[32];        /* Function where the error happened */
     uint8_t mount_opts[64];
     uint32_t padding[112];              /* Padding to the end of the block */
-} __attribute__((packed));
+} EXT4_PACKED;
 
 
 #define EXT4_SUPERBLOCK_MAGIC   0xEF53
@@ -279,7 +279,7 @@ struct ext4_sblock {
  *           (probably won,t be ever...)
  * MMP - multi mout protection (impossible scenario)
  * */
-#define FEATURE_INCOMPAT_IGNORED                      \
+#define EXT_FEATURE_INCOMPAT_IGNORED                  \
         EXT4_FEATURE_INCOMPAT_RECOVER               | \
         EXT4_FEATURE_INCOMPAT_MMP
 
@@ -296,8 +296,8 @@ struct ext4_sblock {
 #endif
 
 struct ext4_fs {
-    struct ext4_blockdev*bdev;
-    struct ext4_sblock sb;
+    struct ext4_blockdev *bdev;
+    struct ext4_sblock    sb;
 
     uint64_t inode_block_limits[4];
     uint64_t inode_blocks_per_level[4];
@@ -401,7 +401,7 @@ struct ext4_inode {
             uint16_t gid_high;
             uint32_t author;
         } hurd2;
-    } __attribute__ ((packed)) osd2;
+    } EXT4_PACKED osd2;
 
     uint16_t extra_isize;
     uint16_t pad1;
@@ -411,7 +411,7 @@ struct ext4_inode {
     uint32_t crtime;        /* File creation time */
     uint32_t crtime_extra;  /* Extra file creation time (nsec << 2 | epoch) */
     uint32_t version_hi;    /* High 32 bits for 64-bit version */
-} __attribute__ ((packed)) ;
+} EXT4_PACKED;
 
 #define EXT4_INODE_MODE_FIFO       0x1000
 #define EXT4_INODE_MODE_CHARDEV    0x2000
@@ -477,7 +477,7 @@ struct ext4_inode_ref {
 union ext4_directory_entry_ll_internal{
     uint8_t name_length_high;  /* Higher 8 bits of name length */
     uint8_t inode_type;        /* Type of referenced inode (in rev >= 0.5) */
-} __attribute__ ((packed));
+} EXT4_PACKED;
 
 /**
  * Linked list directory entry structure
@@ -490,7 +490,7 @@ struct ext4_directory_entry_ll {
     union ext4_directory_entry_ll_internal in;
 
     uint8_t name[EXT4_DIRECTORY_FILENAME_LEN];  /* Entry name */
-} __attribute__((packed)) ;
+} EXT4_PACKED;
 
 struct ext4_directory_iterator {
     struct ext4_inode_ref *inode_ref;
@@ -637,7 +637,7 @@ struct ext4_hash_info {
 /*****************************************************************************/
 
 
-#ifdef CONFIG_BIG_ENDIAN
+#if EXT4_BYTE_ORDER == EXT4_BIG_ENDIAN
 static inline uint64_t to_le64(uint64_t n)
 {
     return  ((n & 0xff) << 56) |
@@ -663,8 +663,6 @@ static inline uint16_t to_le16(uint16_t n)
     return  ((n & 0xff) << 8) |
             ((n & 0xff00) >> 8);
 }
-
-
 #else
 #define to_le64(_n) _n
 #define to_le32(_n) _n

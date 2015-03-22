@@ -40,7 +40,25 @@
 
 #include <ext4_config.h>
 #include <ext4_blockdev.h>
+#include <stdbool.h>
 #include <stdint.h>
+
+
+
+/********************************FILE SEEK FLAGS*****************************/
+
+#ifndef SEEK_SET
+#define SEEK_SET    0
+#endif
+
+#ifndef SEEK_CUR
+#define SEEK_CUR    1
+#endif
+
+#ifndef SEEK_END
+#define SEEK_END    2
+#endif
+
 
 /********************************FILE OPEN FLAGS*****************************/
 
@@ -72,41 +90,41 @@
 #define O_APPEND    02000
 #endif
 
-/********************************FILE SEEK FLAGS*****************************/
 
-#ifndef SEEK_SET
-#define SEEK_SET    0
-#endif
+/******************************** TYPES *************************************/
+/**@brief   Main file system container.*/
+typedef struct ext4_container ext4_fs_t;
 
-#ifndef SEEK_CUR
-#define SEEK_CUR    1
-#endif
-
-#ifndef SEEK_END
-#define SEEK_END    2
-#endif
-
-/********************************OS LOCK INFERFACE***************************/
 
 /**@brief   OS dependent lock interface.*/
 struct ext4_lock {
+    /**@brief   Lock object (mutex, semaphore, etc)*/
+    void *lockobj;
 
-    /**@brief   Lock access to mount point*/
-    void (*lock)(void);
+    /**@brief   Lock access to mount point (should be recursive) */
+    void (*lock)(void *lockobj);
 
-    /**@brief   Unlock access to mount point*/
-    void (*unlock)(void);
+    /**@brief   Unlock access to mount point (should be recursive)*/
+    void (*unlock)(void *lockobj);
 };
 
 
-/********************************FILE DESCRIPTOR*****************************/
+/**@brief   Some of the filesystem stats.*/
+struct ext4_fs_stats {
+    uint32_t inodes_count;
+    uint32_t free_inodes_count;
+    uint64_t blocks_count;
+    uint64_t free_blocks_count;
+    uint32_t block_size;
+    uint32_t block_group_count;
+    uint32_t blocks_per_group;
+    uint32_t inodes_per_group;
+    char     volume_name[16];
+};
+
 
 /**@brief   File descriptor*/
 typedef struct ext4_file {
-
-    /**@brief   Mount point handle.*/
-    struct ext4_mountpoint *mp;
-
     /**@brief   File inode id*/
     uint32_t inode;
 
@@ -118,11 +136,11 @@ typedef struct ext4_file {
 
     /**@brief   File position*/
     uint64_t fpos;
-}ext4_file;
+} ext4_file;
 
-/*****************************DIRECTORY DESCRIPTOR***************************/
+
 /**@brief   Directory entry types. Copy from ext4_types.h*/
-enum  {
+enum ext4_filetype {
     EXT4_DIRENTRY_UNKNOWN = 0,
     EXT4_DIRENTRY_REG_FILE,
     EXT4_DIRENTRY_DIR,
@@ -133,92 +151,78 @@ enum  {
     EXT4_DIRENTRY_SYMLINK
 };
 
+
+/**@brief   File statistics */
+struct ext4_filestat {
+    uint64_t           st_size;     /**< total size, in bytes         */
+    uint32_t           st_ino;      /**< inode number                 */
+    uint32_t           st_dev;      /**< ID of device containing file */
+    uint32_t           st_mode;     /**< protection                   */
+    uint32_t           st_uid;      /**< user ID of owner             */
+    uint32_t           st_gid;      /**< group ID of owner            */
+    uint32_t           st_atime;    /**< time of last access          */
+    uint32_t           st_mtime;    /**< time of last modification    */
+    enum ext4_filetype st_type;     /**< type of file                 */
+};
+
+
 /**@brief   Directory entry descriptor. Copy from ext4_types.h*/
 typedef struct {
     uint32_t inode;
     uint16_t entry_length;
-    uint8_t name_length;
-    uint8_t inode_type;
-    uint8_t name[255];
-}ext4_direntry;
+    uint8_t  name_length;
+    uint8_t  inode_type;
+    uint8_t  name[255];
+} ext4_direntry;
+
 
 typedef struct  {
     /**@brief   File descriptor*/
-    ext4_file f;
+    ext4_file     f;
+
     /**@brief   Current directory entry.*/
     ext4_direntry de;
-}ext4_dir;
+} ext4_dir;
+
 
 /********************************MOUNT OPERATIONS****************************/
 
-/**@brief   Register a block device to a name.
- *          @warning Block device has to be filled by
- *          @ref EXT4_BLOCKDEV_STATIC_INSTANCE. Block cache may be created
- *          @ref EXT4_BCACHE_STATIC_INSTANCE.
- *          Block cache may by created automatically when bc parameter is 0.
- * @param   bd block device
- * @param   bd block device cache (0 = automatic cache mode)
- * @param   dev_name register name
- * @param   standard error code*/
-int ext4_device_register(struct ext4_blockdev *bd, struct ext4_bcache *bc,
-        const char *dev_name);
-
-/**@brief   Mount a block device with EXT4 partition to the mount point.
- * @param   dev_name block device name (@ref ext4_device_register)
- * @param   mount_point mount point, for example
- *          -   /
- *          -   /my_partition/
- *          -   /my_second_partition/
- *
+/**@brief  Mount a block device with EXT4 partition to the mount point.
+ * @param  lockif lock interface
+ * @param  bdif block device interface
+ * @param  block_size block size
+ * @param  number_of_blocks number of block of storage
  * @return standard error code */
-int ext4_mount(const char * dev_name,  char *mount_point);
+ext4_fs_t *ext4_mount(const struct ext4_lock        *lockif,
+                      const struct ext4_blockdev_if *bdif,
+                      size_t                         block_size,
+                      size_t                         number_of_blocks);
+
 
 /**@brief   Umount operation.
- * @param   mount_point mount name
+ * @param   ctx file system context
  * @return  standard error code */
-int ext4_umount(char *mount_point);
+int ext4_umount(ext4_fs_t *ctx);
 
-
-/**@brief   Some of the filesystem stats.*/
-struct ext4_mount_stats {
-    uint32_t inodes_count;
-    uint32_t free_inodes_count;
-    uint64_t blocks_count;
-    uint64_t free_blocks_count;
-
-    uint32_t block_size;
-    uint32_t block_group_count;
-    uint32_t blocks_per_group;
-    uint32_t inodes_per_group;
-
-    char volume_name[16];
-};
 
 /**@brief   Get file system params.
- * @param   mount_point mount path
+ * @param   ctx file system context
  * @param   stats ext fs stats
  * @return  standard error code */
-int ext4_mount_point_stats(const char *mount_point,
-    struct ext4_mount_stats *stats);
+int ext4_statfs(ext4_fs_t *ctx, struct ext4_fs_stats *stats);
 
-/**@brief   Setup OS lock routines.
- * @param   mount_point mount path
- * @param   locks - lock and unlock functions
- * @return  standard error code */
-int ext4_mount_setup_locks(const char * mount_point,
-    const struct ext4_lock *locks);
 
 /**@brief   Enable/disable write back cache mode.
  * @warning Default model of cache is write trough. It means that when You do:
  *
  *          ext4_fopen(...);
- *          ext4_fwrie(...);
+ *          ext4_fwrite(...);
  *                           < --- data is flushed to physical drive
  *
  *          When you do:
  *          ext4_cache_write_back(..., 1);
  *          ext4_fopen(...);
- *          ext4_fwrie(...);
+ *          ext4_fwrite(...);
  *                           < --- data is NOT flushed to physical drive
  *          ext4_cache_write_back(..., 0);
  *                           < --- when write back mode is disabled all
@@ -230,32 +234,37 @@ int ext4_mount_setup_locks(const char * mount_point,
  * If you enable write back mode twice you have to disable it twice
  * to flush all data:
  *
- *      ext4_cache_write_back(..., 1);
- *      ext4_cache_write_back(..., 1);
+ *      ext4_cache_write_back(..., true);
+ *      ext4_cache_write_back(..., true);
  *
- *      ext4_cache_write_back(..., 0);
- *      ext4_cache_write_back(..., 0);
+ *      ext4_cache_write_back(..., false);
+ *      ext4_cache_write_back(..., false);
  *
  * Write back mode is useful when you want to create a lot of empty
  * files/directories.
  *
- * @param   path mount point path
+ * @param   ctx file system context
  * @param   on enable/disable
  *
  * @return  standard error code */
-int ext4_cache_write_back(const char *path, bool on);
+int ext4_cache_write_back(ext4_fs_t *ctx, bool on);
+
 
 /********************************FILE OPERATIONS*****************************/
 
 /**@brief   Remove file by path.
+ * @param   ctx file system context
  * @param   path path to file
  * @return  standard error code */
-int ext4_fremove(const char *path);
+int ext4_fremove(ext4_fs_t *ctx, const char *path);
+
 
 /**@brief   File open function.
- * @param   filename, (has to start from mount point)
- *          /my_partition/my_file
+ * @param   ctx file system context
+ * @param   filename
  * @param   flags open file flags
+ *  |---------------------------------------------------------------|
+ *  |   String mode             Flags                               |
  *  |---------------------------------------------------------------|
  *  |   r or rb                 O_RDONLY                            |
  *  |---------------------------------------------------------------|
@@ -271,30 +280,38 @@ int ext4_fremove(const char *path);
  *  |---------------------------------------------------------------|
  *
  * @return  standard error code*/
-int ext4_fopen (ext4_file *f, const char *path, const char *flags);
+int ext4_fopen(ext4_fs_t *ctx, ext4_file *f, const char *path, uint32_t flags);
+
 
 /**@brief   File close function.
+ * @param   ctx file system context
  * @param   f file handle
  * @return  standard error code*/
-int ext4_fclose(ext4_file *f);
+int ext4_fclose(ext4_fs_t *ctx, ext4_file *f);
+
 
 /**@brief   Read data from file.
+ * @param   ctx file system context
  * @param   f file handle
  * @param   buf output buffer
  * @param   size bytes to read
  * @param   rcnt bytes read (may be NULL)
  * @return  standard error code*/
-int ext4_fread (ext4_file *f, void *buf, uint32_t size, uint32_t *rcnt);
+int ext4_fread(ext4_fs_t *ctx, ext4_file *f, void *buf, uint32_t size, uint32_t *rcnt);
+
 
 /**@brief   Write data to file.
+ * @param   ctx file system context
  * @param   f file handle
  * @param   buf data to write
  * @param   size write length
  * @param   wcnt bytes written (may be NULL)
  * @return  standard error code*/
-int ext4_fwrite(ext4_file *f, void *buf, uint32_t size, uint32_t *wcnt);
+int ext4_fwrite(ext4_fs_t *ctx, ext4_file *f, const void *buf, uint32_t size, uint32_t *wcnt);
+
 
 /**@brief   File seek operation.
+ * @param   ctx file system context
  * @param   f file handle
  * @param   offset offset to seek
  * @param   origin seek type:
@@ -302,47 +319,86 @@ int ext4_fwrite(ext4_file *f, void *buf, uint32_t size, uint32_t *wcnt);
  *              @ref SEEK_CUR
  *              @ref SEEK_END
  * @return  standard error code*/
-int ext4_fseek (ext4_file *f, uint64_t offset, uint32_t origin);
+int ext4_fseek(ext4_fs_t *ctx, ext4_file *f, uint64_t offset, uint32_t origin);
+
 
 /**@brief   Get file position.
+ * @param   ctx file system context
  * @param   f file handle
  * @return  actual file position */
-uint64_t ext4_ftell (ext4_file *f);
+uint64_t ext4_ftell(ext4_fs_t *ctx, ext4_file *f);
+
+
+/**@brief   Get file info.
+ * @param   ctx file system context
+ * @param   path file path
+ * @param   stat file info
+ * @return  standard error code */
+int ext4_stat(ext4_fs_t *ctx, const char *path, struct ext4_filestat *stat);
+
 
 /**@brief   Get file size.
- * @param   f file handle
- * @return  file size */
-uint64_t ext4_fsize (ext4_file *f);
+ * @param   ctx file system context
+ * @param   f file object
+ * @param   stat file info
+ * @return  standard error code */
+int ext4_fstat(ext4_fs_t *ctx, ext4_file *f, struct ext4_filestat *stat);
+
+
+/**@brief   Set file mode.
+ * @param   ctx file system context
+ * @param   path file path
+ * @param   mode mode to set
+ * @return  standard error code */
+int ext4_chmod(ext4_fs_t *ctx, const char *path, uint32_t mode);
+
+
+/**@brief   Set file owner.
+ * @param   ctx file system context
+ * @param   path file path
+ * @param   uid user id
+ * @param   gid group id
+ * @return  standard error code */
+int ext4_chown(ext4_fs_t *ctx, const char *path, uint32_t uid, uint32_t gid);
+
 
 /*********************************DIRECTORY OPERATION***********************/
 
 /**@brief   Recursive directory remove.
+ * @param   ctx file system context
  * @param   path directory path to remove
  * @return  standard error code*/
-int ext4_dir_rm(const char *path);
+int ext4_dir_rm(ext4_fs_t *ctx, const char *path);
+
 
 /**@brief   Create new directory.
+ * @param   ctx file system context
  * @param   name new directory name
  * @return  standard error code*/
-int ext4_dir_mk(const char *path);
+int ext4_dir_mk(ext4_fs_t *ctx, const char *path);
+
 
 /**@brief   Directory open.
+ * @param   ctx file system context
  * @param   d directory handle
  * @param   path directory path
  * @return  standard error code*/
-int ext4_dir_open (ext4_dir *d, const char *path);
+int ext4_dir_open(ext4_fs_t *ctx, ext4_dir *d, const char *path);
+
 
 /**@brief   Directory close.
+ * @param   ctx file system context
  * @param   d directory handle
  * @return  standard error code*/
-int ext4_dir_close(ext4_dir *d);
+int ext4_dir_close(ext4_fs_t *ctx, ext4_dir *d);
 
 
 /**@brief   Return directory entry by id.
+ * @param   ctx file system context
  * @param   d directory handle
  * @param   id entry id
  * @return  directory entry id (NULL id no entry)*/
-ext4_direntry* ext4_dir_entry_get(ext4_dir *d, uint32_t id);
+ext4_direntry* ext4_dir_entry_get(ext4_fs_t *ctx, ext4_dir *d, uint32_t id);
 
 #endif /* EXT4_H_ */
 

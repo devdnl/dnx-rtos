@@ -230,7 +230,7 @@ int ext4_dir_add_entry(struct ext4_inode_ref *parent, const char *name,
 {
     struct ext4_fs *fs = parent->fs;
 
-#if CONFIG_DIR_INDEX_ENABLE
+#if EXT4_CONFIG_DIR_INDEX_ENABLE
     /* Index adding (if allowed) */
     if ((ext4_sb_has_feature_compatible(&fs->sb,
             EXT4_FEATURE_COMPAT_DIR_INDEX)) &&
@@ -321,7 +321,7 @@ int ext4_dir_find_entry(struct ext4_directory_search_result *result,
     struct ext4_sblock *sb = &parent->fs->sb;
 
 
-#if CONFIG_DIR_INDEX_ENABLE
+#if EXT4_CONFIG_DIR_INDEX_ENABLE
     /* Index search */
     if ((ext4_sb_has_feature_compatible(sb,
             EXT4_FEATURE_COMPAT_DIR_INDEX)) &&

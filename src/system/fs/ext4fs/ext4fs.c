@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include "core/fs.h"
+#include "lwext4/ext4.h"
 
 /*==============================================================================
   Local macros
@@ -72,6 +73,8 @@ static dirent_t *readdir (void *fs_handle, DIR *dir);
 //==============================================================================
 API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
 {
+
+
         return STD_RET_ERROR;
 }
 

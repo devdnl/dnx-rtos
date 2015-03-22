@@ -281,7 +281,7 @@ int ext4_fs_check_features(struct ext4_fs *fs, bool *read_only)
 
     /*Check features_incompatible*/
     v = (ext4_get32(&fs->sb, features_incompatible) &
-            (~CONFIG_FEATURE_INCOMPAT_SUPP));
+            (~EXT4_CONFIG_FEATURE_INCOMPAT_SUPP));
     if (v){
         ext4_dprintf(EXT4_DEBUG_FS,
                 "SB features_incompatible: fail\n");
@@ -292,7 +292,7 @@ int ext4_fs_check_features(struct ext4_fs *fs, bool *read_only)
 
     /*Check features_read_only*/
     v = (ext4_get32(&fs->sb, features_read_only) &
-            (~CONFIG_FEATURE_RO_COMPAT_SUPP));
+            (~EXT4_CONFIG_FEATURE_RO_COMPAT_SUPP));
     if (v){
         ext4_dprintf(EXT4_DEBUG_FS,
                 "\nERROR sblock features_read_only . Unsupported:\n");
@@ -699,13 +699,14 @@ int ext4_fs_alloc_inode(struct ext4_fs *fs, struct ext4_inode_ref *inode_ref,
         ext4_inode_set_links_count(inode, 1);
     }
 
+    uint32_t now = ext4_now;
 
-    ext4_inode_set_uid(inode, 0);
-    ext4_inode_set_gid(inode, 0);
+    ext4_inode_set_uid(inode, ext4_current_uid);
+    ext4_inode_set_gid(inode, ext4_current_gid);
     ext4_inode_set_size(inode, 0);
-    ext4_inode_set_access_time(inode, 0);
-    ext4_inode_set_change_inode_time(inode, 0);
-    ext4_inode_set_modification_time(inode, 0);
+    ext4_inode_set_access_time(inode, now);
+    ext4_inode_set_change_inode_time(inode, now);
+    ext4_inode_set_modification_time(inode, now);
     ext4_inode_set_deletion_time(inode, 0);
     ext4_inode_set_blocks_count(&fs->sb, inode, 0);
     ext4_inode_set_flags(inode, 0);
@@ -715,7 +716,7 @@ int ext4_fs_alloc_inode(struct ext4_fs *fs, struct ext4_inode_ref *inode_ref,
     for (i = 0; i < EXT4_INODE_BLOCKS; i++)
         inode->blocks[i] = 0;
 
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     /* Initialize extents if needed */
     if (ext4_sb_has_feature_incompatible(
             &fs->sb, EXT4_FEATURE_INCOMPAT_EXTENTS)) {
@@ -746,7 +747,7 @@ int ext4_fs_free_inode(struct ext4_inode_ref *inode_ref)
     struct ext4_fs *fs = inode_ref->fs;
     uint32_t offset;
     uint32_t suboffset;
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     /* For extents must be data block destroyed by other way */
     if ((ext4_sb_has_feature_incompatible(&fs->sb,
             EXT4_FEATURE_INCOMPAT_EXTENTS)) &&
@@ -853,7 +854,7 @@ int ext4_fs_free_inode(struct ext4_inode_ref *inode_ref)
 
         ext4_inode_set_indirect_block(inode_ref->inode, 2, 0);
     }
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     finish:
 #endif
     /* Mark inode dirty for writing to the physical device */
@@ -910,7 +911,7 @@ int ext4_fs_truncate_inode(struct ext4_inode_ref *inode_ref,
     uint32_t old_blocks_count = old_size / block_size;
     if (old_size % block_size != 0)
         old_blocks_count++;
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     if ((ext4_sb_has_feature_incompatible(sb,
             EXT4_FEATURE_INCOMPAT_EXTENTS)) &&
             (ext4_inode_has_flag(inode_ref->inode, EXT4_INODE_FLAG_EXTENTS))) {
@@ -954,7 +955,7 @@ int ext4_fs_get_inode_data_block_index(struct ext4_inode_ref *inode_ref,
     }
 
     uint32_t current_block;
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     /* Handle i-node using extents */
     if ((ext4_sb_has_feature_incompatible(&fs->sb,
             EXT4_FEATURE_INCOMPAT_EXTENTS)) &&
@@ -1055,7 +1056,7 @@ int ext4_fs_set_inode_data_block_index(struct ext4_inode_ref *inode_ref,
 {
     struct ext4_fs *fs = inode_ref->fs;
 
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     /* Handle inode using extents */
     if ((ext4_sb_has_feature_incompatible(&fs->sb,
             EXT4_FEATURE_INCOMPAT_EXTENTS)) &&
@@ -1311,7 +1312,7 @@ int ext4_fs_release_inode_block(struct ext4_inode_ref *inode_ref,
 int ext4_fs_append_inode_block(struct ext4_inode_ref *inode_ref,
     uint32_t *fblock, uint32_t *iblock)
 {
-#if CONFIG_EXTENT_ENABLE
+#if EXT4_CONFIG_EXTENT_ENABLE
     /* Handle extents separately */
     if ((ext4_sb_has_feature_incompatible(&inode_ref->fs->sb,
             EXT4_FEATURE_INCOMPAT_EXTENTS)) &&
