@@ -126,7 +126,7 @@
 #define __ENABLE_LFS__ _YES_
 #define __ENABLE_FATFS__ _NO_
 #define __ENABLE_PROCFS__ _NO_
-#define __ENABLE_EXT4FS__ _YES_
+#define __ENABLE_EXT2FS__ _YES_
 #define __FATFS_LFN_ENABLE__ _YES_
 #define __FATFS_LFN_CODEPAGE__ 852
 

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    ext4fs.c
+@file    ext2fs.c
 
 @author  Daniel Zorychta
 
-@brief   EXT4 File System by using lwext4 library (kostka.grzegorz@gmail.com)
+@brief   EXT2 File System by using lwext4 library (kostka.grzegorz@gmail.com)
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -42,7 +42,7 @@ typedef struct {
         ext4_fs_t *fsctx;
         mutex_t   *mtx;
         FILE      *srcfile;
-} ext4fs_t;
+} ext2fs_t;
 
 /*==============================================================================
   Local function prototypes
@@ -87,7 +87,7 @@ static const struct ext4_os_if osif = {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
+API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 {
         // open file system source file
         FILE *srcfile = _sys_fopen(src_path, "r+");
@@ -105,7 +105,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
         u64_t block_count = stat.st_size / BLOCK_SIZE;
 
         // create FS context
-        ext4fs_t *hdl = malloc(sizeof(ext4fs_t));
+        ext2fs_t *hdl = malloc(sizeof(ext2fs_t));
         if (hdl) {
                 hdl->mtx = _sys_mutex_new(MUTEX_RECURSIVE);
                 if (hdl->mtx) {
@@ -137,9 +137,9 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_RELEASE(ext4fs, void *fs_handle)
+API_FS_RELEASE(ext2fs, void *fs_handle)
 {
-        ext4fs_t *hdl = fs_handle;
+        ext2fs_t *hdl = fs_handle;
 
         ext4_umount(hdl->fsctx);
         _sys_mutex_delete(hdl->mtx);
@@ -164,7 +164,7 @@ API_FS_RELEASE(ext4fs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(ext4fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -188,7 +188,7 @@ API_FS_OPEN(ext4fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(ext4fs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -212,7 +212,7 @@ API_FS_CLOSE(ext4fs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(ext4fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(ext2fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -239,7 +239,7 @@ API_FS_WRITE(ext4fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(ext4fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(ext2fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -264,7 +264,7 @@ API_FS_READ(ext4fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
  * @return Value depends on driver implementation (int)
  */
 //==============================================================================
-API_FS_IOCTL(ext4fs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -286,7 +286,7 @@ API_FS_IOCTL(ext4fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FLUSH(ext4fs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -307,7 +307,7 @@ API_FS_FLUSH(ext4fs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(ext4fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -328,7 +328,7 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -348,7 +348,7 @@ API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKFIFO(ext4fs, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -368,7 +368,7 @@ API_FS_MKFIFO(ext4fs, void *fs_handle, const char *path, mode_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
+API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -388,9 +388,9 @@ API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
 {
-        ext4fs_t *hdl = fs_handle;
+        ext2fs_t *hdl = fs_handle;
 
         ext4_dir *ext4dir = malloc(sizeof(ext4_dir));
         if (ext4dir) {
@@ -423,7 +423,7 @@ API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static stdret_t closedir(void *fs_handle, DIR *dir)
 {
-        ext4fs_t *hdl = fs_handle;
+        ext2fs_t *hdl = fs_handle;
 
         if (ext4_dir_close(hdl->fsctx, dir->f_dd) == EOK) {
                 free(dir->f_dd);
@@ -458,7 +458,7 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
                 [EXT4_DIRENTRY_SYMLINK ] = FILE_TYPE_LINK,
         };
 
-        ext4fs_t *hdl = fs_handle;
+        ext2fs_t *hdl = fs_handle;
 
         ext4_direntry *ext4_dirent = ext4_dir_entry_get(hdl->fsctx, dir->f_dd, dir->f_seek++);
         if (ext4_dirent) {
@@ -487,7 +487,7 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
+API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -506,7 +506,7 @@ API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_name)
+API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_name)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(old_name);
@@ -526,7 +526,7 @@ API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_nam
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
+API_FS_CHMOD(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -547,7 +547,7 @@ API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(ext4fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
+API_FS_CHOWN(ext2fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -568,7 +568,7 @@ API_FS_CHOWN(ext4fs, void *fs_handle, const char *path, uid_t owner, gid_t group
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
+API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -594,7 +594,7 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
+API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(statfs);
@@ -618,7 +618,7 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
  * @return None
  */
 //==============================================================================
-API_FS_SYNC(ext4fs, void *fs_handle)
+API_FS_SYNC(ext2fs, void *fs_handle)
 {
         UNUSED_ARG(fs_handle);
 }
@@ -632,7 +632,7 @@ API_FS_SYNC(ext4fs, void *fs_handle)
 //==============================================================================
 static void ext4_lock(void *ctx)
 {
-        ext4fs_t *hdl = ctx;
+        ext2fs_t *hdl = ctx;
         _sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
 }
 
@@ -645,7 +645,7 @@ static void ext4_lock(void *ctx)
 //==============================================================================
 static void ext4_unlock(void *ctx)
 {
-        ext4fs_t *hdl = ctx;
+        ext2fs_t *hdl = ctx;
         _sys_mutex_unlock(hdl->mtx);
 }
 
@@ -658,7 +658,7 @@ static void ext4_unlock(void *ctx)
 //==============================================================================
 static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        ext4fs_t *hdl = bdev->usr_ctx;
+        ext2fs_t *hdl = bdev->usr_ctx;
 
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
         size_t n = _sys_fread(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
@@ -677,7 +677,7 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 //==============================================================================
 static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        ext4fs_t *hdl = bdev->usr_ctx;
+        ext2fs_t *hdl = bdev->usr_ctx;
 
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
         size_t n = _sys_fwrite(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
