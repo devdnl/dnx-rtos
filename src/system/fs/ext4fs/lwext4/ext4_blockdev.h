@@ -49,36 +49,34 @@
 
 /** @brief block device interface. */
 struct ext4_blockdev;
-struct ext4_blockdev_if {
-        /**@brief   Open device function
-         * @param   bdev block device.*/
-        int (*open)(struct ext4_blockdev *bdev);
+struct ext4_os_if {
+    /**@brief   Block read function.
+     * @param   bdev block device
+     * @param   buf output buffer
+     * @param   blk_id block id
+     * @param   blk_cnt block count*/
+    int (*bread)(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
 
-        /**@brief   Block read function.
-         * @param   bdev block device
-         * @param   buf output buffer
-         * @param   blk_id block id
-         * @param   blk_cnt block count*/
-        int (*bread)(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
+    /**@brief   Block write function.
+     * @param   buf input buffer
+     * @param   blk_id block id
+     * @param   blk_cnt block count*/
+    int (*bwrite)(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
 
-        /**@brief   Block write function.
-         * @param   buf input buffer
-         * @param   blk_id block id
-         * @param   blk_cnt block count*/
-        int (*bwrite)(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
+    /**@brief   Lock access to mount point (should be recursive) */
+    void (*lock)(void *lockobj);
 
-        /**@brief   Close device function.
-         * @param   bdev block device.*/
-        int (*close)(struct ext4_blockdev *bdev);
+    /**@brief   Unlock access to mount point (should be recursive)*/
+    void (*unlock)(void *lockobj);
 };
 
 /**@brief   Definiton of the simple block device.*/
 struct ext4_blockdev {
-
-    void        *handle;
+    /**@brief   User context */
+    void        *usr_ctx;
 
     /**@brief   OS Interface */
-    const struct ext4_blockdev_if *bdif;
+    const struct ext4_os_if *osif;
 
     /**@brief   Block cache.*/
     struct  ext4_bcache *bc;
@@ -110,13 +108,16 @@ struct ext4_blockdev {
 
 /**@brief   Block device initialization.
  * @param   bdev block device descriptor
- * @param   bg_bsize logical block size
- * @param   bdev block device descriptor
+ * @param   osif OS interface
+ * @param   usr_ctx user's context
+ * @param   ph_bsize physical block size
+ * @param   ph_bcnt physical number of blocks
  * @return  standard error code*/
-int ext4_block_init(struct ext4_blockdev          *bdev,
-                    const struct ext4_blockdev_if *bdif,
-                    uint32_t                       ph_bsize,
-                    uint64_t                       ph_bcnt);
+int ext4_block_init(struct ext4_blockdev    *bdev,
+                    const struct ext4_os_if *osif,
+                    void                    *usr_ctx,
+                    uint32_t                 ph_bsize,
+                    uint64_t                 ph_bcnt);
 
 /**@brief   Binds a bcache to block device.
  * @param   bdev block device descriptor

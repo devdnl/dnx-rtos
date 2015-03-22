@@ -42,30 +42,26 @@
 #include <string.h>
 
 
-int ext4_block_init(struct ext4_blockdev          *bdev,
-                    const struct ext4_blockdev_if *bdif,
-                    uint32_t                       ph_bsize,
-                    uint64_t                       ph_bcnt)
+int ext4_block_init(struct ext4_blockdev    *bdev,
+                    const struct ext4_os_if *osif,
+                    void                    *usr_ctx,
+                    uint32_t                 ph_bsize,
+                    uint64_t                 ph_bcnt)
 {
     ext4_assert(bdev);
-    ext4_assert(bdif && bdif->open && bdif->close && bdif->bread && bdif->bwrite);
+    ext4_assert(osif && osif->bread && osif->bwrite);
 
-    bdev->bdif     = bdif;
+    bdev->osif     = osif;
+    bdev->usr_ctx  = usr_ctx;
     bdev->ph_bsize = ph_bsize;
     bdev->ph_bcnt  = ph_bcnt;
     bdev->ph_bbuf  = ext4_malloc(ph_bsize);
 
     if (bdev->ph_bbuf) {
-        int rc = bdev->bdif->open(bdev);
-        if (rc != EOK) {
-            ext4_free(bdev->ph_bbuf);
-            return rc;
-        }
-
         return EOK;
+    } else {
+       return ENOMEM;
     }
-
-    return ENOMEM;
 }
 
 int ext4_block_bind_bcache(struct ext4_blockdev *bdev, struct ext4_bcache *bc)
@@ -93,8 +89,7 @@ int ext4_block_fini(struct ext4_blockdev *bdev)
         bdev->ph_bbuf = NULL;
     }
 
-    /*Low level block fini*/
-    return bdev->bdif->close(bdev);
+    return EOK;
 }
 
 
@@ -170,7 +165,7 @@ int ext4_block_get(struct ext4_blockdev *bdev, struct ext4_block *b,
     pba = (lba * bdev->lg_bsize) / bdev->ph_bsize;
     pb_cnt = bdev->lg_bsize / bdev->ph_bsize;
 
-    r = bdev->bdif->bread(bdev, b->data, pba, pb_cnt);
+    r = bdev->osif->bread(bdev, b->data, pba, pb_cnt);
 
     if(r != EOK){
         ext4_bcache_free(bdev->bc, b, 0);
@@ -212,7 +207,7 @@ int ext4_block_set(struct ext4_blockdev *bdev, struct ext4_block *b)
     pba = (b->lb_id * bdev->lg_bsize) / bdev->ph_bsize;
     pb_cnt = bdev->lg_bsize / bdev->ph_bsize;
 
-    r = bdev->bdif->bwrite(bdev, b->data, pba, pb_cnt);
+    r = bdev->osif->bwrite(bdev, b->data, pba, pb_cnt);
     bdev->bc->dirty[b->cache_id] = false;
     if(r != EOK){
         b->dirty = false;
@@ -238,7 +233,7 @@ int ext4_blocks_get_direct(struct ext4_blockdev *bdev, void *buf,
     pb_cnt = bdev->lg_bsize / bdev->ph_bsize;
 
     bdev->bread_ctr++;
-    return bdev->bdif->bread(bdev, buf, pba, pb_cnt * cnt);
+    return bdev->osif->bread(bdev, buf, pba, pb_cnt * cnt);
 }
 
 int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf,
@@ -254,7 +249,7 @@ int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf,
 
     bdev->bwrite_ctr++;
 
-    return bdev->bdif->bwrite(bdev, buf, pba, pb_cnt * cnt);
+    return bdev->osif->bwrite(bdev, buf, pba, pb_cnt * cnt);
 }
 
 
@@ -284,14 +279,14 @@ int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
         uint32_t wlen = (bdev->ph_bsize - unalg) > len ?
                 len : (bdev->ph_bsize - unalg);
 
-        r = bdev->bdif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
 
         if(r != EOK)
             return r;
 
         memcpy(bdev->ph_bbuf + unalg, p, wlen);
 
-        r = bdev->bdif->bwrite(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bwrite(bdev, bdev->ph_bbuf, block_idx, 1);
         if(r != EOK)
             return r;
 
@@ -303,7 +298,7 @@ int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
 
     /*Aligned data*/
     blen = len / bdev->ph_bsize;
-    r = bdev->bdif->bwrite(bdev, p, block_idx, blen);
+    r = bdev->osif->bwrite(bdev, p, block_idx, blen);
 
     if(r != EOK)
         return r;
@@ -316,13 +311,13 @@ int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
 
     /*Rest of the data*/
     if(len){
-        r = bdev->bdif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
         if(r != EOK)
             return r;
 
         memcpy(bdev->ph_bbuf, p, len);
 
-        r = bdev->bdif->bwrite(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bwrite(bdev, bdev->ph_bbuf, block_idx, 1);
         if(r != EOK)
             return r;
     }
@@ -357,7 +352,7 @@ int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off, void *buf,
         uint32_t rlen = (bdev->ph_bsize - unalg) > len ?
                 len : (bdev->ph_bsize - unalg);
 
-        r = bdev->bdif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
         if(r != EOK)
             return r;
 
@@ -371,7 +366,7 @@ int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off, void *buf,
     /*Aligned data*/
     blen = len / bdev->ph_bsize;
 
-    r = bdev->bdif->bread(bdev, p, block_idx, blen);
+    r = bdev->osif->bread(bdev, p, block_idx, blen);
 
     if(r != EOK)
         return r;
@@ -384,7 +379,7 @@ int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off, void *buf,
 
     /*Rest of the data*/
     if(len){
-        r = bdev->bdif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
+        r = bdev->osif->bread(bdev, bdev->ph_bbuf, block_idx, 1);
         if(r != EOK)
             return r;
 

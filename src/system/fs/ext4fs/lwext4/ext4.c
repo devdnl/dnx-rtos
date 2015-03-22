@@ -50,31 +50,34 @@
 
 /**@brief   File system main container (context) */
 struct ext4_container {
-        /**@brief   Os dependent lock/unlock functions.*/
-        const struct ext4_lock *lockif;
+    /**@brief   User context */
+    void        *usr_ctx;
 
-        /**@brief   Ext4 filesystem internals.*/
-        struct ext4_fs fs;
+    /**@brief   Os dependent lock/unlock functions.*/
+    const struct ext4_os_if *osif;
 
-        /**@brief   Block device handle.*/
-        struct ext4_blockdev bdev;
+    /**@brief   Ext4 filesystem internals.*/
+    struct ext4_fs fs;
 
-        /**@brief   Block cache handle.*/
-        struct ext4_bcache bcache;
+    /**@brief   Block device handle.*/
+    struct ext4_blockdev bdev;
+
+    /**@brief   Block cache handle.*/
+    struct ext4_bcache bcache;
 };
 
 /****************************************************************************/
 static void lock(ext4_fs_t *ctx)
 {
-    if (ctx->lockif && ctx->lockif->lock) {
-        ctx->lockif->lock(ctx->lockif->lockobj);
+    if (ctx->osif && ctx->osif->lock) {
+        ctx->osif->lock(ctx->usr_ctx);
     }
 }
 
 static void unlock(ext4_fs_t *ctx)
 {
-    if (ctx->lockif && ctx->lockif->unlock) {
-        ctx->lockif->unlock(ctx->lockif->lockobj);
+    if (ctx->osif && ctx->osif->unlock) {
+        ctx->osif->unlock(ctx->usr_ctx);
     }
 }
 
@@ -237,20 +240,21 @@ static int ext4_unlink(ext4_fs_t *ctx,
 
 /****************************************************************************/
 
-ext4_fs_t *ext4_mount(const struct ext4_lock        *lockif,
-                      const struct ext4_blockdev_if *bdif,
-                      size_t                         block_size,
-                      size_t                         number_of_blocks)
+ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
+                      void                    *usr_ctx,
+                      uint32_t                 block_size,
+                      uint64_t                 number_of_blocks)
 {
-    if (!lockif || !bdif || !block_size || !number_of_blocks) {
+    if (!osif || !block_size || !number_of_blocks) {
         return NULL;
     }
 
     ext4_fs_t *ctx = ext4_malloc(sizeof(ext4_fs_t));
     if (ctx) {
-        ctx->lockif = lockif;
+        ctx->osif    = osif;
+        ctx->usr_ctx = usr_ctx;
 
-        if (ext4_block_init(&ctx->bdev, bdif, block_size, number_of_blocks) != EOK)
+        if (ext4_block_init(&ctx->bdev, osif, usr_ctx, block_size, number_of_blocks) != EOK)
             goto error;
 
         if (ext4_fs_init(&ctx->fs, &ctx->bdev) != EOK) {

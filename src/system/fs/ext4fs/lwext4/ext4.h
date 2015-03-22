@@ -96,19 +96,6 @@
 typedef struct ext4_container ext4_fs_t;
 
 
-/**@brief   OS dependent lock interface.*/
-struct ext4_lock {
-    /**@brief   Lock object (mutex, semaphore, etc)*/
-    void *lockobj;
-
-    /**@brief   Lock access to mount point (should be recursive) */
-    void (*lock)(void *lockobj);
-
-    /**@brief   Unlock access to mount point (should be recursive)*/
-    void (*unlock)(void *lockobj);
-};
-
-
 /**@brief   Some of the filesystem stats.*/
 struct ext4_fs_stats {
     uint32_t inodes_count;
@@ -188,15 +175,15 @@ typedef struct  {
 /********************************MOUNT OPERATIONS****************************/
 
 /**@brief  Mount a block device with EXT4 partition to the mount point.
- * @param  lockif lock interface
- * @param  bdif block device interface
+ * @param  osif OS interface
+ * @param  usr_ctx user's context
  * @param  block_size block size
  * @param  number_of_blocks number of block of storage
  * @return standard error code */
-ext4_fs_t *ext4_mount(const struct ext4_lock        *lockif,
-                      const struct ext4_blockdev_if *bdif,
-                      size_t                         block_size,
-                      size_t                         number_of_blocks);
+ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
+                      void                    *usr_ctx,
+                      uint32_t                 block_size,
+                      uint64_t                 number_of_blocks);
 
 
 /**@brief   Umount operation.

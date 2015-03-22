@@ -97,22 +97,22 @@
 #define EXT4_CONFIG_DIR_INDEX_COMB_SORT         1
 #endif
 
-/**@brief   Include error codes from ext4_errno or standard library.*/
+/**@brief   Include error codes from ext4_errno (1) or standard library (0).*/
 #ifndef EXT4_CONFIG_HAVE_OWN_ERRNO
 #define EXT4_CONFIG_HAVE_OWN_ERRNO              0
 #endif
 
-/**@brief   Debug printf enable (stdout)*/
+/**@brief   Debug printf enable (1) (stdout)*/
 #ifndef EXT4_CONFIG_DEBUG_PRINTF
 #define EXT4_CONFIG_DEBUG_PRINTF                0
 #endif
 
-/**@brief   Assert printf enable (stdout)*/
+/**@brief   Assert printf enable (1) (stdout)*/
 #ifndef EXT4_CONFIG_DEBUG_ASSERT
-#define EXT4_CONFIG_DEBUG_ASSERT                1
+#define EXT4_CONFIG_DEBUG_ASSERT                0
 #endif
 
-/**@brief   Cache size of block device. (number of blocks of size get from superblock)*/
+/**@brief   Cache size of block device. (number of blocks of size read from superblock)*/
 #ifndef EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE
 #define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        8
 #endif
