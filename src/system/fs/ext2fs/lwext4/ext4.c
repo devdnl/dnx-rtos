@@ -264,6 +264,8 @@ ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
 
     ext4_fs_t *ctx = ext4_malloc(sizeof(ext4_fs_t));
     if (ctx) {
+        memset(ctx, 0, sizeof(ext4_fs_t));
+
         ctx->osif    = osif;
         ctx->usr_ctx = usr_ctx;
 
