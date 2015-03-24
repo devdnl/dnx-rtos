@@ -1422,7 +1422,7 @@ static bool parse_flags(const char *str, u32_t *flags)
         }
 
         if (strcmp("w", str) == 0 || strcmp("wb", str) == 0) {
-                *flags = O_WRONLY | O_CREAT;
+                *flags = O_WRONLY | O_CREAT | O_TRUNC;
                 return true;
         }
 
