@@ -153,8 +153,9 @@ struct ext4_filestat {
 };
 
 
-/**@brief   Directory entry descriptor. Copy from ext4_types.h*/
+/**@brief   Directory entry descriptor */
 typedef struct {
+    uint64_t size;
     uint32_t inode;
     uint16_t entry_length;
     uint8_t  name_length;

@@ -115,7 +115,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
                         hdl->srcfile = srcfile;
                         hdl->fsctx   = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
                         if (hdl->fsctx) {
-//                                ext4_cache_write_back(hdl->fsctx, true); //TEST
+                                ext4_cache_write_back(hdl->fsctx, true); //TEST
                                 *fs_handle = hdl;
                                 return STD_RET_OK;
                         } else {
@@ -147,7 +147,7 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-//        ext4_cache_write_back(hdl->fsctx, false); //TEST
+        ext4_cache_write_back(hdl->fsctx, false); //TEST
         ext4_umount(hdl->fsctx);
         _sys_mutex_delete(hdl->mtx);
         _sys_fclose(hdl->srcfile);
@@ -552,7 +552,7 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
                 dir->dirent.dev      = 0;
                 dir->dirent.filetype = vfsft[ext4_dirent->inode_type];
                 dir->dirent.name     = static_cast(char*, ext4_dirent->name);
-                dir->dirent.size     = ((ext4_dir*)(dir->f_dd))->f.fsize; // FIXME
+                dir->dirent.size     = ext4_dirent->size;
 
                 return &dir->dirent;
         } else {
@@ -780,8 +780,8 @@ static void ext4_unlock(void *ctx)
 //==============================================================================
 static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        blk_id &= 0xFFFFFFFF; // TEST
-        _sys_printk("Read: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
+//        blk_id &= 0xFFFFFFFF; // TEST
+//        _sys_printk("Read: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
 
 
         ext2fs_t *hdl = bdev->usr_ctx;
@@ -803,8 +803,8 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 //==============================================================================
 static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        blk_id &= 0xFFFFFFFF; // TEST
-        _sys_printk("Write: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
+//        blk_id &= 0xFFFFFFFF; // TEST
+//        _sys_printk("Write: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
 
         ext2fs_t *hdl = bdev->usr_ctx;
 

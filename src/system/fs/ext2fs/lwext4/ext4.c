@@ -1300,37 +1300,49 @@ int ext4_dir_close(ext4_fs_t *ctx, ext4_dir *d)
 
 ext4_direntry* ext4_dir_entry_get(ext4_fs_t *ctx, ext4_dir *d, uint32_t id)
 {
-    int r;
-    uint32_t i;
-    ext4_direntry *de = 0;
-    struct ext4_inode_ref dir;
-    struct ext4_directory_iterator it;
+    ext4_direntry *de = NULL;
 
     if (!ctx || !d)
         return NULL;
 
     lock(ctx);
 
-    r = ext4_fs_get_inode_ref(&ctx->fs, d->f.inode, &dir);
+    struct ext4_inode_ref dir;
+    int r = ext4_fs_get_inode_ref(&ctx->fs, d->f.inode, &dir);
     if(r != EOK){
         goto Finish;
     }
 
+    struct ext4_directory_iterator it;
     r = ext4_dir_iterator_init(&it, &dir, 0);
     if(r != EOK){
         ext4_fs_put_inode_ref(&dir);
         goto Finish;
     }
 
-    i = 0;
+    uint32_t i = 0;
     while(r == EOK){
 
         if(!it.current)
             break;
 
         if(i == id){
-            memcpy(&d->de, it.current, sizeof(ext4_direntry));
             de = &d->de;
+
+            // load file size
+            struct ext4_inode_ref file;
+            r = ext4_fs_get_inode_ref(&ctx->fs, it.current->inode, &file);
+            if (r == EOK) {
+                de->size = ext4_inode_get_size(&ctx->fs.sb, file.inode);
+                ext4_fs_put_inode_ref(&file);
+            }
+
+            de->entry_length = it.current->entry_length;
+            de->inode        = it.current->inode;
+            de->inode_type   = it.current->in.inode_type;
+            de->name_length  = it.current->name_length;
+            memcpy(&de->name, it.current->name, it.current->name_length);
+
             break;
         }
 
