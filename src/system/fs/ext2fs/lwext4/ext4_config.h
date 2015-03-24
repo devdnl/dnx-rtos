@@ -112,7 +112,7 @@
 #define EXT4_CONFIG_DEBUG_ASSERT                0
 #endif
 
-/**@brief   Cache size of block device. (number of blocks in cache (block size: 1KiB - 32KiB))*/
+/**@brief   Number of blocks in cache (block has few sectors (1KiB - 32KiB)). (4+) */
 #ifndef EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE
 #define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        4
 #endif

@@ -973,6 +973,17 @@ int ext4_fstat(ext4_fs_t *ctx, ext4_file *f, struct ext4_filestat *stat)
 
         struct ext4_inode *inode = iref.inode;
 
+        switch (ext4_inode_get_mode(&iref.fs->sb, inode) & EXT4_INODE_MODE_TYPE_MASK) {
+        case EXT4_INODE_MODE_FIFO     : stat->st_type = EXT4_DIRENTRY_REG_FILE; break;
+        case EXT4_INODE_MODE_CHARDEV  : stat->st_type = EXT4_DIRENTRY_DIR;      break;
+        case EXT4_INODE_MODE_DIRECTORY: stat->st_type = EXT4_DIRENTRY_CHRDEV;   break;
+        case EXT4_INODE_MODE_BLOCKDEV : stat->st_type = EXT4_DIRENTRY_BLKDEV;   break;
+        case EXT4_INODE_MODE_FILE     : stat->st_type = EXT4_DIRENTRY_FIFO;     break;
+        case EXT4_INODE_MODE_SOFTLINK : stat->st_type = EXT4_DIRENTRY_SOCK;     break;
+        case EXT4_INODE_MODE_SOCKET   : stat->st_type = EXT4_DIRENTRY_SYMLINK;  break;
+        default                       : stat->st_type = EXT4_DIRENTRY_UNKNOWN;  break;
+        }
+
         stat->st_atime = ext4_inode_get_access_time(inode);
         stat->st_dev   = 0;
         stat->st_gid   = ext4_inode_get_gid(inode);
@@ -980,7 +991,6 @@ int ext4_fstat(ext4_fs_t *ctx, ext4_file *f, struct ext4_filestat *stat)
         stat->st_mode  = ext4_inode_get_mode(&iref.fs->sb, inode) & 01777;
         stat->st_mtime = ext4_inode_get_modification_time(inode);
         stat->st_size  = f->fsize;
-        stat->st_type  = EXT4_DIRENTRY_REG_FILE;
         stat->st_uid   = ext4_inode_get_uid(inode);
 
         ext4_fs_put_inode_ref(&iref);
@@ -1267,6 +1277,18 @@ int ext4_dir_open(ext4_fs_t *ctx, ext4_dir *d, const char *path)
 
     lock(ctx);
     int r = ext4_generic_open(ctx, &d->f, path, O_RDONLY, false, NULL);
+    if (r == EOK) {
+        // check if file is directory
+        struct ext4_inode_ref iref;
+        r = ext4_fs_get_inode_ref(&ctx->fs, d->f.inode, &iref);
+        if (r == EOK) {
+            uint32_t mode = ext4_inode_get_mode(&iref.fs->sb, iref.inode) & EXT4_INODE_MODE_TYPE_MASK;
+            if (mode != EXT4_INODE_MODE_DIRECTORY) {
+                r = ENOTDIR;
+            }
+            ext4_fs_put_inode_ref(&iref);
+        }
+    }
     unlock(ctx);
     return r;
 }
