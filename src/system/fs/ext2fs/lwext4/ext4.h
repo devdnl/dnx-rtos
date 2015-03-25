@@ -317,6 +317,14 @@ int ext4_fseek(ext4_fs_t *ctx, ext4_file *f, uint64_t offset, uint32_t origin);
 uint64_t ext4_ftell(ext4_fs_t *ctx, ext4_file *f);
 
 
+/**@brief   Rename selected file.
+ * @param   ctx file system context
+ * @param   old_path    old name
+ * @param   new_path    new name
+ * @return  standard error code */
+int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path);
+
+
 /**@brief   Get file info.
  * @param   ctx file system context
  * @param   path file path

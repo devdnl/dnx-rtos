@@ -605,8 +605,13 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
 {
         ext2fs_t *hdl = fs_handle;
 
-        // TODO ?
-        return STD_RET_ERROR;
+        int r = ext4_rename(hdl->fsctx, old_name, new_name);
+        if (r != EOK) {
+                errno = r;
+                return STD_RET_ERROR;
+        } else {
+                return STD_RET_OK;
+        }
 }
 
 //==============================================================================
@@ -739,10 +744,10 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(ext2fs, void *fs_handle)
 {
-//        ext2fs_t *hdl = fs_handle;
-//
-//        ext4_cache_write_back(hdl->fsctx, false); TEST
-//        ext4_cache_write_back(hdl->fsctx, true);
+        ext2fs_t *hdl = fs_handle;
+
+        ext4_cache_write_back(hdl->fsctx, false); // TEST
+        ext4_cache_write_back(hdl->fsctx, true);
 }
 
 //==============================================================================

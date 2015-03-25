@@ -529,7 +529,7 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     struct ext4_inode_ref child;
     struct ext4_inode_ref parent;
 
-    if(!ctx)
+    if(!ctx || !path)
         return ENOENT;
 
     path = correct_path(path);
@@ -574,6 +574,60 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
 
     r = ext4_fs_free_inode(&child);
     if(r != EOK)
+        goto Finish;
+
+    Finish:
+    ext4_fs_put_inode_ref(&child);
+    ext4_fs_put_inode_ref(&parent);
+    unlock(ctx);
+    return r;
+}
+
+int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
+{
+    if(!ctx || !old_path || !new_path)
+        return ENOENT;
+
+    old_path = correct_path(old_path);
+    new_path = correct_path(new_path);
+
+    lock(ctx);
+
+    ext4_file f;
+    uint32_t  parent_inode;
+    int r = ext4_generic_open(ctx, &f, old_path, O_RDONLY, true, &parent_inode);
+    if(r != EOK){
+        unlock(ctx);
+        return r;
+    }
+
+    /*Load parent*/
+    struct ext4_inode_ref parent;
+    r = ext4_fs_get_inode_ref(&ctx->fs, parent_inode, &parent);
+    if(r != EOK){
+        unlock(ctx);
+        return r;
+    }
+
+    /*We have file to rename. Load it.*/
+    struct ext4_inode_ref child;
+    r = ext4_fs_get_inode_ref(&ctx->fs, f.inode, &child);
+    if(r != EOK){
+        ext4_fs_put_inode_ref(&parent);
+        unlock(ctx);
+        return r;
+    }
+
+    /*Unlink from parent.*/
+    int len = strnlen(old_path, EXT4_DIRECTORY_FILENAME_LEN);
+    r = ext4_unlink(ctx, &parent, &child, old_path, len);
+    if(r != EOK)
+        goto Finish;
+
+    /*Link to parent as new name.*/
+    len = strnlen(new_path, EXT4_DIRECTORY_FILENAME_LEN);
+    r = ext4_link(ctx, &parent, &child, new_path, len);
+    if (r != EOK)
         goto Finish;
 
     Finish:
