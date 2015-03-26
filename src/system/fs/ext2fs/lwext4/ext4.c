@@ -524,7 +524,7 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     uint32_t parent_inode;
     int r;
     int len;
-    bool is_goal;
+    bool is_goal; // TEST
 
     struct ext4_inode_ref child;
     struct ext4_inode_ref parent;
@@ -540,6 +540,15 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
         unlock(ctx);
         return r;
     }
+
+    _sys_printk("RM full: %s\n", path); // TEST
+
+    const char *tmp_path = strrchr(path, '/');
+    if (tmp_path) {
+            path = tmp_path + 1;
+    }
+
+    _sys_printk("RM short: %s\n", path); // TEST
 
     /*Load parent*/
     r = ext4_fs_get_inode_ref(&ctx->fs, parent_inode, &parent);
@@ -565,7 +574,9 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     if(r != EOK)
         goto Finish;
 
-    len = ext4_path_check(path, &is_goal);
+    len  = strnlen(path, EXT4_DIRECTORY_FILENAME_LEN);
+
+//    len = ext4_path_check(path, &is_goal);
 
     /*Unlink from parent.*/
     r = ext4_unlink(ctx, &parent, &child, path, len);
@@ -589,7 +600,14 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         return ENOENT;
 
     old_path = correct_path(old_path);
+
+    new_path = strrchr(new_path, '/');
+    if (!new_path)
+            return ENOENT;
+
     new_path = correct_path(new_path);
+
+    _sys_printk("New path: '%s'\n", new_path); // TEST
 
     lock(ctx);
 
@@ -601,6 +619,15 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         return r;
     }
 
+    _sys_printk("Opened: '%s'\n", old_path); // TEST
+
+    const char *tmp_path = strrchr(old_path, '/');
+    if (tmp_path) {
+            old_path = tmp_path + 1;
+    }
+
+    _sys_printk("Short: '%s'\n", old_path); // TEST
+
     /*Load parent*/
     struct ext4_inode_ref parent;
     r = ext4_fs_get_inode_ref(&ctx->fs, parent_inode, &parent);
@@ -608,6 +635,8 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         unlock(ctx);
         return r;
     }
+
+    _sys_printk("Parent node got\n"); // TEST
 
     /*We have file to rename. Load it.*/
     struct ext4_inode_ref child;
@@ -618,17 +647,33 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         return r;
     }
 
+    _sys_printk("Children node got\n"); // TEST
+
     /*Unlink from parent.*/
-    int len = strnlen(old_path, EXT4_DIRECTORY_FILENAME_LEN);
+
+//    old_path = strrchr(old_path, '/');
+//    if (!old_path) {
+//            ext4_fs_put_inode_ref(&parent);
+//            unlock(ctx);
+//            return ENOENT;
+//    }
+
+    old_path = correct_path(old_path);
+    int len  = strnlen(old_path, EXT4_DIRECTORY_FILENAME_LEN);
+
     r = ext4_unlink(ctx, &parent, &child, old_path, len);
     if(r != EOK)
         goto Finish;
+
+    _sys_printk("Unlink done\n"); // TEST
 
     /*Link to parent as new name.*/
     len = strnlen(new_path, EXT4_DIRECTORY_FILENAME_LEN);
     r = ext4_link(ctx, &parent, &child, new_path, len);
     if (r != EOK)
         goto Finish;
+
+    _sys_printk("Link done\n"); // TEST
 
     Finish:
     ext4_fs_put_inode_ref(&child);
@@ -1261,6 +1306,13 @@ int ext4_dir_rm(ext4_fs_t *ctx, const char *path)
 
                 /* In this place all directories should be unlinked.
                  * Last unlink from root of current directory*/
+                const char *tmp_path = strrchr(path, '/');
+                if (tmp_path) {
+                        path = tmp_path + 1;
+                }
+
+                len = strnlen(path, EXT4_DIRECTORY_FILENAME_LEN);
+
                 r = ext4_unlink(ctx, &parent, &current, path, len);
                 if(r != EOK){
                     ext4_fs_put_inode_ref(&parent);
