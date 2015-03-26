@@ -613,16 +613,22 @@ API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_name)
 {
+
         ext2fs_t *hdl = fs_handle;
+        UNUSED_ARG(hdl);
+        UNUSED_ARG(old_name);
+        UNUSED_ARG(new_name);
+
+        return STD_RET_ERROR;
 
         // FIXME ex2fs::rename(): this function does not work correctly. Do not use!
-        int r = ext4_rename(hdl->fsctx, old_name, new_name);
-        if (r != EOK) {
-                errno = r;
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+//        int r = ext4_rename(hdl->fsctx, old_name, new_name);
+//        if (r != EOK) {
+//                errno = r;
+//                return STD_RET_ERROR;
+//        } else {
+//                return STD_RET_OK;
+//        }
 }
 
 //==============================================================================
