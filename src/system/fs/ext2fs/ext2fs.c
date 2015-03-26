@@ -42,7 +42,7 @@ typedef struct {
         ext4_fs_t *fsctx;
         mutex_t   *mtx;
         FILE      *srcfile;
-        uint       openfiles; // TODO
+        uint       openfiles;
 } ext2fs_t;
 
 /*==============================================================================
@@ -54,6 +54,8 @@ static void ext4_lock(void *obj);
 static void ext4_unlock(void *obj);
 static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
 static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
+static void increase_openfiles(ext2fs_t *hdl);
+static void decrease_openfiles(ext2fs_t *hdl);
 
 /*==============================================================================
   Local objects
@@ -110,8 +112,9 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
         if (hdl) {
                 hdl->mtx = _sys_mutex_new(MUTEX_RECURSIVE);
                 if (hdl->mtx) {
-                        hdl->srcfile = srcfile;
-                        hdl->fsctx   = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
+                        hdl->openfiles = 0;
+                        hdl->srcfile   = srcfile;
+                        hdl->fsctx     = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
                         if (hdl->fsctx) {
                                 ext4_cache_write_back(hdl->fsctx, true);
                                 *fs_handle = hdl;
@@ -145,13 +148,17 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-        ext4_cache_write_back(hdl->fsctx, false);
-        ext4_umount(hdl->fsctx);
-        _sys_mutex_delete(hdl->mtx);
-        _sys_fclose(hdl->srcfile);
-        free(hdl);
-
-        return STD_RET_OK;
+        if (hdl->openfiles == 0) {
+                ext4_cache_write_back(hdl->fsctx, false);
+                ext4_umount(hdl->fsctx);
+                _sys_mutex_delete(hdl->mtx);
+                _sys_fclose(hdl->srcfile);
+                free(hdl);
+                return STD_RET_OK;
+        } else {
+                errno = EBUSY;
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -181,7 +188,7 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 if (r == EOK) {
                         *fpos  = ext4_ftell(hdl->fsctx, file);
                         *extra = file;
-                        hdl->openfiles++;
+                        increase_openfiles(hdl);
                         return STD_RET_OK;
                 } else {
                         errno = r;
@@ -216,6 +223,7 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
         int r = ext4_fclose(hdl->fsctx, extra);
         if (r == EOK) {
                 free(extra);
+                decrease_openfiles(hdl);
                 return STD_RET_OK;
         } else {
                 errno = r;
@@ -479,6 +487,9 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
                         dir->f_dd       = ext4dir;
                         dir->f_seek     = 0;
                         dir->f_items    = 0;
+
+                        increase_openfiles(hdl);
+
                         return STD_RET_OK;
                 } else {
                         errno = r;
@@ -508,6 +519,7 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
         int r = ext4_dir_close(hdl->fsctx, dir->f_dd);
         if (r == EOK) {
                 free(dir->f_dd);
+                decrease_openfiles(hdl);
                 return STD_RET_OK;
         } else {
                 errno = r;
@@ -603,7 +615,7 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
 {
         ext2fs_t *hdl = fs_handle;
 
-        // FIXME this function does not work correctly. Do not use!
+        // FIXME ex2fs::rename(): this function does not work correctly. Do not use!
         int r = ext4_rename(hdl->fsctx, old_name, new_name);
         if (r != EOK) {
                 errno = r;
@@ -751,9 +763,11 @@ API_FS_SYNC(ext2fs, void *fs_handle)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Protect file system against concurrent
+ *
+ * @param  ctx          user's context (passed by ext4_mount() function)
+ *
+ * @return None
  */
 //==============================================================================
 static void ext4_lock(void *ctx)
@@ -764,9 +778,11 @@ static void ext4_lock(void *ctx)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Disable orotect file system against concurrent
+ *
+ * @param  ctx          user's context (passed by ext4_mount() function)
+ *
+ * @return None
  */
 //==============================================================================
 static void ext4_unlock(void *ctx)
@@ -777,9 +793,14 @@ static void ext4_unlock(void *ctx)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Read block from device
+ *
+ * @param  bdev         block device descriptor
+ * @param  buf          data destination buffer
+ * @param  blk_id       block ID to read (sector number)
+ * @param  blk_cnt      number of blocks to read (sectors)
+ *
+ * @return Standard error value (one of errno.h)
  */
 //==============================================================================
 static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
@@ -796,9 +817,14 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Write block to device
+ *
+ * @param  bdev         block device descriptor
+ * @param  buf          data source buffer
+ * @param  blk_id       block ID to read (sector number)
+ * @param  blk_cnt      number of blocks to read (sectors)
+ *
+ * @return Standard error value (one of errno.h)
  */
 //==============================================================================
 static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
@@ -811,6 +837,38 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
                 return EOK;
         else
                 return errno;
+}
+
+//==============================================================================
+/**
+ * @brief  Increase number of open files
+ *
+ * @param  hdl          this file system handle
+ *
+ * @return None
+ */
+//==============================================================================
+static void increase_openfiles(ext2fs_t *hdl)
+{
+        _sys_critical_section_begin();
+        hdl->openfiles++;
+        _sys_critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief  Decrease number of open files
+ *
+ * @param  hdl          this file system handle
+ *
+ * @return None
+ */
+//==============================================================================
+static void decrease_openfiles(ext2fs_t *hdl)
+{
+        _sys_critical_section_begin();
+        hdl->openfiles--;
+        _sys_critical_section_end();
 }
 
 /*==============================================================================
