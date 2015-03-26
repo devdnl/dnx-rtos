@@ -724,7 +724,8 @@ const char *_strerror(int errnum)
                 [EADDRINUSE  ] = NUMBER_TO_STR(EADDRINUSE),
                 [ENOMEDIUM   ] = NUMBER_TO_STR(ENOMEDIUM),
                 [EMEDIUMTYPE ] = NUMBER_TO_STR(EMEDIUMTYPE),
-                [ECANCELED   ] = NUMBER_TO_STR(ECANCELED)
+                [ECANCELED   ] = NUMBER_TO_STR(ECANCELED),
+                [ENOTSUP     ] = NUMBER_TO_STR(ENOTSUP)
 #elif (CONFIG_ERRNO_STRING_LEN == 2)
                 [ESUCC       ] = TO_STR(ESUCC),
                 [EPERM       ] = TO_STR(EPERM),
@@ -761,7 +762,8 @@ const char *_strerror(int errnum)
                 [EADDRINUSE  ] = TO_STR(EADDRINUSE),
                 [ENOMEDIUM   ] = TO_STR(ENOMEDIUM),
                 [EMEDIUMTYPE ] = TO_STR(EMEDIUMTYPE),
-                [ECANCELED   ] = TO_STR(ECANCELED)
+                [ECANCELED   ] = TO_STR(ECANCELED),
+                [ENOTSUP     ] = TO_STR(ENOTSUP)
 #elif (CONFIG_ERRNO_STRING_LEN == 3)
                 [ESUCC       ] = "Success",
                 [EPERM       ] = "Operation not permitted",
@@ -798,7 +800,8 @@ const char *_strerror(int errnum)
                 [EADDRINUSE  ] = "Address already in use",
                 [ENOMEDIUM   ] = "No medium found",
                 [EMEDIUMTYPE ] = "Wrong medium type",
-                [ECANCELED   ] = "Operation Canceled"
+                [ECANCELED   ] = "Operation Canceled",
+                [ENOTSUP     ] = "Not supported"
 #else
 #error "CONFIG_ERRNO_STRING_LEN should be in range 0 - 3!"
 #endif

@@ -2,6 +2,10 @@
  * Copyright (c) 2013 Grzegorz Kostka (kostka.grzegorz@gmail.com)
  * All rights reserved.
  *
+ * Copyright (c) 2015 Daniel Zorychta (daniel.zorychta@gmail.com)
+ * All rights reserved.
+ * (bug fix, file system context, new interfaces)
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -139,7 +143,7 @@ static int ext4_has_children(bool *has_children, struct ext4_inode_ref *enode)
 
 
 static int ext4_link(ext4_fs_t *ctx, struct ext4_inode_ref *parent,
-    struct ext4_inode_ref *child, const char *name, uint32_t name_len)
+    struct ext4_inode_ref *child, const char *name, uint32_t name_len, bool mk_dir_dots)
 {
     /* Check maximum name length */
     if(name_len > EXT4_DIRECTORY_FILENAME_LEN)
@@ -152,17 +156,15 @@ static int ext4_link(ext4_fs_t *ctx, struct ext4_inode_ref *parent,
         return rc;
 
     /* Fill new dir -> add '.' and '..' entries */
-    if (ext4_inode_is_type(&ctx->fs.sb, child->inode,
-            EXT4_INODE_MODE_DIRECTORY)) {
-        rc = ext4_dir_add_entry(child, ".", strlen("."),
-                child);
+    if (mk_dir_dots && ext4_inode_is_type(&ctx->fs.sb, child->inode, EXT4_INODE_MODE_DIRECTORY)) {
+
+        rc = ext4_dir_add_entry(child, ".", strlen("."), child);
         if (rc != EOK) {
             ext4_dir_remove_entry(parent, name, strlen(name));
             return rc;
         }
 
-        rc = ext4_dir_add_entry(child, "..", strlen(".."),
-                parent);
+        rc = ext4_dir_add_entry(child, "..", strlen(".."), parent);
         if (rc != EOK) {
             ext4_dir_remove_entry(parent, name, strlen(name));
             ext4_dir_remove_entry(child, ".", strlen("."));
@@ -174,14 +176,13 @@ static int ext4_link(ext4_fs_t *ctx, struct ext4_inode_ref *parent,
 
 #if EXT4_CONFIG_DIR_INDEX_ENABLE
         /* Initialize directory index if supported */
-        if (ext4_sb_has_feature_compatible(&ctx->fs.sb,
-                EXT4_FEATURE_COMPAT_DIR_INDEX)) {
+        if (ext4_sb_has_feature_compatible(&ctx->fs.sb, EXT4_FEATURE_COMPAT_DIR_INDEX)) {
+
             rc = ext4_dir_dx_init(child);
             if (rc != EOK)
                 return rc;
 
-            ext4_inode_set_flag(child->inode,
-                EXT4_INODE_FLAG_INDEX);
+            ext4_inode_set_flag(child->inode, EXT4_INODE_FLAG_INDEX);
             child->dirty = true;
         }
 #endif
@@ -210,16 +211,20 @@ static const char *correct_path(const char *path)
 
 static int ext4_unlink(ext4_fs_t *ctx,
     struct ext4_inode_ref *parent, struct ext4_inode_ref *child_inode_ref,
-    const char *name, uint32_t name_len)
+    const char *name, uint32_t name_len, bool ignore_children_check)
 {
-    bool has_children;
-    int rc = ext4_has_children(&has_children, child_inode_ref);
-    if (rc != EOK)
-        return rc;
+    int rc;
 
-    /* Cannot unlink non-empty node */
-    if (has_children)
-        return ENOTSUP;
+    if (!ignore_children_check) {
+        bool has_children;
+        rc = ext4_has_children(&has_children, child_inode_ref);
+        if (rc != EOK)
+            return rc;
+
+        /* Cannot unlink non-empty node */
+        if (has_children)
+            return ENOTSUP;
+    }
 
     /* Remove entry from parent directory */
     rc = ext4_dir_remove_entry(parent, name, name_len);
@@ -420,9 +425,9 @@ static int ext4_generic_open(ext4_fs_t *ctx, ext4_file *f, const char *path,
             ext4_dir_destroy_result(&ref, &result);
 
             /*Link with root dir.*/
-            r = ext4_link(ctx, &ref, &child_ref, path, len);
+            r = ext4_link(ctx, &ref, &child_ref, path, len, true);
             if(r != EOK){
-                /*Fali. Free new inode.*/
+                /*Fail. Free new inode.*/
                 ext4_fs_free_inode(&child_ref);
                 /*We do not want to write new inode.
                   But block has to be released.*/
@@ -524,7 +529,6 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     uint32_t parent_inode;
     int r;
     int len;
-    bool is_goal; // TEST
 
     struct ext4_inode_ref child;
     struct ext4_inode_ref parent;
@@ -541,14 +545,10 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
         return r;
     }
 
-    _sys_printk("RM full: %s\n", path); // TEST
-
     const char *tmp_path = strrchr(path, '/');
     if (tmp_path) {
             path = tmp_path + 1;
     }
-
-    _sys_printk("RM short: %s\n", path); // TEST
 
     /*Load parent*/
     r = ext4_fs_get_inode_ref(&ctx->fs, parent_inode, &parent);
@@ -574,12 +574,9 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     if(r != EOK)
         goto Finish;
 
-    len  = strnlen(path, EXT4_DIRECTORY_FILENAME_LEN);
-
-//    len = ext4_path_check(path, &is_goal);
-
     /*Unlink from parent.*/
-    r = ext4_unlink(ctx, &parent, &child, path, len);
+    len = strnlen(path, EXT4_DIRECTORY_FILENAME_LEN);
+    r = ext4_unlink(ctx, &parent, &child, path, len, false);
     if(r != EOK)
         goto Finish;
 
@@ -594,6 +591,7 @@ int ext4_fremove(ext4_fs_t *ctx, const char *path)
     return r;
 }
 
+// FIXME this function does not work correctly. Do not use!
 int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
 {
     if(!ctx || !old_path || !new_path)
@@ -607,26 +605,28 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
 
     new_path = correct_path(new_path);
 
-    _sys_printk("New path: '%s'\n", new_path); // TEST
-
     lock(ctx);
 
     ext4_file f;
     uint32_t  parent_inode;
+
+    // try open file
     int r = ext4_generic_open(ctx, &f, old_path, O_RDONLY, true, &parent_inode);
     if(r != EOK){
-        unlock(ctx);
-        return r;
+
+        // if file cannot be opened let's tray open as folder
+        r = ext4_generic_open(ctx, &f, old_path, O_RDONLY, false, &parent_inode);
+            if(r != EOK){
+                unlock(ctx);
+                    return r;
+            }
     }
 
-    _sys_printk("Opened: '%s'\n", old_path); // TEST
-
+    // find base name
     const char *tmp_path = strrchr(old_path, '/');
     if (tmp_path) {
-            old_path = tmp_path + 1;
+            old_path = correct_path(tmp_path + 1);
     }
-
-    _sys_printk("Short: '%s'\n", old_path); // TEST
 
     /*Load parent*/
     struct ext4_inode_ref parent;
@@ -636,9 +636,7 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         return r;
     }
 
-    _sys_printk("Parent node got\n"); // TEST
-
-    /*We have file to rename. Load it.*/
+    /*Load node of children*/
     struct ext4_inode_ref child;
     r = ext4_fs_get_inode_ref(&ctx->fs, f.inode, &child);
     if(r != EOK){
@@ -647,33 +645,17 @@ int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path)
         return r;
     }
 
-    _sys_printk("Children node got\n"); // TEST
-
-    /*Unlink from parent.*/
-
-//    old_path = strrchr(old_path, '/');
-//    if (!old_path) {
-//            ext4_fs_put_inode_ref(&parent);
-//            unlock(ctx);
-//            return ENOENT;
-//    }
-
-    old_path = correct_path(old_path);
+    // unlink file from parent
     int len  = strnlen(old_path, EXT4_DIRECTORY_FILENAME_LEN);
-
-    r = ext4_unlink(ctx, &parent, &child, old_path, len);
+    r = ext4_unlink(ctx, &parent, &child, old_path, len, true);
     if(r != EOK)
         goto Finish;
 
-    _sys_printk("Unlink done\n"); // TEST
-
     /*Link to parent as new name.*/
     len = strnlen(new_path, EXT4_DIRECTORY_FILENAME_LEN);
-    r = ext4_link(ctx, &parent, &child, new_path, len);
+    r = ext4_link(ctx, &parent, &child, new_path, len, false);
     if (r != EOK)
         goto Finish;
-
-    _sys_printk("Link done\n"); // TEST
 
     Finish:
     ext4_fs_put_inode_ref(&child);
@@ -1262,7 +1244,7 @@ int ext4_dir_rm(ext4_fs_t *ctx, const char *path)
 
                 /*No children in child directory or file. Just unlink.*/
                 r = ext4_unlink(ctx, &current, &child,
-                        (char *)it.current->name, it.current->name_length);
+                        (char *)it.current->name, it.current->name_length, false);
                 if(r != EOK){
                     ext4_fs_put_inode_ref(&child);
                     break;
@@ -1313,7 +1295,7 @@ int ext4_dir_rm(ext4_fs_t *ctx, const char *path)
 
                 len = strnlen(path, EXT4_DIRECTORY_FILENAME_LEN);
 
-                r = ext4_unlink(ctx, &parent, &current, path, len);
+                r = ext4_unlink(ctx, &parent, &current, path, len, false);
                 if(r != EOK){
                     ext4_fs_put_inode_ref(&parent);
                     goto End;

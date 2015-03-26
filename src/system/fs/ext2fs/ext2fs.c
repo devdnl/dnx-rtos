@@ -105,8 +105,6 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 
         u64_t block_count = stat.st_size / BLOCK_SIZE;
 
-        _sys_printk("Blocks: %d\n", (long)block_count); // TEST
-
         // create FS context
         ext2fs_t *hdl = malloc(sizeof(ext2fs_t));
         if (hdl) {
@@ -115,7 +113,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
                         hdl->srcfile = srcfile;
                         hdl->fsctx   = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
                         if (hdl->fsctx) {
-                                ext4_cache_write_back(hdl->fsctx, true); //TEST
+                                ext4_cache_write_back(hdl->fsctx, true);
                                 *fs_handle = hdl;
                                 return STD_RET_OK;
                         } else {
@@ -147,7 +145,7 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-        ext4_cache_write_back(hdl->fsctx, false); //TEST
+        ext4_cache_write_back(hdl->fsctx, false);
         ext4_umount(hdl->fsctx);
         _sys_mutex_delete(hdl->mtx);
         _sys_fclose(hdl->srcfile);
@@ -367,7 +365,7 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 
         ext2fs_t *hdl = fs_handle;
 
-        struct ext4_filestat filestat; // FIXME allocate to use less stack
+        struct ext4_filestat filestat;
         int r = ext4_fstat(hdl->fsctx, extra, &filestat);
         if (r == EOK) {
 
@@ -605,6 +603,7 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
 {
         ext2fs_t *hdl = fs_handle;
 
+        // FIXME this function does not work correctly. Do not use!
         int r = ext4_rename(hdl->fsctx, old_name, new_name);
         if (r != EOK) {
                 errno = r;
@@ -681,7 +680,7 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
 {
         ext2fs_t *hdl = fs_handle;
 
-        struct ext4_filestat filestat; // FIXME allocate to use less stack
+        struct ext4_filestat filestat;
         int r = ext4_stat(hdl->fsctx, path, &filestat);
         if (r == EOK) {
 
@@ -714,7 +713,7 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
 {
         ext2fs_t *hdl = fs_handle;
 
-        struct ext4_fs_stats stat; // FIXME allocate to use less stack
+        struct ext4_fs_stats stat;
         int r = ext4_statfs(hdl->fsctx, &stat);
         if (r == EOK) {
 
@@ -746,7 +745,7 @@ API_FS_SYNC(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-        ext4_cache_write_back(hdl->fsctx, false); // TEST
+        ext4_cache_write_back(hdl->fsctx, false);
         ext4_cache_write_back(hdl->fsctx, true);
 }
 
@@ -785,10 +784,6 @@ static void ext4_unlock(void *ctx)
 //==============================================================================
 static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-//        blk_id &= 0xFFFFFFFF; // TEST
-//        _sys_printk("Read: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
-
-
         ext2fs_t *hdl = bdev->usr_ctx;
 
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
@@ -808,9 +803,6 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 //==============================================================================
 static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-//        blk_id &= 0xFFFFFFFF; // TEST
-//        _sys_printk("Write: blk_id = %d, blk_cnt = %d\n", (long)blk_id, blk_cnt); // TEST
-
         ext2fs_t *hdl = bdev->usr_ctx;
 
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);

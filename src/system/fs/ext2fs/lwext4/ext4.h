@@ -322,6 +322,7 @@ uint64_t ext4_ftell(ext4_fs_t *ctx, ext4_file *f);
  * @param   old_path    old name
  * @param   new_path    new name
  * @return  standard error code */
+// FIXME this function does not work correctly. Do not use!
 int ext4_rename(ext4_fs_t *ctx, const char *old_path, const char *new_path);
 
 
