@@ -114,7 +114,7 @@
 
 /**@brief   Number of blocks in cache (block has few sectors (1KiB - 32KiB)). (4+) */
 #ifndef EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE
-#define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        4
+#define EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE        __EXT2FS_CACHE_SIZE__
 #endif
 
 /**@brief   CPU Byte order */
