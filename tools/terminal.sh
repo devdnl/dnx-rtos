@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
-ID=AE*
+if [ "$1" == "" ]; then
+    dev=/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AE*-if00-port0
+else
+    dev=$1
+fi
 
-minicom -D /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_$ID-if00-port0 -b 115200
+minicom -D "$dev"  -b 115200

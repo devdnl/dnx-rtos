@@ -37,7 +37,7 @@
 #define __TTY_TERM_COLS__ 80
 #define __TTY_TERM_ROWS__ 24
 #define __TTY_OUT_STREAM_LEN__ 80
-#define __TTY_NUMBER_OF_TERM__ 3
+#define __TTY_NUMBER_OF_TERM__ 4
 #define __TTY_TERM_IN_FILE__ "/dev/ttyS0"
 #define __TTY_TERM_OUT_FILE__ "/dev/ttyS0"
 

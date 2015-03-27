@@ -41,11 +41,11 @@
 #define __NETWORK_MAC_ADDR_3__ 0x37
 #define __NETWORK_MAC_ADDR_4__ 0xB5
 #define __NETWORK_MAC_ADDR_5__ 0xBD
-#define __NETWORK_ETHIF_FILE__ "/dev/eth0"
+#define __NETWORK_ETHIF_FILE__ "/dev/ethmac"
 #define __NETWORK_IP_ADDR1__ 192
 #define __NETWORK_IP_ADDR2__ 168
 #define __NETWORK_IP_ADDR3__ 0
-#define __NETWORK_IP_ADDR4__ 120
+#define __NETWORK_IP_ADDR4__ 100
 #define __NETWORK_IP_MASK1__ 255
 #define __NETWORK_IP_MASK2__ 255
 #define __NETWORK_IP_MASK3__ 255

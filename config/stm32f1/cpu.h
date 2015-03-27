@@ -35,8 +35,8 @@
 #define _CPU_H_
 
 /* configuration to modify */
-#define __CPU_NAME__ STM32F103RCxx
-#define __CPU_FAMILY__ _STM32F10X_HD_
+#define __CPU_NAME__ STM32F107VCxx
+#define __CPU_FAMILY__ _STM32F10X_CL_
 
 /* fixed configuration */
 #define _CPU_START_FREQUENCY_           (8000000UL)
