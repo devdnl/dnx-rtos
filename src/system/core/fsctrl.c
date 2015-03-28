@@ -71,27 +71,21 @@ extern const uint             _FS_table_size;
  * @param *src_path      path to file with source data
  * @param *mount_point   mount point of file system
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno values
  */
 //==============================================================================
-stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_point)
+int _mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
-        if (!FS_name || !mount_point || !src_path) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
-        }
-
-        for (uint i = 0; i < _FS_table_size; i++) {
-                if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
-                        return _vfs_mount(src_path, mount_point,
-                                         (struct vfs_FS_interface *)&_FS_table[i].FS_if);
+        if (FS_name && mount_point && src_path) {
+                for (uint i = 0; i < _FS_table_size; i++) {
+                        if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
+                                return _vfs_mount(src_path, mount_point,
+                                                 (struct vfs_FS_interface *)&_FS_table[i].FS_if);
+                        }
                 }
         }
 
-        errno = EINVAL;
-
-        return STD_RET_ERROR;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -100,17 +94,15 @@ stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_poi
  *
  * @param *mount_point   path to file system
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno values
  */
 //==============================================================================
-stdret_t _umount(const char *mount_point)
+int _umount(const char *mount_point)
 {
         if (mount_point) {
                 return _vfs_umount(mount_point);
         } else {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 }
 

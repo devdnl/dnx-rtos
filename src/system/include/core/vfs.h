@@ -236,8 +236,8 @@ typedef struct vfs_file FILE;
   Exported API functions
 ==============================================================================*/
 extern stdret_t  _vfs_init        (void);
-extern stdret_t  _vfs_mount       (const char*, const char*, struct vfs_FS_interface*);
-extern stdret_t  _vfs_umount      (const char*);
+extern int       _vfs_mount       (const char*, const char*, struct vfs_FS_interface*);
+extern int       _vfs_umount      (const char*);
 extern int       _vfs_getmntentry (int, struct mntent*);
 extern int       _vfs_mknod       (const char*, dev_t);
 extern int       _vfs_mkdir       (const char*, mode_t);
@@ -252,6 +252,7 @@ extern int       _vfs_chown       (const char*, uid_t, gid_t);
 extern int       _vfs_stat        (const char*, struct stat*);
 extern int       _vfs_statfs      (const char*, struct statfs*);
 extern FILE     *_vfs_fopen       (const char*, const char*);
+int _vfs_fopen_r(const char *path, const char *mode, FILE **file);
 extern FILE     *_vfs_freopen     (const char*, const char*, FILE*);
 extern int       _vfs_fclose      (FILE*);
 extern int       _vfs_fclose_force(FILE*);

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mian.c
+@file    syscall.h
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   System call handling
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,67 +24,81 @@
 
 *//*==========================================================================*/
 
+#ifndef _SYSCALL_H_
+#define _SYSCALL_H_
+
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "portable/cpuctl.h"
-#include "core/memman.h"
-#include "core/sysmoni.h"
-#include "core/vfs.h"
-#include "core/syscall.h"
-#include "kernel/kwrapper.h"
-#include "user/initd.h"
 
-#if (CONFIG_NETWORK_ENABLE != 0)
-#       include "arch/netman.h"
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
+==============================================================================*/
+typedef enum {
+        SYSCALL_MOUNT,                  // int: const char *FS_name, const char *src_path, const char *mount_point
+        SYSCALL_UMOUNT,                 // int: const char *mount_point
+        SYSCALL_GETMNTENTRY,
+        SYSCALL_MKNOD,
+        SYSCALL_MKDIR,
+        SYSCALL_MKFIFO,
+        SYSCALL_OPENDIR,
+        SYSCALL_CLOSEDIR,
+        SYSCALL_READDIR,
+        SYSCALL_REMOVE,
+        SYSCALL_RENAME,
+        SYSCALL_CHMOD,
+        SYSCALL_CHOWN,
+        SYSCALL_STAT,
+        SYSCALL_STATFS,
+        SYSCALL_FOPEN,                  // FILE*: const char *path, const char *mode
+        SYSCALL_FREOPEN,
+        SYSCALL_FCLOSE,                 // int: FILE*)
+        SYSCALL_FWRITE,                 // size_t: const void *src, size_t size, size_t count, FILE *file
+        SYSCALL_FREAD,                  // size_t: void *dst, size_t size, size_t count, FILE *file
+        SYSCALL_FSEEK,
+        SYSCALL_FTELL,
+        SYSCALL_IOCTL,
+        SYSCALL_FSTAT,
+        SYSCALL_FFLUSH,
+        SYSCALL_FEOF,
+        SYSCALL_CLEARERROR,
+        SYSCALL_FERROR,
+        SYSCALL_REWIND,
+        SYSCALL_SYNC,
+        SYSCALL_TIME,
+        SYSCALL_STIME,
+        SYSCALL_DRIVERINIT,
+        SYSCALL_DRIVERRELEASE,
+        _SYSCALL_COUNT
+} syscall_t;
+
+/*==============================================================================
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported functions
 ==============================================================================*/
+extern void _syscall_init();
+extern void _syscall(syscall_t, void*, ...);
 
 /*==============================================================================
-  Local object definitions
+  Exported inline functions
 ==============================================================================*/
 
-/*==============================================================================
-  Exported object definitions
-==============================================================================*/
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Main function
- */
-//==============================================================================
-int main(void)
-{
-        _cpuctl_init();
-        _memman_init();
-        _sysm_init();
-        _vfs_init();
-        _syscall_init();
-        _task_new(initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
-
-#if (CONFIG_NETWORK_ENABLE != 0)
-        _netman_init();
-#endif
-
-        _kernel_start();
-        return 0;
+#ifdef __cplusplus
 }
+#endif
 
+#endif /* _SYSCALL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

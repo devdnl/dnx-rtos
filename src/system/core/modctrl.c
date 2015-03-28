@@ -114,23 +114,23 @@ static bool is_device_valid(dev_t id)
 /**
  * @brief Function find driver name and then initialize device
  *
- * @param drv_name            driver name
- * @param node_path           path name to create in the file system or NULL
+ * @param [IN]  drv_name            driver name
+ * @param [IN]  node_path           path name to create in the file system or NULL
+ * @param [OUT] id                  driver id
  *
- * @return Driver ID on success, otherwise -1
+ * @return One of error code (errno)
  */
 //==============================================================================
-int _driver_init(const char *drv_name, const char *node_path)
+int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
 {
         if (drv_name == NULL) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
         if (!driver_memory_region) {
                 driver_memory_region = _sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
-                        return -1;
+                        return ENOMEM;
                 }
         }
 
@@ -142,8 +142,7 @@ int _driver_init(const char *drv_name, const char *node_path)
 
                 if (driver_memory_region[drvid]) {
                         _printk(drv_already_init_str, drv_name);
-                        errno = EADDRINUSE;
-                        return -1;
+                        return EADDRINUSE;
                 }
 
                 _printk(drv_initializing_str, drv_name);
@@ -172,13 +171,12 @@ int _driver_init(const char *drv_name, const char *node_path)
 
                 } else {
                         _printk(drv_initialized_str);
-                        return drvid;
+                        return ESUCC;
                 }
         }
 
         _printk(drv_not_exist_str, drv_name);
-        errno = EINVAL;
-        return -1;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -187,35 +185,31 @@ int _driver_init(const char *drv_name, const char *node_path)
  *
  * @param drv_name            driver name
  *
- * @return 0 on success, otherwise other value
+ * @return One of error code (errno)
  */
 //==============================================================================
 int _driver_release(const char *drv_name)
 {
         if (!drv_name) {
-                errno = EINVAL;
-                return 1;
+                return EINVAL;
         }
 
         for (uint i = 0; i < _regdrv_size_of_driver_table; i++) {
                 if (strcmp(_regdrv_driver_table[i].drv_name, drv_name) == 0) {
 
-                        stdret_t status = STD_RET_ERROR;
                         if (driver_memory_region[i]) {
-                                status = _regdrv_driver_table[i].interface->drv_release(driver_memory_region[i]);
+                                int status = _regdrv_driver_table[i].interface->drv_release(driver_memory_region[i]);
                                 if (status == STD_RET_OK) {
                                         driver_memory_region[i] = NULL;
                                 }
+                                return status;
                         } else {
-                                errno = ENXIO;
+                                return ENXIO;
                         }
-
-                        return status;
                 }
         }
 
-        errno = EINVAL;
-        return 1;
+        return EINVAL;
 }
 
 //==============================================================================

@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include "core/fsctrl.h"
 #include "core/modctrl.h"
+#include "core/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -73,7 +74,7 @@ extern "C" {
  *
  * @errors EINVAL, ENOMEM, ...
  *
- * @return On success, <b>STD_RET_OK</b> is returned. On error, <b>STD_RET_ERROR</b>
+ * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
  * @example
@@ -81,7 +82,7 @@ extern "C" {
  *
  * mkdir("/sdcard", 0666);
  * errno = 0;
- * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
+ * if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
  *         // file system mounted ...
  *
  * } else {
@@ -94,7 +95,9 @@ extern "C" {
 //==============================================================================
 static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
-        return _mount(FS_name, src_path, mount_point);
+        int r;
+        _syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point);
+        return r;
 }
 
 //==============================================================================
@@ -108,7 +111,7 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
  *
  * @errors EINVAL, EBUSY
  *
- * @return On success, <b>STD_RET_OK</b> is returned. On error, <b>STD_RET_ERROR</b>
+ * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
  * @example
@@ -116,11 +119,11 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
  *
  * mkdir("/sdcard", 0666);
  * errno = 0;
- * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
+ * if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
  *         // file system mounted ...
  *         // operations on file system ...
  *
- *         if (umount("/sdcard") == STD_RET_OK) {
+ *         if (umount("/sdcard") == 0) {
  *                 // ...
  *
  *         } else {
@@ -136,7 +139,9 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
 //==============================================================================
 static inline int umount(const char *mount_point)
 {
-        return _umount(mount_point);
+        int r;
+        _syscall(SYSCALL_UMOUNT, &r, mount_point);
+        return r;
 }
 
 //==============================================================================
@@ -169,7 +174,9 @@ static inline int umount(const char *mount_point)
 //==============================================================================
 static inline int driver_init(const char *drv_name, const char *node_path)
 {
-        return _driver_init(drv_name, node_path);
+        int r;
+        _syscall(SYSCALL_DRIVERINIT, &r, drv_name, node_path);
+        return r;
 }
 
 //==============================================================================
@@ -197,7 +204,9 @@ static inline int driver_init(const char *drv_name, const char *node_path)
 //==============================================================================
 static inline int driver_release(const char *drv_name)
 {
-        return _driver_release(drv_name);
+        int r;
+        _syscall(SYSCALL_DRIVERINIT, &r, drv_name);
+        return r;
 }
 
 #ifdef __cplusplus

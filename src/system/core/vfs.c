@@ -111,11 +111,10 @@ stdret_t _vfs_init(void)
  * @param[in] *mount_point      path when dir shall be mounted
  * @param[in] *fs_interface     pointer to description of mount interface
  *
- * @retval STD_RET_OK           mount success
- * @retval STD_RET_ERROR        mount error
+ * @return One of errno values
  */
 //==============================================================================
-stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
+int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
 {
         if (  !mount_point
            || !src_path
@@ -124,11 +123,10 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
            || !fs_interface->fs_release
            || !fs_interface->fs_opendir) {
 
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 
-        stdret_t status = STD_RET_ERROR;
+        stdret_t status = ENOMEM;
 
         // create new paths that are corrected by CWD
         char *cwd_mount_point = new_CWD_path(mount_point, ADD_SLASH);
@@ -159,7 +157,7 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
                                         new_FS = new_FS_entry(base_fs, cwd_mount_point, cwd_src_path, fs_interface);
                                 }
                         } else {
-                                errno = ENOENT;
+                                status = ENOENT;
                         }
 
                         _sysm_sysfree(cwd_src_path);
@@ -170,11 +168,11 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
                          */
                         if (new_FS) {
                                 if (_llist_push_back(vfs_mnt_list, new_FS)) {
-                                        status = STD_RET_OK;
+                                        status = ESUCC;
 
                                 } else {
                                         delete_FS_entry(new_FS);
-                                        errno = ENOMEM;
+                                        status = ENOMEM;
                                 }
                         }
 
@@ -182,7 +180,7 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
                 }
         }
 
-        if (status == STD_RET_ERROR && cwd_mount_point)
+        if (status != ESUCC && cwd_mount_point)
                 _sysm_sysfree(cwd_mount_point);
 
         if (cwd_src_path)
@@ -197,18 +195,16 @@ stdret_t _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS
  *
  * @param[in] *path             dir path
  *
- * @retval STD_RET_OK           mount success
- * @retval STD_RET_ERROR        mount error
+ * @return One of errno values
  */
 //==============================================================================
-stdret_t _vfs_umount(const char *path)
+int _vfs_umount(const char *path)
 {
         if (!path) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 
-        stdret_t status = STD_RET_ERROR;
+        stdret_t status = ENOMEM;
 
         char *cwd_path = new_CWD_path(path, ADD_SLASH);
         if (cwd_path) {
@@ -223,15 +219,15 @@ stdret_t _vfs_umount(const char *path)
                                 if (mount_fs->children_cnt == 0) {
                                         if (delete_FS_entry(mount_fs)) {
                                                 _llist_take(vfs_mnt_list, position);
-                                                status = STD_RET_OK;
+                                                status = ESUCC;
                                         } else {
-                                                errno = EBUSY;
+                                                status = EBUSY;
                                         }
                                 } else {
-                                        errno = EBUSY;
+                                        status = EBUSY;
                                 }
                         } else {
-                                errno = ENOENT;
+                                status = ENOENT;
                         }
 
                         _mutex_unlock(vfs_resource_mtx);
@@ -745,16 +741,22 @@ int _vfs_statfs(const char *path, struct statfs *statfs)
  * @retval NULL if file can't be created
  */
 //==============================================================================
+int _vfs_fopen_r(const char *path, const char *mode, FILE **file);
 FILE *_vfs_fopen(const char *path, const char *mode)
 {
-        if (!path || !mode) {
-                errno = EINVAL;
-                return NULL;
+        FILE *f = NULL;
+        errno = _vfs_fopen_r(path, mode, &f);
+        return f;
+}
+
+int _vfs_fopen_r(const char *path, const char *mode, FILE **file)
+{
+        if (!path || !mode || !file) {
+                return EINVAL;
         }
 
         if (LAST_CHARACTER(path) == '/') { /* path is a directory */
-                errno = EISDIR;
-                return NULL;
+                return EISDIR;
         }
 
         vfs_file_flags_t fflags;
@@ -769,13 +771,13 @@ FILE *_vfs_fopen(const char *path, const char *mode)
 
         vfs_open_flags_t flags = file_mode_str_to_flags(mode, &fflags);
         if (flags == 0) {
-                return NULL;
+                return EINVAL;
         }
 
         char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        FILE *file     = _sysm_syscalloc(1, sizeof(FILE));
+        FILE *file_obj = _sysm_syscalloc(1, sizeof(FILE));
 
-        if (cwd_path && file) {
+        if (cwd_path && file_obj) {
                 const char *external_path = NULL;
                 FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
 
@@ -783,16 +785,16 @@ FILE *_vfs_fopen(const char *path, const char *mode)
                         int priority = increase_task_priority();
 
                         if (fs->interface->fs_open(fs->handle,
-                                                   &file->f_extra_data,
-                                                   &file->fd,
-                                                   &file->f_lseek,
+                                                   &file_obj->f_extra_data,
+                                                   &file_obj->fd,
+                                                   &file_obj->f_lseek,
                                                    external_path,
                                                    flags) == STD_RET_OK) {
 
-                                file->FS_hdl = fs->handle;
-                                file->FS_if  = fs->interface;
-                                file->f_flag = fflags;
-                                file->self   = file;
+                                file_obj->FS_hdl = fs->handle;
+                                file_obj->FS_if  = fs->interface;
+                                file_obj->f_flag = fflags;
+                                file_obj->self   = file_obj;
                         }
 
                         restore_priority(priority);
@@ -802,12 +804,16 @@ FILE *_vfs_fopen(const char *path, const char *mode)
         if (cwd_path)
                 _sysm_sysfree(cwd_path);
 
-        if (file && !file->self) {
-                _sysm_sysfree(file);
-                file = NULL;
+        if (file_obj) {
+                if (file_obj->self) {
+                        *file = file_obj;
+                        return ESUCC;
+                } else {
+                        _sysm_sysfree(file_obj);
+                }
         }
 
-        return file;
+        return ENOMEM;
 }
 
 //==============================================================================

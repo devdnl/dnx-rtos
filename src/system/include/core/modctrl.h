@@ -101,7 +101,7 @@ typedef task_t *dev_lock_t;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int         _driver_init                 (const char*, const char*);
+extern int         _driver_init                 (const char*, const char*, dev_t*);
 extern int         _driver_release              (const char*);
 extern stdret_t    _driver_open                 (dev_t, vfs_open_flags_t);
 extern stdret_t    _driver_close                (dev_t, bool);
