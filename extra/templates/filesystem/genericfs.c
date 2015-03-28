@@ -40,7 +40,7 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t  closedir(void *fs_handle, DIR *dir);
+static int       closedir(void *fs_handle, DIR *dir);
 static dirent_t *readdir (void *fs_handle, DIR *dir);
 
 /*==============================================================================
@@ -66,13 +66,12 @@ static dirent_t *readdir (void *fs_handle, DIR *dir);
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_INIT(genericfs, void **fs_handle, const char *src_path)
 {
-        return STD_RET_ERROR;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -81,13 +80,12 @@ API_FS_INIT(genericfs, void **fs_handle, const char *src_path)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RELEASE(genericfs, void *fs_handle)
 {
-        return STD_RET_OK;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -101,13 +99,12 @@ API_FS_RELEASE(genericfs, void *fs_handle)
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -125,7 +122,7 @@ API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, co
 //==============================================================================
 API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        return STD_RET_ERROR;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -139,6 +136,7 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
  * @param[in ]           fattr                  file attributes
+ * @param[out]          *wrcnt                  number of written bytes
  *
  * @return number of written bytes, -1 if error
  */
@@ -178,12 +176,12 @@ API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t 
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return Value depends on driver implementation (int)
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        return STD_RET_ERROR;
+        return 0;
 }
 
 //==============================================================================
@@ -194,13 +192,12 @@ API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
 {
-        return STD_RET_ERROR;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -212,13 +209,12 @@ API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
  * @param[in ]           fd                     file descriptor
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        return STD_RET_OK;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -229,13 +225,12 @@ API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat
  * @param[in ]          *path                   name of created directory
  * @param[in ]           mode                   dir mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -246,13 +241,12 @@ API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created node
  * @param[in ]           dev                    driver id
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -263,8 +257,7 @@ API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
  * @param[in ]          *path                   name of opened directory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
@@ -273,7 +266,7 @@ API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
         dir->f_readdir  = readdir;
         // ...
 
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -283,13 +276,12 @@ API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t closedir(void *fs_handle, DIR *dir)
+static int closedir(void *fs_handle, DIR *dir)
 {
-        return STD_RET_OK;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -323,13 +315,12 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of removed file/directory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_REMOVE(genericfs, void *fs_handle, const char *path)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -340,13 +331,12 @@ API_FS_REMOVE(genericfs, void *fs_handle, const char *path)
  * @param[in ]          *old_name               old object name
  * @param[in ]          *new_name               new object name
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -357,13 +347,12 @@ API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_
  * @param[in ]          *path                   file path
  * @param[in ]           mode                   new file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHMOD(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -375,13 +364,12 @@ API_FS_CHMOD(genericfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]           owner                  new file owner
  * @param[in ]           group                  new file group
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHOWN(genericfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        return STD_RET_ERROR;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -392,8 +380,7 @@ API_FS_CHOWN(genericfs, void *fs_handle, const char *path, uid_t owner, gid_t gr
  * @param[in ]          *path                   file path
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
@@ -405,7 +392,7 @@ API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
         stat->st_size  = 0;
         stat->st_uid   = 0;
 
-        return STD_RET_OK;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -415,8 +402,7 @@ API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[out]          *statfs                 file system status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
@@ -428,7 +414,7 @@ API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
         statfs->f_type   = 1;
         statfs->f_fsname = "genericfs";
 
-        return STD_RET_OK;
+        return EINVAL;
 }
 
 //==============================================================================

@@ -69,13 +69,12 @@ MODULE_NAME(<!MODULE_NAME!>);
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(<!MODULE_NAME!>, void **device_handle, u8_t major, u8_t minor)
 {
-        return STD_RET_OK;
+        return ENOMEM;
 }
 
 //==============================================================================
@@ -84,13 +83,12 @@ API_MOD_INIT(<!MODULE_NAME!>, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(<!MODULE_NAME!>, void *device_handle)
 {
-        return STD_RET_OK;
+        return EBUSY;
 }
 
 //==============================================================================
@@ -100,13 +98,12 @@ API_MOD_RELEASE(<!MODULE_NAME!>, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, vfs_open_flags_t flags)
 {
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -116,13 +113,12 @@ API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(<!MODULE_NAME!>, void *device_handle, bool force)
 {
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -181,7 +177,7 @@ API_MOD_IOCTL(<!MODULE_NAME!>, void *device_handle, int request, void *arg)
                 return STD_RET_ERROR;
         }
 
-        return STD_RET_OK;
+        return 0;
 }
 
 //==============================================================================
