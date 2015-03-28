@@ -14,3 +14,7 @@ endif
 ifeq ($(__ENABLE_PROCFS__), _YES_)
 include $(FS_LOC)/procfs/Makefile
 endif
+
+ifeq ($(__ENABLE_EXT2FS__), _YES_)
+include $(FS_LOC)/ext2fs/Makefile
+endif

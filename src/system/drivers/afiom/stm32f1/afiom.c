@@ -232,7 +232,7 @@ API_MOD_RELEASE(AFIOM, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(AFIOM, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);

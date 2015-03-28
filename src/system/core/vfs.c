@@ -69,7 +69,7 @@ static bool             is_file_valid           (FILE *file);
 static bool             is_dir_valid            (DIR *dir);
 static int              increase_task_priority  (void);
 static inline void      restore_priority        (int priority);
-static vfs_open_flags_t file_mode_str_to_flags  (const char *str, vfs_file_flags_t *fflags);
+static bool             parse_flags             (const char *str, u32_t *flags);
 static FS_entry_t      *get_path_FS             (const char *path, size_t len, int *position);
 static FS_entry_t      *get_path_base_FS        (const char *path, const char **extPath);
 static char            *new_CWD_path            (const char *path, enum path_correction corr);
@@ -759,20 +759,20 @@ int _vfs_fopen_r(const char *path, const char *mode, FILE **file)
                 return EISDIR;
         }
 
+        u32_t flags;
+        if (parse_flags(mode, &flags) == false) {
+                return EINVAL;
+        }
+
         vfs_file_flags_t fflags;
-        fflags.rd                    = false;
-        fflags.wr                    = false;
+        fflags.rd                    = ((flags == O_RDONLY) || (flags & O_RDWR));
+        fflags.wr                    = (flags & (O_RDWR | O_WRONLY));
+        fflags.append                = (flags & (O_APPEND));
         fflags.eof                   = false;
         fflags.error                 = false;
-        fflags.append                = false;
         fflags.seekmod               = false;
         fflags.fattr.non_blocking_rd = false;
         fflags.fattr.non_blocking_wr = false;
-
-        vfs_open_flags_t flags = file_mode_str_to_flags(mode, &fflags);
-        if (flags == 0) {
-                return EINVAL;
-        }
 
         char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
         FILE *file_obj = _sysm_syscalloc(1, sizeof(FILE));
@@ -1410,51 +1410,46 @@ static inline void restore_priority(int priority)
  *        Function set errno: EINVAL
  *
  * @param[in]  str      file open mode string
- * @param[out] fflags   file flags (for internal file use)
+ * @param[out] flags    file flags (for internal file use)
  *
- * @return file open flags, 0 if error
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static vfs_open_flags_t file_mode_str_to_flags(const char *str, vfs_file_flags_t *fflags)
+static bool parse_flags(const char *str, u32_t *flags)
 {
         if (strcmp("r", str) == 0 || strcmp("rb", str) == 0) {
-                fflags->rd = true;
-                return (O_RDONLY);
+                *flags = O_RDONLY;
+                return true;
         }
 
-        if (strcmp("r+", str) == 0 || strcmp("rb+", str) == 0) {
-                fflags->rd = true;
-                fflags->wr = true;
-                return (O_RDWR);
+        if (strcmp("r+", str) == 0 || strcmp("rb+", str) == 0 || strcmp("r+b", str) == 0) {
+                *flags = O_RDWR;
+                return true;
         }
 
         if (strcmp("w", str) == 0 || strcmp("wb", str) == 0) {
-                fflags->wr = true;
-                return (O_WRONLY | O_CREATE);
+                *flags = O_WRONLY | O_CREAT | O_TRUNC;
+                return true;
         }
 
-        if (strcmp("w+", str) == 0 || strcmp("wb+", str) == 0) {
-                fflags->rd = true;
-                fflags->wr = true;
-                return (O_RDWR | O_CREATE);
+        if (strcmp("w+", str) == 0 || strcmp("wb+", str) == 0 || strcmp("w+b", str) == 0) {
+                *flags = O_RDWR | O_CREAT | O_TRUNC;
+                return true;
         }
 
         if (strcmp("a", str) == 0 || strcmp("ab", str) == 0) {
-                fflags->wr     = true;
-                fflags->append = true;
-                return (O_WRONLY | O_CREATE | O_APPEND);
+                *flags = O_WRONLY | O_CREAT | O_APPEND;
+                return true;
         }
 
-        if (strcmp("a+", str) == 0 || strcmp("ab+", str) == 0) {
-                fflags->rd     = true;
-                fflags->wr     = true;
-                fflags->append = true;
-                return (O_RDWR | O_CREATE | O_APPEND);
+        if (strcmp("a+", str) == 0 || strcmp("ab+", str) == 0 || strcmp("a+b", str) == 0) {
+                *flags = O_RDWR | O_CREAT | O_APPEND;
+                return true;
         }
 
         errno = EINVAL;
 
-        return 0;
+        return false;
 }
 
 //==============================================================================

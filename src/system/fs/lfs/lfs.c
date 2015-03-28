@@ -822,7 +822,7 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         UNUSED_ARG(extra);
 
@@ -836,7 +836,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
 
         /* create new file when necessary */
         if (base_node && node == NULL) {
-                if (!(flags & O_CREATE)) {
+                if (!(flags & O_CREAT)) {
                         goto error;
                 }
 
@@ -873,7 +873,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
                 // clear file if overwritten
-                if ((flags & O_CREATE) && !(flags & O_APPEND)) {
+                if ((flags & O_CREAT) && !(flags & O_APPEND)) {
                         if (node->data) {
                                 free(node->data);
                                 node->data = NULL;

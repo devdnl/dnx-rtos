@@ -159,7 +159,7 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 pre = "Ki";
         }
 
-        printf("\rCopied %d%sB in %d.%3d seconds (%d.%03d KiB/s)\n",
+        printf("\rCopied %d%sB in %d.%03d seconds (%d.%03d KiB/s)\n",
                copy_size,
                pre,
                stop_time / 1000,

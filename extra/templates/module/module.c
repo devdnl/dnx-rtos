@@ -101,7 +101,7 @@ API_MOD_RELEASE(<!MODULE_NAME!>, void *device_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(<!MODULE_NAME!>, void *device_handle, u32_t flags)
 {
         return ESUCC;
 }

@@ -324,7 +324,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(SDSPI, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
 {
         UNUSED_ARG(flags);
 

@@ -149,7 +149,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         UNUSED_ARG(fd);
 
@@ -166,13 +166,13 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
         } else if (flags == O_RDWR) {
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == (O_WRONLY | O_CREATE)) {
+        } else if (flags == (O_WRONLY | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_RDWR | O_CREATE)) {
+        } else if (flags == (O_RDWR | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_WRONLY | O_APPEND | O_CREATE)) {
+        } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
-        } else if (flags == (O_RDWR | O_APPEND | O_CREATE)) {
+        } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
         } else {
                 free(fat_file);

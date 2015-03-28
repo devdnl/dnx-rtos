@@ -49,6 +49,8 @@ ID.CHECKBOX_FATFS_LFN           = wx.wxNewId()
 ID.CHECKBOX_LFS                 = wx.wxNewId()
 ID.CHECKBOX_PROCFS              = wx.wxNewId()
 ID.CHOICE_FATFS_LFN_CODEPAGE    = wx.wxNewId()
+ID.CHECKBOX_EXT2FS              = wx.wxNewId()
+ID.SPINCTRL_EXT2FS_CACHE        = wx.wxNewId()
 
 local codepage = {"437 - U.S.",
                   "720 - Arabic",
@@ -89,6 +91,7 @@ local function load_configuration()
         ui.CheckBox_devfs:SetValue(ct:get_module_state("DEVFS"))
         ui.CheckBox_lfs:SetValue(ct:get_module_state("LFS"))
         ui.CheckBox_procfs:SetValue(ct:get_module_state("PROCFS"))
+        ui.CheckBox_ext2fs:SetValue(ct:get_module_state("EXT2FS"))
 
         local fatfs_en = ct:get_module_state("FATFS")
         ui.CheckBox_fatfs:SetValue(fatfs_en)
@@ -107,6 +110,7 @@ local function load_configuration()
         ui.CheckBox_fatfs_lfn:Enable(fatfs_en)
         ui.Choice_fatfs_lfn_codepage:SetSelection(codepage_idx - 1)
         ui.Choice_fatfs_lfn_codepage:Enable(fatfs_lfn and fatfs_en)
+        ui.SpinBox_ext2fs_cache:SetValue(ct:key_read(config.project.key.EXT2FS_CACHE_SIZE))
 end
 
 
@@ -122,6 +126,8 @@ local function save_configuration()
         ct:key_write(config.project.key.FATFS_LFN_ENABLE, ct:bool_to_yes_no(ui.CheckBox_fatfs_lfn:GetValue()))
         ct:key_write(config.project.key.FATFS_LFN_CODEPAGE, codepage[ui.Choice_fatfs_lfn_codepage:GetSelection() + 1]:match("%d*"))
         ct:enable_module("PROCFS", ui.CheckBox_procfs:GetValue())
+        ct:enable_module("EXT2FS", ui.CheckBox_ext2fs:GetValue())
+        ct:key_write(config.project.key.EXT2FS_CACHE_SIZE, tostring(ui.SpinBox_ext2fs_cache:GetValue()))
 
         modified:no()
 end
@@ -175,7 +181,7 @@ function file_systems:create_window(parent)
 
                 ui.FlexGridSizer1 = wx.wxFlexGridSizer(0, 1, 0, 0)
 
-                --
+                -- devfs
                 ui.StaticBoxSizer1 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "devfs")
                 ui.FlexGridSizer2 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
@@ -189,7 +195,7 @@ function file_systems:create_window(parent)
                 ui.StaticBoxSizer1:Add(ui.FlexGridSizer2, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer1, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                --
+                -- lfs
                 ui.StaticBoxSizer2 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "lfs")
 
                 ui.FlexGridSizer3 = wx.wxFlexGridSizer(2, 1, 0, 0)
@@ -204,7 +210,7 @@ function file_systems:create_window(parent)
                 ui.StaticBoxSizer2:Add(ui.FlexGridSizer3, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer2, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                --
+                -- fatfs
                 ui.StaticBoxSizer3 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "fatfs (FAT12, FAT16, FAT32)")
 
                 ui.FlexGridSizer4 = wx.wxFlexGridSizer(2, 1, 0, 0)
@@ -226,23 +232,44 @@ function file_systems:create_window(parent)
                 ui.StaticBoxSizer3:Add(ui.FlexGridSizer4, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer3, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                --
-                ui.StaticBoxSizer4 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "procfs")
+                -- ext2fs
+                ui.StaticBoxSizer4 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "ext2fs")
                 ui.FlexGridSizer5 = wx.wxFlexGridSizer(2, 1, 0, 0)
 
-                ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "The procfs is a special file system, that provides special functionality; by using this file system you can see all tasks and their names and so on. In this file system are stored special system files, that can be read to obtain system specified settings, or microcontroller information. If you do not need to read special information, then probably you do not need this file system.", wx.wxDefaultPosition, wx.wxDefaultSize, 0, "ID.STATICTEXT4")
+                ui.StaticText4 = wx.wxStaticText(this, wx.wxID_ANY, "The ext2fs is standard Linux file system. This file system requires more RAM and stack than fatfs, but provides better performance. File system uses cache to speed up write and read operations. Higher values of cache size makes file system faster. Cache size is a number of blocks that will be load to memory. Note: an ext2 block size can be in range of 1-32 KiB.", wx.wxDefaultPosition, wx.wxDefaultSize)
                 ui.StaticText4:Wrap(ct.CONTROL_X_SIZE)
                 ui.FlexGridSizer5:Add(ui.StaticText4, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
 
-                ui.CheckBox_procfs = wx.wxCheckBox(this, ID.CHECKBOX_PROCFS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_PROCFS")
-                ui.FlexGridSizer5:Add(ui.CheckBox_procfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.CheckBox_ext2fs = wx.wxCheckBox(this, ID.CHECKBOX_EXT2FS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize, 0, wx.wxDefaultValidator, "ID.CHECKBOX_PROCFS")
+                ui.FlexGridSizer5:Add(ui.CheckBox_ext2fs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.FlexGridSizer7 = wx.wxFlexGridSizer(1, 2, 0, 0)
+                ui.StaticText = wx.wxStaticText(this, wx.wxID_ANY, "Number of blocks cache")
+                ui.FlexGridSizer7:Add(ui.StaticText, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.SpinBox_ext2fs_cache = wx.wxSpinCtrl(this, ID.SPINCTRL_EXT2FS_CACHE, "0", wx.wxDefaultPosition, wx.wxDefaultSize, 0, 4, 65536)
+                ui.FlexGridSizer7:Add(ui.SpinBox_ext2fs_cache, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+                ui.FlexGridSizer5:Add(ui.FlexGridSizer7, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 0)
 
                 ui.StaticBoxSizer4:Add(ui.FlexGridSizer5, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
                 ui.FlexGridSizer1:Add(ui.StaticBoxSizer4, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
 
+                -- procfs
+                ui.StaticBoxSizer5 = wx.wxStaticBoxSizer(wx.wxHORIZONTAL, this, "procfs")
+                ui.FlexGridSizer8 = wx.wxFlexGridSizer(2, 1, 0, 0)
+
+                ui.StaticText5 = wx.wxStaticText(this, wx.wxID_ANY, "The procfs is a special file system, that provides special functionality; by using this file system you can see all tasks and their names and so on. In this file system are stored special system files, that can be read to obtain system specified settings, or microcontroller information. If you do not need to read special information, then probably you do not need this file system.", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.StaticText5:Wrap(ct.CONTROL_X_SIZE)
+                ui.FlexGridSizer8:Add(ui.StaticText5, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.CheckBox_procfs = wx.wxCheckBox(this, ID.CHECKBOX_PROCFS, "Enable", wx.wxDefaultPosition, wx.wxDefaultSize)
+                ui.FlexGridSizer8:Add(ui.CheckBox_procfs, 1, bit.bor(wx.wxALL,wx.wxALIGN_LEFT,wx.wxALIGN_CENTER_VERTICAL), 5)
+
+                ui.StaticBoxSizer5:Add(ui.FlexGridSizer8, 1, bit.bor(wx.wxALL,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 0)
+                ui.FlexGridSizer1:Add(ui.StaticBoxSizer5, 1, bit.bor(wx.wxALL,wx.wxEXPAND,wx.wxALIGN_CENTER_HORIZONTAL,wx.wxALIGN_CENTER_VERTICAL), 5)
+
                 --
                 this:SetSizer(ui.FlexGridSizer1)
-                this:SetScrollRate(50, 50)
+                this:SetScrollRate(25, 25)
 
                 --
                 this:Connect(ID.CHECKBOX_DEVFS,            wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
@@ -251,6 +278,9 @@ function file_systems:create_window(parent)
                 this:Connect(ID.CHECKBOX_FATFS_LFN,        wx.wxEVT_COMMAND_CHECKBOX_CLICKED, LFN_enable_changed  )
                 this:Connect(ID.CHOICE_FATFS_LFN_CODEPAGE, wx.wxEVT_COMMAND_CHOICE_SELECTED,  value_changed       )
                 this:Connect(ID.CHECKBOX_PROCFS,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.CHECKBOX_EXT2FS,           wx.wxEVT_COMMAND_CHECKBOX_CLICKED, value_changed       )
+                this:Connect(ID.SPINCTRL_EXT2FS_CACHE,     wx.wxEVT_COMMAND_SPINCTRL_UPDATED, value_changed       )
+                this:Connect(ID.SPINCTRL_EXT2FS_CACHE,     wx.wxEVT_COMMAND_TEXT_UPDATED,     value_changed       )
         end
 
         return ui.window

@@ -75,7 +75,8 @@ extern "C" {
 #define ENOMEDIUM       33      /* No medium found */
 #define EMEDIUMTYPE     34      /* Wrong medium type */
 #define ECANCELED       35      /* Operation Canceled */
-#define _ENUMBER        36      /* total supported errors */
+#define ENOTSUP         36      /* Not supported */
+#define _ENUMBER        37      /* total supported errors */
 
 #define errno           _errno
 

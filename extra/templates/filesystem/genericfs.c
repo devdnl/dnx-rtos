@@ -69,7 +69,7 @@ static dirent_t *readdir (void *fs_handle, DIR *dir);
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(genericfs, void **fs_handle, const char *src_path)
+API_FS_INIT(<!fs_name!>, void **fs_handle, const char *src_path)
 {
         return EINVAL;
 }
@@ -83,7 +83,7 @@ API_FS_INIT(genericfs, void **fs_handle, const char *src_path)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_RELEASE(genericfs, void *fs_handle)
+API_FS_RELEASE(<!fs_name!>, void *fs_handle)
 {
         return EINVAL;
 }
@@ -97,12 +97,12 @@ API_FS_RELEASE(genericfs, void *fs_handle)
  * @param[out]          *fd                     file descriptor
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
- * @param[in]            flags                  file open flags
+ * @param[in]            flags                  file open flags (O_...)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         return ENOENT;
 }
@@ -120,7 +120,7 @@ API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, co
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         return EINVAL;
 }
@@ -141,7 +141,7 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(<!fs_name!>, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -161,7 +161,7 @@ API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, s
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
 {
         return 0;
 }
@@ -179,7 +179,7 @@ API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t 
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
         return 0;
 }
@@ -195,7 +195,7 @@ API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(<!fs_name!>, void *fs_handle, void *extra, fd_t fd)
 {
         return EINVAL;
 }
@@ -212,7 +212,7 @@ API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         return EINVAL;
 }
@@ -228,7 +228,24 @@ API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKDIR(<!fs_name!>, void *fs_handle, const char *path, mode_t mode)
+{
+        return ENOENT;
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created pipe
+ * @param[in ]           mode                   pipe mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+API_FS_MKFIFO(<!fs_name!>, void *fs_handle, const char *path, mode_t mode)
 {
         return ENOENT;
 }
@@ -244,7 +261,7 @@ API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
+API_FS_MKNOD(<!fs_name!>, void *fs_handle, const char *path, const dev_t dev)
 {
         return ENOENT;
 }
@@ -260,7 +277,7 @@ API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(<!fs_name!>, void *fs_handle, const char *path, DIR *dir)
 {
         dir->f_closedir = closedir;
         dir->f_readdir  = readdir;
@@ -318,7 +335,7 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_REMOVE(genericfs, void *fs_handle, const char *path)
+API_FS_REMOVE(<!fs_name!>, void *fs_handle, const char *path)
 {
         return ENOENT;
 }
@@ -334,7 +351,7 @@ API_FS_REMOVE(genericfs, void *fs_handle, const char *path)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_name)
+API_FS_RENAME(<!fs_name!>, void *fs_handle, const char *old_name, const char *new_name)
 {
         return ENOENT;
 }
@@ -350,7 +367,7 @@ API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CHMOD(genericfs, void *fs_handle, const char *path, mode_t mode)
+API_FS_CHMOD(<!fs_name!>, void *fs_handle, const char *path, mode_t mode)
 {
         return ENOENT;
 }
@@ -367,7 +384,7 @@ API_FS_CHMOD(genericfs, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CHOWN(genericfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
+API_FS_CHOWN(<!fs_name!>, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         return ENOENT;
 }
@@ -383,7 +400,7 @@ API_FS_CHOWN(genericfs, void *fs_handle, const char *path, uid_t owner, gid_t gr
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
+API_FS_STAT(<!fs_name!>, void *fs_handle, const char *path, struct stat *stat)
 {
         stat->st_dev   = 0;
         stat->st_gid   = 0;
@@ -405,14 +422,14 @@ API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
+API_FS_STATFS(<!fs_name!>, void *fs_handle, struct statfs *statfs)
 {
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
         statfs->f_type   = 1;
-        statfs->f_fsname = "genericfs";
+        statfs->f_fsname = "<!fs_name!>";
 
         return EINVAL;
 }
@@ -423,12 +440,12 @@ API_FS_STATFS(genericfs, void *fs_handle, struct statfs *statfs)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @return None
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_SYNC(genericfs, void *fs_handle)
+API_FS_SYNC(<!fs_name!>, void *fs_handle)
 {
-
+        return ESUCC;
 }
 
 /*==============================================================================

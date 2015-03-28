@@ -113,7 +113,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t _sys_driver_open(dev_t id, vfs_open_flags_t flags)
+static inline stdret_t _sys_driver_open(dev_t id, u32_t flags)
 {
         return _driver_open(id, flags);
 }

@@ -223,11 +223,11 @@ int _driver_release(const char *drv_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t _driver_open(dev_t id, vfs_open_flags_t flags)
+stdret_t _driver_open(dev_t id, u32_t flags)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id],
-                                                                    vfs_filter_open_flags_for_device(flags));
+                                                                    vfs_filter_flags_for_device(flags));
         } else {
                 return STD_RET_ERROR;
         }
