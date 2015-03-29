@@ -40,8 +40,8 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int       closedir(void *fs_handle, DIR *dir);
-static dirent_t *readdir (void *fs_handle, DIR *dir);
+static int closedir(void *fs_handle, DIR *dir);
+static int readdir (void *fs_handle, DIR *dir, dirent_t **dirent);
 
 /*==============================================================================
   Local objects
@@ -323,22 +323,19 @@ static int closedir(void *fs_handle, DIR *dir)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return On success pointer to directory entry description object. On error or
- *         when there is not more objects return NULL. When no object then
- *         errno is set to 0, otherwise to specific value.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *readdir(void *fs_handle, DIR *dir)
+static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        dirent_t *dirent = NULL;
-
         dir->dirent.name = "Example";
         dir->dirent.size = 10;
         dir->dirent.filetype = FILE_TYPE_REGULAR;
-        dirent = &dir->dirent;
+        *dirent = &dir->dirent;
 
-        return dirent;
+        return ESUCC;
 }
 
 //==============================================================================

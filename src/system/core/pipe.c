@@ -30,6 +30,7 @@
 #include "config.h"
 #include <stdbool.h>
 #include <sys/types.h>
+#include "stdc/errno.h"
 #include "kernel/kwrapper.h"
 #include "core/pipe.h"
 #include "core/sysmoni.h"
@@ -154,17 +155,18 @@ int _pipe_get_length(pipe_t *pipe)
  * @param pipe          a pipe object
  * @param buf           a destination buffer
  * @param count         a count of bytes to read
+ * @param rdcnt         a number of read bytes
  * @param non_blocking  a non-blocking access mode
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
+int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
 {
         if (is_valid(pipe) && buf && count) {
 
-                int n = 0;
-                for (; n < (int)count; n++) {
+                size_t n = 0;
+                for (; n < count; n++) {
 
                         if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
                                 u8_t null = '\0';
@@ -177,30 +179,32 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
                         }
                 }
 
-                return n;
+                *rdcnt = n;
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
-
-        return -1;
 }
 
 //==============================================================================
 /**
- * @brief Write data to pipe
+ * @brief Read data from pipe
  *
  * @param pipe          a pipe object
- * @param buf           a source buffer
- * @param count         a count of bytes to write
+ * @param buf           a destination buffer
+ * @param count         a count of bytes to read
+ * @param wrcnt         a number of written bytes
  * @param non_blocking  a non-blocking access mode
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
+int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
 {
         if (is_valid(pipe) && buf && count) {
 
-                int n = 0;
-                for (; n < (int)count; n++) {
+                size_t n = 0;
+                for (; n < count; n++) {
 
                         if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
                                 break;
@@ -211,10 +215,11 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
                         }
                 }
 
-                return n;
+                *wrcnt = n;
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
-
-        return -1;
 }
 
 //==============================================================================

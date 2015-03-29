@@ -48,12 +48,12 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t closedir(void *fs_handle, DIR *dir);
-static dirent_t *readdir (void *fs_handle, DIR *dir);
+static int  closedir(void *fs_handle, DIR *dir);
+static int  readdir(void *fs_handle, DIR *dir, dirent_t **dirent);
 static void ext4_lock(void *obj);
 static void ext4_unlock(void *obj);
-static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
-static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
+static int  ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
+static int  ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
 static void increase_openfiles(ext2fs_t *hdl);
 static void decrease_openfiles(ext2fs_t *hdl);
 
@@ -86,23 +86,25 @@ static const struct ext4_os_if osif = {
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 {
+        int status;
+
         // open file system source file
         FILE *srcfile = _sys_fopen(src_path, "r+");
         if (!srcfile) {
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 
         // read number of file blocks
         struct stat stat;
-        if (_sys_fstat(srcfile, &stat) != 0) {
+        status = _sys_fstat(srcfile, &stat);
+        if (status != ESUCC) {
                 _sys_fclose(srcfile);
-                return STD_RET_ERROR;
+                return status;
         }
 
         u64_t block_count = stat.st_size / BLOCK_SIZE;
@@ -118,9 +120,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
                         if (hdl->fsctx) {
                                 ext4_cache_write_back(hdl->fsctx, true);
                                 *fs_handle = hdl;
-                                return STD_RET_OK;
-                        } else {
-                                errno = ENOMEM;
+                                return ESUCC;
                         }
 
                         _sys_mutex_delete(hdl->mtx);
@@ -131,7 +131,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 
         _sys_fclose(srcfile);
 
-        return STD_RET_ERROR;
+        return ENOMEM;
 }
 
 //==============================================================================
@@ -140,8 +140,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RELEASE(ext2fs, void *fs_handle)
@@ -154,10 +153,9 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
                 _sys_mutex_delete(hdl->mtx);
                 _sys_fclose(hdl->srcfile);
                 free(hdl);
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -172,32 +170,29 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
         UNUSED_ARG(fd);
 
-        ext2fs_t *hdl = fs_handle;
+        ext2fs_t *hdl    = fs_handle;
+        int       status = ENOMEM;
 
         ext4_file *file = malloc(sizeof(ext4_file));
         if (file) {
-                int r = ext4_fopen(hdl->fsctx, file, path, flags);
-                if (r == EOK) {
+                status = ext4_fopen(hdl->fsctx, file, path, flags);
+                if (status == ESUCC) {
                         *fpos  = ext4_ftell(hdl->fsctx, file);
                         *extra = file;
                         increase_openfiles(hdl);
-                        return STD_RET_OK;
                 } else {
-                        errno = r;
+                        free(file);
                 }
-
-                free(file);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -209,8 +204,7 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
@@ -220,16 +214,13 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_fclose(hdl->fsctx, extra);
-        if (r == EOK) {
+        int status = ext4_fclose(hdl->fsctx, extra);
+        if (status == ESUCC) {
                 free(extra);
                 decrease_openfiles(hdl);
-                return STD_RET_OK;
-        } else {
-                errno = r;
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -242,32 +233,37 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_WRITE(ext2fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(ext2fs,
+             void            *fs_handle,
+             void            *extra,
+             fd_t             fd,
+             const u8_t      *src,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *wrcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fd);
         UNUSED_ARG(fattr);
 
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
-        if (r != EOK) {
-                errno = r;
-                return -1;
+        int status = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
+        if (status == ESUCC) {
+                uint32_t wrc = 0;
+                status = ext4_fwrite(hdl->fsctx, extra, src, count, &wrc);
+                if (status == ESUCC) {
+                        *wrcnt = wrc;
+                }
         }
 
-        u32_t wrcnt = 0;
-        r = ext4_fwrite(hdl->fsctx, extra, src, count, &wrcnt);
-        if (r == EOK) {
-                return wrcnt;
-        } else {
-                errno = r;
-                return -1;
-        }
+        return status;
 }
 
 //==============================================================================
@@ -280,32 +276,37 @@ API_FS_WRITE(ext2fs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READ(ext2fs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(ext2fs,
+            void            *fs_handle,
+            void            *extra,
+            fd_t             fd,
+            u8_t            *dst,
+            size_t           count,
+            fpos_t          *fpos,
+            size_t          *rdcnt,
+            struct vfs_fattr fattr)
 {
         UNUSED_ARG(fd);
         UNUSED_ARG(fattr);
 
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
-        if (r != EOK) {
-                errno = r;
-                return -1;
+        int status = ext4_fseek(hdl->fsctx, extra, *fpos, SEEK_SET);
+        if (status == ESUCC) {
+                u32_t rdc = 0;
+                status = ext4_fread(hdl->fsctx, extra, dst, count, &rdc);
+                if (status == ESUCC) {
+                        *rdcnt = rdc;
+                }
         }
 
-        u32_t rdcnt = 0;
-        r = ext4_fread(hdl->fsctx, extra, dst, count, &rdcnt);
-        if (r == EOK) {
-                return rdcnt;
-        } else {
-                errno = r;
-                return -1;
-        }
+        return status;
 }
 
 //==============================================================================
@@ -329,8 +330,7 @@ API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
         UNUSED_ARG(request);
         UNUSED_ARG(arg);
 
-        errno = EPERM;
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -341,8 +341,7 @@ API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
@@ -351,7 +350,7 @@ API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -363,8 +362,7 @@ API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
  * @param[in ]           fd                     file descriptor
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
@@ -374,21 +372,17 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_filestat filestat;
-        int r = ext4_fstat(hdl->fsctx, extra, &filestat);
-        if (r == EOK) {
-
+        int status = ext4_fstat(hdl->fsctx, extra, &filestat);
+        if (status == ESUCC) {
                 stat->st_dev   = filestat.st_dev;
                 stat->st_gid   = filestat.st_gid;
                 stat->st_uid   = filestat.st_uid;
                 stat->st_mode  = filestat.st_mode;
                 stat->st_mtime = filestat.st_mtime;
                 stat->st_size  = filestat.st_size;
-
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
         }
+
+        return status;
 }
 
 //==============================================================================
@@ -399,22 +393,19 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @param[in ]          *path                   name of created directory
  * @param[in ]           mode                   dir mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_dir_mk(hdl->fsctx, path);
-        if (r == EOK) {
+        int status = ext4_dir_mk(hdl->fsctx, path);
+        if (status == ESUCC) {
                 ext4_chmod(hdl->fsctx, path, mode);
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
         }
+
+        return status;
 }
 
 //==============================================================================
@@ -425,8 +416,7 @@ API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created pipe
  * @param[in ]           mode                   pipe mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
@@ -435,8 +425,7 @@ API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
-        errno = EPERM;
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -447,8 +436,7 @@ API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created node
  * @param[in ]           dev                    driver id
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
@@ -457,8 +445,7 @@ API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
         UNUSED_ARG(path);
         UNUSED_ARG(dev);
 
-        errno = EPERM;
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -469,18 +456,18 @@ API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
  * @param[in ]          *path                   name of opened directory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
+        int       status;
 
         ext4_dir *ext4dir = malloc(sizeof(ext4_dir));
         if (ext4dir) {
-                int r = ext4_dir_open(hdl->fsctx, ext4dir, path);
-                if (r == EOK) {
+                status = ext4_dir_open(hdl->fsctx, ext4dir, path);
+                if (status == ESUCC) {
                         dir->f_handle   = hdl;
                         dir->f_closedir = closedir;
                         dir->f_readdir  = readdir;
@@ -490,15 +477,15 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
 
                         increase_openfiles(hdl);
 
-                        return STD_RET_OK;
                 } else {
-                        errno = r;
+                        free(ext4dir);
                 }
 
-                free(ext4dir);
+        } else {
+                status = ENOMEM;
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -508,23 +495,20 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t closedir(void *fs_handle, DIR *dir)
+static int closedir(void *fs_handle, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_dir_close(hdl->fsctx, dir->f_dd);
-        if (r == EOK) {
+        int status = ext4_dir_close(hdl->fsctx, dir->f_dd);
+        if (status == ESUCC) {
                 free(dir->f_dd);
                 decrease_openfiles(hdl);
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
         }
+
+        return status;
 }
 
 //==============================================================================
@@ -533,13 +517,12 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return On success pointer to directory entry description object. On error or
- *         when there is not more objects return NULL. When no object then
- *         errno is set to 0, otherwise to specific value.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *readdir(void *fs_handle, DIR *dir)
+static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         static const uint8_t vfsft[] = {
                 [EXT4_DIRENTRY_UNKNOWN ] = FILE_TYPE_UNKNOWN,
@@ -564,9 +547,11 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
                 dir->dirent.name     = static_cast(char*, ext4_dirent->name);
                 dir->dirent.size     = ext4_dirent->size;
 
-                return &dir->dirent;
+                *dirent = &dir->dirent;
+
+                return ESUCC;
         } else {
-                return NULL;
+                return ENOENT;
         }
 }
 
@@ -577,26 +562,21 @@ static dirent_t *readdir(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of removed file/directory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int r = ext4_fremove(hdl->fsctx, path);
-        if (r == EOK) {
-                return STD_RET_OK;
+        // try remove file
+        int status = ext4_fremove(hdl->fsctx, path);
+        if (status != ESUCC) {
+                // try remove dir
+                status = ext4_dir_rm(hdl->fsctx, path);
         }
 
-        r = ext4_dir_rm(hdl->fsctx, path);
-        if (r == EOK) {
-                return STD_RET_OK;
-        }
-
-        errno = r;
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -607,8 +587,7 @@ API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
  * @param[in ]          *old_name               old object name
  * @param[in ]          *new_name               new object name
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_name)
@@ -619,7 +598,7 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
         UNUSED_ARG(old_name);
         UNUSED_ARG(new_name);
 
-        return STD_RET_ERROR;
+        return ENOTSUP;
 
         // FIXME ex2fs::rename(): this function does not work correctly. Do not use!
 //        int r = ext4_rename(hdl->fsctx, old_name, new_name);
@@ -639,21 +618,13 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
  * @param[in ]          *path                   file path
  * @param[in ]           mode                   new file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHMOD(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         ext2fs_t *hdl = fs_handle;
-
-        int r = ext4_chmod(hdl->fsctx, path, mode);
-        if (r == EOK) {
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
-        }
+        return ext4_chmod(hdl->fsctx, path, mode);
 }
 
 //==============================================================================
@@ -665,21 +636,13 @@ API_FS_CHMOD(ext2fs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]           owner                  new file owner
  * @param[in ]           group                  new file group
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHOWN(ext2fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         ext2fs_t *hdl = fs_handle;
-
-        int r = ext4_chown(hdl->fsctx, path, owner, group);
-        if (r == EOK) {
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
-        }
+        return ext4_chown(hdl->fsctx, path, owner, group);
 }
 
 //==============================================================================
@@ -690,8 +653,7 @@ API_FS_CHOWN(ext2fs, void *fs_handle, const char *path, uid_t owner, gid_t group
  * @param[in ]          *path                   file path
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
@@ -699,21 +661,17 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_filestat filestat;
-        int r = ext4_stat(hdl->fsctx, path, &filestat);
-        if (r == EOK) {
-
+        int status = ext4_stat(hdl->fsctx, path, &filestat);
+        if (status == ESUCC) {
                 stat->st_dev   = filestat.st_dev;
                 stat->st_gid   = filestat.st_gid;
                 stat->st_uid   = filestat.st_uid;
                 stat->st_mode  = filestat.st_mode;
                 stat->st_mtime = filestat.st_mtime;
                 stat->st_size  = filestat.st_size;
-
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
         }
+
+        return status;
 }
 
 //==============================================================================
@@ -723,8 +681,7 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[out]          *statfs                 file system status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
@@ -732,9 +689,8 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_fs_stats stat;
-        int r = ext4_statfs(hdl->fsctx, &stat);
-        if (r == EOK) {
-
+        int status = ext4_statfs(hdl->fsctx, &stat);
+        if (status == ESUCC) {
                 statfs->f_bfree  = stat.free_blocks_count;
                 statfs->f_blocks = stat.blocks_count;
                 statfs->f_bsize  = stat.block_size;
@@ -742,12 +698,9 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
                 statfs->f_files  = stat.inodes_count;
                 statfs->f_type   = 2;
                 statfs->f_fsname = "ext2fs";
-
-                return STD_RET_OK;
-        } else {
-                errno = r;
-                return STD_RET_ERROR;
         }
+
+        return status;
 }
 
 //==============================================================================
@@ -763,8 +716,12 @@ API_FS_SYNC(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-        ext4_cache_write_back(hdl->fsctx, false);
-        ext4_cache_write_back(hdl->fsctx, true);
+        int status = ext4_cache_write_back(hdl->fsctx, false);
+        if (status == ESUCC) {
+                status = ext4_cache_write_back(hdl->fsctx, true);
+        }
+
+        return status;
 }
 
 //==============================================================================
@@ -813,6 +770,7 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
+        // TODO new vfs file handling
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
         size_t n = _sys_fread(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
         if (n == blk_cnt)
@@ -837,6 +795,7 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
+        // TODO new vfs file handling
         _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
         size_t n = _sys_fwrite(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
         if (n == blk_cnt)

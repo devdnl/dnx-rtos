@@ -92,15 +92,12 @@ static mutex_t  *vfs_resource_mtx;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t _vfs_init(void)
+bool _vfs_init(void)
 {
         vfs_mnt_list     = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
         vfs_resource_mtx = _mutex_new(MUTEX_RECURSIVE);
 
-        if (!vfs_mnt_list || !vfs_resource_mtx)
-                return STD_RET_ERROR;
-        else
-                return STD_RET_OK;
+        return vfs_mnt_list && vfs_resource_mtx;
 }
 
 //==============================================================================

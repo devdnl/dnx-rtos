@@ -73,15 +73,15 @@ static const struct _driver_if _regdrv_##_modname##_interface = {               
   Exported object types
 ==============================================================================*/
 struct _driver_if {
-        stdret_t (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
-        stdret_t (*drv_release)(void *drvhdl);
-        stdret_t (*drv_open   )(void *drvhdl, u32_t flags);
-        stdret_t (*drv_close  )(void *drvhdl, bool force);
-        ssize_t  (*drv_write  )(void *drvhdl, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        ssize_t  (*drv_read   )(void *drvhdl, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        int      (*drv_ioctl  )(void *drvhdl, int iorq, void *args);
-        stdret_t (*drv_flush  )(void *drvhdl);
-        stdret_t (*drv_stat   )(void *drvhdl, struct vfs_dev_stat *info);
+        int (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
+        int (*drv_release)(void *drvhdl);
+        int (*drv_open   )(void *drvhdl, u32_t flags);
+        int (*drv_close  )(void *drvhdl, bool force);
+        int (*drv_write  )(void *drvhdl, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
+        int (*drv_read   )(void *drvhdl, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
+        int (*drv_ioctl  )(void *drvhdl, int iorq, void *args);
+        int (*drv_flush  )(void *drvhdl);
+        int (*drv_stat   )(void *drvhdl, struct vfs_dev_stat *info);
 };
 
 struct _driver_entry {
@@ -103,13 +103,13 @@ typedef task_t *dev_lock_t;
 ==============================================================================*/
 extern int         _driver_init                 (const char*, const char*, dev_t*);
 extern int         _driver_release              (const char*);
-extern stdret_t    _driver_open                 (dev_t, u32_t);
-extern stdret_t    _driver_close                (dev_t, bool);
-extern ssize_t     _driver_write                (dev_t, const u8_t*, size_t, fpos_t*, struct vfs_fattr);
-extern ssize_t     _driver_read                 (dev_t, u8_t*, size_t, fpos_t*, struct vfs_fattr);
+extern int         _driver_open                 (dev_t, u32_t);
+extern int         _driver_close                (dev_t, bool);
+extern int         _driver_write                (dev_t, const u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
+extern int         _driver_read                 (dev_t, u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
 extern int         _driver_ioctl                (dev_t, int, void*);
-extern stdret_t    _driver_flush                (dev_t);
-extern stdret_t    _driver_stat                 (dev_t, struct vfs_dev_stat*);
+extern int         _driver_flush                (dev_t);
+extern int         _driver_stat                 (dev_t, struct vfs_dev_stat*);
 extern const char *_get_module_name             (uint);
 extern uint        _get_number_of_modules       (void);
 extern int         _get_module_number           (const char*);

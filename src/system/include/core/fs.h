@@ -111,11 +111,10 @@ extern "C" {
  * @param id            module id
  * @param flags         flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline stdret_t _sys_driver_open(dev_t id, u32_t flags)
+static inline int _sys_driver_open(dev_t id, u32_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -127,11 +126,10 @@ static inline stdret_t _sys_driver_open(dev_t id, u32_t flags)
  * @param id            module id
  * @param force         force close request
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline stdret_t _sys_driver_close(dev_t id, bool force)
+static inline int _sys_driver_close(dev_t id, bool force)
 {
         return _driver_close(id, force);
 }
@@ -144,14 +142,20 @@ static inline stdret_t _sys_driver_close(dev_t id, bool force)
  * @param src           data source
  * @param count         buffer size
  * @param fpos          file position
+ * @param wrcnt         number of written bytes
  * @param fattr         file attributes
  *
- * @return number of written bytes, -1 on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline ssize_t _sys_driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline int _sys_driver_write(dev_t            id,
+                                    const u8_t      *src,
+                                    size_t           count,
+                                    fpos_t          *fpos,
+                                    size_t          *wrcnt,
+                                    struct vfs_fattr fattr)
 {
-        return _driver_write(id, src, count, fpos, fattr);
+        return _driver_write(id, src, count, fpos, wrcnt, fattr);
 }
 
 //==============================================================================
@@ -162,14 +166,20 @@ static inline ssize_t _sys_driver_write(dev_t id, const u8_t *src, size_t count,
  * @param dst           data destination
  * @param count         buffer size
  * @param fpos          file position
+ * @param rdcnt         number of read byes
  * @param fattr         file attributes
  *
- * @return number of read bytes, -1 on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline ssize_t _sys_driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+static inline int _sys_driver_read(dev_t            id,
+                                   u8_t            *dst,
+                                   size_t           count,
+                                   fpos_t          *fpos,
+                                   size_t          *rdcnt,
+                                   struct vfs_fattr fattr)
 {
-        return _driver_read(id, dst, count, fpos, fattr);
+        return _driver_read(id, dst, count, fpos, rdcnt, fattr);
 }
 
 //==============================================================================
@@ -180,8 +190,7 @@ static inline ssize_t _sys_driver_read(dev_t id, u8_t *dst, size_t count, fpos_t
  * @param request       io request
  * @param arg           argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
@@ -197,11 +206,10 @@ static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
  * @param request       io request
  * @param arg           argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline stdret_t _sys_driver_flush(dev_t id)
+static inline int _sys_driver_flush(dev_t id)
 {
         return _driver_flush(id);
 }
@@ -213,11 +221,10 @@ static inline stdret_t _sys_driver_flush(dev_t id)
  * @param id            module id
  * @param stat          status object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline stdret_t _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
+static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         return _driver_stat(id, stat);
 }
@@ -280,14 +287,15 @@ static inline int _sys_pipe_get_length(pipe_t *pipe)
  * @param pipe          a pipe object
  * @param buf           a destination buffer
  * @param count         a count of bytes to read
+ * @param rdcnt         a number of read bytes
  * @param non_blocking  a non-blocking access mode
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
+static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
 {
-        return _pipe_read(pipe, buf, count, non_blocking);
+        return _pipe_read(pipe, buf, count, rdcnt, non_blocking);
 }
 
 //==============================================================================
@@ -297,14 +305,15 @@ static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non
  * @param pipe          a pipe object
  * @param buf           a destination buffer
  * @param count         a count of bytes to read
+ * @param wrcnt         a number of written bytes
  * @param non_blocking  a non-blocking access mode
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
+static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
 {
-        return _pipe_write(pipe, buf, count, non_blocking);
+        return _pipe_write(pipe, buf, count, wrcnt, non_blocking);
 }
 
 //==============================================================================

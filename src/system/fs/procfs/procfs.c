@@ -81,15 +81,15 @@ struct file_info {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t    procfs_closedir_freedd  (void *fs_handle, DIR *dir);
-static stdret_t    procfs_closedir_generic (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_root     (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskname (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_bin      (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskid   (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
+static int         procfs_closedir_freedd  (void *fs_handle, DIR *dir);
+static int         procfs_closedir_generic (void *fs_handle, DIR *dir);
+static int         procfs_readdir_root     (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int         procfs_readdir_taskname (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int         procfs_readdir_bin      (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int         procfs_readdir_taskid   (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int         procfs_readdir_taskid_n (void *fs_handle, DIR *dir, dirent_t **dirent);
 static inline void mutex_force_lock        (mutex_t *mtx);
-static stdret_t    add_file_info_to_list   (struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd);
+static int         add_file_info_to_list   (struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd);
 static uint        get_file_content        (struct file_info *file_info, char *buff, uint size);
 
 /*==============================================================================
@@ -111,8 +111,7 @@ static uint        get_file_content        (struct file_info *file_info, char *b
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_INIT(procfs, void **fs_handle, const char *src_path)
@@ -128,7 +127,8 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
                 procfs->resource_mtx = mtx;
 
                 *fs_handle = procfs;
-                return STD_RET_OK;
+                return ESUCC;
+
         } else {
                 if (file_list) {
                         _sys_llist_delete(file_list);
@@ -142,7 +142,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
                         free(procfs);
                 }
 
-                return STD_RET_ERROR;
+                return ENOMEM;
         }
 }
 
@@ -152,8 +152,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RELEASE(procfs, void *fs_handle)
@@ -163,20 +162,22 @@ API_FS_RELEASE(procfs, void *fs_handle)
         if (_sys_mutex_lock(procfs->resource_mtx, 100)) {
                 if (_sys_llist_size(procfs->file_list) != 0) {
                         _sys_mutex_unlock(procfs->resource_mtx);
-                        errno = EBUSY;
-                        return STD_RET_ERROR;
+                        return EBUSY;
                 }
 
                 _sys_critical_section_begin();
-                _sys_mutex_unlock(procfs->resource_mtx);
-                _sys_mutex_delete(procfs->resource_mtx);
-                _sys_llist_delete(procfs->file_list);
-                free(procfs);
+                {
+                        _sys_mutex_unlock(procfs->resource_mtx);
+                        _sys_mutex_delete(procfs->resource_mtx);
+                        _sys_llist_delete(procfs->file_list);
+                        free(procfs);
+                }
                 _sys_critical_section_end();
-                return STD_RET_OK;
+
+                return ESUCC;
+
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -191,8 +192,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
@@ -295,8 +295,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
@@ -411,8 +410,7 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
@@ -436,8 +434,7 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
@@ -460,8 +457,7 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
  * @param[in ]           fd                     file descriptor
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
@@ -510,8 +506,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @param[in ]          *path                   name of created directory
  * @param[in ]           mode                   dir mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
@@ -533,8 +528,7 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created pipe
  * @param[in ]           mode                   pipe mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
@@ -557,8 +551,7 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created node
  * @param[in ]           dev                    driver number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
@@ -581,8 +574,7 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
  * @param[in ]          *path                   name of opened directory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
@@ -646,8 +638,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
  * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
@@ -671,8 +662,7 @@ static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
  * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
@@ -690,8 +680,7 @@ static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of removed file/directory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_REMOVE(procfs, void *fs_handle, const char *path)
@@ -712,8 +701,7 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
  * @param[in ]          *old_name               old object name
  * @param[in ]          *new_name               new object name
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_name)
@@ -735,8 +723,7 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
  * @param[in ]          *path                   file path
  * @param[in ]           mode                   new file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
@@ -759,8 +746,7 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]           owner                  new file owner
  * @param[in ]           group                  new file group
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
@@ -783,8 +769,7 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
  * @param[in ]          *path                   file path
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
@@ -810,8 +795,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[out]          *statfs                 file system status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)

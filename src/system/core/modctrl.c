@@ -147,20 +147,19 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
 
                 _printk(drv_initializing_str, drv_name);
 
-                if (_regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
-                                                                    _regdrv_driver_table[drvid].major,
-                                                                    _regdrv_driver_table[drvid].minor)
-                                                                    != STD_RET_OK) {
-
+                int status = _regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
+                                                                             _regdrv_driver_table[drvid].major,
+                                                                             _regdrv_driver_table[drvid].minor);
+                if (status != ESUCC) {
                         _printk(drv_error_str, drv_name);
-                        return -1;
+                        return status;
                 }
 
                 if (driver_memory_region[drvid] == NULL)
                         driver_memory_region[drvid] = (void*)(size_t)-1;
 
                 if (node_path) {
-                        if (_vfs_mknod(node_path, drvid) == STD_RET_OK) {
+                        if (_vfs_mknod(node_path, drvid) == STD_RET_OK) { // FIXME
                                 _printk(drv_node_created_str, node_path);
                                 return drvid;
                         } else {
@@ -199,7 +198,7 @@ int _driver_release(const char *drv_name)
 
                         if (driver_memory_region[i]) {
                                 int status = _regdrv_driver_table[i].interface->drv_release(driver_memory_region[i]);
-                                if (status == STD_RET_OK) {
+                                if (status == ESUCC) {
                                         driver_memory_region[i] = NULL;
                                 }
                                 return status;
@@ -219,17 +218,16 @@ int _driver_release(const char *drv_name)
  * @param id            module id
  * @param flags         flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _driver_open(dev_t id, u32_t flags)
+int _driver_open(dev_t id, u32_t flags)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id],
                                                                     vfs_filter_flags_for_device(flags));
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
@@ -240,16 +238,15 @@ stdret_t _driver_open(dev_t id, u32_t flags)
  * @param id            module id
  * @param force         force close request
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _driver_close(dev_t id, bool force)
+int _driver_close(dev_t id, bool force)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_close(driver_memory_region[id], force);
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
@@ -261,17 +258,23 @@ stdret_t _driver_close(dev_t id, bool force)
  * @param src           data source
  * @param count         buffer size
  * @param fpos          file position
+ * @param wrcnt         number of written bytes
  * @param fattr         file attributes
  *
- * @return number of written bytes, -1 on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+int _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_write(driver_memory_region[id], src, count, fpos, fattr);
+                return _regdrv_driver_table[id].interface->drv_write(driver_memory_region[id],
+                                                                     src,
+                                                                     count,
+                                                                     fpos,
+                                                                     wrcnt,
+                                                                     fattr);
         } else {
-                return -1;
+                return ENODEV;
         }
 }
 
@@ -283,17 +286,23 @@ ssize_t _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, str
  * @param dst           data destination
  * @param count         buffer size
  * @param fpos          file position
+ * @param rdcnt         number of read bytes
  * @param fattr         file attributes
  *
- * @return number of read bytes, -1 on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+int _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_read(driver_memory_region[id], dst, count, fpos, fattr);
+                return _regdrv_driver_table[id].interface->drv_read(driver_memory_region[id],
+                                                                    dst,
+                                                                    count,
+                                                                    fpos,
+                                                                    rdcnt,
+                                                                    fattr);
         } else {
-                return -1;
+                return ENODEV;
         }
 }
 
@@ -305,8 +314,7 @@ ssize_t _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, struct vfs
  * @param request       io request
  * @param arg           argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _driver_ioctl(dev_t id, int request, void *arg)
@@ -314,7 +322,7 @@ int _driver_ioctl(dev_t id, int request, void *arg)
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_ioctl(driver_memory_region[id], request, arg);
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
@@ -326,16 +334,15 @@ int _driver_ioctl(dev_t id, int request, void *arg)
  * @param request       io request
  * @param arg           argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _driver_flush(dev_t id)
+int _driver_flush(dev_t id)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_flush(driver_memory_region[id]);
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
@@ -346,16 +353,15 @@ stdret_t _driver_flush(dev_t id)
  * @param id            module id
  * @param stat          status object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _driver_stat(dev_t id, struct vfs_dev_stat *stat)
+int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         if (is_device_valid(id)) {
                 return _regdrv_driver_table[id].interface->drv_stat(driver_memory_region[id], stat);
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
