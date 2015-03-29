@@ -108,8 +108,7 @@ static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
@@ -117,15 +116,14 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(minor);
 
         if (major >= _TTY_NUMBER || minor != 0) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 
         /* initialize module base */
         if (!tty_module) {
                 tty_module = calloc(1 ,sizeof(struct module));
                 if (!tty_module)
-                        return STD_RET_ERROR;
+                        return ENOMEM;
 
                 tty_module->infile      = _sys_fopen(_TTY_IN_FILE, "r");
                 tty_module->outfile     = _sys_fopen(_TTY_OUT_FILE, "w");
@@ -154,7 +152,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         free(tty_module);
                         tty_module = NULL;
 
-                        return STD_RET_ERROR;
+                        return ENOMEM;
                 }
         }
 
@@ -173,7 +171,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         tty_module->tty[major] = tty;
                         *device_handle         = tty;
 
-                        return STD_RET_OK;
+                        return ESUCC;
                 } else {
                         if (tty->secure_mtx)
                                 _sys_mutex_delete(tty->secure_mtx);
@@ -194,7 +192,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 }
         }
 
-        return STD_RET_ERROR;
+        return ENOMEM;
 }
 
 //==============================================================================
@@ -203,8 +201,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(TTY, void *device_handle)
@@ -239,9 +236,9 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 }
 
                 _sys_critical_section_end();
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -252,8 +249,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
@@ -261,7 +257,7 @@ API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -271,8 +267,7 @@ API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(TTY, void *device_handle, bool force)
@@ -280,7 +275,7 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -291,31 +286,36 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(TTY,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
         tty_t *tty = device_handle;
 
-        ssize_t n = -1;
-
         if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                 ttybfr_put(tty->screen, reinterpret_cast(const char *, src), count);
                 _sys_mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
 
-                n = count;
-        } else {
-                errno = ETIME;
-        }
+                *wrcnt = count;
 
-        return n;
+                return ESUCC;
+        } else {
+                return ETIME;
+        }
 }
 
 //==============================================================================
@@ -326,18 +326,25 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, fpos_t *f
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(TTY,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fattr);
 
         tty_t *tty = device_handle;
 
-        ssize_t n = 0;
+        *rdcnt = 0;
 
         while (count--) {
                 if (fattr.non_blocking_rd) {
@@ -346,11 +353,13 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
                                 copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
                                 ttyedit_clear(tty->editline);
                                 _sys_mutex_unlock(tty->secure_mtx);
+                        } else {
+                                return ETIME;
                         }
                 }
 
                 if (_sys_queue_receive(tty->queue_out, dst, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
-                        n++;
+                        (*rdcnt)++;
 
                         if (*dst == '\n')
                                 break;
@@ -361,7 +370,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
 
         *fpos = 0;
 
-        return n;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -372,39 +381,33 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 {
-        tty_t *tty = device_handle;
+        tty_t *tty    = device_handle;
+        int    status = EINVAL;
 
         switch (request) {
         case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
                         *reinterpret_cast(int*, arg) = tty_module->current_tty;
-                } else {
-                        errno = EINVAL;
-                        return STD_RET_ERROR;
+                        status = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_COL:
                 if (arg) {
                         *reinterpret_cast(int*, arg) = _TTY_TERMINAL_COLUMNS;
-                } else {
-                        errno = EINVAL;
-                        return STD_RET_ERROR;
+                        status = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_ROW:
                 if (arg) {
                         *reinterpret_cast(int*, arg) = _TTY_TERMINAL_ROWS;
-                } else {
-                        errno = EINVAL;
-                        return STD_RET_ERROR;
+                        status = ESUCC;
                 }
                 break;
 
@@ -413,51 +416,50 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                         if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                 ttyedit_set_value(tty->editline, arg, tty_module->current_tty == tty->major);
                                 _sys_mutex_unlock(tty->secure_mtx);
+                                status = ESUCC;
                         } else {
-                                errno = ETIME;
-                                return STD_RET_ERROR;
+                                status = ETIME;
                         }
-                } else {
-                        errno = EINVAL;
-                        return STD_RET_ERROR;
                 }
                 break;
 
         case IOCTL_TTY__SWITCH_TTY_TO:
                 send_cmd(CMD_SWITCH_TTY, reinterpret_cast(int, arg));
+                status = ESUCC;
                 break;
 
         case IOCTL_TTY__CLEAR_SCR:
                 send_cmd(CMD_CLEAR_TTY, tty->major);
+                status = ESUCC;
                 break;
 
         case IOCTL_TTY__ECHO_ON:
                 ttyedit_enable_echo(tty->editline);
+                status = ESUCC;
                 break;
 
         case IOCTL_TTY__ECHO_OFF:
                 ttyedit_disable_echo(tty->editline);
+                status = ESUCC;
                 break;
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
                         *reinterpret_cast(int*, arg) = _TTY_NUMBER;
-                } else {
-                        errno = EINVAL;
-                        return STD_RET_ERROR;
                 }
                 break;
 
         case IOCTL_TTY__REFRESH_LAST_LINE:
                 send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
+                status = ESUCC;
                 break;
 
         default:
-                errno = EBADRQC;
-                return STD_RET_ERROR;
+                status = EBADRQC;
+                break;
         }
 
-        return STD_RET_OK;
+        return status;
 }
 
 //==============================================================================
@@ -466,8 +468,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(TTY, void *device_handle)
@@ -480,7 +481,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
                 _sys_mutex_unlock(tty->secure_mtx);
         }
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -490,8 +491,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -502,7 +502,7 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_major = tty->major;
         device_stat->st_minor = _TTY_MINOR_NUMBER;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================

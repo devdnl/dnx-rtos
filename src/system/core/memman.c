@@ -63,7 +63,6 @@
 #include "core/memman.h"
 #include "kernel/kwrapper.h"
 #include <string.h>
-#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -276,7 +275,6 @@ void *_memman_malloc(size_t size, _memman_func_t func, void *arg)
         size_t used;
 
         if (size == 0) {
-                errno = ENOMEM;
                 return NULL;
         }
 
@@ -289,7 +287,6 @@ void *_memman_malloc(size_t size, _memman_func_t func, void *arg)
         }
 
         if (size > MEM_SIZE_ALIGNED) {
-                errno = ENOMEM;
                 return NULL;
         }
 
@@ -375,7 +372,6 @@ void *_memman_malloc(size_t size, _memman_func_t func, void *arg)
         }
 
         xTaskResumeAll();
-        errno = ENOMEM;
         return NULL;
 }
 

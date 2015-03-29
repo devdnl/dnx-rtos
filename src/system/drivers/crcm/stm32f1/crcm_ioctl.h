@@ -41,13 +41,13 @@ extern "C" {
 ==============================================================================*/
 /** @brief  Set CRC input mode
  *  @param  enum CRC_input_mode *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1 and errno code is set
  */
 #define IOCTL_CRCM__SET_INPUT_MODE       _IOW(CRCM, 0x00, enum CRC_input_mode*)
 
 /** @brief  Get CRC input mode
  *  @param  enum CRC_input_mode *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1 and errno code is set
  */
 #define IOCTL_CRCM__GET_INPUT_MODE       _IOR(CRCM, 0x01, enum CRC_input_mode*)
 

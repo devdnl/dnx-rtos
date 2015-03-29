@@ -71,36 +71,44 @@ typedef struct {
         u8_t pin_number : 4;
 } GPIO_pin_t;
 
+/**
+ * Type used to read pin state
+ */
+typedef struct {
+        GPIO_pin_t *pin;
+        bool        state;
+} GPIO_pin_state_t;
+
 /*==============================================================================
   Exported macros
 ==============================================================================*/
 /**
  *  @brief  Set selected pin (pin state 1)
- *  @param  GPIO_pin_t *
+ *  @param  GPIO_pin_t*         pin number
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__SET_PIN             _IOW(GPIO, 0, GPIO_pin_t*)
 
 /**
  *  @brief  Clear selected pin (pin state 0)
- *  @param  GPIO_pin_t *
+ *  @param  GPIO_pin_t*         pin number
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__CLEAR_PIN           _IOW(GPIO, 1, GPIO_pin_t*)
 
 /**
  *  @brief  Toggle pin state
- *  @param  GPIO_pin_t *
+ *  @param  GPIO_pin_t*         pin number
  *  @return On success 0, on error -1
  */
 #define IOCTL_GPIO__TOGGLE_PIN          _IOW(GPIO, 2, GPIO_pin_t*)
 
 /**
  *  @brief  Gets pin state
- *  @param  GPIO_pin_t *
- *  @return On success 0 or 1 (pin state), on error -1
+ *  @param  GPIO_pin_state_t*   pin number and state
+ *  @return On success 0, on error -1
  */
-#define IOCTL_GPIO__GET_PIN             _IOR(GPIO, 3, GPIO_pin_t*)
+#define IOCTL_GPIO__GET_PIN             _IOR(GPIO, 3, GPIO_pin_state_t*)
 
 
 /** macro load GPIO_pin_t structure using 1 argument only */

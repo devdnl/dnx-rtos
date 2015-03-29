@@ -96,8 +96,7 @@ extern ETH_DMADESCTypeDef *DMATxDescToSet;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
@@ -105,6 +104,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
+        int            status;
         struct ethmac *hdl          = calloc(1, sizeof(struct ethmac));
         sem_t         *rx_ready_sem = _sys_semaphore_new(1, 0);
         mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_NORMAL);
@@ -123,7 +123,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                       && !_sys_time_is_expired(timeout, INIT_TIMEOUT));
 
                 if (_sys_time_is_expired(timeout, INIT_TIMEOUT)) {
-                        errno = ETIME;
+                        status = ETIME;
                         goto error;
                 }
 
@@ -194,7 +194,9 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                                 ETH_DMARxDescReceiveITConfig(&ethmac->DMA_rx_descriptor[i], ENABLE);
                         }
 
-                        return STD_RET_OK;
+                        return ESUCC;
+                } else {
+                        status = EIO;
                 }
         }
 
@@ -212,7 +214,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         if (tx_mtx)
                 _sys_mutex_delete(tx_mtx);
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -221,14 +223,13 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
         struct ethmac *hdl    = device_handle;
-        stdret_t       status = STD_RET_ERROR;
+        int            status;
 
         _sys_critical_section_begin();
 
@@ -239,9 +240,9 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 ethmac = NULL;
                 free(hdl);
 
-                status = STD_RET_OK;
+                status = ESUCC;
         } else {
-                errno = EBUSY;
+                status = EBUSY;
         }
 
         _sys_critical_section_end();
@@ -256,8 +257,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(ETHMAC, void *device_handle, u32_t flags)
@@ -266,13 +266,7 @@ API_MOD_OPEN(ETHMAC, void *device_handle, u32_t flags)
 
         struct ethmac *hdl = device_handle;
 
-        if (_sys_device_lock(&hdl->dev_lock)) {
-                return STD_RET_OK;
-        } else {
-                errno = EBUSY;
-        }
-
-        return STD_RET_ERROR;
+        return (_sys_device_lock(&hdl->dev_lock) ? ESUCC : EBUSY);
 }
 
 //==============================================================================
@@ -282,8 +276,7 @@ API_MOD_OPEN(ETHMAC, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
@@ -292,10 +285,9 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 
         if (_sys_device_is_access_granted(&hdl->dev_lock) || force) {
                 _sys_device_unlock(&hdl->dev_lock, force);
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -307,29 +299,38 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(ETHMAC,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(fpos);
 
         struct ethmac *hdl = device_handle;
 
-        ssize_t n = -1;
-
         if (is_Ethernet_started()) {
 
-                n = 0;
-
                 if (_sys_mutex_lock(hdl->tx_access, fattr.non_blocking_wr ? 0 : MAX_DELAY_MS)) {
+
+                        *wrcnt = 0;
+                        int status;
+
                         while (count) {
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
 
-                                        if (fattr.non_blocking_wr)
+                                        if (fattr.non_blocking_wr) {
+                                                status = EAGAIN;
                                                 goto exit;
+                                        }
 
                                         _sys_sleep_ms(1);
                                 }
@@ -340,19 +341,23 @@ API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, fpos_t
                                 memcpy(buffer, src, packet_size);
                                 send_packet(count);
 
-                                n     += packet_size;
-                                count -= packet_size;
+                                *wrcnt += packet_size;
+                                count  -= packet_size;
                         }
 
+                        status = ESUCC;
+
+                        exit:
                         _sys_mutex_unlock(hdl->tx_access);
+
+                        return status;
+                } else {
+                        return EAGAIN;
                 }
 
         } else {
-                errno = EPERM;
+                return EIO;
         }
-
-        exit:
-        return n;
 }
 
 //==============================================================================
@@ -363,47 +368,58 @@ API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, fpos_t
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(ETHMAC, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(ETHMAC,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
 
         struct ethmac *hdl = device_handle;
 
-        ssize_t n = -1;
+        if (is_Ethernet_started()) {
+                if (count % ETH_MAX_PACKET_SIZE == 0) {
 
-        if (count % ETH_MAX_PACKET_SIZE == 0 && is_Ethernet_started()) {
+                        *rdcnt = 0;
 
-                n = 0;
+                        if (_sys_mutex_lock(hdl->rx_access, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
+                                size_t pkts = count / ETH_MAX_PACKET_SIZE;
+                                while (pkts--) {
+                                        size_t pkt_size = wait_for_packet(hdl, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS);
+                                        if (pkt_size) {
+                                                u8_t *src = get_buffer_address(DMARxDescToGet);
 
-                if (_sys_mutex_lock(hdl->rx_access, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
-                        size_t pkts = count / ETH_MAX_PACKET_SIZE;
-                        while (pkts--) {
-                                size_t pkt_size = wait_for_packet(hdl, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS);
-                                if (pkt_size) {
-                                        u8_t *src = get_buffer_address(DMARxDescToGet);
+                                                memcpy(dst, src, min(pkt_size, count));
+                                                give_Rx_buffer_to_DMA();
+                                                make_Rx_buffer_available();
 
-                                        memcpy(dst, src, min(pkt_size, count));
-                                        give_Rx_buffer_to_DMA();
-                                        make_Rx_buffer_available();
-
-                                        n += pkt_size;
-                                } else {
-                                        break;
+                                                *rdcnt += pkt_size;
+                                        } else {
+                                                break;
+                                        }
                                 }
-                        }
 
-                        _sys_mutex_unlock(hdl->rx_access);
+                                _sys_mutex_unlock(hdl->rx_access);
+
+                                return ESUCC;
+                        } else {
+                                return EAGAIN;
+                        }
+                } else {
+                        return EINVAL;
                 }
         } else {
-                errno = EPERM;
+                return EIO;
         }
-
-        return n;
 }
 
 //==============================================================================
@@ -414,31 +430,33 @@ API_MOD_READ(ETHMAC, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos,
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 {
         struct ethmac *hdl = device_handle;
 
-        int status = STD_RET_ERROR;
+        int status;
 
         switch (request) {
         case IOCTL_ETHMAC__WAIT_FOR_PACKET:
+
                 if (arg) {
-                        return wait_for_packet(hdl, reinterpret_cast(int, arg));
+                        ethmac_packet_wait_t *pw = reinterpret_cast(ethmac_packet_wait_t*, arg);
+                        pw->size = wait_for_packet(hdl, pw->timeout);
+                        return ESUCC;
                 } else {
-                        errno = EINVAL;
+                        return EINVAL;
                 }
                 break;
 
         case IOCTL_ETHMAC__SET_MAC_ADDR:
                 if (arg) {
                         ETH_MACAddressConfig(ETH_MAC_Address0, arg);
-                        return STD_RET_OK;
+                        return ESUCC;
                 } else {
-                        errno = EINVAL;
+                        return EINVAL;
                 }
                 break;
 
@@ -467,14 +485,18 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         send_packet(pkt->total_size);
 
-                                        status = STD_RET_OK;
+                                        status = ESUCC;
+                                } else {
+                                        status = EAGAIN;
                                 }
 
                                 _sys_mutex_unlock(hdl->tx_access);
+                        } else {
+                                status = EAGAIN;
                         }
+                } else {
+                        status = EINVAL;
                 }
-
-                errno = EINVAL;
                 break;
 
         case IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN:
@@ -487,9 +509,8 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                    && pkt->total_size > 0
                                    && pkt->total_size <= ETH_MAX_PACKET_SIZE) {
 
-                                        int n;
                                         if (is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                                                n = 0;
+                                                pkt->total_size = 0;
 
                                         } else if (ETH_GetRxPktSize() > 0) {
 
@@ -502,41 +523,54 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                                 }
 
                                                 give_Rx_buffer_to_DMA();
-                                                n = offset;
+
+                                                pkt->total_size = offset;
                                         } else {
                                                 give_Rx_buffer_to_DMA();
-                                                n = 0;
+                                                pkt->total_size = 0;
                                         }
 
                                         make_Rx_buffer_available();
 
-                                        status = n;
+                                        status = ESUCC;
+                                } else {
+                                        status = EINVAL;
                                 }
 
                                 _sys_mutex_unlock(hdl->rx_access);
+                        } else {
+                                status = EAGAIN;
                         }
+                } else {
+                        status = EINVAL;
                 }
-
-                errno = EINVAL;
                 break;
 
         case IOCTL_ETHMAC__ETHERNET_START:
                 ETH_Start();
-                return STD_RET_OK;
+                return ESUCC;
 
         case IOCTL_ETHMAC__ETHERNET_STOP:
                 ETH_Stop();
-                return STD_RET_OK;
+                return ESUCC;
 
         case IOCTL_ETHMAC__GET_LINK_STATUS:
-                if (ETH_ReadPHYRegister(ETHMAC_PHY_ADDRESS, PHY_BSR) & PHY_BSR_LINK_STATUS) {
-                        return ETHMAC_LINK_STATUS_CONNECTED;
+                if (arg) {
+                        ethmac_link_status_t *linkstat = reinterpret_cast(ethmac_link_status_t*, arg);
+
+                        if (ETH_ReadPHYRegister(ETHMAC_PHY_ADDRESS, PHY_BSR) & PHY_BSR_LINK_STATUS) {
+                                *linkstat = ETHMAC_LINK_STATUS_CONNECTED;
+                        } else {
+                                *linkstat = ETHMAC_LINK_STATUS_DISCONNECTED;
+                        }
+
+                        return ESUCC;
                 } else {
-                        return ETHMAC_LINK_STATUS_DISCONNECTED;
+                        return EINVAL;
                 }
 
         default:
-                errno = EBADRQC;
+                return EBADRQC;
         }
 
         return status;
@@ -548,8 +582,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(ETHMAC, void *device_handle)
@@ -560,7 +593,7 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
                 ETH_FlushTransmitFIFO();
         }
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -570,8 +603,7 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -582,7 +614,7 @@ API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_major = _ETHMAC_MAJOR_NUMBER;
         device_stat->st_minor = _ETHMAC_MINOR_NUMBER;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================

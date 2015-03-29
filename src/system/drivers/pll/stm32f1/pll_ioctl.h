@@ -41,43 +41,43 @@ extern "C" {
 ==============================================================================*/
 /** @brief  Gets SYSCLK frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_SYSCLK_FREQ      _IOR(PLL, 0x00, u32_t*)
 
 /** @brief  Gets HCLK frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_HCLK_FREQ        _IOR(PLL, 0x01, u32_t*)
 
 /** @brief  Gets PCLK1 frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_PCLK1_FREQ       _IOR(PLL, 0x02, u32_t*)
 
 /** @brief  Gets PCLK2 frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_PCLK2_FREQ       _IOR(PLL, 0x03, u32_t*)
 
 /** @brief  Gets ADCCLK frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_ADCCLK_FREQ      _IOR(PLL, 0x04, u32_t*)
 
 /** @brief  Gets PCLK1 frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_PCLK1_TIM_FREQ   _IOR(PLL, 0x05, u32_t*)
 
 /** @brief  Gets PCLK2 frequency [Hz]
  *  @param  u32_t *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_PLL__GET_PCLK2_TIM_FREQ   _IOR(PLL, 0x06, u32_t*)
 

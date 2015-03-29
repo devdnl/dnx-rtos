@@ -105,10 +105,9 @@ static void init_storage(const char *storage)
         printk("Initializing %s... ", storage);
         FILE *st = fopen(storage, "r+");
         if (st) {
-                if (ioctl(st, IOCTL_STORAGE__INITIALIZE)) {
+                if (ioctl(st, IOCTL_STORAGE__INITIALIZE) == 0) {
                         switch (ioctl(st, IOCTL_STORAGE__READ_MBR)) {
-                                case 1 : printk("OK\n"); break;
-                                case 0 : printk("OK (no MBR)\n"); break;
+                                case 0 : printk("OK\n"); break;
                                 default: printk(FONT_COLOR_RED"read error"RESET_ATTRIBUTES"\n");
                         }
                 } else {

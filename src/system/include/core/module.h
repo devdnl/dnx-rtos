@@ -45,6 +45,8 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#undef errno
+
 #undef  calloc
 #define calloc(size_t__nmemb, size_t__msize)    _sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 
@@ -53,6 +55,8 @@ extern "C" {
 
 #undef  free
 #define free(void__pmem)                        _sysm_modfree(void__pmem, _get_module_number(_module_name_))
+
+// TODO module ID from system instaed of string name
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \
@@ -68,15 +72,15 @@ extern "C" {
 #       define _MODULE_EXTERN_C
 #endif
 
-#define API_MOD_INIT(modname, ...)              _MODULE_EXTERN_C stdret_t _##modname##_init(__VA_ARGS__)
-#define API_MOD_RELEASE(modname, ...)           _MODULE_EXTERN_C stdret_t _##modname##_release(__VA_ARGS__)
-#define API_MOD_OPEN(modname, ...)              _MODULE_EXTERN_C stdret_t _##modname##_open(__VA_ARGS__)
-#define API_MOD_CLOSE(modname, ...)             _MODULE_EXTERN_C stdret_t _##modname##_close(__VA_ARGS__)
-#define API_MOD_WRITE(modname, ...)             _MODULE_EXTERN_C ssize_t _##modname##_write(__VA_ARGS__)
-#define API_MOD_READ(modname, ...)              _MODULE_EXTERN_C ssize_t _##modname##_read(__VA_ARGS__)
+#define API_MOD_INIT(modname, ...)              _MODULE_EXTERN_C int _##modname##_init(__VA_ARGS__)
+#define API_MOD_RELEASE(modname, ...)           _MODULE_EXTERN_C int _##modname##_release(__VA_ARGS__)
+#define API_MOD_OPEN(modname, ...)              _MODULE_EXTERN_C int _##modname##_open(__VA_ARGS__)
+#define API_MOD_CLOSE(modname, ...)             _MODULE_EXTERN_C int _##modname##_close(__VA_ARGS__)
+#define API_MOD_WRITE(modname, ...)             _MODULE_EXTERN_C int _##modname##_write(__VA_ARGS__)
+#define API_MOD_READ(modname, ...)              _MODULE_EXTERN_C int _##modname##_read(__VA_ARGS__)
 #define API_MOD_IOCTL(modname, ...)             _MODULE_EXTERN_C int _##modname##_ioctl(__VA_ARGS__)
-#define API_MOD_FLUSH(modname, ...)             _MODULE_EXTERN_C stdret_t _##modname##_flush(__VA_ARGS__)
-#define API_MOD_STAT(modname, ...)              _MODULE_EXTERN_C stdret_t _##modname##_stat(__VA_ARGS__)
+#define API_MOD_FLUSH(modname, ...)             _MODULE_EXTERN_C int _##modname##_flush(__VA_ARGS__)
+#define API_MOD_STAT(modname, ...)              _MODULE_EXTERN_C int _##modname##_stat(__VA_ARGS__)
 
 /*==============================================================================
   Exported types, enums definitions

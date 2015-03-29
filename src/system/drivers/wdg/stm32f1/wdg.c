@@ -74,8 +74,7 @@ MODULE_NAME(WDG);
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
@@ -90,13 +89,13 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 
                         *device_handle = hdl;
 
-                        return STD_RET_OK;
+                        return ESUCC;
                 } else {
-                        return STD_RET_ERROR;
+                        return ENOMEM;
                 }
 
         } else {
-                return STD_RET_ERROR;
+                return ENODEV;
         }
 }
 
@@ -106,16 +105,14 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(WDG, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        errno = EPERM;
-        return STD_RET_ERROR;
+        return EPERM;
 }
 
 //==============================================================================
@@ -125,8 +122,7 @@ API_MOD_RELEASE(WDG, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
@@ -136,9 +132,9 @@ API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+                return _sys_device_lock(&hdl->file_lock) ? ESUCC : EBUSY;
         } else {
-                return STD_RET_OK;
+                return ESUCC;
         }
 }
 
@@ -149,8 +145,7 @@ API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(WDG, void *device_handle, bool force)
@@ -160,13 +155,12 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
         if (_WDG_CFG_OPEN_LOCK) {
                 if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
                         _sys_device_unlock(&hdl->file_lock, force);
-                        return STD_RET_OK;
+                        return ESUCC;
                 } else {
-                        errno = EBUSY;
-                        return STD_RET_ERROR;
+                        return EBUSY;
                 }
         } else {
-                return STD_RET_OK;
+                return ESUCC;
         }
 }
 
@@ -178,12 +172,19 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(WDG,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
@@ -191,8 +192,7 @@ API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, fpos_t *f
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        errno = EPERM;
-        return -1;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -203,12 +203,19 @@ API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, fpos_t *f
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(WDG,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
@@ -216,8 +223,7 @@ API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        errno = EPERM;
-        return -1;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -228,8 +234,7 @@ API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
@@ -242,17 +247,14 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
                 switch (request) {
                 case IOCTL_WDG__RESET:
                         reset_wdg();
-                        return STD_RET_OK;
+                        return ESUCC;
 
                 default:
-                        errno = EBADRQC;
-                        break;
+                        return EBADRQC;
                 }
         } else {
-                errno = EACCES;
+                return EACCES;
         }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -261,15 +263,14 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(WDG, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -279,8 +280,7 @@ API_MOD_FLUSH(WDG, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -291,7 +291,7 @@ API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = _WDG_MINOR_NUMBER;
         device_stat->st_size  = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================

@@ -116,8 +116,7 @@ API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, 
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
@@ -135,15 +134,23 @@ API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
- * @param[in ]           fattr                  file attributes
  * @param[out]          *wrcnt                  number of written bytes
+ * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_WRITE(<!fs_name!>, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(<!fs_name!>,
+             void            *fs_handle,
+             void            *extra,
+             fd_t             fd,
+             const u8_t      *src,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *wrcnt,
+             struct vfs_fattr fattr)
 {
-        return 0;
+        return EIO;
 }
 
 //==============================================================================
@@ -156,14 +163,23 @@ API_FS_WRITE(<!fs_name!>, void *fs_handle,void *extra, fd_t fd, const u8_t *src,
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READ(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(<!fs_name!>,
+            void            *fs_handle,
+            void            *extra,
+            fd_t             fd,
+            u8_t            *dst,
+            size_t           count,
+            fpos_t          *fpos,
+            size_t          *rdcnt,
+            struct vfs_fattr fattr)
 {
-        return 0;
+        return EIO;
 }
 
 //==============================================================================
@@ -181,7 +197,7 @@ API_FS_READ(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_
 //==============================================================================
 API_FS_IOCTL(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        return 0;
+        return ESUCC;
 }
 
 //==============================================================================

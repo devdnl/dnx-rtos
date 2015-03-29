@@ -75,12 +75,12 @@ struct UART_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t uart_turn_on            (USART_t *uart);
-static stdret_t uart_turn_off           (USART_t *uart);
-static void     configure_uart          (u8_t major, struct UART_config *config);
-static bool     fifo_write              (struct Rx_FIFO *fifo, u8_t *data);
-static bool     fifo_read               (struct Rx_FIFO *fifo, u8_t *data);
-static void     handle_irq              (u8_t major);
+static bool uart_turn_on  (USART_t *uart);
+static bool uart_turn_off (USART_t *uart);
+static void configure_uart(u8_t major, struct UART_config *config);
+static bool fifo_write    (struct Rx_FIFO *fifo, u8_t *data);
+static bool fifo_read     (struct Rx_FIFO *fifo, u8_t *data);
+static void handle_irq    (u8_t major);
 
 /*==============================================================================
   Local object definitions
@@ -153,8 +153,7 @@ static struct UART_data *uart_data[_UART_NUMBER];
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
@@ -162,9 +161,10 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(minor);
 
         if (major >= _UART_NUMBER || minor != _UART_MINOR_NUMBER) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return ENODEV;
         }
+
+        int status;
 
         uart_data[major] = calloc(1, sizeof(struct UART_data));
         if (uart_data[major]) {
@@ -173,13 +173,13 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_NORMAL);
                 uart_data[major]->port_lock_tx_mtx = _sys_mutex_new(MUTEX_NORMAL);
-                stdret_t uart_clock_configured     = uart_turn_on(uart[major]);
+                bool uart_clock_configured         = uart_turn_on(uart[major]);
 
                 if (  uart_data[major]->data_write_sem
                    && uart_data[major]->data_read_sem
                    && uart_data[major]->port_lock_rx_mtx
                    && uart_data[major]->port_lock_tx_mtx
-                   && uart_clock_configured == STD_RET_OK ) {
+                   && uart_clock_configured) {
 
                         uart_data[major]->major  = major;
                         uart_data[major]->config = uart_default_config;
@@ -190,7 +190,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 
                         *device_handle = uart_data[major];
 
-                        return STD_RET_OK;
+                        return status = ESUCC;
                 } else {
                         if (uart_clock_configured) {
                                 uart_turn_off(uart[major]);
@@ -214,10 +214,13 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 
                         free(uart_data[major]);
                         uart_data[major] = NULL;
+                        status = ENOMEM;
                 }
+        } else {
+                status = ENOMEM;
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -226,8 +229,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(UART, void *device_handle)
@@ -253,14 +255,13 @@ API_MOD_RELEASE(UART, void *device_handle)
 
                         _sys_critical_section_end();
 
-                        return STD_RET_OK;
+                        return ESUCC;
                 }
 
                 _sys_mutex_unlock(hdl->port_lock_rx_mtx);
         }
 
-        errno = EBUSY;
-        return STD_RET_ERROR;
+        return EBUSY;
 }
 
 //==============================================================================
@@ -270,8 +271,7 @@ API_MOD_RELEASE(UART, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(UART, void *device_handle, u32_t flags)
@@ -279,7 +279,7 @@ API_MOD_OPEN(UART, void *device_handle, u32_t flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -289,8 +289,7 @@ API_MOD_OPEN(UART, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(UART, void *device_handle, bool force)
@@ -298,7 +297,7 @@ API_MOD_CLOSE(UART, void *device_handle, bool force)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -309,19 +308,25 @@ API_MOD_CLOSE(UART, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(UART,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
         struct UART_data *hdl = device_handle;
 
-        ssize_t n = 0;
         if (_sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
@@ -329,15 +334,14 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *
                 SET_BIT(uart[hdl->major]->CR1, USART_CR1_TXEIE);
                 _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
 
-                n = count - hdl->Tx_buffer.data_size;
+                *wrcnt = count - hdl->Tx_buffer.data_size;
 
                 _sys_mutex_unlock(hdl->port_lock_tx_mtx);
-        } else {
-                errno = EBUSY;
-                n     = -1;
-        }
 
-        return n;
+                return ESUCC;
+        } else {
+                return EBUSY;
+        }
 }
 
 //==============================================================================
@@ -348,38 +352,45 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, fpos_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(UART,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
         struct UART_data *hdl = device_handle;
 
-        ssize_t n = 0;
         if (_sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT)) {
+                *rdcnt = 0;
+
                 while (count--) {
                         if (_sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT)) {
                                 CLEAR_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                                 if (fifo_read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
-                                        n++;
+                                        (*rdcnt)++;
                                 }
                                 SET_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                         }
                 }
 
                 _sys_mutex_unlock(hdl->port_lock_rx_mtx);
-        } else {
-                errno = EBUSY;
-                n     = -1;
-        }
 
-        return n;
+                return ESUCC;
+        } else {
+                return EBUSY;
+        }
 }
 
 //==============================================================================
@@ -390,41 +401,39 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 {
         struct UART_data *hdl    = device_handle;
-        stdret_t          status = STD_RET_OK;
+        int               status = EINVAL;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
                         configure_uart(hdl->major, arg);
                         hdl->config = *(struct UART_config *)arg;
+                        status = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
                         *(struct UART_config *)arg = hdl->config;
+                        status = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CHAR_UNBLOCKING:
                         if (!fifo_read(&hdl->Rx_FIFO, arg)) {
-                             errno  = EAGAIN;
-                             status = STD_RET_ERROR;
+                                status = EAGAIN;
+                        } else {
+                                status = ESUCC;
                         }
                         break;
 
                 default:
-                        errno  = EBADRQC;
-                        status = STD_RET_ERROR;
+                        status = EBADRQC;
                         break;
                 }
-        } else {
-                errno  = EINVAL;
-                status = STD_RET_ERROR;
         }
 
         return status;
@@ -436,15 +445,14 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -454,8 +462,7 @@ API_MOD_FLUSH(UART, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -466,7 +473,7 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -475,11 +482,10 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
  *
  * @param[in] *USART            peripheral address
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static stdret_t uart_turn_on(USART_t *USART)
+static bool uart_turn_on(USART_t *USART)
 {
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -489,7 +495,7 @@ static stdret_t uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
                         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
                 } else {
-                        return STD_RET_ERROR;
+                        return false;
                 }
                 break;
         #endif
@@ -500,7 +506,7 @@ static stdret_t uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
                 } else {
-                        return STD_RET_ERROR;
+                        return false;
                 }
                 break;
         #endif
@@ -511,7 +517,7 @@ static stdret_t uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
                 } else {
-                        return STD_RET_ERROR;
+                        return false;
                 }
                 break;
         #endif
@@ -522,7 +528,7 @@ static stdret_t uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
                 } else {
-                        return STD_RET_ERROR;
+                        return false;
                 }
                 break;
         #endif
@@ -533,16 +539,15 @@ static stdret_t uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
                 } else {
-                        return STD_RET_ERROR;
+                        return false;
                 }
                 break;
         #endif
         default:
-                errno = EIO;
-                return STD_RET_ERROR;
+                return false;
         }
 
-        return STD_RET_OK;
+        return true;
 }
 
 //==============================================================================
@@ -551,11 +556,10 @@ static stdret_t uart_turn_on(USART_t *USART)
  *
  * @param[in] *USART            peripheral address
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
-static stdret_t uart_turn_off(USART_t *USART)
+static bool uart_turn_off(USART_t *USART)
 {
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -599,11 +603,10 @@ static stdret_t uart_turn_off(USART_t *USART)
                 break;
         #endif
         default:
-                errno = EIO;
-                return STD_RET_ERROR;
+                return false;
         }
 
-        return STD_RET_OK;
+        return true;
 }
 
 //==============================================================================

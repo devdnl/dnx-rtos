@@ -69,18 +69,16 @@ enum _IO_GROUP {
 /**
  *  @brief  Initialize storage device
  *  @param  None
- *  @return On success (device initialized) 1 is returned.
- *          On failure (device not initialized) 0 is returned.
- *          On error -1 is returned and errno is set.
+ *  @return On success (device initialized) 0 is returned.
+ *          On error (device not initialized) -1 is returned and errno is set.
  */
 #define IOCTL_STORAGE__INITIALIZE       _IO(STORAGE, 0x00)
 
 /**
  *  @brief  Read storage's MBR sector and detect partitions
  *  @param  None
- *  @return On success (MBR detected) 1 is returned.
- *          On failure (MBR not exist) 0 is returned.
- *          On error -1 is returned and errno is set.
+ *  @return On success (MBR detected) 0 is returned.
+ *          On error (MBR not exist or IO error) -1 is returned and errno is set.
  */
 #define IOCTL_STORAGE__READ_MBR         _IO(STORAGE, 0x01)
 

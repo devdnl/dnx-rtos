@@ -209,9 +209,9 @@ typedef struct vfs_FS_interface {
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
-        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr attr);
-        int      (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
+        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
+        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
+        int      (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *arg);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path, mode_t);

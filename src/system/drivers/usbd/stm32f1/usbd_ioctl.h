@@ -102,7 +102,7 @@ extern "C" {
 /**
  * @brief The request starts the USB device (the device will be visible by the host)
  * @param None
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__START                       _IO (USBD, 0x00)
@@ -111,7 +111,7 @@ extern "C" {
 /**
  * @brief The request stops the USB device (the device will not be visible by the host)
  * @param None
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__STOP                        _IO (USBD, 0x01)
@@ -120,7 +120,7 @@ extern "C" {
 /**
  * @brief The request configures Endpoints 1 to 7. The settings of the Endpoint 0 from given configuration are ignored.
  * @param The pointer to the object of type 'const usb_ep_config_t'
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__CONFIGURE_EP_1_7            _IOW(USBD, 0x02, const usbd_ep_config_t*)
@@ -129,7 +129,7 @@ extern "C" {
 /**
  * @brief The request sets the address of the device (received from host in the SETUP packet).
  * @param The address determined by the 'int' type
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__SET_ADDRESS                 _IOW(USBD, 0x03, int)
@@ -138,7 +138,7 @@ extern "C" {
 /**
  * @brief The request sends the ZLP by the selected endpoint
  * @param None
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__SEND_ZLP                    _IO (USBD, 0x04)
@@ -148,7 +148,7 @@ extern "C" {
  * @brief The request sets a STALL status in the selected endpoint
  * @param The endpoint number determined by the 'int' type. The IN/OUT endpoint
  *        is recognized by most significant bit as is defined by the USB standard
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__SET_EP_STALL                _IOW(USBD, 0x05, int)
@@ -158,7 +158,7 @@ extern "C" {
  * @brief The request sets a VALID (ACK) status in the selected endpoint
  * @param The endpoint number determined by the 'int' type. The IN/OUT endpoint
  *        is recognized by most significant bit as is defined by the USB standard
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__SET_EP_VALID                _IOW(USBD, 0x06, int)
@@ -166,18 +166,18 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request returns a USB reset status
- * @param None
- * @return On success returns true or false, otherwise STD_RET_ERROR
+ * @param The pointer to the bool that indicate that reset was occurred.
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
-#define IOCTL_USBD__WAS_RESET                   _IO (USBD, 0x07)
+#define IOCTL_USBD__WAS_RESET                   _IOR(USBD, 0x07, bool*)
 
 //==============================================================================
 /**
  * @brief The request wait for the SETUP packet
  * @param The pointer to the usb_setup_container_t that contains setup packet buffer
  *        and read-timeout configuration
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__GET_SETUP_PACKET            _IOR(USBD, 0x08, usbd_setup_container_t*)
@@ -186,7 +186,7 @@ extern "C" {
 /**
  * @brief The request sets the error status (IN STALL, OUT STALL) in the selected endpoint
  * @param None
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__SET_ERROR_STATUS            _IO (USBD, 0x09)
@@ -195,7 +195,7 @@ extern "C" {
 /**
  * @brief The request gets the error counter. The counter is cleared after read operation.
  * @param The pointer to integer of 'int' type
- * @return On success returns STD_RET_OK, otherwise STD_RET_ERROR
+ * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
 #define IOCTL_USBD__GET_ERROR_COUNTER           _IOR(USBD, 0x0A, int*)

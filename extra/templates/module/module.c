@@ -129,14 +129,21 @@ API_MOD_CLOSE(<!MODULE_NAME!>, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(<!MODULE_NAME!>, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(<!MODULE_NAME!>,
+              void            *device_handle,
+              const u8_t      *src,
+              size_t           count,
+              fpos_t          *fpos,
+              size_t          *wrcnt,
+              struct vfs_fattr fattr)
 {
-        return 0;
+        return EIO;
 }
 
 //==============================================================================
@@ -147,14 +154,21 @@ API_MOD_WRITE(<!MODULE_NAME!>, void *device_handle, const u8_t *src, size_t coun
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(<!MODULE_NAME!>, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(<!MODULE_NAME!>,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        return 0;
+        return EIO;
 }
 
 //==============================================================================
@@ -165,19 +179,15 @@ API_MOD_READ(<!MODULE_NAME!>, void *device_handle, u8_t *dst, size_t count, fpos
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return Value depends on request. To obtain more information see module's
- *         ioctl request definitions.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(<!MODULE_NAME!>, void *device_handle, int request, void *arg)
 {
         switch (request) {
         default:
-                errno = EBADRQC;
-                return STD_RET_ERROR;
+                return EBADRQC;
         }
-
-        return 0;
 }
 
 //==============================================================================
@@ -186,13 +196,12 @@ API_MOD_IOCTL(<!MODULE_NAME!>, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(<!MODULE_NAME!>, void *device_handle)
 {
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -202,8 +211,7 @@ API_MOD_FLUSH(<!MODULE_NAME!>, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(<!MODULE_NAME!>, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -212,7 +220,7 @@ API_MOD_STAT(<!MODULE_NAME!>, void *device_handle, struct vfs_dev_stat *device_s
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 /*==============================================================================

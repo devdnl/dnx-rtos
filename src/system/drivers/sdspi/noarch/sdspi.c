@@ -131,13 +131,13 @@ static ssize_t  card_read_entire_sectors           (sdpart_t *hdl, u8_t *dst, si
 static ssize_t  card_read_partial_sectors          (sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek);
 static ssize_t  card_write_entire_sectors          (sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek);
 static ssize_t  card_write_partial_sectors         (sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek);
-static stdret_t card_initialize                    (sdpart_t *hdl);
+static int      card_initialize                    (sdpart_t *hdl);
 static ssize_t  card_read                          (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek);
 static ssize_t  card_write                         (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek);
 static u16_t    MBR_get_boot_signature             (u8_t *sector);
 static u32_t    MBR_get_partition_first_LBA_sector (int partition, u8_t *sector);
 static u32_t    MBR_get_partition_number_of_sectors(int partition, u8_t *sector);
-static stdret_t MBR_detect_partitions              (sdpart_t *hdl);
+static int      MBR_detect_partitions              (sdpart_t *hdl);
 
 /*==============================================================================
   Local object definitions
@@ -175,22 +175,20 @@ static const card_cfg_t card_cfg[SDSPI_NUMBER_OF_CARDS] = {
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
         if (major >= _NUMBER_OF_SDSPI_CARDS || minor > _SDSPI_PARTITION_4) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 
         if (SDSPI == NULL) {
                 SDSPI = calloc(1, sizeof(sdctrl_t));
 
                 if (SDSPI == NULL) {
-                        return STD_RET_ERROR;
+                        return ENOMEM;
                 }
         }
 
@@ -222,7 +220,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                         if (hdl)
                                 free(hdl);
 
-                        return STD_RET_ERROR;
+                        return ENOMEM;
                 }
         }
 
@@ -238,11 +236,11 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 
                         *device_handle = part;
 
-                        return STD_RET_OK;
+                        return ESUCC;
                 }
         }
 
-        return STD_RET_ERROR;
+        return ENOMEM;
 }
 
 //==============================================================================
@@ -251,8 +249,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(SDSPI, void *device_handle)
@@ -262,8 +259,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         uint timer = _sys_time_get_reference();
         while (part->used) {
                 if (_sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
-                        errno = EBUSY;
-                        return STD_RET_ERROR;
+                        return EBUSY;
                 }
 
                 _sys_sleep_ms(10);
@@ -310,7 +306,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 
         _sys_critical_section_end();
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -320,8 +316,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
@@ -331,10 +326,9 @@ API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
         sdpart_t *part = device_handle;
 
         if (part->used == true) {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         } else {
-                return STD_RET_OK;
+                return ESUCC;
         }
 }
 
@@ -345,8 +339,7 @@ API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
@@ -357,7 +350,7 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 
         part->used = false;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -368,31 +361,38 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(SDSPI,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
+        int       status;
 
-        ssize_t n = -1;
         if (part->size > 0) {
                 if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
-                        n = card_write(part, src, count, lseek);
+                        status = card_write(part, src, count, lseek, wrcnt);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        errno = EBUSY;
+                        status = EBUSY;
                 }
         } else {
-                errno = ENOMEDIUM;
+                status = ENOMEDIUM;
         }
 
-        return n;
+        return status;
 }
 
 //==============================================================================
@@ -403,31 +403,38 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, fpos_t 
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(SDSPI,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fattr);
 
         sdpart_t *part = device_handle;
+        int       status;
 
-        ssize_t n = -1;
         if (part->size > 0) {
                 if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
-                        n = card_read(part, dst, count, lseek);
+                        status = card_read(part, dst, count, lseek, rdcnt);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        errno = EBUSY;
+                        status = EBUSY;
                 }
         } else {
-                errno = ENOMEDIUM;
+                status = ENOMEDIUM;
         }
 
-        return n;
+        return status;
 }
 
 //==============================================================================
@@ -438,8 +445,7 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
@@ -448,44 +454,33 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         sdpart_t *part = device_handle;
 
-        stdret_t status = -1;
+        int status = EBADRQC;
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
                 if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
-                        if (card_initialize(part) == STD_RET_OK) {
-                                status = 1;
-                        } else {
-                                errno  = ENOMEDIUM;
-                                status = 0;
-                        }
+                        status = card_initialize(part);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        errno  = EBUSY;
-                        status = STD_RET_ERROR;
+                        status = EBUSY;
                 }
                 break;
 
         case IOCTL_SDSPI__READ_MBR:
                 if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
                         if (SDSPI->card[part->major]->initialized) {
-                                if (MBR_detect_partitions(part) == STD_RET_OK) {
-                                        status = 1;
-                                }
+                                status = MBR_detect_partitions(part);
                         } else {
-                                errno  = EMEDIUMTYPE;
-                                status = 0;
+                                status = ENOMEDIUM;
                         }
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        errno  = EBUSY;
-                        status = STD_RET_ERROR;
+                        status = EBUSY;
                 }
                 break;
 
         default:
-                errno = EBADRQC;
-                break;
+                return EBADRQC;
         }
 
         return status;
@@ -497,15 +492,14 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(SDSPI, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -515,8 +509,7 @@ API_MOD_FLUSH(SDSPI, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -528,9 +521,9 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
                 device_stat->st_minor = part->minor;
                 device_stat->st_size  = static_cast(u64_t, part->size) * sector_size;
 
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return ENOMEDIUM;
         }
 }
 
@@ -579,7 +572,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
         desc.rx_buffer = &out;
         desc.tx_buffer = &out;
 
-        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == STD_RET_OK) {
+        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == 0) {
                 return out;
         } else {
                 return 0x00;
@@ -665,7 +658,6 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
         SPI_select_card(hdl);
 
         if (card_wait_ready(hdl) != 0xFF) {
-                errno = EIO;
                 return 0xFF;
         }
 
@@ -717,7 +709,6 @@ static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
               && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
         if (token != 0xFE) {
-                errno = EIO;
                 return false;
         }
 
@@ -746,7 +737,6 @@ static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
 static bool card_transmit_data_block(sdpart_t *hdl, const u8_t *buff, u8_t token)
 {
         if (card_wait_ready(hdl) != 0xFF) {
-                errno = EIO;
                 return false;
         }
 
@@ -759,7 +749,6 @@ static bool card_transmit_data_block(sdpart_t *hdl, const u8_t *buff, u8_t token
                 SPI_receive_block(hdl, dummy_crc_and_response, 3);
 
                 if ((dummy_crc_and_response[2] & 0x1F) != 0x05) {
-                        errno = EIO;
                         return false;
                 }
         }
@@ -1006,12 +995,13 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
  *
  * @param[in]  hdl      SD module data
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t card_initialize(sdpart_t *hdl)
+static int card_initialize(sdpart_t *hdl)
 {
+        int status = EIO;
+
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
                 _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
@@ -1044,6 +1034,9 @@ static stdret_t card_initialize(sdpart_t *hdl)
                                         SDSPI->card[hdl->major]->type.type   = CT_SD2;
                                         SDSPI->card[hdl->major]->type.block  = (OCR[0] & 0x40) ? true : false;
                                         SDSPI->card[hdl->major]->initialized = true;
+                                        status = ESUCC;
+                                } else {
+                                        status = ETIME;
                                 }
                         }
                 } else { /* SDSC or MMC */
@@ -1069,19 +1062,24 @@ static stdret_t card_initialize(sdpart_t *hdl)
 
                                 SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
                                 SDSPI->card[hdl->major]->type.block  = false;
+                                status = ETIME;
                         } else {
                                 SDSPI->card[hdl->major]->initialized = true;
+                                status = ESUCC;
                         }
                 }
+        } else {
+                status = ENOMEDIUM;
         }
 
-        /* size info */
+        /* clear size info */
         for (int i = _SDSPI_FULL_VOLUME; i <= _SDSPI_PARTITION_4; i++) {
                 if (SDSPI->card[hdl->major]->part[i]) {
                         SDSPI->card[hdl->major]->part[i]->size = 0;
                 }
         }
 
+        // read size
         if (card_send_cmd(hdl, CMD9, 0) == 0) {
                 u8_t csd[16];
                 u8_t token;
@@ -1114,7 +1112,7 @@ static stdret_t card_initialize(sdpart_t *hdl)
 
         SPI_deselect_card(hdl);
 
-        return SDSPI->card[hdl->major]->initialized ? STD_RET_OK : STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -1125,17 +1123,18 @@ static stdret_t card_initialize(sdpart_t *hdl)
  * @param[out]  dst             destination
  * @param[in]   count           bytes to read
  * @param[in]   lseek           file index
+ * @param[out]  rdcnt           number of read bytes
  *
- * @retval number of read bytes
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
+static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *rdcnt)
 {
         ssize_t n = 0;
 
         if (SDSPI->card[hdl->major]->initialized == false) {
-                errno = EIO;
-                n = -1;
+                return EIO;
+
         } else {
                 if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
@@ -1149,7 +1148,12 @@ static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
                 SPI_deselect_card(hdl);
         }
 
-        return n;
+        if (n >= 0) {
+                *rdcnt = n;
+                return ESUCC;
+        } else {
+                return EIO;
+        }
 }
 
 //==============================================================================
@@ -1160,23 +1164,22 @@ static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
  * @param[in]  src              source
  * @param[in]  count            bytes to write
  * @param[in]  lseek            file index
+ * @param[out] wrcnt            number of written bytes
  *
- * @retval number of written bytes
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek)
+static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek, size_t *wrcnt)
 {
         ssize_t n = 0;
 
         if (SDSPI->card[hdl->major]->initialized == false) {
-                errno = EIO;
-                n = -1;
+                return EIO;
+
         } else {
                 if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
-
                         n  = card_write_entire_sectors(hdl, src, count / sector_size, lseek);
                         n *= sector_size;
-
                 } else {
                         n  = card_write_partial_sectors(hdl, src, count, lseek);
                 }
@@ -1184,7 +1187,12 @@ static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t ls
                 SPI_deselect_card(hdl);
         }
 
-        return n;
+        if (n >= 0) {
+                *wrcnt = n;
+                return ESUCC;
+        } else {
+                return EIO;
+        }
 }
 
 //==============================================================================
@@ -1285,13 +1293,12 @@ static u32_t MBR_get_partition_number_of_sectors(int partition, u8_t *sector)
  *
  * @param[in]  hdl      SD module data
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t MBR_detect_partitions(sdpart_t *hdl)
+static int MBR_detect_partitions(sdpart_t *hdl)
 {
-        stdret_t status = STD_RET_ERROR;
+        int status = EIO;
 
         u8_t *MBR = malloc(sector_size);
         if (MBR) {
@@ -1300,7 +1307,7 @@ static stdret_t MBR_detect_partitions(sdpart_t *hdl)
                 }
 
                 if (MBR_get_boot_signature(MBR) != 0xAA55) {
-                        errno = EMEDIUMTYPE;
+                        status = EMEDIUMTYPE;
                         goto error;
                 }
 
@@ -1312,10 +1319,12 @@ static stdret_t MBR_detect_partitions(sdpart_t *hdl)
                         }
                 }
 
-                status = STD_RET_OK;
+                status = ESUCC;
 
                 error:
                 free(MBR);
+        } else {
+                status = ENOMEM;
         }
 
         return status;

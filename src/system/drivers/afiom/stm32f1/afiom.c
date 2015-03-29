@@ -173,8 +173,7 @@ static const uint32_t EXTICR4 = EXTICR(_AFIOM_EXTI15_PORT, _AFIOM_EXTI14_PORT, _
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(AFIOM, void **device_handle, u8_t major, u8_t minor)
@@ -194,9 +193,9 @@ API_MOD_INIT(AFIOM, void **device_handle, u8_t major, u8_t minor)
                 AFIO->EXTICR[2] = EXTICR3;
                 AFIO->EXTICR[3] = EXTICR4;
 
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return EADDRINUSE;
         }
 }
 
@@ -206,8 +205,7 @@ API_MOD_INIT(AFIOM, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(AFIOM, void *device_handle)
@@ -218,7 +216,7 @@ API_MOD_RELEASE(AFIOM, void *device_handle)
         CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_AFIORST);
         CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -228,8 +226,7 @@ API_MOD_RELEASE(AFIOM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
@@ -237,7 +234,7 @@ API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -247,8 +244,7 @@ API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(AFIOM, void *device_handle, bool force)
@@ -256,7 +252,7 @@ API_MOD_CLOSE(AFIOM, void *device_handle, bool force)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -267,22 +263,28 @@ API_MOD_CLOSE(AFIOM, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(AFIOM, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(AFIOM,
+              void            *device_handle,
+              const u8_t      *src,
+              size_t           count,
+              fpos_t          *fpos,
+              size_t          *wrcnt,
+              struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
+        UNUSED_ARG(wrcnt);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -293,12 +295,19 @@ API_MOD_WRITE(AFIOM, void *device_handle, const u8_t *src, size_t count, fpos_t 
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(AFIOM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(AFIOM,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
@@ -306,9 +315,7 @@ API_MOD_READ(AFIOM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -319,8 +326,7 @@ API_MOD_READ(AFIOM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, 
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
@@ -330,11 +336,8 @@ API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
 
         switch (request) {
         default:
-                errno = EBADRQC;
-                return STD_RET_ERROR;
+                return EBADRQC;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -343,15 +346,14 @@ API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(AFIOM, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -361,8 +363,7 @@ API_MOD_FLUSH(AFIOM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(AFIOM, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -373,7 +374,7 @@ API_MOD_STAT(AFIOM, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 /*==============================================================================

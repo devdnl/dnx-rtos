@@ -70,8 +70,7 @@ MODULE_NAME(CRCM);
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
@@ -80,7 +79,7 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
            || minor != _CRCM_MINOR_NUMBER
            || (RCC->AHBENR & RCC_AHBENR_CRCEN) ) {
 
-                return STD_RET_ERROR;
+                return EADDRINUSE;
         }
 
         CRCM *hdl = calloc(1, sizeof(CRCM));
@@ -90,9 +89,9 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
                 hdl->input_mode = CRCM_INPUT_MODE_WORD;
                 *device_handle  = hdl;
 
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return ENOMEM;
         }
 }
 
@@ -102,8 +101,7 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(CRCM, void *device_handle)
@@ -112,14 +110,14 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 
         _sys_critical_section_begin();
 
-        stdret_t status = STD_RET_ERROR;
+        int status;
 
         if (_sys_device_is_unlocked(hdl->file_lock)) {
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
                 free(hdl);
-                status = STD_RET_OK;
+                status = ESUCC;
         } else {
-                errno = EBUSY;
+                status = EBUSY;
         }
 
         _sys_critical_section_end();
@@ -134,8 +132,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(CRCM, void *device_handle, u32_t flags)
@@ -144,7 +141,7 @@ API_MOD_OPEN(CRCM, void *device_handle, u32_t flags)
 
         CRCM *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->file_lock) ? ESUCC : EBUSY;
 }
 
 //==============================================================================
@@ -154,8 +151,7 @@ API_MOD_OPEN(CRCM, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(CRCM, void *device_handle, bool force)
@@ -164,10 +160,9 @@ API_MOD_CLOSE(CRCM, void *device_handle, bool force)
 
         if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
                 _sys_device_unlock(&hdl->file_lock, force);
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -179,26 +174,33 @@ API_MOD_CLOSE(CRCM, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(CRCM, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(CRCM,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
         CRCM *hdl = device_handle;
 
-        ssize_t n = -1;
-
         if (_sys_device_is_access_granted(&hdl->file_lock)) {
                 reset_CRC();
 
+                size_t n = 0;
+
                 if (hdl->input_mode == CRCM_INPUT_MODE_BYTE) {
 
-                        for (n = 0; n < (ssize_t)count; n++) {
+                        for (n = 0; n < (size_t)count; n++) {
                                 CRC->DR = src[n];
                         }
 
@@ -224,11 +226,12 @@ API_MOD_WRITE(CRCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
 
                         n = len * sizeof(u32_t);
                 }
-        } else {
-                errno = EACCES;
-        }
 
-        return n;
+                *wrcnt = n;
+                return ESUCC;
+        } else {
+                return EBUSY;
+        }
 }
 
 //==============================================================================
@@ -239,25 +242,30 @@ API_MOD_WRITE(CRCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(CRCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(CRCM,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
         CRCM *hdl = device_handle;
 
-        ssize_t n = -1;
-
         if (_sys_device_is_access_granted(&hdl->file_lock)) {
 
                 u8_t  crc[4] = {CRC->DR, CRC->DR >> 8, CRC->DR >> 16, CRC->DR >> 24};
 
-                n = 0;
+                size_t n   = 0;
                 size_t pos = *fpos;
                 for (size_t i = 0; i < count && sizeof(u32_t); i++) {
                         if (pos + n < sizeof(u32_t)) {
@@ -267,11 +275,12 @@ API_MOD_READ(CRCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                                 break;
                         }
                 }
-        } else {
-                errno = EACCES;
-        }
 
-        return n;
+                *rdcnt = n;
+                return ESUCC;
+        } else {
+                return EBUSY;
+        }
 }
 
 //==============================================================================
@@ -282,8 +291,7 @@ API_MOD_READ(CRCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
@@ -297,30 +305,27 @@ API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
                                 enum CRCM_input_mode mode = *(enum CRCM_input_mode *)arg;
                                 if (mode <= CRCM_INPUT_MODE_WORD) {
                                         hdl->input_mode = mode;
-                                        return STD_RET_OK;
+                                        return ESUCC;
                                 }
                         }
-                        errno = EINVAL;
+                        return EINVAL;
                         break;
 
                 case IOCTL_CRCM__GET_INPUT_MODE:
                         if (arg) {
                                 *(enum CRCM_input_mode *)arg = hdl->input_mode;
-                                return STD_RET_OK;
+                                return ESUCC;
                         } else {
-                                errno = EINVAL;
+                                return EINVAL;
                         }
                         break;
 
                 default:
-                        errno = EBADRQC;
-                        break;
+                        return EBADRQC;
                 }
         } else {
-                errno = EACCES;
+                return EBUSY;
         }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -329,15 +334,14 @@ API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(CRCM, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -347,8 +351,7 @@ API_MOD_FLUSH(CRCM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(CRCM, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -359,7 +362,7 @@ API_MOD_STAT(CRCM, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = _CRCM_MINOR_NUMBER;
         device_stat->st_size  = 4;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================

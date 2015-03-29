@@ -42,18 +42,16 @@ extern "C" {
 /**
  *  @brief  Initialize SD card (OS storage request)
  *  @param  None
- *  @return On success (card initialized) 1 is returned.
- *          On failure (card not initialized) 0 is returned.
- *          On error -1 is returned and errno is set.
+ *  @return On success (card initialized) 0 is returned.
+ *          On error (card not initialized) -1 is returned and errno is set.
  */
 #define IOCTL_SDSPI__INITIALIZE_CARD    IOCTL_STORAGE__INITIALIZE
 
 /**
  *  @brief  Read card's MBR sector and detect partitions (OS storage request)
  *  @param  None
- *  @return On success (MBR detected) 1 is returned.
- *          On failure (MBR not exist) 0 is returned.
- *          On error -1 is returned and errno is set.
+ *  @return On success (MBR detected) 0 is returned.
+ *          On error -1 (MBR not exist or IO error) is returned and errno is set.
  */
 #define IOCTL_SDSPI__READ_MBR           IOCTL_STORAGE__READ_MBR
 

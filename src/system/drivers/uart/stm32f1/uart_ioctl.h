@@ -39,21 +39,24 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set UART configuration
+/**
+ *  @brief  Set UART configuration
  *  @param  struct UART_config *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_UART__SET_CONFIGURATION           _IOW(UART, 0x00, struct UART_config*)
 
-/** @brief  Gets UART configuration
+/**
+ *  @brief  Gets UART configuration
  *  @param  struct UART_config *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_UART__GET_CONFIGURATION           _IOR(UART, 0x01, struct UART_config*)
 
-/** @brief  Gets character from UART in non-blocking mode
+/**
+ *  @brief  Gets character from UART in non-blocking mode
  *  @param  char *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_UART__GET_CHAR_UNBLOCKING         _IOR(UART, 0x02, char*)
 

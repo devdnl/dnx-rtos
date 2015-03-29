@@ -42,56 +42,56 @@ extern "C" {
 /**
  *  @brief  Gets current TTY number
  *  @param  int *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__GET_CURRENT_TTY              _IOR(TTY, 0x00, int*)
 
 /**
  *  @brief  Swtich terminal to selected one
  *  @param  int
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__SWITCH_TTY_TO                _IOW(TTY, 0x01, int )
 
 /**
  *  @brief  Gets number of columns
  *  @param  int *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__GET_COL                      _IOR(TTY, 0x02, int*)
 
 /**
  *  @brief  Gets number of rows
  *  @param  int *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__GET_ROW                      _IOR(TTY, 0x03, int*)
 
 /**
  *  @brief  Clear screen
  *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__CLEAR_SCR                    _IO(TTY, 0x04)
 
 /**
  *  @brief  Enable terminal echo
  *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__ECHO_ON                      _IO(TTY, 0x05)
 
 /**
  *  @brief  Disable terminal echo
  *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__ECHO_OFF                     _IO(TTY, 0x06)
 
 /**
  *  @brief  Set edit line to specified user's text (string)
  *  @param  const char *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__SET_EDITLINE                 _IOW(TTY, 0x07, const char*)
 
@@ -99,14 +99,14 @@ extern "C" {
 /**
  *  @brief  Gets number of virtual terminals
  *  @param  int *
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(TTY, 0x08, int*)
 
 /**
  *  @brief  Refreshes last line
  *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x09)
 

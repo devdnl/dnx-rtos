@@ -125,8 +125,7 @@ static const struct gpio_reg_val GPIOx[] = {
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
@@ -163,7 +162,7 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
                 GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
         }
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -172,8 +171,7 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(GPIO, void *device_handle)
@@ -216,7 +214,7 @@ API_MOD_RELEASE(GPIO, void *device_handle)
         CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPGRST);
 #endif
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -226,8 +224,7 @@ API_MOD_RELEASE(GPIO, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_OPEN(GPIO, void *device_handle, u32_t flags)
@@ -235,7 +232,7 @@ API_MOD_OPEN(GPIO, void *device_handle, u32_t flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -245,8 +242,7 @@ API_MOD_OPEN(GPIO, void *device_handle, u32_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(GPIO, void *device_handle, bool force)
@@ -254,7 +250,7 @@ API_MOD_CLOSE(GPIO, void *device_handle, bool force)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -265,12 +261,19 @@ API_MOD_CLOSE(GPIO, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(GPIO,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
@@ -278,9 +281,7 @@ API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, fpos_t *
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -291,12 +292,19 @@ API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, fpos_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(GPIO,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
@@ -304,9 +312,7 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
         UNUSED_ARG(fpos);
         UNUSED_ARG(fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -317,8 +323,7 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return On success return 0 or 1. On error, -1 is returned, and errno set
- *         appropriately.
+ * @return On success return 0. On error, -1 is returned.
  */
 //==============================================================================
 API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
@@ -349,20 +354,19 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
                 }
 
                 case IOCTL_GPIO__GET_PIN: {
-                        GPIO_pin_t *io = arg;
-                        if (io->port_index == _GPIO_IOCTL_NONE) break;
-                        return (GPIOx[io->port_index].GPIO->IDR & (1 << io->pin_number)) >> io->pin_number;
+                        GPIO_pin_state_t *io = arg;
+                        if (io->pin->port_index == _GPIO_IOCTL_NONE) break;
+                        io->state = (GPIOx[io->pin->port_index].GPIO->IDR & (1 << io->pin->pin_number)) ? true : false;
+                        break;
                 }
 
                 default:
-                        errno = EBADRQC;
-                        return -1;
+                        return EBADRQC;
                 }
 
-                return 0;
+                return ESUCC;
         } else {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 }
 
@@ -372,15 +376,14 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(GPIO, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -390,8 +393,7 @@ API_MOD_FLUSH(GPIO, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -402,7 +404,7 @@ API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 /*==============================================================================

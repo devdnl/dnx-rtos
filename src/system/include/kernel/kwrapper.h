@@ -85,7 +85,7 @@ typedef enum _task_type {
         TASK_TYPE_THREAD
 } task_type_t;
 
-typedef struct _task_data {
+typedef struct _task_data { // TODO PID field
         FILE            *f_stdin;               /* stdin file                         */
         FILE            *f_stdout;              /* stdout file                        */
         FILE            *f_stderr;              /* stderr file                        */
@@ -102,7 +102,7 @@ typedef struct _task_data {
 } _task_data_t;
 
 enum mutex_type {
-        MUTEX_RECURSIVE,
+        MUTEX_RECURSIVE,        // TODO MUTEX_TYPE_NORMAL ...
         MUTEX_NORMAL
 };
 

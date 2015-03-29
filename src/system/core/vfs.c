@@ -1058,7 +1058,7 @@ int _vfs_ioctl(FILE *file, int rq, ...)
  *
  * @param[in]     *file         file
  * @param[in]      rq           request
- * @param[in,out]  arg          arguments
+ * @param[in,out]  arg          argument
  *
  * @return 0 on success. On error, different from 0 is returned
  */

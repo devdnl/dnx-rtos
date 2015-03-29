@@ -97,7 +97,7 @@ static void client2host_transaction(int i)
                 buf.size      = part;
 
                 int s = ioctl(global->flo, IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
-                if (s == 0 || s == 1) {
+                if (s == 0) {
                         n += fwrite(global->buffer, 1, part, global->fsrc);
                 }
 

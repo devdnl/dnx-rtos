@@ -76,9 +76,7 @@ typedef struct {
 /**
  * @brief  Wait for slected interrupt number
  * @param  IRQ_catch_t *      pointer to interrupt number and timeout value
- * @return Returns  0 if timeout occurred.
- *         Returns  1 if interrupt occurred.
- *         Returns -1 if illegal interrupt number or request or configuration.
+ * @return On success 0, on error -1 (check errno to precise error)
  */
 #define IOCTL_IRQ__CATCH                _IOW(IRQ, 0, const IRQ_catch_t*)
 

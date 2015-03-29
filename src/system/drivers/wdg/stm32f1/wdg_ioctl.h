@@ -39,9 +39,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Reset watchdog counter. If this request won not send on time the watchdog resets the system
+/**
+ *  @brief  Reset watchdog counter. If this request won not send on time the watchdog resets the system
  *  @param  None
- *  @return STD_RET_OK, STD_RET_ERROR
+ *  @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_WDG__RESET                _IO(WDG, 0x00)
 

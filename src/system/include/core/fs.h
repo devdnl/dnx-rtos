@@ -47,6 +47,8 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#undef errno
+
 #undef  calloc
 #define calloc(size_t__nmemb, size_t__msize)    _sysm_syscalloc(size_t__nmemb, size_t__msize)
 

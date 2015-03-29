@@ -133,20 +133,20 @@
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
-#define __ENABLE_RTCM__ _NO_
-#define __ENABLE_LOOP__ _NO_
+#define __ENABLE_RTCM__ _YES_
+#define __ENABLE_LOOP__ _YES_
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIOM__ _YES_
-#define __ENABLE_CRCM__ _NO_
+#define __ENABLE_CRCM__ _YES_
 #define __ENABLE_ETHMAC__ _YES_
 #define __ENABLE_PLL__ _YES_
 #define __ENABLE_SDSPI__ _YES_
 #define __ENABLE_SPI__ _YES_
 #define __ENABLE_TTY__ _YES_
 #define __ENABLE_UART__ _YES_
-#define __ENABLE_WDG__ _NO_
+#define __ENABLE_WDG__ _YES_
 #define __ENABLE_USBD__ _NO_
-#define __ENABLE_I2C__ _NO_
+#define __ENABLE_I2C__ _YES_
 #define __ENABLE_IRQ__ _YES_
 
 #endif /* _FLAGS_H_ */

@@ -71,9 +71,7 @@ extern "C" {
  *         If host wants to finish operation earlier the ZLB (Zero-Length Buffer)
  *         should be send (buffer size = 0).
  * @param  loop_buffer_t                host buffer descriptor
- * @return Return 1 if client's buffer contains bytes.
- *         Return 0 if client's buffer is empty.
- *         Return -1 on error.
+ * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT  _IOR(LOOP, 0x03, loop_buffer_t*)
 
@@ -84,9 +82,7 @@ extern "C" {
  *         operation can be done by sending small buffers (is not required to send
  *         entire requested buffer in one part).
  * @param  loop_buffer_t                host buffer descriptor
- * @return Return 1 if client's buffer is not filled yet.
- *         Return 0 if client's buffer is filled.
- *         Return -1 on error.
+ * @return On success 0 is returned, otherwise -1
  */
 #define IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT   _IOW(LOOP, 0x04, loop_buffer_t*)
 

@@ -343,7 +343,8 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
+                        bool was_reset = false;
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET, &was_reset);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
