@@ -203,8 +203,8 @@ struct vfs_fattr {
         bool non_blocking_wr:1;         /**< non-blocking file write access */
 };
 
-/** file system configuration */
-typedef struct vfs_FS_interface {
+/** file system interface */
+typedef struct vfs_FS_itf {
         int (*fs_init   )(void **fshdl, const char *path);
         int (*fs_release)(void *fshdl);
         int (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags);
@@ -226,7 +226,7 @@ typedef struct vfs_FS_interface {
         int (*fs_statfs )(void *fshdl, struct statfs *statfs);
         int (*fs_sync   )(void *fshdl);
         uint32_t   fs_magic;
-} vfs_FS_interface_t;
+} vfs_FS_itf_t;
 
 /** file flags */
 typedef struct vfs_file_flags {
@@ -242,7 +242,7 @@ typedef struct vfs_file_flags {
 /** file type */
 struct vfs_file {
         void               *FS_hdl;
-        vfs_FS_interface_t *FS_if;
+        vfs_FS_itf_t *FS_if;
         void               *f_extra_data;
         struct vfs_file    *self;
         fd_t                fd;
@@ -273,7 +273,6 @@ extern int       _vfs_chown       (const char*, uid_t, gid_t);
 extern int       _vfs_stat        (const char*, struct stat*);
 extern int       _vfs_statfs      (const char*, struct statfs*);
 extern FILE     *_vfs_fopen       (const char*, const char*);
-int _vfs_fopen_r(const char *path, const char *mode, FILE **file); // TEST ?
 extern FILE     *_vfs_freopen     (const char*, const char*, FILE*);
 extern int       _vfs_fclose      (FILE*);
 extern int       _vfs_fclose_force(FILE*);

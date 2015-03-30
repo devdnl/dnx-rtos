@@ -76,11 +76,11 @@ struct thread {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static char   **new_argument_table      (const char *str, int *argc);
-static void     delete_argument_table   (int argc, char **argv);
-static void     program_startup         (void *argv);
-static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
-static void     restore_stdio_defaults  (task_t *task);
+static char **new_argument_table      (const char *str, int *argc);
+static void   delete_argument_table   (int argc, char **argv);
+static void   program_startup         (void *argv);
+static int    get_program_data        (const char *name, struct _prog_data *prg_data);
+static void   restore_stdio_defaults  (task_t *task);
 
 /*==============================================================================
   Local object definitions
@@ -338,26 +338,21 @@ static void delete_argument_table(int argc, char **argv)
  * @param [in]  *name           program name
  * @param [out] *pdata          program data
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
+static int get_program_data(const char *name, struct _prog_data *prg_data)
 {
-        if (!prg_data || !name) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
-        }
-
-        for (int i = 0; i < _prog_table_size; i++) {
-                if (strcmp(name, _prog_table[i].program_name) == 0) {
-                        *prg_data = _prog_table[i];
-                        return STD_RET_OK;
+        if (prg_data && name) {
+                for (int i = 0; i < _prog_table_size; i++) {
+                        if (strcmp(name, _prog_table[i].program_name) == 0) {
+                                *prg_data = _prog_table[i];
+                                return ESUCC;
+                        }
                 }
         }
 
-        errno = EINVAL;
-        return STD_RET_ERROR;
+        return EINVAL;
 }
 
 //==============================================================================
@@ -515,7 +510,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                 if (prog->argv) {
 
                         struct _prog_data prog_data;
-                        if (get_program_data(prog->argv[0], &prog_data) == STD_RET_OK) {
+                        if (get_program_data(prog->argv[0], &prog_data) == ESUCC) {
 
                                 prog->exit_sem = _semaphore_new(1, 0);
                                 if (prog->exit_sem) {

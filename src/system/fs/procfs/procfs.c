@@ -202,8 +202,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
         struct procfs *procmem = fs_handle;
 
         if (flags != O_RDONLY) {
-                errno = EROFS;
-                return STD_RET_ERROR;
+                return EROFS;
         }
 
         *fpos = 0;
@@ -215,15 +214,13 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 path = _strtoi((char*)path, 16, (i32_t*)&taskhdl);
 
                 struct _sysmoni_taskstat task_data;
-                if (_sysm_get_task_stat(taskhdl, &task_data) != STD_RET_OK) {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
+                if (_sysm_get_task_stat(taskhdl, &task_data) != ESUCC) {
+                        return ENOENT;
                 }
 
                 path = strrchr(path, '/');
                 if (path == NULL) {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
+                        return ENOENT;
                 } else {
                         path++;
                 }
@@ -241,8 +238,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 } else if (strcmp((char*) path, FILE_TASK_USEDMEM_STR) == 0) {
                         file_content = FILE_CONTENT_TASK_USEDMEM;
                 } else {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
+                        return ENOENT;
                 }
 
                 return add_file_info_to_list(procmem, taskhdl, file_content, fd);
@@ -255,7 +251,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 u16_t i = 0;
 
                 struct _sysmoni_taskstat task_data;
-                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == STD_RET_OK) {
+                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == ESUCC) {
                         if (strcmp(path, task_data.task_name) == 0) {
                                 return add_file_info_to_list(procmem,
                                                              task_data.task_handle,
@@ -263,8 +259,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                         }
                 }
 
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
 
         } else if (strcmp(path, "/"FILE_CPUINFO_STR) == 0) {
                 return add_file_info_to_list(procmem, NULL, FILE_CONTENT_CPUINFO, fd);
@@ -278,11 +273,9 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                         }
                 }
 
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
         } else {
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 }
 
@@ -307,12 +300,12 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         mutex_force_lock(procmem->resource_mtx);
 
-        int      pos    = _sys_llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
-        stdret_t status = _sys_llist_erase(procmem->file_list, pos) ? STD_RET_OK : STD_RET_ERROR;
+        int pos    = _sys_llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
+        int result = _sys_llist_erase(procmem->file_list, pos) ? ESUCC : ENOENT;
 
         _sys_mutex_unlock(procmem->resource_mtx);
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -325,11 +318,21 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
- * @return number of written bytes, -1 if error
+ * @param[out]          *wrcnt                  number of written bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos)
+API_FS_WRITE(procfs,
+             void            *fs_handle,
+             void            *extra,
+             fd_t             fd,
+             const u8_t      *src,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *wrcnt,
+             struct vfs_fattr fattr)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -338,9 +341,7 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
-        errno = EROFS;
-
-        return -1;
+        return EROFS;
 }
 
 //==============================================================================
@@ -353,11 +354,21 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
- * @return number of read bytes, -1 if error
+ * @param[out]          *rdcnt                  number of read bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos)
+API_FS_READ(procfs,
+            void            *fs_handle,
+            void            *extra,
+            fd_t             fd,
+            u8_t            *dst,
+            size_t           count,
+            fpos_t          *fpos,
+            size_t          *rdcnt,
+            struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -368,36 +379,38 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
         _sys_mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
-                errno = ENOENT;
-                return -1;
+                return ENOENT;
         }
 
         if (file_info->file_content == FILE_CONTENT_NONE) {
-                return 0;
+                *rdcnt = 0;
+                return ESUCC;
         }
 
         if (file_info->file_content >= FILE_CONTENT_COUNT) {
-                errno = ENOENT;
-                return -1;
+                return ENOENT;
         }
 
-        ssize_t n    = -1;
-        char   *data = calloc(FILE_DATA_SIZE, 1);
+        int   result = ENOMEM;
+        char *data   = calloc(FILE_DATA_SIZE, 1);
         if (data) {
                 uint data_size = get_file_content(file_info, data, FILE_DATA_SIZE);
 
                 size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
                 if (seek > data_size) {
-                        n = 0;
+                        *rdcnt = 0;
                 } else {
-                        n = (data_size - seek <= count) ? data_size - seek : count;
+                        size_t n = (data_size - seek <= count) ? data_size - seek : count;
                         strncpy((char *)dst, data + seek, n);
+                        *rdcnt = n;
                 }
 
                 free(data);
+
+                result = ESUCC;
         }
 
-        return n;
+        return result;
 }
 
 //==============================================================================
@@ -421,9 +434,7 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
         UNUSED_ARG(request);
         UNUSED_ARG(arg);
 
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -443,9 +454,7 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -471,13 +480,11 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         _sys_mutex_unlock(procmem->resource_mtx);
 
         if (file_info == NULL) {
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 
         if (file_info->file_content >= FILE_CONTENT_COUNT) {
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 
         stat->st_dev   = 0;
@@ -488,14 +495,15 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
 
-        char *data = calloc(FILE_DATA_SIZE, 1);
+        int   result = ENOMEM;
+        char *data   = calloc(FILE_DATA_SIZE, 1);
         if (data) {
                 stat->st_size = get_file_content(file_info, data, FILE_DATA_SIZE);
                 free(data);
-                return STD_RET_OK;
+                result = ESUCC;
         }
 
-        return STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
@@ -515,9 +523,7 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -537,10 +543,7 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
-        /* not supported by this file system */
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -560,10 +563,7 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
         UNUSED_ARG(path);
         UNUSED_ARG(dev);
 
-        /* not supported by this file system */
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -583,30 +583,36 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 
         dir->f_seek = 0;
 
+        int result = ENOENT;
+
         if (strcmp(path, "/") == 0) {
                 dir->f_dd       = NULL;
                 dir->f_items    = 4;
                 dir->f_readdir  = procfs_readdir_root;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
+                result = ESUCC;
+
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                 dir->f_dd       = NULL;
                 dir->f_items    = _sysm_get_number_of_monitored_tasks();
                 dir->f_readdir  = procfs_readdir_taskname;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
+                result = ESUCC;
+
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
                 dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
                 dir->f_items    = _sysm_get_number_of_monitored_tasks();
                 dir->f_readdir  = procfs_readdir_taskid;
                 dir->f_closedir = procfs_closedir_freedd;
-                return STD_RET_OK;
+                result = ESUCC;
+
         } else if (strcmp(path, "/"DIR_BIN_STR"/") == 0) {
                 dir->f_dd       = NULL;
                 dir->f_items    = _sys_get_programs_table_size();
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
+                result = ESUCC;
+
         } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
                 path += strlen("/"DIR_TASKID_STR"/");
 
@@ -616,18 +622,17 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 if (FIRST_CHARACTER(path) == '/' && SECOND_CHARACTER(path) == '\0') {
                         struct _sysmoni_taskstat taskdata;
                         task_t                 *taskHdl = (task_t *)taskval;
-                        if (_sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
+                        result = _sysm_get_task_stat(taskHdl, &taskdata);
+                        if (result == ESUCC) {
                                 dir->f_dd       = taskHdl;
                                 dir->f_items    = FILE_CONTENT_COUNT;
                                 dir->f_readdir  = procfs_readdir_taskid_n;
                                 dir->f_closedir = procfs_closedir_generic;
-                                return STD_RET_OK;
                         }
                 }
         }
 
-        errno = ENOENT;
-        return STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
@@ -641,16 +646,16 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
+static int procfs_closedir_freedd(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
         if (dir->f_dd) {
                 free(dir->f_dd);
                 dir->f_dd = NULL;
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 }
 
@@ -665,12 +670,12 @@ static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
+static int procfs_closedir_generic(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(dir);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -688,9 +693,7 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -710,9 +713,7 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
         UNUSED_ARG(old_name);
         UNUSED_ARG(new_name);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -732,9 +733,7 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -756,9 +755,7 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
         UNUSED_ARG(owner);
         UNUSED_ARG(group);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -785,7 +782,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -809,7 +806,7 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
         statfs->f_type   = 1;
         statfs->f_fsname = "procfs";
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -824,23 +821,27 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 API_FS_SYNC(procfs, void *fs_handle)
 {
         UNUSED_ARG(fs_handle);
+        return ESUCC;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return Pointer to directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_root(void *fs_handle, DIR *dir)
+static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t *dirent = &dir->dirent;
+        int result = ENOENT;
+
+        *dirent = &dir->dirent;
 
         dir->dirent.filetype = FILE_TYPE_DIR;
         dir->dirent.size     = 0;
@@ -848,14 +849,17 @@ static dirent_t *procfs_readdir_root(void *fs_handle, DIR *dir)
         switch (dir->f_seek++) {
         case 0:
                 dir->dirent.name = DIR_TASKID_STR;
+                result = ESUCC;
                 break;
 
         case 1:
                 dir->dirent.name = DIR_TASKNAME_STR;
+                result = ESUCC;
                 break;
 
         case 2:
                 dir->dirent.name = DIR_BIN_STR;
+                result = ESUCC;
                 break;
 
         case 3: {
@@ -863,70 +867,65 @@ static dirent_t *procfs_readdir_root(void *fs_handle, DIR *dir)
                 if (data) {
                         struct file_info file_info;
                         file_info.file_content = FILE_CONTENT_CPUINFO;
-                        dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                        dir->dirent.size       = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                        dir->dirent.name       = FILE_CPUINFO_STR;
+                        dir->dirent.filetype   = FILE_TYPE_REGULAR;
                         free(data);
+                        result = ESUCC;
+                } else {
+                        result = ENOMEM;
                 }
-
-                dir->dirent.name     = FILE_CPUINFO_STR;
-                dir->dirent.filetype = FILE_TYPE_REGULAR;
                 break;
         }
-
-        default:
-                dirent = NULL;
-                break;
         }
 
-        return dirent;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_taskname(void *fs_handle, DIR *dir)
+static int procfs_readdir_taskname(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t *dirent = NULL;
-
         struct _sysmoni_taskstat taskdata;
-        if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
+        int result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
+        if (result == ESUCC) {
                 dir->dirent.filetype = FILE_TYPE_REGULAR;
                 dir->dirent.name     = taskdata.task_name;
                 dir->dirent.size     = 0;
-
                 dir->f_seek++;
-
-                dirent = &dir->dirent;
+                *dirent = &dir->dirent;
         } else {
-                errno = 0;
+                result = ENOENT;
         }
 
-        return dirent;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_bin(void *fs_handle, DIR *dir)
+static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
-
-        dirent_t *dirent = NULL;
 
         if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
                 dir->dirent.filetype = FILE_TYPE_PROGRAM;
@@ -935,31 +934,35 @@ static dirent_t *procfs_readdir_bin(void *fs_handle, DIR *dir)
 
                 dir->f_seek++;
 
-                dirent = &dir->dirent;
-        }
+                *dirent = &dir->dirent;
 
-        return dirent;
+                return ESUCC;
+        } else {
+                return ENOENT;
+        }
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_taskid(void *fs_handle, DIR *dir)
+static int procfs_readdir_taskid(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t *dirent = NULL;
+        int result = ENOENT;
 
         if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
                 struct _sysmoni_taskstat taskdata;
-                if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
+                result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
+                if (result == ESUCC) {
                         _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
                         dir->dirent.filetype = FILE_TYPE_DIR;
@@ -968,31 +971,30 @@ static dirent_t *procfs_readdir_taskid(void *fs_handle, DIR *dir)
 
                         dir->f_seek++;
 
-                        dirent = &dir->dirent;
+                        *dirent = &dir->dirent;
                 }
         }
 
-        return dirent;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
+static int procfs_readdir_taskid_n(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
 
-        dirent_t *dirent = NULL;
-
         if (dir->f_seek >= FILE_CONTENT_COUNT) {
-                return NULL;
+                return ENOENT;
         }
 
         dir->dirent.filetype = FILE_TYPE_REGULAR;
@@ -1005,6 +1007,8 @@ static dirent_t *procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
         case FILE_CONTENT_TASK_OPENFILES: dir->dirent.name = FILE_TASK_OPENFILES_STR; break;
         }
 
+        int result = ENOMEM;
+
         char *data = calloc(FILE_DATA_SIZE, 1);
         if (data) {
                 struct file_info file_info;
@@ -1012,16 +1016,16 @@ static dirent_t *procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
                 file_info.taskhdl      = dir->f_dd;
 
                 dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                dir->f_seek++;
 
-                dirent = &dir->dirent;
+                *dirent = &dir->dirent;
 
                 free(data);
-        } else {
-                dir->dirent.size = 0;
+
+                result = ESUCC;
         }
 
-        dir->f_seek++;
-        return dirent;
+        return result;
 }
 
 //==============================================================================
@@ -1045,10 +1049,10 @@ static inline void mutex_force_lock(mutex_t *mtx)
  * @param file_content          file content to write in file info
  * @param fd                    file descriptor (result)
  *
- * @return STD_RET_OK if success, STD_RET_ERROR on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
+static int add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
 {
         struct file_info *file_info = calloc(1, sizeof(struct file_info));
         if (file_info) {
@@ -1068,7 +1072,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
                 _sys_mutex_unlock(procmem->resource_mtx);
         }
 
-        return file_info ? STD_RET_OK : STD_RET_ERROR;
+        return file_info ? ESUCC : ENOMEM;
 }
 
 //==============================================================================
@@ -1086,7 +1090,7 @@ static uint get_file_content(struct file_info *file_info, char *buff, uint size)
 {
         struct _sysmoni_taskstat task_info;
         if (file_info->file_content < FILE_CONTENT_CPUINFO) {
-                if (_sysm_get_task_stat(file_info->taskhdl, &task_info) != STD_RET_OK) {
+                if (_sysm_get_task_stat(file_info->taskhdl, &task_info) != ESUCC) {
                         return 0;
                 }
         }

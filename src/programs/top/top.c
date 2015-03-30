@@ -150,10 +150,10 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 taskstat_t *taskstat = calloc(task_number, sizeof(taskstat_t));
                 if (taskstat) {
-                        stdret_t status         = STD_RET_OK;
+                        int      status         = 0;
                         u32_t    total_cpu_load = get_total_CPU_usage();
                         disable_CPU_load_measurement();
-                        for (int i = 0; i < task_number && status == STD_RET_OK; i++) {
+                        for (int i = 0; i < task_number && status == 0; i++) {
                                 status = get_task_stat(i, &taskstat[i]);
                         }
                         enable_CPU_load_measurement();

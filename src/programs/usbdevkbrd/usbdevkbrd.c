@@ -336,7 +336,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                        sizeof(report));
                         }
 
-                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == 0) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
@@ -354,7 +354,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
                                                         ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
@@ -380,7 +380,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != 0) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");

@@ -159,7 +159,7 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
                         driver_memory_region[drvid] = (void*)(size_t)-1;
 
                 if (node_path) {
-                        if (_vfs_mknod(node_path, drvid) == STD_RET_OK) { // FIXME
+                        if (_vfs_mknod(node_path, drvid) == ESUCC) {
                                 _printk(drv_node_created_str, node_path);
                                 return drvid;
                         } else {

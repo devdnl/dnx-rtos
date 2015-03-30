@@ -195,7 +195,7 @@ static inline u32_t get_memory_size(void)
  *
  * @errors EINVAL
  *
- * @return Return <b>STD_RET_OK</b> on success. On error, <b>STD_RET_ERROR</b>
+ * @return Return <b>0</b> on success. On error, <b>positive</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
  * @example
@@ -223,7 +223,7 @@ static inline u32_t get_memory_size(void)
  * // ...
  */
 //==============================================================================
-static inline stdret_t get_detailed_memory_usage(memstat_t *stat)
+static inline int get_detailed_memory_usage(memstat_t *stat)
 {
         return _sysm_get_used_memory(stat);
 }
@@ -363,8 +363,7 @@ static inline uint get_time_ms(void)
  *
  * @errors None
  *
- * @return Return <b>STD_RET_OK</b> on success. On error, <b>STD_RET_ERROR</b>
- * is returned.
+ * @return Return <b>0</b> on success. On error, <b>positive</b> is returned.
  *
  * @example
  * #include <dnx/os.h>
@@ -381,7 +380,7 @@ static inline uint get_time_ms(void)
  * // ...
  */
 //==============================================================================
-static inline stdret_t get_task_stat(uint ntask, taskstat_t *stat)
+static inline int get_task_stat(uint ntask, taskstat_t *stat)
 {
         return _sysm_get_ntask_stat(ntask, stat);
 }

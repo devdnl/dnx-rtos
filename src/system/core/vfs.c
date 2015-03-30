@@ -39,16 +39,17 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PATH_MAX_LEN             16384
+#undef errno
+#define PATH_MAX_LEN             256
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 typedef struct FS_entry {
-        const char         *mount_point;
-        struct FS_entry    *parent_FS_ref;
-        void               *handle;
-        vfs_FS_interface_t *interface;
+        const char          mount_point;
+        struct FS_entry     parent;
+        void                handle;
+        const vfs_FS_itf_t *interface;
         u8_t                children_cnt;
 } FS_entry_t;
 
@@ -61,18 +62,18 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool             can_be_root_FS          (const char *mount_point);
-static FS_entry_t      *new_FS_entry            (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, vfs_FS_interface_t *fs_interface);
-static bool             delete_FS_entry         (FS_entry_t *this);
-static int              fclose                  (FILE *file, bool force);
-static bool             is_file_valid           (FILE *file);
-static bool             is_dir_valid            (DIR *dir);
-static int              increase_task_priority  (void);
-static inline void      restore_priority        (int priority);
-static bool             parse_flags             (const char *str, u32_t *flags);
-static FS_entry_t      *get_path_FS             (const char *path, size_t len, int *position);
-static FS_entry_t      *get_path_base_FS        (const char *path, const char **extPath);
-static char            *new_CWD_path            (const char *path, enum path_correction corr);
+static bool         is_first_fs          (const char *mount_point);
+static int          new_FS_entry            (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, const vfs_FS_itf_t *fs_interface, FS_entry_t **fs_entry);
+static int          delete_FS_entry         (FS_entry_t *this);
+static int          fclose                  (FILE *file, bool force);
+static bool         is_file_valid           (FILE *file);
+static bool         is_dir_valid            (DIR *dir);
+static int          increase_task_priority  (void);
+static inline void  restore_priority        (int priority);
+static bool         parse_flags             (const char *str, u32_t *flags);
+static int          get_path_FS             (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
+static int          get_path_base_FS        (const char *path, const char **extPath, FS_entry_t **fs_entry);
+static int          new_CWD_path            (const char *path, enum path_correction corr, char **new_path);
 
 /*==============================================================================
   Local object definitions
@@ -88,8 +89,7 @@ static mutex_t  *vfs_resource_mtx;
 /**
  * @brief Initialize VFS module
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 bool _vfs_init(void)
@@ -106,89 +106,124 @@ bool _vfs_init(void)
  *
  * @param[in] *src_path         path to source file when file system load data
  * @param[in] *mount_point      path when dir shall be mounted
- * @param[in] *fs_interface     pointer to description of mount interface
+ * @param[in] *fsif             pointer to file system interface
  *
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
+int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_itf *fsif)
 {
         if (  !mount_point
            || !src_path
-           || !fs_interface
-           || !fs_interface->fs_init
-           || !fs_interface->fs_release
-           || !fs_interface->fs_opendir) {
+           || !fsif->fs_init
+           || !fsif->fs_release
+           || !fsif->fs_open
+           || !fsif->fs_close
+           || !fsif->fs_write
+           || !fsif->fs_read
+           || !fsif->fs_ioctl
+           || !fsif->fs_fstat
+           || !fsif->fs_flush
+           || !fsif->fs_mkdir
+           || !fsif->fs_mkfifo
+           || !fsif->fs_mknod
+           || !fsif->fs_opendir
+           || !fsif->fs_remove
+           || !fsif->fs_rename
+           || !fsif->fs_chmod
+           || !fsif->fs_chown
+           || !fsif->fs_stat
+           || !fsif->fs_statfs
+           || !fsif->fs_sync) {
 
                 return EINVAL;
         }
 
-        stdret_t status = ENOMEM;
-
         // create new paths that are corrected by CWD
-        char *cwd_mount_point = new_CWD_path(mount_point, ADD_SLASH);
-        char *cwd_src_path    = new_CWD_path(src_path, SUB_SLASH);
-
-        if (cwd_mount_point && cwd_src_path) {
-
-                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-
-                        FS_entry_t *mounted_fs = get_path_FS(cwd_mount_point, PATH_MAX_LEN, NULL);
-                        const char *ext_path   = NULL;
-                        FS_entry_t *base_fs    = get_path_base_FS(cwd_mount_point, &ext_path);
-
-                        /*
-                         * create new FS in existing DIR and FS, otherwise create new FS if
-                         * first mount
-                         */
-                        FS_entry_t *new_FS = NULL;
-                        if (can_be_root_FS(cwd_mount_point)) {
-                                new_FS = new_FS_entry(base_fs, cwd_mount_point, cwd_src_path, fs_interface);
-
-                        } else if (base_fs && !mounted_fs && ext_path) {
-                                DIR dir;
-                                if (base_fs->interface->fs_opendir(base_fs->handle, ext_path, &dir) == STD_RET_OK) {
-                                        base_fs->children_cnt++;
-                                        dir.f_closedir(dir.f_handle, &dir);
-
-                                        new_FS = new_FS_entry(base_fs, cwd_mount_point, cwd_src_path, fs_interface);
-                                }
-                        } else {
-                                status = ENOENT;
-                        }
-
-                        _sysm_sysfree(cwd_src_path);
-                        cwd_src_path = NULL;
-
-                        /*
-                         * mount FS if created
-                         */
-                        if (new_FS) {
-                                if (_llist_push_back(vfs_mnt_list, new_FS)) {
-                                        status = ESUCC;
-
-                                } else {
-                                        delete_FS_entry(new_FS);
-                                        status = ENOMEM;
-                                }
-                        }
-
-                        _mutex_unlock(vfs_resource_mtx);
-                }
+        char *cwd_mount_point;
+        int result = new_CWD_path(mount_point, ADD_SLASH, &cwd_mount_point);
+        if (result != ESUCC) {
+                return result;
         }
 
-        if (status != ESUCC && cwd_mount_point)
+        char *cwd_src_path;
+        result = new_CWD_path(src_path, SUB_SLASH, &cwd_src_path);
+        if (result != ESUCC) {
+                return result;
+        }
+
+        // create new entry
+        if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+
+                FS_entry_t *new_fs;
+
+                /*
+                 * create new FS in existing DIR and FS, otherwise create new FS if
+                 * first mount
+                 */
+                if (is_first_fs(cwd_mount_point)) {
+                        result = new_FS_entry(NULL, cwd_mount_point, cwd_src_path, fsif, &new_fs);
+                        if (result != ESUCC) {
+                                goto finish;
+                        }
+                } else {
+                        const char *ext_path;
+                        FS_entry_t *base_fs;
+                        FS_entry_t *mounted_fs;
+
+                        result = get_path_base_FS(cwd_mount_point, &ext_path, &base_fs);
+                        if (result != ESUCC) {
+                                goto finish;
+                        }
+
+                        result = get_path_FS(cwd_mount_point, PATH_MAX_LEN, NULL, &mounted_fs);
+                        if (result == ENOENT) {
+                                DIR dir;
+                                result = base_fs->interface->fs_opendir(base_fs->handle, ext_path, &dir);
+                                if (result == ESUCC) {
+                                        base_fs->children_cnt++;
+
+                                        result = dir.f_closedir(dir.f_handle, &dir);
+                                        if (result != ESUCC) {
+                                                goto finish;
+                                        }
+
+                                        result = new_FS_entry(NULL, cwd_mount_point, cwd_src_path, fsif, &new_fs);
+                                        if (result != ESUCC) {
+                                                goto finish;
+                                        }
+                                }
+                        } else {
+                                result = EADDRINUSE;
+                        }
+                }
+
+                /*
+                 * mount FS if created
+                 */
+                if (result == ESUCC) {
+                        if (!_llist_push_back(vfs_mnt_list, new_fs)) {
+                                delete_FS_entry(new_fs);
+                                result = ENOMEM;
+                        }
+                }
+
+                finish:
+                _mutex_unlock(vfs_resource_mtx);
+        }
+
+        if (result != ESUCC && cwd_mount_point)
                 _sysm_sysfree(cwd_mount_point);
 
         if (cwd_src_path)
                 _sysm_sysfree(cwd_src_path);
 
-        return status;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Function unmount dir from file system
+ * @brief Function unmount file system
  *
  * @param[in] *path             dir path
  *
@@ -201,87 +236,74 @@ int _vfs_umount(const char *path)
                 return EINVAL;
         }
 
-        stdret_t status = ENOMEM;
-
-        char *cwd_path = new_CWD_path(path, ADD_SLASH);
-        if (cwd_path) {
+        char *cwd_path;
+        int result = new_CWD_path(path, ADD_SLASH, &cwd_path);
+        if (result == ESUCC) {
                 if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
-                        int position;
-                        FS_entry_t *mount_fs = get_path_FS(cwd_path, PATH_MAX_LEN, &position);
+                        int position; FS_entry_t *mount_fs;
+                        result = get_path_FS(cwd_path, PATH_MAX_LEN, &position, &mount_fs);
 
                         _sysm_sysfree(cwd_path);
 
-                        if (mount_fs) {
+                        if (result == ESUCC) {
                                 if (mount_fs->children_cnt == 0) {
-                                        if (delete_FS_entry(mount_fs)) {
+                                        result = delete_FS_entry(mount_fs);
+                                        if (result == ESUCC) {
                                                 _llist_take(vfs_mnt_list, position);
-                                                status = ESUCC;
-                                        } else {
-                                                status = EBUSY;
                                         }
                                 } else {
-                                        status = EBUSY;
+                                        result = EBUSY;
                                 }
-                        } else {
-                                status = ENOENT;
                         }
 
                         _mutex_unlock(vfs_resource_mtx);
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Function return file system describe object
- * After operation object must be freed using free() function.
  *
- * @param item          n-item to read
- * @param mntent        pointer to mntent object
+ * @param [in]  seek          item to read
+ * @param [out] mntent        pointer to mntent object
  *
- * @return 0 if success, 1 if all items read, -1 on error
+ * @return One of errno values
  */
 //==============================================================================
-int _vfs_getmntentry(int item, struct mntent *mntent)
+int _vfs_getmntentry(int seek, struct mntent *mntent)
 {
         if (!mntent) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
+
+        int result = ENOENT;
 
         FS_entry_t *fs = NULL;
         if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-                fs = _llist_at(vfs_mnt_list, item);
+                fs = _llist_at(vfs_mnt_list, seek);
                 _mutex_unlock(vfs_resource_mtx);
         }
 
         if (fs) {
-                struct statfs stat_fs = {.f_fsname = NULL};
+                int priority = increase_task_priority();
 
-                if (fs->interface->fs_statfs) {
-                        int priority = increase_task_priority();
-                        fs->interface->fs_statfs(fs->handle, &stat_fs);
-                        restore_priority(priority);
-                } else {
-                        return -1;
-                }
-
-                if (stat_fs.f_fsname) {
+                struct statfs stat_fs;
+                result = fs->interface->fs_statfs(fs->handle, &stat_fs);
+                if (result == ESUCC) {
                         mntent->mnt_fsname = stat_fs.f_fsname;
                         mntent->mnt_dir    = fs->mount_point;
                         mntent->free       = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
                         mntent->total      = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
-
-                        return 0;
-                } else {
-                        return -1;
                 }
-        } else {
-                return 1;
+
+                restore_priority(priority);
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -291,31 +313,32 @@ int _vfs_getmntentry(int item, struct mntent *mntent)
  * @param[in] path              path when driver-file shall be created
  * @param[in] dev               device number
  *
- * @return zero on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_mknod(const char *path, dev_t dev)
 {
         if (!path || dev < 0) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, NO_SLASH_ACTION, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_mknod) {
-                        status = fs->interface->fs_mknod(fs->handle, external_path, dev) == STD_RET_OK ? 0 : -1;
+                        int priority = increase_task_priority();
+                        result = fs->interface->fs_mknod(fs->handle, external_path, dev);
+                        restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -325,33 +348,32 @@ int _vfs_mknod(const char *path, dev_t dev)
  * @param[in] path              path to new directory
  * @param[in] mode              directory mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_mkdir(const char *path, mode_t mode)
 {
         if (!path) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, SUB_SLASH, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, SUB_SLASH);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_mkdir) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_mkdir(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_mkdir(fs->handle, external_path, mode);
                         restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -361,80 +383,80 @@ int _vfs_mkdir(const char *path, mode_t mode)
  * @param[in] path              path to pipe
  * @param[in] mode              directory mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_mkfifo(const char *path, mode_t mode)
 {
         if (!path) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, NO_SLASH_ACTION, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_mkfifo) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_mkfifo(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_mkfifo(fs->handle, external_path, mode);
                         restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Function open directory
  *
- * @param[in] *path                 directory path
+ * @param[in]  path                 directory path
+ * @param[out] dir                  pointer to dir pointer
  *
- * @return directory object
+ * @return One of errno values
  */
 //==============================================================================
-DIR *_vfs_opendir(const char *path)
+int _vfs_opendir(const char *path, DIR **dir)
 {
-        if (!path) {
-                errno = EINVAL;
-                return NULL;
+        if (!path || !dir) {
+                return EINVAL;
         }
 
-        DIR *dir = _sysm_sysmalloc(sizeof(DIR));
-        if (dir) {
-                stdret_t status = STD_RET_ERROR;
+        int result = ENOMEM;
 
-                char *cwd_path = new_CWD_path(path, ADD_SLASH);
-                if (cwd_path) {
-                        const char *external_path = NULL;
-                        FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+        *dir = _sysm_sysmalloc(sizeof(DIR));
+        if (*dir) {
+                char *cwd_path;
+                result = new_CWD_path(path, ADD_SLASH, &cwd_path);
+                if (result == ESUCC) {
 
-                        if (fs && fs->interface->fs_opendir) {
-                                dir->f_handle = fs->handle;
+                        const char *external_path; FS_entry_t *fs;
+                        result = get_path_base_FS(cwd_path, &external_path, &fs);
+                        _sysm_sysfree(cwd_path);
+
+                        if (result == ESUCC) {
+                                *dir->f_handle = fs->handle;
 
                                 int priority = increase_task_priority();
-                                status = fs->interface->fs_opendir(fs->handle, external_path, dir);
+                                result = fs->interface->fs_opendir(fs->handle, external_path, *dir);
                                 restore_priority(priority);
                         }
-
-                        _sysm_sysfree(cwd_path);
                 }
 
-                if (status == STD_RET_ERROR) {
-                        _sysm_sysfree(dir);
-                        dir = NULL;
+                if (result == ESUCC) {
+                        *dir->self = dir;
                 } else {
-                        dir->self = dir;
+                        _sysm_sysfree(dir);
+                        *dir = NULL;
                 }
         }
 
-        return dir;
+        return result;
 }
 
 //==============================================================================
@@ -443,45 +465,45 @@ DIR *_vfs_opendir(const char *path)
  *
  * @param[in] *dir                  directory object
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_closedir(DIR *dir)
 {
+        int result = EINVAL;
+
         if (is_dir_valid(dir) && dir->f_closedir) {
-                if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
+                result = dir->f_closedir(dir->f_handle, dir);
+                if (result == ESUCC) {
                         dir->self = NULL;
                         _sysm_sysfree(dir);
-                        return 0;
                 }
         }
 
-        errno = EINVAL;
-        return -1;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Function read next item of opened directory
  *
- * @param[in] *dir                  directory object
+ * @param[in]  *dir                  directory object
+ * @param[out] **dirent              pointer to direntry pointer
  *
- * @return Pointer to element attributes
+ * @return One of errno values
  */
 //==============================================================================
-dirent_t *_vfs_readdir(DIR *dir)
+int _vfs_readdir(DIR *dir, dirent_t **dirent)
 {
-        dirent_t *direntry = NULL;
+        int result = EINVAL;
 
-        if (is_dir_valid(dir) && dir->f_readdir) {
+        if (is_dir_valid(dir) && dirent && dir->f_readdir) {
                 int priority = increase_task_priority();
-                direntry = dir->f_readdir(dir->f_handle, dir);
+                result = dir->f_readdir(dir->f_handle, dir, dirent);
                 restore_priority(priority);
-        } else {
-                errno = EINVAL;
         }
 
-        return direntry;
+        return result;
 }
 
 //==============================================================================
@@ -491,43 +513,46 @@ dirent_t *_vfs_readdir(DIR *dir)
  *
  * @param[in] *path                localization of file/directory
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_remove(const char *path)
 {
         if (!path) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, ADD_SLASH, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, ADD_SLASH);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *mount_fs      = NULL;
-                FS_entry_t *base_fs       = NULL;
+                const char *external_path;
+                FS_entry_t *mount_fs;
+                FS_entry_t *base_fs;
                 if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-                        mount_fs = get_path_FS(cwd_path, PATH_MAX_LEN, NULL);
-                        LAST_CHARACTER(cwd_path) = '\0';        // remove slash at the end
-                        base_fs  = get_path_base_FS(cwd_path, &external_path);
+
+                        result = get_path_FS(cwd_path, PATH_MAX_LEN, NULL, &mount_fs);
+                        if (result == ENOENT) {
+                                // remove slash at the end
+                                LAST_CHARACTER(cwd_path) = '\0';
+
+                                // get parent FS
+                                result = get_path_base_FS(cwd_path, &external_path, &base_fs);
+                        } else {
+                                result = EBUSY;
+                        }
+
                         _mutex_unlock(vfs_resource_mtx);
                 }
 
-                if (base_fs && !mount_fs) {
-                        if (base_fs->interface->fs_remove) {
-                                status = base_fs->interface->fs_remove(base_fs->handle,
-                                                                       external_path) == STD_RET_OK ? 0 : -1;
-                        }
-                } else if (mount_fs) {
-                        errno = EBUSY;
+                if (result == ESUCC) {
+                        result = base_fs->interface->fs_remove(base_fs->handle, external_path);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -539,38 +564,52 @@ int _vfs_remove(const char *path)
  * @param[in] *old_name                  old file name
  * @param[in] *new_name                  new file name
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_rename(const char *old_name, const char *new_name)
 {
         if (!old_name || !new_name) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int   status       = -1;
-        char *cwd_old_name = new_CWD_path(old_name, NO_SLASH_ACTION);
-        char *cwd_new_name = new_CWD_path(new_name, NO_SLASH_ACTION);
+        char *cwd_old_name;
+        int result = new_CWD_path(old_name, NO_SLASH_ACTION, &cwd_old_name);
+        if (result != ESUCC) {
+                return result;
+        }
 
-        if (cwd_old_name && cwd_new_name) {
-                FS_entry_t *old_fs          = NULL;
-                FS_entry_t *new_fs          = NULL;
-                const char *old_extern_path = NULL;
-                const char *new_extern_path = NULL;
+        char *cwd_new_name;
+        result = new_CWD_path(new_name, NO_SLASH_ACTION, &cwd_new_name);
+        if (result != ESUCC) {
+                return result;
+        }
 
-                if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
-                        old_fs = get_path_base_FS(cwd_old_name, &old_extern_path);
-                        new_fs = get_path_base_FS(cwd_new_name, &new_extern_path);
-                        _mutex_unlock(vfs_resource_mtx);
+
+        FS_entry_t *old_fs;
+        FS_entry_t *new_fs;
+        const char *old_extern_path;
+        const char *new_extern_path;
+
+        if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
+                result = get_path_base_FS(cwd_old_name, &old_extern_path, &old_fs);
+                if (result == ESUCC) {
+                        result = get_path_base_FS(cwd_new_name, &new_extern_path, &new_fs);
                 }
+                _mutex_unlock(vfs_resource_mtx);
+        }
 
-                if (old_fs && new_fs && old_fs == new_fs && old_fs->interface->fs_rename) {
+        if (result == ESUCC) {
+
+                if (old_fs == new_fs) {
                         int priority = increase_task_priority();
-                        status = old_fs->interface->fs_rename(old_fs->handle,
+
+                        result = old_fs->interface->fs_rename(old_fs->handle,
                                                               old_extern_path,
-                                                              new_extern_path) == STD_RET_OK ? 0 : -1;
+                                                              new_extern_path);
                         restore_priority(priority);
+                } else {
+                        result = ENOTSUP;
                 }
         }
 
@@ -582,7 +621,7 @@ int _vfs_rename(const char *old_name, const char *new_name)
                 _sysm_sysfree(cwd_new_name);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -592,33 +631,32 @@ int _vfs_rename(const char *old_name, const char *new_name)
  * @param[in] *path         file path
  * @param[in]  mode         file mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_chmod(const char *path, mode_t mode)
 {
         if (!path) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, NO_SLASH_ACTION, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_chmod) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_chmod(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_chmod(fs->handle, external_path, mode);
                         restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -629,33 +667,32 @@ int _vfs_chmod(const char *path, mode_t mode)
  * @param[in]  owner        file owner
  * @param[in]  group        file group
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_chown(const char *path, uid_t owner, gid_t group)
 {
         if (!path) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, NO_SLASH_ACTION, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_chown) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_chown(fs->handle, external_path, owner, group) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_chown(fs->handle, external_path, owner, group);
                         restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -665,33 +702,32 @@ int _vfs_chown(const char *path, uid_t owner, gid_t group)
  * @param[in]  *path            file/dir path
  * @param[out] *stat            pointer to structure
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_stat(const char *path, struct stat *stat)
 {
         if (!path || !stat) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, NO_SLASH_ACTION, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, NO_SLASH_ACTION);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_stat) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_stat(fs->handle, external_path, stat) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_stat(fs->handle, external_path, stat);
                         restore_priority(priority);
                 }
 
                 _sysm_sysfree(cwd_path);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -701,52 +737,44 @@ int _vfs_stat(const char *path, struct stat *stat)
  * @param[in]  *path            fs path
  * @param[out] *statfs          pointer to FS status structure
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 int _vfs_statfs(const char *path, struct statfs *statfs)
 {
         if (!path || !statfs) {
-                errno = EINVAL;
-                return -1;
+                return EINVAL;
         }
 
-        int status = -1;
+        char *cwd_path;
+        int result = new_CWD_path(path, ADD_SLASH, &cwd_path);
+        if (result == ESUCC) {
 
-        char *cwd_path = new_CWD_path(path, ADD_SLASH);
-        if (cwd_path) {
-                const char *external_path = NULL;
-                FS_entry_t *fs = get_path_base_FS(cwd_path, &external_path);
+                const char *external_path; FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                if (result == ESUCC) {
 
-                if (fs && fs->interface->fs_statfs) {
                         int priority = increase_task_priority();
-                        status = fs->interface->fs_statfs(fs->handle, statfs) == STD_RET_OK ? 0 : -1;
+                        result = fs->interface->fs_statfs(fs->handle, statfs);
                         restore_priority(priority);
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Function open selected file
  *
- * @param[in] *name             file path
- * @param[in] *mode             file mode
+ * @param[in]  *name             file path
+ * @param[in]  *mode             file mode
+ * @param[out] **file            pointer to file pointer
  *
- * @retval NULL if file can't be created
+ * @return One of errno values
  */
 //==============================================================================
-int _vfs_fopen_r(const char *path, const char *mode, FILE **file);
-FILE *_vfs_fopen(const char *path, const char *mode)
-{
-        FILE *f = NULL;
-        errno = _vfs_fopen_r(path, mode, &f);
-        return f;
-}
-
-int _vfs_fopen_r(const char *path, const char *mode, FILE **file)
+int _vfs_fopen(const char *path, const char *mode, FILE **file)
 {
         if (!path || !mode || !file) {
                 return EINVAL;
@@ -1216,7 +1244,7 @@ void _vfs_sync(void)
 
 //==============================================================================
 /**
- * @brief  Function check if selected mount point and current mount status
+ * @brief  Function check if selected mount point and current mount path
  *         allow to mount this file system as root.
  *
  * @param  mount_point          mount point path
@@ -1225,7 +1253,7 @@ void _vfs_sync(void)
  *         otherwise false.
  */
 //==============================================================================
-static bool can_be_root_FS(const char *mount_point)
+static bool is_first_fs(const char *mount_point)
 {
         return _llist_size(vfs_mnt_list) == 0 && strcmp(mount_point, "/") == 0;
 }
@@ -1234,34 +1262,38 @@ static bool can_be_root_FS(const char *mount_point)
 /**
  * @brief  Create a new file system entry. Function initialize selected file system.
  *
- * @param  parent_FS            parent file system (can be NULL if none)
- * @param  fs_mount_point       file system mount point. This object must be permanent
- * @param  fs_src_file          file system source file
- * @param  fs_interface         file system interface (is copied to the object)
+ * @param[in ] parent_FS        parent file system (can be NULL if none)
+ * @param[in ] fs_mount_point   file system mount point. This object must be permanent
+ * @param[in ] fs_src_file      file system source file
+ * @param[in ] fs_interface     file system interface (is copied to the object)
+ * @param[out] entry            entry
  *
- * @return On success pointer to file system entry is returned, otherwise NULL.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static FS_entry_t *new_FS_entry(FS_entry_t         *parent_FS,
-                                const char         *fs_mount_point,
-                                const char         *fs_src_file,
-                                vfs_FS_interface_t *fs_interface)
+static int new_FS_entry(FS_entry_t               *parent_FS,
+                        const char               *fs_mount_point,
+                        const char               *fs_src_file,
+                        const vfs_FS_itf_t *fs_interface,
+                        FS_entry_t               **fs_entry)
 {
+        int result = ENOMEM;
+
         FS_entry_t *new_FS = _sysm_sysmalloc(sizeof(FS_entry_t));
         if (new_FS) {
-                new_FS->interface = fs_interface;
-
-                if (fs_interface->fs_init(&new_FS->handle, fs_src_file) == STD_RET_OK) {
+                result = fs_interface->fs_init(&new_FS->handle, fs_src_file);
+                if (result == ESUCC) {
+                        new_FS->interface     = fs_interface;
                         new_FS->mount_point   = fs_mount_point;
-                        new_FS->parent_FS_ref = parent_FS;
+                        new_FS->parent = parent_FS;
                         new_FS->children_cnt  = 0;
+                        *fs_entry             = new_FS;
                 } else {
                         _sysm_sysfree(new_FS);
-                        new_FS = NULL;
                 }
         }
 
-        return new_FS;
+        return result;
 }
 
 //==============================================================================
@@ -1270,17 +1302,18 @@ static FS_entry_t *new_FS_entry(FS_entry_t         *parent_FS,
  *
  * @param  this         file system entry object
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static bool delete_FS_entry(FS_entry_t *this)
+static int delete_FS_entry(FS_entry_t *this)
 {
-        bool status = false;
+        int result = EINVAL;
 
         if (this) {
-                if (this->interface->fs_release(this->handle) == STD_RET_OK) {
-                        if (this->parent_FS_ref && this->parent_FS_ref->children_cnt) {
-                                this->parent_FS_ref->children_cnt--;
+                result = this->interface->fs_release(this->handle);
+                if (result == ESUCC) {
+                        if (this->parent && this->parent->children_cnt) {
+                                this->parent->children_cnt--;
                         }
 
                         if (this->mount_point) {
@@ -1288,11 +1321,10 @@ static bool delete_FS_entry(FS_entry_t *this)
                         }
 
                         _sysm_sysfree(this);
-                        status = true;
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -1302,32 +1334,31 @@ static bool delete_FS_entry(FS_entry_t *this)
  * @param[in] file              pinter to file
  * @param[in] force             force close
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static int fclose(FILE *file, bool force)
 {
-        if (is_file_valid(file) && file->FS_if->fs_close) {
-                if (file->FS_if->fs_close(file->FS_hdl,
-                                          file->f_extra_data,
-                                          file->fd, force) == STD_RET_OK) {
+        int result = EINVAL;
 
+        if (is_file_valid(file) && file->FS_if->fs_close) {
+                result = file->FS_if->fs_close(file->FS_hdl,
+                                               file->f_extra_data,
+                                               file->fd, force);
+                if (result == ESUCC) {
                         file->self   = NULL;
                         file->FS_hdl = NULL;
                         file->FS_hdl = NULL;
                         _sysm_sysfree(file);
-                        return 0;
                 }
         }
 
-        return -1;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Check if file object is valid
- *
- * @errno EINVAL
  *
  * @param file  file object to examine
  *
@@ -1336,25 +1367,16 @@ static int fclose(FILE *file, bool force)
 //==============================================================================
 static bool is_file_valid(FILE *file)
 {
-        if (  file
-           && file->self == file
-           && file->FS_hdl
-           && file->FS_if
-           && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO) {
-
-                return true;
-
-        } else {
-                errno = EINVAL;
-                return false;
-        }
+        return (  file
+               && file->self == file
+               && file->FS_hdl
+               && file->FS_if
+               && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO);
 }
 
 //==============================================================================
 /**
  * @brief Check if dir object is valid
- *
- * @errno EINVAL
  *
  * @param file  file object to examine
  *
@@ -1363,12 +1385,7 @@ static bool is_file_valid(FILE *file)
 //==============================================================================
 static bool is_dir_valid(DIR *dir)
 {
-        if (dir && dir->self == dir) {
-                return true;
-        } else {
-                errno = EINVAL;
-                return false;
-        }
+        return (dir && dir->self == dir);
 }
 
 //==============================================================================
@@ -1404,7 +1421,6 @@ static inline void restore_priority(int priority)
 //==============================================================================
 /**
  * @brief Function convert file open mode string to flags
- *        Function set errno: EINVAL
  *
  * @param[in]  str      file open mode string
  * @param[out] flags    file flags (for internal file use)
@@ -1444,24 +1460,22 @@ static bool parse_flags(const char *str, u32_t *flags)
                 return true;
         }
 
-        errno = EINVAL;
-
         return false;
 }
 
 //==============================================================================
 /**
  * @brief Function return file system entry of selected path
- *        Function set errno: ENXIO (if no entry)
  *
  * @param[in]  path             path to FS
  * @param[in]  len              path length
- * @param[out] position         object position in list
+ * @param[out] position         object position in list (can be NULL)
+ * @param[out] fs_entry         found entry
  *
- * @return On success pointer to file system entry is returned, otherwise NULL.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static FS_entry_t *get_path_FS(const char *path, size_t len, int *position)
+static int get_path_FS(const char *path, size_t len, int *position, FS_entry_t **fs_entry)
 {
         int pos = 0;
 
@@ -1471,13 +1485,14 @@ static FS_entry_t *get_path_FS(const char *path, size_t len, int *position)
                                 *position = pos;
                         }
 
-                        return entry;
+                        *fs_entry = entry;
+                        return ESUCC;
                 }
 
                 pos++;
         }
 
-        return NULL;
+        return ENOENT;
 }
 
 //==============================================================================
@@ -1485,15 +1500,15 @@ static FS_entry_t *get_path_FS(const char *path, size_t len, int *position)
  * @brief Function returned the base file system of selected path. The external
  *        path is passed by pointer ext_path.
  *        Function is thread safe.
- *        Function set errno: ENOENT
  *
  * @param[in]  path           path to FS
- * @param[out] ext_path       pointer to external part of path
+ * @param[out] ext_path       pointer to external part of path (can be NULL)
+ * @param[out] fs_entry       file system entry
  *
  * @return On success base file system entry is returned, otherwise NULL.
  */
 //==============================================================================
-static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
+static int get_path_base_FS(const char *path, const char **ext_path, FS_entry_t **fs_entry)
 {
         const char *path_tail = path + strlen(path);
 
@@ -1501,13 +1516,13 @@ static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
                 path_tail--;
         }
 
-        FS_entry_t *FS_entry = NULL;
+        int result = ENOENT;
+
         if (_mutex_lock(vfs_resource_mtx, MAX_DELAY_MS)) {
 
                 while (path_tail >= path) {
-                        FS_entry_t *entry = get_path_FS(path, path_tail - path + 1, NULL);
-                        if (entry) {
-                                FS_entry = entry;
+                        result = get_path_FS(path, path_tail - path + 1, NULL, fs_entry);
+                        if (result == ESUCC) {
                                 break;
                         } else {
                                 while (*(--path_tail) != '/' && path_tail >= path);
@@ -1517,15 +1532,11 @@ static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
                 _mutex_unlock(vfs_resource_mtx);
         }
 
-        if (FS_entry && ext_path) {
+        if (result == ESUCC && ext_path) {
                 *ext_path = path_tail;
         }
 
-        if (!FS_entry) {
-                errno = ENOENT;
-        }
-
-        return FS_entry;
+        return result;
 }
 
 //==============================================================================
@@ -1533,18 +1544,19 @@ static FS_entry_t *get_path_base_FS(const char *path, const char **ext_path)
  * @brief Function create new path with slash and cwd correction
  *        Function set errno: ENOMEM
  *
- * @param[in] *path             path to correct
+ * @param[in]  path             path to correct
  * @param[in]  corr             path correction kind
+ * @param[out] new_path         new path
  *
- * @return pointer to new path
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static char *new_CWD_path(const char *path, enum path_correction corr)
+static int new_CWD_path(const char *path, enum path_correction corr, char **new_path)
 {
-        char       *new_path;
         uint        new_path_len = strlen(path);
         const char *cwd;
         uint        cwd_len = 0;
+        int         result  = ENOMEM;
 
         /* correct ending slash */
         if (corr == SUB_SLASH && LAST_CHARACTER(path) == '/') {
@@ -1567,32 +1579,34 @@ static char *new_CWD_path(const char *path, enum path_correction corr)
                 }
         }
 
-        new_path = _sysm_syscalloc(new_path_len + 1, sizeof(char));
-        if (new_path) {
+        *new_path = _sysm_syscalloc(new_path_len + 1, sizeof(char));
+        if (*new_path) {
                 if (cwd_len && cwd) {
-                        strcpy(new_path, cwd);
+                        strcpy(*new_path, cwd);
 
                         if (LAST_CHARACTER(cwd) != '/') {
-                                strcat(new_path, "/");
+                                strcat(*new_path, "/");
                         }
                 }
 
                 if (corr == SUB_SLASH) {
-                        strncat(new_path, path, new_path_len - cwd_len);
-                } else if (corr == ADD_SLASH) {
-                        strcat(new_path, path);
+                        strncat(*new_path, path, new_path_len - cwd_len);
 
-                        if (LAST_CHARACTER(new_path) != '/') {
-                                strcat(new_path, "/");
+                } else if (corr == ADD_SLASH) {
+                        strcat(*new_path, path);
+
+                        if (LAST_CHARACTER(*new_path) != '/') {
+                                strcat(*new_path, "/");
                         }
+
                 } else {
-                        strcat(new_path, path);
+                        strcat(*new_path, path);
                 }
-        } else {
-                errno = ENOMEM;
+
+                result = ESUCC;
         }
 
-        return new_path;
+        return result;
 }
 
 /*==============================================================================

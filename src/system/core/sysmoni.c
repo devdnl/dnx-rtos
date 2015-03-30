@@ -189,11 +189,10 @@ static void modify_module_memory_usage(void *mod_no, i32_t size)
 /**
  * @brief Initialize module
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_init(void)
+int _sysm_init(void)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         kernel_panic_descriptor = _sysm_sysmalloc(sizeof(struct kernel_panic_desc));
@@ -236,11 +235,11 @@ stdret_t _sysm_init(void)
                         _mutex_delete(sysm_resource_mtx);
                 }
 
-                return STD_RET_ERROR;
+                return ENOMEM;
         }
 #endif
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -311,16 +310,15 @@ bool _sysm_is_task_exist(task_t *taskhdl)
  *
  * @param *taskhdl      task handle
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
+int _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        stdret_t status = STD_RET_ERROR;
+        int status = ESRCH;
 
         if (_sysm_is_task_exist(taskhdl) == false) {
                 struct task_monitor_data *tmdata = _sysm_syscalloc(1, sizeof(struct task_monitor_data));
@@ -329,7 +327,7 @@ stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
 
                         if (_llist_push_back(sysm_task_list, taskhdl)) {
                                 _task_set_monitor_data(taskhdl, tmdata);
-                                status = STD_RET_OK;
+                                status = ESUCC;
                         } else {
                                 _sysm_sysfree(tmdata);
                                 _task_set_monitor_data(taskhdl, NULL);
@@ -342,7 +340,7 @@ stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
 #else
         UNUSED_ARG(taskhdl);
         UNUSED_ARG(stack_size);
-        return STD_RET_OK;
+        return ESUCC;
 #endif
 }
 
@@ -352,11 +350,10 @@ stdret_t _sysm_start_task_monitoring(task_t *taskhdl, size_t stack_size)
  *
  * @param *taskhdl      task handle
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_stop_task_monitoring(task_t *taskhdl)
+int _sysm_stop_task_monitoring(task_t *taskhdl)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -417,15 +414,15 @@ stdret_t _sysm_stop_task_monitoring(task_t *taskhdl)
         _llist_take(sysm_task_list, pos);
 
         _mutex_unlock(sysm_resource_mtx);
-        return STD_RET_OK;
+        return ESUCC;
 
 exit_error:
         _mutex_unlock(sysm_resource_mtx);
-        return STD_RET_ERROR;
+        return ESRCH;
 
 #else
         UNUSED_ARG(taskhdl);
-        return STD_RET_OK;
+        return ESUCC;
 #endif
 }
 
@@ -436,14 +433,13 @@ exit_error:
  * @param *taskHdl      task handle
  * @param *stat         status result
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_get_task_stat(task_t *taskhdl, struct _sysmoni_taskstat *stat)
+int _sysm_get_task_stat(task_t *taskhdl, struct _sysmoni_taskstat *stat)
 {
         if (!stat)
-                return STD_RET_ERROR;
+                return EINVAL;
 
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -481,11 +477,11 @@ stdret_t _sysm_get_task_stat(task_t *taskhdl, struct _sysmoni_taskstat *stat)
         stat->task_name    = _task_get_name_of(taskhdl);
 
         _mutex_unlock(sysm_resource_mtx);
-        return STD_RET_OK;
+        return ESUCC;
 
 exit_error:
         _mutex_unlock(sysm_resource_mtx);
-        return STD_RET_ERROR;
+        return ESRCH;
 
 #else
         stat->cpu_usage    = 0;
@@ -495,7 +491,7 @@ exit_error:
         stat->priority     = _task_get_priority_of(taskhdl);
         stat->task_handle  = taskhdl;
         stat->task_name    = _task_get_name_of(taskhdl);
-        return STD_RET_OK;
+        return ESUCC;
 #endif
 }
 
@@ -506,21 +502,20 @@ exit_error:
  * @param  item   task item
  * @param *stat   task statistics
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_get_ntask_stat(uint item, struct _sysmoni_taskstat *stat)
+int _sysm_get_ntask_stat(uint item, struct _sysmoni_taskstat *stat)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
-        stdret_t status = STD_RET_ERROR;
+        int status = ESRCH;
 
         task_t *task = _llist_at(sysm_task_list, item);
 
-        if (_sysm_get_task_stat(task, stat) == STD_RET_OK) {
-                status = STD_RET_OK;
+        if (_sysm_get_task_stat(task, stat) == ESUCC) {
+                status = ESUCC;
         }
 
         _mutex_unlock(sysm_resource_mtx);
@@ -528,7 +523,7 @@ stdret_t _sysm_get_ntask_stat(uint item, struct _sysmoni_taskstat *stat)
 #else
         UNUSED_ARG(item);
         UNUSED_ARG(stat);
-        return STD_RET_ERROR;
+        return ESRCH;
 #endif
 }
 
@@ -538,15 +533,13 @@ stdret_t _sysm_get_ntask_stat(uint item, struct _sysmoni_taskstat *stat)
  *
  * @param[out] *mem_info        memory information
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-stdret_t _sysm_get_used_memory(struct _sysmoni_used_memory *mem_info)
+int _sysm_get_used_memory(struct _sysmoni_used_memory *mem_info)
 {
         if (!mem_info) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
@@ -578,7 +571,7 @@ stdret_t _sysm_get_used_memory(struct _sysmoni_used_memory *mem_info)
 #else
         mem_info->used_network_memory  = 0;
 #endif
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -1153,7 +1146,7 @@ FILE *_sysm_freopen(const char *path, const char *mode, FILE *file)
                 return NULL;
         }
 
-        if (_sysm_fclose(file) == STD_RET_OK) {
+        if (_sysm_fclose(file) == ESUCC) {
                 return _sysm_fopen(path, mode);
         } else {
                 return NULL;
@@ -1181,7 +1174,7 @@ int _sysm_fclose(FILE *file)
                 return EOF;
         }
 
-        stdret_t                  status = EOF;
+        int                  status = EOF;
         task_t                   *task;
         struct task_monitor_data *task_monitor_data;
 
@@ -1202,7 +1195,7 @@ int _sysm_fclose(FILE *file)
                 if (task_monitor_data->file_slot[slot] == file) {
                         status = _vfs_fclose(file);
 
-                        if (status == STD_RET_OK) {
+                        if (status == ESUCC) {
                                 task_monitor_data->file_slot[slot] = NULL;
                                 task_monitor_data->opened_files--;
                         }
@@ -1285,7 +1278,7 @@ exit:
 int _sysm_closedir(DIR *dir)
 {
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
-        stdret_t status = EOF;
+        int status = EOF;
 
         mutex_force_lock(sysm_resource_mtx);
 
@@ -1305,7 +1298,7 @@ int _sysm_closedir(DIR *dir)
                 if (task_monitor_data->dir_slot[slot] == dir) {
                         status = _vfs_closedir(dir);
 
-                        if (status == STD_RET_OK) {
+                        if (status == ESUCC) {
                                 task_monitor_data->dir_slot[slot] = NULL;
                                 task_monitor_data->opened_files--;
                         }
