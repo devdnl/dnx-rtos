@@ -33,7 +33,7 @@
 #define __LWIPOPTS_H__
 
 #include "config.h"
-#include "core/sysmoni.h"
+#include "mm/mm.h"
 
 /*
    -----------------------------------------------
@@ -80,9 +80,9 @@
 /**
  * Memory allocation functions
  */
-#define mem_free                                _sysm_netfree
-#define mem_malloc                              _sysm_netmalloc
-#define mem_calloc                              _sysm_netcalloc
+#define mem_free                                _netfree
+#define mem_malloc                              _netmalloc
+#define mem_calloc                              _netcalloc
 
 /*
    ------------------------------------

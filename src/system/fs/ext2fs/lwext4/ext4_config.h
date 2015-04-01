@@ -37,7 +37,7 @@
 #ifndef EXT4_CONFIG_H_
 #define EXT4_CONFIG_H_
 
-#include "core/fs.h"
+#include "fs/fs.h"
 
 /*CONFIGURATION SELECTIONS****************************************************/
 

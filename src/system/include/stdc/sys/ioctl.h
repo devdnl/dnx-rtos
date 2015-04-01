@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
-#include "core/vfs.h"
+#include "drivers/ioctl_macros.h"
+#include "fs/vfs.h"
 
 /* ioctl requests */
 #ifdef ARCH_noarch
@@ -105,11 +105,11 @@ extern "C" {
 //==============================================================================
 static inline int ioctl(FILE *stream, int request, ...)
 {
-        va_list arg;
-        va_start(arg, request);
-        int status = _vfs_vioctl(stream, request, arg);
-        va_end(arg);
-        return status;
+//        va_list arg;
+//        va_start(arg, request);
+//        int status = _vfs_vioctl(stream, request, arg);
+//        va_end(arg);
+//        return status;
 }
 
 #ifdef __cplusplus

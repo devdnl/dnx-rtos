@@ -29,7 +29,6 @@
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "kernel/ktypes.h"
-#include "core/sysmoni.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -116,18 +115,13 @@ static bool is_queue_valid(queue_t *queue)
  * @param[in ] *name            task name
  * @param[in ]  stack_depth     stack deep
  * @param[in ] *argv            argument pointer
+ * @param[in ] *tag             user's tag
  *
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv)
+task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag)
 {
-        struct _task_data *data = _sysm_kcalloc(1, sizeof(struct _task_data));
-        if (!data) {
-                return NULL;
-        }
-
-        data->f_parent_task  = xTaskGetCurrentTaskHandle();
         int scheduler_status = xTaskGetSchedulerState();
         uint child_priority  = PRIORITY(0);
 
@@ -144,18 +138,9 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
                 }
 
                 taskEXIT_CRITICAL();
-                vTaskSetApplicationTaskTag(task, (void *)data);
-
-                if (_sysm_start_task_monitoring(task, sizeof(StackType_t) * stack_depth) == STD_RET_OK) {
-                        vTaskResume(task);
-                } else {
-                        vTaskDelete(task);
-                        _sysm_kfree(data);
-                        task = NULL;
-                }
+                vTaskSetApplicationTaskTag(task, (void *)tag);
         } else {
                 taskEXIT_CRITICAL();
-                _sysm_kfree(data);
                 task = NULL;
         }
 
@@ -312,18 +297,6 @@ int _task_get_free_stack_of(task_t *taskhdl)
                 return uxTaskGetStackHighWaterMark(taskhdl);
         else
                 return -1;
-}
-
-//==============================================================================
-/**
- * @brief Function return data of this task
- *
- * @return this task data
- */
-//==============================================================================
-_task_data_t *_task_get_data(void)
-{
-        return (struct _task_data*)_task_get_tag(THIS_TASK);
 }
 
 //==============================================================================
@@ -489,7 +462,7 @@ mutex_t *_mutex_new(enum mutex_type type)
 {
         mutex_t *mtx = _sysm_kcalloc(1, sizeof(struct mutex));
         if (mtx) {
-                if (type == MUTEX_RECURSIVE) {
+                if (type == MUTEX_TYPE_RECURSIVE) {
                         mtx->object    = xSemaphoreCreateRecursiveMutex();
                         mtx->recursive = true;
                 } else {
@@ -538,16 +511,12 @@ void _mutex_delete(mutex_t *mutex)
 //==============================================================================
 bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
-        if (is_mutex_valid(mutex) && _task_get_data()->f_task_kill == false) {
+        if (is_mutex_valid(mutex)) {
                 bool status;
                 if (mutex->recursive) {
                         status = xSemaphoreTakeRecursive(mutex->object, MS2TICK((TickType_t)blocktime_ms));
                 } else {
                         status = xSemaphoreTake(mutex->object, MS2TICK((TickType_t)blocktime_ms));
-                }
-
-                if (status) {
-                        _task_get_data()->f_mutex_section++;
                 }
 
                 return status;
@@ -574,18 +543,6 @@ bool _mutex_unlock(mutex_t *mutex)
                         status = xSemaphoreGiveRecursive(mutex->object);
                 } else {
                         status = xSemaphoreGive(mutex->object);
-                }
-
-                if (status) {
-                        _task_data_t *data = _task_get_data();
-
-                        if (data->f_mutex_section) {
-                                data->f_mutex_section--;
-                        }
-
-                        if (data->f_task_kill == true && data->f_mutex_section == 0) {
-                                _task_suspend_now();
-                        }
                 }
 
                 return status;

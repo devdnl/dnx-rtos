@@ -35,7 +35,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 #include "libfat_user.h"
 #include "libfat_conf.h"
 
@@ -178,7 +178,7 @@ uint32_t _libfat_get_fattime(void)
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
-                _LIBFAT_MUTEX_t mtx = _sys_mutex_new(MUTEX_NORMAL);
+                _LIBFAT_MUTEX_t mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 if (mtx) {
                         *sobj = mtx;
                         return 1;

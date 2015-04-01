@@ -33,9 +33,9 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include "kernel/kwrapper.h"
-#include "core/conv.h"
-#include "core/env.h"
-#include "core/printx.h"
+#include "lib/conv.h"
+#include "kernel/env.h"  // TODO syscall
+#include "lib/printx.h"
 
 #ifdef __cplusplus
 extern "C" {

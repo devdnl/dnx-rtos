@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "<!cpu_arch!>/<!module_name!>_cfg.h"
 #include "<!cpu_arch!>/<!module_name!>_def.h"
 #include "<!cpu_arch!>/<!module_name!>_ioctl.h"

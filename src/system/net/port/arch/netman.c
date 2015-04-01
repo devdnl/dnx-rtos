@@ -244,7 +244,7 @@ void _netman_init()
 {
         netman = _sysm_netcalloc(1, sizeof(netman_t));
         if (netman) {
-                netman->access    = _mutex_new(MUTEX_RECURSIVE);
+                netman->access    = _mutex_new(MUTEX_TYPE_RECURSIVE);
                 netman->if_thread = _task_new(network_interface_thread, "netifd", STACK_DEPTH_LOW, NULL);
 
                 if (netman->access && netman->if_thread) {

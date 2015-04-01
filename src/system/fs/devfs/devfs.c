@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 
 /*==============================================================================
   Local macros
@@ -107,7 +107,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         UNUSED_ARG(src_path);
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
-        mutex_t            *mtx   = _sys_mutex_new(MUTEX_NORMAL);
+        mutex_t            *mtx   = _sys_mutex_new(MUTEX_TYPE_NORMAL);
         struct devfs_chain *chain = chain_new();
 
         if (devfs && mtx && chain) {

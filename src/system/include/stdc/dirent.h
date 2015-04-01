@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/vfs.h"
+#include "fs/vfs.h"
 
 /*==============================================================================
   Exported macros
@@ -83,7 +83,7 @@ typedef struct vfs_dir DIR;
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-        return _sysm_opendir(name);
+//        return _sysm_opendir(name);
 }
 
 //==============================================================================
@@ -112,7 +112,7 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-        return _sysm_closedir(dir);
+//        return _sysm_closedir(dir);
 }
 
 //==============================================================================
@@ -159,7 +159,7 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline dirent_t *readdir(DIR *dir)
 {
-        return _vfs_readdir(dir);
+//        return _vfs_readdir(dir);
 }
 
 #ifdef __cplusplus

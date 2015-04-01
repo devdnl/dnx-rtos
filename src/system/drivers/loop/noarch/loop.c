@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "noarch/loop_cfg.h"
 #include "noarch/loop_def.h"
 #include "noarch/loop_ioctl.h"
@@ -118,7 +118,7 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
         if (major < _LOOP_NUMBER_OF_DEVICES) {
                 loop_t *hdl = calloc(1, sizeof(loop_t));
                 if (hdl) {
-                        hdl->lock      = _sys_mutex_new(MUTEX_NORMAL);
+                        hdl->lock      = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                         hdl->event_req = _sys_semaphore_new(1, 0);
                         hdl->event_res = _sys_semaphore_new(1, 0);
                         hdl->major   = major;

@@ -35,8 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "kernel/kwrapper.h"
-#include "core/progman.h"
-#include "core/sysmoni.h"
+#include "kernel/progman.h"
 
 /*==============================================================================
   Exported macros

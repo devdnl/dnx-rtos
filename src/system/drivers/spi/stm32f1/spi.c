@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/spi_cfg.h"
 #include "stm32f1/spi_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -330,7 +330,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create protection mutex and start device if initialized first time */
         if (!SPIM->device_protect_mtx[major]) {
-                SPIM->device_protect_mtx[major] = _sys_mutex_new(MUTEX_RECURSIVE);
+                SPIM->device_protect_mtx[major] = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
                 if (!SPIM->device_protect_mtx[major]) {
                         _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
                         SPIM->wait_irq_sem[major] = NULL;

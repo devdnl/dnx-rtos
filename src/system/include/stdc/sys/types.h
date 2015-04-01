@@ -74,6 +74,9 @@ typedef int gid_t;
 /** device */
 typedef int dev_t;
 
+/** process ID */
+typedef int pid_t;
+
 /** time type */
 struct tm {
         int tm_sec;       //!> seconds after the minute        0-60*

@@ -29,7 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/i2c_cfg.h"
 #include "stm32f1/i2c_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -303,7 +303,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (I2C->periph[major].lock == NULL) {
-                I2C->periph[major].lock  = _sys_mutex_new(MUTEX_NORMAL);
+                I2C->periph[major].lock  = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 if (!I2C->periph[major].lock) {
                         status = ENOMEM;
                         goto error;

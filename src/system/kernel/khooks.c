@@ -29,9 +29,8 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/printx.h"
-#include "core/sysmoni.h"
-#include "core/progman.h"
+#include "kernel/kpanic.h"
+#include "kernel/progman.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -81,7 +80,7 @@ void vApplicationIdleHook(void)
 void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
         (void)taskHdl;
-        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        _kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================

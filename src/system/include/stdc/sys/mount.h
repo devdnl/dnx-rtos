@@ -34,9 +34,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fsctrl.h"
-#include "core/modctrl.h"
-#include "core/syscall.h"
+#include "fs/fsctrl.h"
+#include "drivers/drvctrl.h"
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros

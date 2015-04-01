@@ -30,7 +30,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
+#include "drivers/ioctl_macros.h"
 #include "usb_std.h"
 #include "usbd_cfg.h"
 

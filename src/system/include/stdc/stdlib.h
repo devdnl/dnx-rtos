@@ -35,9 +35,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-#include "core/sysmoni.h"
-#include "core/conv.h"
-#include "core/progman.h"
+//#include "core/sysmoni.h"
+#include "lib/conv.h"
+//#include "core/progman.h" TODO syscall
 
 #include <machine/ieeefp.h>
 #include "_ansi.h"
@@ -402,7 +402,7 @@ extern _VOID srand(unsigned __seed);
 //==============================================================================
 static inline void *malloc(size_t size)
 {
-        return _sysm_tskmalloc(size);
+//        return _sysm_tskmalloc(size); TODO syscall
 }
 
 //==============================================================================
@@ -430,7 +430,7 @@ static inline void *malloc(size_t size)
 //==============================================================================
 static inline void *calloc(size_t n, size_t size)
 {
-        return _sysm_tskcalloc(n, size);
+//        return _sysm_tskcalloc(n, size); TODO syscall
 }
 
 //==============================================================================
@@ -459,7 +459,7 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-        _sysm_tskfree(ptr);
+//        _sysm_tskfree(ptr); TODO syscall
 }
 
 //==============================================================================
@@ -504,15 +504,15 @@ static inline void *realloc(void *ptr, size_t size)
         extern _PTR memcpy(_PTR dest, const _PTR src, size_t n);
 
         if (size) {
-                void *mem = _sysm_tskmalloc(size);
-                if (ptr == NULL)
-                        return mem;
-
-                if (mem) {
-                        memcpy(mem, ptr, size);
-                        _sysm_tskfree(ptr);
-                        return mem;
-                }
+//                void *mem = _sysm_tskmalloc(size); TODO syscall
+//                if (ptr == NULL)
+//                        return mem;
+//
+//                if (mem) {
+//                        memcpy(mem, ptr, size);
+//                        _sysm_tskfree(ptr); TODO syscall
+//                        return mem;
+//                }
         }
 
         return NULL;
@@ -536,7 +536,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        _abort();
+//        _abort(); TODO syscall
         for (;;); // no return function - this makes C++ compiler happy
 }
 
@@ -559,7 +559,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        _exit(status);
+//        _exit(status); TODO syscall
         for (;;); // no return function - this makes C++ compiler happy
 }
 
@@ -583,7 +583,7 @@ static inline void exit(int status)
 //==============================================================================
 static inline int system(const char *command)
 {
-        return _system(command);
+//        return _system(command); TODO syscall
 }
 
 //==============================================================================

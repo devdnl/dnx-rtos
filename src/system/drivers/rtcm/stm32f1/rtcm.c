@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/rtcm_cfg.h"
 #include "stm32f1/rtcm_def.h"
 #include "stm32f1/rtcm_ioctl.h"

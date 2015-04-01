@@ -27,10 +27,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "noarch/sdspi_cfg.h"
 #include "noarch/sdspi_def.h"
-#include <sys/ioctl.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -195,7 +194,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         if (SDSPI->card[major] == NULL) {
 
                 struct card *hdl  = calloc(1, sizeof(struct card));
-                mutex_t     *mtx  = _sys_mutex_new(MUTEX_NORMAL);
+                mutex_t     *mtx  = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 FILE        *fspi = _sys_fopen(card_cfg[major].filepath, "r+");
 
                 if (hdl && mtx && fspi) {

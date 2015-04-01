@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/lib/stm32f10x_rcc.h"
@@ -120,7 +120,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
         llist_t       *file_list = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
-        mutex_t       *mtx       = _sys_mutex_new(MUTEX_NORMAL);
+        mutex_t       *mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
 
         if (procfs && file_list && mtx) {
                 procfs->file_list    = file_list;

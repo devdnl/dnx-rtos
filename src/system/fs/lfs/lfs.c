@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -115,7 +115,7 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
                 return ENOMEM;
         }
 
-        lfs->resource_mtx  = _sys_mutex_new(MUTEX_RECURSIVE);
+        lfs->resource_mtx  = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
         lfs->root_dir.data = _sys_llist_new(NULL, NULL);
         lfs->opended_files = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
 

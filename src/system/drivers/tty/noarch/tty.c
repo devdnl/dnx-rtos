@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "tty_cfg.h"
 #include "tty_def.h"
 #include "tty.h"
@@ -160,7 +160,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         tty_t *tty = calloc(1, sizeof(tty_t));
         if (tty) {
                 tty->queue_out  = _sys_queue_new(_TTY_STREAM_SIZE, sizeof(char));
-                tty->secure_mtx = _sys_mutex_new(MUTEX_NORMAL);
+                tty->secure_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 tty->screen     = ttybfr_new();
                 tty->editline   = ttyedit_new(tty_module->outfile);
                 tty->vtcmd      = ttycmd_new();

@@ -31,7 +31,7 @@
 #include <string.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
-#include "core/syscall.h"
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Local symbolic constants/macros

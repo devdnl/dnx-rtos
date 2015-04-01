@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/printx.h"
+//#include "core/printx.h"
 
 #include "_ansi.h"
 
@@ -739,7 +739,7 @@ extern size_t strnlen(const char *s, size_t maxlen);
 //==============================================================================
 static inline char *strerror(int errnum)
 {
-        return (char *)_strerror(errnum);
+//        return (char *)_strerror(errnum); TODO
 }
 
 #ifdef __cplusplus

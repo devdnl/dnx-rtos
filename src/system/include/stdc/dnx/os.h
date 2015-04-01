@@ -37,11 +37,11 @@ extern "C" {
 #include <string.h>
 #include <stdarg.h>
 #include "config.h"
-#include "core/sysmoni.h"
-#include "core/modctrl.h"
-#include "core/progman.h"
+#include "drivers/drvctrl.h"
+#include "kernel/progman.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
+#include "mm/heap.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -93,7 +93,7 @@ typedef struct _sysmoni_used_memory memstat_t;
 //==============================================================================
 static inline u32_t get_used_static_memory(void)
 {
-        return (_MEMMAN_RAM_SIZE - _MEMMAN_HEAP_SIZE);
+        return (_HEAP_RAM_SIZE - _HEAP_HEAP_SIZE);
 }
 
 //==============================================================================
@@ -147,7 +147,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-        return (get_used_static_memory() + (_MEMMAN_HEAP_SIZE - _memman_get_free_heap()));
+        return (get_used_static_memory() + (_HEAP_HEAP_SIZE - _memman_get_free_heap()));
 }
 
 //==============================================================================
@@ -173,7 +173,7 @@ static inline u32_t get_used_memory(void)
 //==============================================================================
 static inline u32_t get_memory_size(void)
 {
-        return _MEMMAN_RAM_SIZE;
+        return _HEAP_RAM_SIZE;
 }
 
 //==============================================================================

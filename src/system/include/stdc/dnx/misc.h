@@ -253,6 +253,32 @@ extern "C" {
 
 //==============================================================================
 /**
+ * @brief cast(type, var)
+ * The macro <b>cast</b>() cast variable <i>var</i> to type <i>type</i>.
+ * Use this macro to cast selected variable type.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * void   *data   = calloc(1, 10);
+ * type_t *buffer = cast(type_t*, data);
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef __cplusplus
+#define cast(type, var) ((type)(var))
+#endif
+
+//==============================================================================
+/**
  * @brief min(a, b)
  * The macro <b>min()</b> compares variables <i>a</i> and <i>b</i> and returns
  * the smaller value. Use this macro with caution because of side effects

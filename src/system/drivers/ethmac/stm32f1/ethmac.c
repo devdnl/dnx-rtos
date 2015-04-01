@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "ethmac_cfg.h"
 #include "ethmac_def.h"
 #include "stm32f10x.h"
@@ -107,8 +107,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         int            status;
         struct ethmac *hdl          = calloc(1, sizeof(struct ethmac));
         sem_t         *rx_ready_sem = _sys_semaphore_new(1, 0);
-        mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_NORMAL);
-        mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_NORMAL);
+        mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+        mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
         if (hdl && rx_ready_sem && rx_mtx && tx_mtx) {
                 hdl->rx_data_ready = rx_ready_sem;
                 hdl->rx_access     = rx_mtx;

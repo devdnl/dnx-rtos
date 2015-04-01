@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 #include "lwext4/ext4.h"
 
 /*==============================================================================
@@ -112,7 +112,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
         // create FS context
         ext2fs_t *hdl = malloc(sizeof(ext2fs_t));
         if (hdl) {
-                hdl->mtx = _sys_mutex_new(MUTEX_RECURSIVE);
+                hdl->mtx = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
                 if (hdl->mtx) {
                         hdl->openfiles = 0;
                         hdl->srcfile   = srcfile;

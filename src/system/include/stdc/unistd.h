@@ -265,7 +265,7 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
-        return strncpy(buf, _task_get_data()->f_cwd, size);
+//        return strncpy(buf, _task_get_descriptor()->t_cwd, size); TODO syscall
 }
 
 //==============================================================================
@@ -295,7 +295,7 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-        return _vfs_chown(pathname, owner, group);
+//        return _vfs_chown(pathname, owner, group); TODO syscall
 }
 
 //==============================================================================
@@ -319,7 +319,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-        _vfs_sync();
+//        _vfs_sync(); TODO syscall
 }
 
 #ifdef __cplusplus

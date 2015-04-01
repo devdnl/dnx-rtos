@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -171,8 +171,8 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 
                 uart_data[major]->data_write_sem   = _sys_semaphore_new(1, 0);
                 uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
-                uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_NORMAL);
-                uart_data[major]->port_lock_tx_mtx = _sys_mutex_new(MUTEX_NORMAL);
+                uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+                uart_data[major]->port_lock_tx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 bool uart_clock_configured         = uart_turn_on(uart[major]);
 
                 if (  uart_data[major]->data_write_sem

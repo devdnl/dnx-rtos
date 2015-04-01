@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/irq_cfg.h"
 #include "stm32f1/irq_def.h"
 #include "stm32f1/stm32f10x.h"
