@@ -31,7 +31,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/gpio_cfg.h"
 #include "stm32f1/gpio_def.h"
 #include "stm32f1/gpio_macros.h"

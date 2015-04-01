@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    panic.h
+@file    kpanic.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Kernel panic handling
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _PANIC_H_
-#define _PANIC_H_
+#ifndef _KPANIC_H_
+#define _KPANIC_H_
 
 /*==============================================================================
   Include files
@@ -69,7 +69,7 @@ extern void _kernel_panic_report(const char*, enum _kernel_panic_desc_cause);
 }
 #endif
 
-#endif /* _PANIC_H_ */
+#endif /* _KPANIC_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -30,6 +30,7 @@
 #include "drivers/driver.h"
 #include "noarch/sdspi_cfg.h"
 #include "noarch/sdspi_def.h"
+#include "sys/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

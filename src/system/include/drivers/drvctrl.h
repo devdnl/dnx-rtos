@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    modctrl.h
+@file    drvctrl.h
 
 @author  Daniel Zorychta
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _MODCTRL_H_
-#define _MODCTRL_H_
+#ifndef _DRVCTRL_H_
+#define _DRVCTRL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,25 +49,25 @@ extern "C" {
  .minor       = _minor,\
  .interface   = &_regdrv_##_drvmodule##_interface}
 
-#define _IMPORT_MODULE_INTERFACE(_modname)                                              \
-extern API_MOD_INIT(_modname, void**, u8_t, u8_t);                                      \
-extern API_MOD_RELEASE(_modname, void*);                                                \
-extern API_MOD_OPEN(_modname, void*, u32_t);                                            \
-extern API_MOD_CLOSE(_modname, void*, bool);                                            \
-extern API_MOD_WRITE(_modname, void*, const u8_t*, size_t, fpos_t*, struct vfs_fattr);  \
-extern API_MOD_READ(_modname, void*, u8_t*, size_t, fpos_t*, struct vfs_fattr);         \
-extern API_MOD_IOCTL(_modname, void*, int, void*);                                      \
-extern API_MOD_FLUSH(_modname, void*);                                                  \
-extern API_MOD_STAT(_modname, void*, struct vfs_dev_stat*);                             \
-static const struct _driver_if _regdrv_##_modname##_interface = {                       \
- .drv_init    = _##_modname##_init,                                                     \
- .drv_release = _##_modname##_release,                                                  \
- .drv_open    = _##_modname##_open,                                                     \
- .drv_close   = _##_modname##_close,                                                    \
- .drv_write   = _##_modname##_write,                                                    \
- .drv_read    = _##_modname##_read,                                                     \
- .drv_ioctl   = _##_modname##_ioctl,                                                    \
- .drv_stat    = _##_modname##_stat,                                                     \
+#define _IMPORT_MODULE_INTERFACE(_modname)                                                       \
+extern API_MOD_INIT(_modname, void**, u8_t, u8_t);                                               \
+extern API_MOD_RELEASE(_modname, void*);                                                         \
+extern API_MOD_OPEN(_modname, void*, u32_t);                                                     \
+extern API_MOD_CLOSE(_modname, void*, bool);                                                     \
+extern API_MOD_WRITE(_modname, void*, const u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);  \
+extern API_MOD_READ(_modname, void*, u8_t*, size_t, fpos_t*, size_t*,  struct vfs_fattr);        \
+extern API_MOD_IOCTL(_modname, void*, int, void*);                                               \
+extern API_MOD_FLUSH(_modname, void*);                                                           \
+extern API_MOD_STAT(_modname, void*, struct vfs_dev_stat*);                                      \
+static const struct _driver_if _regdrv_##_modname##_interface = {                                \
+ .drv_init    = _##_modname##_init,                                                              \
+ .drv_release = _##_modname##_release,                                                           \
+ .drv_open    = _##_modname##_open,                                                              \
+ .drv_close   = _##_modname##_close,                                                             \
+ .drv_write   = _##_modname##_write,                                                             \
+ .drv_read    = _##_modname##_read,                                                              \
+ .drv_ioctl   = _##_modname##_ioctl,                                                             \
+ .drv_stat    = _##_modname##_stat,                                                              \
  .drv_flush   = _##_modname##_flush}
 
 /*==============================================================================
@@ -128,7 +128,7 @@ extern bool        _is_device_locked            (dev_lock_t*);
 }
 #endif
 
-#endif /* _MODCTRL_H_ */
+#endif /* _DRVCTRL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

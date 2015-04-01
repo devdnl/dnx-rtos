@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    modctrl.c
+@file    drvctrl.c
 
 @author  Daniel Zorychta
 
@@ -127,7 +127,7 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
         }
 
         if (!driver_memory_region) {
-                driver_memory_region = _sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
+                driver_memory_region = _syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
                         return ENOMEM;
                 }

@@ -92,8 +92,8 @@ static const char    *service_in_name           = "tty-in";
 static const char    *service_out_name          = "tty-out";
 static const uint     service_in_stack_depth    = STACK_DEPTH_VERY_LOW - 60;
 static const uint     service_out_stack_depth   = STACK_DEPTH_VERY_LOW - 45;
-static const int      service_in_priority       = NORMAL_PRIORITY;
-static const int      service_out_priority      = NORMAL_PRIORITY;
+static const int      service_in_priority       = PRIORITY_NORMAL;
+static const int      service_out_priority      = PRIORITY_NORMAL;
 static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
 
 /*==============================================================================
@@ -519,7 +519,7 @@ static void service_in(void *arg)
         for (;;) {
                 char c;
                 if (_sys_fread(&c, 1, 1, tty_module->infile) > 0) {
-                        _sys_task_set_priority(HIGHEST_PRIORITY);
+                        _sys_task_set_priority(PRIORITY_HIGHEST);
                         send_cmd(CMD_INPUT, c);
                         _sys_task_set_priority(service_in_priority);
                 }
