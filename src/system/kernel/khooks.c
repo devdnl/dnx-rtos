@@ -30,7 +30,7 @@
 #include "config.h"
 #include "kernel/khooks.h"
 #include "kernel/kpanic.h"
-#include "kernel/progman.h"
+#include "kernel/process.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -104,7 +104,7 @@ void vApplicationTickHook(void)
 void vApplicationSwitchedIn(void)
 {
         _copy_task_context_to_standard_variables();
-        _sysm_task_switched_in();
+//        _sysm_task_switched_in(); // TODO task switched in CPU load measurement
 }
 
 //==============================================================================
@@ -115,7 +115,7 @@ void vApplicationSwitchedIn(void)
 void vApplicationSwitchedOut(void)
 {
         _copy_standard_variables_to_task_context();
-        _sysm_task_switched_out();
+//        _sysm_task_switched_out(); // TODO task switched out CPU load measurement
 }
 
 //==============================================================================

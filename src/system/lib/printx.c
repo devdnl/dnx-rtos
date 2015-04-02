@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "config.h"
 #include "lib/printx.h"
-#include "kernel/progman.h"
+#include "kernel/process.h"
 #include "lib/conv.h"
 #include "kernel/kwrapper.h"
 #include "dnx/misc.h"

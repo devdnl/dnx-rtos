@@ -34,6 +34,7 @@
 #include "fs/vfs.h"
 #include "lib/llist.h"
 #include "kernel/kwrapper.h"
+#include "kernel/process.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -72,6 +73,7 @@ static bool         parse_flags             (const char *str, u32_t *flags);
 static int          get_path_FS             (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
 static int          get_path_base_FS        (const char *path, const char **extPath, FS_entry_t **fs_entry);
 static int          new_CWD_path            (const char *path, enum path_correction corr, char **new_path);
+static const char  *get_CWD                 (void);
 
 /*==============================================================================
   Local object definitions
@@ -92,7 +94,7 @@ static mutex_t  *vfs_resource_mtx;
 //==============================================================================
 bool _vfs_init(void)
 {
-        vfs_mnt_list     = _llist_new(_sysmalloc, _sysfree, NULL, NULL);
+        vfs_mnt_list     = _llist_new(_kmalloc, _kfree, NULL, NULL);
         vfs_resource_mtx = _mutex_new(MUTEX_TYPE_RECURSIVE);
 
         return vfs_mnt_list && vfs_resource_mtx;
@@ -211,10 +213,10 @@ int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_itf 
         }
 
         if (result != ESUCC && cwd_mount_point)
-                _sysfree(cwd_mount_point);
+                _kfree(cwd_mount_point);
 
         if (cwd_src_path)
-                _sysfree(cwd_src_path);
+                _kfree(cwd_src_path);
 
         return result;
 }
@@ -242,7 +244,7 @@ int _vfs_umount(const char *path)
                         int position; FS_entry_t *mount_fs;
                         result = get_path_FS(cwd_path, PATH_MAX_LEN, &position, &mount_fs);
 
-                        _sysfree(cwd_path);
+                        _kfree(cwd_path);
 
                         if (result == ESUCC) {
                                 if (mount_fs->children_cnt == 0) {
@@ -333,7 +335,7 @@ int _vfs_mknod(const char *path, dev_t dev)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -368,7 +370,7 @@ int _vfs_mkdir(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -403,7 +405,7 @@ int _vfs_mkfifo(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -427,7 +429,7 @@ int _vfs_opendir(const char *path, DIR **dir)
 
         int result = ENOMEM;
 
-        *dir = _sysmalloc(sizeof(DIR));
+        *dir = _kmalloc(sizeof(DIR));
         if (*dir) {
                 char *cwd_path;
                 result = new_CWD_path(path, ADD_SLASH, &cwd_path);
@@ -435,7 +437,7 @@ int _vfs_opendir(const char *path, DIR **dir)
 
                         const char *external_path; FS_entry_t *fs;
                         result = get_path_base_FS(cwd_path, &external_path, &fs);
-                        _sysfree(cwd_path);
+                        _kfree(cwd_path);
 
                         if (result == ESUCC) {
                                 (*dir)->f_handle = fs->handle;
@@ -449,7 +451,7 @@ int _vfs_opendir(const char *path, DIR **dir)
                 if (result == ESUCC) {
                         (*dir)->self = *dir;
                 } else {
-                        _sysfree(dir);
+                        _kfree(dir);
                         *dir = NULL;
                 }
         }
@@ -474,7 +476,7 @@ int _vfs_closedir(DIR *dir)
                 result = dir->f_closedir(dir->f_handle, dir);
                 if (result == ESUCC) {
                         dir->self = NULL;
-                        _sysfree(dir);
+                        _kfree(dir);
                 }
         }
 
@@ -547,7 +549,7 @@ int _vfs_remove(const char *path)
                         result = base_fs->interface->fs_remove(base_fs->handle, external_path);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -612,11 +614,11 @@ int _vfs_rename(const char *old_name, const char *new_name)
         }
 
         if (cwd_old_name) {
-                _sysfree(cwd_old_name);
+                _kfree(cwd_old_name);
         }
 
         if (cwd_new_name) {
-                _sysfree(cwd_new_name);
+                _kfree(cwd_new_name);
         }
 
         return result;
@@ -651,7 +653,7 @@ int _vfs_chmod(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -687,7 +689,7 @@ int _vfs_chown(const char *path, uid_t owner, gid_t group)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -722,7 +724,7 @@ int _vfs_stat(const char *path, struct stat *stat)
                         restore_priority(priority);
                 }
 
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         return result;
@@ -799,7 +801,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
                 return result;
         }
 
-        FILE *file_obj = _syscalloc(1, sizeof(FILE));
+        FILE *file_obj = _kcalloc(1, sizeof(FILE));
 
         if (result == ESUCC && file_obj) {
                 const char *external_path; FS_entry_t *fs;
@@ -826,14 +828,14 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         if (cwd_path) {
-                _sysfree(cwd_path);
+                _kfree(cwd_path);
         }
 
         if (file_obj) {
                 if (file_obj->self) {
                         *file = file_obj;
                 } else {
-                        _sysfree(file_obj);
+                        _kfree(file_obj);
                 }
         }
 
@@ -862,7 +864,7 @@ int _vfs_fclose(FILE *file, bool force)
                         file->self   = NULL;
                         file->FS_hdl = NULL;
                         file->FS_hdl = NULL;
-                        _sysfree(file);
+                        _kfree(file);
                 }
         }
 
@@ -1243,7 +1245,7 @@ static int new_FS_entry(FS_entry_t               *parent_FS,
 {
         int result = ENOMEM;
 
-        FS_entry_t *new_FS = _sysmalloc(sizeof(FS_entry_t));
+        FS_entry_t *new_FS = _kmalloc(sizeof(FS_entry_t));
         if (new_FS) {
                 result = fs_interface->fs_init(&new_FS->handle, fs_src_file);
                 if (result == ESUCC) {
@@ -1253,7 +1255,7 @@ static int new_FS_entry(FS_entry_t               *parent_FS,
                         new_FS->children_cnt  = 0;
                         *fs_entry             = new_FS;
                 } else {
-                        _sysfree(new_FS);
+                        _kfree(new_FS);
                 }
         }
 
@@ -1281,10 +1283,10 @@ static int delete_FS_entry(FS_entry_t *this)
                         }
 
                         if (this->mount_point) {
-                                _sysfree(const_cast(char*, this->mount_point));
+                                _kfree(const_cast(char*, this->mount_point));
                         }
 
-                        _sysfree(this);
+                        _kfree(this);
                 }
         }
 
@@ -1502,7 +1504,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
 
         /* correct cwd */
         if (FIRST_CHARACTER(path) != '/') {
-                cwd = _task_get_data()->f_cwd;
+                cwd = get_CWD();
                 if (cwd) {
                         cwd_len       = strlen(cwd);
                         new_path_len += cwd_len;
@@ -1514,7 +1516,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
                 }
         }
 
-        *new_path = _syscalloc(new_path_len + 1, sizeof(char));
+        *new_path = _kcalloc(new_path_len + 1, sizeof(char));
         if (*new_path) {
                 if (cwd_len && cwd) {
                         strcpy(*new_path, cwd);
@@ -1542,6 +1544,24 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
         }
 
         return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Return current task CWD (CWD is passed to kworker from request task)
+ * @param  None
+ * @return CWD string
+ */
+//==============================================================================
+static const char *get_CWD(void)
+{
+        _task_desc_t *desc = _task_get_tag(THIS_TASK);
+
+        if (desc) {
+                return desc->t_cwd;
+        }
+
+        return NULL;
 }
 
 /*==============================================================================

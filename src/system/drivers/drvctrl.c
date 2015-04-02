@@ -34,6 +34,7 @@
 #include "drivers/drvctrl.h"
 #include "lib/printx.h"
 #include "fs/vfs.h"
+#include "dnx/misc.h"
 
 /*==============================================================================
   Local macros
@@ -80,10 +81,10 @@ static void **driver_memory_region;
 /*==============================================================================
   External objects
 ==============================================================================*/
-extern const char           *const _regdrv_module_name[];
-extern const struct _driver_entry  _regdrv_driver_table[];
-extern const uint                  _regdrv_size_of_driver_table;
-extern const uint                  _regdrv_number_of_modules;
+extern const char           *const _drvreg_module_name[];
+extern const struct _driver_entry  _drvreg_driver_table[];
+extern const uint                  _drvreg_size_of_driver_table;
+extern const uint                  _drvreg_number_of_modules;
 
 /*==============================================================================
   Function definitions
@@ -99,7 +100,7 @@ extern const uint                  _regdrv_number_of_modules;
 //==============================================================================
 static bool is_device_valid(dev_t id)
 {
-        if (id < (dev_t)_regdrv_size_of_driver_table) {
+        if (id < (dev_t)_drvreg_size_of_driver_table) {
                 if (driver_memory_region[id]) {
                         return true;
                 }
@@ -122,20 +123,20 @@ static bool is_device_valid(dev_t id)
 //==============================================================================
 int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
 {
-        if (drv_name == NULL) {
+        if (!drv_name && !id) {
                 return EINVAL;
         }
 
         if (!driver_memory_region) {
-                driver_memory_region = _syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
+                driver_memory_region = _kcalloc(_drvreg_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
                         return ENOMEM;
                 }
         }
 
-        for (uint drvid = 0; drvid < _regdrv_size_of_driver_table; drvid++) {
+        for (uint drvid = 0; drvid < _drvreg_size_of_driver_table; drvid++) {
 
-                if (strcmp(_regdrv_driver_table[drvid].drv_name, drv_name) != 0) {
+                if (strcmp(_drvreg_driver_table[drvid].drv_name, drv_name) != 0) {
                         continue;
                 }
 
@@ -146,10 +147,13 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
 
                 _printk(drv_initializing_str, drv_name);
 
-                int status = _regdrv_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
-                                                                             _regdrv_driver_table[drvid].major,
-                                                                             _regdrv_driver_table[drvid].minor);
-                if (status != ESUCC) {
+                int status = _drvreg_driver_table[drvid].interface->drv_init(&driver_memory_region[drvid],
+                                                                             _drvreg_driver_table[drvid].major,
+                                                                             _drvreg_driver_table[drvid].minor);
+
+                if (status == ESUCC) {
+                        *id = drvid;
+                } else {
                         _printk(drv_error_str, drv_name);
                         return status;
                 }
@@ -162,7 +166,7 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
                                 _printk(drv_node_created_str, node_path);
                                 return drvid;
                         } else {
-                                _regdrv_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
+                                _drvreg_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
                                 _printk(drv_node_fail_str, node_path);
                                 return -1;
                         }
@@ -192,11 +196,11 @@ int _driver_release(const char *drv_name)
                 return EINVAL;
         }
 
-        for (uint i = 0; i < _regdrv_size_of_driver_table; i++) {
-                if (strcmp(_regdrv_driver_table[i].drv_name, drv_name) == 0) {
+        for (uint i = 0; i < _drvreg_size_of_driver_table; i++) {
+                if (strcmp(_drvreg_driver_table[i].drv_name, drv_name) == 0) {
 
                         if (driver_memory_region[i]) {
-                                int status = _regdrv_driver_table[i].interface->drv_release(driver_memory_region[i]);
+                                int status = _drvreg_driver_table[i].interface->drv_release(driver_memory_region[i]);
                                 if (status == ESUCC) {
                                         driver_memory_region[i] = NULL;
                                 }
@@ -223,7 +227,7 @@ int _driver_release(const char *drv_name)
 int _driver_open(dev_t id, u32_t flags)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_open(driver_memory_region[id],
+                return _drvreg_driver_table[id].interface->drv_open(driver_memory_region[id],
                                                                     vfs_filter_flags_for_device(flags));
         } else {
                 return ENODEV;
@@ -243,7 +247,7 @@ int _driver_open(dev_t id, u32_t flags)
 int _driver_close(dev_t id, bool force)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_close(driver_memory_region[id], force);
+                return _drvreg_driver_table[id].interface->drv_close(driver_memory_region[id], force);
         } else {
                 return ENODEV;
         }
@@ -266,7 +270,7 @@ int _driver_close(dev_t id, bool force)
 int _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_write(driver_memory_region[id],
+                return _drvreg_driver_table[id].interface->drv_write(driver_memory_region[id],
                                                                      src,
                                                                      count,
                                                                      fpos,
@@ -294,7 +298,7 @@ int _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, size_t 
 int _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr fattr)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_read(driver_memory_region[id],
+                return _drvreg_driver_table[id].interface->drv_read(driver_memory_region[id],
                                                                     dst,
                                                                     count,
                                                                     fpos,
@@ -319,7 +323,7 @@ int _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt,
 int _driver_ioctl(dev_t id, int request, void *arg)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_ioctl(driver_memory_region[id], request, arg);
+                return _drvreg_driver_table[id].interface->drv_ioctl(driver_memory_region[id], request, arg);
         } else {
                 return ENODEV;
         }
@@ -339,7 +343,7 @@ int _driver_ioctl(dev_t id, int request, void *arg)
 int _driver_flush(dev_t id)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_flush(driver_memory_region[id]);
+                return _drvreg_driver_table[id].interface->drv_flush(driver_memory_region[id]);
         } else {
                 return ENODEV;
         }
@@ -358,7 +362,7 @@ int _driver_flush(dev_t id)
 int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         if (is_device_valid(id)) {
-                return _regdrv_driver_table[id].interface->drv_stat(driver_memory_region[id], stat);
+                return _drvreg_driver_table[id].interface->drv_stat(driver_memory_region[id], stat);
         } else {
                 return ENODEV;
         }
@@ -375,10 +379,10 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 //==============================================================================
 const char *_get_module_name(uint module_number)
 {
-        if (module_number >= _regdrv_number_of_modules)
+        if (module_number >= _drvreg_number_of_modules)
                 return NULL;
         else
-                return _regdrv_module_name[module_number];
+                return _drvreg_module_name[module_number];
 }
 
 //==============================================================================
@@ -395,8 +399,8 @@ int _get_module_number(const char *module_name)
         if (!module_name)
                 return -1;
 
-        for (uint module = 0; module < _regdrv_number_of_modules; module++) {
-                if (strcmp(_regdrv_module_name[module], module_name) == 0) {
+        for (uint module = 0; module < _drvreg_number_of_modules; module++) {
+                if (strcmp(_drvreg_module_name[module], module_name) == 0) {
                         return module;
                 }
         }
@@ -412,7 +416,7 @@ int _get_module_number(const char *module_name)
 //==============================================================================
 uint _get_number_of_modules(void)
 {
-        return _regdrv_number_of_modules;
+        return _drvreg_number_of_modules;
 };
 
 //==============================================================================
@@ -424,7 +428,7 @@ uint _get_number_of_modules(void)
 //==============================================================================
 uint _get_number_of_drivers(void)
 {
-        return _regdrv_size_of_driver_table;
+        return _drvreg_size_of_driver_table;
 }
 
 //==============================================================================
@@ -438,8 +442,8 @@ uint _get_number_of_drivers(void)
 //==============================================================================
 const char *_get_driver_name(uint n)
 {
-        if (n < _regdrv_size_of_driver_table) {
-                return _regdrv_driver_table[n].drv_name;
+        if (n < _drvreg_size_of_driver_table) {
+                return _drvreg_driver_table[n].drv_name;
         } else {
                 return NULL;
         }
@@ -456,8 +460,8 @@ const char *_get_driver_name(uint n)
 //==============================================================================
 int _get_driver_ID(const char *name)
 {
-        for (uint i = 0; i < _regdrv_size_of_driver_table; i++) {
-                if (strcmp(_regdrv_driver_table[i].drv_name, name) == 0) {
+        for (uint i = 0; i < _drvreg_size_of_driver_table; i++) {
+                if (strcmp(_drvreg_driver_table[i].drv_name, name) == 0) {
                         return i;
                 }
         }
@@ -476,8 +480,8 @@ int _get_driver_ID(const char *name)
 //==============================================================================
 const char *_get_driver_module_name(uint n)
 {
-        if (n < _regdrv_size_of_driver_table) {
-                return _regdrv_driver_table[n].mod_name;
+        if (n < _drvreg_size_of_driver_table) {
+                return _drvreg_driver_table[n].mod_name;
         } else {
                 return NULL;
         }
@@ -494,7 +498,7 @@ const char *_get_driver_module_name(uint n)
 //==============================================================================
 bool _is_driver_active(uint n)
 {
-        if (n < _regdrv_size_of_driver_table) {
+        if (n < _drvreg_size_of_driver_table) {
                 if (driver_memory_region[n] != NULL) {
                         return true;
                 }

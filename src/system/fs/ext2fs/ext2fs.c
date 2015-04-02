@@ -770,13 +770,13 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        // TODO new vfs file handling
-        _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
-        size_t n = _sys_fread(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
-        if (n == blk_cnt)
-                return EOK;
-        else
-                return errno;
+        int result = _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        if (result == ESUCC) {
+                size_t rdcnt;
+                result = _sys_fread(buf, BLOCK_SIZE * blk_cnt, &rdcnt, hdl->srcfile);
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -795,13 +795,13 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        // TODO new vfs file handling
-        _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
-        size_t n = _sys_fwrite(buf, BLOCK_SIZE, blk_cnt, hdl->srcfile);
-        if (n == blk_cnt)
-                return EOK;
-        else
-                return errno;
+        int result = _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        if (result == ESUCC) {
+                size_t wrcnt;
+                result = _sys_fwrite(buf, BLOCK_SIZE * blk_cnt, &wrcnt, hdl->srcfile);
+        }
+
+        return result;
 }
 
 //==============================================================================

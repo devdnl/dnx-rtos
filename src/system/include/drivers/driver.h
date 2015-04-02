@@ -182,7 +182,7 @@ static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dto
          * FIXME: this list should use _sysm_modmalloc() instead of _sysm_sysmalloc.
          *        Module identification function is required.
          */
-        return _llist_new(_sysmalloc, _sysfree, functor, obj_dtor);
+        return _llist_new(_kmalloc, _kfree, functor, obj_dtor);
 }
 
 #ifdef __cplusplus

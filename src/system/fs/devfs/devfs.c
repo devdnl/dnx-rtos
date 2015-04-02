@@ -68,12 +68,12 @@ struct devfs {
   Local function prototypes
 ==============================================================================*/
 static int                 closedir                     (void *fs_handle, DIR *dir);
-static int                *readdir                      (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int                 readdir                      (void *fs_handle, DIR *dir, dirent_t **dirent);
 static struct devfs_chain *chain_new                    (void);
 static void                chain_delete                 (struct devfs_chain *chain);
 static int                 chain_get_node_by_path       (struct devfs_chain *chain, const char *path, struct devnode **node);
 static int                 chain_get_empty_node         (struct devfs_chain *chain, struct devnode **node);
-static struct devnode     *chain_get_n_node             (struct devfs_chain *chain, int n);
+static int                 chain_get_n_node(struct devfs_chain *chain, int n, struct devnode **node);
 static int                 create_new_chain_if_necessary(struct devfs *devfs);
 
 /*==============================================================================
@@ -187,13 +187,14 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 {
         UNUSED_ARG(fd);
 
-        struct devfs *devfs = fs_handle;
-        int           status;
+        struct devfs *devfs  = fs_handle;
+        int           status = ETIME;
 
         if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
+                struct devnode *node;
+                status = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (status == ESUCC) {
                         int open;
                         if (node->type == FILE_TYPE_DRV) {
                                 open = _sys_driver_open(node->IF.drv, flags);
@@ -208,13 +209,10 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                                 *fpos  = 0;
                                 devfs->number_of_opened_files++;
                                 node->opended++;
-                                status = ESUCC;
                         }
                 }
 
                 _sys_mutex_unlock(devfs->mutex);
-        } else {
-                status = ETIME;
         }
 
         return status;
@@ -292,9 +290,9 @@ API_FS_WRITE(devfs,
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_write(node->IF.drv, src, count, fpos, fattr);
+                return _sys_driver_write(node->IF.drv, src, count, fpos, wrcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
+                return _sys_pipe_write(node->IF.pipe, src, count, wrcnt, fattr.non_blocking_wr);
         } else {
                 return ENXIO;
         }
@@ -332,9 +330,9 @@ API_FS_READ(devfs,
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_read(node->IF.drv, dst, count, fpos, fattr);
+                return _sys_driver_read(node->IF.drv, dst, count, fpos, rdcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
+                return _sys_pipe_read(node->IF.pipe, dst, count, rdcnt, fattr.non_blocking_rd);
         } else {
                 return ENXIO;
         }

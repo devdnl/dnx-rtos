@@ -195,7 +195,7 @@ void _syscall_init()
 {
         call_request  = _queue_new(1, sizeof(syscallrq_t));
         call_response = _queue_new(1, sizeof(syscallres_t));
-        kworker        = _task_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL);
+        kworker       = _task_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, NULL);
 }
 
 //==============================================================================
@@ -424,7 +424,7 @@ static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres)
         GETARG(const char *, path);
         GETARG(const char *, mode);
         GETRETURN(FILE **, file);
-        SETERRNO(_vfs_fopen_r(path, mode, file));
+        SETERRNO(_vfs_fopen(path, mode, file));
 }
 
 //==============================================================================

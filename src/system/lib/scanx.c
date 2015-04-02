@@ -28,7 +28,7 @@
  Include files
  =============================================================================*/
 #include "config.h"
-#include "liub/scanx.h"
+#include "lib/scanx.h"
 #include "fs/vfs.h"
 #include "lib/printx.h"
 #include "lib/conv.h"

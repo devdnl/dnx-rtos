@@ -30,6 +30,8 @@
 #include "kernel/env.h"
 #include "config.h"
 
+// TODO if callback will be applied then this file is not necessary
+
 /*==============================================================================
   Local macros
 ==============================================================================*/
@@ -86,18 +88,18 @@
 //==============================================================================
 time_t _time(time_t *timer)
 {
-        time_t t   = -1;
-        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r");
-        if (rtc) {
-                if (_vfs_fread(&t, sizeof(time_t), 1, rtc) == 1) {
-                        if (timer) {
-                                *timer = t;
-                        }
-                }
-                _vfs_fclose(rtc);
-        }
-
-        return t;
+//        time_t t   = -1; // TODO _time function not completed (syscall time)
+//        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r");
+//        if (rtc) {
+//                if (_vfs_fread(&t, sizeof(time_t), 1, rtc) == 1) {
+//                        if (timer) {
+//                                *timer = t;
+//                        }
+//                }
+//                _vfs_fclose(rtc);
+//        }
+//
+//        return t;
 }
 
 //==============================================================================
@@ -117,11 +119,11 @@ time_t _time(time_t *timer)
 int _stime(time_t *timer)
 {
         int    ret = -1;
-        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w");
-        if (rtc) {
-                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
-                _vfs_fclose(rtc);
-        }
+//        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w"); // TODO stime() syscall time
+//        if (rtc) {
+//                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
+//                _vfs_fclose(rtc);
+//        }
 
         return ret;
 }

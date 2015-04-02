@@ -643,7 +643,7 @@ static inline int _sys_mkfifo(const char *path, mode_t mode)
 //==============================================================================
 static inline DIR *_sys_opendir(const char *path)
 {
-        return _vfs_opendir(path);
+//        return _vfs_opendir(path); // TODO
 }
 
 //==============================================================================
@@ -671,7 +671,7 @@ static inline int _sys_closedir(DIR *dir)
 //==============================================================================
 static inline dirent_t *_sys_readdir(DIR *dir)
 {
-        return _vfs_readdir(dir);
+//        return _vfs_readdir(dir); // TODO
 }
 
 //==============================================================================
@@ -779,7 +779,7 @@ static inline int _sys_statfs(const char *path, struct statfs *statfs)
 //==============================================================================
 static inline FILE *_sys_fopen(const char *name, const char *mode)
 {
-        return _vfs_fopen(name, mode);
+//        return _vfs_fopen(name, mode); // TODO
 }
 
 //==============================================================================
@@ -795,7 +795,7 @@ static inline FILE *_sys_fopen(const char *name, const char *mode)
 //==============================================================================
 static inline FILE *_sys_freopen(const char *name, const char *mode, FILE *file)
 {
-        return _vfs_freopen(name, mode, file);
+//        return _vfs_freopen(name, mode, file); // TODO
 }
 
 //==============================================================================
@@ -809,43 +809,41 @@ static inline FILE *_sys_freopen(const char *name, const char *mode, FILE *file)
 //==============================================================================
 static inline int _sys_fclose(FILE *file)
 {
-        return _vfs_fclose(file);
+//        return _vfs_fclose(file); // TODO
 }
 
 //==============================================================================
 /**
  * @brief Function write data to file
  *
- * @param[in] *ptr              address to data (src)
- * @param[in]  size             item size
+ * @param[in]  ptr              address to data (src)
  * @param[in]  count            number of items
- * @param[in] *file             pointer to file object
+ * @param[out] wrcnt            number of written elements
+ * @param[in]  file             pointer to file object
  *
- * @return the number of items successfully written. If an error occurs, or the
- *         end-of-file is reached, the return value is a short item count (or 0).
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline size_t _sys_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
+static inline int _sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
 {
-        return _vfs_fwrite(ptr, size, count, file);
+        return _vfs_fwrite(ptr, size, wrcnt, file);
 }
 
 //==============================================================================
 /**
  * @brief Function read data from file
  *
- * @param[out] *ptr             address to data (dst)
- * @param[in]   size            item size
- * @param[in]   count           number of items
- * @param[in]  *file            pointer to file object
+ * @param[out] ptr              address to data (dst)
+ * @param[in]  size             item size
+ * @param[out] rdcnt            number of read bytes
+ * @param[in]  file             pointer to file object
  *
- * @return the number of items successfully read. If an error occurs, or the
- *         end-of-file is reached, the return value is a short item count (or 0).
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline size_t _sys_fread(void *ptr, size_t size, size_t count, FILE *file)
+static inline int _sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
 {
-        return _vfs_fread(ptr, size, count, file);
+        return _vfs_fread(ptr, size, rdcnt, file);
 }
 
 //==============================================================================
@@ -856,7 +854,7 @@ static inline size_t _sys_fread(void *ptr, size_t size, size_t count, FILE *file
  * @param[in]  offset           seek value
  * @param[in]  mode             seek mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_fseek(FILE *file, i64_t offset, int mode)
@@ -875,7 +873,7 @@ static inline int _sys_fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 static inline i64_t _sys_ftell(FILE *file)
 {
-        return _vfs_ftell(file);
+//        return _vfs_ftell(file); // TODO
 }
 
 //==============================================================================
@@ -931,7 +929,7 @@ static inline int _sys_fflush(FILE *file)
 //==============================================================================
 static inline int _sys_feof(FILE *file)
 {
-        return _vfs_feof(file);
+//        return _vfs_feof(file); // TODO
 }
 
 //==============================================================================
@@ -957,7 +955,7 @@ static inline int _sys_clearerr(FILE *file)
 //==============================================================================
 static inline int _sys_ferror(FILE *file)
 {
-        return _vfs_ferror(file);
+//        return _vfs_ferror(file); // TODO
 }
 
 //==============================================================================
@@ -1803,7 +1801,7 @@ static inline int _sys_task_get_free_stack()
 //==============================================================================
 static inline task_t *_sys_task_get_parent_handle()
 {
-        return _task_get_parent_handle();
+//        return _task_get_parent_handle(); // TODO
 }
 
 //==============================================================================
@@ -1815,7 +1813,7 @@ static inline task_t *_sys_task_get_parent_handle()
 //==============================================================================
 static inline void _sys_task_set_memory_address(void *mem)
 {
-        _task_set_memory_address(mem);
+//        _task_set_memory_address(mem); // TODO
 }
 
 //==============================================================================
@@ -1827,7 +1825,7 @@ static inline void _sys_task_set_memory_address(void *mem)
 //==============================================================================
 static inline void _sys_task_set_stdin(FILE *file)
 {
-        _task_set_stdin(file);
+//        _task_set_stdin(file); // TODO
 }
 
 //==============================================================================
@@ -1839,7 +1837,7 @@ static inline void _sys_task_set_stdin(FILE *file)
 //==============================================================================
 static inline void _sys_task_set_stdout(FILE *file)
 {
-        _task_set_stdout(file);
+//        _task_set_stdout(file); // TODO
 }
 
 //==============================================================================
@@ -1851,7 +1849,7 @@ static inline void _sys_task_set_stdout(FILE *file)
 //==============================================================================
 static inline void _sys_task_set_stderr(FILE *file)
 {
-        _task_set_stderr(file);
+//        _task_set_stderr(file); // TODO
 }
 
 //==============================================================================
@@ -1863,7 +1861,7 @@ static inline void _sys_task_set_stderr(FILE *file)
 //==============================================================================
 static inline void _sys_task_set_cwd(const char *str)
 {
-        _task_set_cwd(str);
+//        _task_set_cwd(str); // TODO
 }
 
 //==============================================================================

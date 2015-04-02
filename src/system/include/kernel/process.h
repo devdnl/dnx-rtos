@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    progman.h
+@file    process.h
 
 @author  Daniel Zorychta
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _PROGMAN_H_
-#define _PROGMAN_H_
+#ifndef _PROCESS_H_
+#define _PROCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +91,28 @@ typedef struct thread thread_t;
 
 typedef struct prog prog_t;
 
+typedef enum _task_type {
+        TASK_TYPE_RAW,
+        TASK_TYPE_PROCESS,
+        TASK_TYPE_THREAD
+} _task_type_t;
+
+typedef struct _task_desc {
+        pid_t            t_PID;
+        FILE            *t_stdin;               /* stdin file                         */
+        FILE            *t_stdout;              /* stdout file                        */
+        FILE            *t_stderr;              /* stderr file                        */
+        FILE            *t_file_chain;          /* chain of open files                */
+        const char      *t_cwd;                 /* current working path               */
+        void            *t_globals;             /* address to global variables        */
+        task_t          *t_parent;              /* parent task                        */
+        task_t          *t_self;                /* pointer to this task handle        */
+        task_t          *t_next;                /* next task (chain)                  */
+        u32_t            t_load_time;           /* counter used to calculate CPU load */
+        int              t_errno;               /* program error number               */
+        _task_type_t     t_task_type:2;         /* task type                          */
+} _task_desc_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
@@ -140,7 +162,7 @@ static inline int _get_programs_table_size(void)
 }
 #endif
 
-#endif /* _PROGMAN_H_ */
+#endif /* _PROCESS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

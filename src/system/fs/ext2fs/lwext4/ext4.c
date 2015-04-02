@@ -289,7 +289,6 @@ ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
         }
 
         if(bsize != ctx->bcache.itemsize) {
-            errno = ENOTSUP;
             goto error;
         }
 

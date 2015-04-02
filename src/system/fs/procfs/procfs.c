@@ -213,10 +213,10 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 task_t *taskhdl = NULL;
                 path = _strtoi((char*)path, 16, (i32_t*)&taskhdl);
 
-                struct _sysmoni_taskstat task_data;
-                if (_sysm_get_task_stat(taskhdl, &task_data) != ESUCC) {
+//                struct _sysmoni_taskstat task_data; TODO _sys_ functions
+//                if (_sysm_get_task_stat(taskhdl, &task_data) != ESUCC) {
                         return ENOENT;
-                }
+//                }
 
                 path = strrchr(path, '/');
                 if (path == NULL) {
@@ -247,17 +247,17 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 
                 path += strlen("/"DIR_TASKNAME_STR"/");
 
-                u16_t n = _sysm_get_number_of_monitored_tasks();
+//                u16_t n = _sysm_get_number_of_monitored_tasks();TODO _sys_ functions
                 u16_t i = 0;
 
-                struct _sysmoni_taskstat task_data;
-                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == ESUCC) {
-                        if (strcmp(path, task_data.task_name) == 0) {
-                                return add_file_info_to_list(procmem,
-                                                             task_data.task_handle,
-                                                             FILE_CONTENT_NONE, fd);
-                        }
-                }
+//                struct _sysmoni_taskstat task_data;TODO _sys_ functions
+//                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == ESUCC) {
+//                        if (strcmp(path, task_data.task_name) == 0) {
+//                                return add_file_info_to_list(procmem,
+//                                                             task_data.task_handle,
+//                                                             FILE_CONTENT_NONE, fd);
+//                        }
+//                }
 
                 return ENOENT;
 
@@ -339,7 +339,9 @@ API_FS_WRITE(procfs,
         UNUSED_ARG(fd);
         UNUSED_ARG(src);
         UNUSED_ARG(count);
+        UNUSED_ARG(wrcnt);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         return EROFS;
 }
@@ -370,7 +372,7 @@ API_FS_READ(procfs,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG2(extra, fattr);
 
         struct procfs *procmem = fs_handle;
 
@@ -594,14 +596,14 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _sysm_get_number_of_monitored_tasks();
+//                dir->f_items    = _sysm_get_number_of_monitored_tasks(); // TODO _sys function needed
                 dir->f_readdir  = procfs_readdir_taskname;
                 dir->f_closedir = procfs_closedir_generic;
                 result = ESUCC;
 
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
                 dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
-                dir->f_items    = _sysm_get_number_of_monitored_tasks();
+//                dir->f_items    = _sysm_get_number_of_monitored_tasks(); // TODO _sys function needed
                 dir->f_readdir  = procfs_readdir_taskid;
                 dir->f_closedir = procfs_closedir_freedd;
                 result = ESUCC;
@@ -620,11 +622,11 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 path = _strtoi((char*)path, 16, &taskval);
 
                 if (FIRST_CHARACTER(path) == '/' && SECOND_CHARACTER(path) == '\0') {
-                        struct _sysmoni_taskstat taskdata;
-                        task_t                 *taskHdl = (task_t *)taskval;
-                        result = _sysm_get_task_stat(taskHdl, &taskdata);
+//                        struct _sysmoni_taskstat taskdata; // TODO _sys function needed
+//                        task_t                 *taskHdl = (task_t *)taskval; // TODO _sys function needed
+//                        result = _sysm_get_task_stat(taskHdl, &taskdata); // TODO _sys function needed
                         if (result == ESUCC) {
-                                dir->f_dd       = taskHdl;
+//                                dir->f_dd       = taskHdl; // TODO _sys function needed
                                 dir->f_items    = FILE_CONTENT_COUNT;
                                 dir->f_readdir  = procfs_readdir_taskid_n;
                                 dir->f_closedir = procfs_closedir_generic;
@@ -897,19 +899,19 @@ static int procfs_readdir_taskname(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG(fs_handle);
 
-        struct _sysmoni_taskstat taskdata;
-        int result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
-        if (result == ESUCC) {
-                dir->dirent.filetype = FILE_TYPE_REGULAR;
-                dir->dirent.name     = taskdata.task_name;
-                dir->dirent.size     = 0;
-                dir->f_seek++;
-                *dirent = &dir->dirent;
-        } else {
-                result = ENOENT;
-        }
-
-        return result;
+//        struct _sysmoni_taskstat taskdata; // TODO _sys function needed
+//        int result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
+//        if (result == ESUCC) {
+//                dir->dirent.filetype = FILE_TYPE_REGULAR;
+//                dir->dirent.name     = taskdata.task_name;
+//                dir->dirent.size     = 0;
+//                dir->f_seek++;
+//                *dirent = &dir->dirent;
+//        } else {
+//                result = ENOENT;
+//        }
+//
+//        return result;
 }
 
 //==============================================================================
@@ -958,22 +960,22 @@ static int procfs_readdir_taskid(void *fs_handle, DIR *dir, dirent_t **dirent)
         UNUSED_ARG(fs_handle);
 
         int result = ENOENT;
-
-        if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
-                struct _sysmoni_taskstat taskdata;
-                result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
-                if (result == ESUCC) {
-                        _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
-
-                        dir->dirent.filetype = FILE_TYPE_DIR;
-                        dir->dirent.name     = dir->f_dd;
-                        dir->dirent.size     = 0;
-
-                        dir->f_seek++;
-
-                        *dirent = &dir->dirent;
-                }
-        }
+        // TODO _sys function needed
+//        if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
+//                struct _sysmoni_taskstat taskdata;
+//                result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
+//                if (result == ESUCC) {
+//                        _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
+//
+//                        dir->dirent.filetype = FILE_TYPE_DIR;
+//                        dir->dirent.name     = dir->f_dd;
+//                        dir->dirent.size     = 0;
+//
+//                        dir->f_seek++;
+//
+//                        *dirent = &dir->dirent;
+//                }
+//        }
 
         return result;
 }
@@ -1088,64 +1090,64 @@ static int add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum f
 //==============================================================================
 static uint get_file_content(struct file_info *file_info, char *buff, uint size)
 {
-        struct _sysmoni_taskstat task_info;
-        if (file_info->file_content < FILE_CONTENT_CPUINFO) {
-                if (_sysm_get_task_stat(file_info->taskhdl, &task_info) != ESUCC) {
-                        return 0;
-                }
-        }
+//        struct _sysmoni_taskstat task_info; // TODO _sys function needed
+//        if (file_info->file_content < FILE_CONTENT_CPUINFO) {
+//                if (_sysm_get_task_stat(file_info->taskhdl, &task_info) != ESUCC) {
+//                        return 0;
+//                }
+//        }
 
-        switch (file_info->file_content) {
-        case FILE_CONTENT_TASK_FREESTACK:
-                return _sys_snprintf(buff, size, "%u\n", task_info.free_stack);
+//        switch (file_info->file_content) { // TODO _sys function needed
+//        case FILE_CONTENT_TASK_FREESTACK:
+//                return _sys_snprintf(buff, size, "%u\n", task_info.free_stack);
+//
+//        case FILE_CONTENT_TASK_NAME:
+//                return _sys_snprintf(buff, size, "%s\n", task_info.task_name);
+//
+//        case FILE_CONTENT_TASK_OPENFILES:
+//                return _sys_snprintf(buff, size, "%u\n", task_info.opened_files);
+//
+//        case FILE_CONTENT_TASK_PRIO:
+//                return _sys_snprintf(buff, size, "%d\n", task_info.priority);
+//
+//        case FILE_CONTENT_TASK_USEDMEM:
+//                return _sys_snprintf(buff, size, "%u\n", task_info.memory_usage);
 
-        case FILE_CONTENT_TASK_NAME:
-                return _sys_snprintf(buff, size, "%s\n", task_info.task_name);
-
-        case FILE_CONTENT_TASK_OPENFILES:
-                return _sys_snprintf(buff, size, "%u\n", task_info.opened_files);
-
-        case FILE_CONTENT_TASK_PRIO:
-                return _sys_snprintf(buff, size, "%d\n", task_info.priority);
-
-        case FILE_CONTENT_TASK_USEDMEM:
-                return _sys_snprintf(buff, size, "%u\n", task_info.memory_usage);
-
-        case FILE_CONTENT_CPUINFO: {
-                #if defined(ARCH_stm32f1)
-                RCC_ClocksTypeDef freq;
-                RCC_GetClocksFreq(&freq);
-                #endif
-
-                return _sys_snprintf(buff, size,
-                                    "CPU name  : %s\n"
-                                    "CPU vendor: %s\n"
-                            #if defined(ARCH_stm32f1)
-                                    "CPU     Hz: %d\n"
-                                    "SYSCLK  Hz: %d\n"
-                                    "PCLK1   Hz: %d\n"
-                                    "PCLK1T  Hz: %d\n"
-                                    "PCLK2   Hz: %d\n"
-                                    "PCLK2T  Hz: %d\n"
-                                    "ADCCLK  Hz: %d\n"
-                            #endif
-                                    ,_CPUCTL_PLATFORM_NAME
-                                    ,_CPUCTL_VENDOR_NAME
-                            #if defined(ARCH_stm32f1)
-                                    ,freq.HCLK_Frequency
-                                    ,freq.SYSCLK_Frequency
-                                    ,freq.PCLK1_Frequency
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency
-                                    ,freq.PCLK2_Frequency
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency
-                                    ,freq.ADCCLK_Frequency
-                            #endif
-                );
-        }
-
-        default:
-                return 0;
-        }
+//        case FILE_CONTENT_CPUINFO: {
+//                #if defined(ARCH_stm32f1)
+//                RCC_ClocksTypeDef freq;
+//                RCC_GetClocksFreq(&freq);
+//                #endif
+//
+//                return _sys_snprintf(buff, size,
+//                                    "CPU name  : %s\n"
+//                                    "CPU vendor: %s\n"
+//                            #if defined(ARCH_stm32f1)
+//                                    "CPU     Hz: %d\n"
+//                                    "SYSCLK  Hz: %d\n"
+//                                    "PCLK1   Hz: %d\n"
+//                                    "PCLK1T  Hz: %d\n"
+//                                    "PCLK2   Hz: %d\n"
+//                                    "PCLK2T  Hz: %d\n"
+//                                    "ADCCLK  Hz: %d\n"
+//                            #endif
+//                                    ,_CPUCTL_PLATFORM_NAME
+//                                    ,_CPUCTL_VENDOR_NAME
+//                            #if defined(ARCH_stm32f1)
+//                                    ,freq.HCLK_Frequency
+//                                    ,freq.SYSCLK_Frequency
+//                                    ,freq.PCLK1_Frequency
+//                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency
+//                                    ,freq.PCLK2_Frequency
+//                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency
+//                                    ,freq.ADCCLK_Frequency
+//                            #endif
+//                );
+//        }
+//
+//        default:
+//                return 0;
+//        }
 }
 
 /*==============================================================================

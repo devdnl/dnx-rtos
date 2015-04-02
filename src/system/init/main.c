@@ -35,7 +35,7 @@
 #include "kernel/kwrapper.h"
 
 #if (CONFIG_NETWORK_ENABLE != 0)
-#       include "arch/netman.h"
+#       include "net/netman.h"
 #endif
 
 /*==============================================================================
@@ -71,6 +71,7 @@ int main(void)
 {
         _cpuctl_init();
         _heap_init();
+        _mm_init();
         _kernel_panic_init();
         _vfs_init();
         _syscall_init();

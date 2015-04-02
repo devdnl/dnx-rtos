@@ -33,7 +33,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include "fs/vfs.h"
-#include "kernel/progman.h"
+#include "kernel/process.h"
 #include "lib/llist.h"
 #include "kernel/kwrapper.h"
 
@@ -44,28 +44,6 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef enum _task_type {
-        TASK_TYPE_RAW,
-        TASK_TYPE_PROCESS,
-        TASK_TYPE_THREAD
-} task_type_t;
-
-typedef struct _task_desc {
-        pid_t            t_PID;
-        FILE            *t_stdin;               /* stdin file                         */
-        FILE            *t_stdout;              /* stdout file                        */
-        FILE            *t_stderr;              /* stderr file                        */
-        FILE            *t_file_chain;          /* chain of open files                */
-        const char      *t_cwd;                 /* current working path               */
-        void            *t_globals;             /* address to global variables        */
-        task_t          *t_parent;              /* parent task                        */
-        task_t          *t_self;                /* pointer to this task handle        */
-        task_t          *t_next;                /* next task (chain)                  */
-        u32_t            t_load_time;           /* counter used to calculate CPU load */
-        int              t_errno;               /* program error number               */
-        task_type_t      t_task_type:2;         /* task type                          */
-} _task_desc_t;
-
 struct prog {
         int            (*func)(int, char**);
         const char      *cwd;
@@ -144,14 +122,14 @@ extern const int               _prog_table_size;
 //==============================================================================
 static void make_RAW_task(task_t *taskhdl)
 {
-        _task_data_t *task_data = _task_get_data_of(taskhdl);
-
-        task_data->f_mem         = NULL;
-        task_data->f_stdin       = NULL;
-        task_data->f_stdout      = NULL;
-        task_data->f_stderr      = NULL;
-        task_data->f_task_object = NULL;
-        task_data->f_task_type   = TASK_TYPE_RAW;
+//        _task_data_t *task_data = _task_get_data_of(taskhdl);
+//
+//        task_data->f_mem         = NULL;
+//        task_data->f_stdin       = NULL;
+//        task_data->f_stdout      = NULL;
+//        task_data->f_stderr      = NULL;
+//        task_data->f_task_object = NULL;
+//        task_data->f_task_type   = TASK_TYPE_RAW;
 }
 
 //==============================================================================
@@ -166,18 +144,18 @@ static void program_startup(void *arg)
         if (arg) {
                 prog_t *prog = arg;
 
-                prog->mem = _sysm_tskcalloc(1, prog->mem_size);
+                prog->mem = _kcalloc(1, prog->mem_size);
                 if (prog->mem || prog->mem_size == 0) {
 
-                        _task_data_t *task_data = _task_get_data();
-                        task_data->f_mem         = prog->mem;
-                        task_data->f_cwd         = prog->cwd;
-                        task_data->f_errno       = 0;
-                        task_data->f_stderr      = prog->stderr;
-                        task_data->f_stdin       = prog->stdin;
-                        task_data->f_stdout      = prog->stdout;
-                        task_data->f_task_object = prog;
-                        task_data->f_task_type   = TASK_TYPE_PROCESS;
+//                        _task_data_t *task_data = _task_get_data();
+//                        task_data->f_mem         = prog->mem;
+//                        task_data->f_cwd         = prog->cwd;
+//                        task_data->f_errno       = 0;
+//                        task_data->f_stderr      = prog->stderr;
+//                        task_data->f_stdin       = prog->stdin;
+//                        task_data->f_stdout      = prog->stdout;
+//                        task_data->f_task_object = prog;
+//                        task_data->f_task_type   = TASK_TYPE_PROCESS;
 
                         stdin  = prog->stdin;
                         stdout = prog->stdout;
@@ -191,7 +169,7 @@ static void program_startup(void *arg)
 
                         if (prog->mem) {
                                 memset(prog->mem, 0, prog->mem_size);
-                                _sysm_tskfree(prog->mem);
+                                _kfree(prog->mem);
                         }
 
                         make_RAW_task(prog->task);
@@ -216,14 +194,14 @@ static void thread_startup(void *arg)
 {
         if (arg) {
                 thread_t     *thread    = arg;
-                _task_data_t *task_data = _task_get_data();
-
-                task_data->f_task_type   = TASK_TYPE_THREAD;
-                task_data->f_task_object = thread;
-                task_data->f_mem         = thread->mem;
-                task_data->f_stdin       = thread->stdin;
-                task_data->f_stdout      = thread->stdout;
-                task_data->f_stderr      = thread->stderr;
+//                _task_data_t *task_data = _task_get_data();
+//
+//                task_data->f_task_type   = TASK_TYPE_THREAD;
+//                task_data->f_task_object = thread;
+//                task_data->f_mem         = thread->mem;
+//                task_data->f_stdin       = thread->stdin;
+//                task_data->f_stdout      = thread->stdout;
+//                task_data->f_stderr      = thread->stderr;
 
                 stdin  = thread->stdin;
                 stdout = thread->stdout;
@@ -255,7 +233,7 @@ static char **new_argument_table(const char *str, int *argc)
         char **argv = NULL;
 
         if (str && argc && str[0] != '\0') {
-                llist_t *args = _llist_new(_sysm_sysmalloc, _sysm_sysfree, NULL, NULL);
+                llist_t *args = _llist_new(_kmalloc, _kfree, NULL, NULL);
 
                 if (args) {
                         // parse arguments
@@ -293,7 +271,7 @@ static char **new_argument_table(const char *str, int *argc)
                                 }
 
                                 // add argument to list
-                                char *arg = _sysm_sysmalloc(str_len + 1);
+                                char *arg = _kmalloc(str_len + 1);
                                 if (arg) {
                                         strncpy(arg, start, str_len);
                                         arg[str_len] = '\0';
@@ -317,7 +295,7 @@ static char **new_argument_table(const char *str, int *argc)
                         int no_of_args = _llist_size(args);
                         *argc = no_of_args;
 
-                        argv = _sysm_sysmalloc((no_of_args + 1) * sizeof(char*));
+                        argv = _kmalloc((no_of_args + 1) * sizeof(char*));
                         if (argv) {
                                 for (int i = 0; i < no_of_args; i++) {
                                         argv[i] = _llist_take_front(args);
@@ -345,10 +323,10 @@ static void delete_argument_table(int argc, char **argv)
 {
         if (argv) {
                 for (int i = 0; i < argc; i++) {
-                        _sysm_sysfree(argv[i]);
+                        _kfree(argv[i]);
                 }
 
-                _sysm_sysfree(argv);
+                _kfree(argv);
         }
 }
 
@@ -389,27 +367,27 @@ static int get_program_data(const char *name, struct _prog_data *prg_data)
 static int process_kill(task_t *taskhdl, int status)
 {
         if (taskhdl) {
-                switch (_task_get_data_of(taskhdl)->f_task_type) {
-                default:
-                case TASK_TYPE_RAW:
-                        if (taskhdl == _task_get_handle()) {
-                                _task_delete(taskhdl);
-                        } else {
-                                _sysm_lock_access();
-                                _task_delete(taskhdl);
-                                _sysm_unlock_access();
-                        }
-                        break;
-                case TASK_TYPE_PROCESS: {
-                        prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
-                        prog->exit_code = status;
-                        _program_kill(prog);
-                        break;
-                }
-                case TASK_TYPE_THREAD:
-                        _thread_cancel(_task_get_data_of(taskhdl)->f_task_object);
-                        break;
-                }
+//                switch (_task_get_data_of(taskhdl)->f_task_type) {
+//                default:
+//                case TASK_TYPE_RAW:
+//                        if (taskhdl == _task_get_handle()) {
+//                                _task_delete(taskhdl);
+//                        } else {
+//                                _sysm_lock_access();
+//                                _task_delete(taskhdl);
+//                                _sysm_unlock_access();
+//                        }
+//                        break;
+//                case TASK_TYPE_PROCESS: {
+//                        prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
+//                        prog->exit_code = status;
+//                        _program_kill(prog);
+//                        break;
+//                }
+//                case TASK_TYPE_THREAD:
+//                        _thread_cancel(_task_get_data_of(taskhdl)->f_task_object);
+//                        break;
+//                }
 
                 return 0;
         }
@@ -471,10 +449,10 @@ static bool thread_is_valid(thread_t *thread)
 //==============================================================================
 static void wait_for_end_of_mutex_section(task_t *task, size_t attempts)
 {
-        while (attempts && _task_get_data_of(task)->f_mutex_section > 0) {
-                sleep_ms(1);    // 1 tick delay
-                attempts--;
-        }
+//        while (attempts && _task_get_data_of(task)->f_mutex_section > 0) {
+//                sleep_ms(1);    // 1 tick delay
+//                attempts--;
+//        }
 }
 
 //==============================================================================
@@ -488,12 +466,12 @@ static void wait_for_end_of_mutex_section(task_t *task, size_t attempts)
 //==============================================================================
 static void restore_stdio_defaults(task_t *task)
 {
-        struct _task_data *data = _task_get_data_of(task);
+//        struct _task_data *data = _task_get_data_of(task);
 
 //        _vfs_ioctl(data->f_stdout, IOCTL_TTY__ECHO_ON); TODO
 
 //        _vfs_ioctl(data->f_stdin , IOCTL_VFS__NON_BLOCKING_RD_MODE); TODO
-        _getc(data->f_stdin);
+//        _getc(data->f_stdin);
 
 //        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_RD_MODE); TODO
 //        _vfs_ioctl(data->f_stdin , IOCTL_VFS__DEFAULT_WR_MODE); TODO
@@ -524,7 +502,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                 return NULL;
         }
 
-        prog_t *prog = _sysm_tskcalloc(1, sizeof(prog_t));
+        prog_t *prog = _kcalloc(1, sizeof(prog_t));
         if (prog) {
 
                 prog->argv = new_argument_table(cmd, &prog->argc);
@@ -547,7 +525,8 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                         prog->task     = _task_new(program_startup,
                                                                    prog_data.program_name,
                                                                    *prog_data.stack_depth,
-                                                                   prog);
+                                                                   prog,
+                                                                   NULL /* TODO */);
 
                                         if (prog->task) {
                                                 return prog;
@@ -564,7 +543,7 @@ prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                         delete_argument_table(prog->argc, prog->argv);
                 }
 
-                _sysm_tskfree(prog);
+                _kfree(prog);
                 prog = NULL;
         }
 
@@ -587,7 +566,7 @@ int _program_delete(prog_t *prog)
                         _semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argc, prog->argv);
                         prog->this = NULL;
-                        _sysm_tskfree(prog);
+                        _kfree(prog);
                         return 0;
                 } else {
                         errno = EAGAIN;
@@ -614,23 +593,23 @@ int _program_kill(prog_t *prog)
                         _semaphore_signal(prog->exit_sem);
                         return 0;
                 } else {
-                        _sysm_lock_access();
+//                        _sysm_lock_access(); // TODO _sysm_lock_access not needed
 
                         if (prog->task != _task_get_handle()) {
-                                _task_get_data_of(prog->task)->f_task_kill = true;
+//                                _task_get_data_of(prog->task)->f_task_kill = true; // TODO task tag
                                 wait_for_end_of_mutex_section(prog->task, mutex_wait_attempts);
                                 _task_suspend(prog->task);
                         }
 
                         if (prog->mem) {
-                                _sysm_tskfree_as(prog->task, prog->mem);
+//                                _kfree_as(prog->task, prog->mem);  // TODO task tag
                                 prog->mem = NULL;
                         }
 
                         restore_stdio_defaults(prog->task);
                         make_RAW_task(prog->task);
                         _semaphore_signal(prog->exit_sem);
-                        _sysm_unlock_access();
+//                        _sysm_unlock_access(); // TODO function not needed
                         _task_delete(prog->task);
                         return 0;
                 }
@@ -739,7 +718,7 @@ void _exit(int status)
 //==============================================================================
 void _abort(void)
 {
-        _fprintf(stdout, "Aborted\n");
+//        _fprintf(stdout, "Aborted\n"); // fprintf
 
         process_kill(_task_get_handle(), -1);
 
@@ -761,23 +740,23 @@ int _system(const char *command)
         if (!command)
                 return 1;
 
-        _task_data_t *task_data = _task_get_data();
-
-        prog_t *prog = _program_new(command,
-                                    task_data->f_cwd,
-                                    task_data->f_stdin,
-                                    task_data->f_stdout,
-                                    task_data->f_stderr);
-        if (prog) {
-                _program_wait_for_close(prog, MAX_DELAY_MS);
-                int status = prog->exit_code;
-                _program_delete(prog);
-                return status;
-        } else {
-                if (errno) {
-                        return -errno;
-                }
-        }
+//        _task_data_t *task_data = _task_get_data();
+//
+//        prog_t *prog = _program_new(command,
+//                                    task_data->f_cwd,
+//                                    task_data->f_stdin,
+//                                    task_data->f_stdout,
+//                                    task_data->f_stderr);
+//        if (prog) {
+//                _program_wait_for_close(prog, MAX_DELAY_MS);
+//                int status = prog->exit_code;
+//                _program_delete(prog);
+//                return status;
+//        } else {
+//                if (errno) {
+//                        return -errno;
+//                }
+//        }
 
         return EXIT_FAILURE;
 }
@@ -800,38 +779,38 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 return NULL;
         }
 
-        thread_t *thread = _sysm_tskmalloc(sizeof(thread_t));
-        sem_t    *sem    = _semaphore_new(1, 0);
-        if (thread && sem) {
-                _task_data_t *task_data = _task_get_data();
-
-                thread->arg      = arg;
-                thread->exit_sem = sem;
-                thread->mem      = task_data->f_mem;
-                thread->stdin    = task_data->f_stdin;
-                thread->stdout   = task_data->f_stdout;
-                thread->stderr   = task_data->f_stderr;
-                thread->func     = func;
-                thread->this     = thread;
-                thread->task     = _task_new(thread_startup, _task_get_name(), stack_depth, thread);
-
-                if (thread->task) {
-                        return thread;
-                } else {
-                        thread->this  = NULL;
-                }
-        }
-
-        if (sem) {
-                _semaphore_delete(sem);
-        }
-
-        if (thread) {
-                _sysm_tskfree(thread);
-                thread = NULL;
-        }
-
-        return thread;
+//        thread_t *thread = _sysm_tskmalloc(sizeof(thread_t));
+//        sem_t    *sem    = _semaphore_new(1, 0);
+//        if (thread && sem) {
+//                _task_data_t *task_data = _task_get_data();
+//
+//                thread->arg      = arg;
+//                thread->exit_sem = sem;
+//                thread->mem      = task_data->f_mem;
+//                thread->stdin    = task_data->f_stdin;
+//                thread->stdout   = task_data->f_stdout;
+//                thread->stderr   = task_data->f_stderr;
+//                thread->func     = func;
+//                thread->this     = thread;
+//                thread->task     = _task_new(thread_startup, _task_get_name(), stack_depth, thread);
+//
+//                if (thread->task) {
+//                        return thread;
+//                } else {
+//                        thread->this  = NULL;
+//                }
+//        }
+//
+//        if (sem) {
+//                _semaphore_delete(sem);
+//        }
+//
+//        if (thread) {
+//                _kfree(thread);
+//                thread = NULL;
+//        }
+//
+//        return thread;
 }
 
 //==============================================================================
@@ -867,27 +846,27 @@ int _thread_join(thread_t *thread)
 //==============================================================================
 int _thread_cancel(thread_t *thread)
 {
-        if (thread_is_valid(thread)) {
-                if (_semaphore_wait(thread->exit_sem, 0)) {
-                        _semaphore_signal(thread->exit_sem);
-                        return 0;
-                } else {
-                        _sysm_lock_access();
-
-                        if (thread->task != _task_get_handle()) {
-                                _task_get_data_of(thread->task)->f_task_kill = true;
-                                wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
-                                _task_suspend(thread->task);
-                        }
-
-                        restore_stdio_defaults(thread->task);
-                        make_RAW_task(thread->task);
-                        _semaphore_signal(thread->exit_sem);
-                        _sysm_unlock_access();
-                        _task_delete(thread->task);
-                        return 0;
-                }
-        }
+//        if (thread_is_valid(thread)) {
+//                if (_semaphore_wait(thread->exit_sem, 0)) {
+//                        _semaphore_signal(thread->exit_sem);
+//                        return 0;
+//                } else {
+//                        _sysm_lock_access();
+//
+//                        if (thread->task != _task_get_handle()) {
+//                                _task_get_data_of(thread->task)->f_task_kill = true;
+//                                wait_for_end_of_mutex_section(thread->task, mutex_wait_attempts);
+//                                _task_suspend(thread->task);
+//                        }
+//
+//                        restore_stdio_defaults(thread->task);
+//                        make_RAW_task(thread->task);
+//                        _semaphore_signal(thread->exit_sem);
+//                        _sysm_unlock_access();
+//                        _task_delete(thread->task);
+//                        return 0;
+//                }
+//        }
 
         return 1;
 }
@@ -927,7 +906,7 @@ int _thread_delete(thread_t *thread)
                 if (_semaphore_wait(thread->exit_sem, 0)) {
                         _semaphore_delete(thread->exit_sem);
                         thread->this = NULL;
-                        _sysm_tskfree(thread);
+                        _kfree(thread);
                         return 0;
                 } else {
                         errno = EAGAIN;
@@ -946,20 +925,20 @@ int _thread_delete(thread_t *thread)
 //==============================================================================
 void _copy_task_context_to_standard_variables(void)
 {
-        _task_data_t *task_data = _task_get_data();
-        if (task_data) {
-                stdin  = task_data->f_stdin;
-                stdout = task_data->f_stdout;
-                stderr = task_data->f_stderr;
-                global = task_data->f_mem;
-                errno  = task_data->f_errno;
-        } else {
-                stdin  = NULL;
-                stdout = NULL;
-                stderr = NULL;
-                global = NULL;
-                errno  = 0;
-        }
+//        _task_data_t *task_data = _task_get_data();
+//        if (task_data) {
+//                stdin  = task_data->t_stdin;
+//                stdout = task_data->t_stdout;
+//                stderr = task_data->t_stderr;
+//                global = task_data->t_mem;
+//                errno  = task_data->t_errno;
+//        } else {
+//                stdin  = NULL;
+//                stdout = NULL;
+//                stderr = NULL;
+//                global = NULL;
+//                errno  = 0;
+//        }
 }
 
 //==============================================================================
@@ -970,14 +949,14 @@ void _copy_task_context_to_standard_variables(void)
 //==============================================================================
 void _copy_standard_variables_to_task_context(void)
 {
-        _task_data_t *task_data = _task_get_data();
-        if (task_data) {
-                task_data->f_stdin  = stdin;
-                task_data->f_stdout = stdout;
-                task_data->f_stderr = stderr;
-                task_data->f_errno  = errno;
-                task_data->f_mem    = global;
-        }
+//        _task_data_t *task_data = _task_get_data();
+//        if (task_data) {
+//                task_data->t_stdin  = stdin;
+//                task_data->t_stdout = stdout;
+//                task_data->t_stderr = stderr;
+//                task_data->t_errno  = errno;
+//                task_data->t_mem    = global;
+//        }
 }
 
 /*==============================================================================

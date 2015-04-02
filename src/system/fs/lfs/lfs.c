@@ -881,7 +881,7 @@ API_FS_WRITE(lfs,
 
                 if (target->type == NODE_TYPE_DRV) {
                         _sys_mutex_unlock(lfs->resource_mtx);
-                        return _sys_driver_write((dev_t)target->data, src, count, fpos, fattr);
+                        return _sys_driver_write((dev_t)target->data, src, count, fpos, wrcnt, fattr);
 
                 } else if (target->type == NODE_TYPE_PIPE) {
                        _sys_mutex_unlock(lfs->resource_mtx);
@@ -975,7 +975,7 @@ API_FS_READ(lfs,
 
                 if (target->type == NODE_TYPE_DRV) {
                         _sys_mutex_unlock(lfs->resource_mtx);
-                        return _sys_driver_read((dev_t)target->data, dst, count, fpos, fattr);
+                        return _sys_driver_read((dev_t)target->data, dst, count, fpos, rdcnt, fattr);
 
                 } else if (target->type == NODE_TYPE_PIPE) {
                         _sys_mutex_unlock(lfs->resource_mtx);
@@ -1350,7 +1350,7 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
                                 free(node);
                                 return ENOMEM;
                         }
-                } else if (type == FILE_TYPE_PIPE) {
+                } else if (type == NODE_TYPE_PIPE) {
                         node->data = _sys_pipe_new();
                         if (node->data == NULL) {
                                 free(node);

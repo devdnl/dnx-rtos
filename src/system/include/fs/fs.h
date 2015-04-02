@@ -42,7 +42,7 @@ extern "C" {
 #include "drivers/drvctrl.h"
 #include "kernel/sysfunc.h"
 #include "kernel/pipe.h"
-#include "kernel/progman.h"
+#include "kernel/process.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -50,13 +50,13 @@ extern "C" {
 #undef errno
 
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    _syscalloc(size_t__nmemb, size_t__msize)
+#define calloc(size_t__nmemb, size_t__msize)    _fscalloc(size_t__nmemb, size_t__msize)
 
 #undef  malloc
-#define malloc(size_t__size)                    _sysmalloc(size_t__size)
+#define malloc(size_t__size)                    _fsmalloc(size_t__size)
 
 #undef  free
-#define free(void__pmem)                        _sysfree(void__pmem)
+#define free(void__pmem)                        _fsfree(void__pmem)
 
 #ifdef __cplusplus
         inline void* operator new     (size_t size) {return _sysmalloc(size);}\
@@ -239,7 +239,7 @@ static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 //==============================================================================
 static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
 {
-        return _llist_new(_sysmalloc, _sysfree, functor, obj_dtor);
+        return _llist_new(_fsmalloc, _fsfree, functor, obj_dtor);
 }
 
 //==============================================================================

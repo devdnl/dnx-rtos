@@ -38,10 +38,11 @@ extern "C" {
 #include <stdarg.h>
 #include "config.h"
 #include "drivers/drvctrl.h"
-#include "kernel/progman.h"
+#include "kernel/process.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "mm/heap.h"
+#include "mm/mm.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -52,7 +53,7 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 typedef struct _sysmoni_taskstat taskstat_t;
-typedef struct _sysmoni_used_memory memstat_t;
+typedef _mm_mem_usage_t          memstat_t;
 
 /*==============================================================================
   Exported object declarations
@@ -120,7 +121,7 @@ static inline u32_t get_used_static_memory(void)
 //==============================================================================
 static inline u32_t get_free_memory(void)
 {
-        return _memman_get_free_heap();
+        return _heap_get_free_heap();
 }
 
 //==============================================================================
@@ -147,7 +148,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-        return (get_used_static_memory() + (_HEAP_HEAP_SIZE - _memman_get_free_heap()));
+        return (get_used_static_memory() + (_HEAP_HEAP_SIZE - _heap_get_free_heap()));
 }
 
 //==============================================================================
@@ -183,11 +184,11 @@ static inline u32_t get_memory_size(void)
  * pointed by <i>stat</i>. <b>memstat_t</b> structure:
  * <pre>
  * typedef struct {
- *         int used_kernel_memory;
- *         int used_system_memory;
- *         int used_network_memory;
- *         int used_modules_memory;
- *         int used_programs_memory;
+ *         i32_t kernel_memory_usage;
+ *         i32_t filesystems_memory_usage;
+ *         i32_t network_memory_usage;
+ *         i32_t modules_memory_usage;
+ *         i32_t applications_memory_usage;
  * } memstat_t;
  * </pre>
  *
@@ -206,16 +207,16 @@ static inline u32_t get_memory_size(void)
  * errno = 0;
  * memstat_t stat;
  * if (get_detailed_memory_usage(&stat) == STD_RET_OK) {
- *         printf("Used memory by kernel  : %d\n"
- *                "Used memory by system  : %d\n"
- *                "Used memory by network : %d\n"
- *                "Used memory by modules : %d\n"
- *                "Used memory by programs: %d\n",
- *                stat.used_kernel_memory,
- *                stat.used_system_memory,
- *                stat.used_network_memory,
- *                stat.used_modules_memory,
- *                stat.used_programs_memory);
+ *         printf("Used memory by kernel      : %d\n"
+ *                "Used memory by file system : %d\n"
+ *                "Used memory by network     : %d\n"
+ *                "Used memory by modules     : %d\n"
+ *                "Used memory by applications: %d\n",
+ *                stat.kernel_memory_usage,
+ *                stat.filesystems_memory_usage,
+ *                stat.network_memory_usage,
+ *                stat.modules_memory_usage,
+ *                stat.applications_memory_usage);
  * } else {
  *         perror(NULL);
  * }
@@ -225,7 +226,7 @@ static inline u32_t get_memory_size(void)
 //==============================================================================
 static inline int get_detailed_memory_usage(memstat_t *stat)
 {
-        return _sysm_get_used_memory(stat);
+        return _mm_get_mem_usage(stat); // TODO errno set
 }
 
 //==============================================================================
@@ -256,7 +257,7 @@ static inline int get_detailed_memory_usage(memstat_t *stat)
 //==============================================================================
 static inline i32_t get_module_memory_usage(uint module_number)
 {
-        return _sysm_get_used_memory_by_module(module_number);
+//        return _sysm_get_used_memory_by_module(module_number); // TODO get module memory usage
 }
 
 //==============================================================================
@@ -382,7 +383,7 @@ static inline uint get_time_ms(void)
 //==============================================================================
 static inline int get_task_stat(uint ntask, taskstat_t *stat)
 {
-        return _sysm_get_ntask_stat(ntask, stat);
+//        return _sysm_get_ntask_stat(ntask, stat); TODO get_task_stat
 }
 
 //==============================================================================
@@ -415,7 +416,7 @@ static inline int get_task_stat(uint ntask, taskstat_t *stat)
 //==============================================================================
 static inline uint get_number_of_monitored_tasks(void)
 {
-        return _sysm_get_number_of_monitored_tasks();
+//        return _sysm_get_number_of_monitored_tasks(); TODO get_number_of_monitored_tasks
 }
 
 //==============================================================================
@@ -479,7 +480,7 @@ static inline int get_number_of_tasks(void)
 //==============================================================================
 static inline u32_t get_total_CPU_usage(void)
 {
-        return _sysm_get_total_CPU_usage();
+//        return _sysm_get_total_CPU_usage(); TODO get_total_CPU_usage
 }
 
 //==============================================================================
@@ -1017,7 +1018,7 @@ static inline bool is_driver_active(uint n)
 //==============================================================================
 static inline void disable_CPU_load_measurement(void)
 {
-        _sysm_disable_CPU_load_measurement();
+//        _sysm_disable_CPU_load_measurement(); // TODO disable_CPU_load_measurement
 }
 
 //==============================================================================
@@ -1058,7 +1059,7 @@ static inline void disable_CPU_load_measurement(void)
 //==============================================================================
 static inline void enable_CPU_load_measurement(void)
 {
-        _sysm_enable_CPU_load_measurement();
+//        _sysm_enable_CPU_load_measurement(); / TODO enable_CPU_load_measurement
 }
 
 //==============================================================================

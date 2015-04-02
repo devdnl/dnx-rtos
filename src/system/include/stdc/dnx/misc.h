@@ -111,7 +111,11 @@ extern "C" {
  * // ...
  */
 //==============================================================================
-#define UNUSED_ARG(argument) (void)argument
+#define UNUSED_ARG(argument)                            (void)argument
+#define UNUSED_ARG2(_arg1, _arg2)                       ((void)_arg1); ((void)_arg2)
+#define UNUSED_ARG3(_arg1, _arg2, _arg3)                ((void)_arg1); ((void)_arg2; ((void)_arg3)
+#define UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4)         ((void)_arg1); ((void)_arg2; ((void)_arg3; ((void)_arg4)
+#define UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5)  ((void)_arg1); ((void)_arg2; ((void)_arg3; ((void)_arg4; ((void)_arg5)
 
 //==============================================================================
 /**

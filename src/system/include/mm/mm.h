@@ -30,6 +30,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "sys/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,13 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        i32_t kernel_memory_usage;
+        i32_t filesystems_memory_usage;
+        i32_t network_memory_usage;
+        i32_t modules_memory_usage;
+        i32_t applications_memory_usage;
+} _mm_mem_usage_t;
 
 /*==============================================================================
   Exported objects
@@ -50,21 +58,30 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern void  _mm_init(void);
+
 extern void *_kcalloc(size_t, size_t);
 extern void *_kmalloc(size_t);
 extern void  _kfree(void*);
 
-extern void *_syscalloc(size_t, size_t);
-extern void *_sysmalloc(size_t);
-extern void  _sysfree(void*);
+extern void *_fscalloc(size_t, size_t);
+extern void *_fsmalloc(size_t);
+extern void  _fsfree(void*);
 
-extern void *_modcalloc(size_t, size_t);
-extern void *_modmalloc(size_t);
-extern void  _modfree(void*);
+extern void *_modcalloc(size_t, size_t, size_t);
+extern void *_modmalloc(size_t, size_t);
+extern void  _modfree(void*, size_t);
 
 extern void *_netcalloc(size_t, size_t);
 extern void *_netmalloc(size_t);
 extern void  _netfree(void*);
+
+extern void *_appcalloc(size_t, size_t);
+extern void *_appmalloc(size_t);
+extern void  _appfree(void*);
+
+extern int   _mm_get_mem_usage(_mm_mem_usage_t*);
+extern int   _mm_get_module_mem_usage(int module, i32_t *usage);
 
 /*==============================================================================
   Exported inline functions

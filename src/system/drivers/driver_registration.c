@@ -29,7 +29,8 @@
 ==============================================================================*/
 #include "drivers/drvctrl.h"
 #include "drivers/driver.h"
-#include <dnx/misc.h>
+#include "dnx/misc.h"
+#include "config.h"
 
 /*==============================================================================
   Modules include files
@@ -172,7 +173,7 @@
  * Variable contains all names of modules. Each module must be registered here
  * only 1 time.
  */
-const char *const _regdrv_module_name[] = {
+const char *const _drvreg_module_name[] = {
         #if (__ENABLE_RTCM__)
         _MODULE_NAME(RTCM),
         #endif
@@ -225,7 +226,7 @@ const char *const _regdrv_module_name[] = {
  * This table contains interfaces of drivers. Each driver have interface
  * connected to its module.
  */
-const struct _driver_entry _regdrv_driver_table[] = {
+const struct _driver_entry _drvreg_driver_table[] = {
         /* RTCM */
         #if (__ENABLE_RTCM__)
         _DRIVER_INTERFACE(RTCM, "rtcm", _RTCM_MAJOR_NUMBER, _RTCM_MINOR_NUMBER),
@@ -481,10 +482,10 @@ const struct _driver_entry _regdrv_driver_table[] = {
 
 
 /** variable contains number of registered drivers */
-const uint _regdrv_size_of_driver_table = ARRAY_SIZE(_regdrv_driver_table);
+const uint _drvreg_size_of_driver_table = ARRAY_SIZE(_drvreg_driver_table);
 
 /** variable contains number of registered modules */
-const uint _regdrv_number_of_modules    = ARRAY_SIZE(_regdrv_module_name);
+const uint _drvreg_number_of_modules    = ARRAY_SIZE(_drvreg_module_name);
 
 /*==============================================================================
   End of file

@@ -158,20 +158,9 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
 //==============================================================================
 void _task_delete(task_t *taskHdl)
 {
-        if (_sysm_is_task_exist(taskHdl)) {
-                _sysm_stop_task_monitoring(taskHdl);
-
-                taskENTER_CRITICAL();
-                struct _task_data *data;
-                if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
-
-                        vTaskSetApplicationTaskTag(taskHdl, NULL);
-                        _sysm_kfree(data);
-                }
-
-                vTaskDelete(taskHdl);
-                taskEXIT_CRITICAL();
-        }
+        taskENTER_CRITICAL();
+        vTaskDelete(taskHdl);
+        taskEXIT_CRITICAL();
 }
 
 //==============================================================================
@@ -312,7 +301,7 @@ int _task_get_free_stack_of(task_t *taskhdl)
 sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 {
         if (cnt_max > 0) {
-                sem_t *sem = _sysm_kcalloc(1, sizeof(struct sem));
+                sem_t *sem = _kcalloc(1, sizeof(struct sem));
                 if (sem) {
                         if (cnt_max == 1) {
                                 vSemaphoreCreateBinary(sem->object);
@@ -330,7 +319,7 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
                         if (sem->object) {
                                 sem->this = sem;
                         } else {
-                                _sysm_kfree(sem);
+                                _kfree(sem);
                                 sem = NULL;
                         }
                 }
@@ -354,7 +343,7 @@ void _semaphore_delete(sem_t *sem)
                 vSemaphoreDelete(sem->object);
                 sem->object = NULL;
                 sem->this   = NULL;
-                _sysm_kfree(sem);
+                _kfree(sem);
         }
 }
 
@@ -460,7 +449,7 @@ bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 mutex_t *_mutex_new(enum mutex_type type)
 {
-        mutex_t *mtx = _sysm_kcalloc(1, sizeof(struct mutex));
+        mutex_t *mtx = _kcalloc(1, sizeof(struct mutex));
         if (mtx) {
                 if (type == MUTEX_TYPE_RECURSIVE) {
                         mtx->object    = xSemaphoreCreateRecursiveMutex();
@@ -473,7 +462,7 @@ mutex_t *_mutex_new(enum mutex_type type)
                 if (mtx->object) {
                         mtx->this = mtx;
                 } else {
-                        _sysm_kfree(mtx);
+                        _kfree(mtx);
                         mtx = NULL;
                 }
         }
@@ -494,7 +483,7 @@ void _mutex_delete(mutex_t *mutex)
                 vSemaphoreDelete(mutex->object);
                 mutex->object = NULL;
                 mutex->this   = NULL;
-                _sysm_kfree(mutex);
+                _kfree(mutex);
         }
 }
 
@@ -563,13 +552,13 @@ bool _mutex_unlock(mutex_t *mutex)
 //==============================================================================
 queue_t *_queue_new(const uint length, const uint item_size)
 {
-        queue_t *queue = _sysm_kcalloc(1, sizeof(struct queue));
+        queue_t *queue = _kcalloc(1, sizeof(struct queue));
         if (queue) {
                 queue->object = xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
                 if (queue->object) {
                         queue->this = queue;
                 } else {
-                        _sysm_kfree(queue);
+                        _kfree(queue);
                         queue = NULL;
                 }
         }
@@ -590,7 +579,7 @@ void _queue_delete(queue_t *queue)
                 vQueueDelete(queue->object);
                 queue->object = NULL;
                 queue->this   = NULL;
-                _sysm_kfree(queue);
+                _kfree(queue);
         }
 }
 
