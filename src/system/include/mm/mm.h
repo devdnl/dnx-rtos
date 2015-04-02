@@ -81,7 +81,7 @@ extern void *_appmalloc(size_t);
 extern void  _appfree(void*);
 
 extern int   _mm_get_mem_usage(_mm_mem_usage_t*);
-extern int   _mm_get_module_mem_usage(int module, i32_t *usage);
+extern int   _mm_get_module_mem_usage(uint module, i32_t *usage);
 
 /*==============================================================================
   Exported inline functions

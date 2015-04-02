@@ -32,7 +32,8 @@
 #include <stdbool.h>
 #include "kernel/kwrapper.h"
 #include "drivers/drvctrl.h"
-#include "lib/printx.h"
+#include "lib/printk.h"
+#include "lib/vt100.h"
 #include "fs/vfs.h"
 #include "dnx/misc.h"
 
@@ -121,7 +122,7 @@ static bool is_device_valid(dev_t id)
  * @return One of error code (errno)
  */
 //==============================================================================
-int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
+int _driver_init(const char *drv_name, const char *node_path, dev_t *id) // TODO return value
 {
         if (!drv_name && !id) {
                 return EINVAL;

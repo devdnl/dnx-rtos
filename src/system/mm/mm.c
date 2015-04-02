@@ -354,7 +354,7 @@ int _mm_get_mem_usage(_mm_mem_usage_t *mem_usage)
  * @return On success 0 is returned, otherwise other value.
  */
 //==============================================================================
-int _mm_get_module_mem_usage(int module, i32_t *usage)
+int _mm_get_module_mem_usage(uint module, i32_t *usage)
 {
         if (module < _drvreg_number_of_modules && usage) {
                 *usage = module_memory_usage[module];

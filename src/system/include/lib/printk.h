@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    printx.h
+@file    printk.h
 
 @author  Daniel Zorychta
 
-@brief   Basic print functions
+@brief   Kernel print support
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,20 +24,16 @@
 
 *//*==========================================================================*/
 
-#ifndef _PRINTX_H_
-#define _PRINTX_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _PRINTK_H_
+#define _PRINTK_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdarg.h>
-#include <stddef.h>
-#include "fs/vfs.h"
-#include "config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
   Exported macros
@@ -54,18 +50,9 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int         _snprintf       (char*, size_t, const char*, ...);
-extern int         _fprintf        (FILE*, const char*, ...);
-extern int         _vfprintf       (FILE*, const char*, va_list);
-extern int         _vsnprintf      (char*, size_t, const char*, va_list);
-extern const char *_strerror       (int);
-extern void        _perror         (const char*);
-extern int         _fputc          (int, FILE*);
-extern int         _f_puts         (const char*, FILE*, bool);
-extern int         _getc           (FILE*);
-extern char       *_fgets          (char*, int, FILE*);
-extern char       *_ctime_r        (const time_t *timer, const struct tm *tm, char *buf);
-extern size_t      _strftime       (char*, size_t, const char*, const struct tm*);
+void _printk_enable(char *filename);
+void _printk_disable(void);
+void _printk(const char *format, ...);
 
 /*==============================================================================
   Exported inline functions
@@ -75,7 +62,7 @@ extern size_t      _strftime       (char*, size_t, const char*, const struct tm*
 }
 #endif
 
-#endif /* _PRINTX_H_ */
+#endif /* _PRINTK_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

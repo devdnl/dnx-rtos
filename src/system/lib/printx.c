@@ -54,10 +54,6 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static FILE *sys_printk_file;
-#endif
-
 #if (CONFIG_PRINTF_ENABLE > 0)
 /** buffer used to store converted time to string */
 static char timestr[32];
@@ -315,84 +311,6 @@ static int dtoa(double value, char* str, int prec, int n)
         return conv;
 }
 #endif
-
-//==============================================================================
-/**
- * @brief Enable printk functionality
- *
- * @param filename      path to file used to write kernel log
- */
-//==============================================================================
-void _printk_enable(char *filename)
-{
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        /* close file if opened */
-        if (sys_printk_file) {
-                _vfs_fclose(sys_printk_file);
-                sys_printk_file = NULL;
-        }
-
-        /* open new file */
-        if (sys_printk_file == NULL) {
-                sys_printk_file = _vfs_fopen(filename, "w");
-        }
-#else
-        UNUSED_ARG(filename);
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Disable printk functionality
- */
-//==============================================================================
-void _printk_disable(void)
-{
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        if (sys_printk_file) {
-                _vfs_fclose(sys_printk_file);
-                sys_printk_file = NULL;
-        }
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Function send kernel message on terminal
- *
- * @param *format             formated text
- * @param ...                 format arguments
- */
-//==============================================================================
-void _printk(const char *format, ...)
-{
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        va_list args;
-
-        if (sys_printk_file) {
-                va_start(args, format);
-                int size = _vsnprintf(NULL, 0, format, args) + 1;
-                va_end(args);
-
-                char *buffer = _sysm_syscalloc(size, sizeof(char));
-                if (buffer) {
-                        va_start(args, format);
-                        int n = _vsnprintf(buffer, size, format, args);
-                        va_end(args);
-
-                        _vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
-
-                        if (LAST_CHARACTER(buffer) != '\n') {
-                                _vfs_fflush(sys_printk_file);
-                        }
-
-                        _sysm_sysfree(buffer);
-                }
-        }
-#else
-        UNUSED_ARG(format);
-#endif
-}
 
 //==============================================================================
 /**
