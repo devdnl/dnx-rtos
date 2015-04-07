@@ -1084,6 +1084,8 @@ static int card_initialize(sdpart_t *hdl)
                 u8_t csd[16];
                 u8_t token;
 
+                memset(csd, 0, sizeof(csd));
+
                 uint timer = _sys_time_get_reference();
                 while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
                       && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));

@@ -119,15 +119,15 @@
 #define __OS_SYSTEM_STOP_MACRO__ _YES_
 
 /* network configuration */
-#define __NETWORK_ENABLE__ _YES_
+#define __NETWORK_ENABLE__ _NO_
 #include "network_flags.h"
 
 /* file systems */
-#define __ENABLE_DEVFS__ _YES_
+#define __ENABLE_DEVFS__ _NO_
 #define __ENABLE_LFS__ _YES_
-#define __ENABLE_FATFS__ _YES_
-#define __ENABLE_PROCFS__ _YES_
-#define __ENABLE_EXT2FS__ _YES_
+#define __ENABLE_FATFS__ _NO_
+#define __ENABLE_PROCFS__ _NO_
+#define __ENABLE_EXT2FS__ _NO_
 #define __EXT2FS_CACHE_SIZE__ 4
 #define __FATFS_LFN_ENABLE__ _YES_
 #define __FATFS_LFN_CODEPAGE__ 852

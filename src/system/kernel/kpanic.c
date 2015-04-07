@@ -27,7 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <string.h>
 #include "kernel/kpanic.h"
+#include "kernel/printk.h"
+#include "kernel/kwrapper.h"
 #include "lib/vt100.h"
 #include "mm/mm.h"
 #include "config.h"

@@ -202,7 +202,7 @@ static void plug_holes(struct mem *mem)
 void _heap_init(void)
 {
         /* align the heap */
-        heap = (u8_t*)_HEAP_HEAP_START;
+        heap = (u8_t*)_HEAP_START;
 
         /* initialize the start of the heap */
         struct mem *mem = (struct mem *)heap;

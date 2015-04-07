@@ -953,14 +953,14 @@ void _copy_task_context_to_standard_variables(void)
 //==============================================================================
 void _copy_standard_variables_to_task_context(void)
 {
-        _task_data_t *task_data = _task_get_data();
-        if (task_data) {
-                task_data->t_stdin  = stdin;
-                task_data->t_stdout = stdout;
-                task_data->t_stderr = stderr;
-                task_data->t_errno  = errno;
-                task_data->t_mem    = global;
-        }
+//        _task_desc = _task_get_tag(THIS_TASK);
+//        if (task_data) {
+//                task_data->t_stdin  = stdin;
+//                task_data->t_stdout = stdout;
+//                task_data->t_stderr = stderr;
+//                task_data->t_errno  = errno;
+//                task_data->t_mem    = global;
+//        }
 }
 
 /*==============================================================================

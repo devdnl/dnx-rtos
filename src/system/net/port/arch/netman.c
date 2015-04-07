@@ -229,7 +229,7 @@ static void network_interface_thread(void *arg)
                 _netman_ifmem_free(netman);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
