@@ -196,6 +196,7 @@ void _syscall_init()
         call_request  = _queue_new(1, sizeof(syscallrq_t));
         call_response = _queue_new(1, sizeof(syscallres_t));
         kworker       = _task_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, NULL);
+//        PID_t kworker = _process_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, true);
 }
 
 //==============================================================================

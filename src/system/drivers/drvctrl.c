@@ -32,7 +32,7 @@
 #include <stdbool.h>
 #include "kernel/kwrapper.h"
 #include "drivers/drvctrl.h"
-#include "lib/printk.h"
+#include "kernel/printk.h"
 #include "lib/vt100.h"
 #include "fs/vfs.h"
 #include "dnx/misc.h"

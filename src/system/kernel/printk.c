@@ -28,7 +28,7 @@
   Include files
 ==============================================================================*/
 #include <stddef.h>
-#include "lib/printk.h"
+#include "kernel/printk.h"
 #include "lib/printx.h"
 #include "config.h"
 #include "fs/vfs.h"

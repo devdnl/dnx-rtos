@@ -1504,7 +1504,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
 
         /* correct cwd */
         if (FIRST_CHARACTER(path) != '/') {
-                cwd = get_CWD();
+                cwd = _process_get_CWD();
                 if (cwd) {
                         cwd_len       = strlen(cwd);
                         new_path_len += cwd_len;
@@ -1544,24 +1544,6 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
         }
 
         return result;
-}
-
-//==============================================================================
-/**
- * @brief  Return current task CWD (CWD is passed to kworker from request task)
- * @param  None
- * @return CWD string
- */
-//==============================================================================
-static const char *get_CWD(void)
-{
-        _task_desc_t *desc = _task_get_tag(THIS_TASK);
-
-        if (desc) {
-                return desc->t_cwd;
-        }
-
-        return NULL;
 }
 
 /*==============================================================================

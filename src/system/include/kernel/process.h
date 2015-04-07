@@ -91,28 +91,6 @@ typedef struct thread thread_t;
 
 typedef struct prog prog_t;
 
-typedef enum _task_type {
-        TASK_TYPE_RAW,
-        TASK_TYPE_PROCESS,
-        TASK_TYPE_THREAD
-} _task_type_t;
-
-typedef struct _task_desc {
-        pid_t            t_PID;
-        FILE            *t_stdin;               /* stdin file                         */
-        FILE            *t_stdout;              /* stdout file                        */
-        FILE            *t_stderr;              /* stderr file                        */
-        FILE            *t_file_chain;          /* chain of open files                */
-        const char      *t_cwd;                 /* current working path               */
-        void            *t_globals;             /* address to global variables        */
-        task_t          *t_parent;              /* parent task                        */
-        task_t          *t_self;                /* pointer to this task handle        */
-        task_t          *t_next;                /* next task (chain)                  */
-        u32_t            t_load_time;           /* counter used to calculate CPU load */
-        int              t_errno;               /* program error number               */
-        _task_type_t     t_task_type:2;         /* task type                          */
-} _task_desc_t;
-
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
@@ -125,23 +103,9 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void      _exit                                          (int);
-extern void      _abort                                         (void);
-extern int       _system                                        (const char*);
-extern prog_t   *_program_new                                   (const char*, const char*, FILE*, FILE*, FILE*);
-extern int       _program_kill                                  (prog_t*);
-extern int       _program_delete                                (prog_t*);
-extern int       _program_wait_for_close                        (prog_t*, const uint);
-extern int       _program_get_exit_code                         (prog_t*);
-extern bool      _program_is_closed                             (prog_t*);
-extern void      _task_kill                                     (task_t*);
-extern thread_t *_thread_new                                    (void (*)(void*), const int, void*);
-extern int       _thread_join                                   (thread_t*);
-extern bool      _thread_is_finished                            (thread_t*);
-extern int       _thread_delete                                 (thread_t*);
-extern int       _thread_cancel                                 (thread_t*);
-extern void      _copy_task_context_to_standard_variables       (void);
-extern void      _copy_standard_variables_to_task_context       (void);
+extern const char *_process_get_CWD                             (void);
+extern void        _copy_task_context_to_standard_variables     (void);
+extern void        _copy_standard_variables_to_task_context     (void);
 
 /*==============================================================================
   Exported inline functions

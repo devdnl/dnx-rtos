@@ -1,8 +1,8 @@
 # Makefile for GNU make
 HDRLOC_CORE += config
 HDRLOC_CORE += include
-HDRLOC_CORE += include/stdc
-HDRLOC_CORE += include/stdc/sys
+HDRLOC_CORE += include/libc
+HDRLOC_CORE += include/libc/sys
 include $(SYS_DRV_LOC)/Makefile
 include $(SYS_FS_LOC)/Makefile
 include $(SYS_INIT_LOC)/Makefile

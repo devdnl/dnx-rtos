@@ -36,7 +36,7 @@
 #include <stdbool.h>
 #include "lib/conv.h"
 #include "lib/llist.h"
-#include "lib/printk.h"
+#include "kernel/printk.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "lib/printx.h"

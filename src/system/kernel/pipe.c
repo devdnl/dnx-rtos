@@ -30,7 +30,7 @@
 #include "config.h"
 #include <stdbool.h>
 #include <sys/types.h>
-#include "stdc/errno.h"
+#include "libc/errno.h"
 #include "kernel/kwrapper.h"
 #include "kernel/pipe.h"
 
