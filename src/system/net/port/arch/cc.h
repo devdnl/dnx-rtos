@@ -33,7 +33,7 @@
 #define _CC_H_
 
 #include <sys/types.h>
-#include "lib/printx.h"
+#include "lib/printk.h"
 
 typedef i8_t    s8_t;
 typedef i16_t   s16_t;

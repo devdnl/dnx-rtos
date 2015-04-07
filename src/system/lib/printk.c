@@ -29,9 +29,11 @@
 ==============================================================================*/
 #include <stddef.h>
 #include "lib/printk.h"
+#include "lib/printx.h"
 #include "config.h"
 #include "fs/vfs.h"
 #include "mm/mm.h"
+#include "dnx/misc.h"
 
 /*==============================================================================
   Local macros
@@ -129,13 +131,14 @@ void _printk(const char *format, ...)
                         int n = _vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        _vfs_fwrite(buffer, sizeof(char), n, printk_file);
+                        size_t wrcnt;
+                        _vfs_fwrite(buffer, n, &wrcnt, printk_file);
 
                         if (LAST_CHARACTER(buffer) != '\n') {
                                 _vfs_fflush(printk_file);
                         }
 
-                        _sysm_kfree(buffer);
+                        _kfree(buffer);
                 }
         }
 #else

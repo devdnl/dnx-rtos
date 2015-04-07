@@ -132,8 +132,8 @@ static ssize_t  card_read_partial_sectors          (sdpart_t *hdl, u8_t *dst, si
 static ssize_t  card_write_entire_sectors          (sdpart_t *hdl, const u8_t *src, size_t nsectors, u64_t lseek);
 static ssize_t  card_write_partial_sectors         (sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek);
 static int      card_initialize                    (sdpart_t *hdl);
-static ssize_t  card_read                          (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek);
-static ssize_t  card_write                         (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek);
+static ssize_t  card_read                          (sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *rdcnt);
+static ssize_t  card_write                         (sdpart_t *hdl, const u8_t *src, size_t count, u64_t lseek, size_t *wrcnt);
 static u16_t    MBR_get_boot_signature             (u8_t *sector);
 static u32_t    MBR_get_partition_first_LBA_sector (int partition, u8_t *sector);
 static u32_t    MBR_get_partition_number_of_sectors(int partition, u8_t *sector);
@@ -1302,7 +1302,8 @@ static int MBR_detect_partitions(sdpart_t *hdl)
 
         u8_t *MBR = malloc(sector_size);
         if (MBR) {
-                if (card_read(hdl, MBR, sector_size, 0) != sector_size) {
+                size_t rdcnt;
+                if (card_read(hdl, MBR, sector_size, 0, &rdcnt) != sector_size) {
                         goto error;
                 }
 

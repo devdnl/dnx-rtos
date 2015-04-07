@@ -84,6 +84,7 @@ static void   restore_stdio_defaults  (task_t *task);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static       u32_t PID_cnt             = 1;
 static const uint  mutex_wait_attempts = 10;
 
 /*==============================================================================
@@ -103,6 +104,9 @@ struct _GVAR_STRUCT_NAME *global;
 
 /* error number */
 int _errno;
+
+/* task descriptor */
+_task_desc_t *_task_desc;
 
 /*==============================================================================
   External object definitions
@@ -925,20 +929,20 @@ int _thread_delete(thread_t *thread)
 //==============================================================================
 void _copy_task_context_to_standard_variables(void)
 {
-//        _task_data_t *task_data = _task_get_data();
-//        if (task_data) {
-//                stdin  = task_data->t_stdin;
-//                stdout = task_data->t_stdout;
-//                stderr = task_data->t_stderr;
-//                global = task_data->t_mem;
-//                errno  = task_data->t_errno;
-//        } else {
-//                stdin  = NULL;
-//                stdout = NULL;
-//                stderr = NULL;
-//                global = NULL;
-//                errno  = 0;
-//        }
+        _task_desc = _task_get_tag(THIS_TASK);
+        if (_task_desc) {
+                stdin  = _task_desc->t_stdin;
+                stdout = _task_desc->t_stdout;
+                stderr = _task_desc->t_stderr;
+                global = _task_desc->t_globals;
+                errno  = _task_desc->t_errno;
+        } else {
+                stdin  = NULL;
+                stdout = NULL;
+                stderr = NULL;
+                global = NULL;
+                errno  = 0;
+        }
 }
 
 //==============================================================================
@@ -949,14 +953,14 @@ void _copy_task_context_to_standard_variables(void)
 //==============================================================================
 void _copy_standard_variables_to_task_context(void)
 {
-//        _task_data_t *task_data = _task_get_data();
-//        if (task_data) {
-//                task_data->t_stdin  = stdin;
-//                task_data->t_stdout = stdout;
-//                task_data->t_stderr = stderr;
-//                task_data->t_errno  = errno;
-//                task_data->t_mem    = global;
-//        }
+        _task_data_t *task_data = _task_get_data();
+        if (task_data) {
+                task_data->t_stdin  = stdin;
+                task_data->t_stdout = stdout;
+                task_data->t_stderr = stderr;
+                task_data->t_errno  = errno;
+                task_data->t_mem    = global;
+        }
 }
 
 /*==============================================================================

@@ -282,7 +282,11 @@ void _appfree(void *mem)
 //==============================================================================
 void *_modcalloc(size_t num, size_t size, size_t modid)
 {
-        return _heap_calloc(num, size, modify_RAM_usage, &module_memory_usage[modid]);
+        if (modid >= 0 && modid < _drvreg_number_of_modules) {
+                return _heap_calloc(num, size, modify_RAM_usage, &module_memory_usage[modid]);
+        } else {
+                return NULL;
+        }
 }
 
 //==============================================================================
@@ -296,7 +300,11 @@ void *_modcalloc(size_t num, size_t size, size_t modid)
 //==============================================================================
 void *_modmalloc(size_t size, size_t modid)
 {
-        return _heap_malloc(size, modify_RAM_usage, &module_memory_usage[modid]);
+        if (modid >= 0 && modid < _drvreg_number_of_modules) {
+                return _heap_malloc(size, modify_RAM_usage, &module_memory_usage[modid]);
+        } else {
+                return NULL;
+        }
 }
 
 //==============================================================================
@@ -311,10 +319,10 @@ void *_modmalloc(size_t size, size_t modid)
 //==============================================================================
 void _modfree(void *mem, size_t modid)
 {
-        return _heap_free(mem, modify_RAM_usage, &module_memory_usage[modid]);
+        if (modid >= 0 && modid < _drvreg_number_of_modules) {
+                return _heap_free(mem, modify_RAM_usage, &module_memory_usage[modid]);
+        }
 }
-
-
 
 //==============================================================================
 /**

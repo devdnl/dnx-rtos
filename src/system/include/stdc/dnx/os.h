@@ -94,7 +94,7 @@ typedef _mm_mem_usage_t          memstat_t;
 //==============================================================================
 static inline u32_t get_used_static_memory(void)
 {
-        return (_HEAP_RAM_SIZE - _HEAP_HEAP_SIZE);
+        return (_HEAP_RAM_SIZE - _HEAP_SIZE);
 }
 
 //==============================================================================
@@ -148,7 +148,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-        return (get_used_static_memory() + (_HEAP_HEAP_SIZE - _heap_get_free_heap()));
+        return (get_used_static_memory() + (_HEAP_SIZE - _heap_get_free_heap()));
 }
 
 //==============================================================================

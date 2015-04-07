@@ -99,21 +99,21 @@ int _fscanf(FILE *stream, const char *format, ...)
 int _vfscanf(FILE *stream, const char *format, va_list arg)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
-        char *str = _sysm_syscalloc(BUFSIZ, sizeof(char));
-        if (!str)
-                return 0;
+//        char *str = _sysm_syscalloc(BUFSIZ, sizeof(char));
+//        if (!str)
+//                return 0;
 
         int n = 0;
-        if (_fgets(str, BUFSIZ, stream) == str) {
-                char *lf;
-                if ((lf = strchr(str, '\n')) != NULL) {
-                        *lf = '\0';
-                }
-
-                n = _vsscanf(str, format, arg);
-        }
-
-        _sysm_sysfree(str);
+//        if (_fgets(str, BUFSIZ, stream) == str) {
+//                char *lf;
+//                if ((lf = strchr(str, '\n')) != NULL) {
+//                        *lf = '\0';
+//                }
+//
+//                n = _vsscanf(str, format, arg);
+//        }
+//
+//        _sysm_sysfree(str);
         return n;
 #else
         UNUSED_ARG(stream);

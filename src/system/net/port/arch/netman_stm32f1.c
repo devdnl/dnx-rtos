@@ -35,7 +35,7 @@
 #include <dnx/os.h>
 #include <dnx/misc.h>
 #include "netif/etharp.h"
-#include "netman.h"
+#include "net/netman.h"
 
 /*==============================================================================
   Local macros

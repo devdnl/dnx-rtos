@@ -40,76 +40,116 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /** VT100 terminal commands */
-#define ENABLE_LINE_WRAP                        "\033[?7h"
-#define SET_NEW_LINE_MODE                       "\033[20h"
-#define SET_LINE_FEED_MODE                      "\033[20l"
-#define CLEAR_SCREEN                            "\033[2J\033[H"
-#define ERASE_LINE                              "\033[2K"
-#define ERASE_LINE_END                          "\033[K"
-#define CURSOR_HOME                             "\033[H"
-#define CURSOR_FORWARD(n)                       "\033["#n"C"
-#define CURSOR_BACKWARD(n)                      "\033["#n"D"
-#define CURSOR_OFF                              "\033[?25l"
-#define CURSOR_ON                               "\033[?25h"
+#define VT100_ENABLE_LINE_WRAP                  "\033[?7h"
+#define VT100_SET_NEW_LINE_MODE                 "\033[20h"
+#define VT100_SET_LINE_FEED_MODE                "\033[20l"
+#define VT100_CLEAR_SCREEN                      "\033[2J\033[H"
+#define VT100_ERASE_LINE                        "\033[2K"
+#define VT100_ERASE_LINE_END                    "\033[K"
+#define VT100_CURSOR_HOME                       "\033[H"
+#define VT100_CURSOR_FORWARD(n)                 "\033["#n"C"
+#define VT100_CURSOR_BACKWARD(n)                "\033["#n"D"
+#define VT100_CURSOR_OFF                        "\033[?25l"
+#define VT100_CURSOR_ON                         "\033[?25h"
+#define VT100_ERASE_LINE_FROM_CUR               "\033[K"
+#define VT100_SHIFT_CURSOR_RIGHT(t)             "\033["#t"C"
+#define VT100_SHIFT_CURSOR_LEFT(t)              "\033["#t"D"
+#define VT100_CLEAR_LINE                        "\r\033[K"
+#define VT100_RESET_ATTRIBUTES                  "\033[0m"
+#define VT100_DISABLE_LINE_WRAP                 "\033[7l"
+#define VT100_CURSOR_OFF                        "\033[?25l"
+#define VT100_CURSOR_ON                         "\033[?25h"
+#define VT100_CURSOR_HOME                       "\033[H"
+#define VT100_SAVE_CURSOR_POSITION              "\0337"
+#define VT100_RESTORE_CURSOR_POSITION           "\0338"
+#define VT100_SET_CURSOR_POSITION(r, c)         "\033["#r";"#c"H"
+#define VT100_QUERY_CURSOR_POSITION             "\033[6n"
+#define VT100_ARROW_UP                          "\033[A"
+#define VT100_ARROW_UP_STDOUT                   "\033^[A"
+#define VT100_ARROW_DOWN                        "\033[B"
+#define VT100_ARROW_DOWN_STDOUT                 "\033^[B"
+#define VT100_TAB                               "\033^[T"
+#define VT100_ARROW_LEFT                        "\033[D"
+#define VT100_ARROW_RIGHT                       "\033[C"
+#define VT100_HOME                              "\033[1~"
+#define VT100_INS                               "\033[2~"
+#define VT100_DEL                               "\033[3~"
+#define VT100_END_1                             "\033[4~"
+#define VT100_END_2                             "\033OF"
+#define VT100_PGUP                              "\033[5~"
+#define VT100_PGDN                              "\033[6~"
+#define VT100_F1                                "\033OP"
+#define VT100_F2                                "\033OQ"
+#define VT100_F3                                "\033OR"
+#define VT100_F4                                "\033OS"
+#define VT100_F5                                "\033[16~"
+#define VT100_F6                                "\033[17~"
+#define VT100_F7                                "\033[18~"
+#define VT100_F8                                "\033[19~"
+#define VT100_F9                                "\033[20~"
+#define VT100_F10                               "\033[21~"
+#define VT100_F11                               "\033[23~"
+#define VT100_F12                               "\033[24~"
+
 
 #if (CONFIG_COLOR_TERMINAL_ENABLE > 0)
-#       define RESET_ATTRIBUTES                 "\033[0m"
-#       define FONT_BLINKING                    "\033[5m"
-#       define FONT_UNDERLINE                   "\033[4m"
-#       define FONT_NORMAL                      "\033[0m"
-#       define FONT_BOLD                        "\033[1m"
-#       define FONT_COLOR_BLACK                 "\033[30m"
-#       define FONT_COLOR_GRAY                  "\033[1;30m"
-#       define FONT_COLOR_RED                   "\033[31m"
-#       define FONT_COLOR_GREEN                 "\033[32m"
-#       define FONT_COLOR_YELLOW                "\033[1;33m"
-#       define FONT_COLOR_BROWN                 "\033[33m"
-#       define FONT_COLOR_BLUE                  "\033[34m"
-#       define FONT_COLOR_LIGHT_BLUE            "\033[1;34m"
-#       define FONT_COLOR_MAGENTA               "\033[35m"
-#       define FONT_COLOR_PINK                  "\033[1;35m"
-#       define FONT_COLOR_CYAN                  "\033[36m"
-#       define FONT_COLOR_WHITE                 "\033[37m"
-#       define BACK_COLOR_BLACK                 "\033[40m"
-#       define BACK_COLOR_GRAY                  "\033[1;40m"
-#       define BACK_COLOR_RED                   "\033[41m"
-#       define BACK_COLOR_GREEN                 "\033[42m"
-#       define BACK_COLOR_YELLOW                "\033[43m"
-#       define BACK_COLOR_BROWN                 "\033[1;43m"
-#       define BACK_COLOR_BLUE                  "\033[44m"
-#       define BACK_COLOR_MAGENTA               "\033[45m"
-#       define BACK_COLOR_PINK                  "\033[1;45m"
-#       define BACK_COLOR_CYAN                  "\033[46m"
-#       define BACK_COLOR_WHITE                 "\033[47m"
+#       define VT100_RESET_ATTRIBUTES           "\033[0m"
+#       define VT100_FONT_BLINKING              "\033[5m"
+#       define VT100_FONT_UNDERLINE             "\033[4m"
+#       define VT100_FONT_NORMAL                "\033[0m"
+#       define VT100_FONT_BOLD                  "\033[1m"
+#       define VT100_FONT_COLOR_BLACK           "\033[30m"
+#       define VT100_FONT_COLOR_GRAY            "\033[1;30m"
+#       define VT100_FONT_COLOR_RED             "\033[31m"
+#       define VT100_FONT_COLOR_GREEN           "\033[32m"
+#       define VT100_FONT_COLOR_YELLOW          "\033[1;33m"
+#       define VT100_FONT_COLOR_BROWN           "\033[33m"
+#       define VT100_FONT_COLOR_BLUE            "\033[34m"
+#       define VT100_FONT_COLOR_LIGHT_BLUE      "\033[1;34m"
+#       define VT100_FONT_COLOR_MAGENTA         "\033[35m"
+#       define VT100_FONT_COLOR_PINK            "\033[1;35m"
+#       define VT100_FONT_COLOR_CYAN            "\033[36m"
+#       define VT100_FONT_COLOR_WHITE           "\033[37m"
+#       define VT100_BACK_COLOR_BLACK           "\033[40m"
+#       define VT100_BACK_COLOR_GRAY            "\033[1;40m"
+#       define VT100_BACK_COLOR_RED             "\033[41m"
+#       define VT100_BACK_COLOR_GREEN           "\033[42m"
+#       define VT100_BACK_COLOR_YELLOW          "\033[43m"
+#       define VT100_BACK_COLOR_BROWN           "\033[1;43m"
+#       define VT100_BACK_COLOR_BLUE            "\033[44m"
+#       define VT100_BACK_COLOR_MAGENTA         "\033[45m"
+#       define VT100_BACK_COLOR_PINK            "\033[1;45m"
+#       define VT100_BACK_COLOR_CYAN            "\033[46m"
+#       define VT100_BACK_COLOR_WHITE           "\033[47m"
 #else
-#       define RESET_ATTRIBUTES
-#       define FONT_BLINKING
-#       define FONT_UNDERLINE
-#       define FONT_NORMAL
-#       define FONT_BOLD
-#       define FONT_COLOR_BLACK
-#       define FONT_COLOR_GRAY
-#       define FONT_COLOR_RED
-#       define FONT_COLOR_GREEN
-#       define FONT_COLOR_YELLOW
-#       define FONT_COLOR_BROWN
-#       define FONT_COLOR_BLUE
-#       define FONT_COLOR_LIGHT_BLUE
-#       define FONT_COLOR_MAGENTA
-#       define FONT_COLOR_PINK
-#       define FONT_COLOR_CYAN
-#       define FONT_COLOR_WHITE
-#       define BACK_COLOR_BLACK
-#       define BACK_COLOR_GRAY
-#       define BACK_COLOR_RED
-#       define BACK_COLOR_GREEN
-#       define BACK_COLOR_YELLOW
-#       define BACK_COLOR_BROWN
-#       define BACK_COLOR_BLUE
-#       define BACK_COLOR_MAGENTA
-#       define BACK_COLOR_PINK
-#       define BACK_COLOR_CYAN
-#       define BACK_COLOR_WHITE
+#       define VT100_RESET_ATTRIBUTES
+#       define VT100_FONT_BLINKING
+#       define VT100_FONT_UNDERLINE
+#       define VT100_FONT_NORMAL
+#       define VT100_FONT_BOLD
+#       define VT100_FONT_COLOR_BLACK
+#       define VT100_FONT_COLOR_GRAY
+#       define VT100_FONT_COLOR_RED
+#       define VT100_FONT_COLOR_GREEN
+#       define VT100_FONT_COLOR_YELLOW
+#       define VT100_FONT_COLOR_BROWN
+#       define VT100_FONT_COLOR_BLUE
+#       define VT100_FONT_COLOR_LIGHT_BLUE
+#       define VT100_FONT_COLOR_MAGENTA
+#       define VT100_FONT_COLOR_PINK
+#       define VT100_FONT_COLOR_CYAN
+#       define VT100_FONT_COLOR_WHITE
+#       define VT100_BACK_COLOR_BLACK
+#       define VT100_BACK_COLOR_GRAY
+#       define VT100_BACK_COLOR_RED
+#       define VT100_BACK_COLOR_GREEN
+#       define VT100_BACK_COLOR_YELLOW
+#       define VT100_BACK_COLOR_BROWN
+#       define VT100_BACK_COLOR_BLUE
+#       define VT100_BACK_COLOR_MAGENTA
+#       define VT100_BACK_COLOR_PINK
+#       define VT100_BACK_COLOR_CYAN
+#       define VT100_BACK_COLOR_WHITE
 #endif
 
 /*==============================================================================

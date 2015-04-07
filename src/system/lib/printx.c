@@ -325,12 +325,12 @@ static int dtoa(double value, char* str, int prec, int n)
 int _fputc(int c, FILE *stream)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        if (stream) {
-                char ch = (char)c;
-                if (_vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
-                        return c;
-                }
-        }
+//        if (stream) {
+//                char ch = (char)c;
+//                if (_vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
+//                        return c;
+//                }
+//        }
 #else
         UNUSED_ARG(c);
         UNUSED_ARG(stream);
@@ -352,16 +352,16 @@ int _fputc(int c, FILE *stream)
 int _f_puts(const char *s, FILE *file, bool puts)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        if (file) {
-                int n = _vfs_fwrite(s, sizeof(char), strlen(s), file);
-
-                if (puts) {
-                        n += _vfs_fwrite("\n", sizeof(char), 1, file);
-                }
-
-                if (n != 0)
-                        return n;
-        }
+//        if (file) {
+//                int n = _vfs_fwrite(s, sizeof(char), strlen(s), file);
+//
+//                if (puts) {
+//                        n += _vfs_fwrite("\n", sizeof(char), 1, file);
+//                }
+//
+//                if (n != 0)
+//                        return n;
+//        }
 #else
         UNUSED_ARG(s);
         UNUSED_ARG(file);
@@ -387,13 +387,13 @@ int _getc(FILE *stream)
         }
 
         int chr = 0;
-        if (_vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
-                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
-                        return EOF;
-                }
-        } else {
-                return EOF;
-        }
+//        if (_vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
+//                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
+//                        return EOF;
+//                }
+//        } else {
+//                return EOF;
+//        }
 
         return chr;
 #else
@@ -420,66 +420,66 @@ char *_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        struct stat file_stat;
-        if (_vfs_fstat(stream, &file_stat) == 0) {
-                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
-                        int n = 0;
-                        for (int i = 0; i < size - 1; i++) {
-                                int m = _vfs_fread(str + i, sizeof(char), 1, stream);
-                                if (m == 0) {
-                                        str[i] = '\0';
-                                        return str;
-                                } else {
-                                        n += m;
-                                }
-
-                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
-                                        if (n == 0) {
-                                                return NULL;
-                                        } else {
-                                                str[i + 1] = '\0';
-                                                return str;
-                                        }
-                                }
-
-                                if (str[i] == '\n') {
-                                        str[i + 1] = '\0';
-                                        break;
-                                }
-                        }
-
-                        return str;
-                } else {
-                        u64_t fpos = _vfs_ftell(stream);
-
-                        int n;
-                        while ((n = _vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
-                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
-                                        return NULL;
-                                }
-                        }
-
-                        char *end;
-                        if ((end = strchr(str, '\n'))) {
-                                end++;
-                                *end = '\0';
-                        } else {
-                                str[n] = '\0';
-                        }
-
-                        int len = strlen(str);
-
-                        if (len != 0 && len < n && _vfs_feof(stream))
-                                _vfs_clearerr(stream);
-
-                        if (len == 0)
-                                len = 1;
-
-                        _vfs_fseek(stream, fpos + len, SEEK_SET);
-
-                        return str;
-                }
-        }
+//        struct stat file_stat;
+//        if (_vfs_fstat(stream, &file_stat) == 0) {
+//                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
+//                        int n = 0;
+//                        for (int i = 0; i < size - 1; i++) {
+//                                int m = _vfs_fread(str + i, sizeof(char), 1, stream);
+//                                if (m == 0) {
+//                                        str[i] = '\0';
+//                                        return str;
+//                                } else {
+//                                        n += m;
+//                                }
+//
+//                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
+//                                        if (n == 0) {
+//                                                return NULL;
+//                                        } else {
+//                                                str[i + 1] = '\0';
+//                                                return str;
+//                                        }
+//                                }
+//
+//                                if (str[i] == '\n') {
+//                                        str[i + 1] = '\0';
+//                                        break;
+//                                }
+//                        }
+//
+//                        return str;
+//                } else {
+//                        u64_t fpos = _vfs_ftell(stream);
+//
+//                        int n;
+//                        while ((n = _vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+//                                if (_vfs_ferror(stream) || _vfs_feof(stream)) {
+//                                        return NULL;
+//                                }
+//                        }
+//
+//                        char *end;
+//                        if ((end = strchr(str, '\n'))) {
+//                                end++;
+//                                *end = '\0';
+//                        } else {
+//                                str[n] = '\0';
+//                        }
+//
+//                        int len = strlen(str);
+//
+//                        if (len != 0 && len < n && _vfs_feof(stream))
+//                                _vfs_clearerr(stream);
+//
+//                        if (len == 0)
+//                                len = 1;
+//
+//                        _vfs_fseek(stream, fpos + len, SEEK_SET);
+//
+//                        return str;
+//                }
+//        }
 #else
         UNUSED_ARG(str);
         UNUSED_ARG(size);
@@ -568,18 +568,18 @@ int _vfprintf(FILE *file, const char *format, va_list arg)
 #if (CONFIG_PRINTF_ENABLE > 0)
         int n = 0;
 
-        if (file && format) {
-                va_list carg;
-                va_copy(carg, arg);
-                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
-
-                char *str = _sysm_syscalloc(1, size);
-                if (str) {
-                        n = _vsnprintf(str, size, format, arg);
-                        _vfs_fwrite(str, sizeof(char), n, file);
-                        _sysm_sysfree(str);
-                }
-        }
+//        if (file && format) {
+//                va_list carg;
+//                va_copy(carg, arg);
+//                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
+//
+//                char *str = _sysm_syscalloc(1, size);
+//                if (str) {
+//                        n = _vsnprintf(str, size, format, arg);
+//                        _vfs_fwrite(str, sizeof(char), n, file);
+//                        _sysm_sysfree(str);
+//                }
+//        }
 
         return n;
 #else

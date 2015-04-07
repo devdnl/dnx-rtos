@@ -36,6 +36,7 @@
 #include <stdbool.h>
 #include "lib/conv.h"
 #include "lib/llist.h"
+#include "lib/printk.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "lib/printx.h"
@@ -887,7 +888,14 @@ static inline i64_t _sys_ftell(FILE *file)
  * @return 0 on success. On error, different from 0 is returned
  */
 //==============================================================================
-#define _sys_ioctl(FILE__stream, ...) _vfs_ioctl(FILE__stream, __VA_ARGS__)
+static inline int _sys_ioctl(FILE *file, int rq, ...)
+{
+    va_list arg;
+    va_start(arg, rq);
+    int result = _vfs_vfioctl(file, rq, arg);
+    va_end(arg);
+    return result;
+}
 
 //==============================================================================
 /**

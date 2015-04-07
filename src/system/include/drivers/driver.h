@@ -41,6 +41,7 @@ extern "C" {
 #include <string.h>
 #include "kernel/sysfunc.h"
 #include "drivers/drvctrl.h"
+#include "lib/vt100.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

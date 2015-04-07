@@ -592,7 +592,7 @@ static void service_out(void *arg)
                                 tty_t *tty = tty_module->tty[rq.arg];
 
                                 if (rq.arg == tty_module->current_tty && _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-                                        const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) ERASE_LINE;
+                                        const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) VT100_ERASE_LINE;
                                         _sys_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
 
                                         const char *last_line = ttybfr_get_line(tty->screen, 0);

@@ -84,7 +84,7 @@
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(_HEAP_HEAP_SIZE - SIZEOF_STRUCT_MEM)
+#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(_HEAP_SIZE - SIZEOF_STRUCT_MEM)
 
 /*==============================================================================
   Local types, enums definitions
@@ -406,7 +406,7 @@ void *_heap_calloc(size_t count, size_t size, _heap_func_t func, void *arg)
 //==============================================================================
 u32_t _heap_get_free_heap(void)
 {
-        return (_HEAP_HEAP_SIZE - used_mem);
+        return (_HEAP_SIZE - used_mem);
 }
 
 /*==============================================================================

@@ -72,8 +72,8 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #define _HEAP_RAM_SIZE        ((size_t)&__ram_size)
-#define _HEAP_HEAP_SIZE       ((size_t)&__heap_size)
-#define _HEAP_HEAP_START      ((void *)&__heap_start)
+#define _HEAP_SIZE            ((size_t)&__heap_size)
+#define _HEAP_START           ((void *)&__heap_start)
 
 /*==============================================================================
   Exported types, enums definitions

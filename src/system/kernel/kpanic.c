@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include "kernel/kpanic.h"
+#include "lib/vt100.h"
 #include "mm/mm.h"
 #include "config.h"
 
@@ -100,7 +101,7 @@ bool _kernel_panic_detect(bool show_msg)
 #endif
 
         bool occurred = (  kernel_panic_descriptor->valid1 == _KERNEL_PANIC_DESC_VALID1
-                       && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
+                        && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
                 if (show_msg) {
@@ -114,7 +115,7 @@ bool _kernel_panic_detect(bool show_msg)
                         }
 
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-                        _printk(FONT_COLOR_RED"*** KERNEL PANIC ***"RESET_ATTRIBUTES"\n");
+                        _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
                         _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
                         _printk("Task : %s\n\n", kernel_panic_descriptor->task_name);
 #endif
