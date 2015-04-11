@@ -127,8 +127,21 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
                 tty_module->infile      = _sys_fopen(_TTY_IN_FILE, "r");
                 tty_module->outfile     = _sys_fopen(_TTY_OUT_FILE, "w");
-                tty_module->service_in  = _sys_task_new(service_in, service_in_name, service_in_stack_depth, NULL);
-                tty_module->service_out = _sys_task_new(service_out, service_out_name, service_out_stack_depth, NULL);
+
+                _sys_task_create(service_in,
+                                 service_in_name,
+                                 service_in_stack_depth,
+                                 NULL,
+                                 NULL,
+                                 &tty_module->service_in);
+
+                _sys_task_create(service_out,
+                                 service_out_name,
+                                 service_out_stack_depth,
+                                 NULL,
+                                 NULL,
+                                 &tty_module->service_out);
+
                 tty_module->queue_cmd   = _sys_queue_new(queue_cmd_len, sizeof(tty_cmd_t));
 
                 if (  !tty_module->infile || !tty_module->outfile || !tty_module->queue_cmd
@@ -144,10 +157,10 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                                 _sys_queue_delete(tty_module->queue_cmd);
 
                         if (tty_module->service_in)
-                                _sys_task_delete(tty_module->service_in);
+                                _sys_task_destroy(tty_module->service_in);
 
                         if (tty_module->service_out)
-                                _sys_task_delete(tty_module->service_out);
+                                _sys_task_destroy(tty_module->service_out);
 
                         _sys_free(reinterpret_cast(void**, &tty_module));
                         tty_module = NULL;
@@ -226,8 +239,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 }
 
                 if (release_TTY) {
-                        _sys_task_delete(tty_module->service_in);
-                        _sys_task_delete(tty_module->service_out);
+                        _sys_task_destroy(tty_module->service_in);
+                        _sys_task_destroy(tty_module->service_out);
                         _sys_fclose(tty_module->infile);
                         _sys_fclose(tty_module->outfile);
                         _sys_queue_delete(tty_module->queue_cmd);

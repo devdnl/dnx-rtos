@@ -29,7 +29,8 @@
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "kernel/ktypes.h"
-#include "dnx/misc.h"
+#include "lib/cast.h"
+#include "errno.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -112,40 +113,47 @@ static bool is_queue_valid(queue_t *queue)
  * Function by default allocate memory for task data (localized in task tag)
  * which is used to cpu load calculation and standard IO and etc.
  *
- * @param[in ] *func            task code
- * @param[in ] *name            task name
- * @param[in ]  stack_depth     stack deep
- * @param[in ] *argv            argument pointer
- * @param[in ] *tag             user's tag
+ * @param[in ] func             task code
+ * @param[in ] name             task name
+ * @param[in ] stack_depth      stack deep
+ * @param[in ] argv             argument pointer (can be NULL)
+ * @param[in ] tag              user's tag (can be NULL)
+ * @param[out] task             task handle (can be NULL)
  *
- * @return task object pointer or NULL if error
+ * @return On of errno value.
  */
 //==============================================================================
-task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag)
+int _task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
 {
-        int scheduler_status = xTaskGetSchedulerState();
-        uint child_priority  = PRIORITY(0);
+        int result = EINVAL;
 
-        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                child_priority = uxTaskPriorityGet(THIS_TASK);
-        }
-
-        taskENTER_CRITICAL();
-        task_t *task = NULL;
-        if (xTaskCreate(func, name, stack_depth, argv, child_priority, &task) == pdPASS) {
+        if (func && name && stack_depth) {
+                int scheduler_status = xTaskGetSchedulerState();
+                uint child_priority  = PRIORITY(0);
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                        vTaskSuspend(task);
+                        child_priority = uxTaskPriorityGet(THIS_TASK);
+                }
+
+                taskENTER_CRITICAL();
+
+                if (xTaskCreate(func, name, stack_depth, argv, child_priority, task) == pdPASS) {
+
+                        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
+                                vTaskSuspend(task);
+                        }
+
+                        vTaskSetApplicationTaskTag(task, (void *)tag);
+
+                        result = ESUCC;
+                } else {
+                        result = ENOMEM;
                 }
 
                 taskEXIT_CRITICAL();
-                vTaskSetApplicationTaskTag(task, (void *)tag);
-        } else {
-                taskEXIT_CRITICAL();
-                task = NULL;
         }
 
-        return task;
+        return result;
 }
 
 //==============================================================================
@@ -155,13 +163,18 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
  * list. Function resume the parent task before delete.
  *
  * @param *taskHdl       task handle
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void _task_delete(task_t *taskHdl)
+int _task_destroy(task_t *taskHdl)
 {
-        taskENTER_CRITICAL();
-        vTaskDelete(taskHdl);
-        taskEXIT_CRITICAL();
+        if (taskHdl) {
+                vTaskDelete(taskHdl);
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -172,7 +185,7 @@ void _task_delete(task_t *taskHdl)
 void _task_exit(void)
 {
         /* request to delete task */
-        _task_delete(_task_get_handle());
+        _task_destroy(_task_get_handle());
 
         /* wait for exit */
         for (;;) {}

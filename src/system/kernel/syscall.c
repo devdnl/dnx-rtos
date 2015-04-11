@@ -29,11 +29,13 @@
 ==============================================================================*/
 #include "kernel/syscall.h"
 #include "fs/fsctrl.h"
-#include "drivers/drvctrl.h"
 #include "fs/vfs.h"
+#include "drivers/drvctrl.h"
 #include "kernel/kwrapper.h"
+#include "kernel/process.h"
 #include "config.h"
 #include "errno.h"
+#include "lib/cast.h"
 #include "dnx/misc.h"
 
 #include "lib/printx.h"
@@ -107,7 +109,7 @@ static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallr
 ==============================================================================*/
 static queue_t *call_request;
 static queue_t *call_response;
-static task_t  *kworker;
+static pid_t    kworker;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -195,8 +197,8 @@ void _syscall_init()
 {
         call_request  = _queue_new(1, sizeof(syscallrq_t));
         call_response = _queue_new(1, sizeof(syscallres_t));
-        kworker       = _task_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, NULL);
-//        pid_t kworker = _process_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, true);
+
+        _process_create(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, &kworker);
 }
 
 //==============================================================================

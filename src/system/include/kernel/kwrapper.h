@@ -90,8 +90,8 @@ enum mutex_type {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t  *_task_new                          (void (*)(void*), const char*, const uint, void*, void*);
-extern void     _task_delete                       (task_t*);
+extern int      _task_create                       (void (*)(void*), const char*, const uint, void*, void*, task_t**);
+extern int      _task_destroy                      (task_t*);
 extern void     _task_exit                         (void);
 extern void     _task_suspend                      (task_t*);
 extern void     _task_resume                       (task_t*);

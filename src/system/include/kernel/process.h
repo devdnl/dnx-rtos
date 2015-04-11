@@ -103,6 +103,7 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern int         _process_create(void (*)(void*), const char*, const uint, void*, pid_t*);
 extern const char *_process_get_CWD                             (void);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);

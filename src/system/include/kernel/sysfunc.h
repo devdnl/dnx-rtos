@@ -1285,17 +1285,19 @@ static inline int _sys_time_diff(uint time1, uint time2)
  * Function by default allocate memory for task data (localized in task tag)
  * which is used to cpu load calculation and standard IO and etc.
  *
- * @param[in ] *func            task code
- * @param[in ] *name            task name
- * @param[in ]  stack_depth     stack deep
- * @param[in ] *argv            argument pointer
+ * @param[in ] func             task code
+ * @param[in ] name             task name
+ * @param[in ] stack_depth      stack deep
+ * @param[in ] argv             argument pointer (can be NULL)
+ * @param[in ] tag              user's tag (can be NULL)
+ * @param[out] task             task handle (can be NULL)
  *
- * @return task object pointer or NULL if error
+ * @return On of errno value.
  */
 //==============================================================================
-static inline task_t *_sys_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv)
+static inline int _sys_task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
 {
-        return _task_new(func, name, stack_depth, argv, NULL);
+        return _task_create(func, name, stack_depth, argv, tag, task);
 }
 
 //==============================================================================
@@ -1307,9 +1309,9 @@ static inline task_t *_sys_task_new(void (*func)(void*), const char *name, const
  * @param *taskHdl       task handle
  */
 //==============================================================================
-static inline void _sys_task_delete(task_t *taskhdl)
+static inline int _sys_task_destroy(task_t *taskhdl)
 {
-        return _task_delete(taskhdl);
+        return _task_destroy(taskhdl);
 }
 
 //==============================================================================
