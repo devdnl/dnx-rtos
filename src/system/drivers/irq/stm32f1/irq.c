@@ -107,10 +107,14 @@ static IRQ_t *IRQ;
 //==============================================================================
 API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
+        int result = ENODEV;
+
         if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
-                int result = _sys_calloc(1, sizeof(IRQ_t), device_handle);
+                result = _sys_calloc(1, sizeof(IRQ_t), device_handle);
                 if (result == ESUCC) {
                         IRQ_t *hdl = *device_handle;
+
+                        IRQ = hdl;
 
                         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
                                 switch (default_config[i].mode) {
@@ -138,33 +142,26 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                 if (default_config[i].mode != _IRQ_MODE_DISABLED) {
                                         set_EXTI_IRQ_priority(i, default_config[i].priority);
 
-                                        hdl->irqsem[i] = _sys_semaphore_new(1, 0);
-                                        if (hdl->irqsem[i] == NULL) {
+                                        result = _sys_semaphore_create(1, 0, &hdl->irqsem[i]);
+                                        if (result != ESUCC) {
                                                 for (int s = 0; s < NUMBER_OF_IRQs; s++) {
                                                         disable_EXTI_IRQ(s);
 
                                                         if (hdl->irqsem[s]) {
-                                                                _sys_semaphore_delete(hdl->irqsem[s]);
+                                                                _sys_semaphore_destroy(hdl->irqsem[s]);
                                                                 hdl->irqsem[s] = NULL;
                                                         }
                                                 }
 
                                                 _sys_free(device_handle);
                                                 IRQ = NULL;
-                                                return ENOMEM;
                                         }
                                 }
                         }
-
-                        IRQ = hdl;
-
-                        return ESUCC;
-                } else {
-                        return ENOMEM;
                 }
         }
 
-        return ENODEV;
+        return result;
 }
 
 //==============================================================================
@@ -186,7 +183,7 @@ API_MOD_RELEASE(IRQ, void *device_handle)
                 disable_EXTI_IRQ(i);
 
                 if (hdl->irqsem[i]) {
-                        _sys_semaphore_delete(hdl->irqsem[i]);
+                        _sys_semaphore_destroy(hdl->irqsem[i]);
                         hdl->irqsem[i] = NULL;
                 }
         }
@@ -306,6 +303,8 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 
         IRQ_t *hdl = device_handle;
 
+        int result = EINVAL;
+
         if (arg) {
                 switch (request) {
                 case IOCTL_IRQ__CATCH: {
@@ -313,14 +312,11 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         if (irqn->irq_number < NUMBER_OF_IRQs) {
                                 if (hdl->irqsem[irqn->irq_number]) {
                                         bool s = _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
-                                        return s ? ESUCC : ETIME;
+                                        result = s ? ESUCC : ETIME;
                                 } else {
                                         return ENODEV;
                                 }
-                        } else {
-                                return EINVAL;
                         }
-
                         break;
                 }
 
@@ -343,14 +339,15 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                                         disable_EXTI_IRQ(cfg->irq_number);
 
                                         if (hdl->irqsem[cfg->irq_number]) {
-                                                _sys_semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                                _sys_semaphore_destroy(hdl->irqsem[cfg->irq_number]);
                                                 hdl->irqsem[cfg->irq_number] = NULL;
                                         }
                                 } else {
                                         if (hdl->irqsem[cfg->irq_number] == NULL) {
-                                                hdl->irqsem[cfg->irq_number] = _sys_semaphore_new(1, 0);
-                                                if (hdl->irqsem[cfg->irq_number] == NULL)
-                                                        return ENODEV;
+                                                int result = _sys_semaphore_create(1, 0, &hdl->irqsem[cfg->irq_number]);
+                                                if (result != ESUCC) {
+                                                        return result;
+                                                }
                                         }
 
                                         bool falling, rising;
@@ -380,11 +377,11 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                 }
 
                 default:
-                        return EBADRQC;
+                        result = EBADRQC;
                 }
-        } else {
-                return EINVAL;
         }
+
+        return result;
 }
 
 //==============================================================================

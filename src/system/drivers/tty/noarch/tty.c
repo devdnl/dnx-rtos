@@ -222,7 +222,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
 {
         tty_t *tty = device_handle;
 
-        if (_sys_mutex_lock(tty->secure_mtx, 0)) {
+        if (_sys_mutex_trylock(tty->secure_mtx) == ESUCC) {
                 _sys_critical_section_begin();
                 _sys_mutex_delete(tty->secure_mtx);
                 _sys_queue_delete(tty->queue_out);

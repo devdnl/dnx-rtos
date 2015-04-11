@@ -1367,15 +1367,16 @@ static inline bool _sys_task_resume_from_ISR(task_t *taskhdl)
 /**
  * @brief Function create binary semaphore
  *
- * @param cnt_max       max count value (1 for binary)
- * @param cnt_init      initial value (0 or 1 for binary)
+ * @param[in]  cnt_max          max count value (1 for binary)
+ * @param[in]  cnt_init         initial value (0 or 1 for binary)
+ * @param[out] sem              created semaphore handle
  *
- * @return binary semaphore object
+ * @return One of errno values.
  */
 //==============================================================================
-static inline sem_t *_sys_semaphore_new(const uint cnt_max, const uint cnt_init)
+static inline int _sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
 {
-        return _semaphore_new(cnt_max, cnt_init);
+        return _semaphore_create(cnt_max, cnt_init, sem);
 }
 
 //==============================================================================
@@ -1385,67 +1386,63 @@ static inline sem_t *_sys_semaphore_new(const uint cnt_max, const uint cnt_init)
  * @param[in] *sem      semaphore object
  */
 //==============================================================================
-static inline void _sys_semaphore_delete(sem_t *sem)
+static inline int _sys_semaphore_destroy(sem_t *sem)
 {
-        return _semaphore_delete(sem);
+        return _semaphore_destroy(sem);
 }
 
 //==============================================================================
 /**
- * @brief Function take semaphore
+ * @brief Function wait for semaphore
  *
  * @param[in] *sem              semaphore object
- * @param[in]  timeout          semaphore polling time
+ * @param[in]  blocktime_ms     semaphore polling time
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_semaphore_wait(sem_t *sem, const uint timeout)
+static inline int _sys_semaphore_wait(sem_t *sem, const uint timeout)
 {
         return _semaphore_wait(sem, timeout);
 }
 
 //==============================================================================
 /**
- * @brief Function give semaphore
+ * @brief Function signal semaphore
  *
  * @param[in] *sem      semaphore object
  *
- * @retval true         semaphore given
- * @retval false        semaphore not given
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_semaphore_signal(sem_t *sem)
+static inline int _sys_semaphore_signal(sem_t *sem)
 {
         return _semaphore_signal(sem);
 }
 
 //==============================================================================
 /**
- * @brief Function take semaphore from ISR
+ * @brief Function wait for semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
  * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+static inline int _sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
         return _semaphore_wait_from_ISR(sem, task_woken);
 }
 
 //==============================================================================
 /**
- * @brief Function give semaphore from ISR
+ * @brief Function signal semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
  * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
 static inline bool _sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
@@ -1457,26 +1454,29 @@ static inline bool _sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 /**
  * @brief Function create new mutex
  *
- * @param type          mutex type
+ * @param[in]  type     mutex type
+ * @param[out] mtx      created mutex handle
  *
- * @return pointer to mutex object, otherwise NULL if error
+ * @return One of errno values.
  */
 //==============================================================================
-static inline mutex_t *_sys_mutex_new(enum mutex_type type)
+static inline int _sys_mutex_create(enum mutex_type type, mutex_t **mtx)
 {
-        return _mutex_new(type);
+        return _mutex_create(type, mtx);
 }
 
 //==============================================================================
 /**
- * @brief Function delete mutex
+ * @brief Function destroy mutex
  *
  * @param[in] *mutex    mutex object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-static inline void _sys_mutex_delete(mutex_t *mutex)
+static inline int _sys_mutex_destroy(mutex_t *mutex)
 {
-        return _mutex_delete(mutex);
+        return _mutex_destroy(mutex);
 }
 
 //==============================================================================
@@ -1484,15 +1484,28 @@ static inline void _sys_mutex_delete(mutex_t *mutex)
  * @brief Function lock mutex
  *
  * @param[in] mutex             mutex object
- * @param[in] timeout           polling time
+ * @param[in] blocktime_ms      polling time
  *
- * @retval true                 mutex locked
- * @retval false                mutex not locked
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_mutex_lock(mutex_t *mutex, const uint timeout)
+static inline int _sys_mutex_lock(mutex_t *mutex, const uint timeout)
 {
         return _mutex_lock(mutex, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief Function lock mutex
+ *
+ * @param[in] mutex             mutex object
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+static inline int _sys_mutex_trylock(mutex_t *mutex)
+{
+        return _mutex_lock(mutex, 0);
 }
 
 //==============================================================================
@@ -1501,11 +1514,10 @@ static inline bool _sys_mutex_lock(mutex_t *mutex, const uint timeout)
  *
  * @param[in] *mutex            mutex object
  *
- * @retval true         mutex unlocked
- * @retval false        mutex still locked
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_mutex_unlock(mutex_t *mutex)
+static inline int _sys_mutex_unlock(mutex_t *mutex)
 {
         return _mutex_unlock(mutex);
 }
@@ -1514,15 +1526,16 @@ static inline bool _sys_mutex_unlock(mutex_t *mutex)
 /**
  * @brief Function create new queue
  *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
+ * @param[in]  length           queue length
+ * @param[in]  item_size        queue item size
+ * @param[out] queue            created queue
  *
- * @return pointer to queue object, otherwise NULL if error
+ * @return One of errno values.
  */
 //==============================================================================
-static inline queue_t*_sys_queue_new(const uint length, const uint item_size)
+static inline int _sys_queue_create(const uint length, const uint item_size, queue_t **queue)
 {
-        return _queue_new(length, item_size);
+        return _queue_create(length, item_size, queue);
 }
 
 //==============================================================================
@@ -1530,11 +1543,13 @@ static inline queue_t*_sys_queue_new(const uint length, const uint item_size)
  * @brief Function delete queue
  *
  * @param[in] *queue            queue object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-static inline void _sys_queue_delete(queue_t *queue)
+static inline int _sys_queue_destroy(queue_t *queue)
 {
-        return _queue_delete(queue);
+        return _queue_destroy(queue);
 }
 
 //==============================================================================
@@ -1544,7 +1559,7 @@ static inline void _sys_queue_delete(queue_t *queue)
  * @param[in] *queue            queue object
  */
 //==============================================================================
-static inline void _sys_queue_reset(queue_t *queue)
+static inline int _sys_queue_reset(queue_t *queue)
 {
         return _queue_reset(queue);
 }
@@ -1557,11 +1572,10 @@ static inline void _sys_queue_reset(queue_t *queue)
  * @param[in] *item             item
  * @param[in]  waittime_ms      wait time
  *
- * @retval true         item posted
- * @retval false        item not posted
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_queue_send(queue_t *queue, const void *item, const uint waittime_ms)
+static inline int _sys_queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 {
         return _queue_send(queue, item, waittime_ms);
 }
@@ -1574,11 +1588,10 @@ static inline bool _sys_queue_send(queue_t *queue, const void *item, const uint 
  * @param[in]  *item             item
  * @param[out] *task_woken       1 if higher priority task woken, otherwise 0 (can be NULL)
  *
- * @retval true         item posted
- * @retval false        item not posted
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+static inline int _sys_queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
         return _queue_send_from_ISR(queue, item, task_woken);
 }
@@ -1591,11 +1604,10 @@ static inline bool _sys_queue_send_from_ISR(queue_t *queue, const void *item, bo
  * @param[out] *item             item
  * @param[in]   waittime_ms      wait time
  *
- * @retval true         item received
- * @retval false        item not received
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_queue_receive(queue_t *queue, void *item, const uint waittime_ms)
+static inline int _sys_queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 {
         return _queue_receive(queue, item, waittime_ms);
 }
@@ -1608,11 +1620,10 @@ static inline bool _sys_queue_receive(queue_t *queue, void *item, const uint wai
  * @param[out] item             item
  * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
+static inline int _sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
         return _queue_receive_from_ISR(queue, item, task_woken);
 }
@@ -1625,11 +1636,10 @@ static inline bool _sys_queue_receive_from_ISR(queue_t *queue, void *item, bool 
  * @param[out] *item             item
  * @param[in]   waittime_ms      wait time
  *
- * @retval true         item received
- * @retval false        item not received
+ * @return One of errno values.
  */
 //==============================================================================
-static inline bool _sys_queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
+static inline int _sys_queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 {
         return _queue_receive_peek(queue, item, waittime_ms);
 }
@@ -1638,42 +1648,45 @@ static inline bool _sys_queue_receive_peek(queue_t *queue, void *item, const uin
 /**
  * @brief Function gets number of items in queue
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_queue_get_number_of_items(queue_t *queue)
+static inline int _sys_queue_get_number_of_items(queue_t *queue, size_t *items)
 {
-        return _queue_get_number_of_items(queue);
+        return _queue_get_number_of_items(queue, items);
 }
 
 //==============================================================================
 /**
  * @brief Function gets number of items in queue from ISR
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_queue_get_number_of_items_from_ISR(queue_t *queue)
+static inline int _sys_queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
 {
-        return _queue_get_number_of_items_from_ISR(queue);
+        return _queue_get_number_of_items_from_ISR(queue, items);
 }
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue from ISR
+ * @brief Function gets number of free items in queue
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_queue_get_space_available(queue_t *queue)
+static inline int _sys_queue_get_space_available(queue_t *queue, size_t *items)
 {
-        return _queue_get_space_available(queue);
+        return _queue_get_space_available(queue, items);
 }
 
 //==============================================================================

@@ -195,9 +195,8 @@ void _syscall(syscall_t syscall, void *retptr, ...)
 //==============================================================================
 void _syscall_init()
 {
-        call_request  = _queue_new(1, sizeof(syscallrq_t));
-        call_response = _queue_new(1, sizeof(syscallres_t));
-
+        _queue_create(1, sizeof(syscallrq_t), &call_request);
+        _queue_create(1, sizeof(syscallres_t), &call_response);
         _process_create(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, &kworker);
 }
 

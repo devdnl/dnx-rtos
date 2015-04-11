@@ -110,39 +110,41 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        struct LFS_data *lfs;
-        int result = _sys_calloc(1, sizeof(struct LFS_data), reinterpret_cast(void**, &lfs));
-        if (result != ESUCC) {
-                return result;
+        int result = _sys_calloc(1, sizeof(struct LFS_data), fs_handle);
+        if (result == ESUCC) {
+                struct LFS_data *lfs = *fs_handle;
+
+                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &lfs->resource_mtx);
+                if (result == ESUCC) {
+
+                        lfs->root_dir.data = _sys_llist_new(NULL, NULL);
+                        lfs->opended_files = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
+
+                        if (lfs->root_dir.data && lfs->opended_files) {
+                                lfs->root_dir.name = "/";
+                                lfs->root_dir.size = sizeof(node_t);
+                                lfs->root_dir.type = NODE_TYPE_DIR;
+
+                                return result;
+                        } else {
+                                if (lfs->root_dir.data) {
+                                        _sys_llist_delete(lfs->root_dir.data);
+                                }
+
+                                if (lfs->opended_files) {
+                                        _sys_llist_delete(lfs->opended_files);
+                                }
+
+                                result = ENOMEM;
+                        }
+
+                        _sys_mutex_destroy(lfs->resource_mtx);
+                }
+
+                _sys_free(fs_handle);
         }
 
-        lfs->resource_mtx  = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
-        lfs->root_dir.data = _sys_llist_new(NULL, NULL);
-        lfs->opended_files = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
-
-        if (!lfs->resource_mtx || !lfs->root_dir.data || !lfs->opended_files) {
-                if (lfs->resource_mtx) {
-                        _sys_mutex_delete(lfs->resource_mtx);
-                }
-
-                if (lfs->root_dir.data) {
-                        _sys_llist_delete(lfs->root_dir.data);
-                }
-
-                if (lfs->opended_files) {
-                        _sys_llist_delete(lfs->opended_files);
-                }
-
-                _sys_free(reinterpret_cast(void**, &lfs));
-                return ENOMEM;
-        } else {
-                lfs->root_dir.name = "/";
-                lfs->root_dir.size = sizeof(node_t);
-                lfs->root_dir.type = NODE_TYPE_DIR;
-
-                *fs_handle = lfs;
-                return ESUCC;
-        }
+        return result;
 }
 
 //==============================================================================

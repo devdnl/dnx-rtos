@@ -101,21 +101,24 @@ extern ETH_DMADESCTypeDef *DMATxDescToSet;
 //==============================================================================
 API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
+        UNUSED_ARG2(major, minor);
 
-        int status = _sys_calloc(1, sizeof(struct ethmac), device_handle);
-
-        sem_t         *rx_ready_sem = _sys_semaphore_new(1, 0);
-        mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-        mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-
-        if (device_handle && rx_ready_sem && rx_mtx && tx_mtx) {
+        int result = _sys_calloc(1, sizeof(struct ethmac), device_handle);
+        if (result == ESUCC) {
                 struct ethmac *hdl = *device_handle;
 
-                hdl->rx_data_ready = rx_ready_sem;
+                result = _sys_semaphore_create(1, 0, &hdl->rx_data_ready);
+                if (result != ESUCC) {
+                        goto finish;
+                }
+
+                mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+                mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+
                 hdl->rx_access     = rx_mtx;
                 hdl->tx_access     = tx_mtx;
+
+
 
                 // reset Ethernet
                 ETH_DeInit();
@@ -126,8 +129,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                       && !_sys_time_is_expired(timeout, INIT_TIMEOUT));
 
                 if (_sys_time_is_expired(timeout, INIT_TIMEOUT)) {
-                        status = ETIME;
-                        goto error;
+                        result = ETIME;
+                        goto finish;
                 }
 
                 // enable interrupts
@@ -198,25 +201,26 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
                         return ESUCC;
                 } else {
-                        status = EIO;
+                        result = EIO;
+                }
+
+                finish:
+                if (result != ESUCC) {
+                        if (device_handle)
+                                _sys_free(device_handle);
+
+                        if (hdl->rx_data_ready)
+                                _sys_semaphore_destroy(hdl->rx_data_ready);
+
+                        if (rx_mtx)
+                                _sys_mutex_delete(rx_mtx);
+
+                        if (tx_mtx)
+                                _sys_mutex_delete(tx_mtx);
                 }
         }
 
-        error:
-        /* error occurred */
-        if (device_handle)
-                _sys_free(device_handle);
-
-        if (rx_ready_sem)
-                _sys_semaphore_delete(rx_ready_sem);
-
-        if (rx_mtx)
-                _sys_mutex_delete(rx_mtx);
-
-        if (tx_mtx)
-                _sys_mutex_delete(tx_mtx);
-
-        return status;
+        return result;
 }
 
 //==============================================================================

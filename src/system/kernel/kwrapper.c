@@ -41,18 +41,18 @@
 ==============================================================================*/
 struct mutex {
         void         *object;
-        struct mutex *this;
+        struct mutex *self;
         bool          recursive;
 };
 
 struct queue {
         void         *object;
-        struct queue *this;
+        struct queue *self;
 };
 
 struct sem {
         void       *object;
-        struct sem *this;
+        struct sem *self;
 };
 
 /*==============================================================================
@@ -79,7 +79,7 @@ struct sem {
 //==============================================================================
 static bool is_semaphore_valid(sem_t *sem)
 {
-        return sem && sem->this == sem && sem->object;
+        return sem && sem->self == sem && sem->object;
 }
 
 //==============================================================================
@@ -91,7 +91,7 @@ static bool is_semaphore_valid(sem_t *sem)
 //==============================================================================
 static bool is_mutex_valid(mutex_t *mtx)
 {
-        return mtx && mtx->this == mtx && mtx->object;
+        return mtx && mtx->self == mtx && mtx->object;
 }
 
 //==============================================================================
@@ -103,7 +103,7 @@ static bool is_mutex_valid(mutex_t *mtx)
 //==============================================================================
 static bool is_queue_valid(queue_t *queue)
 {
-        return queue && queue->this == queue && queue->object;
+        return queue && queue->self == queue && queue->object;
 }
 
 //==============================================================================
@@ -306,43 +306,44 @@ int _task_get_free_stack_of(task_t *taskhdl)
 /**
  * @brief Function create binary semaphore
  *
- * @param cnt_max       max count value (1 for binary)
- * @param cnt_init      initial value (0 or 1 for binary)
+ * @param[in]  cnt_max          max count value (1 for binary)
+ * @param[in]  cnt_init         initial value (0 or 1 for binary)
+ * @param[out] sem              created semaphore handle
  *
- * @return binary semaphore object
+ * @return One of errno values.
  */
 //==============================================================================
-sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
+int _semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
 {
-        if (cnt_max > 0) {
-                sem_t *sem = NULL;
-                _kcalloc(_MM_KRN, 1, sizeof(struct sem), reinterpret_cast(void**, &sem));
-                if (sem) {
+        int result = EINVAL;
+
+        if (cnt_max > 0 && sem) {
+                result = _kcalloc(_MM_KRN, 1, sizeof(struct sem), reinterpret_cast(void**, sem));
+                if (result == ESUCC) {
+
                         if (cnt_max == 1) {
-                                vSemaphoreCreateBinary(sem->object);
-                                if (sem->object) {
+                                vSemaphoreCreateBinary((*sem)->object);
+                                if ((*sem)->object) {
                                         if (cnt_init) {
-                                                xSemaphoreGive(sem->object);
+                                                xSemaphoreGive((*sem)->object);
                                         } else {
-                                                xSemaphoreTake(sem->object, 0);
+                                                xSemaphoreTake((*sem)->object, 0);
                                         }
                                 }
                         } else {
-                                sem->object = xSemaphoreCreateCounting(cnt_max, cnt_init);
+                                (*sem)->object = xSemaphoreCreateCounting(cnt_max, cnt_init);
                         }
 
-                        if (sem->object) {
-                                sem->this = sem;
+                        if ((*sem)->object) {
+                                (*sem)->self = *sem;
                         } else {
-                                _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
-                                sem = NULL;
+                                _kfree(_MM_KRN, reinterpret_cast(void**, sem));
+                                result = ENOMEM;
                         }
                 }
-
-                return sem;
-        } else {
-                return NULL;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -350,106 +351,110 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
  * @brief Function delete semaphore
  *
  * @param[in] *sem      semaphore object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-void _semaphore_delete(sem_t *sem)
+int _semaphore_destroy(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 vSemaphoreDelete(sem->object);
                 sem->object = NULL;
-                sem->this   = NULL;
-                _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
+                sem->self   = NULL;
+                return _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
+        } else {
+                return EINVAL;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function take semaphore
+ * @brief Function wait for semaphore
  *
  * @param[in] *sem              semaphore object
  * @param[in]  blocktime_ms     semaphore polling time
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
-bool _semaphore_wait(sem_t *sem, const uint blocktime_ms)
+int _semaphore_wait(sem_t *sem, const uint blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
-                return xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
+                bool r = xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
+                return r ? ESUCC : ETIME;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function give semaphore
+ * @brief Function signal semaphore
  *
  * @param[in] *sem      semaphore object
  *
- * @retval true         semaphore given
- * @retval false        semaphore not given
+ * @return One of errno values.
  */
 //==============================================================================
-bool _semaphore_signal(sem_t *sem)
+int _semaphore_signal(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
-                return xSemaphoreGive(sem->object);
+                bool r = xSemaphoreGive(sem->object);
+                return r ? ESUCC : EBUSY;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function take semaphore from ISR
+ * @brief Function wait for semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
  * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
-bool _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+int _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
-                signed portBASE_TYPE woken = 0;
+                BaseType_t woken = 0;
                 int ret = xSemaphoreTakeFromISR(sem->object, &woken);
 
-                if (task_woken)
+                if (task_woken) {
                         *task_woken = (bool)woken;
+                }
 
-                return ret;
+                return ret ? ESUCC : EBUSY;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function give semaphore from ISR
+ * @brief Function signal semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
  * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
- * @retval true         semaphore taken
- * @retval false        semaphore not taken
+ * @return One of errno values.
  */
 //==============================================================================
-bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+int _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
-                signed portBASE_TYPE woken = 0;
+                BaseType_t woken = 0;
                 int ret = xSemaphoreGiveFromISR(sem->object, &woken);
 
-                if (task_woken)
+                if (task_woken) {
                         *task_woken = (bool)woken;
+                }
 
-                return ret;
+                return ret ? ESUCC : EBUSY;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -457,49 +462,57 @@ bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 /**
  * @brief Function create new mutex
  *
- * @param type          mutex type
+ * @param[in]  type     mutex type
+ * @param[out] mtx      created mutex handle
  *
- * @return pointer to mutex object, otherwise NULL if error
+ * @return One of errno values.
  */
 //==============================================================================
-mutex_t *_mutex_new(enum mutex_type type)
+int _mutex_create(enum mutex_type type, mutex_t **mtx)
 {
-        mutex_t *mtx = NULL;
-        _kcalloc(_MM_KRN, 1, sizeof(struct mutex), reinterpret_cast(void**, &mtx));
-        if (mtx) {
-                if (type == MUTEX_TYPE_RECURSIVE) {
-                        mtx->object    = xSemaphoreCreateRecursiveMutex();
-                        mtx->recursive = true;
-                } else {
-                        mtx->object    = xSemaphoreCreateMutex();
-                        mtx->recursive = false;
-                }
+        int result = EINVAL;
 
-                if (mtx->object) {
-                        mtx->this = mtx;
-                } else {
-                        _kfree(_MM_KRN, reinterpret_cast(void**, &mtx));
-                        mtx = NULL;
+        if (type <= MUTEX_TYPE_NORMAL && mtx) {
+                result = _kcalloc(_MM_KRN, 1, sizeof(struct mutex), reinterpret_cast(void**, mtx));
+                if (result == ESUCC) {
+                        if (type == MUTEX_TYPE_RECURSIVE) {
+                                (*mtx)->object    = xSemaphoreCreateRecursiveMutex();
+                                (*mtx)->recursive = true;
+                        } else {
+                                (*mtx)->object    = xSemaphoreCreateMutex();
+                                (*mtx)->recursive = false;
+                        }
+
+                        if ((*mtx)->object) {
+                                (*mtx)->self = *mtx;
+                        } else {
+                                _kfree(_MM_KRN, reinterpret_cast(void**, mtx));
+                                result = ENOMEM;
+                        }
                 }
         }
 
-        return mtx;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Function delete mutex
+ * @brief Function destroy mutex
  *
  * @param[in] *mutex    mutex object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-void _mutex_delete(mutex_t *mutex)
+int _mutex_destroy(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
                 vSemaphoreDelete(mutex->object);
                 mutex->object = NULL;
-                mutex->this   = NULL;
-                _kfree(_MM_KRN, reinterpret_cast(void**, &mutex));
+                mutex->self   = NULL;
+                return _kfree(_MM_KRN, reinterpret_cast(void**, &mutex));
+        } else {
+                return EINVAL;
         }
 }
 
@@ -510,11 +523,10 @@ void _mutex_delete(mutex_t *mutex)
  * @param[in] mutex             mutex object
  * @param[in] blocktime_ms      polling time
  *
- * @retval true                 mutex locked
- * @retval false                mutex not locked
+ * @return One of errno values.
  */
 //==============================================================================
-bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
+int _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
         if (is_mutex_valid(mutex)) {
                 bool status;
@@ -524,9 +536,9 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
                         status = xSemaphoreTake(mutex->object, MS2TICK((TickType_t)blocktime_ms));
                 }
 
-                return status;
+                return status ? ESUCC : ETIME;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -536,11 +548,10 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
  *
  * @param[in] *mutex            mutex object
  *
- * @retval true         mutex unlocked
- * @retval false        mutex still locked
+ * @return One of errno values.
  */
 //==============================================================================
-bool _mutex_unlock(mutex_t *mutex)
+int _mutex_unlock(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
                 bool status;
@@ -550,9 +561,9 @@ bool _mutex_unlock(mutex_t *mutex)
                         status = xSemaphoreGive(mutex->object);
                 }
 
-                return status;
+                return status ? ESUCC : EBUSY;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -560,28 +571,31 @@ bool _mutex_unlock(mutex_t *mutex)
 /**
  * @brief Function create new queue
  *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
+ * @param[in]  length           queue length
+ * @param[in]  item_size        queue item size
+ * @param[out] queue            created queue
  *
- * @return pointer to queue object, otherwise NULL if error
+ * @return One of errno values.
  */
 //==============================================================================
-queue_t *_queue_new(const uint length, const uint item_size)
+int _queue_create(const uint length, const uint item_size, queue_t **queue)
 {
-        queue_t *queue = NULL;
-        _kcalloc(_MM_KRN, 1, sizeof(struct queue), reinterpret_cast(void**, &queue));
+        int result = EINVAL;
 
-        if (queue) {
-                queue->object = xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
-                if (queue->object) {
-                        queue->this = queue;
-                } else {
-                        _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
-                        queue = NULL;
+        if (length && item_size && queue) {
+                result = _kcalloc(_MM_KRN, 1, sizeof(struct queue), reinterpret_cast(void**, queue));
+                if (result == ESUCC) {
+                        (*queue)->object = xQueueCreate(length, item_size);
+                        if ((*queue)->object) {
+                                (*queue)->self = *queue;
+                        } else {
+                                _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
+                                result = ENOMEM;
+                        }
                 }
         }
 
-        return queue;
+        return result;
 }
 
 //==============================================================================
@@ -589,15 +603,20 @@ queue_t *_queue_new(const uint length, const uint item_size)
  * @brief Function delete queue
  *
  * @param[in] *queue            queue object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-void _queue_delete(queue_t *queue)
+int _queue_destroy(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 vQueueDelete(queue->object);
                 queue->object = NULL;
-                queue->this   = NULL;
+                queue->self   = NULL;
                 _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -606,12 +625,17 @@ void _queue_delete(queue_t *queue)
  * @brief Function reset queue
  *
  * @param[in] *queue            queue object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
-void _queue_reset(queue_t *queue)
+int _queue_reset(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
-                xQueueReset(queue->object);
+                BaseType_t r = xQueueReset(queue->object);
+                return r == pdTRUE ? ESUCC : EBUSY;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -623,16 +647,16 @@ void _queue_reset(queue_t *queue)
  * @param[in] *item             item
  * @param[in]  waittime_ms      wait time
  *
- * @retval true         item posted
- * @retval false        item not posted
+ * @return One of errno values.
  */
 //==============================================================================
-bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
+int _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueueSend(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                BaseType_t r = xQueueSend(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                return r == pdTRUE ? ESUCC : ENOSPC;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -642,24 +666,24 @@ bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
  *
  * @param[in]  *queue            queue object
  * @param[in]  *item             item
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0 (can be NULL)
+ * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
- * @retval true         item posted
- * @retval false        item not posted
+ * @return One of errno values.
  */
 //==============================================================================
-bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+int _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
         if (is_queue_valid(queue) && item) {
-                signed portBASE_TYPE woken = 0;
+                BaseType_t woken = 0;
                 int ret = xQueueSendFromISR(queue->object, item, &woken);
 
-                if (task_woken)
+                if (task_woken) {
                         *task_woken = (bool)woken;
+                }
 
-                return ret;
+                return ret == pdTRUE ? ESUCC : ENOSPC;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -671,16 +695,16 @@ bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
  * @param[out] *item             item
  * @param[in]   waittime_ms      wait time
  *
- * @retval true         item received
- * @retval false        item not received
+ * @return One of errno values.
  */
 //==============================================================================
-bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
+int _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                BaseType_t r = xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                return r == pdTRUE ? ESUCC : EAGAIN;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -692,22 +716,22 @@ bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
  * @param[out] item             item
  * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @return One of errno values.
  */
 //==============================================================================
-bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
+int _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
         if (is_queue_valid(queue) && item) {
-                signed portBASE_TYPE woken = 0;
-                int ret = xQueueReceiveFromISR(queue->object, item, &woken);
+                BaseType_t woken = 0;
+                BaseType_t ret   = xQueueReceiveFromISR(queue->object, item, &woken);
 
-                if (task_woken)
+                if (task_woken) {
                         *task_woken = (bool)woken;
+                }
 
-                return ret;
+                return ret == pdTRUE ? ESUCC : EAGAIN;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -719,16 +743,16 @@ bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
  * @param[out] *item             item
  * @param[in]   waittime_ms      wait time
  *
- * @retval true         item received
- * @retval false        item not received
+ * @return One of errno values.
  */
 //==============================================================================
-bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
+int _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
-                return xQueuePeek(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                BaseType_t r = xQueuePeek(queue->object, item, MS2TICK((TickType_t)waittime_ms));
+                return r == pdTRUE ? ESUCC : EAGAIN;
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -736,17 +760,20 @@ bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 /**
  * @brief Function gets number of items in queue
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_number_of_items(queue_t *queue)
+int _queue_get_number_of_items(queue_t *queue, size_t *items)
 {
-        if (is_queue_valid(queue)) {
-                return uxQueueMessagesWaiting(queue->object);
+        if (is_queue_valid(queue) && items) {
+                UBaseType_t nomsg = uxQueueMessagesWaiting(queue->object);
+                *items = nomsg;
+                return ESUCC;
         } else {
-                return -1;
+                return EINVAL;
         }
 }
 
@@ -754,17 +781,20 @@ int _queue_get_number_of_items(queue_t *queue)
 /**
  * @brief Function gets number of items in queue from ISR
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_number_of_items_from_ISR(queue_t *queue)
+int _queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
 {
-        if (is_queue_valid(queue)) {
-                return uxQueueMessagesWaitingFromISR(queue->object);
+        if (is_queue_valid(queue) && items) {
+                UBaseType_t nomsg = uxQueueMessagesWaitingFromISR(queue->object);
+                *items = nomsg;
+                return ESUCC;
         } else {
-                return -1;
+                return EINVAL;
         }
 }
 
@@ -772,17 +802,20 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue)
 /**
  * @brief Function gets number of free items in queue
  *
- * @param[in] *queue            queue object
+ * @param[in]  queue            queue object
+ * @param[out] items            number of items in queue
  *
- * @return a number of free items in queue, -1 if error
+ * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_space_available(queue_t *queue)
+int _queue_get_space_available(queue_t *queue, size_t *items)
 {
-        if (is_queue_valid(queue)) {
-                return uxQueueSpacesAvailable(queue);
+        if (is_queue_valid(queue) && items) {
+                UBaseType_t nomsg = uxQueueSpacesAvailable(queue);
+                *items = nomsg;
+                return ESUCC;
         } else {
-                return -1;
+                return EINVAL;
         }
 }
 

@@ -89,12 +89,13 @@ static bool is_valid(pipe_t *this)
  * @return pointer to pipe object
  */
 //==============================================================================
-pipe_t *_pipe_new()
+pipe_t *_pipe_new() // TODO _pipe_create
 {
         pipe_t *pipe;
         _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, &pipe));
 
-        queue_t *queue = _queue_new(CONFIG_PIPE_LENGTH, sizeof(u8_t));
+        queue_t *queue = NULL;
+        _queue_create(CONFIG_PIPE_LENGTH, sizeof(u8_t), &queue);
 
         if (pipe && queue) {
 
@@ -104,7 +105,7 @@ pipe_t *_pipe_new()
 
         } else {
                 if (queue) {
-                        _queue_delete(queue);
+                        _queue_destroy(queue);
                 }
 
                 if (pipe) {
@@ -126,7 +127,7 @@ pipe_t *_pipe_new()
 void _pipe_delete(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
-                _queue_delete(pipe->queue);
+                _queue_destroy(pipe->queue);
                 pipe->self = NULL;
                 _kfree(_MM_KRN, static_cast(void**, &pipe));
         }
@@ -144,7 +145,9 @@ void _pipe_delete(pipe_t *pipe)
 int _pipe_get_length(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
-                return _queue_get_number_of_items(pipe->queue);
+                size_t len = -1;
+                _queue_get_number_of_items(pipe->queue, &len);
+                return len;
         } else {
                 return -1;
         }
@@ -170,7 +173,10 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
                 size_t n = 0;
                 for (; n < count; n++) {
 
-                        if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
+                        size_t noitm = -1;
+                        _queue_get_number_of_items(pipe->queue, &noitm);
+
+                        if (pipe->closed && noitm <= 0) {
                                 u8_t null = '\0';
                                 _queue_send(pipe->queue, &null, pipe_write_timeout);
                                 break;
@@ -208,7 +214,10 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                 size_t n = 0;
                 for (; n < count; n++) {
 
-                        if (pipe->closed && _queue_get_number_of_items(pipe->queue) <= 0) {
+                        size_t noitm = -1;
+                        _queue_get_number_of_items(pipe->queue, &noitm);
+
+                        if (pipe->closed && noitm <= 0) {
                                 break;
                         }
 
