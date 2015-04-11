@@ -72,11 +72,11 @@ typedef int uid_t;
 /** group ID */
 typedef int gid_t;
 
+/** process ID */
+typedef u32_t pid_t;
+
 /** device */
 typedef int dev_t;
-
-/** process ID */
-typedef int pid_t;
 
 /** time type */
 struct tm {

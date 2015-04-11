@@ -81,18 +81,14 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
         if (major == _WDG_MAJOR_NUMBER && minor == _WDG_MINOR_NUMBER) {
 
-                WDG_t *hdl = calloc(1, sizeof(WDG_t));
-                if (hdl) {
+                int result = _sys_calloc(1, sizeof(WDG_t), device_handle);
+                if (result == ESUCC) {
                         configure_wdg();
                         start_wdg();
                         reset_wdg();
-
-                        *device_handle = hdl;
-
-                        return ESUCC;
-                } else {
-                        return ENOMEM;
                 }
+
+                return result;
 
         } else {
                 return ENODEV;
@@ -186,12 +182,7 @@ API_MOD_WRITE(WDG,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
-
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
         return ENOTSUP;
 }
 

@@ -827,7 +827,7 @@ static inline int _sys_fclose(FILE *file)
 //==============================================================================
 static inline int _sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
 {
-//        return _vfs_fwrite(ptr, size, wrcnt, file);
+        return _vfs_fwrite(ptr, size, wrcnt, file);
 }
 
 //==============================================================================

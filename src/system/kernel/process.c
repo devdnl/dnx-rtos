@@ -44,27 +44,20 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef enum task_type {
-        TASK_TYPE_RAW,
-        TASK_TYPE_PROCESS,
-        TASK_TYPE_THREAD
-} task_type_t;
-
-typedef struct task_desc {
-        pid_t            t_PID;
-        FILE            *t_stdin;               /* stdin file                         */
-        FILE            *t_stdout;              /* stdout file                        */
-        FILE            *t_stderr;              /* stderr file                        */
-        FILE            *t_file_chain;          /* chain of open files                */
-        const char      *t_cwd;                 /* current working path               */
-        void            *t_globals;             /* address to global variables        */
-        task_t          *t_parent;              /* parent task                        */
-        task_t          *t_self;                /* pointer to this task handle        */
-        task_t          *t_next;                /* next task (chain)                  */
-        u32_t            t_load_time;           /* counter used to calculate CPU load */
-        int              t_errno;               /* program error number               */
-        task_type_t      t_task_type:2;         /* task type                          */
-} task_desc_t;
+typedef struct process {
+        pid_t            pid;                   /* process ID                         */
+        pid_t            parent;                /* parent process                     */
+        task_t          *task;                  /* pointer to this task handle        */
+        struct process  *next;                  /* next process (chain)               */
+        FILE            *f_stdin;               /* stdin file                         */
+        FILE            *f_stdout;              /* stdout file                        */
+        FILE            *f_stderr;              /* stderr file                        */
+        FILE            *f_list;                /* chain of open files                */
+        const char      *cwd;                   /* current working path               */
+        void            *globals;               /* address to global variables        */
+        int              errnov;                /* program error number               */
+        u32_t            timecnt;               /* counter used to calculate CPU load */
+} process_t;
 
 /*==============================================================================
   Local function prototypes
@@ -73,11 +66,9 @@ typedef struct task_desc {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static       u32_t PID_cnt             = 1;
-static const uint  mutex_wait_attempts = 10;
-
-/* active task descriptor */
-task_desc_t *task_desc;
+static pid_t      PID_cnt = 1;
+static process_t *head;
+static process_t *active_process;
 
 /*==============================================================================
   Exported object definitions
@@ -91,11 +82,11 @@ FILE *stdout;
 /* standard error */
 FILE *stderr;
 
-/* global variables */
-struct _GVAR_STRUCT_NAME *global;
-
 /* error number */
 int _errno;
+
+/* global variables */
+struct _GVAR_STRUCT_NAME *global;
 
 /*==============================================================================
   External object definitions
@@ -114,10 +105,68 @@ extern const int               _prog_table_size;
  * @return ?
  */
 //==============================================================================
+int _process_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, pid_t *pid)
+{
+        int result = EINVAL;
+
+//        if (func && name && stack_depth && pid) {
+//                process_t *proc;
+//                task_t    *task;
+//
+//                result = _kmalloc(sizeof(process_t), &proc);
+//                if (result == ESUCC) {
+//
+//                }
+//        }
+//
+//        return result;
+//
+//
+//        process_t *proc = _kmalloc(sizeof(process_t));
+//        task_t    *task = _task_new(func, name, stack_depth, argv, proc);
+//
+//        if (proc && task) {
+//                proc->task =
+//                proc->pid  =
+//        }
+//
+//
+//        if (empty) {
+//
+//        } else {
+//
+//        }
+//
+//        _task_new();
+//
+//        _process_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, true);
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+int _process_destroy(pid_t pid)
+{
+        return EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
 const char *_process_get_CWD()
 {
-        if (task_desc) {
-                return task_desc->t_cwd;
+        if (active_process && active_process->cwd) {
+                return active_process->cwd;
         } else {
                 return "";
         }
@@ -131,13 +180,13 @@ const char *_process_get_CWD()
 //==============================================================================
 void _copy_task_context_to_standard_variables(void)
 {
-        task_desc = _task_get_tag(THIS_TASK);
-        if (task_desc) {
-                stdin  = task_desc->t_stdin;
-                stdout = task_desc->t_stdout;
-                stderr = task_desc->t_stderr;
-                global = task_desc->t_globals;
-                _errno = task_desc->t_errno;
+        active_process = _task_get_tag(THIS_TASK);
+        if (active_process) {
+                stdin  = active_process->f_stdin;
+                stdout = active_process->f_stdout;
+                stderr = active_process->f_stderr;
+                global = active_process->globals;
+                _errno = active_process->errnov;
         } else {
                 stdin  = NULL;
                 stdout = NULL;
@@ -155,12 +204,12 @@ void _copy_task_context_to_standard_variables(void)
 //==============================================================================
 void _copy_standard_variables_to_task_context(void)
 {
-        if (task_desc) {
-                task_desc->t_stdin   = stdin;
-                task_desc->t_stdout  = stdout;
-                task_desc->t_stderr  = stderr;
-                task_desc->t_globals = global;
-                task_desc->t_errno   = _errno;
+        if (active_process) {
+                active_process->f_stdin  = stdin;
+                active_process->f_stdout = stdout;
+                active_process->f_stderr = stderr;
+                active_process->globals  = global;
+                active_process->errnov   = _errno;
         }
 }
 

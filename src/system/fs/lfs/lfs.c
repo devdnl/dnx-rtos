@@ -110,9 +110,10 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        struct LFS_data *lfs = calloc(1, sizeof(struct LFS_data));
-        if (!lfs) {
-                return ENOMEM;
+        struct LFS_data *lfs;
+        int result = _sys_calloc(1, sizeof(struct LFS_data), reinterpret_cast(void**, &lfs));
+        if (result != ESUCC) {
+                return result;
         }
 
         lfs->resource_mtx  = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
@@ -132,7 +133,7 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
                         _sys_llist_delete(lfs->opended_files);
                 }
 
-                free(lfs);
+                _sys_free(reinterpret_cast(void**, &lfs));
                 return ENOMEM;
         } else {
                 lfs->root_dir.name = "/";
@@ -187,10 +188,13 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
         int result = get_node(path, &lfs->root_dir, -1, NULL, &parent);
         if (result == ESUCC) {
                 // create new node
-                result           = ENOMEM;
-                char *basename   = strrchr(path, '/') + 1;
-                char *child_name = calloc(strlen(basename) + 1, sizeof(char));
-                if (child_name) {
+                char *basename = strrchr(path, '/') + 1;
+
+                char *child_name;
+                result = _sys_calloc(strlen(basename) + 1,
+                                     sizeof(char),
+                                     reinterpret_cast(void**, &child_name));
+                if (result == ESUCC) {
                         strcpy(child_name, basename);
 
                         node_t *child;
@@ -198,7 +202,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
                         if (result == ESUCC) {
                                 child->data = reinterpret_cast(void*, dev);
                         } else {
-                                free(child_name);
+                                _sys_free(reinterpret_cast(void**, &child_name));
                         }
                 }
         }
@@ -230,10 +234,14 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
         int result = get_node(path, &lfs->root_dir, -1, NULL, &parent);
         if (result == ESUCC) {
                 // create new node
-                result           = ENOMEM;
-                char *basename   = strrchr(path, '/') + 1;
-                char *child_name = calloc(strlen(basename) + 1, sizeof(char));
-                if (child_name) {
+                char *basename = strrchr(path, '/') + 1;
+
+                char *child_name;
+                result = _sys_calloc(strlen(basename) + 1,
+                                     sizeof(char),
+                                     reinterpret_cast(void**, child_name));
+
+                if (result == ESUCC) {
                         strcpy(child_name, basename);
 
                         node_t *child;
@@ -241,7 +249,7 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
                         if (result == ESUCC) {
                                 child->mode = mode;
                         } else {
-                                free(child_name);
+                                _sys_free(reinterpret_cast(void**, &child_name));
                         }
                 }
         }
@@ -273,10 +281,14 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
         int result = get_node(path, &lfs->root_dir, -1, NULL, &parent);
         if (result == ESUCC) {
                 // create new node
-                result           = ENOMEM;
-                char *basename   = strrchr(path, '/') + 1;
-                char *child_name = calloc(strlen(basename) + 1, sizeof(char));
-                if (child_name) {
+                char *basename = strrchr(path, '/') + 1;
+
+                char *child_name;
+                result = _sys_calloc(strlen(basename) + 1,
+                                     sizeof(char),
+                                     reinterpret_cast(void**, child_name));
+
+                if (result == ESUCC) {
                         strcpy(child_name, basename);
 
                         node_t *child;
@@ -284,7 +296,7 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                         if (result == ESUCC) {
                                 child->mode = mode;
                         } else {
-                                free(child_name);
+                                _sys_free(reinterpret_cast(void**, &child_name));
                         }
                 }
         }
@@ -480,15 +492,17 @@ API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
         int result = get_node(old_name, &lfs->root_dir, 0, NULL, &target);
         if (result == ESUCC) {
                 char *basename = strrchr(new_name, '/') + 1;
-                char *new_name = calloc(1, strlen(basename) + 1);
-                if (new_name) {
+
+                char *new_name;
+                result = _sys_calloc(1, strlen(basename) + 1,
+                                     reinterpret_cast(void**, &new_name));
+
+                if (result == ESUCC) {
                         if (target->name) {
-                                free(target->name);
+                                _sys_free(reinterpret_cast(void**, target->name));
                         }
 
                         target->name = new_name;
-                } else {
-                        result = ENOMEM;
                 }
         }
 
@@ -717,10 +731,13 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                         goto finish;
                 }
 
-                char *basename  = strrchr(path, '/') + 1;
-                char *file_name = calloc(1, strlen(basename) + 1);
-                if (file_name == NULL) {
-                        result = ENOMEM;
+                char *basename = strrchr(path, '/') + 1;
+
+                char *file_name;
+                result = _sys_calloc(1, strlen(basename) + 1,
+                                     reinterpret_cast(void**, &file_name));
+
+                if (result != ESUCC) {
                         goto finish;
                 }
 
@@ -728,7 +745,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
 
                 result = new_node(parent, file_name, NODE_TYPE_FILE, &item, &child);
                 if (result != ESUCC) {
-                        free(file_name);
+                        _sys_free(reinterpret_cast(void**, &file_name));
                         goto finish;
                 }
         } else {
@@ -749,7 +766,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                 // truncate file if requested
                 if (flags & O_TRUNC) {
                         if (child->data) {
-                                free(child->data);
+                                _sys_free(reinterpret_cast(void**, &child->data));
                                 child->data = NULL;
                         }
 
@@ -905,11 +922,13 @@ API_FS_WRITE(lfs,
                        }
 
                        if ((seek + write_size) > file_length || target->data == NULL) {
-                               char *new_data = malloc(file_length + write_size);
-                               if (new_data) {
+                               char *new_data;
+                               result = _sys_malloc(file_length + write_size,
+                                                    reinterpret_cast(void**, new_data));
+                               if (result == ESUCC) {
                                        if (target->data) {
                                                memcpy(new_data, target->data, file_length);
-                                               free(target->data);
+                                               _sys_free(reinterpret_cast(void**, &target->data));
                                        }
 
                                        memcpy(new_data + seek, src, write_size);
@@ -918,7 +937,6 @@ API_FS_WRITE(lfs,
                                        target->size += write_size - (file_length - seek);
 
                                        *wrcnt = count;
-                                       result = ESUCC;
                                } else {
                                        result = ENOSPC;
                                }
@@ -1174,11 +1192,11 @@ static int delete_node(node_t *base, node_t *target, u32_t position)
         }
 
         if (target->name) {
-                free(target->name);
+                _sys_free(reinterpret_cast(void**, &target->name));
         }
 
         if (target->data) {
-                free(target->data);
+                _sys_free(reinterpret_cast(void**, &target->data));
         }
 
         _sys_llist_erase(base->data, position);
@@ -1332,9 +1350,9 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
                 }
         }
 
-        int     result = ENOMEM;
-        node_t *node   = calloc(1, sizeof(node_t));
-        if (node) {
+        node_t *node;
+        int result = _sys_calloc(1, sizeof(node_t), reinterpret_cast(void**, &node));
+        if (result == ESUCC) {
                 node->name  = filename;
                 node->data  = NULL;
                 node->gid   = 0;
@@ -1347,13 +1365,13 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
                 if (type == NODE_TYPE_DIR) {
                         node->data = _sys_llist_new(NULL, NULL);
                         if (node->data == NULL) {
-                                free(node);
+                                _sys_free(reinterpret_cast(void**, &node));
                                 return ENOMEM;
                         }
                 } else if (type == NODE_TYPE_PIPE) {
                         node->data = _sys_pipe_new();
                         if (node->data == NULL) {
-                                free(node);
+                                _sys_free(reinterpret_cast(void**, &node));
                                 return ENOMEM;
                         }
                 }
@@ -1365,7 +1383,7 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
                         *child = node;
                         result = ESUCC;
                 } else {
-                        free(node);
+                        _sys_free(reinterpret_cast(void**, &node));
                 }
         }
 
@@ -1387,8 +1405,10 @@ static int add_node_to_open_files_list(struct LFS_data *lfs,
                                        node_t          *parent,
                                        node_t          *child)
 {
-        struct opened_file_info *opened_file_info = calloc(1, sizeof(struct opened_file_info));
-        if (opened_file_info) {
+        struct opened_file_info *opened_file_info;
+        int result = _sys_calloc(1, sizeof(struct opened_file_info),
+                                 reinterpret_cast(void**, &opened_file_info));
+        if (result == ESUCC) {
                 opened_file_info->remove_at_close = false;
                 opened_file_info->child           = child;
                 opened_file_info->parent          = parent;
@@ -1402,14 +1422,13 @@ static int add_node_to_open_files_list(struct LFS_data *lfs,
                 }
 
                 /* add open file info to list */
-                if (_sys_llist_push_back(lfs->opended_files, opened_file_info)) {
-                        return ESUCC;
-                } else {
-                        free(opened_file_info);
+                if (!_sys_llist_push_back(lfs->opended_files, opened_file_info)) {
+                        _sys_free(reinterpret_cast(void**, &opened_file_info));
+                        result = ENOMEM;
                 }
         }
 
-        return ENOMEM;
+        return result;
 }
 
 /*==============================================================================

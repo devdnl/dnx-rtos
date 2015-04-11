@@ -113,11 +113,12 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
-        int status;
+        int result = ENODEV;
 
         if (major < _LOOP_NUMBER_OF_DEVICES) {
-                loop_t *hdl = calloc(1, sizeof(loop_t));
-                if (hdl) {
+                loop_t *hdl;
+                result = _sys_calloc(1, sizeof(loop_t), reinterpret_cast(void**, &hdl));
+                if (result == ESUCC) {
                         hdl->lock      = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                         hdl->event_req = _sys_semaphore_new(1, 0);
                         hdl->event_res = _sys_semaphore_new(1, 0);
@@ -139,15 +140,13 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
                                 if (hdl->event_res) {
                                         _sys_semaphore_delete(hdl->event_res);
                                 }
+
+                                result = ENOMEM;
                         }
                 }
-
-                status = ENOMEM;
-        } else {
-                status = ENODEV;
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -169,7 +168,7 @@ API_MOD_RELEASE(LOOP, void *device_handle)
                 _sys_mutex_delete(hdl->lock);
                 _sys_semaphore_delete(hdl->event_req);
                 _sys_semaphore_delete(hdl->event_res);
-                free(hdl);
+                _sys_free(reinterpret_cast(void**, &hdl));
                 _sys_critical_section_end();
                 return ESUCC;
         } else {

@@ -113,7 +113,7 @@ static uint get_line_index(ttybfr_t *this, uint go_back)
 static void link_line(ttybfr_t *this, char *line)
 {
         if (this->line[this->line_head]) {
-                free(this->line[this->line_head]);
+                _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                 this->line[this->line_head] = NULL;
         }
 
@@ -124,7 +124,7 @@ static void link_line(ttybfr_t *this, char *line)
                 this->line_head = (this->line_head + 1) % _TTY_TERMINAL_ROWS;
 
                 if (this->line[this->line_head]) {
-                        free(this->line[this->line_head]);
+                        _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                         this->line[this->line_head] = NULL;
                 }
         }
@@ -154,7 +154,7 @@ static void clear_new_line_buffer(ttybfr_t *this)
 static void clear_last_line(ttybfr_t *this)
 {
         if (this->line[this->line_head]) {
-                free(this->line[this->line_head]);
+                _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                 this->line[this->line_head] = NULL;
         }
 }
@@ -171,7 +171,8 @@ static void put_new_line_buffer(ttybfr_t *this)
         /* function link a new line to the buffer */
         void link_new_line(const char *str, size_t len)
         {
-                char *line = malloc(len + 1);
+                char *line = NULL;
+                _sys_malloc(len + 1, reinterpret_cast(void**, &line));
                 if (line) {
                         strcpy(line, str);
                         link_line(this, line);
@@ -191,7 +192,8 @@ static void put_new_line_buffer(ttybfr_t *this)
                         link_new_line(this->new_line_bfr, new_line_len);
                 } else {
                         size_t last_line_len = strlen(last_line);
-                        char *line = malloc(last_line_len + new_line_len + 1);
+                        char *line = NULL;
+                        _sys_malloc(last_line_len + new_line_len + 1, reinterpret_cast(void**, &line));
                         if (line) {
                                 strcpy(line, last_line);
                                 strcat(line, this->new_line_bfr);
@@ -219,7 +221,8 @@ static void put_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 ttybfr_t *ttybfr_new()
 {
-        ttybfr_t *bfr = calloc(1, sizeof(ttybfr_t));
+        ttybfr_t *bfr = NULL;
+        _sys_calloc(1, sizeof(ttybfr_t), reinterpret_cast(void**, &bfr));
         if (bfr) {
                 bfr->self = bfr;
         }
@@ -238,7 +241,7 @@ void ttybfr_delete(ttybfr_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                free(this);
+                _sys_free(reinterpret_cast(void**, &this));
         }
 }
 
@@ -320,7 +323,7 @@ void ttybfr_clear(ttybfr_t *this)
         if (is_valid(this)) {
                 for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
                         if (this->line[i]) {
-                                free(this->line[i]);
+                                _sys_free(reinterpret_cast(void**, &this->line[i]));
                                 this->line[i] = NULL;
                         }
 

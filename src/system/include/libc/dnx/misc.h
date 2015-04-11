@@ -31,6 +31,7 @@
   Include files
 ==============================================================================*/
 #include <string.h>
+#include "lib/cast.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,11 +112,12 @@ extern "C" {
  * // ...
  */
 //==============================================================================
-#define UNUSED_ARG(argument)                            (void)argument
-#define UNUSED_ARG2(_arg1, _arg2)                       ((void)_arg1); ((void)_arg2)
-#define UNUSED_ARG3(_arg1, _arg2, _arg3)                ((void)_arg1); ((void)_arg2; ((void)_arg3)
-#define UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4)         ((void)_arg1); ((void)_arg2; ((void)_arg3; ((void)_arg4)
-#define UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5)  ((void)_arg1); ((void)_arg2; ((void)_arg3; ((void)_arg4; ((void)_arg5)
+#define UNUSED_ARG(argument)                                    (void)argument
+#define UNUSED_ARG2(_arg1, _arg2)                               ((void)_arg1); ((void)_arg2)
+#define UNUSED_ARG3(_arg1, _arg2, _arg3)                        ((void)_arg1); ((void)_arg2); ((void)_arg3)
+#define UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4)                 ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4)
+#define UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5)          ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4); ((void)_arg5)
+#define UNUSED_ARG6(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6)   ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4); ((void)_arg5); ((void)_arg6)
 
 //==============================================================================
 /**
@@ -170,116 +172,6 @@ extern "C" {
  */
 //==============================================================================
 #define LAST_CHARACTER(char__pstr) char__pstr[strlen(char__pstr) - 1]
-
-//==============================================================================
-/**
- * @brief static_cast(type, var)
- * The macro <b>static_cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to remove <b>static</b> attribute.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * static void *data   = calloc(1, 10);
- * void        *buffer = static_cast(void*, data);
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define static_cast(type, var) ((type)(var))
-#endif
-
-//==============================================================================
-/**
- * @brief const_cast(type, var)
- * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to remove <b>const</b> attribute.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void func(char *str)
- * {
- *        // ...
- * }
- *
- * const char *str = "test";
- *
- * func(const_cast(char*, str));
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define const_cast(type, var) ((type)(var))
-#endif
-
-//==============================================================================
-/**
- * @brief const_cast(type, var)
- * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to reinterpret selected variable type.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void   *data   = calloc(1, 10);
- * type_t *buffer = reinterpret_cast(type_t*, data);
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define reinterpret_cast(type, var) ((type)(var))
-#endif
-
-//==============================================================================
-/**
- * @brief cast(type, var)
- * The macro <b>cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to cast selected variable type.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void   *data   = calloc(1, 10);
- * type_t *buffer = cast(type_t*, data);
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define cast(type, var) ((type)(var))
-#endif
 
 //==============================================================================
 /**

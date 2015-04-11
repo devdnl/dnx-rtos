@@ -89,7 +89,8 @@ static inline bool is_valid(ttycmd_t *this)
 //==============================================================================
 ttycmd_t *ttycmd_new()
 {
-        ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
+        ttycmd_t *ttycmd = NULL;
+        _sys_calloc(1, sizeof(ttycmd_t), reinterpret_cast(void**, &ttycmd));
         if (ttycmd) {
                 ttycmd->self = ttycmd;
         }
@@ -108,7 +109,7 @@ void ttycmd_delete(ttycmd_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                free(this);
+                _sys_free(reinterpret_cast(void**, &this));
         }
 }
 

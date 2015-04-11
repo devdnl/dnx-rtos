@@ -125,7 +125,9 @@ void _printk(const char *format, ...)
                 int size = _vsnprintf(NULL, 0, format, args) + 1;
                 va_end(args);
 
-                char *buffer = _kcalloc(size, sizeof(char));
+                char *buffer = NULL;
+                _kcalloc(_MM_KRN, size, sizeof(char), reinterpret_cast(void**, &buffer));
+
                 if (buffer) {
                         va_start(args, format);
                         int n = _vsnprintf(buffer, size, format, args);
@@ -138,7 +140,7 @@ void _printk(const char *format, ...)
                                 _vfs_fflush(printk_file);
                         }
 
-                        _kfree(buffer);
+                        _kfree(_MM_KRN, reinterpret_cast(void**, buffer));
                 }
         }
 #else

@@ -164,11 +164,9 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        int status;
-
-        uart_data[major] = calloc(1, sizeof(struct UART_data));
-        if (uart_data[major]) {
-
+        int status = _sys_calloc(1, sizeof(struct UART_data), device_handle);
+        if (status == ESUCC) {
+                uart_data[major]                   = *device_handle;
                 uart_data[major]->data_write_sem   = _sys_semaphore_new(1, 0);
                 uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
@@ -188,9 +186,6 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                         NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
                         configure_uart(major, (struct UART_config *)&uart_default_config);
 
-                        *device_handle = uart_data[major];
-
-                        return status = ESUCC;
                 } else {
                         if (uart_clock_configured) {
                                 uart_turn_off(uart[major]);
@@ -212,12 +207,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                                 _sys_mutex_delete(uart_data[major]->port_lock_tx_mtx);
                         }
 
-                        free(uart_data[major]);
+                        _sys_free(device_handle);
                         uart_data[major] = NULL;
+
                         status = ENOMEM;
                 }
-        } else {
-                status = ENOMEM;
         }
 
         return status;
@@ -251,7 +245,7 @@ API_MOD_RELEASE(UART, void *device_handle)
                         uart_turn_off(uart[hdl->major]);
 
                         uart_data[hdl->major] = NULL;
-                        free(hdl);
+                        _sys_free(device_handle);
 
                         _sys_critical_section_end();
 

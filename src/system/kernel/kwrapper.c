@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "kernel/ktypes.h"
+#include "dnx/misc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -301,7 +302,8 @@ int _task_get_free_stack_of(task_t *taskhdl)
 sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 {
         if (cnt_max > 0) {
-                sem_t *sem = _kcalloc(1, sizeof(struct sem));
+                sem_t *sem = NULL;
+                _kcalloc(_MM_KRN, 1, sizeof(struct sem), reinterpret_cast(void**, &sem));
                 if (sem) {
                         if (cnt_max == 1) {
                                 vSemaphoreCreateBinary(sem->object);
@@ -319,7 +321,7 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
                         if (sem->object) {
                                 sem->this = sem;
                         } else {
-                                _kfree(sem);
+                                _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
                                 sem = NULL;
                         }
                 }
@@ -343,7 +345,7 @@ void _semaphore_delete(sem_t *sem)
                 vSemaphoreDelete(sem->object);
                 sem->object = NULL;
                 sem->this   = NULL;
-                _kfree(sem);
+                _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
         }
 }
 
@@ -449,7 +451,8 @@ bool _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 mutex_t *_mutex_new(enum mutex_type type)
 {
-        mutex_t *mtx = _kcalloc(1, sizeof(struct mutex));
+        mutex_t *mtx = NULL;
+        _kcalloc(_MM_KRN, 1, sizeof(struct mutex), reinterpret_cast(void**, &mtx));
         if (mtx) {
                 if (type == MUTEX_TYPE_RECURSIVE) {
                         mtx->object    = xSemaphoreCreateRecursiveMutex();
@@ -462,7 +465,7 @@ mutex_t *_mutex_new(enum mutex_type type)
                 if (mtx->object) {
                         mtx->this = mtx;
                 } else {
-                        _kfree(mtx);
+                        _kfree(_MM_KRN, reinterpret_cast(void**, &mtx));
                         mtx = NULL;
                 }
         }
@@ -483,7 +486,7 @@ void _mutex_delete(mutex_t *mutex)
                 vSemaphoreDelete(mutex->object);
                 mutex->object = NULL;
                 mutex->this   = NULL;
-                _kfree(mutex);
+                _kfree(_MM_KRN, reinterpret_cast(void**, &mutex));
         }
 }
 
@@ -552,13 +555,15 @@ bool _mutex_unlock(mutex_t *mutex)
 //==============================================================================
 queue_t *_queue_new(const uint length, const uint item_size)
 {
-        queue_t *queue = _kcalloc(1, sizeof(struct queue));
+        queue_t *queue = NULL;
+        _kcalloc(_MM_KRN, 1, sizeof(struct queue), reinterpret_cast(void**, &queue));
+
         if (queue) {
                 queue->object = xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
                 if (queue->object) {
                         queue->this = queue;
                 } else {
-                        _kfree(queue);
+                        _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
                         queue = NULL;
                 }
         }
@@ -579,7 +584,7 @@ void _queue_delete(queue_t *queue)
                 vQueueDelete(queue->object);
                 queue->object = NULL;
                 queue->this   = NULL;
-                _kfree(queue);
+                _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
         }
 }
 

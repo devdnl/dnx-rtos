@@ -185,16 +185,17 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (SDSPI == NULL) {
-                SDSPI = calloc(1, sizeof(sdctrl_t));
-
-                if (SDSPI == NULL) {
-                        return ENOMEM;
+                int result = _sys_calloc(1, sizeof(sdctrl_t), reinterpret_cast(void **, &SDSPI));
+                if (result != ESUCC) {
+                        return result;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
 
-                struct card *hdl  = calloc(1, sizeof(struct card));
+                struct card *hdl  = NULL;
+                _sys_calloc(1, sizeof(struct card), reinterpret_cast(void**, &hdl));
+
                 mutex_t     *mtx  = _sys_mutex_new(MUTEX_TYPE_NORMAL);
                 FILE        *fspi = _sys_fopen(card_cfg[major].filepath, "r+");
 
@@ -218,14 +219,15 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                                 _sys_mutex_delete(mtx);
 
                         if (hdl)
-                                free(hdl);
+                                _sys_free(reinterpret_cast(void**, &hdl));
 
                         return ENOMEM;
                 }
         }
 
         if (SDSPI->card[major]) {
-                sdpart_t *part = calloc(1, sizeof(sdpart_t));
+                sdpart_t *part = NULL;
+                _sys_calloc(1, sizeof(sdpart_t), reinterpret_cast(void**, &part));
                 if (part) {
                         part->first_sector = 0;
                         part->size         = 0;
@@ -275,7 +277,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         part->used         = false;
         part->minor        = 0;
 
-        free(part);
+        _sys_free(reinterpret_cast(void**, &part));
 
         // release allocated memory of selected card if all partitions are released
         if (  SDSPI->card[part->major]->part[_SDSPI_FULL_VOLUME] == NULL
@@ -288,7 +290,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
                 _sys_mutex_delete(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
-                free(SDSPI->card[part->major]);
+                _sys_free(reinterpret_cast(void**, &SDSPI->card[part->major]));
                 SDSPI->card[part->major] = NULL;
         }
 
@@ -300,7 +302,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         }
 
         if (released) {
-                free(SDSPI);
+                _sys_free(reinterpret_cast(void**, &SDSPI));
                 SDSPI = NULL;
         }
 
@@ -816,8 +818,9 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
 //==============================================================================
 static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek)
 {
-        u8_t *buffer = malloc(sector_size);
-        if (!buffer)
+        u8_t *buffer;
+        int result = _sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        if (result != ESUCC)
                 return -1;
 
         u32_t recv_data = 0;
@@ -859,7 +862,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
         }
 
         exit:
-        free(buffer);
+        _sys_free(reinterpret_cast(void**, &buffer));
 
         return recv_data;
 }
@@ -931,8 +934,9 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
 //==============================================================================
 static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek)
 {
-        u8_t *buffer = malloc(sector_size);
-        if (!buffer)
+        u8_t *buffer = NULL;
+        int result = _sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        if (result != ESUCC)
                 return -1;
 
         u32_t transmit_data = 0;
@@ -984,7 +988,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
         }
 
         exit:
-        free(buffer);
+        _sys_free(reinterpret_cast(void**, &buffer));
 
         return transmit_data;
 }
@@ -1302,8 +1306,9 @@ static int MBR_detect_partitions(sdpart_t *hdl)
 {
         int status = EIO;
 
-        u8_t *MBR = malloc(sector_size);
-        if (MBR) {
+        u8_t *MBR;
+        status = _sys_malloc(sector_size, reinterpret_cast(void**, &MBR));
+        if (status == ESUCC) {
                 size_t rdcnt;
                 if (card_read(hdl, MBR, sector_size, 0, &rdcnt) != sector_size) {
                         goto error;
@@ -1325,7 +1330,7 @@ static int MBR_detect_partitions(sdpart_t *hdl)
                 status = ESUCC;
 
                 error:
-                free(MBR);
+                _sys_free(reinterpret_cast(void**, &MBR));
         } else {
                 status = ENOMEM;
         }

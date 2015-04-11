@@ -108,8 +108,10 @@ static IRQ_t *IRQ;
 API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
         if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
-                IRQ_t *hdl = calloc(1, sizeof(IRQ_t));
-                if (hdl) {
+                int result = _sys_calloc(1, sizeof(IRQ_t), device_handle);
+                if (result == ESUCC) {
+                        IRQ_t *hdl = *device_handle;
+
                         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
                                 switch (default_config[i].mode) {
                                 default:
@@ -147,14 +149,13 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                                         }
                                                 }
 
-                                                free(hdl);
+                                                _sys_free(device_handle);
                                                 IRQ = NULL;
                                                 return ENOMEM;
                                         }
                                 }
                         }
 
-                        *device_handle = hdl;
                         IRQ = hdl;
 
                         return ESUCC;
@@ -190,7 +191,7 @@ API_MOD_RELEASE(IRQ, void *device_handle)
                 }
         }
 
-        free(hdl);
+        _sys_free(device_handle);
         IRQ = NULL;
 
         _sys_critical_section_end();
@@ -256,11 +257,7 @@ API_MOD_WRITE(IRQ,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
 
         return ENOTSUP;
 }
@@ -287,11 +284,7 @@ API_MOD_READ(IRQ,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
 
         return ENOTSUP;
 }

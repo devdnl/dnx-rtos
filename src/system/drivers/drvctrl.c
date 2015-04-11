@@ -117,21 +117,25 @@ static bool is_device_valid(dev_t id)
  *
  * @param [IN]  drv_name            driver name
  * @param [IN]  node_path           path name to create in the file system or NULL
- * @param [OUT] id                  driver id
+ * @param [OUT] id                  driver id (can be NULL)
  *
  * @return One of error code (errno)
  */
 //==============================================================================
-int _driver_init(const char *drv_name, const char *node_path, dev_t *id) // TODO return value
+int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
 {
-        if (!drv_name && !id) {
+        if (!drv_name) {
                 return EINVAL;
         }
 
         if (!driver_memory_region) {
-                driver_memory_region = _kcalloc(_drvreg_size_of_driver_table, sizeof(void*));
-                if (!driver_memory_region) {
-                        return ENOMEM;
+                int result = _kcalloc(_MM_KRN,
+                                      _drvreg_size_of_driver_table,
+                                      sizeof(void*),
+                                      static_cast(void**, &driver_memory_region));
+
+                if (result != ESUCC) {
+                        return result;
                 }
         }
 
@@ -153,24 +157,27 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id) // TODO
                                                                              _drvreg_driver_table[drvid].minor);
 
                 if (status == ESUCC) {
-                        *id = drvid;
+                        if (id) {
+                                *id = drvid;
+                        }
                 } else {
                         _printk(drv_error_str, drv_name);
                         return status;
                 }
 
-                if (driver_memory_region[drvid] == NULL)
+                if (driver_memory_region[drvid] == NULL) {
                         driver_memory_region[drvid] = (void*)(size_t)-1;
+                }
 
                 if (node_path) {
-                        if (_vfs_mknod(node_path, drvid) == ESUCC) {
+                        int result = _vfs_mknod(node_path, drvid);
+                        if (result == ESUCC) {
                                 _printk(drv_node_created_str, node_path);
-                                return drvid;
                         } else {
                                 _drvreg_driver_table[drvid].interface->drv_release(driver_memory_region[drvid]);
                                 _printk(drv_node_fail_str, node_path);
-                                return -1;
                         }
+                        return result;
 
                 } else {
                         _printk(drv_initialized_str);
@@ -179,6 +186,7 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id) // TODO
         }
 
         _printk(drv_not_exist_str, drv_name);
+
         return EINVAL;
 }
 

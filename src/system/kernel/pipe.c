@@ -30,6 +30,7 @@
 #include "config.h"
 #include <stdbool.h>
 #include <sys/types.h>
+#include "dnx/misc.h"
 #include "libc/errno.h"
 #include "kernel/kwrapper.h"
 #include "kernel/pipe.h"
@@ -90,7 +91,9 @@ static bool is_valid(pipe_t *this)
 //==============================================================================
 pipe_t *_pipe_new()
 {
-        pipe_t  *pipe  = _kmalloc(sizeof(pipe_t));
+        pipe_t *pipe;
+        _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, &pipe));
+
         queue_t *queue = _queue_new(CONFIG_PIPE_LENGTH, sizeof(u8_t));
 
         if (pipe && queue) {
@@ -105,7 +108,7 @@ pipe_t *_pipe_new()
                 }
 
                 if (pipe) {
-                        _kfree(pipe);
+                        _kfree(_MM_KRN, static_cast(void**, &pipe));
                         pipe = NULL;
                 }
         }
@@ -125,7 +128,7 @@ void _pipe_delete(pipe_t *pipe)
         if (is_valid(pipe)) {
                 _queue_delete(pipe->queue);
                 pipe->self = NULL;
-                _kfree(pipe);
+                _kfree(_MM_KRN, static_cast(void**, &pipe));
         }
 }
 

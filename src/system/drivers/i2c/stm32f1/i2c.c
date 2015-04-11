@@ -295,7 +295,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
         /* creates basic module structures */
         if (I2C == NULL) {
-                I2C = calloc(1, sizeof(I2C_mem_t));
+                _sys_calloc(1, sizeof(I2C_mem_t), reinterpret_cast(void**, &I2C));
                 if (!I2C) {
                         status = ENOMEM;
                         goto error;
@@ -327,15 +327,15 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
 
         /* creates device structure */
-        I2C_dev_t *hdl = calloc(1, sizeof(I2C_dev_t));
-        if (hdl) {
-                hdl->config  = &I2C_cfg[major].devices[minor];
-                hdl->address =  I2C_cfg[major].devices[minor].addr;
+        status = _sys_calloc(1, sizeof(I2C_dev_t), device_handle);
+        if (status == ESUCC) {
+                I2C_dev_t *hdl = *device_handle;
+                hdl->config    = &I2C_cfg[major].devices[minor];
+                hdl->address   =  I2C_cfg[major].devices[minor].addr;
                 I2C->periph[major].dev_cnt++;
-                *device_handle = hdl;
-                return ESUCC;
         }
 
+        return status;
 
         /* error handling */
         error:
@@ -363,7 +363,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
 
                 I2C->periph[hdl->config->major].dev_cnt--;
                 release_resources(hdl->config->major);
-                free(hdl);
+                _sys_free(device_handle);
 
                 status = ESUCC;
         } else {
@@ -622,7 +622,7 @@ static void release_resources(u8_t major)
         }
 
         if (!mem_used && I2C) {
-                free(I2C);
+                _sys_free(reinterpret_cast(void**, &I2C));
                 I2C = NULL;
         }
 }

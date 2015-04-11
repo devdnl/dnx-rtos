@@ -228,7 +228,7 @@ void _heap_init(void)
  * @param  func         user defined function called if memory was successfully
  *                      freed
  * @param  arg          user defined argument that is passed via 'func'
- * @return Number of really freed bytes
+ * @return None
  */
 //==============================================================================
 void _heap_free(void *rmem, _heap_func_t func, void *arg)

@@ -48,10 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static i32_t  kernel_memory_usage;
-static i32_t  filesystems_memory_usage;
-static i32_t  network_memory_usage;
-static i32_t  applications_memory_usage;
+static i32_t  memory_usage[_MM_COUNT];
 static i32_t *module_memory_usage;
 
 /*==============================================================================
@@ -84,208 +81,39 @@ static void modify_RAM_usage(void *usage, i32_t size)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Initialize memory management module
+ *
+ * @param  None
+ *
+ * @return On success ESUCC is returned, otherwise other value.
  */
 //==============================================================================
-void _mm_init(void)
+int _mm_init(void)
 {
-        module_memory_usage = _kmalloc(_drvreg_number_of_modules);
+        return _kmalloc(_MM_KRN,
+                        _drvreg_number_of_modules,
+                        reinterpret_cast(void**, &module_memory_usage));
 }
 
 //==============================================================================
 /**
  * @brief  Allocate memory
  *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
+ * @param[in]  mpur             memory purpose
+ * @param[in]  num              number of object of size 'size' to allocate
+ * @param[in]  size             object size
+ * @param[out] mem              pointer to memory block pointer
  *
- * @return Pointer to memory region or NULL if no memory
+ * @return One of errno values.
  */
 //==============================================================================
-void *_kcalloc(size_t num, size_t size)
+int _kcalloc(enum _mm_mem mpur, size_t num, size_t size, void **mem)
 {
-        return _heap_calloc(num, size, modify_RAM_usage, &kernel_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_kmalloc(size_t size)
-{
-        return _heap_malloc(size, modify_RAM_usage, &kernel_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Free allocated memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void _kfree(void *mem)
-{
-        return _heap_free(mem, modify_RAM_usage, &kernel_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_fscalloc(size_t num, size_t size)
-{
-        return _heap_calloc(num, size, modify_RAM_usage, &filesystems_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_fsmalloc(size_t size)
-{
-        return _heap_malloc(size, modify_RAM_usage, &filesystems_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Free allocated memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void _fsfree(void *mem)
-{
-        return _heap_free(mem, modify_RAM_usage, &filesystems_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_netcalloc(size_t num, size_t size)
-{
-        return _heap_calloc(num, size, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_netmalloc(size_t size)
-{
-        return _heap_malloc(size, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Free allocated memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void _netfree(void *mem)
-{
-        return _heap_free(mem, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_appcalloc(size_t num, size_t size)
-{
-        return _heap_calloc(num, size, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_appmalloc(size_t size)
-{
-        return _heap_malloc(size, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Free allocated memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void _appfree(void *mem)
-{
-        return _heap_free(mem, modify_RAM_usage, &network_memory_usage);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory
- *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
- *
- * @return Pointer to memory region or NULL if no memory
- */
-//==============================================================================
-void *_modcalloc(size_t num, size_t size, size_t modid)
-{
-        if (modid >= 0 && modid < _drvreg_number_of_modules) {
-                return _heap_calloc(num, size, modify_RAM_usage, &module_memory_usage[modid]);
+        if (mpur < _MM_COUNT && num && size && mem) {
+                *mem = _heap_calloc(num, size, modify_RAM_usage, &memory_usage[mpur]);
+                return *mem ? ESUCC : ENOMEM;
         } else {
-                return NULL;
+                return EINVAL;
         }
 }
 
@@ -293,34 +121,108 @@ void *_modcalloc(size_t num, size_t size, size_t modid)
 /**
  * @brief  Allocate memory
  *
- * @param  size         object size
+ * @param[in]  mpur             memory purpose
+ * @param[in]  size             object size
+ * @param[out] mem              pointer to memory block pointer
  *
- * @return Pointer to memory region or NULL if no memory
+ * @return One of errno values.
  */
 //==============================================================================
-void *_modmalloc(size_t size, size_t modid)
+int _kmalloc(enum _mm_mem mpur, size_t size, void **mem)
 {
-        if (modid >= 0 && modid < _drvreg_number_of_modules) {
-                return _heap_malloc(size, modify_RAM_usage, &module_memory_usage[modid]);
+        if (mpur < _MM_COUNT && size && mem) {
+                *mem = _heap_malloc(size, modify_RAM_usage, &memory_usage[mpur]);
+                return *mem ? ESUCC : ENOMEM;
         } else {
-                return NULL;
+                return EINVAL;
         }
 }
 
 //==============================================================================
 /**
- * @brief  Free allocated memory
+ * @brief  Free allocated memory. Set selected buffer pointer to NULL.
  *
- * @param  num          number of object of size 'size' to allocate
- * @param  size         object size
+ * @param[in]     mpur          memory purpose
+ * @param[in,out] mem           pointer to memory block to free
  *
- * @return Pointer to memory region or NULL if no memory
+ * @return One of errno values.
  */
 //==============================================================================
-void _modfree(void *mem, size_t modid)
+int _kfree(enum _mm_mem mpur, void **mem)
 {
-        if (modid >= 0 && modid < _drvreg_number_of_modules) {
-                return _heap_free(mem, modify_RAM_usage, &module_memory_usage[modid]);
+        if (mpur < _MM_COUNT && mem && *mem) {
+                _heap_free(*mem, modify_RAM_usage, &memory_usage[mpur]);
+                *mem = NULL;
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param[in]  mpur             memory purpose
+ * @param[in]  num              number of object of size 'size' to allocate
+ * @param[in]  size             object size
+ * @param[in]  modid            module id
+ * @param[out] mem              pointer to memory block pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _modcalloc(size_t num, size_t size, size_t modid, void **mem)
+{
+        if (modid < _drvreg_number_of_modules && num && size && mem) {
+                *mem = _heap_calloc(num, size, modify_RAM_usage, &module_memory_usage[modid]);
+                return *mem ? ESUCC : ENOMEM;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param[in]  mpur             memory purpose
+ * @param[in]  size             object size
+ * @param[in]  modid            module id
+ * @param[out] mem              pointer to memory block pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _modmalloc(size_t size, size_t modid, void **mem)
+{
+        if (modid < _drvreg_number_of_modules && size && mem) {
+                *mem = _heap_malloc(size, modify_RAM_usage, &module_memory_usage[modid]);
+                return *mem ? ESUCC : ENOMEM;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory. Set selected buffer pointer to NULL.
+ *
+ * @param[in]     mpur          memory purpose
+ * @param[in]     modid         memory id
+ * @param[in,out] mem           pointer to memory block to free
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _modfree(void **mem, size_t modid)
+{
+        if (modid < _drvreg_number_of_modules && mem && *mem) {
+                _heap_free(mem, modify_RAM_usage, &module_memory_usage[modid]);
+                *mem = NULL;
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -336,11 +238,11 @@ void _modfree(void *mem, size_t modid)
 int _mm_get_mem_usage(_mm_mem_usage_t *mem_usage)
 {
         if (mem_usage) {
-                mem_usage->kernel_memory_usage       = kernel_memory_usage;
-                mem_usage->filesystems_memory_usage  = filesystems_memory_usage;
-                mem_usage->network_memory_usage      = network_memory_usage;
-                mem_usage->applications_memory_usage = applications_memory_usage;
-                mem_usage->modules_memory_usage      = 0;
+                mem_usage->kernel_memory_usage      = memory_usage[_MM_KRN];
+                mem_usage->filesystems_memory_usage = memory_usage[_MM_FS];
+                mem_usage->network_memory_usage     = memory_usage[_MM_NET];
+                mem_usage->programs_memory_usage    = memory_usage[_MM_PROG];
+                mem_usage->modules_memory_usage     = 0;
 
                 for (size_t i = 0; _drvreg_number_of_modules; i++) {
                         mem_usage->modules_memory_usage += module_memory_usage[i];

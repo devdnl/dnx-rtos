@@ -48,8 +48,16 @@ typedef struct {
         i32_t filesystems_memory_usage;
         i32_t network_memory_usage;
         i32_t modules_memory_usage;
-        i32_t applications_memory_usage;
+        i32_t programs_memory_usage;
 } _mm_mem_usage_t;
+
+enum _mm_mem {
+        _MM_KRN,        //!< allocate memory for kernel purposes
+        _MM_FS,         //!< allocate memory for file system purposes
+        _MM_NET,        //!< allocate memory for network purposes
+        _MM_PROG,       //!< allocate memory for program purposes
+        _MM_COUNT
+};
 
 /*==============================================================================
   Exported objects
@@ -58,30 +66,15 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void  _mm_init(void);
-
-extern void *_kcalloc(size_t, size_t);
-extern void *_kmalloc(size_t);
-extern void  _kfree(void*);
-
-extern void *_fscalloc(size_t, size_t);
-extern void *_fsmalloc(size_t);
-extern void  _fsfree(void*);
-
-extern void *_modcalloc(size_t, size_t, size_t);
-extern void *_modmalloc(size_t, size_t);
-extern void  _modfree(void*, size_t);
-
-extern void *_netcalloc(size_t, size_t);
-extern void *_netmalloc(size_t);
-extern void  _netfree(void*);
-
-extern void *_appcalloc(size_t, size_t);
-extern void *_appmalloc(size_t);
-extern void  _appfree(void*);
-
-extern int   _mm_get_mem_usage(_mm_mem_usage_t*);
-extern int   _mm_get_module_mem_usage(uint module, i32_t *usage);
+extern int _mm_init(void);
+extern int _kcalloc(enum _mm_mem, size_t, size_t, void**);
+extern int _kmalloc(enum _mm_mem, size_t, void**);
+extern int _kfree(enum _mm_mem, void**);
+extern int _modcalloc(size_t, size_t, size_t, void**);
+extern int _modmalloc(size_t, size_t, void**);
+extern int _modfree(void**, size_t);
+extern int _mm_get_mem_usage(_mm_mem_usage_t*);
+extern int _mm_get_module_mem_usage(uint module, i32_t *usage);
 
 /*==============================================================================
   Exported inline functions

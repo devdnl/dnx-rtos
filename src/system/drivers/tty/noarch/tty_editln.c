@@ -91,7 +91,8 @@ static inline bool is_valid(ttyedit_t *this)
 //==============================================================================
 ttyedit_t *ttyedit_new(FILE *out_file)
 {
-        ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
+        ttyedit_t *edit = NULL;
+        _sys_calloc(1, sizeof(ttyedit_t), reinterpret_cast(void**, &edit));
         if (edit) {
                 edit->self         = edit;
                 edit->out_file     = out_file;
@@ -112,7 +113,7 @@ void ttyedit_delete(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                free(this);
+                _sys_free(reinterpret_cast(void**, &this));
         }
 }
 

@@ -57,7 +57,7 @@ enum _kernel_panic_desc_cause {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _kernel_panic_init();
+extern int  _kernel_panic_init();
 extern bool _kernel_panic_detect(bool);
 extern void _kernel_panic_report(const char*, enum _kernel_panic_desc_cause);
 

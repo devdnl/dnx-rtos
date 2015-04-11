@@ -314,7 +314,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* allocate module general data if initialized first time */
         if (!SPIM) {
-                SPIM = calloc(1, sizeof(struct module));
+                _sys_calloc(1, sizeof(struct module), reinterpret_cast(void**, &SPIM));
                 if (!SPIM) {
                         return ENOMEM;
                 }
@@ -367,7 +367,8 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* create new instance for specified major-minor number (virtual spi) */
-        struct spi_virtual *hdl = calloc(1, sizeof(struct spi_virtual));
+        struct spi_virtual *hdl = NULL;
+        _sys_calloc(1, sizeof(struct spi_virtual), reinterpret_cast(void**, &hdl));
         if (hdl) {
                 hdl->config    = spi_default_cfg;
                 hdl->major     = major;
@@ -427,14 +428,14 @@ API_MOD_RELEASE(SPI, void *device_handle)
                 }
 
                 if (free_module_mem) {
-                        free(SPIM);
+                        _sys_free(reinterpret_cast(void**, &SPIM));
                         SPIM = NULL;
                 }
 
                 _sys_critical_section_end();
 
                 /* free virtual spi memory */
-                free(hdl);
+                _sys_free(reinterpret_cast(void**, &hdl));
 
                 return ESUCC;
         } else {

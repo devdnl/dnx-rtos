@@ -104,12 +104,15 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        int            status;
-        struct ethmac *hdl          = calloc(1, sizeof(struct ethmac));
+        int status = _sys_calloc(1, sizeof(struct ethmac), device_handle);
+
         sem_t         *rx_ready_sem = _sys_semaphore_new(1, 0);
         mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
         mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-        if (hdl && rx_ready_sem && rx_mtx && tx_mtx) {
+
+        if (device_handle && rx_ready_sem && rx_mtx && tx_mtx) {
+                struct ethmac *hdl = *device_handle;
+
                 hdl->rx_data_ready = rx_ready_sem;
                 hdl->rx_access     = rx_mtx;
                 hdl->tx_access     = tx_mtx;
@@ -170,8 +173,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
                 if (ETH_Init(&ETH_InitStructure, ETHMAC_PHY_ADDRESS)) {
 
-                        ethmac         = hdl;
-                        *device_handle = hdl;
+                        ethmac = hdl;
 
                         ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
 
@@ -202,8 +204,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
         error:
         /* error occurred */
-        if (hdl)
-                free(hdl);
+        if (device_handle)
+                _sys_free(device_handle);
 
         if (rx_ready_sem)
                 _sys_semaphore_delete(rx_ready_sem);
@@ -228,7 +230,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
-        struct ethmac *hdl    = device_handle;
+        struct ethmac *hdl = device_handle;
         int            status;
 
         _sys_critical_section_begin();
@@ -238,7 +240,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 NVIC_DisableIRQ(ETH_IRQn);
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
                 ethmac = NULL;
-                free(hdl);
+                _sys_free(device_handle);
 
                 status = ESUCC;
         } else {

@@ -121,9 +121,9 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize module base */
         if (!tty_module) {
-                tty_module = calloc(1 ,sizeof(struct module));
-                if (!tty_module)
-                        return ENOMEM;
+                int result = _sys_calloc(1 ,sizeof(struct module), reinterpret_cast(void**, &tty_module));
+                if (result != ESUCC)
+                        return result;
 
                 tty_module->infile      = _sys_fopen(_TTY_IN_FILE, "r");
                 tty_module->outfile     = _sys_fopen(_TTY_OUT_FILE, "w");
@@ -149,7 +149,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         if (tty_module->service_out)
                                 _sys_task_delete(tty_module->service_out);
 
-                        free(tty_module);
+                        _sys_free(reinterpret_cast(void**, &tty_module));
                         tty_module = NULL;
 
                         return ENOMEM;
@@ -157,7 +157,8 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* initialize selected TTY */
-        tty_t *tty = calloc(1, sizeof(tty_t));
+        tty_t *tty = NULL;
+        _sys_calloc(1, sizeof(tty_t), reinterpret_cast(void**, &tty));
         if (tty) {
                 tty->queue_out  = _sys_queue_new(_TTY_STREAM_SIZE, sizeof(char));
                 tty->secure_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
@@ -188,7 +189,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         if (tty->vtcmd)
                                 ttycmd_delete(tty->vtcmd);
 
-                        free(tty);
+                        _sys_free(reinterpret_cast(void**, &tty));
                 }
         }
 
@@ -216,7 +217,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 ttyedit_delete(tty->editline);
                 ttycmd_delete(tty->vtcmd);
                 tty_module->tty[tty->major] = NULL;
-                free(tty);
+                _sys_free(reinterpret_cast(void**, &tty));
 
                 /* de-initialize entire module if all TTYs are released */
                 bool release_TTY = true;
@@ -231,7 +232,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                         _sys_fclose(tty_module->outfile);
                         _sys_queue_delete(tty_module->queue_cmd);
 
-                        free(tty_module);
+                        _sys_free(reinterpret_cast(void**, &tty_module));
                         tty_module = NULL;
                 }
 
@@ -517,8 +518,8 @@ static void service_in(void *arg)
         _sys_task_set_priority(service_in_priority);
 
         for (;;) {
-                char c;
-                if (_sys_fread(&c, 1, 1, tty_module->infile) > 0) {
+                char c = '\0'; size_t rdcnt;
+                if (_sys_fread(&c, 1, &rdcnt, tty_module->infile) > 0) {
                         _sys_task_set_priority(PRIORITY_HIGHEST);
                         send_cmd(CMD_INPUT, c);
                         _sys_task_set_priority(service_in_priority);

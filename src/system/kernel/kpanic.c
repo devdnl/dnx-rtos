@@ -32,6 +32,7 @@
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
 #include "lib/vt100.h"
+#include "lib/cast.h"
 #include "mm/mm.h"
 #include "config.h"
 
@@ -76,12 +77,14 @@ static struct kernel_panic_desc *kernel_panic_descriptor;
 /**
  * @brief  Initialize kernel panic detector
  * @param  None
- * @return None
+ * @return One of errno value.
  */
 //==============================================================================
-void _kernel_panic_init()
+int _kernel_panic_init()
 {
-        kernel_panic_descriptor = _kmalloc(sizeof(struct kernel_panic_desc));
+        return _kmalloc(_MM_KRN,
+                        sizeof(struct kernel_panic_desc),
+                        reinterpret_cast(void**, &kernel_panic_descriptor));
 }
 
 //==============================================================================

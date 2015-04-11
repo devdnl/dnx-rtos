@@ -36,36 +36,34 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include <dnx/misc.h>
-#include <errno.h>
 #include <string.h>
+#include "errno.h"
 #include "kernel/sysfunc.h"
 #include "drivers/drvctrl.h"
 #include "lib/vt100.h"
+#include "lib/cast.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef errno
 
-#undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    _modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
+#undef  _sys_calloc
+#define _sys_calloc(size_t__nmemb, size_t__msize, void__ppmem)    _modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_), void__ppmem)
 
-#undef  malloc
-#define malloc(size_t__size)                    _modmalloc(size_t__size, _get_module_number(_module_name_))
+#undef  _sys_malloc
+#define _sys_malloc(size_t__size, void__ppmem)                    _modmalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
 
-#undef  free
-#define free(void__pmem)                        _modfree(void__pmem, _get_module_number(_module_name_))
-
-// TODO module ID from system instaed of string name
+#undef  _sys_free
+#define _sys_free(void__ppmem)                                    _modfree(void__ppmem, _get_module_number(_module_name_))
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \
         static const char *_module_name_ = #modname;\
-        inline void* operator new     (size_t size) {return malloc(size);}\
-        inline void* operator new[]   (size_t size) {return malloc(size);}\
-        inline void  operator delete  (void* ptr  ) {free(ptr);}\
-        inline void  operator delete[](void* ptr  ) {free(ptr);}
+        inline void* operator new     (size_t size) {void *mem = NULL; _modmalloc(size, _get_module_number(_module_name_), &mem); return mem;}\
+        inline void* operator new[]   (size_t size) {void *mem = NULL; _modmalloc(size, _get_module_number(_module_name_), &mem); return mem;}\
+        inline void  operator delete  (void* ptr  ) {_modfree(&ptr, _get_module_number(_module_name_));}\
+        inline void  operator delete[](void* ptr  ) {_modfree(&ptr, _get_module_number(_module_name_));}
 #       define _MODULE_EXTERN_C extern "C"
 #else
 #       define MODULE_NAME(modname) \

@@ -48,21 +48,15 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #undef errno
-
-#undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    _fscalloc(size_t__nmemb, size_t__msize)
-
-#undef  malloc
-#define malloc(size_t__size)                    _fsmalloc(size_t__size)
-
-#undef  free
-#define free(void__pmem)                        _fsfree(void__pmem)
+#undef _sys_calloc
+#undef _sys_malloc
+#undef _sys_free
 
 #ifdef __cplusplus
-        inline void* operator new     (size_t size) {return _sysmalloc(size);}\
-        inline void* operator new[]   (size_t size) {return _sysmalloc(size);}\
-        inline void  operator delete  (void* ptr  ) {_sysfree(ptr);}\
-        inline void  operator delete[](void* ptr  ) {_sysfree(ptr);}
+        inline void* operator new     (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
+        inline void* operator new[]   (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
+        inline void  operator delete  (void* ptr  ) {_sysfree(&ptr);}\
+        inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
 #       define _FS_EXTERN_C extern "C"
 #else
 #       define _FS_EXTERN_C
@@ -104,6 +98,51 @@ extern "C" {
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param[in]  size             object size
+ * @param[out] mem              pointer to memory block pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+static inline int _sys_malloc(size_t size, void **mem)
+{
+        return _kmalloc(_MM_FS, size, mem);
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param[in]  num              number of object of size 'size' to allocate
+ * @param[in]  size             object size
+ * @param[out] mem              pointer to memory block pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+static inline int _sys_calloc(size_t count, size_t size, void **mem)
+{
+        return _kcalloc(_MM_FS, count, size, mem);
+}
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory
+ *
+ * @param[in,out] mem           pointer to memory block to free
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+static inline int _sys_free(void **mem)
+{
+        return _kfree(_MM_FS, mem);
+}
+
 //==============================================================================
 /**
  * @brief Function open selected driver
@@ -239,6 +278,9 @@ static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 //==============================================================================
 static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
 {
+        void *_fsmalloc(size_t size) {void *mem = NULL; _sys_malloc(size, &mem); return mem;}
+        void  _fsfree  (void *mem)   {_sys_free(&mem);}
+
         return _llist_new(_fsmalloc, _fsfree, functor, obj_dtor);
 }
 
