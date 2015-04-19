@@ -149,9 +149,9 @@ static inline double _sys_atof(const char *str)
  * @return On success 1 is returned, otherwise 0
  */
 //==============================================================================
-static inline int _sys_llist_delete(llist_t *list)
+static inline int _sys_llist_destroy(llist_t *list)
 {
-        return _llist_delete(list);
+        return _llist_destroy(list);
 }
 
 //==============================================================================
@@ -772,15 +772,16 @@ static inline int _sys_statfs(const char *path, struct statfs *statfs)
 /**
  * @brief Function open selected file
  *
- * @param[in] *name             file path
- * @param[in] *mode             file mode
+ * @param[in]  *name             file path
+ * @param[in]  *mode             file mode
+ * @param[out] **file            pointer to file pointer
  *
- * @retval NULL if file can't be created
+ * @return One of errno values
  */
 //==============================================================================
-static inline FILE *_sys_fopen(const char *name, const char *mode)
+static inline int _sys_fopen(const char *name, const char *mode, FILE **file)
 {
-//        return _vfs_fopen(name, mode); // TODO
+        return _vfs_fopen(name, mode, file);
 }
 
 //==============================================================================

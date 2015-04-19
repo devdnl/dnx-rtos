@@ -115,33 +115,34 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
                 struct LFS_data *lfs = *fs_handle;
 
                 result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &lfs->resource_mtx);
-                if (result == ESUCC) {
+                if (result != ESUCC)
+                        goto finish;
 
-                        lfs->root_dir.data = _sys_llist_new(NULL, NULL);
-                        lfs->opended_files = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
+                result = _sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &lfs->root_dir.data));
+                if (result != ESUCC)
+                        goto finish;
 
-                        if (lfs->root_dir.data && lfs->opended_files) {
-                                lfs->root_dir.name = "/";
-                                lfs->root_dir.size = sizeof(node_t);
-                                lfs->root_dir.type = NODE_TYPE_DIR;
+                result = _sys_llist_create(_sys_llist_functor_cmp_pointers, NULL, &lfs->opended_files);
+                if (result != ESUCC)
+                        goto finish;
 
-                                return result;
-                        } else {
-                                if (lfs->root_dir.data) {
-                                        _sys_llist_delete(lfs->root_dir.data);
-                                }
+                lfs->root_dir.name = "/";
+                lfs->root_dir.size = sizeof(node_t);
+                lfs->root_dir.type = NODE_TYPE_DIR;
 
-                                if (lfs->opended_files) {
-                                        _sys_llist_delete(lfs->opended_files);
-                                }
+                finish:
+                if (result != ESUCC) {
+                        if (lfs->resource_mtx)
+                                _sys_mutex_destroy(lfs->resource_mtx);
 
-                                result = ENOMEM;
-                        }
+                        if (lfs->root_dir.data)
+                                _sys_llist_destroy(lfs->root_dir.data);
 
-                        _sys_mutex_destroy(lfs->resource_mtx);
+                        if (lfs->opended_files)
+                                _sys_llist_destroy(lfs->opended_files);
+
+                        _sys_free(fs_handle);
                 }
-
-                _sys_free(fs_handle);
         }
 
         return result;
@@ -908,7 +909,9 @@ API_FS_WRITE(lfs,
                        result = _sys_pipe_write(target->data, src, count, wrcnt, fattr.non_blocking_wr);
                        if (result == ESUCC) {
                                if (*wrcnt > 0) {
-                                       target->size = _sys_pipe_get_length(target->data);
+                                       size_t size = 0;
+                                       result = _sys_pipe_get_length(target->data, &size);
+                                       target->size = size;
                                }
                        }
 
@@ -926,7 +929,7 @@ API_FS_WRITE(lfs,
                        if ((seek + write_size) > file_length || target->data == NULL) {
                                char *new_data;
                                result = _sys_malloc(file_length + write_size,
-                                                    reinterpret_cast(void**, new_data));
+                                                    reinterpret_cast(void**, &new_data));
                                if (result == ESUCC) {
                                        if (target->data) {
                                                memcpy(new_data, target->data, file_length);
@@ -1003,7 +1006,9 @@ API_FS_READ(lfs,
                         result = _sys_pipe_read(target->data, dst, count, rdcnt, fattr.non_blocking_rd);
                         if (result == ESUCC) {
                                 if (*rdcnt > 0) {
-                                        target->size = _sys_pipe_get_length(target->data);
+                                        size_t size;
+                                        result = _sys_pipe_get_length(target->data, &size);
+                                        target->size = size;
                                 }
                         }
 
@@ -1181,7 +1186,7 @@ static int delete_node(node_t *base, node_t *target, u32_t position)
                 if (_sys_llist_size(target->data) > 0) {
                         return ENOTEMPTY;
                 } else {
-                        _sys_llist_delete(target->data);
+                        _sys_llist_destroy(target->data);
                         target->data = NULL;
                 }
 
@@ -1365,26 +1370,25 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
                 node->uid   = 0;
 
                 if (type == NODE_TYPE_DIR) {
-                        node->data = _sys_llist_new(NULL, NULL);
-                        if (node->data == NULL) {
-                                _sys_free(reinterpret_cast(void**, &node));
-                                return ENOMEM;
-                        }
+                        result = _sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &node->data));
+
                 } else if (type == NODE_TYPE_PIPE) {
-                        node->data = _sys_pipe_new();
-                        if (node->data == NULL) {
-                                _sys_free(reinterpret_cast(void**, &node));
-                                return ENOMEM;
+                        result = _sys_pipe_create(reinterpret_cast(pipe_t**, &node->data));
+                }
+
+                if (result == ESUCC) {
+                        if (_sys_llist_push_back(parent->data, node)) {
+                                if (item) {
+                                        *item  = _sys_llist_size(parent->data) - 1;
+                                }
+
+                                *child = node;
+                        } else {
+                                result = ENOMEM;
                         }
                 }
 
-                if (_sys_llist_push_back(parent->data, node)) {
-                        if (item)
-                                *item  = _sys_llist_size(parent->data) - 1;
-
-                        *child = node;
-                        result = ESUCC;
-                } else {
+                if (result != ESUCC) {
                         _sys_free(reinterpret_cast(void**, &node));
                 }
         }

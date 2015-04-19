@@ -273,27 +273,29 @@ static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
  * @brief  List constructor (for FS only)
  * @param  cmp_functor          compare functor (can be NULL)
  * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
- * @return On success list object is returned, otherwise NULL
+ * @return One of errno value.
  */
 //==============================================================================
-static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
+static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
 {
         void *_fsmalloc(size_t size) {void *mem = NULL; _sys_malloc(size, &mem); return mem;}
         void  _fsfree  (void *mem)   {_sys_free(&mem);}
 
-        return _llist_new(_fsmalloc, _fsfree, functor, obj_dtor);
+        return _llist_create(_fsmalloc, _fsfree, functor, obj_dtor, list);
 }
 
 //==============================================================================
 /**
  * @brief Create pipe object
  *
- * @return pointer to pipe object
+ * @param[out] pipe     pointer to pointer of pipe handle
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-static inline pipe_t *_sys_pipe_new()
+static inline int _sys_pipe_create(pipe_t **pipe)
 {
-        return _pipe_new();
+        return _pipe_create(pipe);
 }
 
 //==============================================================================
@@ -301,11 +303,13 @@ static inline pipe_t *_sys_pipe_new()
  * @brief Destroy pipe object
  *
  * @param pipe          a pipe object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-static inline void _sys_pipe_delete(pipe_t *pipe)
+static inline int _sys_pipe_delete(pipe_t *pipe)
 {
-        return _pipe_delete(pipe);
+        return _pipe_destroy(pipe);
 }
 
 //==============================================================================
@@ -313,13 +317,14 @@ static inline void _sys_pipe_delete(pipe_t *pipe)
  * @brief Return length of pipe
  *
  * @param pipe          a pipe object
+ * @param len           a pipe length
  *
- * @return length or -1 if error
+ * @return One of errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_get_length(pipe_t *pipe)
+static inline int _sys_pipe_get_length(pipe_t *pipe, size_t *len)
 {
-        return _pipe_get_length(pipe);
+        return _pipe_get_length(pipe, len);
 }
 
 //==============================================================================
@@ -364,10 +369,10 @@ static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, s
  *
  * @param pipe          a pipe object
  *
- * @return true if pipe closed, otherwise false
+ * @return One of errno value.
  */
 //==============================================================================
-static inline bool _sys_pipe_close(pipe_t *pipe)
+static inline int _sys_pipe_close(pipe_t *pipe)
 {
         return _pipe_close(pipe);
 }
@@ -378,10 +383,10 @@ static inline bool _sys_pipe_close(pipe_t *pipe)
  *
  * @param  pipe         a pipe object
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value.
  */
 //==============================================================================
-static inline bool _sys_pipe_clear(pipe_t *pipe)
+static inline int _sys_pipe_clear(pipe_t *pipe)
 {
         return _pipe_clear(pipe);
 }

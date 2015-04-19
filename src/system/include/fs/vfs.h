@@ -256,7 +256,7 @@ typedef struct vfs_file FILE;
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
-extern bool _vfs_init       (void);
+extern int  _vfs_init       (void);
 extern int  _vfs_mount      (const char*, const char*, struct vfs_FS_itf*);
 extern int  _vfs_umount     (const char*);
 extern int  _vfs_getmntentry(int, struct mntent*);

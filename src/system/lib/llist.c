@@ -31,6 +31,7 @@
 ==============================================================================*/
 #include "lib/llist.h"
 #include <string.h>
+#include "libc/errno.h"
 
 /*==============================================================================
   Local macros
@@ -93,54 +94,64 @@ static const uint32_t magic_number = 0x6D89B264;
 //==============================================================================
 /**
  * @brief  Generic list constructor
- * @param  malloc               allocate memory function
- * @param  free                 free memory function
- * @param  cmp_functor          compare functor (can be NULL)
- * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
- * @return On success list object is returned, otherwise NULL
+ *
+ * @param[in]  malloc               allocate memory function
+ * @param[in]  free                 free memory function
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-llist_t *_llist_new(llist_malloc        malloc,
-                    llist_free          free,
-                    llist_cmp_functor_t cmp_functor,
-                    llist_obj_dtor_t    obj_dtor)
+int _llist_create(llist_malloc        malloc,
+                  llist_free          free,
+                  llist_cmp_functor_t cmp_functor,
+                  llist_obj_dtor_t    obj_dtor,
+                  llist_t             **list)
 {
-        llist_t *this = NULL;
+        int result = EINVAL;
 
-        if (malloc && free) {
-                this = malloc(sizeof(llist_t));
-                if (this) {
-                        this->malloc      = malloc;
-                        this->free        = free;
-                        this->cmp_functor = cmp_functor;
-                        this->obj_dtor    = obj_dtor;
-                        this->head        = NULL;
-                        this->tail        = NULL;
-                        this->count       = 0;
-                        this->self        = this;
+        if (malloc && free && list) {
+                *list = malloc(sizeof(llist_t));
+                if (*list) {
+                        (*list)->malloc      = malloc;
+                        (*list)->free        = free;
+                        (*list)->cmp_functor = cmp_functor;
+                        (*list)->obj_dtor    = obj_dtor;
+                        (*list)->head        = NULL;
+                        (*list)->tail        = NULL;
+                        (*list)->count       = 0;
+                        (*list)->self        = *list;
+
+                        result = ESUCC;
+                } else {
+                        result = ENOMEM;
                 }
         }
 
-        return this;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief  List destructor
+ *
  * @param  this         list object
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-int _llist_delete(llist_t *this)
+int _llist_destroy(llist_t *this)
 {
         if (is_llist_valid(this)) {
                 _llist_clear(this);
                 this->self = NULL;
                 this->free(this);
-                return 1;
+                return ESUCC;
         }
 
-        return 0;
+        return EINVAL;
 }
 
 //==============================================================================

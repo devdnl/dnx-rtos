@@ -215,33 +215,39 @@ static void put_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 /**
  * @brief  Initialize buffer
- * @param  None
- * @return If success buffer object, NULL on error
+ *
+ * @param  bfr          pointer to buffer pointer
+ *
+ * @return One of errno value
  */
 //==============================================================================
-ttybfr_t *ttybfr_new()
+int ttybfr_create(ttybfr_t **bfr)
 {
-        ttybfr_t *bfr = NULL;
-        _sys_calloc(1, sizeof(ttybfr_t), reinterpret_cast(void**, &bfr));
-        if (bfr) {
-                bfr->self = bfr;
+        int result = _sys_calloc(1, sizeof(ttybfr_t), reinterpret_cast(void**, bfr));
+        if (result == ESUCC) {
+                (*bfr)->self = *bfr;
         }
 
-        return bfr;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief  Destroy buffer object
- * @param  this          buffer object
- * @return None
+ *
+ * @param  this          buffer object pointer
+ *
+ * @return One of errno value
  */
 //==============================================================================
-void ttybfr_delete(ttybfr_t *this)
+int ttybfr_destroy(ttybfr_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
                 _sys_free(reinterpret_cast(void**, &this));
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 

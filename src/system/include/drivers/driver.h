@@ -172,16 +172,19 @@ static inline bool _sys_device_is_unlocked(dev_lock_t *dev_lock)
  * @brief  List constructor (for modules only)
  * @param  cmp_functor          compare functor (can be NULL)
  * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
- * @return On success list object is returned, otherwise NULL
+ * @return One of errno value.
  */
 //==============================================================================
-static inline llist_t *_sys_llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
+static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
 {
+        void *_malloc(size_t size) {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
+        void  _free  (void *mem)   {_kfree(_MM_KRN, &mem);}
+
         /*
          * FIXME: this list should use _sysm_modmalloc() instead of _sysm_sysmalloc.
          *        Module identification function is required.
          */
-        return _llist_new(_kmalloc, _kfree, functor, obj_dtor);
+        return _llist_create(_malloc, _free, functor, obj_dtor, list);
 }
 
 #ifdef __cplusplus

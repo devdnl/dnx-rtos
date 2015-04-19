@@ -82,8 +82,8 @@ typedef enum ttycmd_resp {
   Exported functions
 ==============================================================================*/
 /* buffer support ----------------------------------------------------------- */
-extern ttybfr_t        *ttybfr_new                      ();
-extern void             ttybfr_delete                   (ttybfr_t*);
+extern int              ttybfr_create                   (ttybfr_t**);
+extern int              ttybfr_destroy                  (ttybfr_t*);
 extern void             ttybfr_put                      (ttybfr_t*, const char*, size_t);
 extern void             ttybfr_flush                    (ttybfr_t*);
 extern void             ttybfr_clear                    (ttybfr_t*);
@@ -92,8 +92,8 @@ extern const char      *ttybfr_get_fresh_line           (ttybfr_t*);
 extern void             ttybfr_clear_fresh_line_counter (ttybfr_t*);
 
 /* editline support --------------------------------------------------------- */
-extern ttyedit_t       *ttyedit_new                     (FILE*);
-extern void             ttyedit_delete                  (ttyedit_t*);
+extern int              ttyedit_create                  (FILE*, ttyedit_t**);
+extern int              ttyedit_destroy                 (ttyedit_t*);
 extern void             ttyedit_enable_echo             (ttyedit_t*);
 extern void             ttyedit_disable_echo            (ttyedit_t*);
 extern bool             ttyedit_is_echo_enabled         (ttyedit_t*);
@@ -109,8 +109,8 @@ extern void             ttyedit_move_cursor_home        (ttyedit_t*);
 extern void             ttyedit_move_cursor_end         (ttyedit_t*);
 
 /* vt100 command analyze ---------------------------------------------------- */
-extern ttycmd_t        *ttycmd_new                      ();
-extern void             ttycmd_delete                   (ttycmd_t*);
+extern int              ttycmd_create                   (ttycmd_t**);
+extern int              ttycmd_destroy                  (ttycmd_t*);
 extern ttycmd_resp_t    ttycmd_analyze                  (ttycmd_t*, const char);
 extern bool             ttycmd_is_idle                  (ttycmd_t*);
 

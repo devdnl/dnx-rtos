@@ -86,35 +86,30 @@ static bool is_valid(pipe_t *this)
 /**
  * @brief Create pipe object
  *
- * @return pointer to pipe object
+ * @param[out] pipe     pointer to pointer of pipe handle
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-pipe_t *_pipe_new() // TODO _pipe_create
+int _pipe_create(pipe_t **pipe)
 {
-        pipe_t *pipe;
-        _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, &pipe));
+        int result = EINVAL;
 
-        queue_t *queue = NULL;
-        _queue_create(CONFIG_PIPE_LENGTH, sizeof(u8_t), &queue);
+        if (pipe) {
+                result = _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, pipe));
+                if (result == ESUCC) {
 
-        if (pipe && queue) {
-
-                pipe->queue  = queue;
-                pipe->self   = pipe;
-                pipe->closed = false;
-
-        } else {
-                if (queue) {
-                        _queue_destroy(queue);
-                }
-
-                if (pipe) {
-                        _kfree(_MM_KRN, static_cast(void**, &pipe));
-                        pipe = NULL;
+                        result = _queue_create(CONFIG_PIPE_LENGTH, sizeof(u8_t), &(*pipe)->queue);
+                        if (result == ESUCC) {
+                                (*pipe)->self   = *pipe;
+                                (*pipe)->closed = false;
+                        } else {
+                                _kfree(_MM_KRN, reinterpret_cast(void**, pipe));
+                        }
                 }
         }
 
-        return pipe;
+        return result;
 }
 
 //==============================================================================
@@ -122,14 +117,19 @@ pipe_t *_pipe_new() // TODO _pipe_create
  * @brief Destroy pipe object
  *
  * @param pipe          a pipe object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void _pipe_delete(pipe_t *pipe)
+int _pipe_destroy(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 _queue_destroy(pipe->queue);
                 pipe->self = NULL;
                 _kfree(_MM_KRN, static_cast(void**, &pipe));
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -138,18 +138,17 @@ void _pipe_delete(pipe_t *pipe)
  * @brief Return length of pipe
  *
  * @param pipe          a pipe object
+ * @param len           a pipe length
  *
- * @return length or -1 if error
+ * @return One of errno value.
  */
 //==============================================================================
-int _pipe_get_length(pipe_t *pipe)
+int _pipe_get_length(pipe_t *pipe, size_t *len)
 {
-        if (is_valid(pipe)) {
-                size_t len = -1;
-                _queue_get_number_of_items(pipe->queue, &len);
-                return len;
+        if (len && is_valid(pipe)) {
+                return _queue_get_number_of_items(pipe->queue, len);
         } else {
-                return -1;
+                return EINVAL;
         }
 }
 
@@ -239,10 +238,10 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
  *
  * @param pipe          a pipe object
  *
- * @return true if pipe closed, otherwise false
+ * @return One of errno value.
  */
 //==============================================================================
-bool _pipe_close(pipe_t *pipe)
+int _pipe_close(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
                 pipe->closed = true;
@@ -250,7 +249,7 @@ bool _pipe_close(pipe_t *pipe)
                 const u8_t nul = '\0';
                 return _queue_send(pipe->queue, &nul, pipe_write_timeout);
         } else {
-                return false;
+                return EINVAL;
         }
 }
 
@@ -260,16 +259,15 @@ bool _pipe_close(pipe_t *pipe)
  *
  * @param  pipe         a pipe object
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value.
  */
 //==============================================================================
-bool _pipe_clear(pipe_t *pipe)
+int _pipe_clear(pipe_t *pipe)
 {
         if (is_valid(pipe)) {
-                _queue_reset(pipe->queue);
-                return true;
+                return _queue_reset(pipe->queue);
         } else {
-                return false;
+                return EINVAL;
         }
 }
 

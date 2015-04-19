@@ -164,9 +164,12 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        int status = _sys_calloc(1, sizeof(struct UART_data), device_handle);
-        if (status == ESUCC) {
-                uart_data[major]                   = *device_handle;
+        int result = _sys_calloc(1, sizeof(struct UART_data), device_handle);
+        if (result == ESUCC) {
+                uart_data[major] = *device_handle;
+
+                result = _sys_semaphore_create(1, 0, &uart_data[major]->data_write_sem);
+
                 uart_data[major]->data_write_sem   = _sys_semaphore_new(1, 0);
                 uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
                 uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
@@ -210,11 +213,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                         _sys_free(device_handle);
                         uart_data[major] = NULL;
 
-                        status = ENOMEM;
+                        result = ENOMEM;
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================

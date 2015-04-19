@@ -65,13 +65,57 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/** private list object */
 typedef struct _llist llist_t;
-typedef int   (*llist_cmp_functor_t)(const void *a, const void *b);
-typedef void  (*llist_obj_dtor_t)   (void *object);
-typedef void *(*llist_malloc)       (size_t size);
-typedef void  (*llist_free)         (void *mem);
 
-// iterator object
+//==============================================================================
+/**
+ * @brief  Compare functor
+ *
+ * @param  a    pointer to object a
+ * @param  b    pointer to object b
+ *
+ * @return *a == *b:  0 is returned
+ *         *a >  *b:  1 is returned
+ *         *b >  *a: -1 is returned
+ */
+//==============================================================================
+typedef int (*llist_cmp_functor_t)(const void *a, const void *b);
+
+//==============================================================================
+/**
+ * @brief  Object destructor
+ *
+ * @param  object       pointer to object to destroy
+ *
+ * @return None
+ */
+//==============================================================================
+typedef void (*llist_obj_dtor_t)(void *object);
+
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param  size         object size
+ *
+ * @return Pointer to allocated block or NULL on error.
+ */
+//==============================================================================
+typedef void *(*llist_malloc)(size_t size);
+
+//==============================================================================
+/**
+ * @brief  Free memory
+ *
+ * @param  mem          pointer to memory block
+ *
+ * @return None
+ */
+//==============================================================================
+typedef void (*llist_free)(void *mem);
+
+/** iterator object */
 typedef struct {
         llist_t  *list;
         void     *current;
@@ -85,27 +129,29 @@ typedef struct {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief  List constructor
- * @param  malloc               allocate memory function
- * @param  free                 free memory function
- * @param  cmp_functor          compare functor (can be NULL)
- * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
- * @return On success list object is returned, otherwise NULL
+ * @brief  Generic list constructor
+ * @param[in]  malloc               allocate memory function
+ * @param[in]  free                 free memory function
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ * @return One of errno value.
  */
 //==============================================================================
-extern llist_t *_llist_new(llist_malloc        malloc,
-                           llist_free          free,
-                           llist_cmp_functor_t functor,
-                           llist_obj_dtor_t    obj_dtor);
+extern int _llist_create(llist_malloc        malloc,
+                         llist_free          free,
+                         llist_cmp_functor_t functor,
+                         llist_obj_dtor_t    obj_dtor,
+                         llist_t             **list);
 
 //==============================================================================
 /**
  * @brief  List destructor
  * @param  list         list object
- * @return On success 1 is returned, otherwise 0
+ * @return One of errno value.
  */
 //==============================================================================
-extern int _llist_delete(llist_t *list);
+extern int _llist_destroy(llist_t *list);
 
 //==============================================================================
 /**

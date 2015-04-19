@@ -115,46 +115,53 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
+        int result = ENODEV;
+
         if (major >= _TTY_NUMBER || minor != 0) {
-                return ENODEV;
+                return result;
         }
 
         /* initialize module base */
         if (!tty_module) {
-                int result = _sys_calloc(1 ,sizeof(struct module), reinterpret_cast(void**, &tty_module));
+                result = _sys_calloc(1 ,sizeof(struct module), reinterpret_cast(void**, &tty_module));
                 if (result != ESUCC)
                         return result;
 
-                tty_module->infile      = _sys_fopen(_TTY_IN_FILE, "r");
-                tty_module->outfile     = _sys_fopen(_TTY_OUT_FILE, "w");
+                result = _sys_fopen(_TTY_IN_FILE, "r", &tty_module->infile);
+                if (result != ESUCC)
+                        goto module_alloc_finish;
 
-                _sys_task_create(service_in,
-                                 service_in_name,
-                                 service_in_stack_depth,
-                                 NULL,
-                                 NULL,
-                                 &tty_module->service_in);
+                result = _sys_fopen(_TTY_OUT_FILE, "w", &tty_module->outfile);
+                if (result != ESUCC)
+                        goto module_alloc_finish;
 
-                _sys_task_create(service_out,
-                                 service_out_name,
-                                 service_out_stack_depth,
-                                 NULL,
-                                 NULL,
-                                 &tty_module->service_out);
+                result = _sys_task_create(service_in,
+                                          service_in_name,
+                                          service_in_stack_depth,
+                                          NULL,
+                                          NULL,
+                                          &tty_module->service_in);
+                if (result != ESUCC)
+                        goto module_alloc_finish;
 
-                tty_module->queue_cmd   = _sys_queue_new(queue_cmd_len, sizeof(tty_cmd_t));
+                result = _sys_task_create(service_out,
+                                          service_out_name,
+                                          service_out_stack_depth,
+                                          NULL,
+                                          NULL,
+                                          &tty_module->service_out);
+                if (result != ESUCC)
+                        goto module_alloc_finish;
 
-                if (  !tty_module->infile || !tty_module->outfile || !tty_module->queue_cmd
-                   || !tty_module->service_in || !tty_module->service_out) {
+                result = _sys_queue_create(queue_cmd_len, sizeof(tty_cmd_t), &tty_module->queue_cmd);
 
+                module_alloc_finish:
+                if (result != ESUCC) {
                         if (tty_module->infile)
                                 _sys_fclose(tty_module->infile);
 
                         if (tty_module->outfile)
                                 _sys_fclose(tty_module->outfile);
-
-                        if (tty_module->queue_cmd)
-                                _sys_queue_delete(tty_module->queue_cmd);
 
                         if (tty_module->service_in)
                                 _sys_task_destroy(tty_module->service_in);
@@ -162,51 +169,70 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         if (tty_module->service_out)
                                 _sys_task_destroy(tty_module->service_out);
 
-                        _sys_free(reinterpret_cast(void**, &tty_module));
-                        tty_module = NULL;
+                        if (tty_module->queue_cmd)
+                                _sys_queue_destroy(tty_module->queue_cmd);
 
-                        return ENOMEM;
+                        if (tty_module)
+                                _sys_free(reinterpret_cast(void**, &tty_module));
                 }
+        } else {
+                result = ESUCC;
         }
 
         /* initialize selected TTY */
-        tty_t *tty = NULL;
-        _sys_calloc(1, sizeof(tty_t), reinterpret_cast(void**, &tty));
-        if (tty) {
-                tty->queue_out  = _sys_queue_new(_TTY_STREAM_SIZE, sizeof(char));
-                tty->secure_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                tty->screen     = ttybfr_new();
-                tty->editline   = ttyedit_new(tty_module->outfile);
-                tty->vtcmd      = ttycmd_new();
+        if (result == ESUCC) {
+                result = _sys_calloc(1, sizeof(tty_t), device_handle);
+                if (result != ESUCC)
+                        return result;
 
-                if (tty->queue_out && tty->secure_mtx && tty->screen && tty->editline && tty->vtcmd) {
+                tty_t *tty = *device_handle;
 
-                        tty->major             = major;
-                        tty_module->tty[major] = tty;
-                        *device_handle         = tty;
+                result = _sys_queue_create(_TTY_STREAM_SIZE, sizeof(char), &tty->queue_out);
+                if (result != ESUCC)
+                        goto tty_alloc_finish;
 
-                        return ESUCC;
-                } else {
-                        if (tty->secure_mtx)
-                                _sys_mutex_delete(tty->secure_mtx);
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &tty->secure_mtx);
+                if (result != ESUCC)
+                        goto tty_alloc_finish;
 
-                        if (tty->queue_out)
-                                _sys_queue_delete(tty->queue_out);
+                result = ttybfr_create(&tty->screen);
+                if (result != ESUCC)
+                        goto tty_alloc_finish;
 
-                        if (tty->screen)
-                                ttybfr_delete(tty->screen);
+                result = ttyedit_create(tty_module->outfile, &tty->editline);
+                if (result != ESUCC)
+                        goto tty_alloc_finish;
+
+                result = ttycmd_create(&tty->vtcmd);
+                if (result != ESUCC)
+                        goto tty_alloc_finish;
+
+                tty->major             = major;
+                tty_module->tty[major] = tty;
+
+                tty_alloc_finish:
+                if (result != ESUCC) {
+                        if (tty->vtcmd)
+                                ttycmd_destroy(tty->vtcmd);
 
                         if (tty->editline)
-                                ttyedit_delete(tty->editline);
+                                ttyedit_destroy(tty->editline);
 
-                        if (tty->vtcmd)
-                                ttycmd_delete(tty->vtcmd);
+                        if (tty->screen)
+                                ttybfr_destroy(tty->screen);
 
-                        _sys_free(reinterpret_cast(void**, &tty));
+                        if (tty->secure_mtx)
+                                _sys_mutex_destroy(tty->secure_mtx);
+
+                        if (tty->queue_out)
+                                _sys_queue_destroy(tty->queue_out);
+
+                        if (device_handle)
+                                _sys_free(device_handle);
                 }
         }
 
-        return ENOMEM;
+        return result;
 }
 
 //==============================================================================
@@ -224,13 +250,13 @@ API_MOD_RELEASE(TTY, void *device_handle)
 
         if (_sys_mutex_trylock(tty->secure_mtx) == ESUCC) {
                 _sys_critical_section_begin();
-                _sys_mutex_delete(tty->secure_mtx);
-                _sys_queue_delete(tty->queue_out);
-                ttybfr_delete(tty->screen);
-                ttyedit_delete(tty->editline);
-                ttycmd_delete(tty->vtcmd);
+                _sys_mutex_destroy(tty->secure_mtx);
+                _sys_queue_destroy(tty->queue_out);
+                ttybfr_destroy(tty->screen);
+                ttyedit_destroy(tty->editline);
+                ttycmd_destroy(tty->vtcmd);
                 tty_module->tty[tty->major] = NULL;
-                _sys_free(reinterpret_cast(void**, &tty));
+                _sys_free(device_handle);
 
                 /* de-initialize entire module if all TTYs are released */
                 bool release_TTY = true;
@@ -243,10 +269,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
                         _sys_task_destroy(tty_module->service_out);
                         _sys_fclose(tty_module->infile);
                         _sys_fclose(tty_module->outfile);
-                        _sys_queue_delete(tty_module->queue_cmd);
-
+                        _sys_queue_destroy(tty_module->queue_cmd);
                         _sys_free(reinterpret_cast(void**, &tty_module));
-                        tty_module = NULL;
                 }
 
                 _sys_critical_section_end();
@@ -592,8 +616,17 @@ static void service_out(void *arg)
                                         if (_sys_mutex_lock(tty->secure_mtx, 100)) {
                                                 const char *str;
                                                 while ((str = ttybfr_get_fresh_line(tty->screen))) {
-                                                        _sys_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
-                                                        _sys_fwrite(str, 1, strlen(str), tty_module->outfile);
+                                                        size_t wrcnt;
+
+                                                        _sys_fwrite(VT100_CLEAR_LINE,
+                                                                    strlen(VT100_CLEAR_LINE),
+                                                                    &wrcnt,
+                                                                    tty_module->outfile);
+
+                                                        _sys_fwrite(str,
+                                                                    strlen(str),
+                                                                    &wrcnt,
+                                                                    tty_module->outfile);
                                                 }
 
                                                 _sys_mutex_unlock(tty->secure_mtx);
@@ -606,14 +639,25 @@ static void service_out(void *arg)
                                 tty_t *tty = tty_module->tty[rq.arg];
 
                                 if (rq.arg == tty_module->current_tty && _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                                        size_t wrcnt;
+
                                         const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) VT100_ERASE_LINE;
-                                        _sys_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
+                                        _sys_fwrite(cmd,
+                                                    strlen(cmd),
+                                                    &wrcnt,
+                                                    tty_module->outfile);
 
                                         const char *last_line = ttybfr_get_line(tty->screen, 0);
-                                        _sys_fwrite(last_line, sizeof(char), strlen(last_line), tty_module->outfile);
+                                        _sys_fwrite(last_line,
+                                                    strlen(last_line),
+                                                    &wrcnt,
+                                                    tty_module->outfile);
 
                                         const char *editline = ttyedit_get_value(tty->editline);
-                                        _sys_fwrite(editline, sizeof(char), strlen(editline), tty_module->outfile);
+                                        _sys_fwrite(editline,
+                                                    strlen(editline),
+                                                    &wrcnt,
+                                                    tty_module->outfile);
 
                                         _sys_mutex_unlock(tty->secure_mtx);
                                 }
@@ -656,7 +700,8 @@ static void vt100_init()
                           VT100_DISABLE_LINE_WRAP
                           VT100_CURSOR_HOME;
 
-        _sys_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
+        size_t wrcnt;
+        _sys_fwrite(cmd, strlen(cmd), &wrcnt, tty_module->outfile);
 }
 
 //==============================================================================
@@ -685,7 +730,8 @@ static void vt100_analyze(const char c)
 
                         if (ttyedit_is_echo_enabled(tty->editline)) {
                                 const char *crlf = "\r\n";
-                                _sys_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
+                                size_t      wrcnt;
+                                _sys_fwrite(crlf, strlen(crlf), &wrcnt, tty_module->outfile);
                         }
 
                         copy_string_to_queue(str, tty->queue_out, true, 0);
@@ -787,17 +833,22 @@ static void switch_terminal(int term_no)
                         vt100_init();
 
                         if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                                size_t      wrcnt;
                                 const char *str;
+
                                 for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
-                                                _sys_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
+                                                _sys_fwrite(str,
+                                                            strlen(str),
+                                                            &wrcnt,
+                                                            tty_module->outfile);
                                         }
                                 }
 
                                 str = ttyedit_get_value(tty->editline);
-                                _sys_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
+                                _sys_fwrite(str, strlen(str), &wrcnt, tty_module->outfile);
                                 ttybfr_clear_fresh_line_counter(tty->screen);
 
                                 _sys_mutex_unlock(tty->secure_mtx);

@@ -73,7 +73,6 @@ static bool         parse_flags             (const char *str, u32_t *flags);
 static int          get_path_FS             (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
 static int          get_path_base_FS        (const char *path, const char **extPath, FS_entry_t **fs_entry);
 static int          new_CWD_path            (const char *path, enum path_correction corr, char **new_path);
-static const char  *get_CWD                 (void);
 
 /*==============================================================================
   Local object definitions
@@ -92,12 +91,18 @@ static mutex_t  *vfs_resource_mtx;
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-bool _vfs_init(void)
+int _vfs_init(void)
 {
-        vfs_mnt_list     = _llist_new(_kmalloc, _kfree, NULL, NULL);
-        vfs_resource_mtx = _mutex_new(MUTEX_TYPE_RECURSIVE);
+        void *_malloc(size_t size) {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
+        void  _free  (void *mem)   {_kfree(_MM_KRN, &mem);}
 
-        return vfs_mnt_list && vfs_resource_mtx;
+        int result = _llist_create(_malloc, _free, NULL, NULL, &vfs_mnt_list);
+        if (result != ESUCC)
+                return result;
+
+        result = _mutex_create(MUTEX_TYPE_RECURSIVE, &vfs_resource_mtx);
+
+        return result;
 }
 
 //==============================================================================
