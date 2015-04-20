@@ -180,69 +180,68 @@ static const card_cfg_t card_cfg[SDSPI_NUMBER_OF_CARDS] = {
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
+        int result = ENODEV;
+
         if (major >= _NUMBER_OF_SDSPI_CARDS || minor > _SDSPI_PARTITION_4) {
-                return EINVAL;
+                return result;
         }
 
         if (SDSPI == NULL) {
-                int result = _sys_calloc(1, sizeof(sdctrl_t), reinterpret_cast(void **, &SDSPI));
+                result = _sys_calloc(1, sizeof(sdctrl_t), reinterpret_cast(void**, &SDSPI));
                 if (result != ESUCC) {
                         return result;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
+                result = _sys_calloc(1, sizeof(struct card), reinterpret_cast(void**, &SDSPI->card[major]));
+                if (result == ESUCC) {
+                        struct card *hdl = SDSPI->card[major];
 
-                struct card *hdl  = NULL;
-                _sys_calloc(1, sizeof(struct card), reinterpret_cast(void**, &hdl));
+                        result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
+                        if (result != ESUCC)
+                                goto finish;
 
-                mutex_t     *mtx  = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                FILE        *fspi = _sys_fopen(card_cfg[major].filepath, "r+");
-
-                if (hdl && mtx && fspi) {
-                        hdl->SPI_file      = fspi;
-                        hdl->protect_mtx   = mtx;
-                        SDSPI->card[major] = hdl;
+                        result = _sys_fopen(card_cfg[major].filepath, "r+", &hdl->SPI_file);
+                        if (result != ESUCC)
+                                goto finish;
 
                         struct SPI_config cfg;
-                        _sys_ioctl(fspi, IOCTL_SPI__GET_CONFIGURATION, &cfg);
-                        cfg.dummy_byte = 0xFF;
-                        cfg.mode       = SPI_MODE_0;
-                        cfg.msb_first  = true;
-                        _sys_ioctl(fspi, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                        result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        if (result == ESUCC) {
 
-                } else {
-                        if (fspi)
-                                _sys_fclose(fspi);
+                                cfg.dummy_byte = 0xFF;
+                                cfg.mode       = SPI_MODE_0;
+                                cfg.msb_first  = true;
 
-                        if (mtx)
-                                _sys_mutex_delete(mtx);
+                                result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                        }
 
-                        if (hdl)
-                                _sys_free(reinterpret_cast(void**, &hdl));
+                        finish:
+                        if (result != ESUCC) {
+                                if (hdl->protect_mtx)
+                                        _sys_mutex_destroy(hdl->protect_mtx);
 
-                        return ENOMEM;
+                                if (hdl->SPI_file)
+                                        _sys_fclose(hdl->SPI_file);
+
+                                _sys_free(reinterpret_cast(void**, &SDSPI->card[major]));
+                        }
                 }
         }
 
         if (SDSPI->card[major]) {
-                sdpart_t *part = NULL;
-                _sys_calloc(1, sizeof(sdpart_t), reinterpret_cast(void**, &part));
-                if (part) {
-                        part->first_sector = 0;
-                        part->size         = 0;
-                        part->major        = major;
-                        part->minor        = minor;
-
-                        SDSPI->card[major]->part[minor] = part;
-
-                        *device_handle = part;
-
-                        return ESUCC;
+                result = _sys_calloc(1, sizeof(sdpart_t), device_handle);
+                if (result == ESUCC) {
+                        SDSPI->card[major]->part[minor]               = *device_handle;
+                        SDSPI->card[major]->part[minor]->first_sector = 0;
+                        SDSPI->card[major]->part[minor]->size         = 0;
+                        SDSPI->card[major]->part[minor]->major        = major;
+                        SDSPI->card[major]->part[minor]->minor        = minor;
                 }
         }
 
-        return ENOMEM;
+        return result;
 }
 
 //==============================================================================
@@ -258,6 +257,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 {
         sdpart_t *part = device_handle;
 
+        // wait for resource be ready
         uint timer = _sys_time_get_reference();
         while (part->used) {
                 if (_sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
@@ -270,14 +270,13 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         _sys_critical_section_begin();
 
         // release allocated memory by partition
-        SDSPI->card[part->major]->part[part->minor] = NULL;
-
         part->first_sector = 0;
         part->size         = 0;
         part->used         = false;
         part->minor        = 0;
 
-        _sys_free(reinterpret_cast(void**, &part));
+        _sys_free(device_handle);
+        SDSPI->card[part->major]->part[part->minor] = NULL;
 
         // release allocated memory of selected card if all partitions are released
         if (  SDSPI->card[part->major]->part[_SDSPI_FULL_VOLUME] == NULL
@@ -287,11 +286,10 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_4] == NULL  ) {
 
                 _sys_fclose(SDSPI->card[part->major]->SPI_file);
-                _sys_mutex_delete(SDSPI->card[part->major]->protect_mtx);
+                _sys_mutex_destroy(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
                 _sys_free(reinterpret_cast(void**, &SDSPI->card[part->major]));
-                SDSPI->card[part->major] = NULL;
         }
 
         // release module memory if all card are released
@@ -303,7 +301,6 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 
         if (released) {
                 _sys_free(reinterpret_cast(void**, &SDSPI));
-                SDSPI = NULL;
         }
 
         _sys_critical_section_end();
@@ -594,7 +591,8 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 //==============================================================================
 static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 {
-        _sys_fwrite(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        size_t wrcnt;
+        _sys_fwrite(block, count, &wrcnt, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -610,7 +608,8 @@ static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 //==============================================================================
 static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 {
-        _sys_fread(block, 1, count, SDSPI->card[hdl->major]->SPI_file);
+        size_t rdcnt;
+        _sys_fread(block, count, &rdcnt, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================

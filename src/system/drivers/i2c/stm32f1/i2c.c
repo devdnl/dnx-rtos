@@ -125,7 +125,7 @@ typedef struct {
 ==============================================================================*/
 static void release_resources(u8_t major);
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
-static bool enable_I2C(u8_t major);
+static int enable_I2C(u8_t major);
 static void disable_I2C(u8_t major);
 static bool start(I2C_dev_t *hdl);
 static void stop(I2C_dev_t *hdl);
@@ -275,72 +275,65 @@ static I2C_mem_t *I2C;
 //==============================================================================
 API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 {
+        int result = ENODEV;
+
         if (major >= _I2C_NUMBER_OF_PERIPHERALS) {
-                return ENXIO;
+                return result;
         }
 
 #if (_I2C1_ENABLE > 0) && (_I2C1_NUMBER_OF_DEVICES > 0)
         if (major == _I2C1 && minor >= _I2C1_NUMBER_OF_DEVICES) {
-                return ENXIO;
+                return result;
         }
 #endif
 
 #if (_I2C2_ENABLE > 0) && (_I2C2_NUMBER_OF_DEVICES > 0)
         if (major == _I2C2 && minor >= _I2C2_NUMBER_OF_DEVICES) {
-                return ENXIO;
+                return result;
         }
 #endif
 
-        int status;
-
         /* creates basic module structures */
         if (I2C == NULL) {
-                _sys_calloc(1, sizeof(I2C_mem_t), reinterpret_cast(void**, &I2C));
-                if (!I2C) {
-                        status = ENOMEM;
-                        goto error;
-                }
+                result = _sys_calloc(1, sizeof(I2C_mem_t), reinterpret_cast(void**, &I2C));
+                if (result != ESUCC)
+                        goto finish;
         }
 
         if (I2C->periph[major].lock == NULL) {
-                I2C->periph[major].lock  = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                if (!I2C->periph[major].lock) {
-                        status = ENOMEM;
-                        goto error;
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C->periph[major].lock);
+                if (result != ESUCC) {
+                        goto finish;
                 }
         }
 
         if (I2C->periph[major].event == NULL) {
-                I2C->periph[major].event = _sys_semaphore_new(1, 0);
-                if (!I2C->periph[major].event) {
-                        status = ENOMEM;
-                        goto error;
-                }
+                result = _sys_semaphore_create(1, 0, &I2C->periph[major].event);
+                if (result != ESUCC)
+                        goto finish;
         }
 
         if (I2C->periph[major].initialized == false) {
-                if (!enable_I2C(major)) {
-                        status = EIO;
-                        goto error;
-                }
+                result = enable_I2C(major);
+                if (result != ESUCC)
+                        goto finish;
         }
 
-
         /* creates device structure */
-        status = _sys_calloc(1, sizeof(I2C_dev_t), device_handle);
-        if (status == ESUCC) {
+        result = _sys_calloc(1, sizeof(I2C_dev_t), device_handle);
+        if (result == ESUCC) {
                 I2C_dev_t *hdl = *device_handle;
                 hdl->config    = &I2C_cfg[major].devices[minor];
                 hdl->address   =  I2C_cfg[major].devices[minor].addr;
                 I2C->periph[major].dev_cnt++;
         }
 
-        return status;
+        finish:
+        if (result != ESUCC) {
+                release_resources(major);
+        }
 
-        /* error handling */
-        error:
-        release_resources(major);
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -355,7 +348,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 API_MOD_RELEASE(I2C, void *device_handle)
 {
         I2C_dev_t *hdl = device_handle;
-        int        status;
+        int        result;
 
         _sys_critical_section_begin();
 
@@ -365,14 +358,14 @@ API_MOD_RELEASE(I2C, void *device_handle)
                 release_resources(hdl->config->major);
                 _sys_free(device_handle);
 
-                status = ESUCC;
+                result = ESUCC;
         } else {
-                status = EBUSY;
+                result = EBUSY;
         }
 
         _sys_critical_section_end();
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -443,7 +436,7 @@ API_MOD_WRITE(I2C,
         I2C_dev_t *hdl    = device_handle;
         int        status = EIO;
 
-        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout) == ESUCC) {
 
                 if (!start(hdl))
                         goto error;
@@ -603,12 +596,12 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 static void release_resources(u8_t major)
 {
         if (I2C->periph[major].dev_cnt == 0 && I2C->periph[major].lock) {
-                _sys_mutex_delete(I2C->periph[major].lock);
+                _sys_mutex_destroy(I2C->periph[major].lock);
                 I2C->periph[major].lock = NULL;
         }
 
         if (I2C->periph[major].dev_cnt == 0 && I2C->periph[major].event) {
-                _sys_semaphore_delete(I2C->periph[major].event);
+                _sys_semaphore_destroy(I2C->periph[major].event);
                 I2C->periph[major].event = NULL;
         }
 
@@ -623,7 +616,6 @@ static void release_resources(u8_t major)
 
         if (!mem_used && I2C) {
                 _sys_free(reinterpret_cast(void**, &I2C));
-                I2C = NULL;
         }
 }
 
@@ -671,10 +663,10 @@ static void clear_DMA_IRQ_flags(u8_t major)
 /**
  * @brief  Enables selected I2C peripheral according with configuration
  * @param  major        peripheral number
- * @return On success true is returned, otherwise false.
+ * @return One of errno value.
  */
 //==============================================================================
-static bool enable_I2C(u8_t major)
+static int enable_I2C(u8_t major)
 {
         const I2C_config_t *cfg = &I2C_cfg[major];
         I2C_t              *i2c = const_cast(I2C_t*, I2C_cfg[major].I2C);
@@ -691,7 +683,7 @@ static bool enable_I2C(u8_t major)
         clocks.PCLK1_Frequency /= 1000000;
 
         if (clocks.PCLK1_Frequency < 2) {
-                return false;
+                return EIO;
         }
 
         I2C->periph[major].use_DMA = false;
@@ -738,7 +730,7 @@ static bool enable_I2C(u8_t major)
 
         I2C->periph[major].initialized = true;
 
-        return true;
+        return ESUCC;
 }
 
 //==============================================================================

@@ -75,8 +75,8 @@ struct UART_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool uart_turn_on  (USART_t *uart);
-static bool uart_turn_off (USART_t *uart);
+static int  uart_turn_on  (USART_t *uart);
+static int  uart_turn_off (USART_t *uart);
 static void configure_uart(u8_t major, struct UART_config *config);
 static bool fifo_write    (struct Rx_FIFO *fifo, u8_t *data);
 static bool fifo_read     (struct Rx_FIFO *fifo, u8_t *data);
@@ -169,51 +169,46 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 uart_data[major] = *device_handle;
 
                 result = _sys_semaphore_create(1, 0, &uart_data[major]->data_write_sem);
+                if (result != ESUCC)
+                        goto finish;
 
-                uart_data[major]->data_write_sem   = _sys_semaphore_new(1, 0);
-                uart_data[major]->data_read_sem    = _sys_semaphore_new(_UART_RX_BUFFER_SIZE, 0);
-                uart_data[major]->port_lock_rx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                uart_data[major]->port_lock_tx_mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                bool uart_clock_configured         = uart_turn_on(uart[major]);
+                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &uart_data[major]->data_write_sem);
+                if (result != ESUCC)
+                        goto finish;
 
-                if (  uart_data[major]->data_write_sem
-                   && uart_data[major]->data_read_sem
-                   && uart_data[major]->port_lock_rx_mtx
-                   && uart_data[major]->port_lock_tx_mtx
-                   && uart_clock_configured) {
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &uart_data[major]->port_lock_rx_mtx);
+                if (result != ESUCC)
+                        goto finish;
 
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &uart_data[major]->port_lock_tx_mtx);
+                if (result != ESUCC)
+                        goto finish;
+
+                result = uart_turn_on(uart[major]);
+                if (result == ESUCC) {
                         uart_data[major]->major  = major;
                         uart_data[major]->config = uart_default_config;
-
                         NVIC_EnableIRQ(uart_irq[major].irqn);
                         NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
                         configure_uart(major, (struct UART_config *)&uart_default_config);
+                }
 
-                } else {
-                        if (uart_clock_configured) {
-                                uart_turn_off(uart[major]);
-                        }
+                finish:
+                if (result != ESUCC) {
+                        if (uart_data[major]->port_lock_tx_mtx)
+                                _sys_mutex_destroy(uart_data[major]->port_lock_tx_mtx);
 
-                        if (uart_data[major]->data_write_sem) {
-                                _sys_semaphore_delete(uart_data[major]->data_write_sem);
-                        }
+                        if (uart_data[major]->port_lock_rx_mtx)
+                                _sys_mutex_destroy(uart_data[major]->port_lock_rx_mtx);
 
-                        if (uart_data[major]->data_read_sem) {
-                                _sys_semaphore_delete(uart_data[major]->data_read_sem);
-                        }
+                        if (uart_data[major]->data_write_sem)
+                                _sys_semaphore_destroy(uart_data[major]->data_write_sem);
 
-                        if (uart_data[major]->port_lock_rx_mtx) {
-                                _sys_mutex_delete(uart_data[major]->port_lock_rx_mtx);
-                        }
-
-                        if (uart_data[major]->port_lock_tx_mtx) {
-                                _sys_mutex_delete(uart_data[major]->port_lock_tx_mtx);
-                        }
+                        if (uart_data[major]->data_write_sem)
+                                _sys_semaphore_destroy(uart_data[major]->data_write_sem);
 
                         _sys_free(device_handle);
                         uart_data[major] = NULL;
-
-                        result = ENOMEM;
                 }
         }
 
@@ -241,10 +236,10 @@ API_MOD_RELEASE(UART, void *device_handle)
                         _sys_mutex_unlock(hdl->port_lock_rx_mtx);
                         _sys_mutex_unlock(hdl->port_lock_tx_mtx);
 
-                        _sys_mutex_delete(hdl->port_lock_rx_mtx);
-                        _sys_mutex_delete(hdl->port_lock_tx_mtx);
+                        _sys_mutex_destroy(hdl->port_lock_rx_mtx);
+                        _sys_mutex_destroy(hdl->port_lock_tx_mtx);
 
-                        _sys_semaphore_delete(hdl->data_write_sem);
+                        _sys_semaphore_destroy(hdl->data_write_sem);
                         uart_turn_off(uart[hdl->major]);
 
                         uart_data[hdl->major] = NULL;
@@ -479,10 +474,10 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
  *
  * @param[in] *USART            peripheral address
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value
  */
 //==============================================================================
-static bool uart_turn_on(USART_t *USART)
+static int uart_turn_on(USART_t *USART)
 {
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -492,7 +487,7 @@ static bool uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
                         SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
                 } else {
-                        return false;
+                        return EADDRINUSE;
                 }
                 break;
         #endif
@@ -503,7 +498,7 @@ static bool uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
                 } else {
-                        return false;
+                        return EADDRINUSE;
                 }
                 break;
         #endif
@@ -514,7 +509,7 @@ static bool uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
                 } else {
-                        return false;
+                        return EADDRINUSE;
                 }
                 break;
         #endif
@@ -525,7 +520,7 @@ static bool uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
                 } else {
-                        return false;
+                        return EADDRINUSE;
                 }
                 break;
         #endif
@@ -536,15 +531,15 @@ static bool uart_turn_on(USART_t *USART)
                         CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
                 } else {
-                        return false;
+                        return EADDRINUSE;
                 }
                 break;
         #endif
         default:
-                return false;
+                return ENODEV;
         }
 
-        return true;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -553,10 +548,10 @@ static bool uart_turn_on(USART_t *USART)
  *
  * @param[in] *USART            peripheral address
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value.
  */
 //==============================================================================
-static bool uart_turn_off(USART_t *USART)
+static int uart_turn_off(USART_t *USART)
 {
         switch ((u32_t)USART) {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
@@ -600,10 +595,10 @@ static bool uart_turn_off(USART_t *USART)
                 break;
         #endif
         default:
-                return false;
+                return ENODEV;
         }
 
-        return true;
+        return ESUCC;
 }
 
 //==============================================================================

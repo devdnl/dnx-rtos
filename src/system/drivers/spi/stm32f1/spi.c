@@ -92,7 +92,7 @@ struct module {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool     turn_on_SPI          (u8_t major);
+static int      turn_on_SPI          (u8_t major);
 static void     turn_off_SPI         (u8_t major);
 static void     apply_SPI_config     (struct spi_virtual *vspi);
 static void     apply_SPI_safe_config(u8_t major);
@@ -290,97 +290,98 @@ static struct module *SPIM;
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
+        int result = ENXIO;
+
         if (major >= _NUMBER_OF_SPI_PERIPHERALS) {
-                return ENXIO;
+                return result;
         }
 
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         if (major == _SPI1 && minor >= _SPI1_NUMBER_OF_SLAVES) {
-                return ENXIO;
+                return result;
         }
 #endif
 
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         if (major == _SPI2 && minor >= _SPI2_NUMBER_OF_SLAVES) {
-                return ENXIO;
+                return result;
         }
 #endif
 
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         if (major == _SPI3 && minor >= _SPI3_NUMBER_OF_SLAVES) {
-                return ENXIO;
+                return result;
         }
 #endif
 
-        /* allocate module general data if initialized first time */
+        /* allocate module memory */
         if (!SPIM) {
-                _sys_calloc(1, sizeof(struct module), reinterpret_cast(void**, &SPIM));
-                if (!SPIM) {
-                        return ENOMEM;
-                }
+                result = _sys_calloc(1, sizeof(struct module), reinterpret_cast(void**, &SPIM));
+                if (result != ESUCC)
+                        return result;
         }
 
-        /* create irq semaphore */
-        if (!SPIM->wait_irq_sem[major]) {
-                SPIM->wait_irq_sem[major] = _sys_semaphore_new(1, 0);
-                if (!SPIM->wait_irq_sem[major]) {
-                        return ENOMEM;
-                }
-        }
+        /* create SPI peripheral instance */
+        if (SPIM->wait_irq_sem[major] == NULL) {
+                result = _sys_semaphore_create(1, 0, &SPIM->wait_irq_sem[major]);
+                if (result != ESUCC)
+                        goto finish;
 
-        /* create protection mutex and start device if initialized first time */
-        if (!SPIM->device_protect_mtx[major]) {
-                SPIM->device_protect_mtx[major] = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
-                if (!SPIM->device_protect_mtx[major]) {
-                        _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
-                        SPIM->wait_irq_sem[major] = NULL;
-                        return ENOMEM;
-                } else {
-                        if (turn_on_SPI(major) == true) {
-                                if (SPI_cfg[major].DMA) {
-                                        #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
-                                        RCC->AHBENR |= SPI_cfg[major].DMA_enable_mask;
+                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPIM->device_protect_mtx[major]);
+                if (result != ESUCC)
+                        goto finish;
 
-                                        u32_t DMA_IRQ_mask = (DMA_ISR_GIF1 | DMA_ISR_TCIF1 | DMA_ISR_TEIF1);
-                                        u8_t  ch_position  = (SPI_cfg[major].DMA_Rx_channel_number - 1) * 4;
-                                        SPI_cfg[major].DMA->IFCR = (DMA_IRQ_mask << ch_position);
-                                        SPI_cfg[major].DMA->ISR |= (DMA_IRQ_mask << ch_position);
+                result = turn_on_SPI(major);
+                if (result == ESUCC) {
+                        if (SPI_cfg[major].DMA) {
+                                #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
+                                RCC->AHBENR |= SPI_cfg[major].DMA_enable_mask;
 
-                                        NVIC_EnableIRQ(SPI_cfg[major].DMA_Rx_IRQn);
-                                        NVIC_SetPriority(SPI_cfg[major].DMA_Rx_IRQn, SPI_cfg[major].IRQ_priority);
-                                        #endif
-                                } else {
-                                        #if (_SPI1_USE_DMA == 0 && _SPI1_ENABLE) || (_SPI2_USE_DMA == 0 && _SPI2_ENABLE) || (_SPI3_USE_DMA == 0 && _SPI3_ENABLE)
-                                        NVIC_EnableIRQ(SPI_cfg[major].IRQn);
-                                        NVIC_SetPriority(SPI_cfg[major].IRQn, SPI_cfg[major].IRQ_priority);
-                                        #endif
-                                }
+                                u32_t DMA_IRQ_mask = (DMA_ISR_GIF1 | DMA_ISR_TCIF1 | DMA_ISR_TEIF1);
+                                u8_t  ch_position  = (SPI_cfg[major].DMA_Rx_channel_number - 1) * 4;
+                                SPI_cfg[major].DMA->IFCR = (DMA_IRQ_mask << ch_position);
+                                SPI_cfg[major].DMA->ISR |= (DMA_IRQ_mask << ch_position);
 
+                                NVIC_EnableIRQ(SPI_cfg[major].DMA_Rx_IRQn);
+                                NVIC_SetPriority(SPI_cfg[major].DMA_Rx_IRQn, SPI_cfg[major].IRQ_priority);
+                                #endif
                         } else {
-                                _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
+                                #if (_SPI1_USE_DMA == 0 && _SPI1_ENABLE) || (_SPI2_USE_DMA == 0 && _SPI2_ENABLE) || (_SPI3_USE_DMA == 0 && _SPI3_ENABLE)
+                                NVIC_EnableIRQ(SPI_cfg[major].IRQn);
+                                NVIC_SetPriority(SPI_cfg[major].IRQn, SPI_cfg[major].IRQ_priority);
+                                #endif
+                        }
+                }
+
+                finish:
+                if (result != ESUCC) {
+                        if (SPIM->wait_irq_sem[major]) {
+                                _sys_semaphore_destroy(SPIM->wait_irq_sem[major]);
                                 SPIM->wait_irq_sem[major] = NULL;
-                                _sys_mutex_delete(SPIM->device_protect_mtx[major]);
+                        }
+
+                        if (SPIM->device_protect_mtx[major]) {
+                                _sys_mutex_destroy(SPIM->device_protect_mtx[major]);
                                 SPIM->device_protect_mtx[major] = NULL;
-                                return EADDRINUSE;
                         }
                 }
         }
 
-        /* create new instance for specified major-minor number (virtual spi) */
-        struct spi_virtual *hdl = NULL;
-        _sys_calloc(1, sizeof(struct spi_virtual), reinterpret_cast(void**, &hdl));
-        if (hdl) {
-                hdl->config    = spi_default_cfg;
-                hdl->major     = major;
-                hdl->minor     = minor;
-                *device_handle = hdl;
+        /* create new instance for specified major-minor number (virtual SPI) */
+        if (SPIM->wait_irq_sem[major]) {
+                result = _sys_calloc(1, sizeof(struct spi_virtual), device_handle);
+                if (result == ESUCC) {
+                        struct spi_virtual *hdl = *device_handle;
 
-                SPIM->number_of_virtual_spi[major]++;
-        } else {
-                return ENOMEM;
+                        hdl->config = spi_default_cfg;
+                        hdl->major  = major;
+                        hdl->minor  = minor;
+
+                        SPIM->number_of_virtual_spi[major]++;
+                }
         }
 
-        return ESUCC;
+        return result;
 }
 
 //==============================================================================
@@ -404,10 +405,12 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
                 /* deinitialize major device if all minor devices are deinitialized */
                 if (SPIM->number_of_virtual_spi[hdl->major] == 0) {
-                        _sys_mutex_delete(SPIM->device_protect_mtx[hdl->major]);
+                        _sys_mutex_destroy(SPIM->device_protect_mtx[hdl->major]);
                         SPIM->device_protect_mtx[hdl->major] = NULL;
-                        _sys_semaphore_delete(SPIM->wait_irq_sem[hdl->major]);
+
+                        _sys_semaphore_destroy(SPIM->wait_irq_sem[hdl->major]);
                         SPIM->wait_irq_sem[hdl->major] = NULL;
+
                         turn_off_SPI(hdl->major);
 
                         if (SPI_cfg[hdl->major].DMA) {
@@ -429,13 +432,12 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
                 if (free_module_mem) {
                         _sys_free(reinterpret_cast(void**, &SPIM));
-                        SPIM = NULL;
                 }
 
                 _sys_critical_section_end();
 
                 /* free virtual spi memory */
-                _sys_free(reinterpret_cast(void**, &hdl));
+                _sys_free(device_handle);
 
                 return ESUCC;
         } else {
@@ -744,18 +746,18 @@ API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 /**
  * @brief Function enable SPI interface
  * @param[in] major     SPI major number
- * @return On success true is returned, otherwise false.
+ * @return One of errno value.
  */
 //==============================================================================
-static bool turn_on_SPI(u8_t major)
+static int turn_on_SPI(u8_t major)
 {
         if (!(*SPI_cfg[major].APBENR & SPI_cfg[major].APBRSTRENR_mask)) {
                 *SPI_cfg[major].APBRSTR |=  SPI_cfg[major].APBRSTRENR_mask;
                 *SPI_cfg[major].APBRSTR &= ~SPI_cfg[major].APBRSTRENR_mask;
                 *SPI_cfg[major].APBENR  |=  SPI_cfg[major].APBRSTRENR_mask;
-                return true;
+                return ESUCC;
         } else {
-                return false;
+                return EADDRINUSE;
         }
 }
 

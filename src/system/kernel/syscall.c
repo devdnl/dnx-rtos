@@ -468,7 +468,7 @@ static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
         GETARG(FILE*, file);
 
         syscallres->err = 0; // FIXME
-        SETRETURN(size_t, _vfs_fwrite(buf, size, count, file));
+//        SETRETURN(size_t, _vfs_fwrite(buf, size, count, file));
 }
 
 //==============================================================================

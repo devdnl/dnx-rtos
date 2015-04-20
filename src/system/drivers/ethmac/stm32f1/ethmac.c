@@ -108,17 +108,16 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 struct ethmac *hdl = *device_handle;
 
                 result = _sys_semaphore_create(1, 0, &hdl->rx_data_ready);
-                if (result != ESUCC) {
+                if (result != ESUCC)
                         goto finish;
-                }
 
-                mutex_t       *rx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                mutex_t       *tx_mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->rx_access);
+                if (result != ESUCC)
+                        goto finish;
 
-                hdl->rx_access     = rx_mtx;
-                hdl->tx_access     = tx_mtx;
-
-
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->tx_access);
+                if (result != ESUCC)
+                        goto finish;
 
                 // reset Ethernet
                 ETH_DeInit();
@@ -139,10 +138,6 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 NVIC_EnableIRQ(ETH_IRQn);
                 NVIC_SetPriority(ETH_IRQn, ETHMAC_IRQ_PRIORITY);
 
-                // initialize Ethernet
-                ETH_InitTypeDef ETH_InitStructure;
-                ETH_StructInit(&ETH_InitStructure);
-
                 /* MAC configuration */
                 /*
                  * Ethernet DMA configuration
@@ -151,6 +146,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                  * insert/verify the checksum, if the checksum is OK the DMA can handle the frame otherwise
                  * the frame is dropped
                  */
+                ETH_InitTypeDef ETH_InitStructure;
+                ETH_StructInit(&ETH_InitStructure);
                 ETH_InitStructure.ETH_AutoNegotiation             = ETH_AutoNegotiation_Enable;
                 ETH_InitStructure.ETH_LoopbackMode                = ETH_LoopbackMode_Disable;
                 ETH_InitStructure.ETH_RetryTransmission           = ETH_RetryTransmission_Disable;
@@ -198,25 +195,23 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                         for (uint i = 0; i < NUMBER_OF_RX_BUFFERS; i++) {
                                 ETH_DMARxDescReceiveITConfig(&ethmac->DMA_rx_descriptor[i], ENABLE);
                         }
-
-                        return ESUCC;
                 } else {
                         result = EIO;
                 }
 
                 finish:
                 if (result != ESUCC) {
-                        if (device_handle)
-                                _sys_free(device_handle);
-
                         if (hdl->rx_data_ready)
                                 _sys_semaphore_destroy(hdl->rx_data_ready);
 
-                        if (rx_mtx)
-                                _sys_mutex_delete(rx_mtx);
+                        if (hdl->rx_access)
+                                _sys_mutex_destroy(hdl->rx_access);
 
-                        if (tx_mtx)
-                                _sys_mutex_delete(tx_mtx);
+                        if (hdl->tx_access)
+                                _sys_mutex_destroy(hdl->tx_access);
+
+                        if (device_handle)
+                                _sys_free(device_handle);
                 }
         }
 
@@ -234,8 +229,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
-        struct ethmac *hdl = device_handle;
-        int            status;
+        struct ethmac *hdl    = device_handle;
+        int            result = EBUSY;
 
         _sys_critical_section_begin();
 
@@ -243,17 +238,17 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 ETH_DeInit();
                 NVIC_DisableIRQ(ETH_IRQn);
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
-                ethmac = NULL;
+                _sys_semaphore_destroy(hdl->rx_data_ready);
+                _sys_mutex_destroy(hdl->rx_access);
+                _sys_mutex_destroy(hdl->tx_access);
                 _sys_free(device_handle);
-
-                status = ESUCC;
-        } else {
-                status = EBUSY;
+                ethmac = NULL;
+                result = ESUCC;
         }
 
         _sys_critical_section_end();
 
-        return status;
+        return result;
 }
 
 //==============================================================================
