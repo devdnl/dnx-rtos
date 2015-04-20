@@ -325,7 +325,7 @@
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
             <bsp_dir>../../BSP</bsp_dir>
-            <dnx_os_h>../../src/system/include/stdc/dnx/os.h</dnx_os_h>
+            <dnx_os_h>../../src/system/include/libc/dnx/os.h</dnx_os_h>
             <program_template_src_file>../../extra/templates/program/program.c</program_template_src_file>
             <program_template_hdr_file>../../extra/templates/program/program.h</program_template_hdr_file>
             <program_template_makefile>../../extra/templates/program/Makefile</program_template_makefile>

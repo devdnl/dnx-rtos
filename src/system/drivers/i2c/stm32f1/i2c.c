@@ -434,9 +434,9 @@ API_MOD_WRITE(I2C,
         UNUSED_ARG(fattr);
 
         I2C_dev_t *hdl    = device_handle;
-        int        status = EIO;
 
-        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout) == ESUCC) {
+        int status = _sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout);
+        if (status == ESUCC) {
 
                 if (!start(hdl))
                         goto error;
@@ -456,8 +456,6 @@ API_MOD_WRITE(I2C,
 
                 error:
                 _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
-        } else {
-                status = ETIME;
         }
 
         return status;
@@ -488,9 +486,9 @@ API_MOD_READ(I2C,
         UNUSED_ARG(fattr);
 
         I2C_dev_t *hdl    = device_handle;
-        int        status = EIO;
 
-        if (_sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout)) {
+        int status = _sys_mutex_lock(I2C->periph[hdl->config->major].lock, access_timeout);
+        if (status == ESUCC) {
 
                 if (hdl->config->sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                         if (!start(hdl))
@@ -517,8 +515,6 @@ API_MOD_READ(I2C,
 
                 error:
                 _sys_mutex_unlock(I2C->periph[hdl->config->major].lock);
-        } else {
-                status = ETIME;
         }
 
         return status;
@@ -819,7 +815,7 @@ static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
         }
         SET_BIT(get_I2C(hdl)->CR2, CR2);
 
-        if (_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout)) {
+        if (_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout) == ESUCC) {
                 if (I2C->periph[hdl->config->major].error == 0) {
                         return true;
                 }
@@ -850,7 +846,7 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
         SET_BIT(i2c->CR2, I2C_CR2_LAST);
         SET_BIT(DMA->CCR, DMA_CCR1_EN);
 
-        if (_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout)) {
+        if (_sys_semaphore_wait(I2C->periph[hdl->config->major].event, device_timeout) == ESUCC) {
                 if (I2C->periph[hdl->config->major].error == 0) {
                         return true;
                 }

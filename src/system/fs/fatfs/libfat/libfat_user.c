@@ -78,12 +78,16 @@
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_sys_fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
-                return RES_ERROR;
-        } else {
-                return RES_OK;
+        int result = _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (result == ESUCC) {
+                size_t rdcnt = 0;
+                result = _sys_fread(buff, _LIBFAT_MAX_SS * count, &rdcnt, srcfile);
+                if (result == ESUCC && rdcnt == _LIBFAT_MAX_SS * count) {
+                        return RES_OK;
+                }
         }
+
+        return RES_ERROR;
 }
 
 //==============================================================================
@@ -101,12 +105,16 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_sys_fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
-                return RES_ERROR;
-        } else {
-                return RES_OK;
+        int result = _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (result == ESUCC) {
+                size_t wrcnt = 0;
+                result = _sys_fwrite(buff, _LIBFAT_MAX_SS * count, &wrcnt, srcfile);
+                if (result == ESUCC && wrcnt == _LIBFAT_MAX_SS * count) {
+                        return RES_OK;
+                }
         }
+
+        return RES_ERROR;
 }
 
 //==============================================================================
@@ -177,15 +185,7 @@ uint32_t _libfat_get_fattime(void)
 //==============================================================================
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
-        if (sobj) {
-                _LIBFAT_MUTEX_t mtx = _sys_mutex_new(MUTEX_TYPE_NORMAL);
-                if (mtx) {
-                        *sobj = mtx;
-                        return 1;
-                }
-        }
-
-        return 0;
+        return _sys_mutex_create(MUTEX_TYPE_NORMAL, sobj) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -200,12 +200,7 @@ int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 //==============================================================================
 int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                _sys_mutex_delete(sobj);
-                return 1;
-        }
-
-        return 0;
+        return _sys_mutex_destroy(sobj) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -220,13 +215,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                if (_sys_mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
-                        return 1;
-                }
-        }
-
-        return 0;
+        return _sys_mutex_lock(sobj, _LIBFAT_FS_TIMEOUT) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -238,9 +227,7 @@ int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                _sys_mutex_unlock(sobj);
-        }
+        _sys_mutex_unlock(sobj);
 }
 
 //==============================================================================
@@ -254,7 +241,9 @@ void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 void *_libfat_malloc(uint msize)
 {
-        return malloc(msize);
+        void *mem = NULL;
+        _sys_malloc(msize, &mem);
+        return mem;
 }
 
 //==============================================================================
@@ -266,7 +255,7 @@ void *_libfat_malloc(uint msize)
 //==============================================================================
 void _libfat_free(void *mblock)
 {
-        free(mblock);
+        _sys_free(&mblock);
 }
 
 /*==============================================================================

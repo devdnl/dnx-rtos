@@ -180,11 +180,13 @@ typedef struct  {
  * @param  usr_ctx user's context
  * @param  block_size block size
  * @param  number_of_blocks number of block of storage
+ * @param  ctx file system context
  * @return standard error code */
-ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
-                      void                    *usr_ctx,
-                      uint32_t                 block_size,
-                      uint64_t                 number_of_blocks);
+int ext4_mount(const struct ext4_os_if  *osif,
+               void                     *usr_ctx,
+               uint32_t                 block_size,
+               uint64_t                 number_of_blocks,
+               ext4_fs_t                **ctx);
 
 
 /**@brief   Umount operation.

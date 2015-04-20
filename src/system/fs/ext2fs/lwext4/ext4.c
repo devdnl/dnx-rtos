@@ -258,56 +258,56 @@ static int ext4_unlink(ext4_fs_t *ctx,
 
 /****************************************************************************/
 
-ext4_fs_t *ext4_mount(const struct ext4_os_if *osif,
-                      void                    *usr_ctx,
-                      uint32_t                 block_size,
-                      uint64_t                 number_of_blocks)
+int ext4_mount(const struct ext4_os_if *osif,
+               void                    *usr_ctx,
+               uint32_t                block_size,
+               uint64_t                number_of_blocks,
+               ext4_fs_t               **ctx)
 {
-    if (!osif || !block_size || !number_of_blocks) {
-        return NULL;
+    if (!osif || !block_size || !number_of_blocks || !ctx) {
+        return EINVAL;
     }
 
-    ext4_fs_t *ctx = ext4_malloc(sizeof(ext4_fs_t));
-    if (ctx) {
-        memset(ctx, 0, sizeof(ext4_fs_t));
+    *ctx = ext4_malloc(sizeof(ext4_fs_t));
+    if (*ctx) {
+        memset(*ctx, 0, sizeof(ext4_fs_t));
 
-        ctx->osif    = osif;
-        ctx->usr_ctx = usr_ctx;
+        (*ctx)->osif    = osif;
+        (*ctx)->usr_ctx = usr_ctx;
 
-        if (ext4_block_init(&ctx->bdev, osif, usr_ctx, block_size, number_of_blocks) != EOK)
+        if (ext4_block_init(&(*ctx)->bdev, osif, usr_ctx, block_size, number_of_blocks) != EOK)
             goto error;
 
-        if (ext4_fs_init(&ctx->fs, &ctx->bdev) != EOK) {
-            goto error;
-        }
-
-        uint32_t bsize = ext4_sb_get_block_size(&ctx->fs.sb);
-        ext4_block_set_lb_size(&ctx->bdev, bsize);
-
-        if (ext4_bcache_init_dynamic(&ctx->bcache, EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE, bsize) != EOK) {
+        if (ext4_fs_init(&(*ctx)->fs, &(*ctx)->bdev) != EOK) {
             goto error;
         }
 
-        if(bsize != ctx->bcache.itemsize) {
+        uint32_t bsize = ext4_sb_get_block_size(&(*ctx)->fs.sb);
+        ext4_block_set_lb_size(&(*ctx)->bdev, bsize);
+
+        if (ext4_bcache_init_dynamic(&(*ctx)->bcache, EXT4_CONFIG_BLOCK_DEV_CACHE_SIZE, bsize) != EOK) {
+            goto error;
+        }
+
+        if(bsize != (*ctx)->bcache.itemsize) {
             goto error;
         }
 
         /*Bind block cache to block device*/
-        if (ext4_block_bind_bcache(&ctx->bdev, &ctx->bcache) != EOK) {
+        if (ext4_block_bind_bcache(&(*ctx)->bdev, &(*ctx)->bcache) != EOK) {
             goto error;
         }
 
-        return ctx;
+        return ESUCC;
 
         error:
-        ext4_fs_fini(&ctx->fs);
-        ext4_block_fini(&ctx->bdev);
-        ext4_bcache_fini_dynamic(&ctx->bcache);
-        ext4_free(ctx);
-        ctx = NULL;
+        ext4_fs_fini(&(*ctx)->fs);
+        ext4_block_fini(&(*ctx)->bdev);
+        ext4_bcache_fini_dynamic(&(*ctx)->bcache);
+        ext4_free(*ctx);
     }
 
-    return ctx;
+    return ENOMEM;
 }
 
 

@@ -1558,6 +1558,8 @@ static inline int _sys_queue_destroy(queue_t *queue)
  * @brief Function reset queue
  *
  * @param[in] *queue            queue object
+ *
+ * @return One of errno values.
  */
 //==============================================================================
 static inline int _sys_queue_reset(queue_t *queue)

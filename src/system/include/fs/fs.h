@@ -131,6 +131,21 @@ static inline int _sys_calloc(size_t count, size_t size, void **mem)
 
 //==============================================================================
 /**
+ * @brief  Allocate memory and clear allocated block
+ *
+ * @param[in]  size             object size
+ * @param[out] mem              pointer to memory block pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+static inline int _sys_zalloc(size_t size, void **mem)
+{
+        return _kcalloc(_MM_FS, 1, size, mem);
+}
+
+//==============================================================================
+/**
  * @brief  Free allocated memory
  *
  * @param[in,out] mem           pointer to memory block to free
@@ -307,7 +322,7 @@ static inline int _sys_pipe_create(pipe_t **pipe)
  * @return One of errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_delete(pipe_t *pipe)
+static inline int _sys_pipe_destroy(pipe_t *pipe)
 {
         return _pipe_destroy(pipe);
 }

@@ -635,7 +635,7 @@ function ct:find_line(filename, startline, regex)
         assert(type(regex) == "string", "find_line(): regex is not the string type")
 
         file = io.open(filename, "rb")
-        assert(file, "find_line(): file does not exist")
+        assert(file, "find_line(): file does not exist: "..filename)
 
         file:seek("set", 0)
 

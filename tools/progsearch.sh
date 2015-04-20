@@ -46,8 +46,9 @@ function create_makefile()
     echo '# Makefile for GNU make - file generated at build process' > "$Makefile_path"
     echo '' >> "$Makefile_path"
 
+    echo 'CSRC_PROGRAMS += program_registration.c' >> "$Makefile_path" 
     for prog in $program_list; do
-        echo '-include $(PROG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
+        echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
     done
 }
 
@@ -62,7 +63,7 @@ function create_program_registration_file()
     echo '' >> "$program_registration_path"
     echo '#include <dnx/misc.h>' >> "$program_registration_path"
     echo '#include "kernel/kwrapper.h"' >> "$program_registration_path"
-    echo '#include "core/progman.h"' >> "$program_registration_path"
+    echo '#include "kernel/process.h"' >> "$program_registration_path"
     echo '' >> "$program_registration_path"
 
     for prog in $program_list; do

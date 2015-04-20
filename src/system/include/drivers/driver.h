@@ -51,6 +51,9 @@ extern "C" {
 #undef  _sys_calloc
 #define _sys_calloc(size_t__nmemb, size_t__msize, void__ppmem)    _modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_), void__ppmem)
 
+#undef  _sys_zalloc
+#define _sys_zalloc(size_t__msize, void__ppmem)                   _modcalloc(1, size_t__msize, _get_module_number(_module_name_), void__ppmem)
+
 #undef  _sys_malloc
 #define _sys_malloc(size_t__size, void__ppmem)                    _modmalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
 

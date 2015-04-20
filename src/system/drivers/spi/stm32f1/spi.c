@@ -98,7 +98,7 @@ static void     apply_SPI_config     (struct spi_virtual *vspi);
 static void     apply_SPI_safe_config(u8_t major);
 static void     select_slave         (u8_t major, u8_t minor);
 static void     deselect_slave       (u8_t major);
-static bool     transceive           (struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count);
+static int      transceive           (struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count);
 
 /*==============================================================================
   Local objects
@@ -516,23 +516,21 @@ API_MOD_WRITE(SPI,
         UNUSED_ARG(fattr);
 
         struct spi_virtual *hdl    = device_handle;
-        int                 status = EIO;
 
-        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        int status = _sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT);
+        if (status == ESUCC) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
                         select_slave(hdl->major, hdl->minor);
                 }
 
-                if (transceive(hdl, src, NULL, count)) {
+                status = transceive(hdl, src, NULL, count);
+                if (status == ESUCC) {
                         *wrcnt = count;
-                        status = ESUCC;
                 }
 
                 _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-        } else {
-                status = ETIME;
         }
 
         return status;
@@ -564,23 +562,21 @@ API_MOD_READ(SPI,
         UNUSED_ARG(fattr);
 
         struct spi_virtual *hdl    = device_handle;
-        int                 status = EIO;
 
-        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        int status = _sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT);
+        if (status == ESUCC) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
                         select_slave(hdl->major, hdl->minor);
                 }
 
-                if (transceive(hdl, NULL, dst, count)) {
+                status = transceive(hdl, NULL, dst, count);
+                if (status == ESUCC) {
                         *rdcnt = count;
-                        status = ESUCC;
                 }
 
                 _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-        } else {
-                status = ETIME;
         }
 
         return status;
@@ -626,7 +622,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__SELECT:
-                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                         SPIM->RAW[hdl->major] = true;
                         apply_SPI_config(hdl);
                         deselect_slave(hdl->major);
@@ -638,7 +634,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__DESELECT:
-                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                         deselect_slave(hdl->major);
                         apply_SPI_safe_config(hdl->major);
                         SPIM->RAW[hdl->major] = false;
@@ -655,18 +651,14 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         struct SPI_transceive *tr = reinterpret_cast(struct SPI_transceive*, arg);
 
                         if (tr->count) {
-                                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                                         if (SPIM->RAW[hdl->major] == false) {
                                                 deselect_slave(hdl->major);
                                                 apply_SPI_config(hdl);
                                                 select_slave(hdl->major, hdl->minor);
                                         }
 
-                                        if (transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count)) {
-                                                status = ESUCC;
-                                        } else {
-                                                status = EIO;
-                                        }
+                                        status = transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
 
                                         _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                                 }
@@ -682,7 +674,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         int byte = reinterpret_cast(int, arg);
 
-                        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                        if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                                 deselect_slave(hdl->major);
                                 apply_SPI_config(hdl);
 
@@ -892,10 +884,10 @@ static void deselect_slave(u8_t major)
  * @param  tx           source buffer
  * @param  rx           destination buffer
  * @param  count        number of bytes to transfer
- * @return On success true is returned, otherwise false (timeout)
+ * @return One of errno value
  */
 //==============================================================================
-static bool transceive(struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count)
+static int transceive(struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count)
 {
         if (SPI_cfg[hdl->major].DMA) {
                 #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)

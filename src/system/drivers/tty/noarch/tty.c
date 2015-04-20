@@ -343,17 +343,16 @@ API_MOD_WRITE(TTY,
 
         tty_t *tty = device_handle;
 
-        if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+        int result = _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+        if (result == ESUCC) {
                 ttybfr_put(tty->screen, reinterpret_cast(const char *, src), count);
                 _sys_mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
 
                 *wrcnt = count;
-
-                return ESUCC;
-        } else {
-                return ETIME;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -386,7 +385,7 @@ API_MOD_READ(TTY,
 
         while (count--) {
                 if (fattr.non_blocking_rd) {
-                        if (_sys_mutex_lock(tty->secure_mtx, 100)) {
+                        if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
                                 const char *str = ttyedit_get_value(tty->editline);
                                 copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
                                 ttyedit_clear(tty->editline);
@@ -396,7 +395,7 @@ API_MOD_READ(TTY,
                         }
                 }
 
-                if (_sys_queue_receive(tty->queue_out, dst, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
+                if (_sys_queue_receive(tty->queue_out, dst, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS) == ESUCC) {
                         (*rdcnt)++;
 
                         if (*dst == '\n')
@@ -451,12 +450,10 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__SET_EDITLINE:
                 if (arg) {
-                        if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                        status = _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+                        if (status == ESUCC) {
                                 ttyedit_set_value(tty->editline, arg, tty_module->current_tty == tty->major);
                                 _sys_mutex_unlock(tty->secure_mtx);
-                                status = ESUCC;
-                        } else {
-                                status = ETIME;
                         }
                 }
                 break;
@@ -513,13 +510,14 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         tty_t *tty = device_handle;
 
-        if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+        int result = _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+        if (result == ESUCC) {
                 ttybfr_flush(tty->screen);
                 send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
                 _sys_mutex_unlock(tty->secure_mtx);
         }
 
-        return ESUCC;
+        return result;
 }
 
 //==============================================================================
@@ -580,7 +578,7 @@ static void service_out(void *arg)
         for (;;) {
                 tty_cmd_t rq;
 
-                if (_sys_queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY_MS)) {
+                if (_sys_queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY_MS) == ESUCC) {
                         switch (rq.cmd) {
                         case CMD_INPUT: {
                                 vt100_analyze(rq.arg);
@@ -591,7 +589,7 @@ static void service_out(void *arg)
                                 if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
                                         tty_t *tty = tty_module->tty[rq.arg];
 
-                                        if (_sys_mutex_lock(tty->secure_mtx, 100)) {
+                                        if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
                                                 ttybfr_clear(tty->screen);
 
                                                 if (tty_module->current_tty == tty->major) {
@@ -613,7 +611,7 @@ static void service_out(void *arg)
                                 if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg] && rq.arg == tty_module->current_tty) {
                                         tty_t *tty = tty_module->tty[rq.arg];
 
-                                        if (_sys_mutex_lock(tty->secure_mtx, 100)) {
+                                        if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
                                                 const char *str;
                                                 while ((str = ttybfr_get_fresh_line(tty->screen))) {
                                                         size_t wrcnt;
@@ -638,7 +636,8 @@ static void service_out(void *arg)
                         case CMD_REFRESH_LAST_LINE: {
                                 tty_t *tty = tty_module->tty[rq.arg];
 
-                                if (rq.arg == tty_module->current_tty && _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                                if (  rq.arg == tty_module->current_tty
+                                   && _sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
                                         size_t wrcnt;
 
                                         const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) VT100_ERASE_LINE;
@@ -720,7 +719,7 @@ static void vt100_analyze(const char c)
         ttycmd_resp_t resp = ttycmd_analyze(tty->vtcmd, c);
         switch (resp) {
         case TTYCMD_KEY_ENTER:
-                if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
                         const char *str  = ttyedit_get_value(tty->editline);
                         const char *lf   = "\n";
 
@@ -832,7 +831,7 @@ static void switch_terminal(int term_no)
 
                         vt100_init();
 
-                        if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
+                        if (_sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
                                 size_t      wrcnt;
                                 const char *str;
 

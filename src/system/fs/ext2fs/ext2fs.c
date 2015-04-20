@@ -91,47 +91,46 @@ static const struct ext4_os_if osif = {
 //==============================================================================
 API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 {
-        int status;
+        int result = _sys_zalloc(sizeof(ext2fs_t), fs_handle);
+        if (result == ESUCC) {
+                ext2fs_t *hdl = *fs_handle;
 
-        // open file system source file
-        FILE *srcfile = _sys_fopen(src_path, "r+");
-        if (!srcfile) {
-                return ENOENT;
-        }
+                // open file system source file
+                result = _sys_fopen(src_path, "r+", &hdl->srcfile);
+                if (result != ESUCC)
+                        goto finish;
 
-        // read number of file blocks
-        struct stat stat;
-        status = _sys_fstat(srcfile, &stat);
-        if (status != ESUCC) {
-                _sys_fclose(srcfile);
-                return status;
-        }
+                // read number of file blocks
+                struct stat stat;
+                result = _sys_fstat(hdl->srcfile, &stat);
+                if (result != ESUCC)
+                        goto finish;
 
-        u64_t block_count = stat.st_size / BLOCK_SIZE;
+                u64_t block_count = stat.st_size / BLOCK_SIZE;
 
-        // create FS context
-        ext2fs_t *hdl = malloc(sizeof(ext2fs_t));
-        if (hdl) {
-                hdl->mtx = _sys_mutex_new(MUTEX_TYPE_RECURSIVE);
-                if (hdl->mtx) {
-                        hdl->openfiles = 0;
-                        hdl->srcfile   = srcfile;
-                        hdl->fsctx     = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count);
-                        if (hdl->fsctx) {
-                                ext4_cache_write_back(hdl->fsctx, true);
-                                *fs_handle = hdl;
-                                return ESUCC;
-                        }
+                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                if (result != ESUCC)
+                        goto finish;
 
-                        _sys_mutex_delete(hdl->mtx);
+                result = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count, &hdl->fsctx);
+                if (result == ESUCC) {
+                        ext4_cache_write_back(hdl->fsctx, true);
                 }
 
-                free(hdl);
+                finish:
+                if (result != ESUCC) {
+                        if (hdl->srcfile)
+                                _sys_fclose(hdl->srcfile);
+
+                        if (hdl->mtx)
+                                _sys_mutex_destroy(hdl->mtx);
+
+                        _sys_free(fs_handle);
+                }
+
         }
 
-        _sys_fclose(srcfile);
-
-        return ENOMEM;
+        return result;
 }
 
 //==============================================================================
@@ -150,9 +149,9 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
         if (hdl->openfiles == 0) {
                 ext4_cache_write_back(hdl->fsctx, false);
                 ext4_umount(hdl->fsctx);
-                _sys_mutex_delete(hdl->mtx);
+                _sys_mutex_destroy(hdl->mtx);
                 _sys_fclose(hdl->srcfile);
-                free(hdl);
+                _sys_free(fs_handle);
                 return ESUCC;
         } else {
                 return EBUSY;
@@ -177,22 +176,22 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 {
         UNUSED_ARG(fd);
 
-        ext2fs_t *hdl    = fs_handle;
-        int       status = ENOMEM;
+        ext2fs_t *hdl = fs_handle;
 
-        ext4_file *file = malloc(sizeof(ext4_file));
-        if (file) {
-                status = ext4_fopen(hdl->fsctx, file, path, flags);
-                if (status == ESUCC) {
+        ext4_file *file;
+        int result = _sys_malloc(sizeof(ext4_file), static_cast(void**, &file));
+        if (result == ESUCC) {
+                result = ext4_fopen(hdl->fsctx, file, path, flags);
+                if (result == ESUCC) {
                         *fpos  = ext4_ftell(hdl->fsctx, file);
                         *extra = file;
                         increase_openfiles(hdl);
                 } else {
-                        free(file);
+                        _sys_free(static_cast(void**, &file));
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -216,7 +215,7 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         int status = ext4_fclose(hdl->fsctx, extra);
         if (status == ESUCC) {
-                free(extra);
+                _sys_free(&extra);
                 decrease_openfiles(hdl);
         }
 
@@ -462,12 +461,12 @@ API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
 API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
-        int       status;
 
-        ext4_dir *ext4dir = malloc(sizeof(ext4_dir));
-        if (ext4dir) {
-                status = ext4_dir_open(hdl->fsctx, ext4dir, path);
-                if (status == ESUCC) {
+        ext4_dir *ext4dir;
+        int result = _sys_malloc(sizeof(ext4_dir), static_cast(void**, &ext4dir));
+        if (result == ESUCC) {
+                result = ext4_dir_open(hdl->fsctx, ext4dir, path);
+                if (result == ESUCC) {
                         dir->f_handle   = hdl;
                         dir->f_closedir = closedir;
                         dir->f_readdir  = readdir;
@@ -478,14 +477,11 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
                         increase_openfiles(hdl);
 
                 } else {
-                        free(ext4dir);
+                        _sys_free(static_cast(void**, ext4dir));
                 }
-
-        } else {
-                status = ENOMEM;
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -502,13 +498,13 @@ static int closedir(void *fs_handle, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_dir_close(hdl->fsctx, dir->f_dd);
-        if (status == ESUCC) {
-                free(dir->f_dd);
+        int result = ext4_dir_close(hdl->fsctx, dir->f_dd);
+        if (result == ESUCC) {
+                _sys_free(static_cast(void**, dir->f_dd));
                 decrease_openfiles(hdl);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================

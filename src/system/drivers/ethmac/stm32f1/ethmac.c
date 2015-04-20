@@ -320,7 +320,7 @@ API_MOD_WRITE(ETHMAC,
 
         if (is_Ethernet_started()) {
 
-                if (_sys_mutex_lock(hdl->tx_access, fattr.non_blocking_wr ? 0 : MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(hdl->tx_access, fattr.non_blocking_wr ? 0 : MAX_DELAY_MS) == ESUCC) {
 
                         *wrcnt = 0;
                         int status;
@@ -392,7 +392,7 @@ API_MOD_READ(ETHMAC,
 
                         *rdcnt = 0;
 
-                        if (_sys_mutex_lock(hdl->rx_access, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
+                        if (_sys_mutex_lock(hdl->rx_access, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS) == ESUCC) {
                                 size_t pkts = count / ETH_MAX_PACKET_SIZE;
                                 while (pkts--) {
                                         size_t pkt_size = wait_for_packet(hdl, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS);
@@ -463,7 +463,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         case IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN:
                 if (arg) {
-                        if (_sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS)) {
+                        if (_sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
                                 ethmac_packet_chain_t *pkt = reinterpret_cast(ethmac_packet_chain_t*, arg);
 
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
@@ -502,7 +502,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         case IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN:
                 if (arg) {
-                        if (_sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS)) {
+                        if (_sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS) == ESUCC) {
                                 ethmac_packet_chain_t *pkt = reinterpret_cast(ethmac_packet_chain_t*, arg);
 
                                 if (  pkt->payload
@@ -680,7 +680,7 @@ static size_t wait_for_packet(struct ethmac *hdl, uint timeout)
                 size = ETH_GetRxPktSize();
 
         } else {
-                if (_sys_semaphore_wait(hdl->rx_data_ready, timeout)) {
+                if (_sys_semaphore_wait(hdl->rx_data_ready, timeout) == ESUCC) {
                         if (!is_buffer_owned_by_DMA(DMARxDescToGet)) {
                                 size = ETH_GetRxPktSize();
                         }

@@ -164,7 +164,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        int result = _sys_calloc(1, sizeof(struct UART_data), device_handle);
+        int result = _sys_zalloc(sizeof(struct UART_data), device_handle);
         if (result == ESUCC) {
                 uart_data[major] = *device_handle;
 
@@ -228,8 +228,8 @@ API_MOD_RELEASE(UART, void *device_handle)
 {
         struct UART_data *hdl = device_handle;
 
-        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT)) {
-                if (_sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT)) {
+        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT) == ESUCC) {
+                if (_sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT) == ESUCC) {
 
                         _sys_critical_section_begin();
 
@@ -319,21 +319,20 @@ API_MOD_WRITE(UART,
 
         struct UART_data *hdl = device_handle;
 
-        if (_sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
+        int result = _sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
+        if (result == ESUCC) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
                 SET_BIT(uart[hdl->major]->CR1, USART_CR1_TXEIE);
-                _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
+                result = _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
 
                 *wrcnt = count - hdl->Tx_buffer.data_size;
 
                 _sys_mutex_unlock(hdl->port_lock_tx_mtx);
-
-                return ESUCC;
-        } else {
-                return EBUSY;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -363,11 +362,13 @@ API_MOD_READ(UART,
 
         struct UART_data *hdl = device_handle;
 
-        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT)) {
+        int result = _sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT);
+        if (result == ESUCC) {
                 *rdcnt = 0;
 
                 while (count--) {
-                        if (_sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT)) {
+                        result = _sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
+                        if (result == ESUCC) {
                                 CLEAR_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                                 if (fifo_read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
@@ -378,11 +379,9 @@ API_MOD_READ(UART,
                 }
 
                 _sys_mutex_unlock(hdl->port_lock_rx_mtx);
-
-                return ESUCC;
-        } else {
-                return EBUSY;
         }
+
+        return result;
 }
 
 //==============================================================================

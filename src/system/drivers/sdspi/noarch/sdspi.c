@@ -380,7 +380,7 @@ API_MOD_WRITE(SDSPI,
         int       status;
 
         if (part->size > 0) {
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
                         status = card_write(part, src, count, lseek, wrcnt);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
@@ -422,7 +422,7 @@ API_MOD_READ(SDSPI,
         int       status;
 
         if (part->size > 0) {
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
                         u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
                         status = card_read(part, dst, count, lseek, rdcnt);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
@@ -457,7 +457,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
                         status = card_initialize(part);
                         _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
@@ -466,7 +466,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SDSPI__READ_MBR:
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME)) {
+                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
                         if (SDSPI->card[part->major]->initialized) {
                                 status = MBR_detect_partitions(part);
                         } else {

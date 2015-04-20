@@ -56,12 +56,14 @@
 
 /**@brief   Memory allocation function (e.g. void *malloc(size_t size)) */
 #ifndef ext4_malloc
-#define ext4_malloc                             malloc
+static inline void *_ext2_malloc(size_t size) {void *mem = NULL; _sys_malloc(size, &mem); return mem;}
+#define ext4_malloc                             _ext2_malloc
 #endif
 
 /**@brief   Memory free function (e.g. void free(void *mem)) */
 #ifndef ext4_free
-#define ext4_free                               free
+static inline void _ext2_free(void *mem) {_sys_free(&mem);}
+#define ext4_free                               _ext2_free
 #endif
 
 /**@brief   Quick Sort function (e.g. void qsort(void  *base,

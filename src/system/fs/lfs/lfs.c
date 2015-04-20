@@ -1166,7 +1166,7 @@ static inline char get_last_char(const char *str)
 //==============================================================================
 static void mutex_force_lock(mutex_t *mtx)
 {
-        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != ESUCC);
 }
 
 //==============================================================================
@@ -1193,7 +1193,7 @@ static int delete_node(node_t *base, node_t *target, u32_t position)
         } else if (target->type == NODE_TYPE_PIPE) {
 
                 if (target->data) {
-                        _sys_pipe_delete(target->data);
+                        _sys_pipe_destroy(target->data);
                         target->data = NULL;
                 }
         }

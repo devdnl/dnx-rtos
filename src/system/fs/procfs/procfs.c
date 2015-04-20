@@ -118,32 +118,31 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        llist_t       *file_list = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
-        mutex_t       *mtx       = _sys_mutex_new(MUTEX_TYPE_NORMAL);
+        int result = _sys_zalloc(sizeof(struct procfs), fs_handle);
+        if (result == ESUCC) {
+                struct procfs *procfs = *fs_handle;
 
-        if (procfs && file_list && mtx) {
-                procfs->file_list    = file_list;
-                procfs->resource_mtx = mtx;
+                result = _sys_llist_create(_sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
+                if (result != ESUCC)
+                        goto finish;
 
-                *fs_handle = procfs;
-                return ESUCC;
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
+                if (result != ESUCC)
+                        goto finish;
 
-        } else {
-                if (file_list) {
-                        _sys_llist_delete(file_list);
+                finish:
+                if (result != ESUCC) {
+                        if (procfs->file_list)
+                                _sys_llist_destroy(procfs->file_list);
+
+                        if (procfs->resource_mtx)
+                                _sys_mutex_destroy(procfs->resource_mtx);
+
+                        _sys_free(fs_handle);
                 }
-
-                if (mtx) {
-                        _sys_mutex_delete(mtx);
-                }
-
-                if (procfs) {
-                        free(procfs);
-                }
-
-                return ENOMEM;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -159,7 +158,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
 {
         struct procfs *procfs = fs_handle;
 
-        if (_sys_mutex_lock(procfs->resource_mtx, 100)) {
+        if (_sys_mutex_lock(procfs->resource_mtx, 100) == ESUCC) {
                 if (_sys_llist_size(procfs->file_list) != 0) {
                         _sys_mutex_unlock(procfs->resource_mtx);
                         return EBUSY;
@@ -168,9 +167,9 @@ API_FS_RELEASE(procfs, void *fs_handle)
                 _sys_critical_section_begin();
                 {
                         _sys_mutex_unlock(procfs->resource_mtx);
-                        _sys_mutex_delete(procfs->resource_mtx);
-                        _sys_llist_delete(procfs->file_list);
-                        free(procfs);
+                        _sys_mutex_destroy(procfs->resource_mtx);
+                        _sys_llist_destroy(procfs->file_list);
+                        _sys_free(&fs_handle);
                 }
                 _sys_critical_section_end();
 
@@ -248,7 +247,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 path += strlen("/"DIR_TASKNAME_STR"/");
 
 //                u16_t n = _sysm_get_number_of_monitored_tasks();TODO _sys_ functions
-                u16_t i = 0;
+//                u16_t i = 0;
 
 //                struct _sysmoni_taskstat task_data;TODO _sys_ functions
 //                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == ESUCC) {
@@ -393,9 +392,9 @@ API_FS_READ(procfs,
                 return ENOENT;
         }
 
-        int   result = ENOMEM;
-        char *data   = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
+        char *data;
+        int result = _sys_zalloc(FILE_DATA_SIZE, static_cast(void**, &data));
+        if (result == ESUCC) {
                 uint data_size = get_file_content(file_info, data, FILE_DATA_SIZE);
 
                 size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
@@ -407,9 +406,7 @@ API_FS_READ(procfs,
                         *rdcnt = n;
                 }
 
-                free(data);
-
-                result = ESUCC;
+                _sys_free(static_cast(void**, &data));
         }
 
         return result;
@@ -497,12 +494,11 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
 
-        int   result = ENOMEM;
-        char *data   = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
+        char *data;
+        int result = _sys_zalloc(FILE_DATA_SIZE, static_cast(void**, &data));
+        if (result == ESUCC) {
                 stat->st_size = get_file_content(file_info, data, FILE_DATA_SIZE);
-                free(data);
-                result = ESUCC;
+                _sys_free(static_cast(void**, &data));
         }
 
         return result;
@@ -602,7 +598,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 result = ESUCC;
 
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
-                dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
+                _sys_zalloc(TASK_ID_STR_LEN, &dir->f_dd);
 //                dir->f_items    = _sysm_get_number_of_monitored_tasks(); // TODO _sys function needed
                 dir->f_readdir  = procfs_readdir_taskid;
                 dir->f_closedir = procfs_closedir_freedd;
@@ -653,7 +649,7 @@ static int procfs_closedir_freedd(void *fs_handle, DIR *dir)
         UNUSED_ARG(fs_handle);
 
         if (dir->f_dd) {
-                free(dir->f_dd);
+                _sys_free(&dir->f_dd);
                 dir->f_dd = NULL;
                 return ESUCC;
         } else {
@@ -865,17 +861,16 @@ static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
                 break;
 
         case 3: {
-                char *data = calloc(FILE_DATA_SIZE, 1);
-                if (data) {
+                char *data;
+                result = _sys_zalloc(FILE_DATA_SIZE, static_cast(void**, &data));
+                if (result == ESUCC) {
                         struct file_info file_info;
                         file_info.file_content = FILE_CONTENT_CPUINFO;
                         dir->dirent.size       = get_file_content(&file_info, data, FILE_DATA_SIZE);
                         dir->dirent.name       = FILE_CPUINFO_STR;
                         dir->dirent.filetype   = FILE_TYPE_REGULAR;
-                        free(data);
+                        _sys_free(static_cast(void**, data));
                         result = ESUCC;
-                } else {
-                        result = ENOMEM;
                 }
                 break;
         }
@@ -1009,10 +1004,9 @@ static int procfs_readdir_taskid_n(void *fs_handle, DIR *dir, dirent_t **dirent)
         case FILE_CONTENT_TASK_OPENFILES: dir->dirent.name = FILE_TASK_OPENFILES_STR; break;
         }
 
-        int result = ENOMEM;
-
-        char *data = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
+        char *data;
+        int result = _sys_zalloc(FILE_DATA_SIZE, static_cast(void**, &data));
+        if (result == ESUCC) {
                 struct file_info file_info;
                 file_info.file_content = dir->f_seek;
                 file_info.taskhdl      = dir->f_dd;
@@ -1022,9 +1016,7 @@ static int procfs_readdir_taskid_n(void *fs_handle, DIR *dir, dirent_t **dirent)
 
                 *dirent = &dir->dirent;
 
-                free(data);
-
-                result = ESUCC;
+                _sys_free(static_cast(void**, &data));
         }
 
         return result;
@@ -1039,7 +1031,7 @@ static int procfs_readdir_taskid_n(void *fs_handle, DIR *dir, dirent_t **dirent)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != ESUCC);
 }
 
 //==============================================================================
@@ -1056,8 +1048,9 @@ static inline void mutex_force_lock(mutex_t *mtx)
 //==============================================================================
 static int add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
 {
-        struct file_info *file_info = calloc(1, sizeof(struct file_info));
-        if (file_info) {
+        struct file_info *file_info;
+        int result = _sys_zalloc(sizeof(struct file_info), static_cast(void**, &file_info));
+        if (result == ESUCC) {
                 file_info->taskhdl      = taskhdl;
                 file_info->file_content = file_content;
 
@@ -1067,14 +1060,14 @@ static int add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum f
                         *fd = (fd_t)file_info;
 
                 } else {
-                        free(file_info);
-                        file_info = NULL;
+                        _sys_free(static_cast(void**, &file_info));
+                        result = ENOMEM;
                 }
 
                 _sys_mutex_unlock(procmem->resource_mtx);
         }
 
-        return file_info ? ESUCC : ENOMEM;
+        return result;
 }
 
 //==============================================================================

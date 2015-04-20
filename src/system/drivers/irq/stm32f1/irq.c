@@ -311,8 +311,7 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         const IRQ_catch_t *irqn = arg;
                         if (irqn->irq_number < NUMBER_OF_IRQs) {
                                 if (hdl->irqsem[irqn->irq_number]) {
-                                        bool s = _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
-                                        result = s ? ESUCC : ETIME;
+                                        result = _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
                                 } else {
                                         return ENODEV;
                                 }
