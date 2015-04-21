@@ -77,6 +77,8 @@ typedef enum {
         SYSCALL_STIME,
         SYSCALL_DRIVERINIT,
         SYSCALL_DRIVERRELEASE,
+        SYSCALL_ALLOC,
+        SYSCALL_FREE,
         _SYSCALL_COUNT
 } syscall_t;
 
