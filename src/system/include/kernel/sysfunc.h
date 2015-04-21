@@ -595,7 +595,7 @@ static inline int _sys_llist_functor_cmp_strings(const void *a, const void *b)
  * @param[in] path              path when driver-file shall be created
  * @param[in] dev               device number
  *
- * @return zero on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_mknod(const char *path, dev_t dev)
@@ -610,7 +610,7 @@ static inline int _sys_mknod(const char *path, dev_t dev)
  * @param[in] path              path to new directory
  * @param[in] mode              directory mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_mkdir(const char *path, mode_t mode)
@@ -625,7 +625,7 @@ static inline int _sys_mkdir(const char *path, mode_t mode)
  * @param[in] path              path to pipe
  * @param[in] mode              directory mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_mkfifo(const char *path, mode_t mode)
@@ -637,14 +637,15 @@ static inline int _sys_mkfifo(const char *path, mode_t mode)
 /**
  * @brief Function open directory
  *
- * @param[in] *path                 directory path
+ * @param[in]  path                 directory path
+ * @param[out] dir                  pointer to dir pointer
  *
- * @return directory object
+ * @return One of errno values
  */
 //==============================================================================
-static inline DIR *_sys_opendir(const char *path)
+static inline int _sys_opendir(const char *path, DIR **dir)
 {
-//        return _vfs_opendir(path); // TODO
+        return _vfs_opendir(path, dir);
 }
 
 //==============================================================================
@@ -653,7 +654,7 @@ static inline DIR *_sys_opendir(const char *path)
  *
  * @param[in] *dir                  directory object
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_closedir(DIR *dir)
@@ -665,14 +666,15 @@ static inline int _sys_closedir(DIR *dir)
 /**
  * @brief Function read next item of opened directory
  *
- * @param[in] *dir                  directory object
+ * @param[in]  *dir                  directory object
+ * @param[out] **dirent              pointer to direntry pointer
  *
- * @return element attributes
+ * @return One of errno values
  */
 //==============================================================================
-static inline dirent_t *_sys_readdir(DIR *dir)
+static inline int _sys_readdir(DIR *dir, dirent_t **dirent)
 {
-//        return _vfs_readdir(dir); // TODO
+        return _vfs_readdir(dir, dirent);
 }
 
 //==============================================================================
@@ -682,7 +684,7 @@ static inline dirent_t *_sys_readdir(DIR *dir)
  *
  * @param[in] *path                localization of file/directory
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_remove(const char *path)
@@ -699,7 +701,7 @@ static inline int _sys_remove(const char *path)
  * @param[in] *old_name                  old file name
  * @param[in] *new_name                  new file name
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_rename(const char *old_name, const char *new_name)
@@ -714,7 +716,7 @@ static inline int _sys_rename(const char *old_name, const char *new_name)
  * @param[in] *path         file path
  * @param[in]  mode         file mode
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_chmod(const char *path, mode_t mode)
@@ -730,7 +732,7 @@ static inline int _sys_chmod(const char *path, mode_t mode)
  * @param[in]  owner        file owner
  * @param[in]  group        file group
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_chown(const char *path, uid_t owner, gid_t group)
@@ -745,7 +747,7 @@ static inline int _sys_chown(const char *path, uid_t owner, gid_t group)
  * @param[in]  *path            file/dir path
  * @param[out] *stat            pointer to structure
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_stat(const char *path, struct stat *stat)
@@ -760,7 +762,7 @@ static inline int _sys_stat(const char *path, struct stat *stat)
  * @param[in]  *path            fs path
  * @param[out] *statfs          pointer to FS status structure
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno values
  */
 //==============================================================================
 static inline int _sys_statfs(const char *path, struct statfs *statfs)
@@ -786,32 +788,16 @@ static inline int _sys_fopen(const char *name, const char *mode, FILE **file)
 
 //==============================================================================
 /**
- * @brief Function close old stream and open new
- *
- * @param[in] *name             file path
- * @param[in] *mode             file mode
- * @param[in] *file             old stream
- *
- * @retval NULL if file can't be created
- */
-//==============================================================================
-static inline FILE *_sys_freopen(const char *name, const char *mode, FILE *file)
-{
-//        return _vfs_freopen(name, mode, file); // TODO
-}
-
-//==============================================================================
-/**
  * @brief Function close opened file
  *
- * @param[in] *file             pinter to file
+ * @param[in] file              pinter to file
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_fclose(FILE *file)
 {
-//        return _vfs_fclose(file); // TODO
+        return _vfs_fclose(file, false);
 }
 
 //==============================================================================
@@ -845,7 +831,7 @@ static inline int _sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE 
 //==============================================================================
 static inline int _sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
 {
-//        return _vfs_fread(ptr, size, rdcnt, file);
+        return _vfs_fread(ptr, size, rdcnt, file);
 }
 
 //==============================================================================
@@ -868,14 +854,15 @@ static inline int _sys_fseek(FILE *file, i64_t offset, int mode)
 /**
  * @brief Function returns seek value
  *
- * @param[in] *file             file object
+ * @param[in]  file             file object
+ * @param[out] lseek            file seek
  *
- * @return -1 if error, otherwise correct value
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline i64_t _sys_ftell(FILE *file)
+static inline int _sys_ftell(FILE *file, i64_t *lseek)
 {
-//        return _vfs_ftell(file); // TODO
+        return _vfs_ftell(file, lseek);
 }
 
 //==============================================================================
@@ -884,9 +871,9 @@ static inline i64_t _sys_ftell(FILE *file)
  *
  * @param[in]     *file         file
  * @param[in]      rq           request
- * @param[in,out] ...           additional function arguments
+ * @param[in,out]  ...          argument (non or one, depends on request)
  *
- * @return 0 on success. On error, different from 0 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_ioctl(FILE *file, int rq, ...)
@@ -905,7 +892,7 @@ static inline int _sys_ioctl(FILE *file, int rq, ...)
  * @param[in]  *file            file object
  * @param[out] *stat            pointer to stat structure
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_fstat(FILE *file, struct stat *stat)
@@ -919,7 +906,7 @@ static inline int _sys_fstat(FILE *file, struct stat *stat)
  *
  * @param[in] *file     file to flush
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_fflush(FILE *file)
@@ -931,14 +918,15 @@ static inline int _sys_fflush(FILE *file)
 /**
  * @brief Function check end of file
  *
- * @param[in] *file     file
+ * @param[in]  *file    file
+ * @param[out] *eof     EOF indicator (EOF or 0)
  *
- * @return 0 if there is not a file end, otherwise greater than 0
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline int _sys_feof(FILE *file)
+static inline int _sys_feof(FILE *file, int *eof)
 {
-//        return _vfs_feof(file); // TODO
+        return _vfs_feof(file, eof);
 }
 
 //==============================================================================
@@ -946,6 +934,8 @@ static inline int _sys_feof(FILE *file)
  * @brief Function clear file's error
  *
  * @param[in] *file     file
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_clearerr(FILE *file)
@@ -957,14 +947,15 @@ static inline int _sys_clearerr(FILE *file)
 /**
  * @brief Function check that file has no errors
  *
- * @param[in] *file     file
+ * @param[in]  file     file
+ * @param[out] error    error indicator (1 for error, 0 no error)
  *
- * @return nonzero value if the file stream has errors occurred, 0 otherwise
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline int _sys_ferror(FILE *file)
+static inline int _sys_ferror(FILE *file, int *error)
 {
-//        return _vfs_ferror(file); // TODO
+        return _vfs_ferror(file, error);
 }
 
 //==============================================================================
@@ -973,7 +964,7 @@ static inline int _sys_ferror(FILE *file)
  *
  * @param[in] *file     file
  *
- * @return 0 on success. On error, -1 is returned
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static inline int _sys_rewind(FILE *file)
@@ -986,8 +977,6 @@ static inline int _sys_rewind(FILE *file)
  * @brief Synchronize internal buffers of mounted file systems
  *
  * @param None
- *
- * @errors None
  *
  * @return None
  */

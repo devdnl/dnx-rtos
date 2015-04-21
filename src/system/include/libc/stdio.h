@@ -40,9 +40,9 @@ extern "C" {
 //#include "core/sysmoni.h"
 //#include "core/printx.h"
 //#include "core/scanx.h"
-//#include "core/progman.h"
+#include "kernel/process.h"
 //#include "core/conv.h"
-//#include "kernel/kwrapper.h"
+#include "kernel/kwrapper.h"
 #include <limits.h>
 #include <stddef.h>
 #include <stdarg.h>

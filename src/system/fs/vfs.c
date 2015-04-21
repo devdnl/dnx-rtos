@@ -1160,7 +1160,8 @@ int _vfs_clearerr(FILE *file)
 /**
  * @brief Function check that file has no errors
  *
- * @param[in] *file     file
+ * @param[in]  file     file
+ * @param[out] error    error indicator (1 for error, 0 no error)
  *
  * @return One of errno value (errno.h)
  */

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    ifconfig.c
+@file    initd.c
 
 @author  Daniel Zorychta
 
-@brief   Read network configuration
+@brief   Initialization daemon
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -29,8 +29,6 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include <dnx/net.h>
-#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
