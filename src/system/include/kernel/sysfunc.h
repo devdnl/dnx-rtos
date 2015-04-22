@@ -969,7 +969,7 @@ static inline int _sys_ferror(FILE *file, int *error)
 //==============================================================================
 static inline int _sys_rewind(FILE *file)
 {
-        return _vfs_rewind(file);
+        return _vfs_fseek(file, 0, VFS_SEEK_SET);
 }
 
 //==============================================================================

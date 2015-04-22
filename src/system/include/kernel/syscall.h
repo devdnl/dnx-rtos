@@ -42,43 +42,42 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum {
-        SYSCALL_MOUNT,                  // int: const char *FS_name, const char *src_path, const char *mount_point
-        SYSCALL_UMOUNT,                 // int: const char *mount_point
-        SYSCALL_GETMNTENTRY,
-        SYSCALL_MKNOD,
-        SYSCALL_MKDIR,
-        SYSCALL_MKFIFO,
-        SYSCALL_OPENDIR,
-        SYSCALL_CLOSEDIR,
-        SYSCALL_READDIR,
-        SYSCALL_REMOVE,
-        SYSCALL_RENAME,
-        SYSCALL_CHMOD,
-        SYSCALL_CHOWN,
-        SYSCALL_STAT,
-        SYSCALL_STATFS,
-        SYSCALL_FOPEN,                  // FILE*: const char *path, const char *mode
-        SYSCALL_FREOPEN,
-        SYSCALL_FCLOSE,                 // int: FILE*)
-        SYSCALL_FWRITE,                 // size_t: const void *src, size_t size, size_t count, FILE *file
-        SYSCALL_FREAD,                  // size_t: void *dst, size_t size, size_t count, FILE *file
-        SYSCALL_FSEEK,
-        SYSCALL_FTELL,
-        SYSCALL_IOCTL,
-        SYSCALL_FSTAT,
-        SYSCALL_FFLUSH,
-        SYSCALL_FEOF,
-        SYSCALL_CLEARERROR,
-        SYSCALL_FERROR,
-        SYSCALL_REWIND,
-        SYSCALL_SYNC,
-        SYSCALL_TIME,
-        SYSCALL_STIME,
-        SYSCALL_DRIVERINIT,
-        SYSCALL_DRIVERRELEASE,
-        SYSCALL_ALLOC,
-        SYSCALL_FREE,
+typedef enum {                          // | RETURN TYPE    | ARG 1                     | ARG 2                     | ARG 3                     | ARG 4                     |
+        SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
+        SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                           |                           |                           |
+        SYSCALL_GETMNTENTRY,            // |                |                           |                           |                           |                           |
+        SYSCALL_MKNOD,                  // |                |                           |                           |                           |                           |
+        SYSCALL_MKDIR,                  // |                |                           |                           |                           |                           |
+        SYSCALL_MKFIFO,                 // |                |                           |                           |                           |                           |
+        SYSCALL_OPENDIR,                // |                |                           |                           |                           |                           |
+        SYSCALL_CLOSEDIR,               // |                |                           |                           |                           |                           |
+        SYSCALL_READDIR,                // |                |                           |                           |                           |                           |
+        SYSCALL_REMOVE,                 // | int            | const char *path          |                           |                           |                           |
+        SYSCALL_RENAME,                 // | int            | const char *old_name      | const char *new_name      |                           |                           |
+        SYSCALL_CHMOD,                  // |                |                           |                           |                           |                           |
+        SYSCALL_CHOWN,                  // |                |                           |                           |                           |                           |
+        SYSCALL_STAT,                   // |                |                           |                           |                           |                           |
+        SYSCALL_STATFS,                 // |                |                           |                           |                           |                           |
+        SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode          | FILE*                     |                           |
+        SYSCALL_FREOPEN,                // | FILE*          | const char *path          | const char *mode          |                           |                           |
+        SYSCALL_FCLOSE,                 // | int            | FILE*                     |                           |                           |                           |
+        SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t size               | size_t count              | FILE *file                |
+        SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t size               | size_t count              | FILE *file                |
+        SYSCALL_FSEEK,                  // | int            | FILE*                     | i64_t  seek               | int    origin             |                           |
+        SYSCALL_FTELL,                  // | i64_t          | FILE*                     |                           |                           |                           |
+        SYSCALL_IOCTL,                  // |                |                           |                           |                           |                           |
+        SYSCALL_FSTAT,                  // |                |                           |                           |                           |                           |
+        SYSCALL_FFLUSH,                 // | int            | FILE*                     |                           |                           |                           |
+        SYSCALL_FEOF,                   // | int            | FILE*                     |                           |                           |                           |
+        SYSCALL_CLEARERROR,             // | void           | FILE*                     |                           |                           |                           |
+        SYSCALL_FERROR,                 // | int            | FILE*                     |                           |                           |                           |
+        SYSCALL_SYNC,                   // |                |                           |                           |                           |                           |
+        SYSCALL_GETTIME,                // |                |                           |                           |                           |                           |
+        SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
+        SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
+        SYSCALL_DRIVERRELEASE,          // |                |                           |                           |                           |                           |
+        SYSCALL_ALLOC,                  // |                |                           |                           |                           |                           |
+        SYSCALL_FREE,                   // |                |                           |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 
@@ -89,6 +88,7 @@ typedef enum {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern void _syscall(syscall_t syscall, void *retptr, ...);
 extern void _syscall_init();
 
 /*==============================================================================

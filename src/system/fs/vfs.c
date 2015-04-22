@@ -1178,20 +1178,6 @@ int _vfs_ferror(FILE *file, int *error)
 
 //==============================================================================
 /**
- * @brief Function rewind file
- *
- * @param[in] *file     file
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-int _vfs_rewind(FILE *file)
-{
-        return _vfs_fseek(file, 0, VFS_SEEK_SET);
-}
-
-//==============================================================================
-/**
  * @brief Synchronize internal buffers of mounted file systems
  *
  * @param None

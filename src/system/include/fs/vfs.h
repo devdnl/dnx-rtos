@@ -284,7 +284,6 @@ extern int  _vfs_fflush     (FILE*);
 extern int  _vfs_feof       (FILE*, int*);
 extern int  _vfs_clearerr   (FILE*);
 extern int  _vfs_ferror     (FILE*, int*);
-extern int  _vfs_rewind     (FILE*);
 extern void _vfs_sync       (void);
 
 /*==============================================================================

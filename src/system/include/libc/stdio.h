@@ -41,6 +41,7 @@ extern "C" {
 //#include "core/printx.h"
 //#include "core/scanx.h"
 #include "kernel/process.h"
+#include "kernel/syscall.h"
 //#include "core/conv.h"
 #include "kernel/kwrapper.h"
 #include <limits.h>
@@ -154,7 +155,9 @@ typedef struct vfs_file FILE;
 //==============================================================================
 static inline FILE *fopen(const char *path, const char *mode)
 {
-//        return _sysm_fopen(path, mode);
+        FILE *f = NULL;
+        _syscall(SYSCALL_FOPEN, &f, path, mode);
+        return f;
 }
 
 //==============================================================================
@@ -190,7 +193,9 @@ static inline FILE *fopen(const char *path, const char *mode)
 //==============================================================================
 static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 {
-//        return _sysm_freopen(path, mode, file);
+        FILE *f = NULL;
+        _syscall(SYSCALL_FREOPEN, &f, path, mode, file);
+        return f;
 }
 
 //==============================================================================
@@ -221,7 +226,9 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 //==============================================================================
 static inline int fclose(FILE *file)
 {
-//        return _sysm_fclose(file);
+        int r = EOF;
+        _syscall(SYSCALL_FCLOSE, &r, file);
+        return r;
 }
 
 //==============================================================================
@@ -260,7 +267,9 @@ static inline int fclose(FILE *file)
 //==============================================================================
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
-//        return _vfs_fwrite(ptr, size, count, file);
+        size_t s = 0;
+        _syscall(SYSCALL_FWRITE, &s, ptr, size, count, file);
+        return s;
 }
 
 //==============================================================================
@@ -299,7 +308,9 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 //==============================================================================
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
-//        return _vfs_fread(ptr, size, count, file);
+        size_t s = 0;
+        _syscall(SYSCALL_FREAD, &s, ptr, size, count, file);
+        return s;
 }
 
 //==============================================================================
@@ -335,11 +346,13 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 //==============================================================================
 static inline int fsetpos(FILE *file, const fpos_t *pos)
 {
-//        if (pos) {
-//                return _vfs_fseek(file, *pos, SEEK_SET);
-//        } else {
-//                return EOF;
-//        }
+        if (pos) {
+                size_t r = 1;
+                _syscall(SYSCALL_FSEEK, &r, file, *pos, SEEK_SET);
+                return r;
+        } else {
+                return EOF;
+        }
 }
 
 //==============================================================================
@@ -381,7 +394,9 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 //==============================================================================
 static inline int fseek(FILE *file, i64_t offset, int mode)
 {
-//        return _vfs_fseek(file, offset, mode);
+        size_t r = 1;
+        _syscall(SYSCALL_FSEEK, &r, file, offset, mode);
+        return r;
 }
 
 //==============================================================================
@@ -415,7 +430,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 static inline void rewind(FILE *file)
 {
-//        _vfs_rewind(file);
+        _syscall(SYSCALL_FSEEK, NULL, file, 0, SEEK_SET);
 }
 
 //==============================================================================
@@ -452,7 +467,9 @@ static inline void rewind(FILE *file)
 //==============================================================================
 static inline i64_t ftell(FILE *file)
 {
-//        return _vfs_ftell(file);
+        i64_t r = -1;
+        _syscall(SYSCALL_FTELL, &r, file);
+        return r;
 }
 
 //==============================================================================
@@ -491,12 +508,14 @@ static inline i64_t ftell(FILE *file)
 //==============================================================================
 static inline int fgetpos(FILE *file, fpos_t *pos)
 {
-//        if (pos) {
-//                *pos = (fpos_t)_vfs_ftell(file);
-//                return 0;
-//        } else {
-//                return EOF;
-//        }
+        if (pos) {
+                i64_t r = -1;
+                _syscall(SYSCALL_FTELL, &r, file);
+                *pos = r;
+                return r < 0 ? EOF : 0;
+        } else {
+                return EOF;
+        }
 }
 
 //==============================================================================
@@ -534,7 +553,9 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 //==============================================================================
 static inline int fflush(FILE *file)
 {
-//        return _vfs_fflush(file);
+        int r = EOF;
+        _syscall(SYSCALL_FFLUSH, &r, file);
+        return r;
 }
 
 //==============================================================================
@@ -571,7 +592,9 @@ static inline int fflush(FILE *file)
 //==============================================================================
 static inline int feof(FILE *file)
 {
-//        return _vfs_feof(file);
+        int r = EOF;
+        _syscall(SYSCALL_FEOF, &r, file);
+        return r;
 }
 
 //==============================================================================
@@ -610,7 +633,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-//        return _vfs_clearerr(file);
+        _syscall(SYSCALL_CLEARERROR, NULL, file);
 }
 
 //==============================================================================
@@ -651,7 +674,9 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-//        return _vfs_ferror(file);
+        int r = EOF;
+        _syscall(SYSCALL_FERROR, &r, file);
+        return r;
 }
 
 //==============================================================================
@@ -835,7 +860,9 @@ static inline char *tmpnam(char *str)
 //==============================================================================
 static inline int remove(const char *path)
 {
-//        return _vfs_remove(path);
+        int r = EOF;
+        _syscall(SYSCALL_REMOVE, &r, path);
+        return r;
 }
 
 //==============================================================================
@@ -861,7 +888,9 @@ static inline int remove(const char *path)
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
-//        return _vfs_rename(old_name, new_name);
+        int r = EOF;
+        _syscall(SYSCALL_RENAME, &r, old_name, new_name);
+        return r;
 }
 
 //==============================================================================

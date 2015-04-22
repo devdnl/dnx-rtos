@@ -59,23 +59,23 @@ extern "C" {
 #endif
 
 #define PROGRAM_MAIN(name, stack_depth, argc, argv) \
-        _PROGMAN_CXX const int __built_in_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const int __built_in_app_##name##_ss__ = stack_depth;\
-        _PROGMAN_CXX int __built_in_app_##name##_main(argc, argv)
+        _PROGMAN_CXX const int __builtin_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const int __builtin_app_##name##_ss__ = stack_depth;\
+        _PROGMAN_CXX int __builtin_app_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
-        _PROGMAN_EXTERN_C const int __built_in_app_##name##_gs__;\
-        _PROGMAN_EXTERN_C const int __built_in_app_##name##_ss__;\
-        _PROGMAN_EXTERN_C int __built_in_app_##name##_main(int, char**)
+        _PROGMAN_EXTERN_C const int __builtin_app_##name##_gs__;\
+        _PROGMAN_EXTERN_C const int __builtin_app_##name##_ss__;\
+        _PROGMAN_EXTERN_C int __builtin_app_##name##_main(int, char**)
 
 #define int_main(name, stack_depth, argc, argv)\
         PROGRAM_MAIN(name, stack_depth, argc, argv)
 
 #define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
-         .main_function = __built_in_app_##name##_main,\
-         .globals_size  = &__built_in_app_##name##_gs__,\
-         .stack_depth   = &__built_in_app_##name##_ss__}
+         .main_function = __builtin_app_##name##_main,\
+         .globals_size  = &__builtin_app_##name##_gs__,\
+         .stack_depth   = &__builtin_app_##name##_ss__}
 
 /*==============================================================================
   Exported types, enums definitions

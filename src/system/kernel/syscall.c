@@ -45,7 +45,7 @@
 ==============================================================================*/
 #define GETARG(type, var)       type var = va_arg(syscallrq->args, type)
 #define GETRETURN(type, var)    type var = syscallrq->retptr
-#define SETRETURN(type, var)    *((type*)syscallrq->retptr) = (var)
+#define SETRETURN(type, var)    if (syscallrq->retptr) {*((type*)syscallrq->retptr) = (var);}
 #define SETERRNO(var)           syscallres->err = var
 #define GETERRNO()              syscallres->err
 
@@ -97,7 +97,6 @@ static void syscall_fflush(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_rewind(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_time(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_stime(syscallrq_t *syscallrq, syscallres_t *syscallres);
@@ -141,10 +140,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_FEOF         ] = syscall_feof,
         [SYSCALL_CLEARERROR   ] = syscall_clearerr,
         [SYSCALL_FERROR       ] = syscall_ferror,
-        [SYSCALL_REWIND       ] = syscall_rewind,
         [SYSCALL_SYNC         ] = syscall_sync,
-        [SYSCALL_TIME         ] = syscall_time,
-        [SYSCALL_STIME        ] = syscall_stime,
+        [SYSCALL_GETTIME      ] = syscall_gettime,
+        [SYSCALL_SETTIME      ] = syscall_settime,
         [SYSCALL_DRIVERINIT   ] = syscall_driverinit,
         [SYSCALL_DRIVERRELEASE] = syscall_driverrelease,
 };
@@ -586,18 +584,6 @@ static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return ?
  */
 //==============================================================================
-static void syscall_rewind(syscallrq_t *syscallrq, syscallres_t *syscallres)
-{
-
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
@@ -610,10 +596,10 @@ static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return ?
  */
 //==============================================================================
-static void syscall_time(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
-}
+}.
 
 //==============================================================================
 /**
@@ -622,7 +608,7 @@ static void syscall_time(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return ?
  */
 //==============================================================================
-static void syscall_stime(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
 }
