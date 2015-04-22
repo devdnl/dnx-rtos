@@ -76,8 +76,8 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERRELEASE,          // |                |                           |                           |                           |                           |
-        SYSCALL_ALLOC,                  // |                |                           |                           |                           |                           |
-        SYSCALL_FREE,                   // |                |                           |                           |                           |                           |
+        SYSCALL_ALLOC,                  // | void*          | size_t size               |                           |                           |                           |
+        SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

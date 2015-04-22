@@ -37,7 +37,7 @@ extern "C" {
 #include <sys/types.h>
 //#include "core/sysmoni.h"
 #include "lib/conv.h"
-//#include "core/progman.h" TODO syscall
+#include "kernel/syscall.h"
 
 #include <machine/ieeefp.h>
 #include "_ansi.h"
@@ -402,7 +402,9 @@ extern _VOID srand(unsigned __seed);
 //==============================================================================
 static inline void *malloc(size_t size)
 {
-//        return _sysm_tskmalloc(size); TODO syscall
+        void *mem = NULL;
+        _syscall(SYSCALL_ALLOC, &mem, size);
+        return mem;
 }
 
 //==============================================================================
@@ -430,7 +432,9 @@ static inline void *malloc(size_t size)
 //==============================================================================
 static inline void *calloc(size_t n, size_t size)
 {
-//        return _sysm_tskcalloc(n, size); TODO syscall
+        void *mem = NULL;
+        _syscall(SYSCALL_ALLOC, &mem, size * n);
+        return mem;
 }
 
 //==============================================================================
@@ -459,7 +463,7 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-//        _sysm_tskfree(ptr); TODO syscall
+        _syscall(SYSCALL_FREE, NULL, ptr);
 }
 
 //==============================================================================
@@ -504,15 +508,15 @@ static inline void *realloc(void *ptr, size_t size)
         extern _PTR memcpy(_PTR dest, const _PTR src, size_t n);
 
         if (size) {
-//                void *mem = _sysm_tskmalloc(size); TODO syscall
-//                if (ptr == NULL)
-//                        return mem;
-//
-//                if (mem) {
-//                        memcpy(mem, ptr, size);
-//                        _sysm_tskfree(ptr); TODO syscall
-//                        return mem;
-//                }
+                void *mem = malloc(size);
+                if (ptr == NULL)
+                        return mem;
+
+                if (mem) {
+                        memcpy(mem, ptr, size);
+                        free(ptr);
+                        return mem;
+                }
         }
 
         return NULL;

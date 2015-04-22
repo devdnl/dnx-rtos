@@ -98,8 +98,8 @@ static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_time(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_stime(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallres);
 
@@ -599,7 +599,7 @@ static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
 static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
-}.
+}
 
 //==============================================================================
 /**
