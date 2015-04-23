@@ -110,7 +110,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
         int result = ENODEV;
 
         if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
-                result = _sys_calloc(1, sizeof(IRQ_t), device_handle);
+                result = _sys_zalloc(sizeof(IRQ_t), device_handle);
                 if (result == ESUCC) {
                         IRQ_t *hdl = *device_handle;
 

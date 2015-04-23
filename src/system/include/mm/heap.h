@@ -98,7 +98,7 @@ extern void *__heap_start;
 ==============================================================================*/
 extern void   _heap_init(void);
 extern void  *_heap_malloc(size_t, _heap_func_t, void*);
-extern void  *_heap_calloc(size_t count, size_t size, _heap_func_t, void*);
+extern void  *_heap_zalloc(size_t, _heap_func_t, void*);
 extern void   _heap_free(void *mem, _heap_func_t, void*);
 extern u32_t  _heap_get_free_heap(void);
 

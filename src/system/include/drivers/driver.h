@@ -48,17 +48,14 @@ extern "C" {
 ==============================================================================*/
 #undef errno
 
-#undef  _sys_calloc
-#define _sys_calloc(size_t__nmemb, size_t__msize, void__ppmem)    _modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_), void__ppmem)
-
 #undef  _sys_zalloc
-#define _sys_zalloc(size_t__msize, void__ppmem)                   _modcalloc(1, size_t__msize, _get_module_number(_module_name_), void__ppmem)
+#define _sys_zalloc(size_t__size, void__ppmem)                    _mzalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
 
 #undef  _sys_malloc
-#define _sys_malloc(size_t__size, void__ppmem)                    _modmalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
+#define _sys_malloc(size_t__size, void__ppmem)                    _mmalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
 
 #undef  _sys_free
-#define _sys_free(void__ppmem)                                    _modfree(void__ppmem, _get_module_number(_module_name_))
+#define _sys_free(void__ppmem)                                    _mfree(void__ppmem, _get_module_number(_module_name_))
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \

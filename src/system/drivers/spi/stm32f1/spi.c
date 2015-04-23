@@ -316,7 +316,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* allocate module memory */
         if (!SPIM) {
-                result = _sys_calloc(1, sizeof(struct module), reinterpret_cast(void**, &SPIM));
+                result = _sys_zalloc(sizeof(struct module), static_cast(void**, &SPIM));
                 if (result != ESUCC)
                         return result;
         }
@@ -369,7 +369,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create new instance for specified major-minor number (virtual SPI) */
         if (SPIM->wait_irq_sem[major]) {
-                result = _sys_calloc(1, sizeof(struct spi_virtual), device_handle);
+                result = _sys_zalloc(sizeof(struct spi_virtual), device_handle);
                 if (result == ESUCC) {
                         struct spi_virtual *hdl = *device_handle;
 

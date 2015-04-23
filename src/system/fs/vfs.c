@@ -804,7 +804,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         FILE *file_obj = NULL;
-        result = _kcalloc(_MM_KRN, 1, sizeof(FILE), reinterpret_cast(void**, &file_obj));
+        result = _kzalloc(_MM_KRN, sizeof(FILE), static_cast(void**, &file_obj));
         if (result == ESUCC && file_obj) {
                 const char *external_path; FS_entry_t *fs;
                 result = get_path_base_FS(cwd_path, &external_path, &fs);
@@ -830,14 +830,14 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         if (cwd_path) {
-                _kfree(_MM_KRN, reinterpret_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
         }
 
         if (file_obj) {
                 if (file_obj->self) {
                         *file = file_obj;
                 } else {
-                        _kfree(_MM_KRN, reinterpret_cast(void**, &file_obj));
+                        _kfree(_MM_KRN, static_cast(void**, &file_obj));
                 }
         }
 
@@ -1503,7 +1503,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
                 }
         }
 
-        int result = _kcalloc(_MM_KRN, new_path_len + 1, sizeof(char), reinterpret_cast(void**, new_path));
+        int result = _kzalloc(_MM_KRN, new_path_len + 1, static_cast(void**, new_path));
         if (result == ESUCC) {
                 if (cwd_len && cwd) {
                         strcpy(*new_path, cwd);

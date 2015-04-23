@@ -82,7 +82,7 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
                 return EADDRINUSE;
         }
 
-        int result = _sys_calloc(1, sizeof(CRCM), device_handle);
+        int result = _sys_zalloc(sizeof(CRCM), device_handle);
         if (result == ESUCC) {
                 CRCM *hdl = *device_handle;
 
@@ -112,7 +112,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 
         if (_sys_device_is_unlocked(hdl->file_lock)) {
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                _sys_free(reinterpret_cast(void**, &hdl));
+                _sys_free(static_cast(void**, &hdl));
                 status = ESUCC;
         } else {
                 status = EBUSY;

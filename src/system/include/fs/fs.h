@@ -115,23 +115,7 @@ static inline int _sys_malloc(size_t size, void **mem)
 
 //==============================================================================
 /**
- * @brief  Allocate memory
- *
- * @param[in]  num              number of object of size 'size' to allocate
- * @param[in]  size             object size
- * @param[out] mem              pointer to memory block pointer
- *
- * @return One of errno values.
- */
-//==============================================================================
-static inline int _sys_calloc(size_t count, size_t size, void **mem)
-{
-        return _kcalloc(_MM_FS, count, size, mem);
-}
-
-//==============================================================================
-/**
- * @brief  Allocate memory and clear allocated block
+ * @brief  Allocate memory and clear content
  *
  * @param[in]  size             object size
  * @param[out] mem              pointer to memory block pointer
@@ -141,7 +125,7 @@ static inline int _sys_calloc(size_t count, size_t size, void **mem)
 //==============================================================================
 static inline int _sys_zalloc(size_t size, void **mem)
 {
-        return _kcalloc(_MM_FS, 1, size, mem);
+        return _kzalloc(_MM_FS, size, mem);
 }
 
 //==============================================================================

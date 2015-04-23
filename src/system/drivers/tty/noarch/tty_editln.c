@@ -92,7 +92,7 @@ static inline bool is_valid(ttyedit_t *this)
 //==============================================================================
 int ttyedit_create(FILE *out_file, ttyedit_t **edit)
 {
-        int result = _sys_calloc(1, sizeof(ttyedit_t), reinterpret_cast(void**, edit));
+        int result = _sys_zalloc(sizeof(ttyedit_t), static_cast(void**, edit));
         if (result == ESUCC) {
                 (*edit)->self         = *edit;
                 (*edit)->out_file     = out_file;

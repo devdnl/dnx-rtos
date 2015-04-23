@@ -100,17 +100,16 @@ int _mm_init(void)
  * @brief  Allocate memory
  *
  * @param[in]  mpur             memory purpose
- * @param[in]  num              number of object of size 'size' to allocate
  * @param[in]  size             object size
  * @param[out] mem              pointer to memory block pointer
  *
  * @return One of errno values.
  */
 //==============================================================================
-int _kcalloc(enum _mm_mem mpur, size_t num, size_t size, void **mem)
+int _kzalloc(enum _mm_mem mpur, size_t size, void **mem)
 {
-        if (mpur < _MM_COUNT && num && size && mem) {
-                *mem = _heap_calloc(num, size, modify_RAM_usage, &memory_usage[mpur]);
+        if (mpur < _MM_COUNT && size && mem) {
+                *mem = _heap_zalloc(size, modify_RAM_usage, &memory_usage[mpur]);
                 return *mem ? ESUCC : ENOMEM;
         } else {
                 return EINVAL;
@@ -164,7 +163,6 @@ int _kfree(enum _mm_mem mpur, void **mem)
  * @brief  Allocate memory
  *
  * @param[in]  mpur             memory purpose
- * @param[in]  num              number of object of size 'size' to allocate
  * @param[in]  size             object size
  * @param[in]  modid            module id
  * @param[out] mem              pointer to memory block pointer
@@ -172,10 +170,10 @@ int _kfree(enum _mm_mem mpur, void **mem)
  * @return One of errno values.
  */
 //==============================================================================
-int _modcalloc(size_t num, size_t size, size_t modid, void **mem)
+int _mzalloc(size_t size, size_t modid, void **mem)
 {
-        if (modid < _drvreg_number_of_modules && num && size && mem) {
-                *mem = _heap_calloc(num, size, modify_RAM_usage, &module_memory_usage[modid]);
+        if (modid < _drvreg_number_of_modules && size && mem) {
+                *mem = _heap_zalloc(size, modify_RAM_usage, &module_memory_usage[modid]);
                 return *mem ? ESUCC : ENOMEM;
         } else {
                 return EINVAL;
@@ -194,7 +192,7 @@ int _modcalloc(size_t num, size_t size, size_t modid, void **mem)
  * @return One of errno values.
  */
 //==============================================================================
-int _modmalloc(size_t size, size_t modid, void **mem)
+int _mmalloc(size_t size, size_t modid, void **mem)
 {
         if (modid < _drvreg_number_of_modules && size && mem) {
                 *mem = _heap_malloc(size, modify_RAM_usage, &module_memory_usage[modid]);
@@ -215,7 +213,7 @@ int _modmalloc(size_t size, size_t modid, void **mem)
  * @return One of errno values.
  */
 //==============================================================================
-int _modfree(void **mem, size_t modid)
+int _mfree(void **mem, size_t modid)
 {
         if (modid < _drvreg_number_of_modules && mem && *mem) {
                 _heap_free(mem, modify_RAM_usage, &module_memory_usage[modid]);

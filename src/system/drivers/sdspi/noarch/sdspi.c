@@ -187,14 +187,14 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (SDSPI == NULL) {
-                result = _sys_calloc(1, sizeof(sdctrl_t), reinterpret_cast(void**, &SDSPI));
+                result = _sys_zalloc(sizeof(sdctrl_t), static_cast(void**, &SDSPI));
                 if (result != ESUCC) {
                         return result;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
-                result = _sys_calloc(1, sizeof(struct card), reinterpret_cast(void**, &SDSPI->card[major]));
+                result = _sys_zalloc(sizeof(struct card), static_cast(void**, &SDSPI->card[major]));
                 if (result == ESUCC) {
                         struct card *hdl = SDSPI->card[major];
 
@@ -225,13 +225,13 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                                 if (hdl->SPI_file)
                                         _sys_fclose(hdl->SPI_file);
 
-                                _sys_free(reinterpret_cast(void**, &SDSPI->card[major]));
+                                _sys_free(static_cast(void**, &SDSPI->card[major]));
                         }
                 }
         }
 
         if (SDSPI->card[major]) {
-                result = _sys_calloc(1, sizeof(sdpart_t), device_handle);
+                result = _sys_zalloc(sizeof(sdpart_t), device_handle);
                 if (result == ESUCC) {
                         SDSPI->card[major]->part[minor]               = *device_handle;
                         SDSPI->card[major]->part[minor]->first_sector = 0;

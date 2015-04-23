@@ -318,7 +318,7 @@ int _semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
         int result = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                result = _kcalloc(_MM_KRN, 1, sizeof(struct sem), reinterpret_cast(void**, sem));
+                result = _kzalloc(_MM_KRN, sizeof(struct sem), static_cast(void**, sem));
                 if (result == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -337,7 +337,7 @@ int _semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
                         if ((*sem)->object) {
                                 (*sem)->self = *sem;
                         } else {
-                                _kfree(_MM_KRN, reinterpret_cast(void**, sem));
+                                _kfree(_MM_KRN, static_cast(void**, sem));
                                 result = ENOMEM;
                         }
                 }
@@ -473,7 +473,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
         int result = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                result = _kcalloc(_MM_KRN, 1, sizeof(struct mutex), reinterpret_cast(void**, mtx));
+                result = _kzalloc(_MM_KRN, sizeof(struct mutex), static_cast(void**, mtx));
                 if (result == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutex();
@@ -486,7 +486,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                         if ((*mtx)->object) {
                                 (*mtx)->self = *mtx;
                         } else {
-                                _kfree(_MM_KRN, reinterpret_cast(void**, mtx));
+                                _kfree(_MM_KRN, static_cast(void**, mtx));
                                 result = ENOMEM;
                         }
                 }
@@ -583,13 +583,13 @@ int _queue_create(const uint length, const uint item_size, queue_t **queue)
         int result = EINVAL;
 
         if (length && item_size && queue) {
-                result = _kcalloc(_MM_KRN, 1, sizeof(struct queue), reinterpret_cast(void**, queue));
+                result = _kzalloc(_MM_KRN, sizeof(struct queue), static_cast(void**, queue));
                 if (result == ESUCC) {
                         (*queue)->object = xQueueCreate(length, item_size);
                         if ((*queue)->object) {
                                 (*queue)->self = *queue;
                         } else {
-                                _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
+                                _kfree(_MM_KRN, static_cast(void**, &queue));
                                 result = ENOMEM;
                         }
                 }

@@ -109,6 +109,7 @@ static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallr
 static queue_t *call_request;
 static queue_t *call_response;
 static pid_t    kworker;
+static pid_t    initd;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -195,7 +196,9 @@ void _syscall_init()
 {
         _queue_create(1, sizeof(syscallrq_t), &call_request);
         _queue_create(1, sizeof(syscallres_t), &call_response);
-        _process_create(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, &kworker);
+        _process_create(&kworker, "kworker", NULL);
+//        _thread_create(kworker, NULL, kworker_thread);
+        _process_create(&initd, "initd", NULL);
 }
 
 //==============================================================================
@@ -205,9 +208,9 @@ void _syscall_init()
  * @return ?
  */
 //==============================================================================
-static void kworker_thread(void *arg)
+int _syscall_kworker_master(int argc, char *argv[])
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG2(argc, argv);
 
         for (;;) {
                 syscallrq_t  syscallrq;
@@ -224,6 +227,8 @@ static void kworker_thread(void *arg)
                         _queue_send(call_response, &syscallres, MAX_DELAY_MS);
                 }
         }
+
+        return 0;
 }
 
 //==============================================================================

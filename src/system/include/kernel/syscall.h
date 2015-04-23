@@ -76,7 +76,8 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERRELEASE,          // |                |                           |                           |                           |                           |
-        SYSCALL_ALLOC,                  // | void*          | size_t size               |                           |                           |                           |
+        SYSCALL_MALLOC,                 // | void*          | size_t size               |                           |                           |                           |
+        SYSCALL_ZALLOC,                 // | void*          | size_t size               |                           |                           |                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
@@ -90,6 +91,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
 ==============================================================================*/
 extern void _syscall(syscall_t syscall, void *retptr, ...);
 extern void _syscall_init();
+extern int  _syscall_kworker_master(int, char**);
 
 /*==============================================================================
   Exported inline functions

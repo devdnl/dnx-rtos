@@ -67,12 +67,12 @@ enum _mm_mem {
   Exported functions
 ==============================================================================*/
 extern int _mm_init(void);
-extern int _kcalloc(enum _mm_mem, size_t, size_t, void**);
+extern int _kzalloc(enum _mm_mem, size_t, void**);
 extern int _kmalloc(enum _mm_mem, size_t, void**);
 extern int _kfree(enum _mm_mem, void**);
-extern int _modcalloc(size_t, size_t, size_t, void**);
-extern int _modmalloc(size_t, size_t, void**);
-extern int _modfree(void**, size_t);
+extern int _mzalloc(size_t, size_t, void**);
+extern int _mmalloc(size_t, size_t, void**);
+extern int _mfree(void**, size_t);
 extern int _mm_get_mem_usage(_mm_mem_usage_t*);
 extern int _mm_get_module_mem_usage(uint module, i32_t *usage);
 

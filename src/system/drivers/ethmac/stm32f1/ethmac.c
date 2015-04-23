@@ -103,7 +103,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG2(major, minor);
 
-        int result = _sys_calloc(1, sizeof(struct ethmac), device_handle);
+        int result = _sys_zalloc(sizeof(struct ethmac), device_handle);
         if (result == ESUCC) {
                 struct ethmac *hdl = *device_handle;
 

@@ -377,21 +377,20 @@ void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
 
 //==============================================================================
 /**
- * @brief  Contiguously allocates enough space for count objects that are size
- *         bytes of memory each and returns a pointer to the allocated memory.
- *         The allocated memory is filled with bytes of value zero.
- * @param  count   number of objects to allocate
- * @param  size    size of the objects to allocate
+ * @brief  Allocate a block of memory with a minimum of 'size' bytes.
+ *         Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
+ *         Allocated memory is cleared.
+ * @param  size    is the minimum size of the requested block in bytes.
  * @param  func    user defined function called when memory was allocated
  * @param  arg     user defined argument passed via 'func' function
  * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_heap_calloc(size_t count, size_t size, _heap_func_t func, void *arg)
+void *_heap_zalloc(size_t size, _heap_func_t func, void *arg)
 {
-        void *p = _heap_malloc(count * size, func, arg);
+        void *p = _heap_malloc(size, func, arg);
         if (p) {
-                memset(p, 0, MEM_ALIGN_SIZE(count * size));
+                memset(p, 0, MEM_ALIGN_SIZE(size));
         }
 
         return p;

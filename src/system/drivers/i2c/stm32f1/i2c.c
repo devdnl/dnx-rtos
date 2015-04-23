@@ -295,7 +295,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
         /* creates basic module structures */
         if (I2C == NULL) {
-                result = _sys_calloc(1, sizeof(I2C_mem_t), reinterpret_cast(void**, &I2C));
+                result = _sys_zalloc(sizeof(I2C_mem_t), static_cast(void**, &I2C));
                 if (result != ESUCC)
                         goto finish;
         }
@@ -320,7 +320,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* creates device structure */
-        result = _sys_calloc(1, sizeof(I2C_dev_t), device_handle);
+        result = _sys_zalloc(sizeof(I2C_dev_t), device_handle);
         if (result == ESUCC) {
                 I2C_dev_t *hdl = *device_handle;
                 hdl->config    = &I2C_cfg[major].devices[minor];
@@ -611,7 +611,7 @@ static void release_resources(u8_t major)
         }
 
         if (!mem_used && I2C) {
-                _sys_free(reinterpret_cast(void**, &I2C));
+                _sys_free(static_cast(void**, &I2C));
         }
 }
 

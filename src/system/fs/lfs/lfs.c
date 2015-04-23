@@ -110,7 +110,7 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
-        int result = _sys_calloc(1, sizeof(struct LFS_data), fs_handle);
+        int result = _sys_zalloc(sizeof(struct LFS_data), fs_handle);
         if (result == ESUCC) {
                 struct LFS_data *lfs = *fs_handle;
 
@@ -194,9 +194,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
                 char *basename = strrchr(path, '/') + 1;
 
                 char *child_name;
-                result = _sys_calloc(strlen(basename) + 1,
-                                     sizeof(char),
-                                     reinterpret_cast(void**, &child_name));
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, &child_name));
                 if (result == ESUCC) {
                         strcpy(child_name, basename);
 
@@ -205,7 +203,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
                         if (result == ESUCC) {
                                 child->data = reinterpret_cast(void*, dev);
                         } else {
-                                _sys_free(reinterpret_cast(void**, &child_name));
+                                _sys_free(static_cast(void**, &child_name));
                         }
                 }
         }
@@ -240,10 +238,7 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
                 char *basename = strrchr(path, '/') + 1;
 
                 char *child_name;
-                result = _sys_calloc(strlen(basename) + 1,
-                                     sizeof(char),
-                                     reinterpret_cast(void**, child_name));
-
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, child_name));
                 if (result == ESUCC) {
                         strcpy(child_name, basename);
 
@@ -287,10 +282,7 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                 char *basename = strrchr(path, '/') + 1;
 
                 char *child_name;
-                result = _sys_calloc(strlen(basename) + 1,
-                                     sizeof(char),
-                                     reinterpret_cast(void**, child_name));
-
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, child_name));
                 if (result == ESUCC) {
                         strcpy(child_name, basename);
 
@@ -497,9 +489,7 @@ API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
                 char *basename = strrchr(new_name, '/') + 1;
 
                 char *new_name;
-                result = _sys_calloc(1, strlen(basename) + 1,
-                                     reinterpret_cast(void**, &new_name));
-
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, &new_name));
                 if (result == ESUCC) {
                         if (target->name) {
                                 _sys_free(reinterpret_cast(void**, target->name));
@@ -737,9 +727,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
                 char *basename = strrchr(path, '/') + 1;
 
                 char *file_name;
-                result = _sys_calloc(1, strlen(basename) + 1,
-                                     reinterpret_cast(void**, &file_name));
-
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, &file_name));
                 if (result != ESUCC) {
                         goto finish;
                 }
@@ -1358,7 +1346,7 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
         }
 
         node_t *node;
-        int result = _sys_calloc(1, sizeof(node_t), reinterpret_cast(void**, &node));
+        int result = _sys_zalloc(sizeof(node_t), static_cast(void**, &node));
         if (result == ESUCC) {
                 node->name  = filename;
                 node->data  = NULL;
@@ -1412,8 +1400,8 @@ static int add_node_to_open_files_list(struct LFS_data *lfs,
                                        node_t          *child)
 {
         struct opened_file_info *opened_file_info;
-        int result = _sys_calloc(1, sizeof(struct opened_file_info),
-                                 reinterpret_cast(void**, &opened_file_info));
+        int result = _sys_zalloc(sizeof(struct opened_file_info),
+                                 static_cast(void**, &opened_file_info));
         if (result == ESUCC) {
                 opened_file_info->remove_at_close = false;
                 opened_file_info->child           = child;

@@ -129,9 +129,8 @@ int _driver_init(const char *drv_name, const char *node_path, dev_t *id)
         }
 
         if (!driver_memory_region) {
-                int result = _kcalloc(_MM_KRN,
-                                      _drvreg_size_of_driver_table,
-                                      sizeof(void*),
+                int result = _kzalloc(_MM_KRN,
+                                      _drvreg_size_of_driver_table * sizeof(void*),
                                       static_cast(void**, &driver_memory_region));
 
                 if (result != ESUCC) {

@@ -123,7 +123,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize module base */
         if (!tty_module) {
-                result = _sys_calloc(1 ,sizeof(struct module), reinterpret_cast(void**, &tty_module));
+                result = _sys_zalloc(sizeof(struct module), static_cast(void**, &tty_module));
                 if (result != ESUCC)
                         return result;
 
@@ -173,7 +173,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                                 _sys_queue_destroy(tty_module->queue_cmd);
 
                         if (tty_module)
-                                _sys_free(reinterpret_cast(void**, &tty_module));
+                                _sys_free(static_cast(void**, &tty_module));
                 }
         } else {
                 result = ESUCC;
@@ -181,7 +181,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize selected TTY */
         if (result == ESUCC) {
-                result = _sys_calloc(1, sizeof(tty_t), device_handle);
+                result = _sys_zalloc(sizeof(tty_t), device_handle);
                 if (result != ESUCC)
                         return result;
 

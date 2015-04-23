@@ -45,16 +45,16 @@
   Local types, enums definitions
 ==============================================================================*/
 typedef struct process {
-        pid_t            pid;                   /* process ID                         */
-        pid_t            parent;                /* parent process                     */
+        struct process  *next;                  /* next process                       */
         task_t          *task;                  /* pointer to this task handle        */
-        struct process  *next;                  /* next process (chain)               */
         FILE            *f_stdin;               /* stdin file                         */
         FILE            *f_stdout;              /* stdout file                        */
         FILE            *f_stderr;              /* stderr file                        */
         FILE            *f_list;                /* chain of open files                */
         const char      *cwd;                   /* current working path               */
         void            *globals;               /* address to global variables        */
+        pid_t            parent;                /* parent process                     */
+        pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
 } process_t;
@@ -67,8 +67,14 @@ typedef struct process {
   Local object definitions
 ==============================================================================*/
 static pid_t      PID_cnt = 1;
-static process_t *head;
+static process_t *process_list_head;
 static process_t *active_process;
+
+const int kworker_stack_depth   = STACK_DEPTH_LOW;
+const struct _prog_data kworker = {.globals_size  = 0,
+                                   .main_function = _syscall_kworker_master,
+                                   .program_name  = "kworker",
+                                   .stack_depth   = &kworker_stack_depth};
 
 /*==============================================================================
   Exported object definitions
@@ -100,14 +106,44 @@ extern const int               _prog_table_size;
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Create a new process
+ *
+ * @param[out] pid      PID of created process (can be NULL)
+ * @param[in]  attr     process attributes (use NULL for default attributes)
+ * @param[in]  name     process name
+ * @param[in]  ...      string arguments
+ * @param[in]  NULL     last argument must be NULL
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-int _process_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, pid_t *pid)
+int _process_create(pid_t *pid, process_attr_t *attr, const char *name, ...)
 {
         int result = EINVAL;
+
+        if (name) {
+                const struct _prog_data *prog = NULL;
+
+                if (strncmp(name, "kworker", 32) == 0) {
+                        prog = &kworker;
+                } else {
+                        for (int i = 0; i < _prog_table_size; i++) {
+                                if (strncmp(_prog_table[i].program_name, name, 128) == 0) {
+                                        prog = &_prog_table[i];
+                                }
+                        }
+                }
+
+                if (prog) {
+                        process_t *proc;
+                } else {
+                        result = ESRCH;
+                }
+
+//                _task_create();
+        }
+
+        return result;
 
 //        if (func && name && stack_depth && pid) {
 //                process_t *proc;
@@ -140,8 +176,8 @@ int _process_create(void (*func)(void*), const char *name, const uint stack_dept
 //        _task_new();
 //
 //        _process_new(kworker_thread, "kworker", CONFIG_RTOS_SYSCALL_STACK_DEPTH, NULL, true);
-
-        return result;
+//
+//        return result;
 }
 
 //==============================================================================

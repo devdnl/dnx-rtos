@@ -81,7 +81,7 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
         if (major == _WDG_MAJOR_NUMBER && minor == _WDG_MINOR_NUMBER) {
 
-                int result = _sys_calloc(1, sizeof(WDG_t), device_handle);
+                int result = _sys_zalloc(sizeof(WDG_t), device_handle);
                 if (result == ESUCC) {
                         configure_wdg();
                         start_wdg();
@@ -212,6 +212,7 @@ API_MOD_READ(WDG,
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(rdcnt);
         UNUSED_ARG(fattr);
 
         return ENOTSUP;

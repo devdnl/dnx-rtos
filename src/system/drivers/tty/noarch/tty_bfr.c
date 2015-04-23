@@ -223,7 +223,7 @@ static void put_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 int ttybfr_create(ttybfr_t **bfr)
 {
-        int result = _sys_calloc(1, sizeof(ttybfr_t), reinterpret_cast(void**, bfr));
+        int result = _sys_zalloc(sizeof(ttybfr_t), static_cast(void**, bfr));
         if (result == ESUCC) {
                 (*bfr)->self = *bfr;
         }
@@ -244,7 +244,7 @@ int ttybfr_destroy(ttybfr_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                _sys_free(reinterpret_cast(void**, &this));
+                _sys_free(static_cast(void**, &this));
                 return ESUCC;
         } else {
                 return EINVAL;

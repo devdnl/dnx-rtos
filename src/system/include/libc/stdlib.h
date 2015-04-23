@@ -403,7 +403,7 @@ extern _VOID srand(unsigned __seed);
 static inline void *malloc(size_t size)
 {
         void *mem = NULL;
-        _syscall(SYSCALL_ALLOC, &mem, size);
+        _syscall(SYSCALL_MALLOC, &mem, size);
         return mem;
 }
 
@@ -433,7 +433,7 @@ static inline void *malloc(size_t size)
 static inline void *calloc(size_t n, size_t size)
 {
         void *mem = NULL;
-        _syscall(SYSCALL_ALLOC, &mem, size * n);
+        _syscall(SYSCALL_ZALLOC, &mem, size * n);
         return mem;
 }
 

@@ -47,10 +47,10 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
 #ifdef __cplusplus
-        inline void* operator new     (size_t size) {return _sysm_tskmalloc(size);}
-        inline void* operator new[]   (size_t size) {return _sysm_tskmalloc(size);}
-        inline void  operator delete  (void* ptr  ) {_sysm_tskfree(ptr);}
-        inline void  operator delete[](void* ptr  ) {_sysm_tskfree(ptr);}
+        inline void* operator new     (size_t size) {return malloc(size);}
+        inline void* operator new[]   (size_t size) {return malloc(size);}
+        inline void  operator delete  (void* ptr  ) {free(ptr);}
+        inline void  operator delete[](void* ptr  ) {free(ptr);}
 #       define _PROGMAN_CXX extern "C"
 #       define _PROGMAN_EXTERN_C extern "C"
 #else
@@ -58,18 +58,15 @@ extern "C" {
 #       define _PROGMAN_EXTERN_C extern
 #endif
 
-#define PROGRAM_MAIN(name, stack_depth, argc, argv) \
-        _PROGMAN_CXX const int __builtin_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const int __builtin_app_##name##_ss__ = stack_depth;\
-        _PROGMAN_CXX int __builtin_app_##name##_main(argc, argv)
-
 #define _IMPORT_PROGRAM(name)\
         _PROGMAN_EXTERN_C const int __builtin_app_##name##_gs__;\
         _PROGMAN_EXTERN_C const int __builtin_app_##name##_ss__;\
         _PROGMAN_EXTERN_C int __builtin_app_##name##_main(int, char**)
 
 #define int_main(name, stack_depth, argc, argv)\
-        PROGRAM_MAIN(name, stack_depth, argc, argv)
+        _PROGMAN_CXX const int __builtin_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const int __builtin_app_##name##_ss__ = stack_depth;\
+        _PROGMAN_CXX int __builtin_app_##name##_main(argc, argv)
 
 #define _PROGRAM_CONFIG(name) \
         {.program_name  = #name,\
@@ -87,6 +84,12 @@ struct _prog_data {
         const int *stack_depth;
 };
 
+typedef struct {
+        FILE *f_stdin;
+        FILE *f_stdout;
+        FILE *f_stderr;
+} process_attr_t;
+
 typedef struct thread thread_t;
 
 typedef struct prog prog_t;
@@ -103,7 +106,7 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int         _process_create(void (*)(void*), const char*, const uint, void*, pid_t*);
+extern int         _process_create                              (pid_t*, process_attr_t*, const char*, ...);
 extern const char *_process_get_CWD                             (void);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);
