@@ -29,6 +29,10 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <dnx/misc.h>
+#include <dnx/os.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -68,7 +72,24 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        return 0;
+        UNUSED_ARG2(argc, argv);
+
+        int result = 0;
+
+        result = mount("lfs", "", "/");
+        result = mkdir("/dev", 0777);
+        result = driver_init("gpio", "/dev/gpio");
+        result = driver_init("afiom", NULL);
+        result = driver_init("uart2", "/dev/ttyS0");
+        result = driver_init("tty0", "/dev/tty0");
+
+        result = syslog_enable("/dev/tty0");
+
+        result = driver_init("tty1", "/dev/tty1");
+
+//        result = syslog_disable();
+
+        return result;
 }
 
 /*==============================================================================

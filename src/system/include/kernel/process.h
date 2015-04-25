@@ -59,13 +59,13 @@ extern "C" {
 #endif
 
 #define _IMPORT_PROGRAM(_name_)\
-        _PROGMAN_EXTERN_C const int __builtin_app_##_name_##_gs__;\
-        _PROGMAN_EXTERN_C const int __builtin_app_##_name_##_ss__;\
-        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**)
+        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_gs__;\
+        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_ss__;\
+        _PROGMAN_EXTERN_C size_t __builtin_app_##_name_##_main(int, char**)
 
 #define int_main(_name_, stack_depth, argc, argv)\
-        _PROGMAN_CXX const int __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const int __builtin_app_##_name_##_ss__ = stack_depth;\
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
 
 #define _PROGRAM_CONFIG(_name_) \
@@ -80,7 +80,7 @@ extern "C" {
 typedef int (*process_func_t)(int, char**);
 
 struct _prog_data {
-        char           *name;
+        const char     *name;
         const size_t   *globals_size;
         const size_t   *stack_depth;
         process_func_t  main;

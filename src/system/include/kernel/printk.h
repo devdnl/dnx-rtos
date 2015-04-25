@@ -50,9 +50,9 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-void _printk_enable(char *filename);
-void _printk_disable(void);
-void _printk(const char *format, ...);
+int  _printk_enable(const char*);
+int  _printk_disable(void);
+void _printk(const char*, ...);
 
 /*==============================================================================
   Exported inline functions

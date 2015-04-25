@@ -82,7 +82,9 @@ extern "C" {
 //==============================================================================
 static inline int mknod(const char *pathname, dev_t dev)
 {
-        return _vfs_mknod(pathname, dev);
+        int r;
+        _syscall(SYSCALL_MKNOD, &r, pathname, dev);
+        return r;
 }
 
 //==============================================================================
@@ -109,7 +111,9 @@ static inline int mknod(const char *pathname, dev_t dev)
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-        return _vfs_mkdir(pathname, mode);
+        int r;
+        _syscall(SYSCALL_MKDIR, &r, pathname, mode);
+        return r;
 }
 
 //==============================================================================
@@ -139,7 +143,9 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
-        return _vfs_mkfifo(pathname, mode);
+        int r;
+        _syscall(SYSCALL_MKFIFO, &r, pathname, mode);
+        return r;
 }
 
 //==============================================================================
@@ -165,7 +171,9 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
-        return _vfs_chmod(pathname, mode);
+        int r;
+        _syscall(SYSCALL_CHMOD, &r, pathname, mode);
+        return r;
 }
 
 //==============================================================================
@@ -213,7 +221,9 @@ static inline int chmod(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
-        return _vfs_stat(pathname, buf);
+        int r;
+        _syscall(SYSCALL_STAT, &r, pathname, buf);
+        return r;
 }
 
 //==============================================================================
@@ -251,9 +261,11 @@ static inline int stat(const char *pathname, struct stat *buf)
  * // ...
  */
 //==============================================================================
-static inline int fstat(FILE *file, struct stat *stat)
+static inline int fstat(FILE *file, struct stat *buf)
 {
-        return _vfs_fstat(file, stat);
+        int r;
+        _syscall(SYSCALL_FSTAT, &r, file, buf);
+        return r;
 }
 
 #ifdef __cplusplus

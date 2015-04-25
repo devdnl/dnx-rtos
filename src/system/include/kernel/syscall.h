@@ -79,6 +79,9 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_MALLOC,                 // | void*          | size_t size               |                           |                           |                           |
         SYSCALL_ZALLOC,                 // | void*          | size_t size               |                           |                           |                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
+        SYSCALL_SYSLOGENABLE,           // |                |                           |                           |                           |                           |
+        SYSCALL_SYSLOGDISABLE,          // |                |                           |                           |                           |                           |
+        SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

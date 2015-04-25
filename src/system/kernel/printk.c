@@ -34,6 +34,7 @@
 #include "fs/vfs.h"
 #include "mm/mm.h"
 #include "dnx/misc.h"
+#include "libc/errno.h"
 
 /*==============================================================================
   Local macros
@@ -72,37 +73,43 @@ static FILE *printk_file;
  * @brief Enable printk functionality
  *
  * @param filename      path to file used to write kernel log
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void _printk_enable(char *filename)
+int _printk_enable(const char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        /* close file if opened */
         if (printk_file) {
                 _vfs_fclose(printk_file, false);
                 printk_file = NULL;
         }
 
-        /* open new file */
-        if (printk_file == NULL) {
-                _vfs_fopen(filename, "w", &printk_file);
-        }
+        return _vfs_fopen(filename, "w", &printk_file);
 #else
         UNUSED_ARG(filename);
+        return ENOTSUP;
 #endif
 }
 
 //==============================================================================
 /**
  * @brief Disable printk functionality
+ *
+ * @param None
+ *
+ * @return One of errno value
  */
 //==============================================================================
-void _printk_disable(void)
+int _printk_disable(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (printk_file) {
-                _vfs_fclose(printk_file, false);
+                int result  = _vfs_fclose(printk_file, false);
                 printk_file = NULL;
+                return result;
+        } else {
+                return ESUCC;
         }
 #endif
 }
@@ -140,7 +147,7 @@ void _printk(const char *format, ...)
                                 _vfs_fflush(printk_file);
                         }
 
-                        _kfree(_MM_KRN, static_cast(void**, buffer));
+                        _kfree(_MM_KRN, static_cast(void**, &buffer));
                 }
         }
 #else

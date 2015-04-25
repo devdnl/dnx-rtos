@@ -140,9 +140,9 @@ int _task_create(task_func_t func, const char *name, const size_t stack_depth, v
                 task_t *tsk = NULL;
                 if (xTaskCreate(func, name, stack_depth, argv, child_priority, &tsk) == pdPASS) {
 
-                        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                                vTaskSuspend(tsk);
-                        }
+//                        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
+//                                vTaskSuspend(tsk);
+//                        }
 
                         vTaskSetApplicationTaskTag(tsk, (void *)tag);
 

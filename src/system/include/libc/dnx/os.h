@@ -34,16 +34,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 #include <string.h>
 #include <stdarg.h>
-#include "config.h"
-#include "drivers/drvctrl.h"
-#include "kernel/process.h"
-#include "kernel/kwrapper.h"
-#include "kernel/khooks.h"
-#include "mm/heap.h"
-#include "mm/mm.h"
-#include "portable/cpuctl.h"
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -72,33 +66,6 @@ typedef _mm_mem_usage_t          memstat_t;
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief u32_t get_used_static_memory(void)
- * The function <b>get_used_static_memory</b>() return used static memory
- * in bytes. Usage of static memory is determined by configuration.
- *
- * @param None
- *
- * @errors None
- *
- * @return Number of bytes reserved by static memory.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * printf("Used static memory: %d bytes\n", get_used_static_memory());
- *
- * // ...
- */
-//==============================================================================
-static inline u32_t get_used_static_memory(void) // FIXME redundant interface
-{
-        return (_HEAP_RAM_SIZE - _HEAP_SIZE);
-}
-
-//==============================================================================
-/**
  * @brief u32_t get_free_memory(void)
  * The function <b>get_free_memory</b>() return free memory in bytes. This is
  * the total amount of memory which can be used.
@@ -121,7 +88,7 @@ static inline u32_t get_used_static_memory(void) // FIXME redundant interface
 //==============================================================================
 static inline u32_t get_free_memory(void)
 {
-        return _heap_get_free_heap();
+//        return _heap_get_free_heap();
 }
 
 //==============================================================================
@@ -148,7 +115,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-        return (get_used_static_memory() + (_HEAP_SIZE - _heap_get_free_heap()));
+//        return (get_used_static_memory() + (_HEAP_SIZE - _heap_get_free_heap()));
 }
 
 //==============================================================================
@@ -174,12 +141,12 @@ static inline u32_t get_used_memory(void)
 //==============================================================================
 static inline u32_t get_memory_size(void)
 {
-        return _HEAP_RAM_SIZE;
+//        return _HEAP_RAM_SIZE;
 }
 
 //==============================================================================
 /**
- * @brief stdret_t get_detailed_memory_usage(memstat_t *stat)
+ * @brief stdret_t get_memory_usage_details(memstat_t *stat)
  * The function <b>get_detailed_memory_usage</b>() return detailed memory usage
  * pointed by <i>stat</i>. <b>memstat_t</b> structure:
  * <pre>
@@ -224,9 +191,9 @@ static inline u32_t get_memory_size(void)
  * // ...
  */
 //==============================================================================
-static inline int get_detailed_memory_usage(memstat_t *stat)
+static inline int get_memory_usage_details(memstat_t *stat)
 {
-        return _mm_get_mem_usage(stat); // TODO errno set
+        return _mm_get_mem_usage(stat); // TODO errno set use syscall
 }
 
 //==============================================================================
@@ -283,7 +250,7 @@ static inline i32_t get_module_memory_usage(uint module_number)
 //==============================================================================
 static inline u32_t get_uptime(void)
 {
-        return _get_uptime_counter();
+//        return _get_uptime_counter();
 }
 
 //==============================================================================
@@ -309,7 +276,7 @@ static inline u32_t get_uptime(void)
 //==============================================================================
 static inline uint get_tick_counter(void)
 {
-        return _kernel_get_tick_counter();
+//        return _kernel_get_tick_counter();
 }
 
 //==============================================================================
@@ -339,7 +306,7 @@ static inline uint get_tick_counter(void)
 //==============================================================================
 static inline uint get_time_ms(void)
 {
-        return _kernel_get_time_ms();
+//        return _kernel_get_time_ms();
 }
 
 //==============================================================================
@@ -443,7 +410,7 @@ static inline uint get_number_of_monitored_tasks(void)
 //==============================================================================
 static inline int get_number_of_tasks(void)
 {
-        return _kernel_get_number_of_tasks();
+//        return _kernel_get_number_of_tasks();
 }
 
 //==============================================================================
@@ -558,7 +525,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.6.1";
+        return "1.7.0";
 }
 
 //==============================================================================
@@ -584,7 +551,7 @@ static inline const char *get_OS_version(void)
 //==============================================================================
 static inline const char *get_OS_codename(void)
 {
-        return "Butterfly";
+        return "Caribou";
 }
 
 //==============================================================================
@@ -1085,7 +1052,35 @@ static inline void enable_CPU_load_measurement(void)
 //==============================================================================
 static inline void restart_system(void)
 {
-        _cpuctl_restart_system();
+        _syscall(SYSCALL_RESTART, NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  ? TODO syslog_enable
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline int syslog_enable(const char *path)
+{
+        int r = -1;
+        _syscall(SYSCALL_SYSLOGENABLE, &r, path);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief  ? TODO syslog_disable
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline int syslog_disable()
+{
+        int r = -1;
+        _syscall(SYSCALL_SYSLOGDISABLE, &r);
+        return r;
 }
 
 //==============================================================================
@@ -1125,10 +1120,10 @@ static inline void restart_system(void)
  * // ...
  */
 //==============================================================================
-static inline prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
-{
-        return _program_new(cmd, cwd, stin, stout, sterr);
-}
+//static inline prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+//{
+//        return _program_new(cmd, cwd, stin, stout, sterr);
+//}
 
 //==============================================================================
 /**
@@ -1164,10 +1159,10 @@ static inline prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, 
  * // ...
  */
 //==============================================================================
-static inline int program_kill(prog_t *prog)
-{
-        return _program_kill(prog);
-}
+//static inline int program_kill(prog_t *prog)
+//{
+//        return _program_kill(prog);
+//}
 
 //==============================================================================
 /**
@@ -1202,10 +1197,10 @@ static inline int program_kill(prog_t *prog)
  * // ...
  */
 //==============================================================================
-static inline int program_delete(prog_t *prog)
-{
-        return _program_delete(prog);
-}
+//static inline int program_delete(prog_t *prog)
+//{
+//        return _program_delete(prog);
+//}
 
 //==============================================================================
 /**
@@ -1240,10 +1235,10 @@ static inline int program_delete(prog_t *prog)
  * // ...
  */
 //==============================================================================
-static inline int program_wait_for_close(prog_t *prog, const uint timeout)
-{
-        return _program_wait_for_close(prog, timeout);
-}
+//static inline int program_wait_for_close(prog_t *prog, const uint timeout)
+//{
+//        return _program_wait_for_close(prog, timeout);
+//}
 
 //==============================================================================
 /**
@@ -1282,10 +1277,10 @@ static inline int program_wait_for_close(prog_t *prog, const uint timeout)
  * // ...
  */
 //==============================================================================
-static inline int program_get_exit_code(prog_t *prog)
-{
-        return _program_get_exit_code(prog);
-}
+//static inline int program_get_exit_code(prog_t *prog)
+//{
+//        return _program_get_exit_code(prog);
+//}
 
 //==============================================================================
 /**
@@ -1323,10 +1318,10 @@ static inline int program_get_exit_code(prog_t *prog)
  * // ...
  */
 //==============================================================================
-static inline bool program_is_closed(prog_t *prog)
-{
-        return _program_is_closed(prog);
-}
+//static inline bool program_is_closed(prog_t *prog)
+//{
+//        return _program_is_closed(prog);
+//}
 
 #ifdef __cplusplus
 }

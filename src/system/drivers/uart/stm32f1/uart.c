@@ -172,7 +172,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &uart_data[major]->data_write_sem);
+                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &uart_data[major]->data_read_sem);
                 if (result != ESUCC)
                         goto finish;
 
@@ -325,9 +325,12 @@ API_MOD_WRITE(UART,
                 hdl->Tx_buffer.data_size = count;
 
                 SET_BIT(uart[hdl->major]->CR1, USART_CR1_TXEIE);
+
                 result = _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
 
-                *wrcnt = count - hdl->Tx_buffer.data_size;
+                if (result == ESUCC) {
+                        *wrcnt = count - hdl->Tx_buffer.data_size;
+                }
 
                 _sys_mutex_unlock(hdl->port_lock_tx_mtx);
         }

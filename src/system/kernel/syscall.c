@@ -33,6 +33,7 @@
 #include "drivers/drvctrl.h"
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
+#include "kernel/printk.h"
 #include "config.h"
 #include "errno.h"
 #include "lib/cast.h"
@@ -68,7 +69,6 @@ typedef void (*syscallfunc_t)(syscallrq_t*, syscallres_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void kworker_thread(void *arg);
 static void syscall_mount(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_umount(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_getmntentry(syscallrq_t *syscallrq, syscallres_t *syscallres);
@@ -102,6 +102,12 @@ static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres);
 
 /*==============================================================================
   Local objects
@@ -146,6 +152,12 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SETTIME      ] = syscall_settime,
         [SYSCALL_DRIVERINIT   ] = syscall_driverinit,
         [SYSCALL_DRIVERRELEASE] = syscall_driverrelease,
+        [SYSCALL_MALLOC       ] = syscall_malloc,
+        [SYSCALL_ZALLOC       ] = syscall_zalloc,
+        [SYSCALL_FREE         ] = syscall_free,
+        [SYSCALL_SYSLOGENABLE ] = syscall_syslogenable,
+        [SYSCALL_SYSLOGDISABLE] = syscall_syslogdisable,
+        [SYSCALL_RESTART      ] = syscall_restart,
 };
 
 /*==============================================================================
@@ -175,11 +187,17 @@ void _syscall(syscall_t syscall, void *retptr, ...)
         syscallrq.retptr   = retptr;
         va_start(syscallrq.args, retptr);
 
-        if (_queue_send(call_request, &syscallrq, MAX_DELAY_MS)) {
+        int result = _queue_send(call_request, &syscallrq, MAX_DELAY_MS);
+        if (result == ESUCC) {
                 syscallres_t callres;
-                if (_queue_receive(call_response, &callres, MAX_DELAY_MS)) {
-                      errno = callres.err;
+                result = _queue_receive(call_response, &callres, MAX_DELAY_MS);
+                if (result == ESUCC) {
+                        errno = callres.err;
+                } else {
+                        errno = result;
                 }
+        } else {
+                errno = result;
         }
 
         va_end(syscallrq.args);
@@ -216,9 +234,10 @@ int _syscall_kworker_master(int argc, char *argv[])
                 syscallrq_t  syscallrq;
                 syscallres_t syscallres;
 
-                if (_queue_receive(call_request, &syscallrq, MAX_DELAY_MS)) {
+                if (_queue_receive(call_request, &syscallrq, MAX_DELAY_MS) == ESUCC) {
 
                         if (syscallrq.syscall < _SYSCALL_COUNT) {
+                                syscallres.err = ESUCC;
                                 syscalltab[syscallrq.syscall](&syscallrq, &syscallres);
                         } else {
                                 syscallres.err = EBADRQC;
@@ -294,7 +313,10 @@ static void syscall_mknod(syscallrq_t *syscallrq, syscallres_t *syscallres)
 //==============================================================================
 static void syscall_mkdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
-
+        GETARG(const char *, path);
+        GETARG(mode_t,       mode);
+        SETERRNO(_vfs_mkdir(path, mode));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 //==============================================================================
@@ -468,10 +490,11 @@ static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
         GETARG(const uint8_t *, buf);
         GETARG(size_t, size);
         GETARG(size_t, count);
-        GETARG(FILE*, file);
+        GETARG(FILE*,  file);
 
-        syscallres->err = 0; // FIXME
-//        SETRETURN(size_t, _vfs_fwrite(buf, size, count, file));
+        size_t wrcnt = 0;
+        SETERRNO(_vfs_fwrite(buf, count * size, &wrcnt, file));
+        SETRETURN(size_t, wrcnt);
 }
 
 //==============================================================================
@@ -483,7 +506,14 @@ static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
 //==============================================================================;
 static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
+        GETARG(uint8_t *, buf);
+        GETARG(size_t, size);
+        GETARG(size_t, count);
+        GETARG(FILE*,  file);
 
+        size_t rdcnt = 0;
+        SETERRNO(_vfs_fread(buf, count * size, &rdcnt, file));
+        SETRETURN(size_t, rdcnt);
 }
 
 //==============================================================================
@@ -629,9 +659,9 @@ static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
         GETARG(const char *, drv_name);
         GETARG(const char *, node_path);
-        dev_t drvid;
+        dev_t drvid = -1;
         SETERRNO(_driver_init(drv_name, node_path, &drvid));
-        SETRETURN(int, GETERRNO() == ESUCC ? drvid : -1);
+        SETRETURN(int, drvid);
 }
 
 //==============================================================================
@@ -646,6 +676,83 @@ static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallr
         GETARG(const char *, drv_name);
         SETERRNO(_driver_release(drv_name));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : 1);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+        GETARG(const char *, path);
+        SETERRNO(_printk_enable(path));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+        SETERRNO(_printk_disable());
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+        UNUSED_ARG2(syscallrq, syscallres);
+
+        _cpuctl_restart_system();
 }
 
 /*==============================================================================

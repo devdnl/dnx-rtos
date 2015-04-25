@@ -76,16 +76,19 @@ extern const uint             _FS_table_size;
 //==============================================================================
 int _mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
+        int result = EINVAL;
+
         if (FS_name && mount_point && src_path) {
                 for (uint i = 0; i < _FS_table_size; i++) {
                         if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
-                                return _vfs_mount(src_path, mount_point,
-                                                 (struct vfs_FS_itf *)&_FS_table[i].FS_if);
+                                result = _vfs_mount(src_path, mount_point,
+                                                    (struct vfs_FS_itf *)&_FS_table[i].FS_if);
+                                break;
                         }
                 }
         }
 
-        return EINVAL;
+        return result;
 }
 
 //==============================================================================

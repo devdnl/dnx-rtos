@@ -238,7 +238,7 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
                 char *basename = strrchr(path, '/') + 1;
 
                 char *child_name;
-                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, child_name));
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, &child_name));
                 if (result == ESUCC) {
                         strcpy(child_name, basename);
 
@@ -282,7 +282,7 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                 char *basename = strrchr(path, '/') + 1;
 
                 char *child_name;
-                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, child_name));
+                result = _sys_zalloc(strlen(basename) + 1, static_cast(void**, &child_name));
                 if (result == ESUCC) {
                         strcpy(child_name, basename);
 
@@ -1340,7 +1340,7 @@ static int new_node(node_t *parent, char *filename, enum node_type type, i32_t *
         }
 
         _sys_llist_foreach(node_t*, node, parent->data) {
-                if (strcpy(node->name, filename) == 0) {
+                if (strncmp(node->name, filename, 255) == 0) {
                         return EEXIST;
                 }
         }
