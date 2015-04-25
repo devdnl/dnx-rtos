@@ -92,7 +92,7 @@ typedef _mm_mem_usage_t          memstat_t;
  * // ...
  */
 //==============================================================================
-static inline u32_t get_used_static_memory(void)
+static inline u32_t get_used_static_memory(void) // FIXME redundant interface
 {
         return (_HEAP_RAM_SIZE - _HEAP_SIZE);
 }

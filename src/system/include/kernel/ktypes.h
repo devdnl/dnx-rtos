@@ -51,6 +51,7 @@ typedef void task_t;
 typedef struct sem sem_t;
 typedef struct queue queue_t;
 typedef struct mutex mutex_t;
+typedef void (*task_func_t)(void*);
 
 /*==============================================================================
    Exported object declarations

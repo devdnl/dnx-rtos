@@ -196,9 +196,9 @@ void _syscall_init()
 {
         _queue_create(1, sizeof(syscallrq_t), &call_request);
         _queue_create(1, sizeof(syscallres_t), &call_response);
-        _process_create(&kworker, "kworker", NULL);
+        _process_create(&kworker, NULL, "kworker", "");
 //        _thread_create(kworker, NULL, kworker_thread);
-        _process_create(&initd, "initd", NULL);
+        _process_create(&initd, NULL, "initd", "");
 }
 
 //==============================================================================

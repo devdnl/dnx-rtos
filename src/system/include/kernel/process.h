@@ -58,41 +58,48 @@ extern "C" {
 #       define _PROGMAN_EXTERN_C extern
 #endif
 
-#define _IMPORT_PROGRAM(name)\
-        _PROGMAN_EXTERN_C const int __builtin_app_##name##_gs__;\
-        _PROGMAN_EXTERN_C const int __builtin_app_##name##_ss__;\
-        _PROGMAN_EXTERN_C int __builtin_app_##name##_main(int, char**)
+#define _IMPORT_PROGRAM(_name_)\
+        _PROGMAN_EXTERN_C const int __builtin_app_##_name_##_gs__;\
+        _PROGMAN_EXTERN_C const int __builtin_app_##_name_##_ss__;\
+        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**)
 
-#define int_main(name, stack_depth, argc, argv)\
-        _PROGMAN_CXX const int __builtin_app_##name##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
-        _PROGMAN_CXX const int __builtin_app_##name##_ss__ = stack_depth;\
-        _PROGMAN_CXX int __builtin_app_##name##_main(argc, argv)
+#define int_main(_name_, stack_depth, argc, argv)\
+        _PROGMAN_CXX const int __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
+        _PROGMAN_CXX const int __builtin_app_##_name_##_ss__ = stack_depth;\
+        _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
 
-#define _PROGRAM_CONFIG(name) \
-        {.program_name  = #name,\
-         .main_function = __builtin_app_##name##_main,\
-         .globals_size  = &__builtin_app_##name##_gs__,\
-         .stack_depth   = &__builtin_app_##name##_ss__}
+#define _PROGRAM_CONFIG(_name_) \
+        {.name          = #_name_,\
+         .main          = __builtin_app_##_name_##_main,\
+         .globals_size  = &__builtin_app_##_name_##_gs__,\
+         .stack_depth   = &__builtin_app_##_name_##_ss__}
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef int (*process_func_t)(int, char**);
+
 struct _prog_data {
-        char      *program_name;
-        int      (*main_function)(int, char**);
-        const int *globals_size;
-        const int *stack_depth;
+        char           *name;
+        const size_t   *globals_size;
+        const size_t   *stack_depth;
+        process_func_t  main;
 };
 
 typedef struct {
-        FILE *f_stdin;
-        FILE *f_stdout;
-        FILE *f_stderr;
+        FILE       *f_stdin;
+        FILE       *f_stdout;
+        FILE       *f_stderr;
+        const char *cwd;
 } process_attr_t;
 
-typedef struct thread thread_t;
+typedef struct {
+        size_t stack_depth;
+} thread_attr_t;
 
-typedef struct prog prog_t;
+//typedef struct thread thread_t;
+
+//typedef struct prog prog_t;
 
 /*==============================================================================
   Exported object declarations
@@ -106,7 +113,7 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int         _process_create                              (pid_t*, process_attr_t*, const char*, ...);
+extern int         _process_create                              (pid_t*, process_attr_t*, const char*, const char*);
 extern const char *_process_get_CWD                             (void);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);

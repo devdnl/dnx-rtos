@@ -93,10 +93,7 @@ static mutex_t  *vfs_resource_mtx;
 //==============================================================================
 int _vfs_init(void)
 {
-        void *_malloc(size_t size) {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
-        void  _free  (void *mem)   {_kfree(_MM_KRN, &mem);}
-
-        int result = _llist_create(_malloc, _free, NULL, NULL, &vfs_mnt_list);
+        int result = _llist_create_krn(_MM_KRN, NULL, NULL, &vfs_mnt_list);
         if (result != ESUCC)
                 return result;
 

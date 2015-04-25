@@ -51,6 +51,9 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef void *(*malloc_t)(size_t size, void *allocctx);
+typedef void  (*free_t)(void *mem, void *freectx);
+
 // list's begin
 typedef struct item {
         struct item *prev;
@@ -60,8 +63,10 @@ typedef struct item {
 
 // list main object
 struct _llist {
-        llist_malloc         malloc;
-        llist_free           free;
+        malloc_t             malloc;
+        free_t               free;
+        void                *allocctx;
+        void                *freectx;
         llist_cmp_functor_t  cmp_functor;
         llist_obj_dtor_t     obj_dtor;
         item_t              *head;
@@ -81,6 +86,13 @@ static int     insert_item      (llist_t *this, int index, const void *data);
 static item_t *get_item         (llist_t *this, int position);
 static int     remove_item      (llist_t *this, item_t *item, bool unlink);
 static void    quicksort        (llist_t *this, int left, int right);
+static void   *usrmalloc        (size_t size, void *allocctx);
+static void    usrfree          (void *mem, void *freectx);
+static void   *krnmalloc        (size_t size, void *allocctx);
+static void    krnfree          (void *mem, void *freectx);
+static void   *modmalloc        (size_t size, void *allocctx);
+static void    modfree          (void *mem, void *freectx);
+
 
 /*==============================================================================
   Local objects
@@ -93,7 +105,7 @@ static const uint32_t magic_number = 0x6D89B264;
 
 //==============================================================================
 /**
- * @brief  Generic list constructor
+ * @brief  List constructor for userland
  *
  * @param[in]  malloc               allocate memory function
  * @param[in]  free                 free memory function
@@ -104,19 +116,21 @@ static const uint32_t magic_number = 0x6D89B264;
  * @return One of errno value.
  */
 //==============================================================================
-int _llist_create(llist_malloc        malloc,
-                  llist_free          free,
-                  llist_cmp_functor_t cmp_functor,
-                  llist_obj_dtor_t    obj_dtor,
-                  llist_t             **list)
+int _llist_create_usr(llist_malloc_t      malloc,
+                      llist_free_t        free,
+                      llist_cmp_functor_t cmp_functor,
+                      llist_obj_dtor_t    obj_dtor,
+                      llist_t             **list)
 {
         int result = EINVAL;
 
         if (malloc && free && list) {
                 *list = malloc(sizeof(llist_t));
                 if (*list) {
-                        (*list)->malloc      = malloc;
-                        (*list)->free        = free;
+                        (*list)->malloc      = usrmalloc;
+                        (*list)->free        = usrfree;
+                        (*list)->allocctx    = malloc;
+                        (*list)->freectx     = free;
                         (*list)->cmp_functor = cmp_functor;
                         (*list)->obj_dtor    = obj_dtor;
                         (*list)->head        = NULL;
@@ -127,6 +141,86 @@ int _llist_create(llist_malloc        malloc,
                         result = ESUCC;
                 } else {
                         result = ENOMEM;
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  List constructor for userland
+ *
+ * @param[in]  mem                  memory allocation selection
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _llist_create_krn(enum _mm_mem        mem,
+                      llist_cmp_functor_t cmp_functor,
+                      llist_obj_dtor_t    obj_dtor,
+                      llist_t             **list)
+{
+        int result = EINVAL;
+
+        if (list && mem != _MM_MOD && mem < _MM_COUNT) {
+                result = _kzalloc(mem, sizeof(llist_t), static_cast(void*, list));
+                if (result == ESUCC) {
+                        (*list)->malloc      = krnmalloc;
+                        (*list)->free        = krnfree;
+                        (*list)->allocctx    = reinterpret_cast(void*, mem);
+                        (*list)->freectx     = reinterpret_cast(void*, mem);
+                        (*list)->cmp_functor = cmp_functor;
+                        (*list)->obj_dtor    = obj_dtor;
+                        (*list)->head        = NULL;
+                        (*list)->tail        = NULL;
+                        (*list)->count       = 0;
+                        (*list)->self        = *list;
+
+                        result = ESUCC;
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  List constructor for userland
+ *
+ * @param[in]  modid                module ID
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _llist_create_mod(size_t              modid,
+                      llist_cmp_functor_t cmp_functor,
+                      llist_obj_dtor_t    obj_dtor,
+                      llist_t             **list)
+{
+        int result = EINVAL;
+
+        if (list) {
+                result = _kzalloc(_MM_MOD, sizeof(llist_t), static_cast(void*, list), modid);
+                if (result == ESUCC) {
+                        (*list)->malloc      = modmalloc;
+                        (*list)->free        = modfree;
+                        (*list)->allocctx    = reinterpret_cast(void*, modid);
+                        (*list)->freectx     = reinterpret_cast(void*, modid);
+                        (*list)->cmp_functor = cmp_functor;
+                        (*list)->obj_dtor    = obj_dtor;
+                        (*list)->head        = NULL;
+                        (*list)->tail        = NULL;
+                        (*list)->count       = 0;
+                        (*list)->self        = *list;
+
+                        result = ESUCC;
                 }
         }
 
@@ -147,7 +241,7 @@ int _llist_destroy(llist_t *this)
         if (is_llist_valid(this)) {
                 _llist_clear(this);
                 this->self = NULL;
-                this->free(this);
+                this->free(this, this->freectx);
                 return ESUCC;
         }
 
@@ -198,14 +292,14 @@ int _llist_size(llist_t *this)
 void *_llist_push_emplace_front(llist_t *this, size_t size, const void *data)
 {
         if (is_llist_valid(this) && data && size) {
-                void *mem = this->malloc(size);
+                void *mem = this->malloc(size, this->allocctx);
                 if (mem) {
                         memcpy(mem, data, size);
 
                         if (prepend(this, mem)) {
                                 return mem;
                         } else {
-                                this->free(mem);
+                                this->free(mem, this->freectx);
                         }
                 }
         }
@@ -260,14 +354,14 @@ int _llist_pop_front(llist_t *this)
 void *_llist_push_emplace_back(llist_t *this, size_t size, const void *data)
 {
         if (is_llist_valid(this) && data && size) {
-                void *mem = this->malloc(size);
+                void *mem = this->malloc(size, this->allocctx);
                 if (mem) {
                         memcpy(mem, data, size);
 
                         if (append(this, mem)) {
                                 return mem;
                         } else {
-                                this->free(mem);
+                                this->free(mem, this->freectx);
                         }
                 }
         }
@@ -322,14 +416,14 @@ int _llist_pop_back(llist_t *this)
 void *_llist_emplace(llist_t *this, int position, size_t size, const void *data)
 {
         if (is_llist_valid(this) && position >= 0 && data && size) {
-                void *mem = this->malloc(size);
+                void *mem = this->malloc(size, this->allocctx);
                 if (mem) {
                         memcpy(mem, data, size);
 
                         if (insert_item(this, position, mem)) {
                                 return mem;
                         } else {
-                                this->free(mem);
+                                this->free(mem, this->freectx);
                         }
                 }
         }
@@ -1007,13 +1101,13 @@ static int remove_item(llist_t *this, item_t *item, bool unlink)
                         if (this->obj_dtor) {
                                 this->obj_dtor(item->data);
                         } else {
-                                this->free(item->data);
+                                this->free(item->data, this->freectx);
                         }
 
                         item->data = NULL;
                 }
 
-                this->free(item);
+                this->free(item, this->freectx);
 
                 this->count--;
 
@@ -1044,7 +1138,7 @@ static int insert_item(llist_t *this, int index, const void *data)
                 return 0;
 
         } else {
-                item_t *new_item = this->malloc(sizeof(item_t));
+                item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
                 if (new_item) {
                         new_item->data = const_cast(void*, data);
 
@@ -1060,7 +1154,7 @@ static int insert_item(llist_t *this, int index, const void *data)
                                 return 1;
                         }
 
-                        this->free(new_item);
+                        this->free(new_item, this->freectx);
                 }
 
         }
@@ -1078,7 +1172,7 @@ static int insert_item(llist_t *this, int index, const void *data)
 //==============================================================================
 static int prepend(llist_t *this, const void *data)
 {
-        item_t *new_item = this->malloc(sizeof(item_t));
+        item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
         if (new_item) {
                 new_item->data = const_cast(void*, data);
 
@@ -1112,7 +1206,7 @@ static int prepend(llist_t *this, const void *data)
 //==============================================================================
 static int append(llist_t *this, const void *data)
 {
-        item_t *new_item = this->malloc(sizeof(item_t));
+        item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
         if (new_item) {
                 new_item->data = const_cast(void*, data);
 
@@ -1184,6 +1278,102 @@ static void quicksort(llist_t *this, int left, int right)
         if (j + 1 < right) {
                 quicksort(this, j + 1, right);
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory in user space
+ *
+ * @param  size         block size to allocate
+ * @param  allocctx     allocation context (user's malloc function)
+ *
+ * @return On success pointer to allocated block, otherwise NULL
+ */
+//==============================================================================
+static void *usrmalloc(size_t size, void *allocctx)
+{
+        llist_malloc_t alloc = allocctx;
+        return alloc(size);
+}
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory in user space
+ *
+ * @param  mem          block to free
+ * @param  freectx      deallocation context (user's free function)
+ *
+ * @return None
+ */
+//==============================================================================
+static void usrfree(void *mem, void *freectx)
+{
+        llist_free_t free = freectx;
+        free(mem);
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory in user space
+ *
+ * @param  size         block size to allocate
+ * @param  allocctx     allocation context (kernel memory index)
+ *
+ * @return On success pointer to allocated block, otherwise NULL
+ */
+//==============================================================================
+static void *krnmalloc(size_t size, void *allocctx)
+{
+        void *mem = NULL;
+        _kmalloc(reinterpret_cast(enum _mm_mem, allocctx), size, &mem);
+        return mem;
+}
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory in user space
+ *
+ * @param  mem          block to free
+ * @param  freectx      deallocation context (kernel memory index)
+ *
+ * @return None
+ */
+//==============================================================================
+static void krnfree(void *mem, void *freectx)
+{
+        _kfree(reinterpret_cast(enum _mm_mem, freectx), &mem);
+}
+
+//==============================================================================
+/**
+ * @brief  Allocate memory in user space
+ *
+ * @param  size         block size to allocate
+ * @param  allocctx     allocation context (module index)
+ *
+ * @return On success pointer to allocated block, otherwise NULL
+ */
+//==============================================================================
+static void *modmalloc(size_t size, void *allocctx)
+{
+        void *mem = NULL;
+        _kmalloc(_MM_MOD, size, &mem, reinterpret_cast(size_t, allocctx));
+        return mem;
+}
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory in user space
+ *
+ * @param  mem          block to free
+ * @param  freectx      deallocation context (module index)
+ *
+ * @return None
+ */
+//==============================================================================
+static void modfree(void *mem, void *freectx)
+{
+        _kfree(_MM_MOD, &mem, reinterpret_cast(size_t, freectx));
 }
 
 /*==============================================================================

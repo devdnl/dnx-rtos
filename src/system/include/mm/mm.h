@@ -44,6 +44,7 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
+        i32_t static_memory_usage;
         i32_t kernel_memory_usage;
         i32_t filesystems_memory_usage;
         i32_t network_memory_usage;
@@ -56,6 +57,7 @@ enum _mm_mem {
         _MM_FS,         //!< allocate memory for file system purposes
         _MM_NET,        //!< allocate memory for network purposes
         _MM_PROG,       //!< allocate memory for program purposes
+        _MM_MOD,        //!< allocate memorr for modules purposes
         _MM_COUNT
 };
 
@@ -67,12 +69,9 @@ enum _mm_mem {
   Exported functions
 ==============================================================================*/
 extern int _mm_init(void);
-extern int _kzalloc(enum _mm_mem, size_t, void**);
-extern int _kmalloc(enum _mm_mem, size_t, void**);
-extern int _kfree(enum _mm_mem, void**);
-extern int _mzalloc(size_t, size_t, void**);
-extern int _mmalloc(size_t, size_t, void**);
-extern int _mfree(void**, size_t);
+extern int _kzalloc(enum _mm_mem, const size_t, void**, ...);
+extern int _kmalloc(enum _mm_mem, const size_t, void**, ...);
+extern int _kfree(enum _mm_mem, void**, ...);
 extern int _mm_get_mem_usage(_mm_mem_usage_t*);
 extern int _mm_get_module_mem_usage(uint module, i32_t *usage);
 

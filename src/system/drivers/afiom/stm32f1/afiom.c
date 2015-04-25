@@ -281,6 +281,7 @@ API_MOD_WRITE(AFIOM,
         UNUSED_ARG(src);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(wrcnt);
         UNUSED_ARG(fattr);
         UNUSED_ARG(wrcnt);
 
@@ -313,6 +314,7 @@ API_MOD_READ(AFIOM,
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(rdcnt);
         UNUSED_ARG(fattr);
 
         return ENOTSUP;

@@ -49,13 +49,17 @@ extern "C" {
 #undef errno
 
 #undef  _sys_zalloc
-#define _sys_zalloc(size_t__size, void__ppmem)                    _mzalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
+#define _sys_zalloc(size_t__size, void__ppmem)                    _kzalloc(_MM_MOD, size_t__size, void__ppmem, _get_module_number(_module_name_))
 
 #undef  _sys_malloc
-#define _sys_malloc(size_t__size, void__ppmem)                    _mmalloc(size_t__size, _get_module_number(_module_name_), void__ppmem)
+#define _sys_malloc(size_t__size, void__ppmem)                    _kmalloc(_MM_MOD, size_t__size, void__ppmem, _get_module_number(_module_name_))
 
 #undef  _sys_free
-#define _sys_free(void__ppmem)                                    _mfree(void__ppmem, _get_module_number(_module_name_))
+#define _sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _get_module_number(_module_name_))
+
+#undef  _sys_llist_create
+#define _sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
+        _llist_create_mod(_get_module_number(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);
 
 #ifdef __cplusplus
 #       define MODULE_NAME(modname) \
@@ -165,26 +169,6 @@ static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
 static inline bool _sys_device_is_unlocked(dev_lock_t *dev_lock)
 {
         return !_is_device_locked(dev_lock);
-}
-
-//==============================================================================
-/**
- * @brief  List constructor (for modules only)
- * @param  cmp_functor          compare functor (can be NULL)
- * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
- * @return One of errno value.
- */
-//==============================================================================
-static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
-{
-        void *_malloc(size_t size) {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
-        void  _free  (void *mem)   {_kfree(_MM_KRN, &mem);}
-
-        /*
-         * FIXME: this list should use _sysm_modmalloc() instead of _sysm_sysmalloc.
-         *        Module identification function is required.
-         */
-        return _llist_create(_malloc, _free, functor, obj_dtor, list);
 }
 
 #ifdef __cplusplus

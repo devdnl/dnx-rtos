@@ -123,7 +123,7 @@ static bool is_queue_valid(queue_t *queue)
  * @return On of errno value.
  */
 //==============================================================================
-int _task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
+int _task_create(task_func_t func, const char *name, const size_t stack_depth, void *argv, void *tag, task_t **task)
 {
         int result = EINVAL;
 
@@ -137,13 +137,18 @@ int _task_create(void (*func)(void*), const char *name, const uint stack_depth, 
 
                 taskENTER_CRITICAL();
 
-                if (xTaskCreate(func, name, stack_depth, argv, child_priority, task) == pdPASS) {
+                task_t *tsk = NULL;
+                if (xTaskCreate(func, name, stack_depth, argv, child_priority, &tsk) == pdPASS) {
 
                         if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                                vTaskSuspend(task);
+                                vTaskSuspend(tsk);
                         }
 
-                        vTaskSetApplicationTaskTag(task, (void *)tag);
+                        vTaskSetApplicationTaskTag(tsk, (void *)tag);
+
+                        if (task) {
+                                *task = tsk;
+                        }
 
                         result = ESUCC;
                 } else {

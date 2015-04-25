@@ -277,10 +277,7 @@ static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 //==============================================================================
 static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
 {
-        void *_fsmalloc(size_t size) {void *mem = NULL; _sys_malloc(size, &mem); return mem;}
-        void  _fsfree  (void *mem)   {_sys_free(&mem);}
-
-        return _llist_create(_fsmalloc, _fsfree, functor, obj_dtor, list);
+        return _llist_create_krn(_MM_FS, functor, obj_dtor, list);
 }
 
 //==============================================================================

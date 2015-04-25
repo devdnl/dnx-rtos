@@ -35,6 +35,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "mm/mm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,7 +103,7 @@ typedef void (*llist_obj_dtor_t)(void *object);
  * @return Pointer to allocated block or NULL on error.
  */
 //==============================================================================
-typedef void *(*llist_malloc)(size_t size);
+typedef void *(*llist_malloc_t)(size_t size);
 
 //==============================================================================
 /**
@@ -113,7 +114,7 @@ typedef void *(*llist_malloc)(size_t size);
  * @return None
  */
 //==============================================================================
-typedef void (*llist_free)(void *mem);
+typedef void (*llist_free_t)(void *mem);
 
 /** iterator object */
 typedef struct {
@@ -129,7 +130,7 @@ typedef struct {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief  Generic list constructor
+ * @brief  List constructor for userland
  * @param[in]  malloc               allocate memory function
  * @param[in]  free                 free memory function
  * @param[in]  cmp_functor          compare functor (can be NULL)
@@ -138,11 +139,45 @@ typedef struct {
  * @return One of errno value.
  */
 //==============================================================================
-extern int _llist_create(llist_malloc        malloc,
-                         llist_free          free,
-                         llist_cmp_functor_t functor,
-                         llist_obj_dtor_t    obj_dtor,
-                         llist_t             **list);
+extern int _llist_create_usr(llist_malloc_t      malloc,
+                             llist_free_t        free,
+                             llist_cmp_functor_t functor,
+                             llist_obj_dtor_t    obj_dtor,
+                             llist_t             **list);
+
+//==============================================================================
+/**
+ * @brief  List constructor for userland
+ *
+ * @param[in]  mem                  memory allocation selection
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _llist_create_krn(enum _mm_mem        mem,
+                             llist_cmp_functor_t cmp_functor,
+                             llist_obj_dtor_t    obj_dtor,
+                             llist_t             **list);
+
+//==============================================================================
+/**
+ * @brief  List constructor for userland
+ *
+ * @param[in]  modid                module ID
+ * @param[in]  cmp_functor          compare functor (can be NULL)
+ * @param[in]  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param[out] list                 pointer to pointer of list handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _llist_create_mod(size_t              modid,
+                             llist_cmp_functor_t cmp_functor,
+                             llist_obj_dtor_t    obj_dtor,
+                             llist_t             **list);
 
 //==============================================================================
 /**
