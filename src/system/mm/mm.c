@@ -31,8 +31,8 @@
 #include <stdbool.h>
 #include "mm/mm.h"
 #include "mm/heap.h"
-#include "dnx/misc.h"
-#include "errno.h"
+#include "lib/cast.h"
+#include "kernel/errno.h"
 
 /*==============================================================================
   Local macros

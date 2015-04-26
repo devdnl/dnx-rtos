@@ -37,7 +37,7 @@ extern "C" {
 #include "config.h"
 #include <sys/types.h>
 #include <string.h>
-#include "errno.h"
+#include "kernel/errno.h"
 #include "kernel/sysfunc.h"
 #include "drivers/drvctrl.h"
 #include "lib/vt100.h"

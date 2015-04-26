@@ -146,7 +146,7 @@ static inline u32_t get_memory_size(void)
 //==============================================================================
 /**
  * @brief stdret_t get_memory_usage_details(memstat_t *stat)
- * The function <b>get_detailed_memory_usage</b>() return detailed memory usage
+ * The function <b>get_memory_usage_details</b>() return detailed memory usage
  * pointed by <i>stat</i>. <b>memstat_t</b> structure:
  * <pre>
  * typedef struct {
@@ -172,7 +172,7 @@ static inline u32_t get_memory_size(void)
  *
  * errno = 0;
  * memstat_t stat;
- * if (get_detailed_memory_usage(&stat) == STD_RET_OK) {
+ * if (get_memory_usage_details(&stat) == STD_RET_OK) {
  *         printf("Used memory by kernel      : %d\n"
  *                "Used memory by file system : %d\n"
  *                "Used memory by network     : %d\n"

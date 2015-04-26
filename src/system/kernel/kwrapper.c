@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "kernel/ktypes.h"
+#include "kernel/errno.h"
 #include "lib/cast.h"
-#include "errno.h"
 
 /*==============================================================================
   Local symbolic constants/macros

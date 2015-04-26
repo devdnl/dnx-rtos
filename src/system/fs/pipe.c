@@ -28,12 +28,11 @@
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <stdbool.h>
 #include <sys/types.h>
 #include "dnx/misc.h"
 #include "libc/errno.h"
 #include "kernel/kwrapper.h"
-#include "kernel/pipe.h"
+#include "fs/pipe.h"
 
 /*==============================================================================
   Local macros

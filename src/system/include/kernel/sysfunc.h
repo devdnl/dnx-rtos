@@ -33,12 +33,12 @@
 #include <stdbool.h>
 #include "sys/types.h"
 #include "dnx/misc.h"
-#include "errno.h"
 #include "lib/conv.h"
 #include "lib/llist.h"
 #include "lib/vsnprintf.h"
 #include "lib/vfprintf.h"
 #include "lib/vsscanf.h"
+#include "kernel/errno.h"
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
 #include "kernel/time.h"

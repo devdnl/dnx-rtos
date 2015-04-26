@@ -27,10 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "kernel/time.h"
-#include "fs/vfs.h"
-#include "errno.h"
 #include "config.h"
+#include "kernel/time.h"
+#include "kernel/errno.h"
+#include "fs/vfs.h"
 
 /*==============================================================================
   Local macros

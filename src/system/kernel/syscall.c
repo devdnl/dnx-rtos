@@ -27,16 +27,16 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "kernel/syscall.h"
+#include "config.h"
 #include "fs/fsctrl.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
+#include "kernel/syscall.h"
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
 #include "kernel/printk.h"
 #include "kernel/kpanic.h"
-#include "config.h"
-#include "errno.h"
+#include "kernel/errno.h"
 #include "lib/cast.h"
 #include "dnx/misc.h"
 
@@ -163,9 +163,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
 };
 
-
-
-
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -198,12 +195,12 @@ void syscall(syscall_t syscall, void *retptr, ...)
                 syscallres_t callres;
                 result = _queue_receive(call_response, &callres, MAX_DELAY_MS);
                 if (result == ESUCC) {
-                        errno = callres.err;
+                        _errno = callres.err;
                 } else {
-                        errno = result;
+                        _errno = result;
                 }
         } else {
-                errno = result;
+                _errno = result;
         }
 
         va_end(syscallrq.args);

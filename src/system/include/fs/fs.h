@@ -41,8 +41,8 @@ extern "C" {
 #include <errno.h>
 #include "drivers/drvctrl.h"
 #include "kernel/sysfunc.h"
-#include "kernel/pipe.h"
 #include "kernel/process.h"
+#include "fs/pipe.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

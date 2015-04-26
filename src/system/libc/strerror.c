@@ -28,8 +28,8 @@
   Include files
 ==============================================================================*/
 #include <string.h>
-#include "config.h"
-#include "errno.h"
+#include <config.h>
+#include <errno.h>
 
 /*==============================================================================
   Local macros
