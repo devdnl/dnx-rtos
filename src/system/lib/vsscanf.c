@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    scanx.c
+@file    vsscanf.c
 
 @author  Daniel Zorychta
 
-@brief   Basic scan functions.
+@brief
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -25,128 +25,44 @@
 *//*==========================================================================*/
 
 /*==============================================================================
- Include files
- =============================================================================*/
-#include "config.h"
-#include "lib/scanx.h"
-#include "fs/vfs.h"
+  Include files
+==============================================================================*/
+#include "lib/vsscanf.h"
 #include "lib/conv.h"
-#include <dnx/misc.h>
-#include <string.h>
+#include "dnx/misc.h"
+#include "config.h"
+#include <stdint.h>
 
 /*==============================================================================
- Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
-#define BUFSIZ                  CONFIG_STREAM_BUFFER_LENGTH
-
-/*==============================================================================
- Local types, enums definitions
-==============================================================================*/
-
-/*==============================================================================
- Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
- Local object definitions
-==============================================================================*/
-
-/*==============================================================================
- Exported object definitions
-==============================================================================*/
-
-/*==============================================================================
- Function definitions
-==============================================================================*/
-//==============================================================================
-/**
- * @brief Function scan stream
- *
- * @param[in]  *stream        file
- * @param[in]  *format        message format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//==============================================================================
-int _fscanf(FILE *stream, const char *format, ...)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-        va_list arg;
-        va_start(arg, format);
-        int n = _vfscanf(stream, format, arg);
-        va_end(arg);
-        return n;
-#else
-        UNUSED_ARG(stream);
-        UNUSED_ARG(format);
-        return 0;
+#ifndef EOF
+#define EOF (-1)
 #endif
-}
 
-//==============================================================================
-/**
- * @brief Function scan stream
- *
- * @param[in]  *stream        file
- * @param[in]  *format        message format
- * @param[out]  arg           output arguments
- *
- * @return number of scanned elements
- */
-//==============================================================================
-int _vfscanf(FILE *stream, const char *format, va_list arg)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-//        char *str = _sysm_syscalloc(BUFSIZ, sizeof(char));
-//        if (!str)
-//                return 0;
+/*==============================================================================
+  Local object types
+==============================================================================*/
 
-        int n = 0;
-//        if (_fgets(str, BUFSIZ, stream) == str) {
-//                char *lf;
-//                if ((lf = strchr(str, '\n')) != NULL) {
-//                        *lf = '\0';
-//                }
-//
-//                n = _vsscanf(str, format, arg);
-//        }
-//
-//        _sysm_sysfree(str);
-        return n;
-#else
-        UNUSED_ARG(stream);
-        UNUSED_ARG(format);
-        UNUSED_ARG(arg);
-        return 0;
-#endif
-}
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 
-//==============================================================================
-/**
- * @brief Function scan arguments defined by format (multiple argument version)
- *
- * @param[in]  *str           data buffer
- * @param[in]  *format        scan format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//==============================================================================
-int _sscanf(const char *str, const char *format, ...)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-        va_list args;
-        va_start(args, format);
-        int n = _vsscanf(str, format, args);
-        va_end(args);
-        return n;
-#else
-        UNUSED_ARG(str);
-        UNUSED_ARG(format);
-        return 0;
-#endif
-}
+/*==============================================================================
+  Local objects
+==============================================================================*/
+
+/*==============================================================================
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
 //==============================================================================
 /**
@@ -162,13 +78,13 @@ int _sscanf(const char *str, const char *format, ...)
 int _vsscanf(const char *str, const char *format, va_list args)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
-        int    read_fields = 0;
-        char   chr;
-        int    value;
-        char  *strs;
-        int    sign;
-        char  *string;
-        u16_t  bfr_size;
+        int       read_fields = 0;
+        char      chr;
+        int       value;
+        char     *strs;
+        int       sign;
+        char     *string;
+        uint16_t  bfr_size;
 
         if (!str || !format) {
                 return EOF;
@@ -257,7 +173,7 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                          || (*str >= 'A' && *str <= 'F') )
                                       && (bfr_size > 0) ) {
 
-                                        uint var;
+                                        int var;
 
                                         if (*str >= 'a') {
                                                 var = *str - 'a' + 10;
@@ -392,13 +308,11 @@ int _vsscanf(const char *str, const char *format, va_list args)
 sscanf_end:
         return read_fields;
 #else
-        UNUSED_ARG(str);
-        UNUSED_ARG(format);
-        UNUSED_ARG(args);
+        UNUSED_ARG3(str, format, args);
         return 0;
 #endif
 }
 
 /*==============================================================================
- End of file
+  End of file
 ==============================================================================*/

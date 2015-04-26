@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    initd.c
+@file    vfscanf.c
 
 @author  Daniel Zorychta
 
-@brief   Initialization daemon
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,19 +27,19 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <config.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
 #include <dnx/misc.h>
-#include <dnx/os.h>
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -47,13 +47,15 @@
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -62,40 +64,39 @@ GLOBAL_VARIABLES_SECTION {
 
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief Function scan stream
  *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
+ * @param[in]  *stream        file
+ * @param[in]  *format        message format
+ * @param[out]  arg           output arguments
  *
- * @return program status
+ * @return number of scanned elements
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+int vfscanf(FILE *stream, const char *format, va_list arg)
 {
-        UNUSED_ARG2(argc, argv);
+        int n = 0;
 
-        int result = 0;
+#if (CONFIG_SCANF_ENABLE > 0)
+        char *str = calloc(BUFSIZ, sizeof(char));
+        if (!str)
+                return 0;
 
-        result = mount("lfs", "", "/");
-        result = mkdir("/dev", 0777);
-        result = driver_init("gpio", "/dev/gpio");
-        result = driver_init("afiom", NULL);
-        result = driver_init("uart2", "/dev/ttyS0");
-        result = driver_init("tty0", "/dev/tty0");
+        if (fgets(str, BUFSIZ, stream) == str) {
+                char *lf;
+                if ((lf = strchr(str, '\n')) != NULL) {
+                        *lf = '\0';
+                }
 
-        result = syslog_enable("/dev/tty0");
+                n = vsscanf(str, format, arg);
+        }
 
-        detect_kernel_panic(true);
+        free(str);
+#else
+        UNUSED_ARG3(stream, format, arg);
+#endif
 
-        result = driver_init("tty1", "/dev/tty1");
-
-        stdout = fopen("/dev/tty0", "w");
-
-        printf("Hello world! I'm using syscalls!\n");
-
-//        result = syslog_disable();
-
-        return result;
+        return n;
 }
 
 /*==============================================================================

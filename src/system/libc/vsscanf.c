@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    scanx.h
+@file    vsscanf.c
 
 @author  Daniel Zorychta
 
-@brief   Basic scan functions
+@brief
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,48 +24,57 @@
 
 *//*==========================================================================*/
 
-#ifndef _SCANX_H_
-#define _SCANX_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdarg.h>
-#include "fs/vfs.h"
+#include <stdio.h>
+#include <config.h>
+#include <lib/vsscanf.h>
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Local function prototypes
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Local objects
 ==============================================================================*/
-extern int _fscanf (FILE*, const char*, ...);
-extern int _vfscanf(FILE*, const char*, va_list);
-extern int _sscanf (const char*, const char*, ...);
-extern int _vsscanf(const char*, const char*, va_list);
 
 /*==============================================================================
-  Exported inline functions
+  Exported objects
 ==============================================================================*/
 
-#ifdef __cplusplus
+/*==============================================================================
+  External objects
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief Function scan arguments defined by format (argument list version)
+ *
+ * @param[in]  *str           data buffer
+ * @param[in]  *format        scan format
+ * @param[out]  args          output
+ *
+ * @return number of scanned elements
+ */
+//==============================================================================
+int vsscanf(const char *str, const char *format, va_list args)
+{
+        return _vsscanf(str, format, args);
 }
-#endif
 
-#endif /* _SCANX_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

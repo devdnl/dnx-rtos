@@ -61,9 +61,9 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode          | FILE*                     |                           |
         SYSCALL_FREOPEN,                // | FILE*          | const char *path          | const char *mode          |                           |                           |
         SYSCALL_FCLOSE,                 // | int            | FILE*                     |                           |                           |                           |
-        SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t size               | size_t count              | FILE *file                |
-        SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t size               | size_t count              | FILE *file                |
-        SYSCALL_FSEEK,                  // | int            | FILE*                     | i64_t  seek               | int    origin             |                           |
+        SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *size              | size_t *count             | FILE *file                |
+        SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *size              | size_t *count             | FILE *file                |
+        SYSCALL_FSEEK,                  // | int            | FILE*                     | i64_t  *seek              | int    *origin            |                           |
         SYSCALL_FTELL,                  // | i64_t          | FILE*                     |                           |                           |                           |
         SYSCALL_IOCTL,                  // |                |                           |                           |                           |                           |
         SYSCALL_FSTAT,                  // |                |                           |                           |                           |                           |
@@ -77,13 +77,16 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERRELEASE,          // |                |                           |                           |                           |                           |
-        SYSCALL_MALLOC,                 // | void*          | size_t size               |                           |                           |                           |
-        SYSCALL_ZALLOC,                 // | void*          | size_t size               |                           |                           |                           |
+        SYSCALL_MALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
+        SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
         SYSCALL_SYSLOGENABLE,           // |                |                           |                           |                           |                           |
         SYSCALL_SYSLOGDISABLE,          // |                |                           |                           |                           |                           |
         SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
-        SYSCALL_KERNELPANICDETECT,      // | bool           | bool                      |                           |                           |                           |
+        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
+        SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
+        SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
+        SYSCALL_SYSTEM,                 // | int            | const char *command       |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

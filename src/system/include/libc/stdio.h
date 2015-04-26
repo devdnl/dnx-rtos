@@ -1274,6 +1274,110 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
 
 //==============================================================================
 /**
+ * @brief int vsscanf(const char *str, const char *format, va_list args)
+ * The function scans input according to format as described below. This format
+ * may contain conversion specifications; the results from such conversions,
+ * if any, are stored in the locations pointed to by the pointer arguments that
+ * follow format. Each pointer argument must be of a type that is appropriate
+ * for the value returned by the corresponding conversion specification.
+ * An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
+ *
+ * <b>c</b> - Scans single character.<p>
+ *
+ * <b>s</b> - Scans string.<p>
+ *
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Scans unsigned type number.<p>
+ *
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
+ *
+ * <b>o</b> - Scans value in Octal formatting.<p>
+ *
+ * <b>f, F, g, G</b> - Scans float value.
+ *
+ * @param s             input string (must be <i>null</i> terminated)
+ * @param format        formatting string
+ * @param args          argument sequence list
+ *
+ * @errors EINVAL, ENOMEM
+ *
+ * @return The function return the number of input items successfully matched
+ * and assigned, which can be fewer than provided for, or even zero in the event
+ * of an early matching failure.<p>
+ *
+ * The value <b>EOF</b> is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * also returned if a read error occurs, in which case the error indicator for
+ * the stream is set, and <b>errno</b> is set indicate the error.
+ *
+ * @example
+ * // ...
+ * char *buffer = "12, 1256";
+ * va_list arg;
+ * vsscanf("%i, %i", arg);
+ * // ...
+ */
+//==============================================================================
+extern int vsscanf(const char *s, const char *format, va_list args);
+
+//==============================================================================
+/**
+ * @brief int vfscanf(FILE *stream, const char *format, va_list arg)
+ * The function scans input according to format as described below. This format
+ * may contain conversion specifications; the results from such conversions,
+ * if any, are stored in the locations pointed to by the pointer arguments that
+ * follow format. Each pointer argument must be of a type that is appropriate
+ * for the value returned by the corresponding conversion specification.
+ * An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
+ *
+ * <b>c</b> - Scans single character.<p>
+ *
+ * <b>s</b> - Scans string.<p>
+ *
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Scans unsigned type number.<p>
+ *
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
+ *
+ * <b>o</b> - Scans value in Octal formatting.<p>
+ *
+ * <b>f, F, g, G</b> - Scans float value.
+ *
+ * @param stream        input file
+ * @param format        formatting string
+ * @param arg           argument sequence list
+ *
+ * @errors EINVAL, ENOMEM
+ *
+ * @return The function return the number of input items successfully matched
+ * and assigned, which can be fewer than provided for, or even zero in the event
+ * of an early matching failure.<p>
+ *
+ * The value <b>EOF</b> is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * also returned if a read error occurs, in which case the error indicator for
+ * the stream is set, and <b>errno</b> is set indicate the error.
+ *
+ * @example
+ * // ...
+ * va_list arg;
+ * // ...
+ * vfscanf(stdin, "%i%i", arg);
+ * // ...
+ */
+//==============================================================================
+extern int vfscanf(FILE *stream, const char *format, va_list arg);
+
+//==============================================================================
+/**
  * @brief int scanf(const char *format, ...)
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
@@ -1321,11 +1425,11 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
 //==============================================================================
 static inline int scanf(const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vfscanf(stdin, format, arg);
-//        va_end(arg);
-//        return status;
+        va_list arg;
+        va_start(arg, format);
+        int status = vfscanf(stdin, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -1379,7 +1483,7 @@ static inline int scanf(const char *format, ...)
 //==============================================================================
 static inline int vscanf(const char *format, va_list arg)
 {
-//        return _vfscanf(stdin, format, arg);
+        return vfscanf(stdin, format, arg);
 }
 
 //==============================================================================
@@ -1432,66 +1536,11 @@ static inline int vscanf(const char *format, va_list arg)
 //==============================================================================
 static inline int fscanf(FILE *stream, const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vfscanf(stream, format, arg);
-//        va_end(arg);
-//        return status;
-}
-
-//==============================================================================
-/**
- * @brief int vfscanf(FILE *stream, const char *format, va_list arg)
- * The function scans input according to format as described below. This format
- * may contain conversion specifications; the results from such conversions,
- * if any, are stored in the locations pointed to by the pointer arguments that
- * follow format. Each pointer argument must be of a type that is appropriate
- * for the value returned by the corresponding conversion specification.
- * An arguments are passed by list <i>arg</i>.<p>
- *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.<p>
- *
- * <b>c</b> - Scans single character.<p>
- *
- * <b>s</b> - Scans string.<p>
- *
- * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
- *
- * <b>u</b> - Scans unsigned type number.<p>
- *
- * <b>x, X</b> - Scans value in HEX formatting.<p>
- *
- * <b>o</b> - Scans value in Octal formatting.<p>
- *
- * <b>f, F, g, G</b> - Scans float value.
- *
- * @param stream        input file
- * @param format        formatting string
- * @param arg           argument sequence list
- *
- * @errors EINVAL, ENOMEM
- *
- * @return The function return the number of input items successfully matched
- * and assigned, which can be fewer than provided for, or even zero in the event
- * of an early matching failure.<p>
- *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
- * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
- *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vfscanf(stdin, "%i%i", arg);
- * // ...
- */
-//==============================================================================
-static inline int vfscanf(FILE *stream, const char *format, va_list arg)
-{
-//        return _vfscanf(stream, format, arg);
+        va_list arg;
+        va_start(arg, format);
+        int status = vfscanf(stream, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -1545,66 +1594,11 @@ static inline int vfscanf(FILE *stream, const char *format, va_list arg)
 //==============================================================================
 static inline int sscanf(const char *s, const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vsscanf(s, format, arg);
-//        va_end(arg);
-//        return status;
-}
-
-//==============================================================================
-/**
- * @brief int vsscanf(const char *str, const char *format, va_list args)
- * The function scans input according to format as described below. This format
- * may contain conversion specifications; the results from such conversions,
- * if any, are stored in the locations pointed to by the pointer arguments that
- * follow format. Each pointer argument must be of a type that is appropriate
- * for the value returned by the corresponding conversion specification.
- * An arguments are passed by list <i>arg</i>.<p>
- *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.<p>
- *
- * <b>c</b> - Scans single character.<p>
- *
- * <b>s</b> - Scans string.<p>
- *
- * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
- *
- * <b>u</b> - Scans unsigned type number.<p>
- *
- * <b>x, X</b> - Scans value in HEX formatting.<p>
- *
- * <b>o</b> - Scans value in Octal formatting.<p>
- *
- * <b>f, F, g, G</b> - Scans float value.
- *
- * @param s             input string (must be <i>null</i> terminated)
- * @param format        formatting string
- * @param args          argument sequence list
- *
- * @errors EINVAL, ENOMEM
- *
- * @return The function return the number of input items successfully matched
- * and assigned, which can be fewer than provided for, or even zero in the event
- * of an early matching failure.<p>
- *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
- * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
- *
- * @example
- * // ...
- * char *buffer = "12, 1256";
- * va_list arg;
- * vsscanf("%i, %i", arg);
- * // ...
- */
-//==============================================================================
-static inline int vsscanf(const char *s, const char *format, va_list args)
-{
-//        return _vsscanf(s, format, args);
+        va_list arg;
+        va_start(arg, format);
+        int status = vsscanf(s, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================

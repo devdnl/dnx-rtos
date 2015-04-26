@@ -320,7 +320,7 @@ static void syscall_mknod(syscallrq_t *syscallrq, syscallres_t *syscallres)
 static void syscall_mkdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
         GETARG(const char *, path);
-        GETARG(mode_t,       mode);
+        GETARG(mode_t,       mode); // FIXME should be a pointer
         SETERRNO(_vfs_mkdir(path, mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
@@ -494,9 +494,9 @@ static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres)
 static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
         GETARG(const uint8_t *, buf);
-        GETARG(size_t, size);
-        GETARG(size_t, count);
-        GETARG(FILE*,  file);
+        GETARG(size_t, size); // FIXME should be a pointer
+        GETARG(size_t, count); // FIXME should be a pointer
+        GETARG(FILE*,  file); // FIXME should be a pointer
 
         size_t wrcnt = 0;
         SETERRNO(_vfs_fwrite(buf, count * size, &wrcnt, file));
@@ -513,9 +513,9 @@ static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
 static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
         GETARG(uint8_t *, buf);
-        GETARG(size_t, size);
-        GETARG(size_t, count);
-        GETARG(FILE*,  file);
+        GETARG(size_t, size); // FIXME should be a pointer
+        GETARG(size_t, count); // FIXME should be a pointer
+        GETARG(FILE*,  file); // FIXME should be a pointer
 
         size_t rdcnt = 0;
         SETERRNO(_vfs_fread(buf, count * size, &rdcnt, file));
@@ -705,7 +705,10 @@ static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallr
 //==============================================================================
 static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
-
+        GETARG(size_t *, size);
+        void * mem = NULL;
+        SETERRNO(_kmalloc(_MM_PROG, *size, &mem));
+        SETRETURN(void*, mem);
 }
 
 //==============================================================================
@@ -717,7 +720,10 @@ static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
 //==============================================================================
 static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
-
+        GETARG(size_t *, size);
+        void * mem = NULL;
+        SETERRNO(_kzalloc(_MM_PROG, *size, &mem));
+        SETRETURN(void*, mem);
 }
 
 //==============================================================================
@@ -729,7 +735,8 @@ static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
 //==============================================================================
 static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
-
+        GETARG(void *, mem);
+        SETERRNO(_kfree(_MM_PROG, &mem));
 }
 
 //==============================================================================

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    initd.c
+@file    vsscanf.h
 
 @author  Daniel Zorychta
 
-@brief   Initialization daemon
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,80 +24,44 @@
 
 *//*==========================================================================*/
 
+#ifndef _VSSCANF_H_
+#define _VSSCANF_H_
+
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <dnx/misc.h>
-#include <dnx/os.h>
+#include <stdarg.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
+extern int _vsscanf(const char*, const char*, va_list);
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
 
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Program main function
- *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
- */
-//==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
-{
-        UNUSED_ARG2(argc, argv);
-
-        int result = 0;
-
-        result = mount("lfs", "", "/");
-        result = mkdir("/dev", 0777);
-        result = driver_init("gpio", "/dev/gpio");
-        result = driver_init("afiom", NULL);
-        result = driver_init("uart2", "/dev/ttyS0");
-        result = driver_init("tty0", "/dev/tty0");
-
-        result = syslog_enable("/dev/tty0");
-
-        detect_kernel_panic(true);
-
-        result = driver_init("tty1", "/dev/tty1");
-
-        stdout = fopen("/dev/tty0", "w");
-
-        printf("Hello world! I'm using syscalls!\n");
-
-//        result = syslog_disable();
-
-        return result;
+#ifdef __cplusplus
 }
+#endif
 
+#endif /* _VSSCANF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

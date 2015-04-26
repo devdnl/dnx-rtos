@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/vfs.h"
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -83,7 +83,9 @@ typedef struct vfs_dir DIR;
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-//        return _sysm_opendir(name); TODO opendir
+        DIR *dir = NULL;
+        syscall(SYSCALL_OPENDIR, &dir, name);
+        return dir;
 }
 
 //==============================================================================
@@ -112,7 +114,9 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-//        return _sysm_closedir(dir); TODO closedir
+        int r = -1;
+        syscall(SYSCALL_CLOSEDIR, &r, dir);
+        return r;
 }
 
 //==============================================================================
@@ -159,7 +163,9 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline dirent_t *readdir(DIR *dir)
 {
-//        return _vfs_readdir(dir); TODO readdir
+        dirent_t *dirent = NULL;
+        syscall(SYSCALL_READDIR, &dirent, dir);
+        return dir;
 }
 
 #ifdef __cplusplus

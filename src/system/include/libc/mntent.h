@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/vfs.h"
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -91,7 +91,9 @@ extern "C" {
 //==============================================================================
 static inline int getmntentry(int item, struct mntent *mntent)
 {
-//        return _vfs_getmntentry(item, mntent); TODO getmntentry
+        int r = -1;
+        syscall(SYSCALL_OPENDIR, &r, &item, mntent);
+        return r;
 }
 
 #ifdef __cplusplus

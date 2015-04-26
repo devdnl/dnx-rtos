@@ -38,7 +38,7 @@
 #include "lib/llist.h"
 #include "lib/vsnprintf.h"
 #include "lib/vfprintf.h"
-#include "lib/scanx.h"
+#include "lib/vsscanf.h"
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
 #include "kernel/time.h"
@@ -1000,6 +1000,23 @@ static inline void _sys_sync()
 
 //==============================================================================
 /**
+ * @brief Function convert arguments to stream
+ *
+ * @param[in] *buf           buffer for stream
+ * @param[in]  size          buffer size
+ * @param[in] *format        message format
+ * @param[in]  args          argument list
+ *
+ * @return number of printed characters
+ */
+//==============================================================================
+static inline int _sys_vsnprintf(char *buf, size_t size, const char *format, va_list args)
+{
+        return _vsnprintf(buf, size, format, args);
+}
+
+//==============================================================================
+/**
  * @brief Function send to buffer formated output string
  *
  * @param *bfr                output buffer
@@ -1017,6 +1034,22 @@ static inline int _sys_snprintf(char *bfr, size_t size, const char *format, ...)
         int r = _vsnprintf(bfr, size, format, arg);
         va_end(arg);
         return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function write to file formatted string
+ *
+ * @param file                file
+ * @param format              formated text
+ * @param args                arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+static inline int _sys_vfprintf(FILE *file, const char *format, va_list args)
+{
+        return _vfprintf(file, format, args);
 }
 
 //==============================================================================
@@ -1041,68 +1074,6 @@ static inline int _sys_fprintf(FILE *file, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string
- *
- * @param file                file
- * @param format              formated text
- * @param args                arguments
- *
- * @retval number of written characters
- */
-//==============================================================================
-static inline int _sys_vfprintf(FILE *file, const char *format, va_list args)
-{
-        return _vfprintf(file, format, args);
-}
-
-//==============================================================================
-/**
- * @brief Function convert arguments to stream
- *
- * @param[in] *buf           buffer for stream
- * @param[in]  size          buffer size
- * @param[in] *format        message format
- * @param[in]  args          argument list
- *
- * @return number of printed characters
- */
-//==============================================================================
-static inline int _sys_vsnprintf(char *buf, size_t size, const char *format, va_list args)
-{
-        return _vsnprintf(buf, size, format, args);
-}
-
-//==============================================================================
-/**
- * @brief Function scan stream
- *
- * @param[in]  *stream        file
- * @param[in]  *format        message format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//==============================================================================
-#define _sys_fscanf(FILE__stream, ...) _fscanf(FILE__stream, __VA_ARGS__)
-
-//==============================================================================
-/**
- * @brief Function scan stream
- *
- * @param[in]  *stream        file
- * @param[in]  *format        message format
- * @param[out]  args          output arguments
- *
- * @return number of scanned elements
- */
-//==============================================================================
-static inline int _sys_vfscanf(FILE *stream, const char *format, va_list args)
-{
-        return _vfscanf(stream, format, args);
-}
-
-//==============================================================================
-/**
  * @brief Function scan arguments defined by format (multiple argument version)
  *
  * @param[in]  *str           data buffer
@@ -1112,7 +1083,14 @@ static inline int _sys_vfscanf(FILE *stream, const char *format, va_list args)
  * @return number of scanned elements
  */
 //==============================================================================
-#define _sys_sscanf(const_char__str, ...) _sscanf(const_char__str, __VA_ARGS__)
+static inline int _sys_sscanf(const char *str, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int n = _vsscanf(str, format, arg);
+        va_end(arg);
+        return n;
+}
 
 //==============================================================================
 /**

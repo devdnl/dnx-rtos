@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <string.h>
-#include "kernel/kwrapper.h"
+#include <sys/types.h>
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -295,7 +295,9 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-//        return _vfs_chown(pathname, owner, group); TODO syscall
+        int r = -1;
+        syscall(SYSCALL_CHOWN, &r, pathname, &owner, &group);
+        return r;
 }
 
 //==============================================================================
@@ -319,7 +321,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-//        _vfs_sync(); TODO syscall
+        syscall(SYSCALL_SYNC, NULL);
 }
 
 #ifdef __cplusplus
