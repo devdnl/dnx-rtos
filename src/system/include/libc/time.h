@@ -342,7 +342,7 @@ extern int _ltimeoff;
  */
 //==============================================================================
 static inline clock_t clock(void)
-{
+{       // TODO consider that this should be as syscall or fastsyscall
         clock_t clock = -1;
         syscall(SYSCALL_GETCLOCK, &clock);
         return clock;

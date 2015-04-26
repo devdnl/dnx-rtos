@@ -35,12 +35,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-//#include "core/sysmoni.h"
-#include "lib/conv.h"
-#include "kernel/syscall.h"
-
+#include <lib/conv.h>
+#include <kernel/syscall.h>
 #include <machine/ieeefp.h>
-#include "_ansi.h"
+#include <_ansi.h>
 
 #define __need_size_t
 #define __need_wchar_t

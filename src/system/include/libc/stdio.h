@@ -34,19 +34,14 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
-#include <sys/types.h> // TODO remove sysem headers dependencies
-//#include "fs/vfs.h"
-//#include "core/sysmoni.h"
-//#include "core/printx.h"
-//#include "core/scanx.h"
-#include "kernel/process.h"
-#include "kernel/syscall.h"
-//#include "core/conv.h"
-#include "kernel/kwrapper.h"
+#include <config.h>
+#include <sys/types.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <kernel/process.h>
+#include <kernel/syscall.h>
+#include <kernel/kwrapper.h>
 
 /*==============================================================================
   Exported macros
