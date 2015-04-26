@@ -30,18 +30,20 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
-#include <dnx/misc.h>
-#include <errno.h>
 #include <stdbool.h>
+#include "sys/types.h"
+#include "dnx/misc.h"
+#include "errno.h"
 #include "lib/conv.h"
 #include "lib/llist.h"
+#include "lib/vsnprintf.h"
+#include "lib/vfprintf.h"
+#include "lib/scanx.h"
 #include "kernel/printk.h"
+#include "kernel/kwrapper.h"
+#include "kernel/time.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
-#include "lib/printx.h"
-#include "lib/scanx.h"
-#include "kernel/env.h"
 #include "portable/cpuctl.h"
 
 #ifdef __cplusplus
@@ -998,28 +1000,6 @@ static inline void _sys_sync()
 
 //==============================================================================
 /**
- * @brief Enable printk functionality
- *
- * @param filename      path to file used to write kernel log
- */
-//==============================================================================
-static inline void _sys_printk_enable(char *filename)
-{
-        _printk_enable(filename);
-}
-
-//==============================================================================
-/**
- * @brief Disable printk functionality
- */
-//==============================================================================
-static inline void _sys_printk_disable()
-{
-        _printk_disable();
-}
-
-//==============================================================================
-/**
  * @brief Function send to buffer formated output string
  *
  * @param *bfr                output buffer
@@ -1030,7 +1010,14 @@ static inline void _sys_printk_disable()
  * @retval number of written characters
  */
 //==============================================================================
-#define _sys_snprintf(char__bfr, size_t__size, ...) _snprintf(char__bfr, size_t__size, __VA_ARGS__)
+static inline int _sys_snprintf(char *bfr, size_t size, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int r = _vsnprintf(bfr, size, format, arg);
+        va_end(arg);
+        return r;
+}
 
 //==============================================================================
 /**
@@ -1043,7 +1030,14 @@ static inline void _sys_printk_disable()
  * @retval number of written characters
  */
 //==============================================================================
-#define _sys_fprintf(FILE__file, ...) _fprintf(FILE__file, __VA_ARGS__)
+static inline int _sys_fprintf(FILE *file, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int r = _vfprintf(file, format, arg);
+        va_end(arg);
+        return r;
+}
 
 //==============================================================================
 /**
@@ -1076,80 +1070,6 @@ static inline int _sys_vfprintf(FILE *file, const char *format, va_list args)
 static inline int _sys_vsnprintf(char *buf, size_t size, const char *format, va_list args)
 {
         return _vsnprintf(buf, size, format, args);
-}
-
-//==============================================================================
-/**
- * @brief Function returns error string
- *
- * @param errnum        error number
- *
- * @return error number string
- */
-//==============================================================================
-static inline const char *_sys_strerror(int errnum)
-{
-        return _strerror(errnum);
-}
-
-//==============================================================================
-/**
- * @brief Function put character into file
- *
- * @param  c                   character
- * @param *stream              file
- *
- * @retval c if OK otherwise EOF
- */
-//==============================================================================
-static inline int _sys_fputc(int c, FILE *stream)
-{
-        return _fputc(c, stream);
-}
-
-//==============================================================================
-/**
- * @brief Function puts string to selected file
- *
- * @param[in] *s        string
- * @param[in] *file     file
- *
- * @return number of characters written to the stream
- */
-//==============================================================================
-static inline int _sys_fputs(const char *s, FILE *file)
-{
-        return _f_puts(s, file, false);
-}
-
-//==============================================================================
-/**
- * @brief Function get character from file
- *
- * @param *stream            source file
- *
- * @retval character
- */
-//==============================================================================
-static inline int _sys_getc(FILE *stream)
-{
-        return _getc(stream);
-}
-
-//==============================================================================
-/**
- * @brief Function gets number of bytes from file
- *
- * @param[out] *str          buffer with string
- * @param[in]   size         buffer size
- * @param[in]  *stream       source stream
- *
- * @retval NULL if error, otherwise pointer to str
- */
-//==============================================================================
-static inline char *_sys_fgets(char *str, int size, FILE *stream)
-{
-        return _fgets(str, size, stream);
 }
 
 //==============================================================================
@@ -2027,16 +1947,12 @@ static inline time_t _sys_mktime(struct tm *timeptr)
  *                      in which case the parameter is not used (the function
  *                      still returns a value of type time_t with the result).
  *
- * @return The current calendar time as a time_t object.
- *         If the argument is not a null pointer, the return value is the same
- *         as the one stored in the location pointed by argument timer.
- *         If the function could not retrieve the calendar time, it returns
- *         a value of -1.
+ * @return One of errno value.
  */
 //==============================================================================
-static inline time_t _sys_time(time_t *timer)
+static inline int _sys_gettime(time_t *timer)
 {
-        return _time(timer);
+        return _gettime(timer);
 }
 
 //==============================================================================
@@ -2049,41 +1965,12 @@ static inline time_t _sys_time(time_t *timer)
  * @param  timer        pointer to an object of type time_t, where the time
  *                      value is stored.
  *
- * @return On success 0 is returned.
- *         On error -1 is returned.
+ * @return One of errno value.
  */
 //==============================================================================
-static inline int _sys_stime(time_t *timer)
+static inline int _sys_settime(time_t *timer)
 {
-        return _stime(timer);
-}
-
-//==============================================================================
-/**
- * @brief  Setup time zone by setting difference between UTC and local time
- *
- * @param  tdiff        time difference in seconds (can be negative)
- *
- * @return None
- */
-//==============================================================================
-static inline void _sys_tzset(int tdiff)
-{
-        _ltimeoff = tdiff;
-}
-
-//==============================================================================
-/**
- * @brief  Return difference in seconds between UTC and local time
- *
- * @param  None
- *
- * @return Difference between UTC and local time in seconds.
- */
-//==============================================================================
-static inline int _sys_timezone()
-{
-        return _ltimeoff;
+        return _settime(timer);
 }
 
 //==============================================================================
@@ -2131,63 +2018,6 @@ static inline struct tm *_sys_gmtime_r(const time_t *timer, struct tm *tm)
 static inline struct tm *_sys_localtime_r(const time_t *timer, struct tm *tm)
 {
         return _localtime_r(timer, tm);
-}
-
-//==============================================================================
-/**
- * @brief  Format time as string
- *
- * Copies into ptr the content of format, expanding its format specifiers into
- * the corresponding values that represent the time described in timeptr, with
- * a limit of maxsize characters.
- *
- * @param  ptr          Pointer to the destination array where the resulting
- *                      C string is copied.
- * @param  maxsize      Maximum number of characters to be copied to ptr,
- *                      including the terminating null-character.
- * @param  format       C string containing any combination of regular characters
- *                      and special format specifiers. These format specifiers
- *                      are replaced by the function to the corresponding values
- *                      to represent the time specified in timeptr.
- * @param timeptr       Pointer to a tm structure that contains a calendar time
- *                      broken down into its components (see struct tm).
- *
- * @return If the length of the resulting C string, including the terminating
- *         null-character, doesn't exceed maxsize, the function returns the
- *         total number of characters copied to ptr (not including the terminating
- *         null-character).
- *         Otherwise, it returns zero, and the contents of the array pointed by
- *         ptr are indeterminate.
- *
- * @note Supported flags:
- *       % - % character
- *       n - new line
- *       H - Hour in 24h format (00-23)
- *       I - Hour in 12h format (01-12)
- *       M - Minute (00-59)
- *       S - Second (00-61)
- *       A - Full weekday name
- *       a - Abbreviated weekday name
- *       B - Full month name
- *       b - Abbreviated month name
- *       h - Abbreviated month name
- *       C - Year divided by 100 and truncated to integer (00-99) (century)
- *       y - Year, last two digits (00-99)
- *       Y - Year
- *       d - Day of the month, zero-padded (01-31)
- *       p - AM or PM designation
- *       j - Day of the year (001-366)
- *       m - Month as a decimal number (01-12)
- *       X - Time representation                                14:55:02
- *       F - Short YYYY-MM-DD date, equivalent to %Y-%m-%d      2001-08-23
- *       D - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
- *       x - Short MM/DD/YY date, equivalent to %m/%d/%y        08/23/01
- *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
- */
-//==============================================================================
-static inline size_t _sys_strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
-{
-        return _strftime(ptr, maxsize, format, timeptr);
 }
 
 #ifdef __cplusplus

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    kpanic.h
+@file    vfprintf.c
 
 @author  Daniel Zorychta
 
-@brief   Kernel panic handling
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,52 +24,79 @@
 
 *//*==========================================================================*/
 
-#ifndef _KPANIC_H_
-#define _KPANIC_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <config.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <lib/vsnprintf.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
 ==============================================================================*/
-enum _kernel_panic_desc_cause {
-        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
-        _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
-        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
-        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
-};
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
+==============================================================================*/
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
-extern int  _kernel_panic_init();
-extern bool _kernel_panic_detect(bool);
-extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
-}
+//==============================================================================
+/**
+ * @brief Function write to file formatted string
+ *
+ * @param file                file
+ * @param format              formated text
+ * @param arg                 arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int vfprintf(FILE *file, const char *format, va_list arg)
+{
+        int n = 0;
+
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (file && format) {
+                va_list carg;
+                va_copy(carg, arg);
+                u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
+
+                char *str = calloc(1, size);
+                if (str) {
+                        n = vsnprintf(str, size, format, arg);
+                        fwrite(str, sizeof(char), n, file);
+                        free(str);
+                }
+        }
+#else
+        UNUSED_ARG3(file, format, arg);
 #endif
 
-#endif /* _KPANIC_H_ */
+        return n;
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

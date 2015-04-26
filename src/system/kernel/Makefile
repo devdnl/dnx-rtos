@@ -1,7 +1,7 @@
 # Makefile for GNU make
 CSRC_CORE   += kernel/syscall.c
 CSRC_CORE   += kernel/process.c
-CSRC_CORE   += kernel/env.c
+CSRC_CORE   += kernel/time.c
 CSRC_CORE   += kernel/pipe.c
 CSRC_CORE   += kernel/khooks.c
 CSRC_CORE   += kernel/kwrapper.c

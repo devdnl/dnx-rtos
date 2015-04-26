@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    printk.c
+@file    fgets.h
 
 @author  Daniel Zorychta
 
-@brief   Kernel print support
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,14 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stddef.h>
-#include "kernel/printk.h"
-#include "config.h"
-#include "fs/vfs.h"
-#include "mm/mm.h"
-#include "dnx/misc.h"
-#include "lib/vsnprintf.h"
-#include "libc/errno.h"
+#include <config.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local macros
@@ -51,9 +47,6 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static FILE *printk_file;
-#endif
 
 /*==============================================================================
   Exported objects
@@ -67,92 +60,90 @@ static FILE *printk_file;
   Function definitions
 ==============================================================================*/
 
-
 //==============================================================================
 /**
- * @brief Enable printk functionality
+ * @brief Function gets number of bytes from file
  *
- * @param filename      path to file used to write kernel log
+ * @param[out] *str          buffer with string
+ * @param[in]   size         buffer size
+ * @param[in]  *stream       source stream
  *
- * @return One of errno value.
+ * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-int _printk_enable(const char *filename)
+char *fgets(char *str, int size, FILE *stream)
 {
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        if (printk_file) {
-                _vfs_fclose(printk_file, false);
-                printk_file = NULL;
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (!str || size < 2 || !stream) {
+                return NULL;
         }
 
-        return _vfs_fopen(filename, "w+", &printk_file);
-#else
-        UNUSED_ARG(filename);
-        return ENOTSUP;
-#endif
-}
+        struct stat file_stat;
+        if (fstat(stream, &file_stat) == 0) {
+                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
+                        int n = 0;
+                        for (int i = 0; i < size - 1; i++) {
+                                int m = fread(str + i, sizeof(char), 1, stream);
+                                if (m == 0) {
+                                        str[i] = '\0';
+                                        return str;
+                                } else {
+                                        n += m;
+                                }
 
-//==============================================================================
-/**
- * @brief Disable printk functionality
- *
- * @param None
- *
- * @return One of errno value
- */
-//==============================================================================
-int _printk_disable(void)
-{
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        if (printk_file) {
-                int result  = _vfs_fclose(printk_file, false);
-                printk_file = NULL;
-                return result;
-        } else {
-                return ESUCC;
-        }
-#endif
-}
+                                if (ferror(stream) || feof(stream)) {
+                                        if (n == 0) {
+                                                return NULL;
+                                        } else {
+                                                str[i + 1] = '\0';
+                                                return str;
+                                        }
+                                }
 
-//==============================================================================
-/**
- * @brief Function send kernel message on terminal
- *
- * @param *format             formated text
- * @param ...                 format arguments
- */
-//==============================================================================
-void _printk(const char *format, ...)
-{
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        va_list args;
-
-        if (printk_file) {
-                va_start(args, format);
-                int size = _vsnprintf(NULL, 0, format, args) + 1;
-                va_end(args);
-
-                char *buffer = NULL;
-                _kzalloc(_MM_KRN, size, static_cast(void**, &buffer));
-
-                if (buffer) {
-                        va_start(args, format);
-                        int n = _vsnprintf(buffer, size, format, args);
-                        va_end(args);
-
-                        size_t wrcnt;
-                        _vfs_fwrite(buffer, n, &wrcnt, printk_file);
-
-                        if (LAST_CHARACTER(buffer) != '\n') {
-                                _vfs_fflush(printk_file);
+                                if (str[i] == '\n') {
+                                        str[i + 1] = '\0';
+                                        break;
+                                }
                         }
 
-                        _kfree(_MM_KRN, static_cast(void**, &buffer));
+                        return str;
+                } else {
+                        u64_t fpos = ftell(stream);
+
+                        int n;
+                        while ((n = fread(str, sizeof(char), size - 1, stream)) == 0) {
+                                if (ferror(stream) || feof(stream)) {
+                                        return NULL;
+                                }
+                        }
+
+                        char *end;
+                        if ((end = strchr(str, '\n'))) {
+                                end++;
+                                *end = '\0';
+                        } else {
+                                str[n] = '\0';
+                        }
+
+                        int len = strlen(str);
+
+                        if (len != 0 && len < n && feof(stream))
+                                clearerr(stream);
+
+                        if (len == 0)
+                                len = 1;
+
+                        fseek(stream, fpos + len, SEEK_SET);
+
+                        return str;
                 }
         }
 #else
-        UNUSED_ARG(format);
+        UNUSED_ARG(str);
+        UNUSED_ARG(size);
+        UNUSED_ARG(stream);
 #endif
+        return NULL;
 }
 
 /*==============================================================================

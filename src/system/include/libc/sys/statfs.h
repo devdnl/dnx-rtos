@@ -34,7 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/vfs.h"
+#include <sys/types.h>
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -97,7 +98,9 @@ extern "C" {
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)
 {
-        return _vfs_statfs(path, statfs);
+        int r = -1;
+        syscall(SYSCALL_STATFS, &r, path, statfs);
+        return r;
 }
 
 #ifdef __cplusplus

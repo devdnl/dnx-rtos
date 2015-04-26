@@ -88,6 +88,216 @@ static bool is_leap_year(int year)
 
 //==============================================================================
 /**
+ * @brief  Reverse selected buffer
+ * @param  begin        beggining of the buffer
+ * @param  end          end of the buffer
+ * @return None
+ */
+//==============================================================================
+static void reverse_buffer(char *begin, char *end)
+{
+        while (end > begin) {
+                char tmp = *end;
+                *end--   = *begin;
+                *begin++ = tmp;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function convert value to the character
+ *
+ * @param  val          converted value
+ * @param *buf          result buffer
+ * @param  base         conversion base
+ * @param  usign_val    unsigned value conversion
+ * @param  zeros_req    zeros required (added zeros to conversion)
+ *
+ * @return pointer in the buffer
+ */
+//==============================================================================
+char *_itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
+{
+        static const char digits[]  = "0123456789ABCDEF";
+        char             *buf_start = buf;
+
+        if (base >= 2 && base <= 16) {
+                bool sign     = val < 0 && !usign_val;
+                u8_t zero_cnt = 0;
+
+                if (base == 10 && sign) {
+                        val = -val;
+                }
+
+                i32_t quot, rem;
+                do {
+                        if (usign_val) {
+                                quot = static_cast(u32_t, val) / base;
+                                rem  = static_cast(u32_t, val) % base;
+                        } else {
+                                quot = val / base;
+                                rem  = val % base;
+                        }
+
+                        *buf++ = digits[rem];
+                        zero_cnt++;
+
+                } while ((val = quot));
+
+                while (zeros_req > zero_cnt) {
+                        *buf++ = '0';
+                        zero_cnt++;
+                }
+
+                if (sign) {
+                        *buf++ = '-';
+                }
+
+                reverse_buffer(buf_start, buf - 1);
+        }
+
+        *buf = '\0';
+        return buf_start;
+}
+
+//==============================================================================
+/**
+ * @brief Function convert double to string
+ *
+ * @note used software: nickgsuperstar@gmail.com & nickg@client9.com
+ *                      https://code.google.com/p/stringencoders/
+ *
+ * @param[in]   value           input value
+ * @param[out] *str             string - result
+ * @param[in]   prec            precision
+ * @param[in]   n               buffer size
+ *
+ * @return number of characters
+ */
+//==============================================================================
+int _dtoa(double value, char *str, int prec, int n)
+{
+        const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
+                                10000000, 100000000, 1000000000};
+
+        int   conv = 0;
+        char *wstr = str;
+
+        void push_char(const char c)
+        {
+                if (conv < n) {
+                        *wstr++ = c;
+                        conv++;
+                }
+        }
+
+        /*
+         * Hacky test for NaN
+         * under -fast-math this won't work, but then you also won't
+         * have correct nan values anyways.  The alternative is
+         * to link with libmath (bad) or hack IEEE double bits (bad)
+         */
+        if (!(value == value)) {
+                push_char('n');
+                push_char('a');
+                push_char('n');
+                return conv;
+        }
+
+        /* if input is larger than thres_max, revert to exponential */
+        const double thres_max = reinterpret_cast(double, 0x7FFFFFFF);
+
+        double diff  = 0.0;
+
+        if (prec < 0) {
+                prec = 0;
+        } else if (prec > 9) {
+                /* precision of >= 10 can lead to overflow errors */
+                prec = 9;
+        }
+
+        /* we'll work in positive values and deal with the negative sign issue later */
+        int neg = 0;
+        if (value < 0) {
+                neg = 1;
+                value = -value;
+        }
+
+        int    whole = (int) value;
+        double tmp   = (value - whole) * pow10[prec];
+        u32_t  frac  = (u32_t)tmp;
+
+        diff = tmp - frac;
+
+        if (diff > 0.5) {
+                ++frac;
+
+                /* handle rollover, e.g.  case 0.99 with prec 1 is 1.0  */
+                if (frac >= pow10[prec]) {
+                        frac = 0;
+                        ++whole;
+                }
+        } else if (diff == 0.5 && ((frac == 0) || (frac & 1))) {
+                /* if halfway, round up if odd, OR if last digit is 0.  That last part is strange */
+                ++frac;
+        }
+
+        /* for very large numbers switch back to native sprintf for exponentials.
+         anyone want to write code to replace this? */
+        /*
+         normal printf behavior is to print EVERY whole number digit
+         which can be 100s of characters overflowing your buffers == bad
+         */
+        if (value > thres_max) {
+                push_char('E');
+                push_char('?');
+                return conv;
+        }
+
+        if (prec == 0) {
+                diff = value - whole;
+                if (diff > 0.5) {
+                        /* greater than 0.5, round up, e.g. 1.6 -> 2 */
+                        ++whole;
+                } else if (diff == 0.5 && (whole & 1)) {
+                        /* exactly 0.5 and ODD, then round up */
+                        /* 1.5 -> 2, but 2.5 -> 2 */
+                        ++whole;
+                }
+        } else {
+                int count = prec;
+
+                /* now do fractional part, as an unsigned number */
+                do {
+                        --count;
+                        push_char((char) (48 + (frac % 10)));
+                } while (frac /= 10);
+
+                /* add extra 0s */
+                while (count-- > 0) {
+                        push_char('0');
+                }
+
+                /* add decimal */
+                push_char('.');
+        }
+
+        /* Do whole part. Take care of sign. Conversion. Number is reversed. */
+        do {
+                push_char((char) (48 + (whole % 10)));
+        } while (whole /= 10);
+
+        if (neg) {
+                push_char('-');
+        }
+
+        reverse_buffer(str, wstr - 1);
+
+        return conv;
+}
+
+//==============================================================================
+/**
  * @brief Function convert ASCII to the number
  * When function find any other character than number (depended of actual base)
  * immediately finished operation and return pointer when bad character was

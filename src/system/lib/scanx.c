@@ -30,7 +30,6 @@
 #include "config.h"
 #include "lib/scanx.h"
 #include "fs/vfs.h"
-#include "lib/printx.h"
 #include "lib/conv.h"
 #include <dnx/misc.h>
 #include <string.h>

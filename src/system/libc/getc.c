@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    printx.h
+@file    getc.c
 
 @author  Daniel Zorychta
 
-@brief   Basic print functions
+@brief
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,27 +24,26 @@
 
 *//*==========================================================================*/
 
-#ifndef _PRINTX_H_
-#define _PRINTX_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdarg.h>
-#include <stddef.h>
-#include "fs/vfs.h"
-#include "config.h"
+#include <config.h>
+#include <stdio.h>
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
+==============================================================================*/
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -52,30 +51,45 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
-extern int         _snprintf       (char*, size_t, const char*, ...);
-extern int         _fprintf        (FILE*, const char*, ...);
-extern int         _vfprintf       (FILE*, const char*, va_list);
-extern int         _vsnprintf      (char*, size_t, const char*, va_list);
-extern const char *_strerror       (int);
-extern void        _perror         (const char*);
-extern int         _fputc          (int, FILE*);
-extern int         _f_puts         (const char*, FILE*, bool);
-extern int         _getc           (FILE*);
-extern char       *_fgets          (char*, int, FILE*);
-extern char       *_ctime_r        (const time_t *timer, const struct tm *tm, char *buf);
-extern size_t      _strftime       (char*, size_t, const char*, const struct tm*);
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
-}
-#endif
+//==============================================================================
+/**
+ * @brief Function get character from file
+ *
+ * @param *stream            source file
+ *
+ * @retval character
+ */
+//==============================================================================
+int getc(FILE *stream)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (!stream) {
+                return EOF;
+        }
 
-#endif /* _PRINTX_H_ */
+        int chr = 0;
+        if (fread(&chr, sizeof(char), 1, stream) != 0) {
+                if (ferror(stream) || feof(stream)) {
+                        return EOF;
+                }
+        } else {
+                return EOF;
+        }
+
+        return chr;
+#else
+        UNUSED_ARG(stream);
+        return EOF;
+#endif
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

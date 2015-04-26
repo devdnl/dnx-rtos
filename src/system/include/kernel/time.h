@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    kpanic.h
+@file    time.h
 
 @author  Daniel Zorychta
 
-@brief   Kernel panic handling
+@brief   Time set/get functions
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,13 +24,13 @@
 
 *//*==========================================================================*/
 
-#ifndef _KPANIC_H_
-#define _KPANIC_H_
+#ifndef _ENV_H_
+#define _ENV_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdbool.h>
+#include "sys/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,12 +43,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-enum _kernel_panic_desc_cause {
-        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
-        _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
-        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
-        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
-};
 
 /*==============================================================================
   Exported objects
@@ -57,9 +51,8 @@ enum _kernel_panic_desc_cause {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  _kernel_panic_init();
-extern bool _kernel_panic_detect(bool);
-extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
+extern int _gettime(time_t*);
+extern int _settime(time_t*);
 
 /*==============================================================================
   Exported inline functions
@@ -69,7 +62,7 @@ extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
 }
 #endif
 
-#endif /* _KPANIC_H_ */
+#endif /* _ENV_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

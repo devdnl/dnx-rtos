@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    initd.c
+@file    vsnprintf.c
 
 @author  Daniel Zorychta
 
-@brief   Initialization daemon
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,19 +27,17 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <config.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <dnx/misc.h>
-#include <dnx/os.h>
+#include <stdarg.h>
+#include <lib/vsnprintf.h>
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -47,13 +45,15 @@
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -62,38 +62,59 @@ GLOBAL_VARIABLES_SECTION {
 
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief Function convert arguments to stream
  *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
+ * @param[in] *buf           buffer for stream
+ * @param[in]  size          buffer size
+ * @param[in] *format        message format
+ * @param[in]  arg           argument list
  *
- * @return program status
+ * @return number of printed characters
+ *
+ * Supported flags:
+ *   %%         - print % character
+ *                printf("%%"); => %
+ *
+ *   %c         - print selected character (the \0 character is skipped)
+ *                printf("_%c_", 'x');  => _x_
+ *                printf("_%c_", '\0'); => __
+ *
+ *   %s         - print selected string
+ *                printf("%s", "Foobar"); => Foobar
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                printf("%.*s\n", 3, "Foobar"); => Foo
+ *
+ *   %.ns       - print selected string but only the n length
+ *                printf("%.3s\n", "Foobar"); => Foo
+ *
+ *   %d, %i     - print decimal integer values
+ *                printf("%d, %i", -5, 10); => -5, 10
+ *
+ *   %u         - print unsigned decimal integer values
+ *                printf("%u, %u", -1, 10); => 4294967295, 10
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                printf("0x%x, 0x%X", 0x5A, 0xfa); => 0x5a, 0xFA
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                printf("0x02X, 0x03X", 0x5, 0x1F43); => 0x05, 0x1F43
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                printf("Foobar: %f", 1.0); => Foobar: 1.000000
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                NOTE: not supported
+ *
+ *   %p         - print pointer
+ *                printf("Pointer: %p", main); => Pointer: 0x4028B4
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+int vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-        UNUSED_ARG2(argc, argv);
-
-        int result = 0;
-
-        result = mount("lfs", "", "/");
-        result = mkdir("/dev", 0777);
-        result = driver_init("gpio", "/dev/gpio");
-        result = driver_init("afiom", NULL);
-        result = driver_init("uart2", "/dev/ttyS0");
-        result = driver_init("tty0", "/dev/tty0");
-
-        result = syslog_enable("/dev/tty0");
-
-        detect_kernel_panic(true);
-
-        result = driver_init("tty1", "/dev/tty1");
-
-        printf("fdsa\n");
-
-//        result = syslog_disable();
-
-        return result;
+        return _vsnprintf(buf, size, format, arg);
 }
 
 /*==============================================================================

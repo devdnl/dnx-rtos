@@ -31,6 +31,7 @@
 #include "kernel/khooks.h"
 #include "kernel/kpanic.h"
 #include "kernel/process.h"
+#include "dnx/misc.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -79,8 +80,8 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
-        (void)taskHdl;
-        _kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        UNUSED_ARG2(taskHdl, taskName);
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================

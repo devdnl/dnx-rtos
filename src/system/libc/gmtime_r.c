@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    initd.c
+@file    gmtime_r.c
 
 @author  Daniel Zorychta
 
-@brief   Initialization daemon
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,19 +27,16 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <dnx/misc.h>
-#include <dnx/os.h>
+#include <time.h>
+#include <config.h>
+#include <lib/conv.h>
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -47,13 +44,15 @@
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -62,38 +61,47 @@ GLOBAL_VARIABLES_SECTION {
 
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief  Convert time_t to tm as UTC time
  *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
  *
- * @return program status
+ * @param  timer        Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+struct tm *gmtime(const time_t *timer)
 {
-        UNUSED_ARG2(argc, argv);
+        return _gmtime_r(timer, &_tmbuf);
+}
 
-        int result = 0;
-
-        result = mount("lfs", "", "/");
-        result = mkdir("/dev", 0777);
-        result = driver_init("gpio", "/dev/gpio");
-        result = driver_init("afiom", NULL);
-        result = driver_init("uart2", "/dev/ttyS0");
-        result = driver_init("tty0", "/dev/tty0");
-
-        result = syslog_enable("/dev/tty0");
-
-        detect_kernel_panic(true);
-
-        result = driver_init("tty1", "/dev/tty1");
-
-        printf("fdsa\n");
-
-//        result = syslog_disable();
-
-        return result;
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as UTC time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
+ */
+//==============================================================================
+struct tm *gmtime_r(const time_t *timer, struct tm *tm)
+{
+        return _gmtime_r(timer, tm);
 }
 
 /*==============================================================================

@@ -32,10 +32,7 @@
 ==============================================================================*/
 #include <sys/types.h>
 #include <stddef.h>
-#include "kernel/kwrapper.h"
-#include "lib/conv.h"
-#include "kernel/env.h"  // TODO syscall
-#include "lib/printx.h"
+#include <kernel/syscall.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -315,6 +312,7 @@ enum timezone {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern int _ltimeoff;
 
 /*==============================================================================
   Exported functions
@@ -345,7 +343,9 @@ enum timezone {
 //==============================================================================
 static inline clock_t clock(void)
 {
-        return _kernel_get_time_ms();
+        clock_t clock = -1;
+        syscall(SYSCALL_GETCLOCK, &clock);
+        return clock;
 }
 
 //==============================================================================
@@ -387,10 +387,7 @@ static inline double difftime(time_t end, time_t beginning)
  *         If the calendar time cannot be represented, a value of -1 is returned.
  */
 //==============================================================================
-static inline time_t mktime(struct tm *timeptr)
-{
-        return _mktime(timeptr);
-}
+extern time_t mktime(struct tm *timeptr);
 
 //==============================================================================
 /**
@@ -420,7 +417,14 @@ static inline time_t mktime(struct tm *timeptr)
 //==============================================================================
 static inline time_t time(time_t *timer)
 {
-        return _time(timer);
+        time_t time = -1;
+        syscall(SYSCALL_GETTIME, &time);
+
+        if (timer) {
+                *timer = time;
+        }
+
+        return time;
 }
 
 //==============================================================================
@@ -439,7 +443,9 @@ static inline time_t time(time_t *timer)
 //==============================================================================
 static inline int stime(time_t *timer)
 {
-        return _stime(timer);
+        int r = -1;
+        syscall(SYSCALL_SETTIME, &r, timer);
+        return r;
 }
 
 //==============================================================================
@@ -496,10 +502,7 @@ static inline int timezone()
  *         may be altered by any subsequent call to asctime or ctime.
  */
 //==============================================================================
-static inline char *asctime(const struct tm *timeptr)
-{
-        return _ctime_r(NULL, timeptr, NULL);
-}
+extern char *asctime(const struct tm *timeptr);
 
 //==============================================================================
 /**
@@ -530,10 +533,7 @@ static inline char *asctime(const struct tm *timeptr)
  *         may be altered by any subsequent call to asctime or ctime.
  */
 //==============================================================================
-static inline char *asctime_r(const struct tm *timeptr, char *buf)
-{
-        return _ctime_r(NULL, timeptr, buf);
-}
+extern char *asctime_r(const struct tm *timeptr, char *buf);
 
 //==============================================================================
 /**
@@ -566,10 +566,7 @@ static inline char *asctime_r(const struct tm *timeptr, char *buf)
  *         value may be altered by any subsequent call to asctime or ctime.
  */
 //==============================================================================
-static inline char *ctime(const time_t *timer)
-{
-        return _ctime_r(timer, NULL, NULL);
-}
+extern char *ctime(const time_t *timer);
 
 //==============================================================================
 /**
@@ -605,10 +602,7 @@ static inline char *ctime(const time_t *timer)
  *         value may be altered by any subsequent call to asctime or ctime.
  */
 //==============================================================================
-static inline char *ctime_r(const time_t *timer, char *buf)
-{
-        return _ctime_r(timer, NULL, buf);
-}
+extern char *ctime_r(const time_t *timer, char *buf);
 
 //==============================================================================
 /**
@@ -626,10 +620,7 @@ static inline char *ctime_r(const time_t *timer, char *buf)
  *         that correspond to the UTC time representation of timer.
  */
 //==============================================================================
-static inline struct tm *gmtime(const time_t *timer)
-{
-        return _gmtime_r(timer, &_tmbuf);
-}
+extern struct tm *gmtime(const time_t *timer);
 
 //==============================================================================
 /**
@@ -650,10 +641,7 @@ static inline struct tm *gmtime(const time_t *timer)
  *         that correspond to the UTC time representation of timer.
  */
 //==============================================================================
-static inline struct tm *gmtime_r(const time_t *timer, struct tm *tm)
-{
-        return _gmtime_r(timer, tm);
-}
+extern struct tm *gmtime_r(const time_t *timer, struct tm *tm);
 
 //==============================================================================
 /**
@@ -670,10 +658,7 @@ static inline struct tm *gmtime_r(const time_t *timer, struct tm *tm)
  *         that correspond to the local time representation of timer.
  */
 //==============================================================================
-static inline struct tm *localtime(const time_t *timer)
-{
-        return _localtime_r(timer, &_tmbuf);
-}
+extern struct tm *localtime(const time_t *timer);
 
 //==============================================================================
 /**
@@ -693,10 +678,7 @@ static inline struct tm *localtime(const time_t *timer)
  *         that correspond to the local time representation of timer.
  */
 //==============================================================================
-static inline struct tm *localtime_r(const time_t *timer, struct tm *tm)
-{
-        return _localtime_r(timer, tm);
-}
+extern struct tm *localtime_r(const time_t *timer, struct tm *tm);
 
 //==============================================================================
 /**
@@ -750,10 +732,7 @@ static inline struct tm *localtime_r(const time_t *timer, struct tm *tm)
  *       z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
  */
 //==============================================================================
-static inline size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
-{
-        return _strftime(ptr, maxsize, format, timeptr);
-}
+extern size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr);
 
 #ifdef __cplusplus
 }

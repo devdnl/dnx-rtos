@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    kpanic.h
+@file    fputs.c
 
 @author  Daniel Zorychta
 
-@brief   Kernel panic handling
+@brief
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,52 +24,104 @@
 
 *//*==========================================================================*/
 
-#ifndef _KPANIC_H_
-#define _KPANIC_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <config.h>
 #include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string.h>
+#include <stdio.h>
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
 ==============================================================================*/
-enum _kernel_panic_desc_cause {
-        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
-        _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
-        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
-        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
-};
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
+==============================================================================*/
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
-extern int  _kernel_panic_init();
-extern bool _kernel_panic_detect(bool);
-extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
-}
-#endif
+//==============================================================================
+/**
+ * @brief Function puts string to selected file (fputs & puts)
+ *
+ * @param[in] *s        string
+ * @param[in] *file     file
+ * @param[in]  puts     puts functionality (true: add \n at the end of string)
+ *
+ * @return number of characters written to the stream
+ */
+//==============================================================================
+static int f_puts(const char *s, FILE *file, bool puts)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (file) {
+                int n = fwrite(s, sizeof(char), strlen(s), file);
 
-#endif /* _KPANIC_H_ */
+                if (puts) {
+                        n += fwrite("\n", sizeof(char), 1, file);
+                }
+
+                if (n != 0) {
+                        return n;
+                }
+        }
+#else
+        UNUSED_ARG(s);
+        UNUSED_ARG(file);
+        UNUSED_ARG(puts);
+#endif
+        return EOF;
+}
+
+//==============================================================================
+/**
+ * @brief Function puts string to selected file
+ *
+ * @param[in] *s        string
+ * @param[in] *file     file
+ *
+ * @return number of characters written to the stream
+ */
+//==============================================================================
+int fputs(const char *s, FILE *file)
+{
+        return f_puts(s, file, false);
+}
+
+//==============================================================================
+/**
+ * @brief Function puts string to stdout
+ *
+ * @param[in] *s        string
+ *
+ * @return number of characters written to the stream
+ */
+//==============================================================================
+int puts(const char *s)
+{
+        return f_puts(s, stdout, true);
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

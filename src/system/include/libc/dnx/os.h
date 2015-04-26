@@ -35,8 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <string.h>
-#include <stdarg.h>
+#include <stdbool.h>
 #include "kernel/syscall.h"
 
 /*==============================================================================
@@ -735,7 +734,7 @@ static inline const char *get_user_name(void)
 //==============================================================================
 static inline const char *get_module_name(uint modid)
 {
-        return _get_module_name(modid);
+//        return _get_module_name(modid);
 }
 
 //==============================================================================
@@ -762,7 +761,7 @@ static inline const char *get_module_name(uint modid)
 //==============================================================================
 static inline int get_module_number(const char *name)
 {
-        return _get_module_number(name);
+//        return _get_module_number(name);
 }
 
 //==============================================================================
@@ -792,7 +791,7 @@ static inline int get_module_number(const char *name)
 //==============================================================================
 static inline uint get_number_of_modules(void)
 {
-        return _get_number_of_modules();
+//        return _get_number_of_modules();
 }
 
 //==============================================================================
@@ -822,7 +821,7 @@ static inline uint get_number_of_modules(void)
 //==============================================================================
 static inline uint get_number_of_drivers(void)
 {
-        return _get_number_of_drivers();
+//        return _get_number_of_drivers();
 }
 
 //==============================================================================
@@ -852,7 +851,7 @@ static inline uint get_number_of_drivers(void)
 //==============================================================================
 static inline const char *get_driver_name(uint n)
 {
-        return _get_driver_name(n);
+//        return _get_driver_name(n);
 }
 
 //==============================================================================
@@ -883,7 +882,7 @@ static inline const char *get_driver_name(uint n)
 //==============================================================================
 static inline int get_driver_ID(const char *name)
 {
-        return _get_driver_ID(name);
+//        return _get_driver_ID(name);
 }
 
 //==============================================================================
@@ -913,7 +912,7 @@ static inline int get_driver_ID(const char *name)
 //==============================================================================
 static inline const char *get_driver_module_name(uint n)
 {
-        return _get_driver_module_name(n);
+//        return _get_driver_module_name(n);
 }
 
 //==============================================================================
@@ -944,7 +943,7 @@ static inline const char *get_driver_module_name(uint n)
 //==============================================================================
 static inline bool is_driver_active(uint n)
 {
-        return _is_driver_active(n);
+//        return _is_driver_active(n);
 }
 
 //==============================================================================
@@ -1052,7 +1051,7 @@ static inline void enable_CPU_load_measurement(void)
 //==============================================================================
 static inline void restart_system(void)
 {
-        _syscall(SYSCALL_RESTART, NULL);
+        syscall(SYSCALL_RESTART, NULL);
 }
 
 //==============================================================================
@@ -1065,7 +1064,7 @@ static inline void restart_system(void)
 static inline int syslog_enable(const char *path)
 {
         int r = -1;
-        _syscall(SYSCALL_SYSLOGENABLE, &r, path);
+        syscall(SYSCALL_SYSLOGENABLE, &r, path);
         return r;
 }
 
@@ -1079,7 +1078,21 @@ static inline int syslog_enable(const char *path)
 static inline int syslog_disable()
 {
         int r = -1;
-        _syscall(SYSCALL_SYSLOGDISABLE, &r);
+        syscall(SYSCALL_SYSLOGDISABLE, &r);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief  ? TODO detect_kernel_panic
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline bool detect_kernel_panic(bool showmsg)
+{
+        bool r = false;
+        syscall(SYSCALL_KERNELPANICDETECT, &r, &showmsg);
         return r;
 }
 

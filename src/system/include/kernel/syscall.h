@@ -72,6 +72,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_CLEARERROR,             // | void           | FILE*                     |                           |                           |                           |
         SYSCALL_FERROR,                 // | int            | FILE*                     |                           |                           |                           |
         SYSCALL_SYNC,                   // |                |                           |                           |                           |                           |
+        SYSCALL_GETCLOCK,               // |                |                           |                           |                           |                           |
         SYSCALL_GETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
@@ -82,6 +83,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_SYSLOGENABLE,           // |                |                           |                           |                           |                           |
         SYSCALL_SYSLOGDISABLE,          // |                |                           |                           |                           |                           |
         SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
+        SYSCALL_KERNELPANICDETECT,      // | bool           | bool                      |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 
@@ -92,7 +94,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _syscall(syscall_t syscall, void *retptr, ...);
+extern void syscall(syscall_t syscall, void *retptr, ...);
 extern void _syscall_init();
 extern int  _syscall_kworker_master(int, char**);
 

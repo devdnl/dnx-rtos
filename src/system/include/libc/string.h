@@ -34,8 +34,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-//#include "core/printx.h"
-
 #include "_ansi.h"
 
 #define __need_size_t
@@ -737,10 +735,7 @@ extern size_t strnlen(const char *s, size_t maxlen);
  * // ...
  */
 //==============================================================================
-static inline char *strerror(int errnum)
-{
-//        return (char *)_strerror(errnum); TODO
-}
+extern const char *strerror(int errnum);
 
 #ifdef __cplusplus
 }

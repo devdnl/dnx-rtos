@@ -79,7 +79,7 @@ extern "C" {
 //==============================================================================
 static inline void sleep(const uint seconds)
 {
-        _sleep(seconds);
+//        _sleep(seconds); TODO sleep syscall?
 }
 
 //==============================================================================
@@ -105,7 +105,7 @@ static inline void sleep(const uint seconds)
 //==============================================================================
 static inline void sleep_ms(const uint milliseconds)
 {
-        _sleep_ms(milliseconds);
+//        _sleep_ms(milliseconds); TODO sleep_ms syscall?
 }
 
 //==============================================================================
@@ -136,8 +136,8 @@ static inline void sleep_ms(const uint milliseconds)
 //==============================================================================
 static inline void usleep(const uint microseconds)
 {
-        uint ms = microseconds / 1000;
-        _sleep_ms(ms ? ms : 1);
+//        uint ms = microseconds / 1000;
+//        _sleep_ms(ms ? ms : 1); TODO usleep syscall?
 }
 
 //==============================================================================
@@ -169,7 +169,7 @@ static inline void usleep(const uint microseconds)
 //==============================================================================
 static inline int prepare_sleep_until(void)
 {
-        return _kernel_get_tick_counter();
+//        return _kernel_get_tick_counter(); TODO prepare_sleep_until syscall?
 }
 
 //==============================================================================
@@ -202,7 +202,7 @@ static inline int prepare_sleep_until(void)
 //==============================================================================
 static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 {
-        _sleep_until_ms(milliseconds, ref_time_ticks);
+//        _sleep_until_ms(milliseconds, ref_time_ticks); TODO sleep_until_ms syscall?
 }
 
 //==============================================================================
@@ -235,7 +235,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 {
-        _sleep_until(seconds, ref_time_ticks);
+//        _sleep_until(seconds, ref_time_ticks);TODO sleep_until syscall?
 }
 
 //==============================================================================

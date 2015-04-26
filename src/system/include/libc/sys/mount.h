@@ -34,8 +34,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/fsctrl.h"
-#include "drivers/drvctrl.h"
 #include "kernel/syscall.h"
 
 /*==============================================================================
@@ -96,7 +94,7 @@ extern "C" {
 static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
         int r;
-        _syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point);
+        syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point);
         return r;
 }
 
@@ -140,7 +138,7 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
 static inline int umount(const char *mount_point)
 {
         int r;
-        _syscall(SYSCALL_UMOUNT, &r, mount_point);
+        syscall(SYSCALL_UMOUNT, &r, mount_point);
         return r;
 }
 
@@ -175,7 +173,7 @@ static inline int umount(const char *mount_point)
 static inline int driver_init(const char *drv_name, const char *node_path)
 {
         int r;
-        _syscall(SYSCALL_DRIVERINIT, &r, drv_name, node_path);
+        syscall(SYSCALL_DRIVERINIT, &r, drv_name, node_path);
         return r;
 }
 
@@ -205,7 +203,7 @@ static inline int driver_init(const char *drv_name, const char *node_path)
 static inline int driver_release(const char *drv_name)
 {
         int r;
-        _syscall(SYSCALL_DRIVERINIT, &r, drv_name);
+        syscall(SYSCALL_DRIVERINIT, &r, drv_name);
         return r;
 }
 

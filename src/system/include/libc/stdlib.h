@@ -403,7 +403,7 @@ extern _VOID srand(unsigned __seed);
 static inline void *malloc(size_t size)
 {
         void *mem = NULL;
-        _syscall(SYSCALL_MALLOC, &mem, size);
+        syscall(SYSCALL_MALLOC, &mem, size);
         return mem;
 }
 
@@ -433,7 +433,7 @@ static inline void *malloc(size_t size)
 static inline void *calloc(size_t n, size_t size)
 {
         void *mem = NULL;
-        _syscall(SYSCALL_ZALLOC, &mem, size * n);
+        syscall(SYSCALL_ZALLOC, &mem, size * n);
         return mem;
 }
 
@@ -463,7 +463,7 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-        _syscall(SYSCALL_FREE, NULL, ptr);
+        syscall(SYSCALL_FREE, NULL, ptr);
 }
 
 //==============================================================================
@@ -540,7 +540,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-//        _abort(); TODO syscall
+//        _abort(); TODO syscall abort
         for (;;); // no return function - this makes C++ compiler happy
 }
 
@@ -563,7 +563,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-//        _exit(status); TODO syscall
+//        _exit(status); TODO syscall exit
         for (;;); // no return function - this makes C++ compiler happy
 }
 
@@ -587,7 +587,7 @@ static inline void exit(int status)
 //==============================================================================
 static inline int system(const char *command)
 {
-//        return _system(command); TODO syscall
+//        return _system(command); TODO syscall system
 }
 
 //==============================================================================

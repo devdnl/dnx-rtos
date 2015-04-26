@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/vfs.h"
 #include <sys/types.h>
+#include "kernel/syscall.h"
 
 /*==============================================================================
   Exported macros
@@ -83,7 +83,7 @@ extern "C" {
 static inline int mknod(const char *pathname, dev_t dev)
 {
         int r;
-        _syscall(SYSCALL_MKNOD, &r, pathname, dev);
+        syscall(SYSCALL_MKNOD, &r, pathname, dev);
         return r;
 }
 
@@ -112,7 +112,7 @@ static inline int mknod(const char *pathname, dev_t dev)
 static inline int mkdir(const char *pathname, mode_t mode)
 {
         int r;
-        _syscall(SYSCALL_MKDIR, &r, pathname, mode);
+        syscall(SYSCALL_MKDIR, &r, pathname, mode);
         return r;
 }
 
@@ -144,7 +144,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
         int r;
-        _syscall(SYSCALL_MKFIFO, &r, pathname, mode);
+        syscall(SYSCALL_MKFIFO, &r, pathname, mode);
         return r;
 }
 
@@ -172,7 +172,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 static inline int chmod(const char *pathname, mode_t mode)
 {
         int r;
-        _syscall(SYSCALL_CHMOD, &r, pathname, mode);
+        syscall(SYSCALL_CHMOD, &r, pathname, mode);
         return r;
 }
 
@@ -222,7 +222,7 @@ static inline int chmod(const char *pathname, mode_t mode)
 static inline int stat(const char *pathname, struct stat *buf)
 {
         int r;
-        _syscall(SYSCALL_STAT, &r, pathname, buf);
+        syscall(SYSCALL_STAT, &r, pathname, buf);
         return r;
 }
 
@@ -264,7 +264,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 static inline int fstat(FILE *file, struct stat *buf)
 {
         int r;
-        _syscall(SYSCALL_FSTAT, &r, file, buf);
+        syscall(SYSCALL_FSTAT, &r, file, buf);
         return r;
 }
 

@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include <stdarg.h>
+#include <stdbool.h>
 #include "mm/mm.h"
 #include "mm/heap.h"
 #include "dnx/misc.h"

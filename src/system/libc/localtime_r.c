@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mntent.h
+@file    localtime_r.c
 
 @author  Daniel Zorychta
 
 @brief
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,24 +24,27 @@
 
 *//*==========================================================================*/
 
-#ifndef _MNTENT_H_
-#define _MNTENT_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/vfs.h"
+#include <time.h>
+#include <config.h>
+#include <lib/conv.h>
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
+==============================================================================*/
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -49,56 +52,56 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
+
 //==============================================================================
 /**
- * @brief int getmntentry(int item, struct mntent *mntent)
- * Function return file system describe object. After operation object must be
- * freed using free() function.<p>
+ * @brief  Convert time_t to tm as local time
  *
- * <b>mntent</b> structure:
- * <pre>
- * struct mntent {
- *         const char *mnt_fsname;    // device or server for file system
- *         const char *mnt_dir;       // directory mounted on
- *         u64_t       total;         // device total size
- *         u64_t       free;          // device free
- * };
- * </pre>
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
  *
- * @param item          n-item to read
- * @param mntent        pointer to mntent object
+ * @param  timer        Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
  *
- * @errors EINVAL
- *
- * @return Returns 0 on success. Returns 1 if all items was read. On error -1 is
- * returned and <b>errno</b> is set appropriately.
- *
- * @example
- * // ...
- *
- * struct mntent entry;
- * int n = 0;
- * while (getmntentry(i++, &entry) == 0) {
- *        // ...
- * }
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
  */
 //==============================================================================
-static inline int getmntentry(int item, struct mntent *mntent)
+struct tm *localtime(const time_t *timer)
 {
-//        return _vfs_getmntentry(item, mntent); TODO getmntentry
+        return _localtime_r(timer, &_tmbuf);
 }
 
-#ifdef __cplusplus
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as local time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
+ */
+//==============================================================================
+struct tm *localtime_r(const time_t *timer, struct tm *tm)
+{
+        return _localtime_r(timer, tm);
 }
-#endif
 
-#endif /* _MNTENT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

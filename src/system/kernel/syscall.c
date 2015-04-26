@@ -34,12 +34,11 @@
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
 #include "kernel/printk.h"
+#include "kernel/kpanic.h"
 #include "config.h"
 #include "errno.h"
 #include "lib/cast.h"
 #include "dnx/misc.h"
-
-#include "lib/printx.h"
 
 /*==============================================================================
   Local macros
@@ -98,6 +97,7 @@ static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_getclock(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres);
@@ -108,6 +108,7 @@ static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *syscallres);
 
 /*==============================================================================
   Local objects
@@ -119,46 +120,51 @@ static pid_t    initd;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
-        [SYSCALL_MOUNT        ] = syscall_mount,
-        [SYSCALL_UMOUNT       ] = syscall_umount,
-        [SYSCALL_GETMNTENTRY  ] = syscall_getmntentry,
-        [SYSCALL_MKNOD        ] = syscall_mknod,
-        [SYSCALL_MKDIR        ] = syscall_mkdir,
-        [SYSCALL_MKFIFO       ] = syscall_mkfifo,
-        [SYSCALL_OPENDIR      ] = syscall_opendir,
-        [SYSCALL_CLOSEDIR     ] = syscall_closedir,
-        [SYSCALL_READDIR      ] = syscall_readdir,
-        [SYSCALL_REMOVE       ] = syscall_remove,
-        [SYSCALL_RENAME       ] = syscall_rename,
-        [SYSCALL_CHMOD        ] = syscall_chmod,
-        [SYSCALL_CHOWN        ] = syscall_chown,
-        [SYSCALL_STAT         ] = syscall_stat,
-        [SYSCALL_STATFS       ] = syscall_statfs,
-        [SYSCALL_FOPEN        ] = syscall_fopen,
-        [SYSCALL_FREOPEN      ] = syscall_freopen,
-        [SYSCALL_FCLOSE       ] = syscall_fclose,
-        [SYSCALL_FWRITE       ] = syscall_fwrite,
-        [SYSCALL_FREAD        ] = syscall_fread,
-        [SYSCALL_FSEEK        ] = syscall_fseek,
-        [SYSCALL_FTELL        ] = syscall_ftell,
-        [SYSCALL_IOCTL        ] = syscall_ioctl,
-        [SYSCALL_FSTAT        ] = syscall_fstat,
-        [SYSCALL_FFLUSH       ] = syscall_fflush,
-        [SYSCALL_FEOF         ] = syscall_feof,
-        [SYSCALL_CLEARERROR   ] = syscall_clearerr,
-        [SYSCALL_FERROR       ] = syscall_ferror,
-        [SYSCALL_SYNC         ] = syscall_sync,
-        [SYSCALL_GETTIME      ] = syscall_gettime,
-        [SYSCALL_SETTIME      ] = syscall_settime,
-        [SYSCALL_DRIVERINIT   ] = syscall_driverinit,
-        [SYSCALL_DRIVERRELEASE] = syscall_driverrelease,
-        [SYSCALL_MALLOC       ] = syscall_malloc,
-        [SYSCALL_ZALLOC       ] = syscall_zalloc,
-        [SYSCALL_FREE         ] = syscall_free,
-        [SYSCALL_SYSLOGENABLE ] = syscall_syslogenable,
-        [SYSCALL_SYSLOGDISABLE] = syscall_syslogdisable,
-        [SYSCALL_RESTART      ] = syscall_restart,
+        [SYSCALL_MOUNT            ] = syscall_mount,
+        [SYSCALL_UMOUNT           ] = syscall_umount,
+        [SYSCALL_GETMNTENTRY      ] = syscall_getmntentry,
+        [SYSCALL_MKNOD            ] = syscall_mknod,
+        [SYSCALL_MKDIR            ] = syscall_mkdir,
+        [SYSCALL_MKFIFO           ] = syscall_mkfifo,
+        [SYSCALL_OPENDIR          ] = syscall_opendir,
+        [SYSCALL_CLOSEDIR         ] = syscall_closedir,
+        [SYSCALL_READDIR          ] = syscall_readdir,
+        [SYSCALL_REMOVE           ] = syscall_remove,
+        [SYSCALL_RENAME           ] = syscall_rename,
+        [SYSCALL_CHMOD            ] = syscall_chmod,
+        [SYSCALL_CHOWN            ] = syscall_chown,
+        [SYSCALL_STAT             ] = syscall_stat,
+        [SYSCALL_STATFS           ] = syscall_statfs,
+        [SYSCALL_FOPEN            ] = syscall_fopen,
+        [SYSCALL_FREOPEN          ] = syscall_freopen,
+        [SYSCALL_FCLOSE           ] = syscall_fclose,
+        [SYSCALL_FWRITE           ] = syscall_fwrite,
+        [SYSCALL_FREAD            ] = syscall_fread,
+        [SYSCALL_FSEEK            ] = syscall_fseek,
+        [SYSCALL_FTELL            ] = syscall_ftell,
+        [SYSCALL_IOCTL            ] = syscall_ioctl,
+        [SYSCALL_FSTAT            ] = syscall_fstat,
+        [SYSCALL_FFLUSH           ] = syscall_fflush,
+        [SYSCALL_FEOF             ] = syscall_feof,
+        [SYSCALL_CLEARERROR       ] = syscall_clearerr,
+        [SYSCALL_FERROR           ] = syscall_ferror,
+        [SYSCALL_SYNC             ] = syscall_sync,
+        [SYSCALL_GETCLOCK         ] = syscall_getclock,
+        [SYSCALL_GETTIME          ] = syscall_gettime,
+        [SYSCALL_SETTIME          ] = syscall_settime,
+        [SYSCALL_DRIVERINIT       ] = syscall_driverinit,
+        [SYSCALL_DRIVERRELEASE    ] = syscall_driverrelease,
+        [SYSCALL_MALLOC           ] = syscall_malloc,
+        [SYSCALL_ZALLOC           ] = syscall_zalloc,
+        [SYSCALL_FREE             ] = syscall_free,
+        [SYSCALL_SYSLOGENABLE     ] = syscall_syslogenable,
+        [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
+        [SYSCALL_RESTART          ] = syscall_restart,
+        [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
 };
+
+
+
 
 /*==============================================================================
   Exported objects
@@ -179,7 +185,7 @@ static const syscallfunc_t syscalltab[] = {
  * @return ?
  */
 //==============================================================================
-void _syscall(syscall_t syscall, void *retptr, ...)
+void syscall(syscall_t syscall, void *retptr, ...)
 {
         syscallrq_t syscallrq;
         syscallrq.syscall  = syscall;
@@ -631,6 +637,18 @@ static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return ?
  */
 //==============================================================================
+static void syscall_getclock(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
 static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
@@ -753,6 +771,20 @@ static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres)
         UNUSED_ARG2(syscallrq, syscallres);
 
         _cpuctl_restart_system();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+        GETARG(bool *, showmsg);
+        SETRETURN(bool, _kernel_panic_detect(*showmsg));
+        SETERRNO(ESUCC);
 }
 
 /*==============================================================================

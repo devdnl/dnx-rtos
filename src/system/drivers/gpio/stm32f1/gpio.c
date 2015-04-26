@@ -279,6 +279,7 @@ API_MOD_WRITE(GPIO,
         UNUSED_ARG(src);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(wrcnt);
         UNUSED_ARG(fattr);
 
         return ENOTSUP;
@@ -310,6 +311,7 @@ API_MOD_READ(GPIO,
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(rdcnt);
         UNUSED_ARG(fattr);
 
         return ENOTSUP;

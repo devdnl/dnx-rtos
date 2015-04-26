@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported macros
@@ -53,6 +54,8 @@ extern int       _ltimeoff;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern char      *_itoa          (i32_t, char*, u8_t, bool, u8_t);
+extern int        _dtoa          (double, char*, int, int);
 extern double     _strtod        (const char*, char**);
 extern i32_t      _atoi          (const char*);
 extern char      *_strtoi        (const char*, int, i32_t*);

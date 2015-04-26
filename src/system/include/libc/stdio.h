@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <sys/types.h>
+#include <sys/types.h> // TODO remove sysem headers dependencies
 //#include "fs/vfs.h"
 //#include "core/sysmoni.h"
 //#include "core/printx.h"
@@ -67,15 +67,15 @@ extern "C" {
 #endif
 
 #ifndef SEEK_SET
-#define SEEK_SET                VFS_SEEK_SET
+#define SEEK_SET                0
 #endif
 
 #ifndef SEEK_CUR
-#define SEEK_CUR                VFS_SEEK_CUR
+#define SEEK_CUR                1
 #endif
 
 #ifndef SEEK_END
-#define SEEK_END                VFS_SEEK_END
+#define SEEK_END                2
 #endif
 
 #define FILENAME_MAX            255
@@ -93,6 +93,9 @@ typedef struct vfs_file FILE;
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
 
 /*==============================================================================
   Exported functions
@@ -156,7 +159,7 @@ typedef struct vfs_file FILE;
 static inline FILE *fopen(const char *path, const char *mode)
 {
         FILE *f = NULL;
-        _syscall(SYSCALL_FOPEN, &f, path, mode);
+        syscall(SYSCALL_FOPEN, &f, path, mode);
         return f;
 }
 
@@ -194,7 +197,7 @@ static inline FILE *fopen(const char *path, const char *mode)
 static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 {
         FILE *f = NULL;
-        _syscall(SYSCALL_FREOPEN, &f, path, mode, file);
+        syscall(SYSCALL_FREOPEN, &f, path, mode, file);
         return f;
 }
 
@@ -227,7 +230,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 static inline int fclose(FILE *file)
 {
         int r = EOF;
-        _syscall(SYSCALL_FCLOSE, &r, file);
+        syscall(SYSCALL_FCLOSE, &r, file);
         return r;
 }
 
@@ -268,7 +271,7 @@ static inline int fclose(FILE *file)
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        _syscall(SYSCALL_FWRITE, &s, ptr, size, count, file);
+        syscall(SYSCALL_FWRITE, &s, ptr, size, count, file);
         return s;
 }
 
@@ -309,7 +312,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        _syscall(SYSCALL_FREAD, &s, ptr, size, count, file);
+        syscall(SYSCALL_FREAD, &s, ptr, size, count, file);
         return s;
 }
 
@@ -348,7 +351,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 {
         if (pos) {
                 size_t r = 1;
-                _syscall(SYSCALL_FSEEK, &r, file, *pos, SEEK_SET);
+                syscall(SYSCALL_FSEEK, &r, file, *pos, SEEK_SET);
                 return r;
         } else {
                 return EOF;
@@ -395,7 +398,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 static inline int fseek(FILE *file, i64_t offset, int mode)
 {
         size_t r = 1;
-        _syscall(SYSCALL_FSEEK, &r, file, offset, mode);
+        syscall(SYSCALL_FSEEK, &r, file, offset, mode);
         return r;
 }
 
@@ -430,7 +433,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 static inline void rewind(FILE *file)
 {
-        _syscall(SYSCALL_FSEEK, NULL, file, 0, SEEK_SET);
+        syscall(SYSCALL_FSEEK, NULL, file, 0, SEEK_SET);
 }
 
 //==============================================================================
@@ -468,7 +471,7 @@ static inline void rewind(FILE *file)
 static inline i64_t ftell(FILE *file)
 {
         i64_t r = -1;
-        _syscall(SYSCALL_FTELL, &r, file);
+        syscall(SYSCALL_FTELL, &r, file);
         return r;
 }
 
@@ -510,7 +513,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 {
         if (pos) {
                 i64_t r = -1;
-                _syscall(SYSCALL_FTELL, &r, file);
+                syscall(SYSCALL_FTELL, &r, file);
                 *pos = r;
                 return r < 0 ? EOF : 0;
         } else {
@@ -554,7 +557,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 static inline int fflush(FILE *file)
 {
         int r = EOF;
-        _syscall(SYSCALL_FFLUSH, &r, file);
+        syscall(SYSCALL_FFLUSH, &r, file);
         return r;
 }
 
@@ -593,7 +596,7 @@ static inline int fflush(FILE *file)
 static inline int feof(FILE *file)
 {
         int r = EOF;
-        _syscall(SYSCALL_FEOF, &r, file);
+        syscall(SYSCALL_FEOF, &r, file);
         return r;
 }
 
@@ -633,7 +636,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        _syscall(SYSCALL_CLEARERROR, NULL, file);
+        syscall(SYSCALL_CLEARERROR, NULL, file);
 }
 
 //==============================================================================
@@ -675,7 +678,7 @@ static inline void clearerr(FILE *file)
 static inline int ferror(FILE *file)
 {
         int r = EOF;
-        _syscall(SYSCALL_FERROR, &r, file);
+        syscall(SYSCALL_FERROR, &r, file);
         return r;
 }
 
@@ -706,10 +709,7 @@ static inline int ferror(FILE *file)
  * // ...
  */
 //==============================================================================
-static inline void perror(const char *s)
-{
-//        _perror(s);
-}
+extern void perror(const char *s);
 
 //==============================================================================
 /**
@@ -861,7 +861,7 @@ static inline char *tmpnam(char *str)
 static inline int remove(const char *path)
 {
         int r = EOF;
-        _syscall(SYSCALL_REMOVE, &r, path);
+        syscall(SYSCALL_REMOVE, &r, path);
         return r;
 }
 
@@ -889,9 +889,52 @@ static inline int remove(const char *path)
 static inline int rename(const char *old_name, const char *new_name)
 {
         int r = EOF;
-        _syscall(SYSCALL_RENAME, &r, old_name, new_name);
+        syscall(SYSCALL_RENAME, &r, old_name, new_name);
         return r;
 }
+
+//==============================================================================
+/**
+ * @brief int vfprintf(FILE *stream, const char *format, va_list arg)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>stream</b>.
+ * An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.<p>
+ *
+ * <b>c</b> - Prints single character.<p>
+ *
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Prints unsigned type number.<p>
+ *
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *
+ * <b>f</b> - Prints float value.
+ *
+ * @param stream        output stream
+ * @param format        formatting string
+ * @param arg           argument list
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @example
+ * // ...
+ * va_list arg;
+ * // ...
+ * vfprintf(stdout, "foois %d; bar is 0x%x\n", arg);
+ * // ...
+ */
+//==============================================================================
+extern int vfprintf(FILE *stream, const char *format, va_list arg);
 
 //==============================================================================
 /**
@@ -934,11 +977,11 @@ static inline int rename(const char *old_name, const char *new_name)
 //==============================================================================
 static inline int printf(const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vfprintf(stdout, format, arg);
-//        va_end(arg);
-//        return status;
+        va_list arg;
+        va_start(arg, format);
+        int status = vfprintf(stdout, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -983,7 +1026,7 @@ static inline int printf(const char *format, ...)
 //==============================================================================
 static inline int vprintf(const char *format, va_list arg)
 {
-//        return _vfprintf(stdout, format, arg);
+        return vfprintf(stdout, format, arg);
 }
 
 //==============================================================================
@@ -1028,108 +1071,11 @@ static inline int vprintf(const char *format, va_list arg)
 //==============================================================================
 static inline int fprintf(FILE *stream, const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vfprintf(stream, format, arg);
-//        va_end(arg);
-//        return status;
-}
-
-//==============================================================================
-/**
- * @brief int vfprintf(FILE *stream, const char *format, va_list arg)
- * The function produce output according to a <i>format</i> as described below.
- * The function write output to <b>stream</b>.
- * An arguments are passed by list <i>arg</i>.<p>
- *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
- *
- * <b>c</b> - Prints single character.<p>
- *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
- *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
- *
- * <b>u</b> - Prints unsigned type number.<p>
- *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
- *
- * <b>f</b> - Prints float value.
- *
- * @param stream        output stream
- * @param format        formatting string
- * @param arg           argument list
- *
- * @errors EINVAL, ENOMEM, ENOENT, ...
- *
- * @return Upon successful return, these functions return the number of
- * characters printed (excluding the null byte used to end output to strings).
- * If an output error is encountered, a negative value is returned.
- *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vfprintf(stdout, "foois %d; bar is 0x%x\n", arg);
- * // ...
- */
-//==============================================================================
-static inline int vfprintf(FILE *stream, const char *format, va_list arg)
-{
-//        return _vfprintf(stream, format, arg);
-}
-
-//==============================================================================
-/**
- * @brief int snprintf(char *s, size_t n, const char *format, ...)
- * The function produce output according to a <i>format</i> as described below.
- * The function write output pointed to by <i>s</i> of size <i>n</i>.<p>
- *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
- *
- * <b>c</b> - Prints single character.<p>
- *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
- *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
- *
- * <b>u</b> - Prints unsigned type number.<p>
- *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
- *
- * <b>f</b> - Prints float value.
- *
- * @param s             buffer where output was produced
- * @param n             buffer size
- * @param format        formatting string
- * @param ...           argument sequence
- *
- * @errors EINVAL, ENOMEM, ENOENT, ...
- *
- * @return Upon successful return, these functions return the number of
- * characters printed (excluding the null byte used to end output to strings).
- * If an output error is encountered, a negative value is returned.
- *
- * @example
- * // ...
- * char buffer[20];
- * int foo = 12;
- * int bar = 0x12;
- * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
- * // ...
- */
-//==============================================================================
-static inline int snprintf(char *s, size_t n, const char *format, ...)
-{
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vsnprintf(s, n, format, arg);
-//        va_end(arg);
-//        return status;
+        va_list arg;
+        va_start(arg, format);
+        int status = vfprintf(stream, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -1175,9 +1121,57 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
  * // ...
  */
 //==============================================================================
-static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
+extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
+
+//==============================================================================
+/**
+ * @brief int snprintf(char *s, size_t n, const char *format, ...)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>s</i> of size <i>n</i>.<p>
+ *
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.<p>
+ *
+ * <b>c</b> - Prints single character.<p>
+ *
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Prints unsigned type number.<p>
+ *
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *
+ * <b>f</b> - Prints float value.
+ *
+ * @param s             buffer where output was produced
+ * @param n             buffer size
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @example
+ * // ...
+ * char buffer[20];
+ * int foo = 12;
+ * int bar = 0x12;
+ * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
+ * // ...
+ */
+//==============================================================================
+static inline int snprintf(char *s, size_t n, const char *format, ...)
 {
-//        return _vsnprintf(bfr, size, format, args);
+        va_list arg;
+        va_start(arg, format);
+        int status = vsnprintf(s, n, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -1224,11 +1218,11 @@ static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list 
 //==============================================================================
 static inline int sprintf(char *s, const char *format, ...)
 {
-//        va_list arg;
-//        va_start(arg, format);
-//        int status = _vsnprintf(s, UINT16_MAX, format, arg);
-//        va_end(arg);
-//        return status;
+        va_list arg;
+        va_start(arg, format);
+        int status = vsnprintf(s, UINT16_MAX, format, arg);
+        va_end(arg);
+        return status;
 }
 
 //==============================================================================
@@ -1275,7 +1269,7 @@ static inline int sprintf(char *s, const char *format, ...)
 //==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
 {
-//        return _vsnprintf(s, UINT16_MAX, format, arg);
+        return vsnprintf(s, UINT16_MAX, format, arg);
 }
 
 //==============================================================================
@@ -1615,6 +1609,28 @@ static inline int vsscanf(const char *s, const char *format, va_list args)
 
 //==============================================================================
 /**
+ * @brief int fputc(int c, FILE *stream)
+ * <b>fputc</b>() writes the character <i>c</i>, cast to an unsigned char, to
+ * <i>stream</i>.
+ *
+ * @param c         character to put
+ * @param stream    destination stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character written as an unsigned char cast to an int or
+ * <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * fputc('f', stdout);
+ * // ...
+ */
+//==============================================================================
+extern int fputc(int c, FILE *stream);
+
+//==============================================================================
+/**
  * @brief int putc(int c, FILE *stream)
  * <b>putc</b>() is equivalent to <b>fputc</b>().
  *
@@ -1634,7 +1650,7 @@ static inline int vsscanf(const char *s, const char *format, va_list args)
 //==============================================================================
 static inline int putc(int c, FILE *stream)
 {
-//        return _fputc(c, stream);
+        return fputc(c, stream);
 }
 
 //==============================================================================
@@ -1657,32 +1673,7 @@ static inline int putc(int c, FILE *stream)
 //==============================================================================
 static inline int putchar(int c)
 {
-//        return _fputc(c, stdout);
-}
-
-//==============================================================================
-/**
- * @brief int fputc(int c, FILE *stream)
- * <b>fputc</b>() writes the character <i>c</i>, cast to an unsigned char, to
- * <i>stream</i>.
- *
- * @param c         character to put
- * @param stream    destination stream
- *
- * @errors EINVAL, ENOMEM, ...
- *
- * @return Return the character written as an unsigned char cast to an int or
- * <b>EOF</b> on error.
- *
- * @example
- * // ...
- * fputc('f', stdout);
- * // ...
- */
-//==============================================================================
-static inline int fputc(int c, FILE *stream)
-{
-//        return _fputc(c, stream);
+        return fputc(c, stdout);
 }
 
 //==============================================================================
@@ -1704,10 +1695,7 @@ static inline int fputc(int c, FILE *stream)
  * // ...
  */
 //==============================================================================
-static inline int fputs(const char *s, FILE *stream)
-{
-//        return _f_puts(s, stream, false);
-}
+extern int fputs(const char *s, FILE *stream);
 
 //==============================================================================
 /**
@@ -1727,10 +1715,27 @@ static inline int fputs(const char *s, FILE *stream)
  * // ...
  */
 //==============================================================================
-static inline int puts(const char *s)
-{
-//        return _f_puts(s, stdout, true);
-}
+extern int puts(const char *s);
+
+//==============================================================================
+/**
+ * @brief int getc(FILE *stream)
+ * <b>getc</b>() is equivalent to <b>fgetc</b>().
+ *
+ * @param stream        input stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error.
+ *
+ * @example
+ * // ...
+ * char c = getc(stdin);
+ * // ...
+ */
+//==============================================================================
+extern int getc(FILE *stream);
 
 //==============================================================================
 /**
@@ -1752,30 +1757,7 @@ static inline int puts(const char *s)
 //==============================================================================
 static inline int getchar(void)
 {
-//        return _getc(stdin);
-}
-
-//==============================================================================
-/**
- * @brief int getc(FILE *stream)
- * <b>getc</b>() is equivalent to <b>fgetc</b>().
- *
- * @param stream        input stream
- *
- * @errors EINVAL, ENOMEM, ...
- *
- * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error.
- *
- * @example
- * // ...
- * char c = getc(stdin);
- * // ...
- */
-//==============================================================================
-static inline int getc(FILE *stream)
-{
-//        return _getc(stream);
+        return getc(stdin);
 }
 
 //==============================================================================
@@ -1799,7 +1781,7 @@ static inline int getc(FILE *stream)
 //==============================================================================
 static inline int fgetc(FILE *stream)
 {
-//        return _getc(stream);
+        return getc(stream);
 }
 
 //==============================================================================
@@ -1864,10 +1846,7 @@ static inline int ungetc(int c, FILE *stream)
  * // ...
  */
 //==============================================================================
-static inline char *fgets(char *str, int size, FILE *stream)
-{
-//        return _fgets(str, size, stream);
-}
+extern char *fgets(char *str, int size, FILE *stream);
 
 #ifdef __cplusplus
 }

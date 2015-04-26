@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    env.c
+@file    time.c
 
 @author  Daniel Zorychta
 
@@ -27,10 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "kernel/env.h"
+#include "kernel/time.h"
+#include "fs/vfs.h"
+#include "errno.h"
 #include "config.h"
-
-// TODO if callback will be applied then this file is not necessary
 
 /*==============================================================================
   Local macros
@@ -79,27 +79,24 @@
  *                      in which case the parameter is not used (the function
  *                      still returns a value of type time_t with the result).
  *
- * @return The current calendar time as a time_t object.
- *         If the argument is not a null pointer, the return value is the same
- *         as the one stored in the location pointed by argument timer.
- *         If the function could not retrieve the calendar time, it returns
- *         a value of -1.
+ * @return One of errno value.
  */
 //==============================================================================
-time_t _time(time_t *timer)
+int _gettime(time_t *timer)
 {
-//        time_t t   = -1; // TODO _time function not completed (syscall time)
-//        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r");
-//        if (rtc) {
-//                if (_vfs_fread(&t, sizeof(time_t), 1, rtc) == 1) {
-//                        if (timer) {
-//                                *timer = t;
-//                        }
-//                }
-//                _vfs_fclose(rtc);
-//        }
-//
-//        return t;
+        int result = EINVAL;
+
+        if (timer) {
+                FILE *rtc;
+                result = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r", &rtc);
+                if (result == ESUCC) {
+                        size_t rdcnt;
+                        result = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
+                        _vfs_fclose(rtc, false);
+                }
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -112,20 +109,24 @@ time_t _time(time_t *timer)
  * @param  timer        pointer to an object of type time_t, where the time
  *                      value is stored.
  *
- * @return On success 0 is returned.
- *         On error -1 is returned.
+ * @return One of errno value.
  */
 //==============================================================================
-int _stime(time_t *timer)
+int _settime(time_t *timer)
 {
-        int    ret = -1;
-//        FILE  *rtc = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w"); // TODO stime() syscall time
-//        if (rtc) {
-//                ret = _vfs_fwrite(timer, sizeof(time_t), 1, rtc) == 1 ? 0 : -1;
-//                _vfs_fclose(rtc);
-//        }
+        int result = EINVAL;
 
-        return ret;
+        if (timer) {
+                FILE *rtc;
+                result = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w", &rtc);
+                if (result == ESUCC) {
+                        size_t wrcnt;
+                        result = _vfs_fwrite(timer, sizeof(time_t), &wrcnt, rtc);
+                        _vfs_fclose(rtc, false);
+                }
+        }
+
+        return result;
 }
 
 /*==============================================================================

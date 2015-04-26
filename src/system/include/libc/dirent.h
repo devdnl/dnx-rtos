@@ -83,7 +83,7 @@ typedef struct vfs_dir DIR;
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-//        return _sysm_opendir(name);
+//        return _sysm_opendir(name); TODO opendir
 }
 
 //==============================================================================
@@ -112,7 +112,7 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-//        return _sysm_closedir(dir);
+//        return _sysm_closedir(dir); TODO closedir
 }
 
 //==============================================================================
@@ -159,7 +159,7 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline dirent_t *readdir(DIR *dir)
 {
-//        return _vfs_readdir(dir);
+//        return _vfs_readdir(dir); TODO readdir
 }
 
 #ifdef __cplusplus
