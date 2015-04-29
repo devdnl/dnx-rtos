@@ -31,7 +31,7 @@
   Include files
 ==============================================================================*/
 #include <string.h>
-#include "lib/cast.h"
+#include <lib/cast.h>
 
 #ifdef __cplusplus
 extern "C" {

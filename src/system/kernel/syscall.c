@@ -84,7 +84,6 @@ static void syscall_chown(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_stat(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_statfs(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_freopen(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres);
@@ -97,7 +96,6 @@ static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_getclock(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres);
@@ -136,7 +134,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_STAT             ] = syscall_stat,
         [SYSCALL_STATFS           ] = syscall_statfs,
         [SYSCALL_FOPEN            ] = syscall_fopen,
-        [SYSCALL_FREOPEN          ] = syscall_freopen,
         [SYSCALL_FCLOSE           ] = syscall_fclose,
         [SYSCALL_FWRITE           ] = syscall_fwrite,
         [SYSCALL_FREAD            ] = syscall_fread,
@@ -149,7 +146,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_CLEARERROR       ] = syscall_clearerr,
         [SYSCALL_FERROR           ] = syscall_ferror,
         [SYSCALL_SYNC             ] = syscall_sync,
-        [SYSCALL_GETCLOCK         ] = syscall_getclock,
         [SYSCALL_GETTIME          ] = syscall_gettime,
         [SYSCALL_SETTIME          ] = syscall_settime,
         [SYSCALL_DRIVERINIT       ] = syscall_driverinit,
@@ -464,18 +460,6 @@ static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return ?
  */
 //==============================================================================
-static void syscall_freopen(syscallrq_t *syscallrq, syscallres_t *syscallres)
-{
-
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
 static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
@@ -623,18 +607,6 @@ static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres)
  */
 //==============================================================================
 static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
-{
-
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-static void syscall_getclock(syscallrq_t *syscallrq, syscallres_t *syscallres)
 {
 
 }

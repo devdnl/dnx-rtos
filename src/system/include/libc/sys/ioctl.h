@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/ioctl_macros.h"
-#include "kernel/syscall.h"
+#include <drivers/ioctl_macros.h>
+#include <kernel/syscall.h>
 
 /* ioctl requests */
 #ifdef ARCH_noarch
@@ -108,7 +108,7 @@ static inline int ioctl(FILE *stream, int request, ...)
         va_list arg;
         va_start(arg, request);
         int r = -1;
-        syscall(SYSCALL_IOCTL, &r, arg);
+        syscall(SYSCALL_IOCTL, &r, stream, &arg);
         va_end(arg);
         return r;
 }

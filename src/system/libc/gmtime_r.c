@@ -77,7 +77,7 @@
 //==============================================================================
 struct tm *gmtime(const time_t *timer)
 {
-        return _gmtime_r(timer, &_tmbuf);
+        return _builtinfunc(gmtime_r, timer, &_tmbuf);
 }
 
 //==============================================================================
@@ -101,7 +101,7 @@ struct tm *gmtime(const time_t *timer)
 //==============================================================================
 struct tm *gmtime_r(const time_t *timer, struct tm *tm)
 {
-        return _gmtime_r(timer, tm);
+        return _builtinfunc(gmtime_r, timer, tm);
 }
 
 /*==============================================================================

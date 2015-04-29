@@ -34,9 +34,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
+#include <config.h>
 #include <stdbool.h>
-#include "kernel/syscall.h"
+#include <kernel/syscall.h>
+#include <kernel/khooks.h>
+#include <mm/mm.h>
+#include <drivers/drvctrl.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -45,7 +48,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef struct _sysmoni_taskstat taskstat_t;
+typedef struct _sysmoni_taskstat taskstat_t; // TODO
 typedef _mm_mem_usage_t          memstat_t;
 
 /*==============================================================================
@@ -87,7 +90,7 @@ typedef _mm_mem_usage_t          memstat_t;
 //==============================================================================
 static inline u32_t get_free_memory(void)
 {
-//        return _heap_get_free_heap();
+        return _builtinfunc(mm_get_mem_free);
 }
 
 //==============================================================================
@@ -114,7 +117,7 @@ static inline u32_t get_free_memory(void)
 //==============================================================================
 static inline u32_t get_used_memory(void)
 {
-//        return (get_used_static_memory() + (_HEAP_SIZE - _heap_get_free_heap()));
+        return _builtinfunc(mm_get_mem_usage);
 }
 
 //==============================================================================
@@ -140,7 +143,7 @@ static inline u32_t get_used_memory(void)
 //==============================================================================
 static inline u32_t get_memory_size(void)
 {
-//        return _HEAP_RAM_SIZE;
+        return _builtinfunc(mm_get_mem_size);
 }
 
 //==============================================================================
@@ -192,7 +195,7 @@ static inline u32_t get_memory_size(void)
 //==============================================================================
 static inline int get_memory_usage_details(memstat_t *stat)
 {
-        return _mm_get_mem_usage(stat); // TODO errno set use syscall
+        return _builtinfunc(mm_get_mem_usage_details, stat);
 }
 
 //==============================================================================
@@ -223,7 +226,9 @@ static inline int get_memory_usage_details(memstat_t *stat)
 //==============================================================================
 static inline i32_t get_module_memory_usage(uint module_number)
 {
-//        return _sysm_get_used_memory_by_module(module_number); // TODO get module memory usage
+        i32_t size = -1;
+        _builtinfunc(mm_get_module_mem_usage, module_number, &size);
+        return size;
 }
 
 //==============================================================================
@@ -249,7 +254,7 @@ static inline i32_t get_module_memory_usage(uint module_number)
 //==============================================================================
 static inline u32_t get_uptime(void)
 {
-//        return _get_uptime_counter();
+        return _builtinfunc(get_uptime_counter);
 }
 
 //==============================================================================
@@ -275,7 +280,7 @@ static inline u32_t get_uptime(void)
 //==============================================================================
 static inline uint get_tick_counter(void)
 {
-//        return _kernel_get_tick_counter();
+        return _builtinfunc(kernel_get_tick_counter);
 }
 
 //==============================================================================
@@ -305,7 +310,7 @@ static inline uint get_tick_counter(void)
 //==============================================================================
 static inline uint get_time_ms(void)
 {
-//        return _kernel_get_time_ms();
+        return _builtinfunc(kernel_get_time_ms);
 }
 
 //==============================================================================
@@ -347,42 +352,9 @@ static inline uint get_time_ms(void)
  * // ...
  */
 //==============================================================================
-static inline int get_task_stat(uint ntask, taskstat_t *stat)
+static inline int get_process_stat(uint ntask, taskstat_t *stat)
 {
-//        return _sysm_get_ntask_stat(ntask, stat); TODO get_task_stat
-}
-
-//==============================================================================
-/**
- * @brief uint get_number_of_monitored_tasks(void)
- * The function <b>get_number_of_monitored_tasks</b>() return number of
- * monitored tasks. Real task number is larger by 1, because idle task is not
- * added to monitoring.
- *
- * @param None
- *
- * @errors None
- *
- * @return Return number of monitored tasks.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * uint number_of_tasks = get_number_of_monitored_tasks();
- * for (uint i = 0; i < number_of_tasks; i++) {
- *         taskstat_t stat;
- *         get_task_stat(i, &stat);
- *         printf("Memory usage: %d\n", stat.memory_usage);
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline uint get_number_of_monitored_tasks(void)
-{
-//        return _sysm_get_number_of_monitored_tasks(); TODO get_number_of_monitored_tasks
+//        return _sysm_get_ntask_stat(ntask, stat); TODO get_process_stat()
 }
 
 //==============================================================================
@@ -407,9 +379,9 @@ static inline uint get_number_of_monitored_tasks(void)
  * // ...
  */
 //==============================================================================
-static inline int get_number_of_tasks(void)
+static inline int get_number_of_processes(void)
 {
-//        return _kernel_get_number_of_tasks();
+//        return _kernel_get_number_of_tasks(); TODO get_number_of_processes()
 }
 
 //==============================================================================
@@ -446,7 +418,7 @@ static inline int get_number_of_tasks(void)
 //==============================================================================
 static inline u32_t get_total_CPU_usage(void)
 {
-//        return _sysm_get_total_CPU_usage(); TODO get_total_CPU_usage
+//        return _sysm_get_total_CPU_usage(); TODO get_total_CPU_usage()
 }
 
 //==============================================================================
@@ -576,7 +548,7 @@ static inline const char *get_OS_codename(void)
 //==============================================================================
 static inline const char *get_kernel_name(void)
 {
-        return "FreeRTOS";
+        return _KERNEL_NAME;
 }
 
 //==============================================================================
@@ -602,7 +574,7 @@ static inline const char *get_kernel_name(void)
 //==============================================================================
 static inline const char *get_kernel_version(void)
 {
-        return tskKERNEL_VERSION_NUMBER;
+        return _KERNEL_VERSION;
 }
 
 //==============================================================================
@@ -734,7 +706,7 @@ static inline const char *get_user_name(void)
 //==============================================================================
 static inline const char *get_module_name(uint modid)
 {
-//        return _get_module_name(modid);
+        return _builtinfunc(get_module_name, modid);
 }
 
 //==============================================================================
@@ -761,7 +733,7 @@ static inline const char *get_module_name(uint modid)
 //==============================================================================
 static inline int get_module_number(const char *name)
 {
-//        return _get_module_number(name);
+        return _builtinfunc(get_module_number, name);
 }
 
 //==============================================================================
@@ -791,7 +763,7 @@ static inline int get_module_number(const char *name)
 //==============================================================================
 static inline uint get_number_of_modules(void)
 {
-//        return _get_number_of_modules();
+        return _builtinfunc(get_number_of_modules);
 }
 
 //==============================================================================
@@ -821,7 +793,7 @@ static inline uint get_number_of_modules(void)
 //==============================================================================
 static inline uint get_number_of_drivers(void)
 {
-//        return _get_number_of_drivers();
+        return _builtinfunc(get_number_of_drivers);
 }
 
 //==============================================================================
@@ -851,7 +823,7 @@ static inline uint get_number_of_drivers(void)
 //==============================================================================
 static inline const char *get_driver_name(uint n)
 {
-//        return _get_driver_name(n);
+        return _builtinfunc(get_driver_name, n);
 }
 
 //==============================================================================
@@ -882,7 +854,7 @@ static inline const char *get_driver_name(uint n)
 //==============================================================================
 static inline int get_driver_ID(const char *name)
 {
-//        return _get_driver_ID(name);
+        return _builtinfunc(get_driver_ID, name);
 }
 
 //==============================================================================
@@ -912,7 +884,7 @@ static inline int get_driver_ID(const char *name)
 //==============================================================================
 static inline const char *get_driver_module_name(uint n)
 {
-//        return _get_driver_module_name(n);
+        return _builtinfunc(get_driver_module_name, n);
 }
 
 //==============================================================================
@@ -943,7 +915,7 @@ static inline const char *get_driver_module_name(uint n)
 //==============================================================================
 static inline bool is_driver_active(uint n)
 {
-//        return _is_driver_active(n);
+        return _builtinfunc(is_driver_active, n);
 }
 
 //==============================================================================
@@ -1056,9 +1028,17 @@ static inline void restart_system(void)
 
 //==============================================================================
 /**
- * @brief  ? TODO syslog_enable
- * @param  ?
- * @return ?
+ * @brief  int syslog_enable(const char *path)
+ * The function <b>syslog_enable</b>() enable system logging function. Log
+ * messages will be write to the file pointed by <i>path</i>. If file exists and
+ * is correctly opened then 0 is returned, otherwise -1 and appropriate errno
+ * value is set.
+ *
+ * @param  path         log file path
+ *
+ * @errors Any
+ *
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 static inline int syslog_enable(const char *path)
@@ -1070,9 +1050,15 @@ static inline int syslog_enable(const char *path)
 
 //==============================================================================
 /**
- * @brief  ? TODO syslog_disable
- * @param  ?
- * @return ?
+ * @brief  int syslog_disable()
+ * The function <b>int syslog_disable</b>() disable system logging functionallity.
+ * On success 0 is returned, otherwise -1 and appropriate errno value is set.
+ *
+ * @param  None
+ *
+ * @errors Any
+ *
+ * @return On success 0 is returned, otherwise -1 and appropriate errno value is set.
  */
 //==============================================================================
 static inline int syslog_disable()
@@ -1084,9 +1070,17 @@ static inline int syslog_disable()
 
 //==============================================================================
 /**
- * @brief  ? TODO detect_kernel_panic
- * @param  ?
- * @return ?
+ * @brief  bool detect_kernel_panic(bool showmsg)
+ * The function <b>bool detect_kernel_panic</b>() detect if in the last session
+ * the Kernel Panic occurred. Kernel Panic message is show if <i>showmsg</i> is
+ * set to <b>true</b>. Function return <b>true</b> if Kernel Panic is detected,
+ * otherwise <b>false</b>.
+ *
+ * @param  showmsg      show message if kernel panic occurred
+ *
+ * @errors None
+ *
+ * @return If kernel panic occurred then true is returned, otherwise false.
  */
 //==============================================================================
 static inline bool detect_kernel_panic(bool showmsg)
@@ -1135,7 +1129,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
 //{
-//        return _program_new(cmd, cwd, stin, stout, sterr);
+//        return _program_new(cmd, cwd, stin, stout, sterr); // TODO program_new()
 //}
 
 //==============================================================================
@@ -1174,7 +1168,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline int program_kill(prog_t *prog)
 //{
-//        return _program_kill(prog);
+//        return _program_kill(prog); // TODO program_kill()
 //}
 
 //==============================================================================
@@ -1212,7 +1206,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline int program_delete(prog_t *prog)
 //{
-//        return _program_delete(prog);
+//        return _program_delete(prog); // TODO program_delete()
 //}
 
 //==============================================================================
@@ -1250,7 +1244,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline int program_wait_for_close(prog_t *prog, const uint timeout)
 //{
-//        return _program_wait_for_close(prog, timeout);
+//        return _program_wait_for_close(prog, timeout); // TODO program_wait_for_close()
 //}
 
 //==============================================================================
@@ -1292,7 +1286,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline int program_get_exit_code(prog_t *prog)
 //{
-//        return _program_get_exit_code(prog);
+//        return _program_get_exit_code(prog); // TODO program_get_exit_code()
 //}
 
 //==============================================================================
@@ -1333,7 +1327,7 @@ static inline bool detect_kernel_panic(bool showmsg)
 //==============================================================================
 //static inline bool program_is_closed(prog_t *prog)
 //{
-//        return _program_is_closed(prog);
+//        return _program_is_closed(prog); // TODO program_is_closed()
 //}
 
 #ifdef __cplusplus

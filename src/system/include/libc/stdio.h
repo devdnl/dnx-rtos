@@ -160,6 +160,39 @@ static inline FILE *fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
+ * @brief int fclose(FILE *file)
+ * The <b>fclose</b>() function closes the created stream <i>file</i>.
+ *
+ * @param file          file to close
+ *
+ * @errors EINVAL, ENOENT, ESRCH
+ *
+ * @return Upon successful completion 0 is returned. Otherwise, <b>EOF</b> is
+ * returned and <b>errno</b> is set to indicate the error. In either case any
+ * further access (including another call to fclose()) to the stream results
+ * in undefined behavior.
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "w+");
+ * if (file) {
+ *        // file operations...
+ *
+ *        fclose(file);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int fclose(FILE *file)
+{
+        int r = EOF;
+        syscall(SYSCALL_FCLOSE, &r, file);
+        return r;
+}
+
+//==============================================================================
+/**
  * @brief FILE *freopen(const char *path, const char *mode, FILE *file)
  * The <b>freopen</b>() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates the stream pointed to by stream with it. The
@@ -191,42 +224,8 @@ static inline FILE *fopen(const char *path, const char *mode)
 //==============================================================================
 static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 {
-        FILE *f = NULL;
-        syscall(SYSCALL_FREOPEN, &f, path, mode, file);
-        return f;
-}
-
-//==============================================================================
-/**
- * @brief int fclose(FILE *file)
- * The <b>fclose</b>() function closes the created stream <i>file</i>.
- *
- * @param file          file to close
- *
- * @errors EINVAL, ENOENT, ESRCH
- *
- * @return Upon successful completion 0 is returned. Otherwise, <b>EOF</b> is
- * returned and <b>errno</b> is set to indicate the error. In either case any
- * further access (including another call to fclose()) to the stream results
- * in undefined behavior.
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline int fclose(FILE *file)
-{
-        int r = EOF;
-        syscall(SYSCALL_FCLOSE, &r, file);
-        return r;
+        fclose(file);
+        return fopen(path, mode);
 }
 
 //==============================================================================

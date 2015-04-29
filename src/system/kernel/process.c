@@ -267,7 +267,7 @@ const char *_process_get_CWD()
 //==============================================================================
 void _copy_task_context_to_standard_variables(void)
 {
-        active_process = _task_get_tag(THIS_TASK);
+        active_process = _task_get_tag(_THIS_TASK);
 
         if (active_process->type == TASK_TYPE_THREAD) {
                 active_process = reinterpret_cast(thread_t*, active_process)->process;
@@ -315,7 +315,7 @@ void _copy_standard_variables_to_task_context(void)
 static void process_startup(void *arg)
 {
         process_func_t funcmain = arg;
-        process_t     *proc     = _task_get_tag(THIS_TASK);
+        process_t     *proc     = _task_get_tag(_THIS_TASK);
 
         proc->ret  = funcmain(proc->argc, proc->argv);
         proc->task = NULL;

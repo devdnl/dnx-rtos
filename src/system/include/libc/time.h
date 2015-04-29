@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <kernel/syscall.h>
+#include <kernel/kwrapper.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -342,10 +343,8 @@ extern int _ltimeoff;
  */
 //==============================================================================
 static inline clock_t clock(void)
-{       // TODO consider that this should be as syscall or fastsyscall
-        clock_t clock = -1;
-        syscall(SYSCALL_GETCLOCK, &clock);
-        return clock;
+{
+        return _builtinfunc(kernel_get_time_ms);
 }
 
 //==============================================================================

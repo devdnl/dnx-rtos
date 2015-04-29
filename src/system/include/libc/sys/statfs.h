@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-#include "kernel/syscall.h"
+#include <kernel/syscall.h>
 
 /*==============================================================================
   Exported macros

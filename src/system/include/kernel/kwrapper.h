@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include "kernel/builtinfunc.h"
 #include "kernel/ktypes.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -49,6 +50,10 @@ extern "C" {
 #undef free
 #undef malloc
 
+/** KERNEL NAME */
+#define _KERNEL_NAME                    "FreeRTOS"
+#define _KERNEL_VERSION                 tskKERNEL_VERSION_NUMBER
+
 /** STANDARD STACK SIZES */
 #define STACK_DEPTH_MINIMAL             ((1   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_VERY_LOW            ((2   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
@@ -61,7 +66,7 @@ extern "C" {
 #define STACK_DEPTH_USER(depth)         (depth)
 
 /** OS BASIC DEFINITIONS */
-#define THIS_TASK                       NULL
+#define _THIS_TASK                      NULL
 #define MAX_DELAY_MS                    ((portMAX_DELAY) - 1000)
 #define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
 
@@ -178,7 +183,7 @@ static inline int _kernel_get_number_of_tasks(void)
 //==============================================================================
 static inline void _task_suspend_now(void)
 {
-        vTaskSuspend(THIS_TASK);
+        vTaskSuspend(_THIS_TASK);
 }
 
 //==============================================================================
@@ -214,7 +219,7 @@ static inline void _task_yield_from_ISR(void)
 //==============================================================================
 static inline char *_task_get_name(void)
 {
-        return pcTaskGetTaskName(THIS_TASK);
+        return pcTaskGetTaskName(_THIS_TASK);
 }
 
 //==============================================================================
@@ -238,7 +243,7 @@ static inline task_t *_task_get_handle(void)
 //==============================================================================
 static inline void _task_set_priority(const int priority)
 {
-        vTaskPrioritySet(THIS_TASK, PRIORITY(priority));
+        vTaskPrioritySet(_THIS_TASK, PRIORITY(priority));
 }
 
 //==============================================================================
@@ -250,7 +255,7 @@ static inline void _task_set_priority(const int priority)
 //==============================================================================
 static inline int _task_get_priority(void)
 {
-        return (int)(uxTaskPriorityGet(THIS_TASK) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
+        return (int)(uxTaskPriorityGet(_THIS_TASK) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
 }
 
 //==============================================================================
@@ -262,7 +267,7 @@ static inline int _task_get_priority(void)
 //==============================================================================
 static inline int _task_get_free_stack(void)
 {
-        return uxTaskGetStackHighWaterMark(THIS_TASK);
+        return uxTaskGetStackHighWaterMark(_THIS_TASK);
 }
 
 //==============================================================================

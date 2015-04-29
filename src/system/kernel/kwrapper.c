@@ -132,7 +132,7 @@ int _task_create(task_func_t func, const char *name, const size_t stack_depth, v
                 uint child_priority  = PRIORITY(0);
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                        child_priority = uxTaskPriorityGet(THIS_TASK);
+                        child_priority = uxTaskPriorityGet(_THIS_TASK);
                 }
 
                 taskENTER_CRITICAL();

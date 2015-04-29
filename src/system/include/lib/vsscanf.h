@@ -24,13 +24,14 @@
 
 *//*==========================================================================*/
 
-#ifndef _VSSCANF_H_
-#define _VSSCANF_H_
+#ifndef _LIB_VSSCANF_H_
+#define _LIB_VSSCANF_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
 #include <stdarg.h>
+#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,7 +62,7 @@ extern int _vsscanf(const char*, const char*, va_list);
 }
 #endif
 
-#endif /* _VSSCANF_H_ */
+#endif /* _LIB_VSSCANF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

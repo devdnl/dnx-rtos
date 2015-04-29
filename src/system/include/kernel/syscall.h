@@ -38,7 +38,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define syscall_direct(syscall, ...) // TODO
 
 /*==============================================================================
   Exported object types
@@ -60,7 +59,6 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_STAT,                   // |                |                           |                           |                           |                           |
         SYSCALL_STATFS,                 // |                |                           |                           |                           |                           |
         SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode          | FILE*                     |                           |
-        SYSCALL_FREOPEN,                // | FILE*          | const char *path          | const char *mode          |                           |                           |
         SYSCALL_FCLOSE,                 // | int            | FILE*                     |                           |                           |                           |
         SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *size              | size_t *count             | FILE *file                |
         SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *size              | size_t *count             | FILE *file                |
@@ -73,7 +71,6 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_CLEARERROR,             // | void           | FILE*                     |                           |                           |                           |
         SYSCALL_FERROR,                 // | int            | FILE*                     |                           |                           |                           |
         SYSCALL_SYNC,                   // |                |                           |                           |                           |                           |
-        SYSCALL_GETCLOCK,               // |                |                           |                           |                           |                           |
         SYSCALL_GETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |

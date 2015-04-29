@@ -24,13 +24,14 @@
 
 *//*==========================================================================*/
 
-#ifndef _VFPRINTF_H_
-#define _VFPRINTF_H_
+#ifndef _LIB_VFPRINTF_H_
+#define _LIB_VFPRINTF_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
 #include "fs/vfs.h"
+#include "kernel/builtinfunc.h"
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -63,7 +64,7 @@ extern int _vfprintf(FILE*, const char*, va_list);
 }
 #endif
 
-#endif /* _VFPRINTF_H_ */
+#endif /* _LIB_VFPRINTF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _VSNPRINTF_H_
-#define _VSNPRINTF_H_
+#ifndef _LIB_VSNPRINTF_H_
+#define _LIB_VSNPRINTF_H_
 
 /*==============================================================================
   Include files
@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +64,7 @@ extern int _vsnprintf(char *buf, size_t size, const char *format, va_list arg);
 }
 #endif
 
-#endif /* _VSNPRINTF_H_ */
+#endif /* _LIB_VSNPRINTF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

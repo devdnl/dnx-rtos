@@ -71,7 +71,7 @@
 //==============================================================================
 time_t mktime(struct tm *tm)
 {
-        return static_cast(time_t, _mktime(tm));
+        return static_cast(time_t, _builtinfunc(mktime, tm));
 }
 
 /*==============================================================================

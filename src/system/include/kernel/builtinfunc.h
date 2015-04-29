@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    conv.h
+@file    builtincall.h
 
 @author  Daniel Zorychta
 
-@brief   Module with calculation and convert functions.
+@brief
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,23 +24,23 @@
 
 *//*==========================================================================*/
 
-#ifndef _LIB_CONV_H_
-#define _LIB_CONV_H_
+#ifndef _BUILTINCALL_H_
+#define _BUILTINCALL_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <sys/types.h>
-#include <stdbool.h>
-#include "kernel/builtinfunc.h"
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+#ifndef _builtinfunc
+#define _builtinfunc(_func, ...)       _##_func(__VA_ARGS__)
+#endif
 
 /*==============================================================================
   Exported object types
@@ -49,21 +49,10 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern struct tm _tmbuf;
-extern int       _ltimeoff;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern char      *_itoa          (i32_t, char*, u8_t, bool, u8_t);
-extern int        _dtoa          (double, char*, int, int);
-extern double     _strtod        (const char*, char**);
-extern i32_t      _atoi          (const char*);
-extern char      *_strtoi        (const char*, int, i32_t*);
-extern double     _atof          (const char*);
-extern u32_t      _mktime        (struct tm*);
-extern struct tm *_gmtime_r      (const time_t*, struct tm*);
-extern struct tm *_localtime_r   (const time_t*, struct tm*);
 
 /*==============================================================================
   Exported inline functions
@@ -73,7 +62,7 @@ extern struct tm *_localtime_r   (const time_t*, struct tm*);
 }
 #endif
 
-#endif /* _LIB_CONV_H_ */
+#endif /* _BUILTINCALL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -114,7 +114,7 @@
 //==============================================================================
 int vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-        return _vsnprintf(buf, size, format, arg);
+        return _builtinfunc(vsnprintf, buf, size, format, arg);
 }
 
 /*==============================================================================

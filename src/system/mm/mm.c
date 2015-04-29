@@ -177,7 +177,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
  * @return On success ESUCC (0) is returned, otherwise different than 0 is returned.
  */
 //==============================================================================
-int _mm_get_mem_usage(_mm_mem_usage_t *mem_usage)
+int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
 {
         if (mem_usage) {
                 mem_usage->static_memory_usage      = _HEAP_RAM_SIZE - _HEAP_SIZE;
@@ -215,6 +215,48 @@ int _mm_get_module_mem_usage(uint module, i32_t *usage)
         } else {
                 return EINVAL;
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Return free memory
+ *
+ * @param  None
+ *
+ * @return Free memory
+ */
+//==============================================================================
+size_t _mm_get_mem_free()
+{
+        return _heap_get_free_heap();
+}
+
+//==============================================================================
+/**
+ * @brief  Return free memory
+ *
+ * @param  None
+ *
+ * @return Free memory
+ */
+//==============================================================================
+size_t _mm_get_mem_usage()
+{
+        return (_HEAP_RAM_SIZE - _HEAP_SIZE) + (_HEAP_SIZE - _heap_get_free_heap());
+}
+
+//==============================================================================
+/**
+ * @brief  Return memory size (RAM)
+ *
+ * @param  None
+ *
+ * @return Total memory size
+ */
+//==============================================================================
+size_t _mm_get_mem_size()
+{
+        return _HEAP_RAM_SIZE;
 }
 
 //==============================================================================

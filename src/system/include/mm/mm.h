@@ -68,12 +68,15 @@ enum _mm_mem {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int _mm_init(void);
-extern int _kzalloc(enum _mm_mem, const size_t, void**, ...);
-extern int _kmalloc(enum _mm_mem, const size_t, void**, ...);
-extern int _kfree(enum _mm_mem, void**, ...);
-extern int _mm_get_mem_usage(_mm_mem_usage_t*);
-extern int _mm_get_module_mem_usage(uint module, i32_t *usage);
+extern int    _mm_init(void);
+extern int    _kzalloc(enum _mm_mem, const size_t, void**, ...);
+extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
+extern int    _kfree(enum _mm_mem, void**, ...);
+extern int    _mm_get_mem_usage_details(_mm_mem_usage_t*);
+extern int    _mm_get_module_mem_usage(uint module, i32_t *usage);
+extern size_t _mm_get_mem_free();
+extern size_t _mm_get_mem_usage();
+extern size_t _mm_get_mem_size();
 
 /*==============================================================================
   Exported inline functions

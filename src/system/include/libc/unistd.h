@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <kernel/syscall.h>
+#include <kernel/kwrapper.h>
 
 /*==============================================================================
   Exported macros
@@ -79,7 +80,7 @@ extern "C" {
 //==============================================================================
 static inline void sleep(const uint seconds)
 {
-//        _sleep(seconds); TODO sleep syscall?
+        _builtinfunc(sleep, seconds);
 }
 
 //==============================================================================
@@ -105,7 +106,7 @@ static inline void sleep(const uint seconds)
 //==============================================================================
 static inline void sleep_ms(const uint milliseconds)
 {
-//        _sleep_ms(milliseconds); TODO sleep_ms syscall?
+        _builtinfunc(sleep_ms, milliseconds);
 }
 
 //==============================================================================
@@ -136,8 +137,8 @@ static inline void sleep_ms(const uint milliseconds)
 //==============================================================================
 static inline void usleep(const uint microseconds)
 {
-//        uint ms = microseconds / 1000;
-//        _sleep_ms(ms ? ms : 1); TODO usleep syscall?
+        uint ms = microseconds / 1000;
+        _builtinfunc(sleep_ms, ms ? ms : 1);
 }
 
 //==============================================================================
@@ -169,7 +170,7 @@ static inline void usleep(const uint microseconds)
 //==============================================================================
 static inline int prepare_sleep_until(void)
 {
-//        return _kernel_get_tick_counter(); TODO prepare_sleep_until syscall?
+        return _builtinfunc(kernel_get_tick_counter);
 }
 
 //==============================================================================
@@ -202,7 +203,7 @@ static inline int prepare_sleep_until(void)
 //==============================================================================
 static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 {
-//        _sleep_until_ms(milliseconds, ref_time_ticks); TODO sleep_until_ms syscall?
+        _builtinfunc(sleep_until_ms, milliseconds, ref_time_ticks);
 }
 
 //==============================================================================
@@ -235,7 +236,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 {
-//        _sleep_until(seconds, ref_time_ticks);TODO sleep_until syscall?
+        _builtinfunc(sleep_until, seconds, ref_time_ticks);
 }
 
 //==============================================================================

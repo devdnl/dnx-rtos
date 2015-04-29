@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <lib/conv.h>
+#include <lib/cast.h>
 #include <kernel/syscall.h>
 #include <machine/ieeefp.h>
 #include <_ansi.h>
@@ -670,7 +671,7 @@ static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 //==============================================================================
 static inline int atoi(const char *str)
 {
-        return _atoi(str);
+        return _builtinfunc(atoi, str);
 }
 
 //==============================================================================
@@ -694,7 +695,7 @@ static inline int atoi(const char *str)
 //==============================================================================
 static inline int atol(const char *str)
 {
-        return _atoi(str);
+        return _builtinfunc(atoi, str);
 }
 
 //==============================================================================
@@ -759,7 +760,7 @@ static inline int atol(const char *str)
 static inline i32_t strtol(const char *nptr, char **endptr, int base)
 {
         i32_t result;
-        char *end = _strtoi(nptr, base, &result);
+        char *end = _builtinfunc(strtoi, nptr, base, &result);
         if (endptr)
                 *endptr = end;
         return result;
@@ -787,7 +788,7 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 static inline double atof(const char *nptr)
 {
-        return _atof(nptr);
+        return _builtinfunc(atof, nptr);
 }
 
 //==============================================================================
@@ -811,7 +812,7 @@ static inline double atof(const char *nptr)
 //==============================================================================
 static inline double strtod(const char *nptr, char **endptr)
 {
-        return _strtod(nptr, endptr);
+        return _builtinfunc(strtod, nptr, endptr);
 }
 
 //==============================================================================
@@ -835,7 +836,7 @@ static inline double strtod(const char *nptr, char **endptr)
 //==============================================================================
 static inline float strtof(const char *nptr, char **endptr)
 {
-        return (float)_strtod(nptr, endptr);
+        return static_cast(float, _builtinfunc(strtod, nptr, endptr));
 }
 
 #ifdef __cplusplus
