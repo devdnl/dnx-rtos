@@ -87,7 +87,7 @@ int _printk_enable(const char *filename)
 
         return _vfs_fopen(filename, "w+", &printk_file);
 #else
-        UNUSED_ARG(filename);
+        UNUSED_ARG1(filename);
         return ENOTSUP;
 #endif
 }
@@ -151,7 +151,7 @@ void _printk(const char *format, ...)
                 }
         }
 #else
-        UNUSED_ARG(format);
+        UNUSED_ARG1(format);
 #endif
 }
 

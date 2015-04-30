@@ -320,7 +320,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         sdpart_t *part = device_handle;
 
@@ -343,7 +343,7 @@ API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 {
-        UNUSED_ARG(force);
+        UNUSED_ARG1(force);
 
         sdpart_t *part = device_handle;
 
@@ -374,7 +374,7 @@ API_MOD_WRITE(SDSPI,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         sdpart_t *part = device_handle;
         int       status;
@@ -416,7 +416,7 @@ API_MOD_READ(SDSPI,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         sdpart_t *part = device_handle;
         int       status;
@@ -449,7 +449,7 @@ API_MOD_READ(SDSPI,
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         sdpart_t *part = device_handle;
 
@@ -496,7 +496,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(SDSPI, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }

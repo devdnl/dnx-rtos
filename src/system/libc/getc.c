@@ -85,7 +85,7 @@ int getc(FILE *stream)
 
         return chr;
 #else
-        UNUSED_ARG(stream);
+        UNUSED_ARG1(stream);
         return EOF;
 #endif
 }

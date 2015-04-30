@@ -86,9 +86,9 @@ static int f_puts(const char *s, FILE *file, bool puts)
                 }
         }
 #else
-        UNUSED_ARG(s);
-        UNUSED_ARG(file);
-        UNUSED_ARG(puts);
+        UNUSED_ARG1(s);
+        UNUSED_ARG1(file);
+        UNUSED_ARG1(puts);
 #endif
         return EOF;
 }

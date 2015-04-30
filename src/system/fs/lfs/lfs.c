@@ -108,7 +108,7 @@ static int          add_node_to_open_files_list (struct LFS_data *lfs, node_t *p
 //==============================================================================
 API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
-        UNUSED_ARG(src_path);
+        UNUSED_ARG1(src_path);
 
         int result = _sys_zalloc(sizeof(struct LFS_data), fs_handle);
         if (result == ESUCC) {
@@ -159,7 +159,7 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 //==============================================================================
 API_FS_RELEASE(lfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         /*
          * Here the LFS should delete all lists and free all allocated buffers.
@@ -349,8 +349,8 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static int lfs_closedir(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(dir);
 
         return ESUCC;
 }
@@ -625,7 +625,7 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -674,7 +674,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
@@ -702,7 +702,7 @@ API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -803,7 +803,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const ch
 //==============================================================================
 API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs    = fs_handle;
         int              result = ENOENT;
@@ -876,7 +876,7 @@ API_FS_WRITE(lfs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs    = fs_handle;
         int              result = ENOENT;
@@ -973,7 +973,7 @@ API_FS_READ(lfs,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs    = fs_handle;
         int              result = ENOENT;
@@ -1049,7 +1049,7 @@ API_FS_READ(lfs,
 //==============================================================================
 API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs    = fs_handle;
         int              result = ENOENT;
@@ -1098,7 +1098,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 //==============================================================================
 API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct LFS_data *lfs    = fs_handle;
         int              result = ENOENT;
@@ -1131,7 +1131,7 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_SYNC(lfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
         return ESUCC;
 }
 

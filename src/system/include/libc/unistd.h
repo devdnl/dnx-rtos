@@ -274,9 +274,6 @@ static inline char *getcwd(char *buf, size_t size)
  * @brief int chown(const char *pathname, uid_t owner, gid_t group)
  * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
- * This function is not supported by dnx RTOS, because users and groups are
- * not implemented yet.
- *
  * @param pathname      path to file
  * @param owner         owner ID
  * @param group         group ID

@@ -83,7 +83,7 @@ extern "C" {
 static inline int mknod(const char *pathname, dev_t dev)
 {
         int r;
-        syscall(SYSCALL_MKNOD, &r, pathname, dev);
+        syscall(SYSCALL_MKNOD, &r, pathname, &dev);
         return r;
 }
 
@@ -112,7 +112,7 @@ static inline int mknod(const char *pathname, dev_t dev)
 static inline int mkdir(const char *pathname, mode_t mode)
 {
         int r;
-        syscall(SYSCALL_MKDIR, &r, pathname, mode);
+        syscall(SYSCALL_MKDIR, &r, pathname, &mode);
         return r;
 }
 
@@ -144,7 +144,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
         int r;
-        syscall(SYSCALL_MKFIFO, &r, pathname, mode);
+        syscall(SYSCALL_MKFIFO, &r, pathname, &mode);
         return r;
 }
 
@@ -172,7 +172,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 static inline int chmod(const char *pathname, mode_t mode)
 {
         int r;
-        syscall(SYSCALL_CHMOD, &r, pathname, mode);
+        syscall(SYSCALL_CHMOD, &r, pathname, &mode);
         return r;
 }
 

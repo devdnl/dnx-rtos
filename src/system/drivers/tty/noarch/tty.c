@@ -90,8 +90,8 @@ MODULE_NAME(TTY);
 static struct module *tty_module;
 static const char    *service_in_name           = "tty-in";
 static const char    *service_out_name          = "tty-out";
-static const uint     service_in_stack_depth    = STACK_DEPTH_VERY_LOW;// - 60;
-static const uint     service_out_stack_depth   = STACK_DEPTH_VERY_LOW;// - 45;
+static const uint     service_in_stack_depth    = 96; // FIXME stack size adjustment needed (tty)
+static const uint     service_out_stack_depth   = 96; // FIXME stack size adjustment needed (tty)
 static const int      service_in_priority       = PRIORITY_NORMAL;
 static const int      service_out_priority      = PRIORITY_NORMAL;
 static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
@@ -113,7 +113,7 @@ static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
 //==============================================================================
 API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(minor);
 
         int result = ENODEV;
 
@@ -292,8 +292,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -310,8 +310,8 @@ API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(TTY, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -338,8 +338,8 @@ API_MOD_WRITE(TTY,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         tty_t *tty = device_handle;
 
@@ -377,7 +377,7 @@ API_MOD_READ(TTY,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         tty_t *tty = device_handle;
 
@@ -548,7 +548,7 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void service_in(void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         _sys_task_set_priority(service_in_priority);
 
@@ -569,7 +569,7 @@ static void service_in(void *arg)
 //==============================================================================
 static void service_out(void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         _sys_task_set_priority(service_out_priority);
 

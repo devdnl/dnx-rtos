@@ -287,11 +287,12 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
         FS_entry_t *fs = NULL;
         int result = _mutex_lock(vfs_resource_mtx, MAX_DELAY_MS);
         if (result == ESUCC) {
-                fs = _llist_at(vfs_mnt_list, seek);
+                fs     = _llist_at(vfs_mnt_list, seek);
+                result = fs ? ESUCC : ENOENT;
                 _mutex_unlock(vfs_resource_mtx);
         }
 
-        if (result == ESUCC && fs) {
+        if (result == ESUCC) {
                 int priority = increase_task_priority();
 
                 struct statfs stat_fs;
@@ -299,8 +300,8 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
                 if (result == ESUCC) {
                         mntent->mnt_fsname = stat_fs.f_fsname;
                         mntent->mnt_dir    = fs->mount_point;
-                        mntent->free       = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
-                        mntent->total      = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
+                        mntent->mnt_free   = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
+                        mntent->mnt_total  = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
                 }
 
                 restore_priority(priority);

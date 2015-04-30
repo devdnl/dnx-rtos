@@ -45,41 +45,41 @@ extern "C" {
 typedef enum {                          // | RETURN TYPE    | ARG 1                     | ARG 2                     | ARG 3                     | ARG 4                     |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
         SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                           |                           |                           |
-        SYSCALL_GETMNTENTRY,            // |                |                           |                           |                           |                           |
-        SYSCALL_MKNOD,                  // |                |                           |                           |                           |                           |
-        SYSCALL_MKDIR,                  // |                |                           |                           |                           |                           |
-        SYSCALL_MKFIFO,                 // |                |                           |                           |                           |                           |
-        SYSCALL_OPENDIR,                // |                |                           |                           |                           |                           |
-        SYSCALL_CLOSEDIR,               // |                |                           |                           |                           |                           |
-        SYSCALL_READDIR,                // |                |                           |                           |                           |                           |
+        SYSCALL_GETMNTENTRY,            // | int            | int *seek                 | struct mntent *mntent     |                           |                           |
+        SYSCALL_MKNOD,                  // | int            | const char *pathname      | dev_t *device             |                           |                           |
+        SYSCALL_MKDIR,                  // | int            | const char *pathname      | mode_t *mode              |                           |                           |
+        SYSCALL_MKFIFO,                 // | int            | const char *pathname      | mode_t *mode              |                           |                           |
+        SYSCALL_OPENDIR,                // | DIR*           | const char *pathname      |                           |                           |                           |
+        SYSCALL_CLOSEDIR,               // | int            | DIR *dir                  |                           |                           |                           |
+        SYSCALL_READDIR,                // | dirent_t*      | DIR *dir                  |                           |                           |                           |
         SYSCALL_REMOVE,                 // | int            | const char *path          |                           |                           |                           |
         SYSCALL_RENAME,                 // | int            | const char *old_name      | const char *new_name      |                           |                           |
-        SYSCALL_CHMOD,                  // |                |                           |                           |                           |                           |
-        SYSCALL_CHOWN,                  // |                |                           |                           |                           |                           |
-        SYSCALL_STAT,                   // |                |                           |                           |                           |                           |
-        SYSCALL_STATFS,                 // |                |                           |                           |                           |                           |
-        SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode          | FILE*                     |                           |
-        SYSCALL_FCLOSE,                 // | int            | FILE*                     |                           |                           |                           |
+        SYSCALL_CHMOD,                  // | int            | const char *pathname      | mode_t *mode              |                           |                           |
+        SYSCALL_CHOWN,                  // | int            | const char *pathname      | uid_t *owner              | gid_t *group              |                           |
+        SYSCALL_STAT,                   // | int            | const char *pathname      | struct stat *buf          |                           |                           |
+        SYSCALL_STATFS,                 // | int            | const char *path          | struct statfs *buf        |                           |                           |
+        SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode          |                           |                           |
+        SYSCALL_FCLOSE,                 // | int            | FILE *file                |                           |                           |                           |
         SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *size              | size_t *count             | FILE *file                |
         SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *size              | size_t *count             | FILE *file                |
-        SYSCALL_FSEEK,                  // | int            | FILE*                     | i64_t  *seek              | int    *origin            |                           |
-        SYSCALL_FTELL,                  // | i64_t          | FILE*                     |                           |                           |                           |
-        SYSCALL_IOCTL,                  // |                |                           |                           |                           |                           |
-        SYSCALL_FSTAT,                  // |                |                           |                           |                           |                           |
-        SYSCALL_FFLUSH,                 // | int            | FILE*                     |                           |                           |                           |
-        SYSCALL_FEOF,                   // | int            | FILE*                     |                           |                           |                           |
-        SYSCALL_CLEARERROR,             // | void           | FILE*                     |                           |                           |                           |
-        SYSCALL_FERROR,                 // | int            | FILE*                     |                           |                           |                           |
-        SYSCALL_SYNC,                   // |                |                           |                           |                           |                           |
-        SYSCALL_GETTIME,                // |                |                           |                           |                           |                           |
-        SYSCALL_SETTIME,                // |                |                           |                           |                           |                           |
-        SYSCALL_DRIVERINIT,             // |                |                           |                           |                           |                           |
-        SYSCALL_DRIVERRELEASE,          // |                |                           |                           |                           |                           |
+        SYSCALL_FSEEK,                  // | int            | FILE *file                | i64_t  *seek              | int    *origin            |                           |
+        SYSCALL_FTELL,                  // | i64_t          | FILE *file                |                           |                           |                           |
+        SYSCALL_IOCTL,                  // | int            | FILE *file                | int *request              | va_list *arg              |                           |
+        SYSCALL_FSTAT,                  // | int            | FILE *file                | struct stat *buf          |                           |                           |
+        SYSCALL_FFLUSH,                 // | int            | FILE *file                |                           |                           |                           |
+        SYSCALL_FEOF,                   // | int            | FILE *file                |                           |                           |                           |
+        SYSCALL_CLEARERROR,             // | void           | FILE *file                |                           |                           |                           |
+        SYSCALL_FERROR,                 // | int            | FILE *file                |                           |                           |                           |
+        SYSCALL_SYNC,                   // | void           |                           |                           |                           |                           |
+        SYSCALL_GETTIME,                // | time_t         |                           |                           |                           |                           |
+        SYSCALL_SETTIME,                // | int            | time_t *time              |                           |                           |                           |
+        SYSCALL_DRIVERINIT,             // | int            | const char *drv_name      | const char *node_path     |                           |                           |
+        SYSCALL_DRIVERRELEASE,          // | int            | const char *drv_name      |                           |                           |                           |
         SYSCALL_MALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
         SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
-        SYSCALL_SYSLOGENABLE,           // |                |                           |                           |                           |                           |
-        SYSCALL_SYSLOGDISABLE,          // |                |                           |                           |                           |                           |
+        SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                           |                           |                           |
+        SYSCALL_SYSLOGDISABLE,          // | int            |                           |                           |                           |                           |
         SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
         SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
         SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |

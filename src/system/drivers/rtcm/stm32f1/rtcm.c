@@ -79,10 +79,10 @@ MODULE_NAME(RTCM);
 //==============================================================================
 API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
-        UNUSED_ARG(_module_name_);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(major);
+        UNUSED_ARG1(minor);
+        UNUSED_ARG1(_module_name_);
 
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
         SET_BIT(PWR->CR, PWR_CR_DBP);
@@ -130,7 +130,7 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(RTCM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -147,8 +147,8 @@ API_MOD_RELEASE(RTCM, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(RTCM, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -165,8 +165,8 @@ API_MOD_OPEN(RTCM, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(RTCM, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -193,8 +193,8 @@ API_MOD_WRITE(RTCM,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(fattr);
 
         if (*fpos == 0) {
                 count = count > sizeof(time_t) ? sizeof(time_t) : count;
@@ -250,8 +250,8 @@ API_MOD_READ(RTCM,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(fattr);
 
         if (*fpos == 0) {
                 count = count > sizeof(time_t) ? sizeof(time_t) : count;
@@ -283,9 +283,9 @@ API_MOD_READ(RTCM,
 //==============================================================================
 API_MOD_IOCTL(RTCM, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(request);
+        UNUSED_ARG1(arg);
 
         return EBADRQC;
 }
@@ -301,7 +301,7 @@ API_MOD_IOCTL(RTCM, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(RTCM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -318,7 +318,7 @@ API_MOD_FLUSH(RTCM, void *device_handle)
 //==============================================================================
 API_MOD_STAT(RTCM, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = sizeof(time_t);
         device_stat->st_major = 0;

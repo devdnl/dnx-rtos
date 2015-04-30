@@ -125,25 +125,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** file type */
-typedef enum tfile {
-        FILE_TYPE_UNKNOWN,
-        FILE_TYPE_REGULAR,
-        FILE_TYPE_DIR,
-        FILE_TYPE_DRV,
-        FILE_TYPE_LINK,
-        FILE_TYPE_PROGRAM,
-        FILE_TYPE_PIPE
-} tfile_t;
-
-/** directory entry */
-typedef struct dirent {
-        char   *name;
-        u64_t   size;
-        tfile_t filetype;
-        dev_t   dev;
-} dirent_t;
-
 /** directory type */
 struct vfs_dir {
         int           (*f_readdir)(void *fshdl, struct vfs_dir *dir, dirent_t **dirent);
@@ -159,42 +140,11 @@ struct vfs_dir {
 typedef struct vfs_dir DIR;
 #define __DIR_TYPE_DEFINED__
 
-/** file statistics */
-struct stat {
-        u64_t   st_size;                /**< total size, in bytes         */
-        u32_t   st_dev;                 /**< ID of device containing file */
-        u32_t   st_mode;                /**< protection                   */
-        u32_t   st_uid;                 /**< user ID of owner             */
-        u32_t   st_gid;                 /**< group ID of owner            */
-        u32_t   st_atime;               /**< time of last access          */
-        u32_t   st_mtime;               /**< time of last modification    */
-        tfile_t st_type;                /**< type of file                 */
-};
-
 /** device info */
 struct vfs_dev_stat {
         u64_t st_size;                  /**< total size, in bytes */
         u8_t  st_major;                 /**< device major number  */
         u8_t  st_minor;                 /**< device minor number  */
-};
-
-/** file system statistic */
-struct statfs {
-        u32_t f_type;                   /**< file system type       */
-        u32_t f_bsize;                  /**< block size             */
-        u32_t f_blocks;                 /**< total blocks           */
-        u32_t f_bfree;                  /**< free blocks            */
-        u32_t f_files;                  /**< total file nodes in FS */
-        u32_t f_ffree;                  /**< free file nodes in FS  */
-        const char *f_fsname;           /**< FS name                */
-};
-
-/** structure describing a mount table entry */
-struct mntent {
-        const char *mnt_fsname;         /**< device or server for filesystem */
-        const char *mnt_dir;            /**< directory mounted on            */
-        u64_t       total;              /**< device total size               */
-        u64_t       free;               /**< device free                     */
 };
 
 /** file write/read attributtes */

@@ -106,7 +106,7 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(WDG, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return EPERM;
 }
@@ -123,7 +123,7 @@ API_MOD_RELEASE(WDG, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         WDG_t *hdl = device_handle;
 
@@ -208,12 +208,12 @@ API_MOD_READ(WDG,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(rdcnt);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(dst);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(rdcnt);
+        UNUSED_ARG1(fattr);
 
         return ENOTSUP;
 }
@@ -231,7 +231,7 @@ API_MOD_READ(WDG,
 //==============================================================================
 API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         WDG_t *hdl = device_handle;
 
@@ -260,7 +260,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(WDG, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -277,7 +277,7 @@ API_MOD_FLUSH(WDG, void *device_handle)
 //==============================================================================
 API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_major = _WDG_MAJOR_NUMBER;
         device_stat->st_minor = _WDG_MINOR_NUMBER;

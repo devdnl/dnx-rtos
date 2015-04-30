@@ -208,8 +208,8 @@ API_MOD_RELEASE(IRQ, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(IRQ, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -226,8 +226,8 @@ API_MOD_OPEN(IRQ, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(IRQ, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -299,7 +299,7 @@ API_MOD_READ(IRQ,
 //==============================================================================
 API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         IRQ_t *hdl = device_handle;
 
@@ -394,7 +394,7 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(IRQ, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -411,7 +411,7 @@ API_MOD_FLUSH(IRQ, void *device_handle)
 //==============================================================================
 API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = _IRQ_MAJOR_NUMBER;

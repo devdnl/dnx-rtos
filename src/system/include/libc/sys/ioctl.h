@@ -34,28 +34,29 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdarg.h>
 #include <drivers/ioctl_macros.h>
 #include <kernel/syscall.h>
 
 /* ioctl requests */
 #ifdef ARCH_noarch
-#       include "noarch/loop_ioctl.h"
-#       include "noarch/tty_ioctl.h"
-#       include "noarch/sdspi_ioctl.h"
+#       include <noarch/loop_ioctl.h>
+#       include <noarch/tty_ioctl.h>
+#       include <noarch/sdspi_ioctl.h>
 #endif
 #ifdef ARCH_stm32f1
-#       include "stm32f1/rtcm_ioctl.h"
-#       include "stm32f1/afiom_ioctl.h"
-#       include "stm32f1/crcm_ioctl.h"
-#       include "stm32f1/ethmac_ioctl.h"
-#       include "stm32f1/gpio_ioctl.h"
-#       include "stm32f1/pll_ioctl.h"
-#       include "stm32f1/spi_ioctl.h"
-#       include "stm32f1/uart_ioctl.h"
-#       include "stm32f1/usbd_ioctl.h"
-#       include "stm32f1/irq_ioctl.h"
-#       include "stm32f1/i2c_ioctl.h"
-#       include "stm32f1/wdg_ioctl.h"
+#       include <stm32f1/rtcm_ioctl.h>
+#       include <stm32f1/afiom_ioctl.h>
+#       include <stm32f1/crcm_ioctl.h>
+#       include <stm32f1/ethmac_ioctl.h>
+#       include <stm32f1/gpio_ioctl.h>
+#       include <stm32f1/pll_ioctl.h>
+#       include <stm32f1/spi_ioctl.h>
+#       include <stm32f1/uart_ioctl.h>
+#       include <stm32f1/usbd_ioctl.h>
+#       include <stm32f1/irq_ioctl.h>
+#       include <stm32f1/i2c_ioctl.h>
+#       include <stm32f1/wdg_ioctl.h>
 #endif
 
 /*==============================================================================
@@ -87,9 +88,8 @@ extern "C" {
  *
  * @errors EINVAL, ENOENT, EBADRQC, ...
  *
- * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
- * return value as an output parameter and return a nonnegative value on
- * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
+ * @return On success zero is returned. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
  *
  * @example
  * // ...
@@ -108,7 +108,7 @@ static inline int ioctl(FILE *stream, int request, ...)
         va_list arg;
         va_start(arg, request);
         int r = -1;
-        syscall(SYSCALL_IOCTL, &r, stream, &arg);
+        syscall(SYSCALL_IOCTL, &r, stream, &request, &arg);
         va_end(arg);
         return r;
 }

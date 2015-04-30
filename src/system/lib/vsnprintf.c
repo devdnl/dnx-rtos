@@ -456,10 +456,10 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
         return (scan_len - 1);
 #else
-        UNUSED_ARG(buf);
-        UNUSED_ARG(size);
-        UNUSED_ARG(format);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(buf);
+        UNUSED_ARG1(size);
+        UNUSED_ARG1(format);
+        UNUSED_ARG1(arg);
         return 0;
 #endif
 }

@@ -355,7 +355,7 @@ API_MOD_RELEASE(USBD, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(USBD, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         USB_ep_t *hdl = device_handle;
 
@@ -406,8 +406,8 @@ API_MOD_WRITE(USBD,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         USB_ep_t *hdl = device_handle;
         int       status;
@@ -538,8 +538,8 @@ API_MOD_READ(USBD,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         USB_ep_t *hdl = device_handle;
         int       status;
@@ -892,7 +892,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(USBD, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }

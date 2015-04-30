@@ -189,7 +189,7 @@ static inline int driver_init(const char *drv_name, const char *node_path)
  *
  * @errors EINVAL, ...
  *
- * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
  * @example

@@ -161,9 +161,9 @@ static inline int closedir(DIR *dir)
  * // ...
  */
 //==============================================================================
-static inline dirent_t *readdir(DIR *dir)
+static inline struct dirent *readdir(DIR *dir)
 {
-        dirent_t *dirent = NULL;
+        struct dirent *dirent = NULL;
         syscall(SYSCALL_READDIR, &dirent, dir);
         return dir;
 }

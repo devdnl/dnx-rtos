@@ -139,9 +139,9 @@ char *fgets(char *str, int size, FILE *stream)
                 }
         }
 #else
-        UNUSED_ARG(str);
-        UNUSED_ARG(size);
-        UNUSED_ARG(stream);
+        UNUSED_ARG1(str);
+        UNUSED_ARG1(size);
+        UNUSED_ARG1(stream);
 #endif
         return NULL;
 }

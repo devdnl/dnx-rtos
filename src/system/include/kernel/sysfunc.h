@@ -31,8 +31,9 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
-#include "sys/types.h"
 #include "dnx/misc.h"
+#include "sys/types.h"
+#include "lib/unarg.h"
 #include "lib/conv.h"
 #include "lib/llist.h"
 #include "lib/vsnprintf.h"

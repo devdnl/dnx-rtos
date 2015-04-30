@@ -380,7 +380,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(I2C, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         I2C_dev_t *hdl = device_handle;
 
@@ -431,7 +431,7 @@ API_MOD_WRITE(I2C,
               struct vfs_fattr  fattr,
               size_t           *wrcnt)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         I2C_dev_t *hdl    = device_handle;
 
@@ -483,7 +483,7 @@ API_MOD_READ(I2C,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         I2C_dev_t *hdl    = device_handle;
 
@@ -556,7 +556,7 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(I2C, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }

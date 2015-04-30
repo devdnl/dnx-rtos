@@ -34,6 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <sys/types.h>
 #include <kernel/syscall.h>
 
 /*==============================================================================
@@ -58,16 +59,15 @@ extern "C" {
 //==============================================================================
 /**
  * @brief int getmntentry(int item, struct mntent *mntent)
- * Function return file system describe object. After operation object must be
- * freed using free() function.<p>
+ * Function return file system describe object.<p>
  *
  * <b>mntent</b> structure:
  * <pre>
  * struct mntent {
  *         const char *mnt_fsname;    // device or server for file system
  *         const char *mnt_dir;       // directory mounted on
- *         u64_t       total;         // device total size
- *         u64_t       free;          // device free
+ *         u64_t       mnt_total;     // device total size
+ *         u64_t       mnt_free;      // device free
  * };
  * </pre>
  *

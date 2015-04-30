@@ -116,7 +116,7 @@ static uint        get_file_content        (struct file_info *file_info, char *b
 //==============================================================================
 API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
-        UNUSED_ARG(src_path);
+        UNUSED_ARG1(src_path);
 
         int result = _sys_zalloc(sizeof(struct procfs), fs_handle);
         if (result == ESUCC) {
@@ -196,7 +196,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG1(extra);
 
         struct procfs *procmem = fs_handle;
 
@@ -292,8 +292,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 //==============================================================================
 API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(extra);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(force);
 
         struct procfs *procmem = fs_handle;
 
@@ -333,14 +333,14 @@ API_FS_WRITE(procfs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(wrcnt);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(src);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(wrcnt);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         return EROFS;
 }
@@ -427,11 +427,11 @@ API_FS_READ(procfs,
 //==============================================================================
 API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(request);
+        UNUSED_ARG1(arg);
 
         return ENOTSUP;
 }
@@ -449,9 +449,9 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
 //==============================================================================
 API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
 
         return ESUCC;
 }
@@ -470,7 +470,7 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG1(extra);
 
         struct procfs *procmem = fs_handle;
 
@@ -517,9 +517,9 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return EROFS;
 }
@@ -537,9 +537,9 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return ENOTSUP;
 }
@@ -557,9 +557,9 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(dev);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(dev);
 
         return ENOTSUP;
 }
@@ -577,7 +577,7 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         dir->f_seek = 0;
 
@@ -646,7 +646,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static int procfs_closedir_freedd(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         if (dir->f_dd) {
                 _sys_free(&dir->f_dd);
@@ -670,8 +670,8 @@ static int procfs_closedir_freedd(void *fs_handle, DIR *dir)
 //==============================================================================
 static int procfs_closedir_generic(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(dir);
 
         return ESUCC;
 }
@@ -688,8 +688,8 @@ static int procfs_closedir_generic(void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(procfs, void *fs_handle, const char *path)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
 
         return EROFS;
 }
@@ -707,9 +707,9 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(old_name);
-        UNUSED_ARG(new_name);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(old_name);
+        UNUSED_ARG1(new_name);
 
         return EROFS;
 }
@@ -727,9 +727,9 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
 //==============================================================================
 API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return EROFS;
 }
@@ -748,10 +748,10 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(owner);
-        UNUSED_ARG(group);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(owner);
+        UNUSED_ARG1(group);
 
         return EROFS;
 }
@@ -769,8 +769,8 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
 //==============================================================================
 API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
@@ -795,7 +795,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
@@ -818,7 +818,7 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(procfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
         return ESUCC;
 }
 
@@ -835,7 +835,7 @@ API_FS_SYNC(procfs, void *fs_handle)
 //==============================================================================
 static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         int result = ENOENT;
 
@@ -892,7 +892,7 @@ static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
 //==============================================================================
 static int procfs_readdir_taskname(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
 //        struct _sysmoni_taskstat taskdata; // TODO _sys function needed
 //        int result = _sysm_get_ntask_stat(dir->f_seek, &taskdata);
@@ -922,7 +922,7 @@ static int procfs_readdir_taskname(void *fs_handle, DIR *dir, dirent_t **dirent)
 //==============================================================================
 static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
                 dir->dirent.filetype = FILE_TYPE_PROGRAM;
@@ -952,7 +952,7 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 //==============================================================================
 static int procfs_readdir_taskid(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         int result = ENOENT;
         // TODO _sys function needed
@@ -988,7 +988,7 @@ static int procfs_readdir_taskid(void *fs_handle, DIR *dir, dirent_t **dirent)
 //==============================================================================
 static int procfs_readdir_taskid_n(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         if (dir->f_seek >= FILE_CONTENT_COUNT) {
                 return ENOENT;

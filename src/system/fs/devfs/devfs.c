@@ -104,7 +104,7 @@ static int      create_new_chain_if_necessary(struct devfs *devfs);
 //==============================================================================
 API_FS_INIT(devfs, void **fs_handle, const char *src_path)
 {
-        UNUSED_ARG(src_path);
+        UNUSED_ARG1(src_path);
 
         int result = _sys_zalloc(sizeof(struct devfs), fs_handle);
         if (result == ESUCC) {
@@ -187,7 +187,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct devfs *devfs  = fs_handle;
 
@@ -234,7 +234,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 //==============================================================================
 API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct devfs   *devfs  = fs_handle;
         struct devnode *node   = extra;
@@ -287,8 +287,8 @@ API_FS_WRITE(devfs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         struct devnode *node = extra;
 
@@ -327,8 +327,8 @@ API_FS_READ(devfs,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         struct devnode *node = extra;
 
@@ -356,8 +356,8 @@ API_FS_READ(devfs,
 //==============================================================================
 API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         struct devnode *node = extra;
 
@@ -385,8 +385,8 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 //==============================================================================
 API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         struct devnode *node = extra;
 
@@ -457,9 +457,9 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 //==============================================================================
 API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return ENOTSUP;
 }
@@ -603,8 +603,8 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 static int closedir(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(dir);
 
         return ESUCC;
 }
@@ -880,7 +880,7 @@ API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(devfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
         return ESUCC;
 }
 

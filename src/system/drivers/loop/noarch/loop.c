@@ -111,7 +111,7 @@ static uint host_request_timeout = MAX_DELAY_MS;
 //==============================================================================
 API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(minor);
 
         int result = ENODEV;
 
@@ -195,8 +195,8 @@ API_MOD_RELEASE(LOOP, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(LOOP, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -213,8 +213,8 @@ API_MOD_OPEN(LOOP, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(LOOP, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -241,7 +241,7 @@ API_MOD_WRITE(LOOP,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         loop_t *hdl = device_handle;
 
@@ -300,7 +300,7 @@ API_MOD_READ(LOOP,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         loop_t *hdl = device_handle;
 

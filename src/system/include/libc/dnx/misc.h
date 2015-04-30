@@ -32,6 +32,7 @@
 ==============================================================================*/
 #include <string.h>
 #include <lib/cast.h>
+#include <lib/unarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,8 +90,8 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief UNUSED_ARG(argument)
- * The macro <b>UNUSED_ARG</b>() disable compiler warning if argument
+ * @brief UNUSED_ARGx(argument)
+ * The macro <b>UNUSED_ARGx</b>() disable compiler warning if argument
  * <i>argument</i> is not used.
  *
  * @param argument  argument
@@ -104,7 +105,7 @@ extern "C" {
  *
  * void some_function(int a, int b)
  * {
- *         UNUSED_ARG(b);
+ *         UNUSED_ARG1(b);
  *
  *         printf("%d", a);
  * }
@@ -112,12 +113,7 @@ extern "C" {
  * // ...
  */
 //==============================================================================
-#define UNUSED_ARG(argument)                                    (void)argument
-#define UNUSED_ARG2(_arg1, _arg2)                               ((void)_arg1); ((void)_arg2)
-#define UNUSED_ARG3(_arg1, _arg2, _arg3)                        ((void)_arg1); ((void)_arg2); ((void)_arg3)
-#define UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4)                 ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4)
-#define UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5)          ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4); ((void)_arg5)
-#define UNUSED_ARG6(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6)   ((void)_arg1); ((void)_arg2); ((void)_arg3); ((void)_arg4); ((void)_arg5); ((void)_arg6)
+// defined in <lib/unarg.h>
 
 //==============================================================================
 /**

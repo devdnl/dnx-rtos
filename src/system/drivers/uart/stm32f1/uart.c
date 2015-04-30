@@ -158,7 +158,7 @@ static struct UART_data *uart_data[_UART_NUMBER];
 //==============================================================================
 API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(minor);
 
         if (major >= _UART_NUMBER || minor != _UART_MINOR_NUMBER) {
                 return ENODEV;
@@ -268,8 +268,8 @@ API_MOD_RELEASE(UART, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(UART, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -286,8 +286,8 @@ API_MOD_OPEN(UART, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(UART, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -314,8 +314,8 @@ API_MOD_WRITE(UART,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         struct UART_data *hdl = device_handle;
 
@@ -360,8 +360,8 @@ API_MOD_READ(UART,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         struct UART_data *hdl = device_handle;
 
@@ -444,7 +444,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -461,7 +461,7 @@ API_MOD_FLUSH(UART, void *device_handle)
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;

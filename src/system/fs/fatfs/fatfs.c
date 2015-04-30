@@ -145,7 +145,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         struct fatfs *hdl = fs_handle;
 
@@ -215,8 +215,8 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 //==============================================================================
 API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(fd);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(force);
 
         struct fatfs *hdl = fs_handle;
 
@@ -335,11 +335,11 @@ API_FS_READ(fatfs,
 //==============================================================================
 API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(request);
+        UNUSED_ARG1(arg);
 
         return ENOTSUP;
 }
@@ -357,8 +357,8 @@ API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 //==============================================================================
 API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         FATFILE *fat_file = extra;
         return faterr_2_errno(libfat_sync(fat_file));
@@ -378,8 +378,8 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
         FATFILE *fat_file  = extra;
         stat->st_dev   = 0;
@@ -430,9 +430,9 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return ENOTSUP;
 }
@@ -450,9 +450,9 @@ API_FS_MKFIFO(fatfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(dev);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(dev);
 
         return ENOTSUP;
 }
@@ -543,7 +543,7 @@ static int fatfs_closedir(void *fs_handle, DIR *dir)
 //==============================================================================
 static int fatfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         struct fatdir *fatdir = dir->f_dd;
 
@@ -641,10 +641,10 @@ API_FS_CHMOD(fatfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_CHOWN(fatfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(owner);
-        UNUSED_ARG(group);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(owner);
+        UNUSED_ARG1(group);
 
         return ENOTSUP;
 }
@@ -738,7 +738,7 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(fatfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
         return ESUCC;
 }
 

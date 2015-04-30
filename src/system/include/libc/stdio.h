@@ -264,7 +264,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        syscall(SYSCALL_FWRITE, &s, ptr, size, count, file);
+        syscall(SYSCALL_FWRITE, &s, ptr, &size, &count, file);
         return s;
 }
 
@@ -305,50 +305,8 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        syscall(SYSCALL_FREAD, &s, ptr, size, count, file);
+        syscall(SYSCALL_FREAD, &s, ptr, &size, &count, file);
         return s;
-}
-
-//==============================================================================
-/**
- * @brief int fsetpos(FILE *file, const fpos_t *pos)
- * The <b>fsetpos</b>() function is alternate interfaces equivalent to <b>fseek</b>()
- * (with whence set to <b>SEEK_SET</b>), setting and storing the current value
- * of the file offset into the object referenced by <i>pos</i>.
- *
- * @param file          stream
- * @param pos           offset
- *
- * @errors EINVAL, ENOENT
- *
- * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
- * returned and <b>errno</b> is set to indicate the error.
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        if (fsetpos(file, 100) != 0) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline int fsetpos(FILE *file, const fpos_t *pos)
-{
-        if (pos) {
-                size_t r = 1;
-                syscall(SYSCALL_FSEEK, &r, file, *pos, SEEK_SET);
-                return r;
-        } else {
-                return EOF;
-        }
 }
 
 //==============================================================================
@@ -391,8 +349,48 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 static inline int fseek(FILE *file, i64_t offset, int mode)
 {
         size_t r = 1;
-        syscall(SYSCALL_FSEEK, &r, file, offset, mode);
+        syscall(SYSCALL_FSEEK, &r, file, &offset, &mode);
         return r;
+}
+
+//==============================================================================
+/**
+ * @brief int fsetpos(FILE *file, const fpos_t *pos)
+ * The <b>fsetpos</b>() function is alternate interfaces equivalent to <b>fseek</b>()
+ * (with whence set to <b>SEEK_SET</b>), setting and storing the current value
+ * of the file offset into the object referenced by <i>pos</i>.
+ *
+ * @param file          stream
+ * @param pos           offset
+ *
+ * @errors EINVAL, ENOENT
+ *
+ * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
+ * returned and <b>errno</b> is set to indicate the error.
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "w+");
+ * if (file) {
+ *        if (fsetpos(file, 100) != 0) {
+ *                // error handling
+ *        }
+ *
+ *        // file operations...
+ *
+ *        fclose(file);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int fsetpos(FILE *file, const fpos_t *pos)
+{
+        if (pos) {
+                return fseek(file, *pos, SEEK_SET);
+        } else {
+                return EOF;
+        }
 }
 
 //==============================================================================
@@ -426,7 +424,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 static inline void rewind(FILE *file)
 {
-        syscall(SYSCALL_FSEEK, NULL, file, 0, SEEK_SET);
+        fseek(file, 0, SEEK_SET);
 }
 
 //==============================================================================
@@ -505,10 +503,8 @@ static inline i64_t ftell(FILE *file)
 static inline int fgetpos(FILE *file, fpos_t *pos)
 {
         if (pos) {
-                i64_t r = -1;
-                syscall(SYSCALL_FTELL, &r, file);
-                *pos = r;
-                return r < 0 ? EOF : 0;
+                *pos = ftell(file);
+                return (i64_t)*pos < 0 ? EOF : 0;
         } else {
                 return EOF;
         }

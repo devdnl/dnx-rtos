@@ -263,7 +263,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(ETHMAC, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         struct ethmac *hdl = device_handle;
 
@@ -314,7 +314,7 @@ API_MOD_WRITE(ETHMAC,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
+        UNUSED_ARG1(fpos);
 
         struct ethmac *hdl = device_handle;
 
@@ -383,7 +383,7 @@ API_MOD_READ(ETHMAC,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fpos);
+        UNUSED_ARG1(fpos);
 
         struct ethmac *hdl = device_handle;
 
@@ -588,7 +588,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(ETHMAC, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         if (is_Ethernet_started()) {
                 ETH_FlushTransmitFIFO();
@@ -609,7 +609,7 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
 //==============================================================================
 API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = _ETHMAC_MAJOR_NUMBER;

@@ -200,7 +200,7 @@ static void restore_configuration()
 //==============================================================================
 static void network_interface_thread(void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         /* open interface file */
         while (netman->if_file == NULL) {

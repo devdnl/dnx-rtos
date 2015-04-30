@@ -174,7 +174,7 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         ext2fs_t *hdl = fs_handle;
 
@@ -208,8 +208,8 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 //==============================================================================
 API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(fd);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(force);
 
         ext2fs_t *hdl = fs_handle;
 
@@ -248,8 +248,8 @@ API_FS_WRITE(ext2fs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fd);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(fattr);
 
         ext2fs_t *hdl = fs_handle;
 
@@ -291,8 +291,8 @@ API_FS_READ(ext2fs,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fd);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(fattr);
 
         ext2fs_t *hdl = fs_handle;
 
@@ -323,11 +323,11 @@ API_FS_READ(ext2fs,
 //==============================================================================
 API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
+        UNUSED_ARG1(request);
+        UNUSED_ARG1(arg);
 
         return ENOTSUP;
 }
@@ -345,9 +345,9 @@ API_FS_IOCTL(ext2fs, void *fs_handle, void *extra, fd_t fd, int request, void *a
 //==============================================================================
 API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(extra);
+        UNUSED_ARG1(fd);
 
         return ESUCC;
 }
@@ -366,7 +366,7 @@ API_FS_FLUSH(ext2fs, void *fs_handle, void *extra, fd_t fd)
 //==============================================================================
 API_FS_FSTAT(ext2fs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fd);
 
         ext2fs_t *hdl = fs_handle;
 
@@ -420,9 +420,9 @@ API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
         return ENOTSUP;
 }
@@ -440,9 +440,9 @@ API_FS_MKFIFO(ext2fs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(ext2fs, void *fs_handle, const char *path, const dev_t dev)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(dev);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(dev);
 
         return ENOTSUP;
 }
@@ -590,9 +590,9 @@ API_FS_RENAME(ext2fs, void *fs_handle, const char *old_name, const char *new_nam
 {
 
         ext2fs_t *hdl = fs_handle;
-        UNUSED_ARG(hdl);
-        UNUSED_ARG(old_name);
-        UNUSED_ARG(new_name);
+        UNUSED_ARG1(hdl);
+        UNUSED_ARG1(old_name);
+        UNUSED_ARG1(new_name);
 
         return ENOTSUP;
 

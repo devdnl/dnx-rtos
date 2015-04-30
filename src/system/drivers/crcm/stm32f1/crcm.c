@@ -135,7 +135,7 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(CRCM, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         CRCM *hdl = device_handle;
 
@@ -186,8 +186,8 @@ API_MOD_WRITE(CRCM,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         CRCM *hdl = device_handle;
 
@@ -254,8 +254,8 @@ API_MOD_READ(CRCM,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
         CRCM *hdl = device_handle;
 
@@ -337,7 +337,7 @@ API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(CRCM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -354,7 +354,7 @@ API_MOD_FLUSH(CRCM, void *device_handle)
 //==============================================================================
 API_MOD_STAT(CRCM, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_major = _CRCM_MAJOR_NUMBER;
         device_stat->st_minor = _CRCM_MINOR_NUMBER;

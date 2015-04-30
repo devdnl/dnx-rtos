@@ -437,7 +437,7 @@ static inline time_t time(time_t *timer)
  *                      value is stored.
  *
  * @return On success 0 is returned.
- *         On error -1 is returned.
+ *         On error  -1 is returned.
  */
 //==============================================================================
 static inline int stime(time_t *timer)

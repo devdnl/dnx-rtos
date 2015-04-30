@@ -178,9 +178,9 @@ static const uint32_t EXTICR4 = EXTICR(_AFIOM_EXTI15_PORT, _AFIOM_EXTI14_PORT, _
 //==============================================================================
 API_MOD_INIT(AFIOM, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(major);
+        UNUSED_ARG1(minor);
 
         if (!(RCC->APB2ENR & RCC_APB2ENR_AFIOEN)) {
                 SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
@@ -210,7 +210,7 @@ API_MOD_INIT(AFIOM, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(AFIOM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_AFIORST);
         CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_AFIORST);
@@ -231,8 +231,8 @@ API_MOD_RELEASE(AFIOM, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
         return ESUCC;
 }
@@ -249,8 +249,8 @@ API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(AFIOM, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
         return ESUCC;
 }
@@ -277,13 +277,13 @@ API_MOD_WRITE(AFIOM,
               size_t          *wrcnt,
               struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(wrcnt);
-        UNUSED_ARG(fattr);
-        UNUSED_ARG(wrcnt);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(src);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(wrcnt);
+        UNUSED_ARG1(fattr);
+        UNUSED_ARG1(wrcnt);
 
         return ENOTSUP;
 }
@@ -310,12 +310,12 @@ API_MOD_READ(AFIOM,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(rdcnt);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(dst);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(rdcnt);
+        UNUSED_ARG1(fattr);
 
         return ENOTSUP;
 }
@@ -333,8 +333,8 @@ API_MOD_READ(AFIOM,
 //==============================================================================
 API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(arg);
 
         switch (request) {
         default:
@@ -353,7 +353,7 @@ API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(AFIOM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         return ESUCC;
 }
@@ -370,7 +370,7 @@ API_MOD_FLUSH(AFIOM, void *device_handle)
 //==============================================================================
 API_MOD_STAT(AFIOM, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;
