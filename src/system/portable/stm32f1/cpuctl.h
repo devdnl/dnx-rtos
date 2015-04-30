@@ -40,14 +40,15 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/* CPU/platform name */
+#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
+#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
+#define _CPUCTL_BYTE_ORDER                      _BYTE_ORDER_LITTLE_ENDIAN
+
 /* renames of interrupts vectors for kernel purposes */
 #define xPortPendSVHandler                      PendSV_Handler
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
-
-/* CPU/platform name */
-#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
-#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
 
 /*==============================================================================
   Exported types, enums definitions

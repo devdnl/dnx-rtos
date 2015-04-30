@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    cpuctl.h
+@file    endian.h
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,40 +24,46 @@
 
 *//*==========================================================================*/
 
-#ifndef _SYS_CPUCTL_H_
-#define _SYS_CPUCTL_H_
+#ifndef _ENDIAN_H_
+#define _ENDIAN_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <portable/cpuctl.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
-#define _BYTE_ORDER_LITTLE_ENDIAN       0
-#define _BYTE_ORDER_BIG_ENDIAN          1
-
-#if defined(ARCH_stm32f1)
-#       include "stm32f1/cpuctl.h"
-#endif
+#define LITTLE_ENDIAN           _BYTE_ORDER_LITTLE
+#define BIG_ENDIAN              _BYTE_ORDER_BIG
+#define BYTE_ORDER              _CPUCTL_BYTE_ORDER
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _SYS_CPUCTL_H_ */
+#endif /* _ENDIAN_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

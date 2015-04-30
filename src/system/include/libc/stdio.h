@@ -41,7 +41,6 @@ extern "C" {
 #include <stdarg.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
-#include <kernel/kwrapper.h>
 
 /*==============================================================================
   Exported macros
