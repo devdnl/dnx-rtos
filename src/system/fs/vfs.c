@@ -823,10 +823,10 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
                                                         external_path,
                                                         o_flags);
                         if (result == ESUCC) {
-                                file_obj->FS_hdl = fs->handle;
-                                file_obj->FS_if  = fs->interface;
-                                file_obj->f_flag = f_flags;
-                                file_obj->self   = file_obj;
+                                file_obj->FS_hdl    = fs->handle;
+                                file_obj->FS_if     = fs->interface;
+                                file_obj->f_flag    = f_flags;
+                                file_obj->head.type = _RES_TYPE_FILE;
                         }
 
                         restore_priority(priority);
@@ -838,7 +838,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         if (file_obj) {
-                if (file_obj->self) {
+                if (file_obj->head.type == _RES_TYPE_FILE) {
                         *file = file_obj;
                 } else {
                         _kfree(_MM_KRN, static_cast(void**, &file_obj));
@@ -867,9 +867,9 @@ int _vfs_fclose(FILE *file, bool force)
                                                file->f_extra_data,
                                                file->fd, force);
                 if (result == ESUCC) {
-                        file->self   = NULL;
-                        file->FS_hdl = NULL;
-                        file->FS_hdl = NULL;
+                        file->head.type = _RES_TYPE_UNKNOWN;
+                        file->FS_hdl    = NULL;
+                        file->FS_hdl    = NULL;
                         _kfree(_MM_KRN, static_cast(void**, &file));
                 }
         }
@@ -1293,10 +1293,10 @@ static int delete_FS_entry(FS_entry_t *this)
 //==============================================================================
 static bool is_file_valid(FILE *file)
 {
-        return (  file
-               && file->self == file
-               && file->FS_hdl
-               && file->FS_if
+        return (  file                  != NULL
+               && file->FS_hdl          != NULL
+               && file->FS_if           != NULL
+               && file->head.type       == _RES_TYPE_FILE
                && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO);
 }
 

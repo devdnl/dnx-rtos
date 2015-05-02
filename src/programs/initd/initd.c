@@ -52,6 +52,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        const char *str;
 };
 
 /*==============================================================================
@@ -80,6 +81,8 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
         if (argc == 2 && strcmp(argv[1], "--child") == 0) {
                 puts("Hello! I'm child of initd parent!");
+
+                global->str = "Works!";
 
                 int i = 0;
                 while (true) {

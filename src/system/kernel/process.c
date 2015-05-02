@@ -31,7 +31,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-//#include <sys/ioctl.h>
 #include "fs/vfs.h"
 #include "kernel/process.h"
 #include "kernel/kwrapper.h"
@@ -41,6 +40,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define USERSPACE
+#define KERNELSPACE
 
 /*==============================================================================
   Local types, enums definitions
@@ -57,22 +58,22 @@ typedef struct process {
         FILE            *f_stdin;               /* stdin file                         */
         FILE            *f_stdout;              /* stdout file                        */
         FILE            *f_stderr;              /* stderr file                        */
-        FILE            *res_list;              /* list of used resources             */
+        _res_head_t     *res_list;              /* list of used resources             */
         const char      *cwd;                   /* current working path               */
         void            *globals;               /* address to global variables        */
         char            **argv;                 /* program arguments                  */
         int              argc;                  /* number of arguments                */
-        int              ret;                   /* program return value               */
+        int              status;                /* program status (return value)      */
         pid_t            pid;                   /* process ID                         */
         pid_t            ppid;                  /* parent process ID                  */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-
-        struct {
-                bool    f_stdin_ref:1;          /* stdin file is referenced           */
-                bool    f_stdout_ref:1;         /* stdout file is referenced          */
-                bool    f_stderr_ref:1;         /* stderr file is referenced          */
-        } flag;
+//
+//        struct {
+//                bool    f_stdin_ref:1;          /* stdin file is referenced           */
+//                bool    f_stdout_ref:1;         /* stdout file is referenced          */
+//                bool    f_stderr_ref:1;         /* stderr file is referenced          */
+//        } flag;
 } process_t;
 
 typedef struct thread {
@@ -85,9 +86,12 @@ typedef struct thread {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void process_startup(void *arg);
+static void process_code(void *arg);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
 static void argtab_destroy(char **argv);
+static void chain_push(_res_head_t **chain, _res_head_t *item);
+static _res_head_t *chain_at(_res_head_t *chain, size_t i);
+static _res_head_t *chain_take(_res_head_t *chain, _res_head_t *target);
 
 /*==============================================================================
   Local object definitions
@@ -143,7 +147,7 @@ extern const int               _prog_table_size;
  * @return One of errno value.
  */
 //==============================================================================
-int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
+KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 {
         int result = EINVAL;
 
@@ -176,40 +180,52 @@ int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 
                         // allocate program's global variables
                         if (*usrprog->globals_size > 0) {
-                                result = _kzalloc(_MM_KRN, *usrprog->globals_size, &proc->globals);
-                                if (result != ESUCC)
+                                _res_head_t *mem;
+                                result = _kzalloc(_MM_PROG,
+                                                  *usrprog->globals_size + sizeof(_res_head_t),
+                                                  static_cast(void*, &mem));
+
+                                if (result == ESUCC) {
+                                        proc->globals  = &mem[1];
+                                        mem->type      = _RES_TYPE_MEMORY;
+                                        chain_push(&proc->res_list, mem);
+                                } else {
                                         goto finish;
+                                }
                         }
 
-                        // set configured program settings
+                        // set configured program settings FIXME stdio should be added to res_list
                         if (attr) {
                                 if (attr->f_stdin) {
-                                        proc->f_stdin          = attr->f_stdin;
-                                        proc->flag.f_stdin_ref = true;
+                                        proc->f_stdin = attr->f_stdin;
 
                                 } else if (attr->p_stdin) {
                                         result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
-                                        if (result != ESUCC)
+                                        if (result == ESUCC) {
+                                                chain_push(&proc->res_list, reinterpret_cast(_res_head_t*, proc->f_stdin));
+                                        } else {
                                                 goto finish;
+                                        }
                                 }
 
                                 if (attr->f_stdout) {
-                                        proc->f_stdout          = attr->f_stdout;
-                                        proc->flag.f_stdout_ref = true;
+                                        proc->f_stdout = attr->f_stdout;
 
                                 } else if (attr->p_stdout) {
                                         if (strcmp(attr->p_stdout, attr->p_stdin) == 0) {
                                                 proc->f_stdout = proc->f_stdin;
                                         } else {
                                                 result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
-                                                if (result != ESUCC)
+                                                if (result == ESUCC) {
+                                                        chain_push(&proc->res_list, reinterpret_cast(_res_head_t*, proc->f_stdout));
+                                                } else {
                                                         goto finish;
+                                                }
                                         }
                                 }
 
                                 if (attr->f_stderr) {
-                                        proc->f_stderr          = attr->f_stderr;
-                                        proc->flag.f_stderr_ref = true;
+                                        proc->f_stderr = attr->f_stderr;
 
                                 } else if (attr->p_stderr) {
                                         if (strcmp(attr->p_stderr, attr->p_stdin) == 0) {
@@ -220,8 +236,11 @@ int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 
                                         } else {
                                                 result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
-                                                if (result != ESUCC)
+                                                if (result == ESUCC) {
+                                                        chain_push(&proc->res_list, reinterpret_cast(_res_head_t*, proc->f_stdout));
+                                                } else {
                                                         goto finish;
+                                                }
                                         }
                                 }
 
@@ -235,13 +254,10 @@ int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
                         }
 
                         // set default program settings
-                        proc->pid      = PID_cnt++;
-                        proc->errnov   = ESUCC;
-                        proc->timecnt  = 0;
-                        proc->res_list = NULL;
+                        proc->pid = PID_cnt++;
 
                         // create program's task
-                        result = _task_create(process_startup,
+                        result = _task_create(process_code,
                                               usrprog->name,
                                               *usrprog->stack_depth,
                                               usrprog->main,
@@ -261,20 +277,25 @@ int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 
                         finish:
                         if (result != ESUCC) {
-                                if (proc->globals)
-                                        _kfree(_MM_KRN, &proc->globals);
 
-                                if (proc->argv)
-                                        argtab_destroy(proc->argv);
+                                _res_head_t *res = proc->res_list;
+                                while (res) {
+                                        _res_head_t *resource = res;
+                                        switch (res->type) {
+                                        case _RES_TYPE_FILE:
+                                                _vfs_fclose(reinterpret_cast(FILE*, resource), true);
+                                                break;
 
-                                if (proc->f_stdin && !proc->flag.f_stdin_ref)
-                                        _vfs_fclose(proc->f_stdin, false);
+                                        case _RES_TYPE_MEMORY:
+                                                _kfree(_MM_PROG, static_cast(void*, &resource));
+                                                break;
 
-                                if (proc->f_stdout && !proc->flag.f_stdout_ref)
-                                        _vfs_fclose(proc->f_stdout, false);
+                                        default:
+                                                break;
+                                        }
 
-                                if (proc->f_stderr && !proc->flag.f_stderr_ref)
-                                        _vfs_fclose(proc->f_stderr, false);
+                                        res = res->next;
+                                }
 
                                 _kfree(_MM_KRN, static_cast(void**, &proc));
                         }
@@ -286,14 +307,91 @@ int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Free all process's resources and remove from process list
+ *
+ * @param  pid          process ID
+ *
+ * @return One of errno value
  */
 //==============================================================================
-int _process_destroy(pid_t pid)
+KERNELSPACE int _process_destroy(pid_t pid)
 {
         return EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief  Clear all process resources, set exit code and close task. Process is
+ *         not removed from process list.
+ *
+ * @param  taskhdl      task handle (contain PID)
+ * @param  status       status (exit code)
+ *
+ * @return One of errno value
+ */
+//==============================================================================
+KERNELSPACE int _process_exit(task_t *taskhdl, int status)
+{
+        int result = EINVAL;
+
+        if (taskhdl) {
+                process_t *proc = _task_get_tag(taskhdl);
+                if (proc) {
+                        proc->status = status;
+
+                        if (proc->task) {
+                                _task_destroy(proc->task);
+                                proc->task = NULL;
+                        }
+
+                        if (proc->argv) {
+                                argtab_destroy(proc->argv);
+                                proc->argv = NULL;
+                                proc->argc = 0;
+                        }
+
+                        _res_head_t *res = proc->res_list;
+                        while (res) {
+                                _res_head_t *resource = res;
+                                switch (res->type) {
+                                case _RES_TYPE_FILE:
+                                        _vfs_fclose(reinterpret_cast(FILE*, resource), true);
+                                        break;
+
+                                case _RES_TYPE_MEMORY:
+                                        _kfree(_MM_PROG, static_cast(void*, &resource));
+                                        break;
+
+                                default:
+                                        break;
+                                }
+
+                                res = res->next;
+                        }
+
+                        proc->f_stdin  = NULL;
+                        proc->f_stdout = NULL;
+                        proc->f_stderr = NULL;
+                        proc->globals  = NULL;
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Works almost the same as _process_exit() but set exit code to -1 and
+ *         print on process's terminal suitable message.
+ *
+ * @param  pid          process ID
+ *
+ * @return One of errno value
+ */
+//==============================================================================
+KERNELSPACE int _process_abort(task_t *taskhdl)
+{
+        return _process_exit;
 }
 
 //==============================================================================
@@ -303,7 +401,7 @@ int _process_destroy(pid_t pid)
  * @return ?
  */
 //==============================================================================
-const char *_process_get_CWD()
+KERNELSPACE const char *_process_get_CWD()
 {
         const char *cwd = "";
 
@@ -322,7 +420,7 @@ const char *_process_get_CWD()
  *        global, errno)
  */
 //==============================================================================
-void _copy_task_context_to_standard_variables(void)
+KERNELSPACE void _copy_task_context_to_standard_variables(void)
 {
         active_process = _task_get_tag(_THIS_TASK);
 
@@ -351,7 +449,7 @@ void _copy_task_context_to_standard_variables(void)
  *        to task context
  */
 //==============================================================================
-void _copy_standard_variables_to_task_context(void)
+KERNELSPACE void _copy_standard_variables_to_task_context(void)
 {
         if (active_process) {
                 active_process->f_stdin  = stdin;
@@ -364,18 +462,22 @@ void _copy_standard_variables_to_task_context(void)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  This function start user code [USERLAND]
+ *
+ * @param  arg          process argument - process main function
+ *
+ * @return None
  */
 //==============================================================================
-static void process_startup(void *arg)
+USERSPACE static void process_code(void *arg)
 {
         process_func_t funcmain = arg;
         process_t     *proc     = _task_get_tag(_THIS_TASK);
 
-        proc->ret  = funcmain(proc->argc, proc->argv);
+        proc->status  = funcmain(proc->argc, proc->argv);
         proc->task = NULL;
+
+        syscall(SYSCALL_EXIT, &proc->status);
 
         _task_exit();
 }
@@ -391,7 +493,7 @@ static void process_startup(void *arg)
  * @return One of errno value.
  */
 //==============================================================================
-static int argtab_create(const char *str, int *argc, char **argv[])
+KERNELSPACE static int argtab_create(const char *str, int *argc, char **argv[])
 {
         int result = EINVAL;
 
@@ -483,16 +585,79 @@ static int argtab_create(const char *str, int *argc, char **argv[])
  * @param argv          pointer to argument table (must be ended with NULL)
  */
 //==============================================================================
-static void argtab_destroy(char **argv)
+KERNELSPACE static void argtab_destroy(char **argv)
 {
         if (argv) {
                 int n = 0;
                 while (argv[n]) {
                         _kfree(_MM_KRN, static_cast(void*, &argv[n]));
+                        n++;
                 }
 
                 _kfree(_MM_KRN, static_cast(void*, &argv));
         }
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE static void chain_push(_res_head_t **chain, _res_head_t *item)
+{
+        if (chain) {
+                if (*chain == NULL) {
+                        *chain = item;
+                } else {
+                        _res_head_t *ch = *chain;
+                        while (ch) {
+                                if (ch->next == NULL) {
+                                        ch->next = item;
+                                        break;
+                                } else {
+                                        ch = ch->next;
+                                }
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE static _res_head_t *chain_at(_res_head_t *chain, size_t i)
+{
+        while (chain && i) {
+                chain = chain->next;
+                i--;
+        }
+
+        return chain;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE static _res_head_t *chain_take(_res_head_t *chain, _res_head_t *target)
+{
+        while (chain) {
+                if (chain->next == target) {
+                        chain->next = target->next;
+                        return target;
+                }
+        }
+
+        return NULL;
 }
 
 /*==============================================================================

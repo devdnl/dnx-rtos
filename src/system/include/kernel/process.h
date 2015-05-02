@@ -87,8 +87,10 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/***/
 typedef int (*process_func_t)(int, char**);
 
+/** KERNELSPACE: program attributes */
 struct _prog_data {
         const char     *name;
         const size_t   *globals_size;
@@ -96,7 +98,7 @@ struct _prog_data {
         process_func_t  main;
 };
 
-/** Process attributes */
+/** USERSPACE: Process attributes */
 typedef struct {
         FILE       *f_stdin;            //!< stdin  file object pointer (major)
         FILE       *f_stdout;           //!< stdout file object pointer (major)
@@ -107,13 +109,10 @@ typedef struct {
         const char *cwd;                //!< working directory path
 } process_attr_t;
 
+/** USERSPACE: thread attributes */
 typedef struct {
         size_t stack_depth;
 } thread_attr_t;
-
-//typedef struct thread thread_t;
-
-//typedef struct prog prog_t;
 
 /*==============================================================================
   Exported object declarations
@@ -128,6 +127,9 @@ extern int                      _errno;
   Exported function prototypes
 ==============================================================================*/
 extern int         _process_create                              (pid_t*, const process_attr_t*, const char*);
+extern int         _process_destroy                             (pid_t);
+extern int         _process_exit                                (task_t*, int);
+extern int         _process_abort                               (task_t*);
 extern const char *_process_get_CWD                             (void);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);

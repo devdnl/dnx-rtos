@@ -46,6 +46,7 @@
 ==============================================================================*/
 #define GETARG(type, var)       type var = va_arg(syscallrq->args, type)
 #define GETRETURN(type, var)    type var = syscallrq->retptr
+#define GETTASKHDL()            syscallrq->task
 #define SETRETURN(type, var)    if (syscallrq->retptr) {*((type*)syscallrq->retptr) = (var);}
 #define SETERRNO(var)           syscallres->err = var
 #define GETERRNO()              syscallres->err
@@ -108,6 +109,9 @@ static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallre
 static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres);
 static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_abort(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_exit(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_system(syscallrq_t *syscallrq, syscallres_t *syscallres);
 
 /*==============================================================================
   Local objects
@@ -158,6 +162,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
         [SYSCALL_RESTART          ] = syscall_restart,
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
+        [SYSCALL_ABORT            ] = syscall_abort,
+        [SYSCALL_EXIT             ] = syscall_exit,
+        [SYSCALL_SYSTEM           ] = syscall_system,
 };
 
 /*==============================================================================
@@ -171,41 +178,6 @@ static const syscallfunc_t syscalltab[] = {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief  Function call selected syscall
- *
- * @param  syscall      syscall number
- * @param  retptr       pointer to return value
- * @param  ...          additional arguments
- *
- * @return None
- */
-//==============================================================================
-void syscall(syscall_t syscall, void *retptr, ...)
-{
-        syscallrq_t syscallrq;
-        syscallrq.syscall  = syscall;
-        syscallrq.task     = _task_get_handle();
-        syscallrq.retptr   = retptr;
-        va_start(syscallrq.args, retptr);
-
-        int result = _queue_send(call_request, &syscallrq, MAX_DELAY_MS);
-        if (result == ESUCC) {
-                syscallres_t callres;
-                result = _queue_receive(call_response, &callres, MAX_DELAY_MS);
-                if (result == ESUCC) {
-                        _errno = callres.err;
-                } else {
-                        _errno = result;
-                }
-        } else {
-                _errno = result;
-        }
-
-        va_end(syscallrq.args);
-}
 
 //==============================================================================
 /**
@@ -227,7 +199,42 @@ void _syscall_init()
 
 //==============================================================================
 /**
- * @brief  Main syscall thread (master)
+ * @brief  Function call selected syscall [USERLAND]
+ *
+ * @param  syscall      syscall number
+ * @param  retptr       pointer to return value
+ * @param  ...          additional arguments
+ *
+ * @return None
+ */
+//==============================================================================
+void syscall(syscall_t syscall, void *retptr, ...)
+{
+        syscallrq_t syscallrq;
+        syscallrq.syscall  = syscall;
+        syscallrq.task     = _builtinfunc(task_get_handle);
+        syscallrq.retptr   = retptr;
+        va_start(syscallrq.args, retptr);
+
+        int result = _builtinfunc(queue_send, call_request, &syscallrq, MAX_DELAY_MS);
+        if (result == ESUCC) {
+                syscallres_t callres;
+                result = _builtinfunc(queue_receive, call_response, &callres, MAX_DELAY_MS);
+                if (result == ESUCC) {
+                        _errno = callres.err;
+                } else {
+                        _errno = result;
+                }
+        } else {
+                _errno = result;
+        }
+
+        va_end(syscallrq.args);
+}
+
+//==============================================================================
+/**
+ * @brief  Main syscall process (master) [KERNELLAND]
  *
  * @param  argc         argument count
  * @param  argv         arguments
@@ -962,6 +969,52 @@ static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *sysc
         UNUSED_ARG1(syscallres);
         GETARG(bool *, showmsg);
         SETRETURN(bool, _kernel_panic_detect(*showmsg));
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall abort current process (caller) and set exit code as -1
+ *
+ * @param  syscallrq            syscall request
+ * @param  syscallres           syscall response
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_abort(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall close current process (caller)
+ *
+ * @param  syscallrq            syscall request
+ * @param  syscallres           syscall response
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_exit(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+        GETARG(int *, status);
+        SETERRNO(_process_exit(GETTASKHDL(), *status));
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall start shell application to run command line
+ *
+ * @param  syscallrq            syscall request
+ * @param  syscallres           syscall response
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_system(syscallrq_t *syscallrq, syscallres_t *syscallres)
+{
+
 }
 
 /*==============================================================================

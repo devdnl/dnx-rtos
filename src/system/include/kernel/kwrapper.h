@@ -68,6 +68,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/** USERSPACE/KERNELSPACE: mutex type */
 enum mutex_type {
         MUTEX_TYPE_RECURSIVE,
         MUTEX_TYPE_NORMAL
@@ -88,7 +89,7 @@ extern uint     _kernel_get_tick_counter           (void);
 extern int      _kernel_get_number_of_tasks        (void);
 
 extern int      _task_create                       (task_func_t, const char*, const size_t, void*, void*, task_t**);
-extern int      _task_destroy                      (task_t*);
+extern void     _task_destroy                      (task_t*);
 extern void     _task_exit                         (void);
 extern void     _task_suspend                      (task_t*);
 extern void     _task_resume                       (task_t*);

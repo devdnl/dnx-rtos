@@ -1198,9 +1198,9 @@ static inline int _sys_task_create(void (*func)(void*), const char *name, const 
  * @param *taskHdl       task handle
  */
 //==============================================================================
-static inline int _sys_task_destroy(task_t *taskhdl)
+static inline void _sys_task_destroy(task_t *taskhdl)
 {
-        return _task_destroy(taskhdl);
+        _task_destroy(taskhdl);
 }
 
 //==============================================================================

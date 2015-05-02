@@ -191,10 +191,10 @@ typedef struct vfs_file_flags {
 
 /** file type */
 struct vfs_file {
+        _res_head_t         head;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
         void               *f_extra_data;
-        struct vfs_file    *self;
         fd_t                fd;
         fpos_t              f_lseek;
         vfs_file_flags_t    f_flag;

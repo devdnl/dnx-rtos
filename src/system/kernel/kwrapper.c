@@ -222,14 +222,9 @@ int _task_create(task_func_t func, const char *name, const size_t stack_depth, v
  * @return One of errno value.
  */
 //==============================================================================
-int _task_destroy(task_t *taskHdl)
+void _task_destroy(task_t *taskHdl)
 {
-        if (taskHdl) {
-                vTaskDelete(taskHdl);
-                return ESUCC;
-        } else {
-                return EINVAL;
-        }
+        vTaskDelete(taskHdl);
 }
 
 //==============================================================================
@@ -240,6 +235,7 @@ int _task_destroy(task_t *taskHdl)
 void _task_exit(void)
 {
         /* request to delete task */
+        _task_set_priority(_THIS_TASK, PRIORITY_LOWEST);
         _task_destroy(_THIS_TASK);
 
         /* wait for exit */
