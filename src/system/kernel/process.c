@@ -63,10 +63,16 @@ typedef struct process {
         char            **argv;                 /* program arguments                  */
         int              argc;                  /* number of arguments                */
         int              ret;                   /* program return value               */
-        pid_t            parent;                /* parent process                     */
         pid_t            pid;                   /* process ID                         */
+        pid_t            ppid;                  /* parent process ID                  */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
+
+        struct {
+                bool    f_stdin_ref:1;          /* stdin file is referenced           */
+                bool    f_stdout_ref:1;         /* stdout file is referenced          */
+                bool    f_stderr_ref:1;         /* stderr file is referenced          */
+        } flag;
 } process_t;
 
 typedef struct thread {
@@ -132,95 +138,146 @@ extern const int               _prog_table_size;
  *
  * @param[out] pid      PID of created process (can be NULL)
  * @param[in]  attr     process attributes (use NULL for default attributes)
- * @param[in]  name     process name
- * @param[in]  argv     string arguments
+ * @param[in]  cmd      command (name + arguments)
  *
  * @return One of errno value.
  */
 //==============================================================================
-int _process_create(pid_t *pid, process_attr_t *attr, const char *name, const char *argv)
+int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
 {
         int result = EINVAL;
 
-        if (name && argv) {
-                const struct _prog_data *usrprog = NULL;
+        if (cmd && cmd[0] != '\0') {
+                process_t *proc;
+                result = _kzalloc(_MM_KRN, sizeof(process_t), static_cast(void**, &proc));
+                if (result == ESUCC) {
 
-                // find program
-                if (strncmp(name, "kworker", 32) == 0) {
-                        usrprog = &kworker;
-                } else {
-                        for (int i = 0; i < _prog_table_size; i++) {
-                                if (strncmp(_prog_table[i].name, name, 128) == 0) {
-                                        usrprog = &_prog_table[i];
+                        // parse program's arguments
+                        result = argtab_create(cmd, &proc->argc, &proc->argv);
+                        if (result != ESUCC)
+                                goto finish;
+
+                        // find program
+                        const struct _prog_data *usrprog = NULL;
+                        if (strncmp(proc->argv[0], "kworker", 32) == 0) {
+                                usrprog = &kworker;
+                        } else {
+                                for (int i = 0; i < _prog_table_size; i++) {
+                                        if (strncmp(_prog_table[i].name, proc->argv[0], 128) == 0) {
+                                                usrprog = &_prog_table[i];
+                                        }
                                 }
                         }
-                }
 
-                // program exist
-                if (usrprog) {
-                        process_t *proc;
-                        result = _kzalloc(_MM_KRN, sizeof(process_t), static_cast(void**, &proc));
-                        if (result == ESUCC) {
+                        if (usrprog == NULL) {
+                                result = ENOENT;
+                                goto finish;
+                        }
 
-                                // allocate program's global variables
-                                if (*usrprog->globals_size > 0) {
-                                        result = _kzalloc(_MM_KRN, *usrprog->globals_size, &proc->globals);
+                        // allocate program's global variables
+                        if (*usrprog->globals_size > 0) {
+                                result = _kzalloc(_MM_KRN, *usrprog->globals_size, &proc->globals);
+                                if (result != ESUCC)
+                                        goto finish;
+                        }
+
+                        // set configured program settings
+                        if (attr) {
+                                if (attr->f_stdin) {
+                                        proc->f_stdin          = attr->f_stdin;
+                                        proc->flag.f_stdin_ref = true;
+
+                                } else if (attr->p_stdin) {
+                                        result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
                                         if (result != ESUCC)
                                                 goto finish;
                                 }
 
-                                // parse program's arguments
-                                result = argtab_create(argv, &proc->argc, &proc->argv);
-                                if (result != ESUCC)
-                                        goto finish;
+                                if (attr->f_stdout) {
+                                        proc->f_stdout          = attr->f_stdout;
+                                        proc->flag.f_stdout_ref = true;
 
-                                // set configured program settings
-                                if (attr) {
-                                        proc->f_stdin  = attr->f_stdin;
-                                        proc->f_stdout = attr->f_stdout;
-                                        proc->f_stderr = attr->f_stderr;
-                                        proc->cwd      = attr->cwd;
-                                }
-
-                                // set default program settings
-                                proc->parent   = 0; // TODO parent PID
-                                proc->pid      = PID_cnt++;
-                                proc->errnov   = ESUCC;
-                                proc->timecnt  = 0;
-                                proc->res_list = NULL;
-
-                                // create program's task
-                                result = _task_create(process_startup,
-                                                      usrprog->name,
-                                                      *usrprog->stack_depth,
-                                                      usrprog->main,
-                                                      proc,
-                                                      &proc->task);
-                                if (result == ESUCC) {
-                                        *pid = proc->pid;
-
-                                        if (process_list_head == NULL) {
-                                                process_list_head = proc;
-                                                process_list_tail = proc;
+                                } else if (attr->p_stdout) {
+                                        if (strcmp(attr->p_stdout, attr->p_stdin) == 0) {
+                                                proc->f_stdout = proc->f_stdin;
                                         } else {
-                                                process_list_tail->next = proc;
-                                                process_list_tail = proc;
+                                                result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
+                                                if (result != ESUCC)
+                                                        goto finish;
                                         }
                                 }
 
-                                finish:
-                                if (result != ESUCC) {
-                                        if (proc->globals)
-                                                _kfree(_MM_KRN, &proc->globals);
+                                if (attr->f_stderr) {
+                                        proc->f_stderr          = attr->f_stderr;
+                                        proc->flag.f_stderr_ref = true;
 
-                                        if (proc->argv)
-                                                argtab_destroy(proc->argv);
+                                } else if (attr->p_stderr) {
+                                        if (strcmp(attr->p_stderr, attr->p_stdin) == 0) {
+                                                proc->f_stderr = proc->f_stdin;
 
-                                        _kfree(_MM_KRN, static_cast(void**, &proc));
+                                        } else if (strcmp(attr->p_stderr, attr->p_stdout) == 0) {
+                                                proc->f_stderr = proc->f_stdout;
+
+                                        } else {
+                                                result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
+                                                if (result != ESUCC)
+                                                        goto finish;
+                                        }
+                                }
+
+                                proc->cwd = attr->cwd;
+                        }
+
+                        // get parent PID
+                        process_t *pproc = _task_get_tag(_THIS_TASK);
+                        if (pproc) {
+                                proc->ppid = pproc->pid;
+                        }
+
+                        // set default program settings
+                        proc->pid      = PID_cnt++;
+                        proc->errnov   = ESUCC;
+                        proc->timecnt  = 0;
+                        proc->res_list = NULL;
+
+                        // create program's task
+                        result = _task_create(process_startup,
+                                              usrprog->name,
+                                              *usrprog->stack_depth,
+                                              usrprog->main,
+                                              proc,
+                                              &proc->task);
+                        if (result == ESUCC) {
+                                *pid = proc->pid;
+
+                                if (process_list_head == NULL) {
+                                        process_list_head = proc;
+                                        process_list_tail = proc;
+                                } else {
+                                        process_list_tail->next = proc;
+                                        process_list_tail = proc;
                                 }
                         }
-                } else {
-                        result = ESRCH;
+
+                        finish:
+                        if (result != ESUCC) {
+                                if (proc->globals)
+                                        _kfree(_MM_KRN, &proc->globals);
+
+                                if (proc->argv)
+                                        argtab_destroy(proc->argv);
+
+                                if (proc->f_stdin && !proc->flag.f_stdin_ref)
+                                        _vfs_fclose(proc->f_stdin, false);
+
+                                if (proc->f_stdout && !proc->flag.f_stdout_ref)
+                                        _vfs_fclose(proc->f_stdout, false);
+
+                                if (proc->f_stderr && !proc->flag.f_stderr_ref)
+                                        _vfs_fclose(proc->f_stderr, false);
+
+                                _kfree(_MM_KRN, static_cast(void**, &proc));
+                        }
                 }
         }
 
@@ -340,82 +397,79 @@ static int argtab_create(const char *str, int *argc, char **argv[])
 
         if (str && argc && argv) {
 
-                if (str[0] == '\0') {
-                        result = _kzalloc(_MM_KRN, sizeof(char*), static_cast(void*, argv));
-                } else {
+                llist_t *largs;
+                result = _llist_create_krn(_MM_KRN, NULL, NULL, &largs);
 
-                        llist_t *largs;
-                        result = _llist_create_krn(_MM_KRN, NULL, NULL, &largs);
+                if (result == ESUCC) {
+                        // parse arguments
+                        while (*str != '\0') {
+                                // skip spaces
+                                str += strspn(str, " ");
 
-                        if (result == ESUCC) {
-                                // parse arguments
-                                while (*str != '\0') {
-                                        // skip spaces
-                                        str += strspn(str, " ");
+                                // select character to find as end of argument
+                                bool quo = false;
+                                char find = ' ';
+                                if (*str == '\'' || *str == '"') {
+                                        quo = true;
+                                        find = *str;
+                                        str++;
+                                }
 
-                                        // select character to find as end of argument
-                                        bool quo = false;
-                                        char find = ' ';
-                                        if (*str == '\'' || *str == '"') {
-                                                quo = true;
-                                                find = *str;
-                                                str++;
-                                        }
+                                // find selected character
+                                const char *start = str;
+                                const char *end   = strchr(str, find);
 
-                                        // find selected character
-                                        const char *start = str;
-                                        const char *end   = strchr(str, find);
+                                // check if string end is reached
+                                if (!end) {
+                                        end = strchr(str, '\0');
+                                } else {
+                                        end++;
+                                }
 
-                                        // check if string end is reached
-                                        if (!end) {
-                                                end = strchr(str, '\0');
-                                        } else {
-                                                end++;
-                                        }
+                                // calculate argument length (without nul character)
+                                int str_len = end - start;
+                                if (str_len == 0)
+                                        break;
 
-                                        // calculate argument length (without nul character)
-                                        int str_len = end - start;
-                                        if (str_len == 0)
-                                                break;
+                                if (quo || *(end - 1) == ' ') {
+                                        str_len--;
+                                }
 
-                                        if (quo || *(end - 1) == ' ') {
-                                                str_len--;
-                                        }
+                                // add argument to list
+                                char *arg;
+                                result = _kmalloc(_MM_KRN, str_len + 1, static_cast(void**, &arg));
+                                if (result == ESUCC) {
+                                        strncpy(arg, start, str_len);
+                                        arg[str_len] = '\0';
 
-                                        // add argument to list
-                                        char *arg;
-                                        result = _kmalloc(_MM_KRN, str_len + 1, static_cast(void**, &arg));
-                                        if (result == ESUCC) {
-                                                strncpy(arg, start, str_len);
-                                                arg[str_len] = '\0';
-
-                                                if (_llist_push_back(largs, arg) == NULL) {
-                                                        goto finish;
-                                                }
-                                        } else {
+                                        if (_llist_push_back(largs, arg) == NULL) {
                                                 goto finish;
                                         }
-
-                                        // next token
-                                        str = end;
+                                } else {
+                                        goto finish;
                                 }
 
-                                // create table with arguments
-                                int no_of_args = _llist_size(largs);
-                                *argc = no_of_args;
-
-                                result = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), static_cast(void*, argv));
-                                if (result == ESUCC) {
-                                        for (int i = 0; i < no_of_args; i++) {
-                                                argv[i] = _llist_take_front(largs);
-                                        }
-
-                                        argv[no_of_args] = NULL;
-                                }
-
-                                finish:
-                                _llist_destroy(largs);
+                                // next token
+                                str = end;
                         }
+
+                        // create table with arguments
+                        int no_of_args = _llist_size(largs);
+                        *argc = no_of_args;
+
+                        char **arg = NULL;
+                        result = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), static_cast(void*, &arg));
+                        if (result == ESUCC) {
+                                for (int i = 0; i < no_of_args; i++) {
+                                        arg[i] = _llist_take_front(largs);
+                                }
+
+                                arg[no_of_args] = NULL;
+                                *argv = arg;
+                        }
+
+                        finish:
+                        _llist_destroy(largs);
                 }
         }
 

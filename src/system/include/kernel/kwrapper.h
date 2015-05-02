@@ -80,6 +80,8 @@ enum mutex_type {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+// TODO kwrapper: automatically detected ISR functions
+
 extern void     _kernel_start                      (void);
 extern uint     _kernel_get_time_ms                (void);
 extern uint     _kernel_get_tick_counter           (void);

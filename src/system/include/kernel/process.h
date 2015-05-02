@@ -96,11 +96,15 @@ struct _prog_data {
         process_func_t  main;
 };
 
+/** Process attributes */
 typedef struct {
-        FILE       *f_stdin;
-        FILE       *f_stdout;
-        FILE       *f_stderr;
-        const char *cwd;
+        FILE       *f_stdin;            //!< stdin  file object pointer (major)
+        FILE       *f_stdout;           //!< stdout file object pointer (major)
+        FILE       *f_stderr;           //!< stderr file object pointer (major)
+        const char *p_stdin;            //!< stdin  file path (minor)
+        const char *p_stdout;           //!< stdout file path (minor)
+        const char *p_stderr;           //!< stderr file path (minor)
+        const char *cwd;                //!< working directory path
 } process_attr_t;
 
 typedef struct {
@@ -123,7 +127,7 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int         _process_create                              (pid_t*, process_attr_t*, const char*, const char*);
+extern int         _process_create                              (pid_t*, const process_attr_t*, const char*);
 extern const char *_process_get_CWD                             (void);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);

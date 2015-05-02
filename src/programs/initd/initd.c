@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
+#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -71,30 +72,54 @@ GLOBAL_VARIABLES_SECTION {
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
         int result = 0;
 
-        result = mount("lfs", "", "/");
-        result = mkdir("/dev", 0777);
-        result = driver_init("gpio", "/dev/gpio");
-        result = driver_init("afiom", NULL);
-        result = driver_init("uart2", "/dev/ttyS0");
-        result = driver_init("tty0", "/dev/tty0");
+        if (argc == 2 && strcmp(argv[1], "--child") == 0) {
+                puts("Hello! I'm child of initd parent!");
 
-        result = syslog_enable("/dev/tty0");
+                int i = 0;
+                while (true) {
+                        printf("Sec: %d\n", i++);
+                        sleep(1);
+                }
 
-        detect_kernel_panic(true);
+        } else {
+                result = mount("lfs", "", "/");
+                result = mkdir("/dev", 0777);
+                result = driver_init("gpio", "/dev/gpio");
+                result = driver_init("afiom", NULL);
+                result = driver_init("uart2", "/dev/ttyS0");
+                result = driver_init("tty0", "/dev/tty0");
 
-        result = driver_init("tty1", "/dev/tty1");
+                result = syslog_enable("/dev/tty0");
 
-        stdout = fopen("/dev/tty0", "w");
+                detect_kernel_panic(true);
 
-        printf("Hello world! I'm using syscalls!\n");
+                result = driver_init("tty1", "/dev/tty1");
 
-//        result = syslog_disable();
+                stdout = fopen("/dev/tty0", "w");
+
+                printf("Hello world! I'm using syscalls!\n");
+
+
+                puts("Starting child...");
+
+                pid_t pid = 0;
+                const process_attr_t attr = {
+                       .cwd      = "/",
+                       .p_stdin  = "/dev/tty1",
+                       .p_stdout = "/dev/tty1",
+                       .p_stderr = "/dev/tty1"
+                };
+
+                result = _process_create(&pid, &attr, "initd --child");
+
+                printf("Result: %d\n", result);
+        }
 
         return result;
 }
