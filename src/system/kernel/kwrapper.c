@@ -35,6 +35,10 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/** CALCULATIONS */
+#define _CEILING(x,y)   (((x) + (y) - 1) / (y))
+#define MS2TICK(ms)     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
+
 
 /*==============================================================================
   Local types, enums definitions
@@ -104,6 +108,52 @@ static bool is_mutex_valid(mutex_t *mtx)
 static bool is_queue_valid(queue_t *queue)
 {
         return queue && queue->self == queue && queue->object;
+}
+
+//==============================================================================
+/**
+ * @brief Function start kernel scheduler
+ */
+//==============================================================================
+void _kernel_start(void)
+{
+        vTaskStartScheduler();
+}
+
+//==============================================================================
+/**
+ * @brief Function return OS time in milliseconds
+ *
+ * @return a OS time in milliseconds
+ */
+//==============================================================================
+uint _kernel_get_time_ms(void)
+{
+        return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
+}
+
+//==============================================================================
+/**
+ * @brief Function return tick counter
+ *
+ * @return a tick counter value
+ */
+//==============================================================================
+uint _kernel_get_tick_counter(void)
+{
+        return (uint)xTaskGetTickCount();
+}
+
+//==============================================================================
+/**
+ * @brief Function return a number of task
+ *
+ * @return a number of tasks
+ */
+//==============================================================================
+int _kernel_get_number_of_tasks(void)
+{
+        return uxTaskGetNumberOfTasks();
 }
 
 //==============================================================================
@@ -190,7 +240,7 @@ int _task_destroy(task_t *taskHdl)
 void _task_exit(void)
 {
         /* request to delete task */
-        _task_destroy(_task_get_handle());
+        _task_destroy(_THIS_TASK);
 
         /* wait for exit */
         for (;;) {}
@@ -200,7 +250,9 @@ void _task_exit(void)
 /**
  * @brief Function suspend selected task
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] *taskhdl          task handle (NULL for current task)
+ *
+ * @return None
  */
 //==============================================================================
 void _task_suspend(task_t *taskhdl)
@@ -246,65 +298,132 @@ bool _task_resume_from_ISR(task_t *taskhdl)
 /**
  * @brief Function return name of selected task
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] *taskhdl          task handle (NULL for current task)
  *
  * @return name of selected task or NULL if error
  */
 //==============================================================================
-char *_task_get_name_of(task_t *taskhdl)
+char *_task_get_name(task_t *taskhdl)
 {
-        if (taskhdl)
-                return pcTaskGetTaskName(taskhdl);
-        else
-                return NULL;
+        return pcTaskGetTaskName(taskhdl);
 }
 
 //==============================================================================
 /**
  * @brief Function return task priority
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] *taskhdl          task handle (NULL for current task)
  *
  * @return priority of selected task
  */
 //==============================================================================
-int _task_get_priority_of(task_t *taskhdl)
+int _task_get_priority(task_t *taskhdl)
 {
-        if (taskhdl)
-                return (int)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
-        else
-                return 0;
+        return (int)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
 }
 
 //==============================================================================
 /**
  * @brief Function set selected task priority
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] *taskhdl          task handle (NULL for current task)
  * @param[in]  priority         priority
+ *
+ * @return None
  */
 //==============================================================================
-void _task_set_priority_of(task_t *taskhdl, const int priority)
+void _task_set_priority(task_t *taskhdl, const int priority)
 {
-        if (taskhdl)
-                vTaskPrioritySet(taskhdl, PRIORITY(priority));
+        vTaskPrioritySet(taskhdl, PRIORITY(priority));
 }
 
 //==============================================================================
 /**
  * @brief Function return a free stack level of selected task
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] *taskhdl          task handle (NULL for current task)
  *
  * @return free stack level or -1 if error
  */
 //==============================================================================
-int _task_get_free_stack_of(task_t *taskhdl)
+int _task_get_free_stack(task_t *taskhdl)
 {
-        if (taskhdl)
-                return uxTaskGetStackHighWaterMark(taskhdl);
-        else
-                return -1;
+        return uxTaskGetStackHighWaterMark(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function yield task
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _task_yield(void)
+{
+        taskYIELD();
+}
+
+//==============================================================================
+/**
+ * @brief Function yield task from ISR
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _task_yield_from_ISR(void)
+{
+#ifdef portYIELD_FROM_ISR
+        portYIELD_FROM_ISR(true);
+#else
+        taskYIELD();
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function return current task handle object address
+ *
+ * @param None
+ *
+ * @return current task handle
+ */
+//==============================================================================
+task_t *_task_get_handle(void)
+{
+        return xTaskGetCurrentTaskHandle();
+}
+
+//==============================================================================
+/**
+ * @brief Function set task tag
+ *
+ * @param[in] taskhdl           task handle (NULL for current task)
+ * @param[in] tag               task tag
+ *
+ * @return None
+ */
+//==============================================================================
+void _task_set_tag(task_t *taskhdl, void *tag)
+{
+        vTaskSetApplicationTaskTag(taskhdl, (TaskHookFunction_t)tag);
+}
+
+//==============================================================================
+/**
+ * @brief Function return task tag
+ *
+ * @param[in] *taskhdl          task handle (NULL for current task)
+ *
+ * @return task tag
+ */
+//==============================================================================
+void *_task_get_tag(task_t *taskhdl)
+{
+        return (void*)xTaskGetApplicationTaskTag(taskhdl);
 }
 
 //==============================================================================
@@ -822,6 +941,120 @@ int _queue_get_space_available(queue_t *queue, size_t *items)
         } else {
                 return EINVAL;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function enter to critical section
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _critical_section_begin(void)
+{
+        taskENTER_CRITICAL();
+}
+
+//==============================================================================
+/**
+ * @brief Function exit from critical section
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _critical_section_end(void)
+{
+        taskEXIT_CRITICAL();
+}
+
+//==============================================================================
+/**
+ * @brief Function disable interrupts
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _ISR_disable(void)
+{
+        taskDISABLE_INTERRUPTS();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable interrupts
+ *
+ * @param None
+ *
+ * @return None
+ */
+//==============================================================================
+void _ISR_enable(void)
+{
+        taskENABLE_INTERRUPTS();
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in milliseconds
+ *
+ * @param[in] milliseconds
+ *
+ * @return None
+ */
+//==============================================================================
+void _sleep_ms(const uint milliseconds)
+{
+        vTaskDelay(MS2TICK(milliseconds));
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in seconds
+ *
+ * @param[in] seconds
+ *
+ * @return None
+ */
+//==============================================================================
+void _sleep(const uint seconds)
+{
+        vTaskDelay(MS2TICK(seconds * 1000UL));
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
+ *
+ * @return None
+ */
+//==============================================================================
+void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+{
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(milliseconds));
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
+ *
+ * @return None
+ */
+//==============================================================================
+void _sleep_until(const uint seconds, int *ref_time_ticks)
+{
+        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(seconds * 1000UL));
 }
 
 /*==============================================================================

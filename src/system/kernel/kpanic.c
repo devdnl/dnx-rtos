@@ -144,11 +144,11 @@ bool _kernel_panic_detect(bool show_msg)
 //==============================================================================
 void _kernel_panic_report(enum _kernel_panic_desc_cause suggest_cause)
 {
-        const char *task_name = _task_get_name();
+        const char *task_name = _task_get_name(_THIS_TASK);
 
         strncpy(kernel_panic_descriptor->task_name, task_name, CONFIG_RTOS_TASK_NAME_LEN);
 
-        if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack() == 0) {
+        if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
         } else {
                 kernel_panic_descriptor->cause = suggest_cause;

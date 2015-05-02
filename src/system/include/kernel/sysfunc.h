@@ -1623,7 +1623,7 @@ static inline int _sys_get_number_of_tasks()
 //==============================================================================
 static inline void _sys_task_suspend_now()
 {
-        _task_suspend_now();
+        _task_suspend(_THIS_TASK);
 }
 
 //==============================================================================
@@ -1655,7 +1655,7 @@ static inline void _sys_task_yield_from_ISR()
 //==============================================================================
 static inline char *_sys_task_get_name()
 {
-        return _task_get_name();
+        return _task_get_name(_THIS_TASK);
 }
 
 //==============================================================================
@@ -1679,7 +1679,7 @@ static inline task_t *_sys_task_get_handle()
 //==============================================================================
 static inline void _sys_task_set_priority(const int priority)
 {
-        _task_set_priority(priority);
+        _task_set_priority(_THIS_TASK, priority);
 }
 
 //==============================================================================
@@ -1691,7 +1691,7 @@ static inline void _sys_task_set_priority(const int priority)
 //==============================================================================
 static inline int _sys_task_get_priority()
 {
-        return _task_get_priority();
+        return _task_get_priority(_THIS_TASK);
 }
 
 //==============================================================================
@@ -1703,79 +1703,7 @@ static inline int _sys_task_get_priority()
 //==============================================================================
 static inline int _sys_task_get_free_stack()
 {
-        return _task_get_free_stack();
-}
-
-//==============================================================================
-/**
- * @brief Function return parent task handle
- *
- * @return parent task handle
- */
-//==============================================================================
-static inline task_t *_sys_task_get_parent_handle()
-{
-//        return _task_get_parent_handle(); // TODO
-}
-
-//==============================================================================
-/**
- * @brief Function set global variables address
- *
- * @param[in] *mem
- */
-//==============================================================================
-static inline void _sys_task_set_memory_address(void *mem)
-{
-//        _task_set_memory_address(mem); // TODO
-}
-
-//==============================================================================
-/**
- * @brief Function set stdin file
- *
- * @param[in] *file
- */
-//==============================================================================
-static inline void _sys_task_set_stdin(FILE *file)
-{
-//        _task_set_stdin(file); // TODO
-}
-
-//==============================================================================
-/**
- * @brief Function set stdout file
- *
- * @param[in] *file
- */
-//==============================================================================
-static inline void _sys_task_set_stdout(FILE *file)
-{
-//        _task_set_stdout(file); // TODO
-}
-
-//==============================================================================
-/**
- * @brief Function set stderr file
- *
- * @param[in] *file
- */
-//==============================================================================
-static inline void _sys_task_set_stderr(FILE *file)
-{
-//        _task_set_stderr(file); // TODO
-}
-
-//==============================================================================
-/**
- * @brief Function set cwd path
- *
- * @param str           cwd string
- */
-//==============================================================================
-static inline void _sys_task_set_cwd(const char *str)
-{
-//        _task_set_cwd(str); // TODO
+        return _task_get_free_stack(_THIS_TASK);
 }
 
 //==============================================================================

@@ -65,10 +65,6 @@ extern "C" {
 #define PRIORITY_NORMAL                 0
 #define PRIORITY_HIGHEST                ((int)(configMAX_PRIORITIES / 2))
 
-/** CALCULATIONS */
-#define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
-#define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -84,26 +80,39 @@ enum mutex_type {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern void     _kernel_start                      (void);
+extern uint     _kernel_get_time_ms                (void);
+extern uint     _kernel_get_tick_counter           (void);
+extern int      _kernel_get_number_of_tasks        (void);
+
 extern int      _task_create                       (task_func_t, const char*, const size_t, void*, void*, task_t**);
 extern int      _task_destroy                      (task_t*);
 extern void     _task_exit                         (void);
 extern void     _task_suspend                      (task_t*);
 extern void     _task_resume                       (task_t*);
 extern bool     _task_resume_from_ISR              (task_t*);
-extern char    *_task_get_name_of                  (task_t*);
-extern int      _task_get_priority_of              (task_t*);
-extern void     _task_set_priority_of              (task_t*, const int);
-extern int      _task_get_free_stack_of            (task_t*);
+extern char    *_task_get_name                     (task_t*);
+extern int      _task_get_priority                 (task_t*);
+extern void     _task_set_priority                 (task_t*, const int);
+extern int      _task_get_free_stack               (task_t*);
+extern void     _task_yield                        (void);
+extern void     _task_yield_from_ISR               (void);
+extern task_t  *_task_get_handle                   (void);
+extern void     _task_set_tag                      (task_t*, void*);
+extern void    *_task_get_tag                      (task_t*);
+
 extern int      _semaphore_create                  (const uint, const uint, sem_t**);
 extern int      _semaphore_destroy                 (sem_t*);
 extern int      _semaphore_wait                    (sem_t*, const uint);
 extern int      _semaphore_signal                  (sem_t*);
 extern int      _semaphore_wait_from_ISR           (sem_t*, bool*);
 extern int      _semaphore_signal_from_ISR         (sem_t*, bool*);
+
 extern int      _mutex_create                      (enum mutex_type, mutex_t**);
 extern int      _mutex_destroy                     (mutex_t*);
 extern int      _mutex_lock                        (mutex_t*, const uint);
 extern int      _mutex_unlock                      (mutex_t*);
+
 extern int      _queue_create                      (const uint, const uint, queue_t**);
 extern int      _queue_destroy                     (queue_t*);
 extern int      _queue_reset                       (queue_t*);
@@ -116,265 +125,20 @@ extern int      _queue_get_number_of_items         (queue_t*, size_t*);
 extern int      _queue_get_number_of_items_from_ISR(queue_t*, size_t*);
 extern int      _queue_get_space_available         (queue_t*, size_t*);
 
+extern void     _critical_section_begin            (void);
+extern void     _critical_section_end              (void);
+
+extern void     _ISR_disable                       (void);
+extern void     _ISR_enable                        (void);
+
+extern void     _sleep_ms                          (const uint);
+extern void     _sleep                             (const uint);
+extern void     _sleep_until_ms                    (const uint, int*);
+extern void     _sleep_until                       (const uint, int*);
+
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Function start kernel scheduler
- */
-//==============================================================================
-static inline void _kernel_start(void)
-{
-        vTaskStartScheduler();
-}
-
-//==============================================================================
-/**
- * @brief Function return OS time in milliseconds
- *
- * @return a OS time in milliseconds
- */
-//==============================================================================
-static inline uint _kernel_get_time_ms(void)
-{
-        return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
-}
-
-//==============================================================================
-/**
- * @brief Function return tick counter
- *
- * @return a tick counter value
- */
-//==============================================================================
-static inline uint _kernel_get_tick_counter(void)
-{
-        return (uint)xTaskGetTickCount();
-}
-
-//==============================================================================
-/**
- * @brief Function return a number of task
- *
- * @return a number of tasks
- */
-//==============================================================================
-static inline int _kernel_get_number_of_tasks(void)
-{
-        return uxTaskGetNumberOfTasks();
-}
-
-//==============================================================================
-/**
- * @brief Function suspend current task
- */
-//==============================================================================
-static inline void _task_suspend_now(void)
-{
-        vTaskSuspend(_THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function yield task
- */
-//==============================================================================
-static inline void _task_yield(void)
-{
-        taskYIELD();
-}
-
-//==============================================================================
-/**
- * @brief Function yield task from ISR
- */
-//==============================================================================
-static inline void _task_yield_from_ISR(void)
-{
-#ifdef portYIELD_FROM_ISR
-        portYIELD_FROM_ISR(true);
-#else
-        taskYIELD();
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Function return name of current task
- *
- * @return name of current task
- */
-//==============================================================================
-static inline char *_task_get_name(void)
-{
-        return pcTaskGetTaskName(_THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function return current task handle object address
- *
- * @return current task handle
- */
-//==============================================================================
-static inline task_t *_task_get_handle(void)
-{
-        return xTaskGetCurrentTaskHandle();
-}
-
-//==============================================================================
-/**
- * @brief Function set priority of current task
- *
- * @param[in]  priority         priority
- */
-//==============================================================================
-static inline void _task_set_priority(const int priority)
-{
-        vTaskPrioritySet(_THIS_TASK, PRIORITY(priority));
-}
-
-//==============================================================================
-/**
- * @brief Function return priority of current task
- *
- * @return current task priority
- */
-//==============================================================================
-static inline int _task_get_priority(void)
-{
-        return (int)(uxTaskPriorityGet(_THIS_TASK) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
-}
-
-//==============================================================================
-/**
- * @brief Function return a free stack level of current task
- *
- * @return free stack level
- */
-//==============================================================================
-static inline int _task_get_free_stack(void)
-{
-        return uxTaskGetStackHighWaterMark(_THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function set task tag
- *
- * @param[in] taskhdl           task handle
- * @param[in] tag               task tag
- */
-//==============================================================================
-static inline void _task_set_tag(task_t *taskhdl, void *tag)
-{
-        vTaskSetApplicationTaskTag(taskhdl, (TaskHookFunction_t)tag);
-}
-
-//==============================================================================
-/**
- * @brief Function return task tag
- *
- * @param[in] *taskhdl          task handle
- *
- * @return task tag
- */
-//==============================================================================
-static inline void *_task_get_tag(task_t *taskhdl)
-{
-        return (void*)xTaskGetApplicationTaskTag(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function enter to critical section
- */
-//==============================================================================
-static inline void _critical_section_begin(void)
-{
-        taskENTER_CRITICAL();
-}
-
-//==============================================================================
-/**
- * @brief Function exit from critical section
- */
-//==============================================================================
-static inline void _critical_section_end(void)
-{
-        taskEXIT_CRITICAL();
-}
-
-//==============================================================================
-/**
- * @brief Function disable interrupts
- */
-//==============================================================================
-static inline void _ISR_disable(void)
-{
-        taskDISABLE_INTERRUPTS();
-}
-
-//==============================================================================
-/**
- * @brief Function enable interrupts
- */
-//==============================================================================
-static inline void _ISR_enable(void)
-{
-        taskENABLE_INTERRUPTS();
-}
-
-//==============================================================================
-/**
- * @brief Function put to sleep task in milliseconds
- *
- * @param[in] milliseconds
- */
-//==============================================================================
-static inline void _sleep_ms(const uint milliseconds)
-{
-        vTaskDelay(MS2TICK(milliseconds));
-}
-
-//==============================================================================
-/**
- * @brief Function put to sleep task in seconds
- *
- * @param[in] seconds
- */
-//==============================================================================
-static inline void _sleep(const uint seconds)
-{
-        vTaskDelay(MS2TICK(seconds * 1000UL));
-}
-
-//==============================================================================
-/**
- * @brief Function sleep task in regular periods (reference argument)
- *
- * @param milliseconds          milliseconds
- * @param ref_time_ticks        reference time in OS ticks
- */
-//==============================================================================
-static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
-{
-        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(milliseconds));
-}
-
-//==============================================================================
-/**
- * @brief Function sleep task in regular periods (reference argument)
- *
- * @param seconds       seconds
- * @param ref_time_ticks        reference time in OS ticks
- */
-//==============================================================================
-static inline void _sleep_until(const uint seconds, int *ref_time_ticks)
-{
-        vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(seconds * 1000UL));
-}
 
 #ifdef __cplusplus
 }

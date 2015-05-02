@@ -1323,10 +1323,10 @@ static bool is_dir_valid(DIR *dir)
 //==============================================================================
 static int increase_task_priority(void)
 {
-        int priority = _task_get_priority();
+        int priority = _task_get_priority(_THIS_TASK);
 
         if (priority < PRIORITY_HIGHEST) {
-                _task_set_priority(priority + 1);
+                _task_set_priority(_THIS_TASK, priority + 1);
         }
 
         return priority;
@@ -1341,7 +1341,7 @@ static int increase_task_priority(void)
 //==============================================================================
 static inline void restore_priority(int priority)
 {
-        _task_set_priority(priority);
+        _task_set_priority(_THIS_TASK, priority);
 }
 
 //==============================================================================
