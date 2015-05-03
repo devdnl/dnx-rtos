@@ -44,19 +44,19 @@
   Local types, enums definitions
 ==============================================================================*/
 struct mutex {
+        res_header_t  header;
         void         *object;
-        struct mutex *self;
         bool          recursive;
 };
 
 struct queue {
+        res_header_t  header;
         void         *object;
-        struct queue *self;
 };
 
 struct sem {
-        void       *object;
-        struct sem *self;
+        res_header_t  header;
+        void         *object;
 };
 
 /*==============================================================================
@@ -83,7 +83,7 @@ struct sem {
 //==============================================================================
 static bool is_semaphore_valid(sem_t *sem)
 {
-        return sem && sem->self == sem && sem->object;
+        return sem && sem->header.type == RES_TYPE_SEMAPHORE && sem->object;
 }
 
 //==============================================================================
@@ -95,7 +95,7 @@ static bool is_semaphore_valid(sem_t *sem)
 //==============================================================================
 static bool is_mutex_valid(mutex_t *mtx)
 {
-        return mtx && mtx->self == mtx && mtx->object;
+        return mtx && mtx->header.type == RES_TYPE_MUTEX && mtx->object;
 }
 
 //==============================================================================
@@ -107,7 +107,7 @@ static bool is_mutex_valid(mutex_t *mtx)
 //==============================================================================
 static bool is_queue_valid(queue_t *queue)
 {
-        return queue && queue->self == queue && queue->object;
+        return queue && queue->header.type == RES_TYPE_QUEUE && queue->object;
 }
 
 //==============================================================================
@@ -455,7 +455,7 @@ int _semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
                         }
 
                         if ((*sem)->object) {
-                                (*sem)->self = *sem;
+                                (*sem)->header.type = RES_TYPE_SEMAPHORE;
                         } else {
                                 _kfree(_MM_KRN, static_cast(void**, sem));
                                 result = ENOMEM;
@@ -479,8 +479,8 @@ int _semaphore_destroy(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 vSemaphoreDelete(sem->object);
-                sem->object = NULL;
-                sem->self   = NULL;
+                sem->object      = NULL;
+                sem->header.type = RES_TYPE_UNKNOWN;
                 return _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
         } else {
                 return EINVAL;
@@ -604,7 +604,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                         }
 
                         if ((*mtx)->object) {
-                                (*mtx)->self = *mtx;
+                                (*mtx)->header.type = RES_TYPE_MUTEX;
                         } else {
                                 _kfree(_MM_KRN, static_cast(void**, mtx));
                                 result = ENOMEM;
@@ -628,8 +628,8 @@ int _mutex_destroy(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
                 vSemaphoreDelete(mutex->object);
-                mutex->object = NULL;
-                mutex->self   = NULL;
+                mutex->object      = NULL;
+                mutex->header.type = RES_TYPE_UNKNOWN;
                 return _kfree(_MM_KRN, reinterpret_cast(void**, &mutex));
         } else {
                 return EINVAL;
@@ -707,7 +707,7 @@ int _queue_create(const uint length, const uint item_size, queue_t **queue)
                 if (result == ESUCC) {
                         (*queue)->object = xQueueCreate(length, item_size);
                         if ((*queue)->object) {
-                                (*queue)->self = *queue;
+                                (*queue)->header.type = RES_TYPE_QUEUE;
                         } else {
                                 _kfree(_MM_KRN, static_cast(void**, &queue));
                                 result = ENOMEM;
@@ -731,8 +731,8 @@ int _queue_destroy(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 vQueueDelete(queue->object);
-                queue->object = NULL;
-                queue->self   = NULL;
+                queue->object      = NULL;
+                queue->header.type = RES_TYPE_UNKNOWN;
                 _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
                 return ESUCC;
         } else {

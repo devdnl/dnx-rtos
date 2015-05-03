@@ -127,11 +127,11 @@ extern "C" {
 ==============================================================================*/
 /** directory type */
 struct vfs_dir {
+        res_header_t    header;
         int           (*f_readdir)(void *fshdl, struct vfs_dir *dir, dirent_t **dirent);
         int           (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void           *f_dd;           //!< Directory descriptor (FS object)
         void           *f_handle;       //!< File System handle
-        struct vfs_dir *self;           //!< object validation pointer
         size_t          f_items;        //!< number of items
         size_t          f_seek;         //!< seek
         dirent_t        dirent;         //!< directory entry data
@@ -191,7 +191,7 @@ typedef struct vfs_file_flags {
 
 /** file type */
 struct vfs_file {
-        _res_head_t         head;
+        res_header_t        header;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
         void               *f_extra_data;

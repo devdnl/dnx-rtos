@@ -64,21 +64,22 @@ typedef struct mutex mutex_t;
 
 /** KERNELSPACE: resource type */
 typedef enum {
-        _RES_TYPE_UNKNOWN       = 0,
-        _RES_TYPE_PROCESS       = 0x958701BA,
-        _RES_TYPE_THREAD        = 0x1EE62243,
-        _RES_TYPE_MUTEX         = 0x300C6B74,
-        _RES_TYPE_SEMAPHORE     = 0x4E59901B,
-        _RES_TYPE_QUEUE         = 0x83D50ADB,
-        _RES_TYPE_FILE          = 0x7D129250,
-        _RES_TYPE_MEMORY        = 0x9E834645
-} _res_type_t;
+        RES_TYPE_UNKNOWN       = 0,
+        RES_TYPE_PROCESS       = 0x958701BA,
+        RES_TYPE_THREAD        = 0x1EE62243,
+        RES_TYPE_MUTEX         = 0x300C6B74,
+        RES_TYPE_SEMAPHORE     = 0x4E59901B,
+        RES_TYPE_QUEUE         = 0x83D50ADB,
+        RES_TYPE_FILE          = 0x7D129250,
+        RES_TYPE_DIR           = 0x19586E97,
+        RES_TYPE_MEMORY        = 0x9E834645
+} res_type_t;
 
 /** KERNELSPACE: object header (must be the first in object) */
 typedef struct {
         void       *next;
-        _res_type_t type;
-} _res_head_t;
+        res_type_t  type;
+} res_header_t;
 
 /*==============================================================================
    Exported object declarations

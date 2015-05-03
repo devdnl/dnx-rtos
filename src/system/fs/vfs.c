@@ -451,7 +451,7 @@ int _vfs_opendir(const char *path, DIR **dir)
                 }
 
                 if (result == ESUCC) {
-                        (*dir)->self = *dir;
+                        (*dir)->header.type = RES_TYPE_DIR;
                 } else {
                         _kfree(_MM_KRN, static_cast(void**, dir));
                 }
@@ -476,7 +476,7 @@ int _vfs_closedir(DIR *dir)
         if (is_dir_valid(dir) && dir->f_closedir) {
                 result = dir->f_closedir(dir->f_handle, dir);
                 if (result == ESUCC) {
-                        dir->self = NULL;
+                        dir->header.type = RES_TYPE_UNKNOWN;
                         _kfree(_MM_KRN, static_cast(void**, &dir));
                 }
         }
@@ -823,10 +823,10 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
                                                         external_path,
                                                         o_flags);
                         if (result == ESUCC) {
-                                file_obj->FS_hdl    = fs->handle;
-                                file_obj->FS_if     = fs->interface;
-                                file_obj->f_flag    = f_flags;
-                                file_obj->head.type = _RES_TYPE_FILE;
+                                file_obj->FS_hdl      = fs->handle;
+                                file_obj->FS_if       = fs->interface;
+                                file_obj->f_flag      = f_flags;
+                                file_obj->header.type = RES_TYPE_FILE;
                         }
 
                         restore_priority(priority);
@@ -838,7 +838,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         if (file_obj) {
-                if (file_obj->head.type == _RES_TYPE_FILE) {
+                if (file_obj->header.type == RES_TYPE_FILE) {
                         *file = file_obj;
                 } else {
                         _kfree(_MM_KRN, static_cast(void**, &file_obj));
@@ -867,9 +867,9 @@ int _vfs_fclose(FILE *file, bool force)
                                                file->f_extra_data,
                                                file->fd, force);
                 if (result == ESUCC) {
-                        file->head.type = _RES_TYPE_UNKNOWN;
-                        file->FS_hdl    = NULL;
-                        file->FS_hdl    = NULL;
+                        file->header.type = RES_TYPE_UNKNOWN;
+                        file->FS_hdl      = NULL;
+                        file->FS_hdl      = NULL;
                         _kfree(_MM_KRN, static_cast(void**, &file));
                 }
         }
@@ -1296,7 +1296,7 @@ static bool is_file_valid(FILE *file)
         return (  file                  != NULL
                && file->FS_hdl          != NULL
                && file->FS_if           != NULL
-               && file->head.type       == _RES_TYPE_FILE
+               && file->header.type     == RES_TYPE_FILE
                && file->FS_if->fs_magic == _VFS_FILE_SYSTEM_MAGIC_NO);
 }
 
@@ -1311,7 +1311,7 @@ static bool is_file_valid(FILE *file)
 //==============================================================================
 static bool is_dir_valid(DIR *dir)
 {
-        return (dir && dir->self == dir);
+        return (dir && dir->header.type == RES_TYPE_DIR);
 }
 
 //==============================================================================
