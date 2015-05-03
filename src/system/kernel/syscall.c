@@ -44,12 +44,14 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define NUMBER_OF_SYS_THREADS   2
+
 #define GETARG(type, var)       type var = va_arg(syscallrq->args, type)
 #define GETRETURN(type, var)    type var = syscallrq->retptr
 #define GETTASKHDL()            syscallrq->task
 #define SETRETURN(type, var)    if (syscallrq->retptr) {*((type*)syscallrq->retptr) = (var);}
-#define SETERRNO(var)           syscallres->err = var
-#define GETERRNO()              syscallres->err
+#define SETERRNO(var)           syscallrq->err = var
+#define GETERRNO()              syscallrq->err
 
 /*==============================================================================
   Local object types
@@ -57,69 +59,66 @@
 typedef struct {
         void     *retptr;
         task_t   *task;
+        sem_t    *done_sem;
         syscall_t syscall;
         va_list   args;
+        int       err;
 } syscallrq_t;
 
-typedef struct {
-        int       err;
-} syscallres_t;
-
-typedef void (*syscallfunc_t)(syscallrq_t*, syscallres_t*);
+typedef void (*syscallfunc_t)(syscallrq_t*);
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void syscall_mount(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_umount(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_getmntentry(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_mknod(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_mkdir(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_mkfifo(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_opendir(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_closedir(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_readdir(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_remove(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_rename(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_chmod(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_chown(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_stat(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_statfs(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fseek(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_ftell(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_ioctl(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fstat(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_fflush(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_abort(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_exit(syscallrq_t *syscallrq, syscallres_t *syscallres);
-static void syscall_system(syscallrq_t *syscallrq, syscallres_t *syscallres);
+static void syscall_mount(syscallrq_t *syscallrq);
+static void syscall_umount(syscallrq_t *syscallrq);
+static void syscall_getmntentry(syscallrq_t *syscallrq);
+static void syscall_mknod(syscallrq_t *syscallrq);
+static void syscall_mkdir(syscallrq_t *syscallrq);
+static void syscall_mkfifo(syscallrq_t *syscallrq);
+static void syscall_opendir(syscallrq_t *syscallrq);
+static void syscall_closedir(syscallrq_t *syscallrq);
+static void syscall_readdir(syscallrq_t *syscallrq);
+static void syscall_remove(syscallrq_t *syscallrq);
+static void syscall_rename(syscallrq_t *syscallrq);
+static void syscall_chmod(syscallrq_t *syscallrq);
+static void syscall_chown(syscallrq_t *syscallrq);
+static void syscall_stat(syscallrq_t *syscallrq);
+static void syscall_statfs(syscallrq_t *syscallrq);
+static void syscall_fopen(syscallrq_t *syscallrq);
+static void syscall_fclose(syscallrq_t *syscallrq);
+static void syscall_fwrite(syscallrq_t *syscallrq);
+static void syscall_fread(syscallrq_t *syscallrq);
+static void syscall_fseek(syscallrq_t *syscallrq);
+static void syscall_ftell(syscallrq_t *syscallrq);
+static void syscall_ioctl(syscallrq_t *syscallrq);
+static void syscall_fstat(syscallrq_t *syscallrq);
+static void syscall_fflush(syscallrq_t *syscallrq);
+static void syscall_feof(syscallrq_t *syscallrq);
+static void syscall_clearerr(syscallrq_t *syscallrq);
+static void syscall_ferror(syscallrq_t *syscallrq);
+static void syscall_sync(syscallrq_t *syscallrq);
+static void syscall_gettime(syscallrq_t *syscallrq);
+static void syscall_settime(syscallrq_t *syscallrq);
+static void syscall_driverinit(syscallrq_t *syscallrq);
+static void syscall_driverrelease(syscallrq_t *syscallrq);
+static void syscall_malloc(syscallrq_t *syscallrq);
+static void syscall_zalloc(syscallrq_t *syscallrq);
+static void syscall_free(syscallrq_t *syscallrq);
+static void syscall_syslogenable(syscallrq_t *syscallrq);
+static void syscall_syslogdisable(syscallrq_t *syscallrq);
+static void syscall_restart(syscallrq_t *syscallrq);
+static void syscall_kernelpanicdetect(syscallrq_t *syscallrq);
+static void syscall_abort(syscallrq_t *syscallrq);
+static void syscall_exit(syscallrq_t *syscallrq);
+static void syscall_system(syscallrq_t *syscallrq);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
 static queue_t *call_request;
-static queue_t *call_response;
-static pid_t    kworker;
-static pid_t    initd;
+static sem_t   *access_sem[NUMBER_OF_SYS_THREADS];
+static sem_t   *try_sem;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -190,16 +189,20 @@ static const syscallfunc_t syscalltab[] = {
 //==============================================================================
 void _syscall_init()
 {
-        _queue_create(1, sizeof(syscallrq_t), &call_request);
-        _queue_create(1, sizeof(syscallres_t), &call_response);
-        _process_create(&kworker, NULL, "kworker");
-//        _thread_create(kworker, NULL, kworker_thread);
-        _process_create(&initd, NULL, "initd");
+        _queue_create(NUMBER_OF_SYS_THREADS, sizeof(syscallrq_t*), &call_request);
+        _semaphore_create(1, 0, &try_sem);
+
+        for (int i = 0; i < NUMBER_OF_SYS_THREADS; i++) {
+                _semaphore_create(1, 1, &access_sem[i]);
+        }
+
+        _process_create(NULL, NULL, "kworker");
+        _process_create(NULL, NULL, "initd");
 }
 
 //==============================================================================
 /**
- * @brief  Function call selected syscall [USERLAND]
+ * @brief  Function call selected syscall [USERSPACE]
  *
  * @param  syscall      syscall number
  * @param  retptr       pointer to return value
@@ -211,24 +214,34 @@ void _syscall_init()
 void syscall(syscall_t syscall, void *retptr, ...)
 {
         syscallrq_t syscallrq;
-        syscallrq.syscall  = syscall;
-        syscallrq.task     = _builtinfunc(task_get_handle);
-        syscallrq.retptr   = retptr;
+        syscallrq.syscall = syscall;
+        syscallrq.task    = _builtinfunc(task_get_handle);
+        syscallrq.retptr  = retptr;
+        syscallrq.err     = ESUCC;
         va_start(syscallrq.args, retptr);
 
-        int result = _builtinfunc(queue_send, call_request, &syscallrq, MAX_DELAY_MS);
-        if (result == ESUCC) {
-                syscallres_t callres;
-                result = _builtinfunc(queue_receive, call_response, &callres, MAX_DELAY_MS);
-                if (result == ESUCC) {
-                        _errno = callres.err;
-                } else {
-                        _errno = result;
+        while (true) {
+                for (int i = 0; i < NUMBER_OF_SYS_THREADS; i++) {
+                        if (_builtinfunc(semaphore_wait, access_sem[i], 0) == ESUCC) {
+                                syscallrq.done_sem = access_sem[i];
+                                syscallrq_t *syscallrq_ptr = &syscallrq;
+                                int result = _builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS);
+                                if (result == ESUCC) {
+                                        if (_builtinfunc(semaphore_wait, access_sem[i], MAX_DELAY_MS) == ESUCC) {
+                                                _errno = syscallrq.err;
+                                                _builtinfunc(semaphore_signal, access_sem[i]);
+                                                goto finish;
+                                        }
+                                } else {
+                                        _builtinfunc(semaphore_signal, access_sem[i]);
+                                }
+                        }
                 }
-        } else {
-                _errno = result;
+
+                _builtinfunc(semaphore_wait, try_sem, MAX_DELAY_MS);
         }
 
+        finish:
         va_end(syscallrq.args);
 }
 
@@ -247,19 +260,17 @@ int _syscall_kworker_master(int argc, char *argv[])
         UNUSED_ARG2(argc, argv);
 
         for (;;) {
-                syscallrq_t  syscallrq;
-                syscallres_t syscallres;
-
+                syscallrq_t *syscallrq;
                 if (_queue_receive(call_request, &syscallrq, MAX_DELAY_MS) == ESUCC) {
 
-                        if (syscallrq.syscall < _SYSCALL_COUNT) {
-                                syscallres.err = ESUCC;
-                                syscalltab[syscallrq.syscall](&syscallrq, &syscallres);
+                        if (syscallrq->syscall < _SYSCALL_COUNT) {
+                                syscalltab[syscallrq->syscall](syscallrq);
                         } else {
-                                syscallres.err = EBADRQC;
+                                syscallrq->err = EBADRQC;
                         }
 
-                        _queue_send(call_response, &syscallres, MAX_DELAY_MS);
+                        _semaphore_signal(syscallrq->done_sem);
+                        _semaphore_signal(try_sem);
                 }
         }
 
@@ -276,7 +287,7 @@ int _syscall_kworker_master(int argc, char *argv[])
  * @return None
  */
 //==============================================================================
-static void syscall_mount(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_mount(syscallrq_t *syscallrq)
 {
         GETARG(const char *, FS_name);
         GETARG(const char *, src_path);
@@ -295,7 +306,7 @@ static void syscall_mount(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_umount(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_umount(syscallrq_t *syscallrq)
 {
         GETARG(const char *, mount_point);
         SETERRNO(_umount(mount_point));
@@ -312,7 +323,7 @@ static void syscall_umount(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_getmntentry(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_getmntentry(syscallrq_t *syscallrq)
 {
         GETARG(int *, seek);
         GETARG(struct mntent *, mntent);
@@ -338,7 +349,7 @@ static void syscall_getmntentry(syscallrq_t *syscallrq, syscallres_t *syscallres
  * @return None
  */
 //==============================================================================
-static void syscall_mknod(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_mknod(syscallrq_t *syscallrq)
 {
         GETARG(const char *, pathname);
         GETARG(dev_t *, dev);
@@ -356,7 +367,7 @@ static void syscall_mknod(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_mkdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_mkdir(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -374,7 +385,7 @@ static void syscall_mkdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_mkfifo(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_mkfifo(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -392,7 +403,7 @@ static void syscall_mkfifo(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_opendir(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_opendir(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         DIR *dir = NULL;
@@ -410,7 +421,7 @@ static void syscall_opendir(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_closedir(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_closedir(syscallrq_t *syscallrq)
 {
         GETARG(DIR *, dir);
         SETERRNO(_vfs_closedir(dir));
@@ -427,7 +438,7 @@ static void syscall_closedir(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_readdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_readdir(syscallrq_t *syscallrq)
 {
         GETARG(DIR *, dir);
         dirent_t *dirent = NULL;
@@ -445,7 +456,7 @@ static void syscall_readdir(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_remove(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_remove(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         SETERRNO(_vfs_remove(path));
@@ -462,7 +473,7 @@ static void syscall_remove(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_rename(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_rename(syscallrq_t *syscallrq)
 {
         GETARG(const char *, oldname);
         GETARG(const char *, newname);
@@ -480,7 +491,7 @@ static void syscall_rename(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_chmod(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_chmod(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -498,7 +509,7 @@ static void syscall_chmod(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_chown(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_chown(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(uid_t *, owner);
@@ -517,7 +528,7 @@ static void syscall_chown(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_stat(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_stat(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(struct stat *, buf);
@@ -535,7 +546,7 @@ static void syscall_stat(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_fstat(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fstat(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         GETARG(struct stat *, buf);
@@ -553,7 +564,7 @@ static void syscall_fstat(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_statfs(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_statfs(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(struct statfs *, buf);
@@ -571,7 +582,7 @@ static void syscall_statfs(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fopen(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         GETARG(const char *, mode);
@@ -590,7 +601,7 @@ static void syscall_fopen(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fclose(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_fclose(file, false));
@@ -607,7 +618,7 @@ static void syscall_fclose(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fwrite(syscallrq_t *syscallrq)
 {
         GETARG(const uint8_t *, buf);
         GETARG(size_t *, size);
@@ -629,7 +640,7 @@ static void syscall_fwrite(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================;
-static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fread(syscallrq_t *syscallrq)
 {
         GETARG(uint8_t *, buf);
         GETARG(size_t *, size);
@@ -651,7 +662,7 @@ static void syscall_fread(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================;
-static void syscall_fseek(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fseek(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         GETARG(i64_t *, lseek);
@@ -670,7 +681,7 @@ static void syscall_fseek(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_ftell(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_ftell(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         i64_t lseek = -1;
@@ -688,7 +699,7 @@ static void syscall_ftell(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_ioctl(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_ioctl(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         GETARG(int *, request);
@@ -707,7 +718,7 @@ static void syscall_ioctl(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_fflush(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_fflush(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_fflush(file));
@@ -724,7 +735,7 @@ static void syscall_fflush(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_feof(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         int eof = EOF;
@@ -742,7 +753,7 @@ static void syscall_feof(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_clearerr(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_clearerr(file));
@@ -758,7 +769,7 @@ static void syscall_clearerr(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_ferror(syscallrq_t *syscallrq)
 {
         GETARG(FILE *, file);
         int error = EOF;
@@ -776,9 +787,9 @@ static void syscall_ferror(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_sync(syscallrq_t *syscallrq)
 {
-        UNUSED_ARG2(syscallres, syscallrq);
+        UNUSED_ARG1(syscallrq);
         _vfs_sync();
 }
 
@@ -792,7 +803,7 @@ static void syscall_sync(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_gettime(syscallrq_t *syscallrq)
 {
         time_t time = -1;
         SETERRNO(_gettime(&time));
@@ -809,7 +820,7 @@ static void syscall_gettime(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_settime(syscallrq_t *syscallrq)
 {
         GETARG(time_t *, time);
         SETERRNO(_settime(time));
@@ -826,7 +837,7 @@ static void syscall_settime(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_driverinit(syscallrq_t *syscallrq)
 {
         GETARG(const char *, drv_name);
         GETARG(const char *, node_path);
@@ -845,7 +856,7 @@ static void syscall_driverinit(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_driverrelease(syscallrq_t *syscallrq)
 {
         GETARG(const char *, drv_name);
         SETERRNO(_driver_release(drv_name));
@@ -862,7 +873,7 @@ static void syscall_driverrelease(syscallrq_t *syscallrq, syscallres_t *syscallr
  * @return None
  */
 //==============================================================================
-static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_malloc(syscallrq_t *syscallrq)
 {
         GETARG(size_t *, size);
         void * mem = NULL;
@@ -880,7 +891,7 @@ static void syscall_malloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_zalloc(syscallrq_t *syscallrq)
 {
         GETARG(size_t *, size);
         void * mem = NULL;
@@ -898,7 +909,7 @@ static void syscall_zalloc(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_free(syscallrq_t *syscallrq)
 {
         GETARG(void *, mem);
         SETERRNO(_kfree(_MM_PROG, &mem));
@@ -914,7 +925,7 @@ static void syscall_free(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_syslogenable(syscallrq_t *syscallrq)
 {
         GETARG(const char *, path);
         SETERRNO(_printk_enable(path));
@@ -931,7 +942,7 @@ static void syscall_syslogenable(syscallrq_t *syscallrq, syscallres_t *syscallre
  * @return None
  */
 //==============================================================================
-static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_syslogdisable(syscallrq_t *syscallrq)
 {
         SETERRNO(_printk_disable());
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
@@ -947,10 +958,9 @@ static void syscall_syslogdisable(syscallrq_t *syscallrq, syscallres_t *syscallr
  * @return None
  */
 //==============================================================================
-static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_restart(syscallrq_t *syscallrq)
 {
-        UNUSED_ARG2(syscallrq, syscallres);
-
+        UNUSED_ARG1(syscallrq);
         _cpuctl_restart_system();
 }
 
@@ -964,9 +974,8 @@ static void syscall_restart(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_kernelpanicdetect(syscallrq_t *syscallrq)
 {
-        UNUSED_ARG1(syscallres);
         GETARG(bool *, showmsg);
         SETRETURN(bool, _kernel_panic_detect(*showmsg));
 }
@@ -981,7 +990,7 @@ static void syscall_kernelpanicdetect(syscallrq_t *syscallrq, syscallres_t *sysc
  * @return None
  */
 //==============================================================================
-static void syscall_abort(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_abort(syscallrq_t *syscallrq)
 {
 
 }
@@ -996,7 +1005,7 @@ static void syscall_abort(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_exit(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_exit(syscallrq_t *syscallrq)
 {
         GETARG(int *, status);
         SETERRNO(_process_exit(GETTASKHDL(), *status));
@@ -1012,7 +1021,7 @@ static void syscall_exit(syscallrq_t *syscallrq, syscallres_t *syscallres)
  * @return None
  */
 //==============================================================================
-static void syscall_system(syscallrq_t *syscallrq, syscallres_t *syscallres)
+static void syscall_system(syscallrq_t *syscallrq)
 {
 
 }
