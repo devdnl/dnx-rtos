@@ -33,6 +33,7 @@
 #include "mm/heap.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
+#include "kernel/ktypes.h"
 
 /*==============================================================================
   Local macros
@@ -41,12 +42,16 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef struct {
+        i32_t *usage1;
+        i32_t *usage2;
+} usage_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static void modify_RAM_usage(void *usage, i32_t size);
-static int  kalloc(enum _mm_mem mpur, const size_t size, bool clear, void **mem, size_t modid);
+static int  kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *arg);
 
 /*==============================================================================
   Local objects
@@ -97,12 +102,12 @@ int _mm_init(void)
 //==============================================================================
 int _kzalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
 {
-        va_list arg;
-        va_start(arg, mem);
-        size_t modid = va_arg(arg, int);
-        va_end(arg);
+        va_list vaarg;
+        va_start(vaarg, mem);
+        void *arg = va_arg(vaarg, void*);
+        va_end(vaarg);
 
-        return kalloc(mpur, size, true, mem, modid);
+        return kalloc(mpur, size, true, mem, arg);
 }
 
 //==============================================================================
@@ -119,12 +124,12 @@ int _kzalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
 //==============================================================================
 int _kmalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
 {
-        va_list arg;
-        va_start(arg, mem);
-        size_t modid = va_arg(arg, int);
-        va_end(arg);
+        va_list vaarg;
+        va_start(vaarg, mem);
+        void *arg = va_arg(vaarg, void*);
+        va_end(vaarg);
 
-        return kalloc(mpur, size, false, mem, modid);
+        return kalloc(mpur, size, false, mem, arg);
 }
 
 //==============================================================================
@@ -143,23 +148,49 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
         int result = EINVAL;
 
         if (mpur < _MM_COUNT && mem && *mem) {
-                i32_t *usage = NULL;
+                va_list vaarg;
+                va_start(vaarg, mem);
+                void *arg = va_arg(vaarg, void*);
+                va_end(vaarg);
 
-                if (mpur == _MM_MOD) {
-                        va_list arg;
-                        va_start(arg, mem);
-                        size_t modid = va_arg(arg, int);
-                        va_end(arg);
+                usage_t usage;
+                usage.usage1 = NULL;
+                usage.usage2 = NULL;
 
+                switch (mpur) {
+                case _MM_MOD: {
+                        size_t modid = reinterpret_cast(size_t, arg);
                         if (modid < _drvreg_number_of_modules) {
-                                usage = &module_memory_usage[modid];
+                                usage.usage1 = &module_memory_usage[modid];
+                                result       = ESUCC;
                         }
-                } else {
-                        usage = &memory_usage[mpur];
+                        break;
                 }
 
-                if (usage) {
-                        _heap_free(*mem, modify_RAM_usage, usage);
+                case _MM_PROG:
+                        if ((*reinterpret_cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
+                                usage.usage2 = arg;
+                                result       = ESUCC;
+                                (*reinterpret_cast(res_header_t**, mem))->next = NULL;
+                                (*reinterpret_cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
+                        } else {
+                                result = EFAULT;
+                                break;
+                        }
+                        // go through
+                case _MM_KRN:
+                case _MM_FS:
+                case _MM_NET:
+                        usage.usage1 = &memory_usage[mpur];
+                        result       = ESUCC;
+                        break;
+
+                default:
+                        break;
+                }
+
+                if (result == ESUCC) {
+                        _heap_free(*mem, modify_RAM_usage, &usage);
                         *mem   = NULL;
                         result = ESUCC;
                 }
@@ -271,42 +302,78 @@ size_t _mm_get_mem_size()
 //==============================================================================
 static void modify_RAM_usage(void *usage, i32_t size)
 {
-        *reinterpret_cast(i32_t*, usage) += size;
+        usage_t *usage_vars = usage;
+
+        if (usage_vars->usage1)
+                *usage_vars->usage1 += size;
+
+        if (usage_vars->usage2)
+                *usage_vars->usage2 += size;
 }
 
 //==============================================================================
 /**
  * @brief  Allocate memory
  *
- * @param[in]  mpur             memory purpose
- * @param[in]  size             object size
- * @param[in]  clear            clear allocated block
- * @param[out] mem              pointer to memory block pointer
- * @param[in]  modid            module ID if _MM_MOD selected
+ * _MM_PROG:
+ *      Function allocate extra size (res_header_t) when block is created for
+ *      application purposes. Extra size is used to create chain of resources.
+ *      Additional argument is used to pass pointer with memory usage variable.
+ *
+ * _MM_MOD
+ *      Function use arg argument to pass module number.
+ *
+ * @param[in]      mpur             memory purpose
+ * @param[in]      size             object size
+ * @param[in]      clear            clear allocated block
+ * @param[out]     mem              pointer to memory block pointer
+ * @param[out,in]  arg              argument depending on selected memory region
  *
  * @return One of errno values.
  */
 //==============================================================================
-static int kalloc(enum _mm_mem mpur, const size_t size, bool clear, void **mem, size_t modid)
+static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *arg)
 {
         int result = EINVAL;
 
         if (mpur < _MM_COUNT && size && mem) {
-                i32_t *usage = NULL;
+                usage_t usage;
+                usage.usage1 = NULL;
+                usage.usage2 = NULL;
 
-                if (mpur == _MM_MOD) {
+                switch (mpur) {
+                case _MM_MOD: {
+                        size_t modid = reinterpret_cast(size_t, arg);
                         if (modid < _drvreg_number_of_modules) {
-                                usage = &module_memory_usage[modid];
+                                usage.usage1 = &module_memory_usage[modid];
                         }
-                } else {
-                        usage = &memory_usage[mpur];
+                        break;
                 }
 
-                if (usage) {
+                case _MM_PROG:
+                        size += sizeof(res_header_t);
+                        usage.usage2 = arg;
+                        // go through
+                case _MM_KRN:
+                case _MM_FS:
+                case _MM_NET:
+                        usage.usage1 = &memory_usage[mpur];
+                        break;
+
+                default:
+                        break;
+                }
+
+                if (usage.usage1) {
                         if (clear) {
-                                *mem = _heap_zalloc(size, modify_RAM_usage, usage);
+                                *mem = _heap_zalloc(size, modify_RAM_usage, &usage);
                         } else {
-                                *mem = _heap_malloc(size, modify_RAM_usage, usage);
+                                *mem = _heap_malloc(size, modify_RAM_usage, &usage);
+                        }
+
+                        if (mem && mpur == _MM_PROG) {
+                                (*reinterpret_cast(res_header_t**, mem))->next = NULL;
+                                (*reinterpret_cast(res_header_t**, mem))->type = RES_TYPE_MEMORY;
                         }
 
                         result = *mem ? ESUCC : ENOMEM;

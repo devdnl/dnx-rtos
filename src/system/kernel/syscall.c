@@ -46,12 +46,13 @@
 ==============================================================================*/
 #define NUMBER_OF_SYS_THREADS   2
 
-#define GETARG(type, var)       type var = va_arg(syscallrq->args, type)
-#define GETRETURN(type, var)    type var = syscallrq->retptr
-#define GETTASKHDL()            syscallrq->task
-#define SETRETURN(type, var)    if (syscallrq->retptr) {*((type*)syscallrq->retptr) = (var);}
-#define SETERRNO(var)           syscallrq->err = var
-#define GETERRNO()              syscallrq->err
+#define GETARG(type, var)       type var = va_arg(rq->args, type)
+#define GETRETURN(type, var)    type var = rq->retptr
+#define GETTASKHDL()            rq->task
+#define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
+#define SETERRNO(var)           rq->err = var
+#define GETERRNO()              rq->err
+#define UNUSED_RQ()             UNUSED_ARG1(rq)
 
 /*==============================================================================
   Local object types
@@ -70,48 +71,48 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void syscall_mount(syscallrq_t *syscallrq);
-static void syscall_umount(syscallrq_t *syscallrq);
-static void syscall_getmntentry(syscallrq_t *syscallrq);
-static void syscall_mknod(syscallrq_t *syscallrq);
-static void syscall_mkdir(syscallrq_t *syscallrq);
-static void syscall_mkfifo(syscallrq_t *syscallrq);
-static void syscall_opendir(syscallrq_t *syscallrq);
-static void syscall_closedir(syscallrq_t *syscallrq);
-static void syscall_readdir(syscallrq_t *syscallrq);
-static void syscall_remove(syscallrq_t *syscallrq);
-static void syscall_rename(syscallrq_t *syscallrq);
-static void syscall_chmod(syscallrq_t *syscallrq);
-static void syscall_chown(syscallrq_t *syscallrq);
-static void syscall_stat(syscallrq_t *syscallrq);
-static void syscall_statfs(syscallrq_t *syscallrq);
-static void syscall_fopen(syscallrq_t *syscallrq);
-static void syscall_fclose(syscallrq_t *syscallrq);
-static void syscall_fwrite(syscallrq_t *syscallrq);
-static void syscall_fread(syscallrq_t *syscallrq);
-static void syscall_fseek(syscallrq_t *syscallrq);
-static void syscall_ftell(syscallrq_t *syscallrq);
-static void syscall_ioctl(syscallrq_t *syscallrq);
-static void syscall_fstat(syscallrq_t *syscallrq);
-static void syscall_fflush(syscallrq_t *syscallrq);
-static void syscall_feof(syscallrq_t *syscallrq);
-static void syscall_clearerr(syscallrq_t *syscallrq);
-static void syscall_ferror(syscallrq_t *syscallrq);
-static void syscall_sync(syscallrq_t *syscallrq);
-static void syscall_gettime(syscallrq_t *syscallrq);
-static void syscall_settime(syscallrq_t *syscallrq);
-static void syscall_driverinit(syscallrq_t *syscallrq);
-static void syscall_driverrelease(syscallrq_t *syscallrq);
-static void syscall_malloc(syscallrq_t *syscallrq);
-static void syscall_zalloc(syscallrq_t *syscallrq);
-static void syscall_free(syscallrq_t *syscallrq);
-static void syscall_syslogenable(syscallrq_t *syscallrq);
-static void syscall_syslogdisable(syscallrq_t *syscallrq);
-static void syscall_restart(syscallrq_t *syscallrq);
-static void syscall_kernelpanicdetect(syscallrq_t *syscallrq);
-static void syscall_abort(syscallrq_t *syscallrq);
-static void syscall_exit(syscallrq_t *syscallrq);
-static void syscall_system(syscallrq_t *syscallrq);
+static void syscall_mount(syscallrq_t *rq);
+static void syscall_umount(syscallrq_t *rq);
+static void syscall_getmntentry(syscallrq_t *rq);
+static void syscall_mknod(syscallrq_t *rq);
+static void syscall_mkdir(syscallrq_t *rq);
+static void syscall_mkfifo(syscallrq_t *rq);
+static void syscall_opendir(syscallrq_t *rq);
+static void syscall_closedir(syscallrq_t *rq);
+static void syscall_readdir(syscallrq_t *rq);
+static void syscall_remove(syscallrq_t *rq);
+static void syscall_rename(syscallrq_t *rq);
+static void syscall_chmod(syscallrq_t *rq);
+static void syscall_chown(syscallrq_t *rq);
+static void syscall_stat(syscallrq_t *rq);
+static void syscall_statfs(syscallrq_t *rq);
+static void syscall_fopen(syscallrq_t *rq);
+static void syscall_fclose(syscallrq_t *rq);
+static void syscall_fwrite(syscallrq_t *rq);
+static void syscall_fread(syscallrq_t *rq);
+static void syscall_fseek(syscallrq_t *rq);
+static void syscall_ftell(syscallrq_t *rq);
+static void syscall_ioctl(syscallrq_t *rq);
+static void syscall_fstat(syscallrq_t *rq);
+static void syscall_fflush(syscallrq_t *rq);
+static void syscall_feof(syscallrq_t *rq);
+static void syscall_clearerr(syscallrq_t *rq);
+static void syscall_ferror(syscallrq_t *rq);
+static void syscall_sync(syscallrq_t *rq);
+static void syscall_gettime(syscallrq_t *rq);
+static void syscall_settime(syscallrq_t *rq);
+static void syscall_driverinit(syscallrq_t *rq);
+static void syscall_driverrelease(syscallrq_t *rq);
+static void syscall_malloc(syscallrq_t *rq);
+static void syscall_zalloc(syscallrq_t *rq);
+static void syscall_free(syscallrq_t *rq);
+static void syscall_syslogenable(syscallrq_t *rq);
+static void syscall_syslogdisable(syscallrq_t *rq);
+static void syscall_restart(syscallrq_t *rq);
+static void syscall_kernelpanicdetect(syscallrq_t *rq);
+static void syscall_abort(syscallrq_t *rq);
+static void syscall_exit(syscallrq_t *rq);
+static void syscall_system(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -260,16 +261,16 @@ int _syscall_kworker_master(int argc, char *argv[])
         UNUSED_ARG2(argc, argv);
 
         for (;;) {
-                syscallrq_t *syscallrq;
-                if (_queue_receive(call_request, &syscallrq, MAX_DELAY_MS) == ESUCC) {
+                syscallrq_t *rq;
+                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
 
-                        if (syscallrq->syscall < _SYSCALL_COUNT) {
-                                syscalltab[syscallrq->syscall](syscallrq);
+                        if (rq->syscall < _SYSCALL_COUNT) {
+                                syscalltab[rq->syscall](rq);
                         } else {
-                                syscallrq->err = EBADRQC;
+                                rq->err = EBADRQC;
                         }
 
-                        _semaphore_signal(syscallrq->done_sem);
+                        _semaphore_signal(rq->done_sem);
                         _semaphore_signal(try_sem);
                 }
         }
@@ -281,13 +282,13 @@ int _syscall_kworker_master(int argc, char *argv[])
 /**
  * @brief  This syscall mount selected file system to selected path
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_mount(syscallrq_t *syscallrq)
+static void syscall_mount(syscallrq_t *rq)
 {
         GETARG(const char *, FS_name);
         GETARG(const char *, src_path);
@@ -300,13 +301,13 @@ static void syscall_mount(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall unmount selected file system
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_umount(syscallrq_t *syscallrq)
+static void syscall_umount(syscallrq_t *rq)
 {
         GETARG(const char *, mount_point);
         SETERRNO(_umount(mount_point));
@@ -317,13 +318,13 @@ static void syscall_umount(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall return information about selected file system
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_getmntentry(syscallrq_t *syscallrq)
+static void syscall_getmntentry(syscallrq_t *rq)
 {
         GETARG(int *, seek);
         GETARG(struct mntent *, mntent);
@@ -343,13 +344,13 @@ static void syscall_getmntentry(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall create device node
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_mknod(syscallrq_t *syscallrq)
+static void syscall_mknod(syscallrq_t *rq)
 {
         GETARG(const char *, pathname);
         GETARG(dev_t *, dev);
@@ -361,13 +362,13 @@ static void syscall_mknod(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall create directory
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_mkdir(syscallrq_t *syscallrq)
+static void syscall_mkdir(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -379,13 +380,13 @@ static void syscall_mkdir(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall create FIFO pipe
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_mkfifo(syscallrq_t *syscallrq)
+static void syscall_mkfifo(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -397,13 +398,13 @@ static void syscall_mkfifo(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall open selected directory
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_opendir(syscallrq_t *syscallrq)
+static void syscall_opendir(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         DIR *dir = NULL;
@@ -415,13 +416,13 @@ static void syscall_opendir(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall close selected directory
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_closedir(syscallrq_t *syscallrq)
+static void syscall_closedir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
         SETERRNO(_vfs_closedir(dir));
@@ -432,13 +433,13 @@ static void syscall_closedir(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall read selected directory
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_readdir(syscallrq_t *syscallrq)
+static void syscall_readdir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
         dirent_t *dirent = NULL;
@@ -450,13 +451,13 @@ static void syscall_readdir(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall remove selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_remove(syscallrq_t *syscallrq)
+static void syscall_remove(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         SETERRNO(_vfs_remove(path));
@@ -467,13 +468,13 @@ static void syscall_remove(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall rename selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_rename(syscallrq_t *syscallrq)
+static void syscall_rename(syscallrq_t *rq)
 {
         GETARG(const char *, oldname);
         GETARG(const char *, newname);
@@ -485,13 +486,13 @@ static void syscall_rename(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall change mode of selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_chmod(syscallrq_t *syscallrq)
+static void syscall_chmod(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(mode_t *, mode);
@@ -503,13 +504,13 @@ static void syscall_chmod(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall change owner and group of selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_chown(syscallrq_t *syscallrq)
+static void syscall_chown(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(uid_t *, owner);
@@ -522,13 +523,13 @@ static void syscall_chown(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall read statistics of selected file by path
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_stat(syscallrq_t *syscallrq)
+static void syscall_stat(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(struct stat *, buf);
@@ -540,13 +541,13 @@ static void syscall_stat(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall read statistics of selected file by FILE object
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_fstat(syscallrq_t *syscallrq)
+static void syscall_fstat(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         GETARG(struct stat *, buf);
@@ -558,13 +559,13 @@ static void syscall_fstat(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall read statistics of file system mounted in selected path
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_statfs(syscallrq_t *syscallrq)
+static void syscall_statfs(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(struct statfs *, buf);
@@ -576,13 +577,13 @@ static void syscall_statfs(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall open selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_fopen(syscallrq_t *syscallrq)
+static void syscall_fopen(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(const char *, mode);
@@ -595,13 +596,13 @@ static void syscall_fopen(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall close selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_fclose(syscallrq_t *syscallrq)
+static void syscall_fclose(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_fclose(file, false));
@@ -612,13 +613,13 @@ static void syscall_fclose(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall write data to selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_fwrite(syscallrq_t *syscallrq)
+static void syscall_fwrite(syscallrq_t *rq)
 {
         GETARG(const uint8_t *, buf);
         GETARG(size_t *, size);
@@ -634,13 +635,13 @@ static void syscall_fwrite(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall read data from selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================;
-static void syscall_fread(syscallrq_t *syscallrq)
+static void syscall_fread(syscallrq_t *rq)
 {
         GETARG(uint8_t *, buf);
         GETARG(size_t *, size);
@@ -656,13 +657,13 @@ static void syscall_fread(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall move file pointer
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================;
-static void syscall_fseek(syscallrq_t *syscallrq)
+static void syscall_fseek(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         GETARG(i64_t *, lseek);
@@ -675,13 +676,13 @@ static void syscall_fseek(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall return file pointer value
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_ftell(syscallrq_t *syscallrq)
+static void syscall_ftell(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         i64_t lseek = -1;
@@ -693,13 +694,13 @@ static void syscall_ftell(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall perform not standard operation on selected file/device
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_ioctl(syscallrq_t *syscallrq)
+static void syscall_ioctl(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         GETARG(int *, request);
@@ -712,13 +713,13 @@ static void syscall_ioctl(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall flush buffers of selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_fflush(syscallrq_t *syscallrq)
+static void syscall_fflush(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_fflush(file));
@@ -729,13 +730,13 @@ static void syscall_fflush(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall check that end-of-file occurred
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_feof(syscallrq_t *syscallrq)
+static void syscall_feof(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         int eof = EOF;
@@ -747,13 +748,13 @@ static void syscall_feof(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall clear file errors
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_clearerr(syscallrq_t *syscallrq)
+static void syscall_clearerr(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         SETERRNO(_vfs_clearerr(file));
@@ -763,13 +764,13 @@ static void syscall_clearerr(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall return file error indicator
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_ferror(syscallrq_t *syscallrq)
+static void syscall_ferror(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
         int error = EOF;
@@ -781,15 +782,15 @@ static void syscall_ferror(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall synchronize all buffers of filesystems
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_sync(syscallrq_t *syscallrq)
+static void syscall_sync(syscallrq_t *rq)
 {
-        UNUSED_ARG1(syscallrq);
+        UNUSED_RQ();
         _vfs_sync();
 }
 
@@ -797,13 +798,13 @@ static void syscall_sync(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall return current time value (UTC timestamp)
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_gettime(syscallrq_t *syscallrq)
+static void syscall_gettime(syscallrq_t *rq)
 {
         time_t time = -1;
         SETERRNO(_gettime(&time));
@@ -814,13 +815,13 @@ static void syscall_gettime(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall set current system time (UTC timestamp)
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_settime(syscallrq_t *syscallrq)
+static void syscall_settime(syscallrq_t *rq)
 {
         GETARG(time_t *, time);
         SETERRNO(_settime(time));
@@ -831,13 +832,13 @@ static void syscall_settime(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall initialize selected driver and create node
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_driverinit(syscallrq_t *syscallrq)
+static void syscall_driverinit(syscallrq_t *rq)
 {
         GETARG(const char *, drv_name);
         GETARG(const char *, node_path);
@@ -850,13 +851,13 @@ static void syscall_driverinit(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall release selected driver
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_driverrelease(syscallrq_t *syscallrq)
+static void syscall_driverrelease(syscallrq_t *rq)
 {
         GETARG(const char *, drv_name);
         SETERRNO(_driver_release(drv_name));
@@ -867,17 +868,17 @@ static void syscall_driverrelease(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall allocate memory for application
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_malloc(syscallrq_t *syscallrq)
+static void syscall_malloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
-        void * mem = NULL;
-        SETERRNO(_kmalloc(_MM_PROG, *size, &mem));
+        void *mem = NULL;
+        SETERRNO(_process_memalloc(GETTASKHDL(), *size, &mem, false));
         SETRETURN(void*, mem);
 }
 
@@ -885,17 +886,17 @@ static void syscall_malloc(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall allocate memory for application and clear allocated block
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_zalloc(syscallrq_t *syscallrq)
+static void syscall_zalloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
-        void * mem = NULL;
-        SETERRNO(_kzalloc(_MM_PROG, *size, &mem));
+        void *mem = NULL;
+        SETERRNO(_process_memalloc(GETTASKHDL(), *size, &mem, true));
         SETRETURN(void*, mem);
 }
 
@@ -903,29 +904,29 @@ static void syscall_zalloc(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall free allocated memory by application
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_free(syscallrq_t *syscallrq)
+static void syscall_free(syscallrq_t *rq)
 {
         GETARG(void *, mem);
-        SETERRNO(_kfree(_MM_PROG, &mem));
+        SETERRNO(_process_memfree(GETTASKHDL(), mem));
 }
 
 //==============================================================================
 /**
  * @brief  This syscall enable system log functionality in selected file
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_syslogenable(syscallrq_t *syscallrq)
+static void syscall_syslogenable(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         SETERRNO(_printk_enable(path));
@@ -936,13 +937,13 @@ static void syscall_syslogenable(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall disable system log functionality
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_syslogdisable(syscallrq_t *syscallrq)
+static void syscall_syslogdisable(syscallrq_t *rq)
 {
         SETERRNO(_printk_disable());
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
@@ -952,15 +953,15 @@ static void syscall_syslogdisable(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall restart entire system
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_restart(syscallrq_t *syscallrq)
+static void syscall_restart(syscallrq_t *rq)
 {
-        UNUSED_ARG1(syscallrq);
+        UNUSED_RQ();
         _cpuctl_restart_system();
 }
 
@@ -968,13 +969,13 @@ static void syscall_restart(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall check if kernel panic occurred in last session
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_kernelpanicdetect(syscallrq_t *syscallrq)
+static void syscall_kernelpanicdetect(syscallrq_t *rq)
 {
         GETARG(bool *, showmsg);
         SETRETURN(bool, _kernel_panic_detect(*showmsg));
@@ -984,13 +985,13 @@ static void syscall_kernelpanicdetect(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall abort current process (caller) and set exit code as -1
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_abort(syscallrq_t *syscallrq)
+static void syscall_abort(syscallrq_t *rq)
 {
 
 }
@@ -999,13 +1000,13 @@ static void syscall_abort(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall close current process (caller)
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_exit(syscallrq_t *syscallrq)
+static void syscall_exit(syscallrq_t *rq)
 {
         GETARG(int *, status);
         SETERRNO(_process_exit(GETTASKHDL(), *status));
@@ -1015,13 +1016,13 @@ static void syscall_exit(syscallrq_t *syscallrq)
 /**
  * @brief  This syscall start shell application to run command line
  *
- * @param  syscallrq            syscall request
- * @param  syscallres           syscall response
+ * @param  rq                   syscall request
+
  *
  * @return None
  */
 //==============================================================================
-static void syscall_system(syscallrq_t *syscallrq)
+static void syscall_system(syscallrq_t *rq)
 {
 
 }

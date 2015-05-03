@@ -131,6 +131,8 @@ extern int         _process_destroy                             (pid_t, int*);
 extern int         _process_exit                                (task_t*, int);
 extern int         _process_abort                               (task_t*);
 extern const char *_process_get_CWD                             (void);
+extern int         _process_memalloc                            (task_t*, size_t, void**, bool);
+extern int         _process_memfree                             (task_t*, void*);
 extern void        _copy_task_context_to_standard_variables     (void);
 extern void        _copy_standard_variables_to_task_context     (void);
 

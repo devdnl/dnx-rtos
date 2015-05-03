@@ -63,7 +63,7 @@ typedef struct process {
         pid_t            ppid;                  /* parent process ID                  */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-        size_t           usedmem;               /* used memory                        */
+        i32_t            usedmem;               /* used memory                        */
 } process_t;
 
 typedef struct thread {
@@ -194,6 +194,8 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
                                         process_list_tail = proc;
                                 }
                                 _critical_section_end();
+
+                                proc->header.type = RES_TYPE_PROCESS;
                         }
 
                         finish:
@@ -316,6 +318,80 @@ KERNELSPACE const char *_process_get_CWD()
         _critical_section_end();
 
         return cwd;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear)
+{
+        int result = EINVAL;
+
+        process_t *proc = _task_get_tag(taskhdl);
+        if (proc) {
+                if (proc->header.type == RES_TYPE_THREAD) {
+                        proc = reinterpret_cast(thread_t*, proc)->process;
+                }
+
+                if (proc && proc->header.type == RES_TYPE_PROCESS) {
+                        void *blk;
+
+                        if (clear) {
+                                result = _kzalloc(_MM_PROG, size, &blk, &proc->usedmem);
+                        } else {
+                                result = _kmalloc(_MM_PROG, size, &blk, &proc->usedmem);
+                        }
+
+                        if (result == ESUCC) {
+                                chain_push(&proc->res_list, blk);
+                                *mem = &reinterpret_cast(res_header_t*, blk)[1];
+                        }
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+int _process_memfree(task_t *taskhdl, void *mem)
+{
+        int result = EINVAL;
+
+        process_t *proc = _task_get_tag(taskhdl);
+        if (proc) {
+                if (proc->header.type == RES_TYPE_THREAD) {
+                        proc = reinterpret_cast(thread_t*, proc)->process;
+                }
+
+                if (proc && proc->header.type == RES_TYPE_PROCESS) {
+                        void *blk = reinterpret_cast(res_header_t*, mem) - 1;
+
+                        foreach_process_resources(res, proc->res_list) {
+                                if (res == blk) {
+                                        result = _kfree(_MM_PROG, &blk, &proc->usedmem);
+                                        if (result == EFAULT) {
+                                                const char *msg = "*** Error: double free or corruption ***\n";
+                                                size_t wrcnt;
+                                                _vfs_fwrite(msg, strlen(msg), &wrcnt, proc->f_stderr);
+                                        }
+
+                                        break;
+                                }
+                        }
+                }
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -647,12 +723,12 @@ KERNELSPACE static int allocate_process_globals(process_t *proc, const struct _p
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
                 result = _kzalloc(_MM_PROG,
-                                  *usrprog->globals_size + sizeof(res_header_t),
-                                  static_cast(void*, &mem));
+                                  *usrprog->globals_size,
+                                  static_cast(void*, &mem),
+                                  &proc->usedmem);
 
                 if (result == ESUCC) {
-                        proc->globals  = &mem[1];
-                        mem->type      = RES_TYPE_MEMORY;
+                        proc->globals = &mem[1];
                         chain_push(&proc->res_list, mem);
                 }
         }
