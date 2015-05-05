@@ -68,6 +68,16 @@
   Local symbolic constants/macros
 ==============================================================================*/
 /**
+ * Heap size declared by linker script
+ */
+#define HEAP_SIZE                      ((size_t)&__heap_size)
+
+/**
+ * Heap start declared by linker script
+ */
+#define HEAP_START                     ((void *)&__heap_start)
+
+/**
  * MEM_ALIGNMENT: should be set to the alignment of the CPU for which
  * program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
  * byte alignment -> define MEM_ALIGNMENT to 2.
@@ -117,35 +127,21 @@ static struct mem *heap_end;
 /** pointer to the lowest free block, this is used for faster search */
 static struct mem *lfree;
 
-/** RAM usage */
-static u32_t used_mem;
+/** heap usage */
+static size_t heap_used;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+/** pointer to heap size value */
+extern void *__heap_size;
+
+/** pointer to heap start */
+extern void *__heap_start;
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief  Function calls user defined function when memory is allocated or
- *         freed. On error function is not called. If memory was allocated then
- *         positive value of size is passed. If memory was freed then negative
- *         value of size is passed.
- * @param  func         user defined function
- * @param  arg          argument to pass via function
- * @param  size         allocated/freed size
- * @return None
- */
-//==============================================================================
-static inline void call_user_function(_heap_func_t func, void *arg, i32_t size)
-{
-        if (func) {
-                func(arg, size);
-        }
-}
 
 //==============================================================================
 /**
@@ -154,7 +150,9 @@ static inline void call_user_function(_heap_func_t func, void *arg, i32_t size)
  *         one empty struct mem pointing to another empty struct mem.
  *         This assumes access to the heap is protected by the calling function
  *         already.
+ *
  * @param  mem        this points to a struct mem which just has been freed
+ *
  * @return None
  */
 //==============================================================================
@@ -195,14 +193,16 @@ static void plug_holes(struct mem *mem)
 //==============================================================================
 /**
 * @brief  Zero the heap and initialize start, end and lowest-free
+*
 * @param  None
+*
 * @return None
 */
 //==============================================================================
 void _heap_init(void)
 {
         /* align the heap */
-        heap = (u8_t*)_HEAP_START;
+        heap = (u8_t*)HEAP_START;
 
         /* initialize the start of the heap */
         struct mem *mem = (struct mem *)heap;
@@ -223,18 +223,18 @@ void _heap_init(void)
 //==============================================================================
 /**
  * @brief  Put a struct mem back on the heap
+ *
  * @param  rmem         is the data portion of a struct mem as returned by a previous
- *                      call to mem_malloc()
- * @param  func         user defined function called if memory was successfully
- *                      freed
- * @param  arg          user defined argument that is passed via 'func'
+ *                      call to _heap_alloc()
+ * @param  freed        freed block size (can be NULL)
+ *
  * @return None
  */
 //==============================================================================
-void _heap_free(void *rmem, _heap_func_t func, void *arg)
+void _heap_free(void *rmem, size_t *freed)
 {
-        if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end)
-        {
+        if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
+
                 vTaskSuspendAll();
 
                 /* Get the corresponding struct mem ... */
@@ -247,10 +247,12 @@ void _heap_free(void *rmem, _heap_func_t func, void *arg)
                         lfree = mem;
                 }
 
-                size_t freed = (mem->next - (size_t)(((u8_t *)mem - heap)));
-                used_mem -= freed;
+                size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap)));
+                heap_used -= blksize;
 
-                call_user_function(func, arg, -freed);
+                if (freed) {
+                        *freed = blksize;
+                }
 
                 plug_holes(mem);
 
@@ -262,13 +264,14 @@ void _heap_free(void *rmem, _heap_func_t func, void *arg)
 /**
  * @brief  Allocate a block of memory with a minimum of 'size' bytes.
  *         Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
- * @param  size    is the minimum size of the requested block in bytes.
- * @param  func    user defined function called when memory was allocated
- * @param  arg     user defined argument passed via 'func' function
+ *
+ * @param  size         is the minimum size of the requested block in bytes.
+ * @param  allocated    real size of allocated block (it can be bigger than size)
+
  * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
+void *_heap_alloc(size_t size, size_t *allocated)
 {
         size_t ptr, ptr2;
         struct mem *mem, *mem2;
@@ -340,7 +343,7 @@ void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
                                 }
 
                                 used = (size + SIZEOF_STRUCT_MEM);
-                                used_mem += used;
+                                heap_used += used;
                         } else {
                                 /* (a mem2 struct does no fit into the user data space of
                                  *  mem and mem->next will always
@@ -354,7 +357,7 @@ void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
                                 mem->used = 1;
 
                                 used = (mem->next - (size_t)((u8_t *)mem - heap));
-                                used_mem += used;
+                                heap_used += used;
                         }
 
                         if (mem == lfree) {
@@ -364,7 +367,9 @@ void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
                                 }
                         }
 
-                        call_user_function(func, arg, used);
+                        if (allocated) {
+                                *allocated = used;
+                        }
 
                         xTaskResumeAll();
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
@@ -377,35 +382,72 @@ void *_heap_malloc(size_t size, _heap_func_t func, void *arg)
 
 //==============================================================================
 /**
- * @brief  Allocate a block of memory with a minimum of 'size' bytes.
- *         Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
- *         Allocated memory is cleared.
- * @param  size    is the minimum size of the requested block in bytes.
- * @param  func    user defined function called when memory was allocated
- * @param  arg     user defined argument passed via 'func' function
- * @return Pointer to allocated memory or NULL if no free memory was found.
+ * @brief  Function return free heap
+ *
+ * @param  None
+ *
+ * @return Free heap value
  */
 //==============================================================================
-void *_heap_zalloc(size_t size, _heap_func_t func, void *arg)
+size_t _heap_get_free(void)
 {
-        void *p = _heap_malloc(size, func, arg);
-        if (p) {
-                memset(p, 0, MEM_ALIGN_SIZE(size));
-        }
-
-        return p;
+        return (HEAP_SIZE - heap_used);
 }
 
 //==============================================================================
 /**
- * @brief  Function return free memory
+ * @brief  Function return used heap
+ *
  * @param  None
- * @return Free memory value
+ *
+ * @return Use heap value
  */
 //==============================================================================
-u32_t _heap_get_free_heap(void)
+size_t _heap_get_used(void)
 {
-        return (_HEAP_SIZE - used_mem);
+        return heap_used;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return heap size
+ *
+ * @param  None
+ *
+ * @return Heap size
+ */
+//==============================================================================
+size_t _heap_get_size(void)
+{
+        return HEAP_SIZE;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return size of selected block
+ *
+ * @param  rmem     memory block
+ *
+ * @return Block size, 0 on error
+ */
+//==============================================================================
+size_t _heap_get_block_size(void *rmem)
+{
+    size_t blksize = 0;
+
+    if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
+
+            vTaskSuspendAll();
+
+            /* get the corresponding struct mem */
+            struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+
+            blksize = (mem->next - (size_t)(((u8_t *)mem - heap)));
+
+            xTaskResumeAll();
+    }
+
+    return blksize;
 }
 
 /*==============================================================================

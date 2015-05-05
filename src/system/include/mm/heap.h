@@ -5,7 +5,7 @@
 
 @brief   This file support dynamic memory management.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -71,36 +71,25 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define _HEAP_RAM_SIZE        ((size_t)&__ram_size)
-#define _HEAP_SIZE            ((size_t)&__heap_size)
-#define _HEAP_START           ((void *)&__heap_start)
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/**
- * @brief  Type define the function that is called when a block is successfully allocated or freed.
- * @param  arg          user defined argument
- * @param  size         size of allocated (positive value) or freed (negative value) block
- * @return None
- */
-typedef void (*_heap_func_t)(void *arg, i32_t size);
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-extern void *__ram_size;
-extern void *__heap_size;
-extern void *__heap_start;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
 extern void   _heap_init(void);
-extern void  *_heap_malloc(size_t, _heap_func_t, void*);
-extern void  *_heap_zalloc(size_t, _heap_func_t, void*);
-extern void   _heap_free(void *mem, _heap_func_t, void*);
-extern u32_t  _heap_get_free_heap(void);
+extern void   _heap_free(void*, size_t*);
+extern void  *_heap_alloc(size_t, size_t*);
+extern size_t _heap_get_free(void);
+extern size_t _heap_get_used(void);
+extern size_t _heap_get_size(void);
+extern size_t _heap_get_block_size(void*);
 
 #ifdef __cplusplus
 }

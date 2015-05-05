@@ -57,7 +57,7 @@ enum _mm_mem {
         _MM_FS,         //!< allocate memory for file system purposes
         _MM_NET,        //!< allocate memory for network purposes
         _MM_PROG,       //!< allocate memory for program purposes
-        _MM_MOD,        //!< allocate memorr for modules purposes
+        _MM_MOD,        //!< allocate memory for modules purposes
         _MM_COUNT
 };
 
@@ -74,6 +74,7 @@ extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
 extern int    _kfree(enum _mm_mem, void**, ...);
 extern int    _mm_get_mem_usage_details(_mm_mem_usage_t*);
 extern int    _mm_get_module_mem_usage(uint module, i32_t *usage);
+extern size_t _mm_get_block_size(void*);
 extern size_t _mm_get_mem_free();
 extern size_t _mm_get_mem_usage();
 extern size_t _mm_get_mem_size();

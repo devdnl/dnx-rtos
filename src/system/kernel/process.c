@@ -76,6 +76,7 @@ typedef struct thread {
   Local function prototypes
 ==============================================================================*/
 static void process_code(void *arg);
+static process_t *task_get_process_container(task_t *taskhdl);
 static void process_free_resources(process_t *proc);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
 static void argtab_destroy(char **argv);
@@ -214,7 +215,7 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
  * @brief  Free all process's resources and remove from process list
  *
  * @param  pid          process ID
- * @parma  status       process exit status (can be NULL)
+ * @param  status       process exit status (can be NULL)
  *
  * @return One of errno value
  */
@@ -268,7 +269,7 @@ KERNELSPACE int _process_exit(task_t *taskhdl, int status)
         int result = EINVAL;
 
         if (taskhdl) {
-                process_t *proc = _task_get_tag(taskhdl);
+                process_t *proc = task_get_process_container(taskhdl);
                 if (proc) {
                         proc->status = status;
                         process_free_resources(proc);
@@ -290,7 +291,7 @@ KERNELSPACE int _process_exit(task_t *taskhdl, int status)
 //==============================================================================
 KERNELSPACE int _process_abort(task_t *taskhdl)
 {
-        process_t *proc = _task_get_tag(taskhdl);
+        process_t *proc = task_get_process_container(taskhdl);
         if (proc) {
                 const char *aborted = "Aborted\n";
                 size_t      wrcnt;
@@ -327,7 +328,31 @@ KERNELSPACE const char *_process_get_CWD()
  * @return ?
  */
 //==============================================================================
-int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear)
+KERNELSPACE int _process_register_resource(res_header_t *resource, int memusage)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE int _process_remove_resource(res_header_t *resource, int memusage)
+{
+
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear) // FIXME to remove
 {
         int result = EINVAL;
 
@@ -363,7 +388,7 @@ int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear)
  * @return ?
  */
 //==============================================================================
-int _process_memfree(task_t *taskhdl, void *mem)
+int _process_memfree(task_t *taskhdl, void *mem) // FIXME to remove
 {
         int result = EINVAL;
 
@@ -478,12 +503,29 @@ USERSPACE static void process_code(void *arg)
         process_func_t funcmain = arg;
         process_t     *proc     = _task_get_tag(_THIS_TASK);
 
-        proc->status  = funcmain(proc->argc, proc->argv);
-        proc->task = NULL;
+        proc->status = funcmain(proc->argc, proc->argv);
 
         syscall(SYSCALL_EXIT, &proc->status);
 
         _task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE static process_t *task_get_process_container(task_t *taskhdl)
+{
+        process_t *process = _task_get_tag(_THIS_TASK);
+
+        if (process->header.type == RES_TYPE_THREAD) {
+                process = reinterpret_cast(thread_t*, process)->process;
+        }
+
+        return process;
 }
 
 //==============================================================================
