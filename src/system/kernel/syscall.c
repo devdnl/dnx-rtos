@@ -27,6 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <string.h>
 #include "config.h"
 #include "fs/fsctrl.h"
 #include "fs/vfs.h"
@@ -408,7 +409,7 @@ static void syscall_opendir(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         DIR *dir = NULL;
-        SETERRNO(_vfs_opendir(path, &dir));
+        SETERRNO(_vfs_opendir(path, &dir));//FIXME resource add
         SETRETURN(DIR*, dir);
 }
 
@@ -425,7 +426,7 @@ static void syscall_opendir(syscallrq_t *rq)
 static void syscall_closedir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
-        SETERRNO(_vfs_closedir(dir));
+        SETERRNO(_vfs_closedir(dir));//FIXME resource release
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -588,7 +589,7 @@ static void syscall_fopen(syscallrq_t *rq)
         GETARG(const char *, path);
         GETARG(const char *, mode);
         FILE *file = NULL;
-        SETERRNO(_vfs_fopen(path, mode, &file));
+        SETERRNO(_vfs_fopen(path, mode, &file));//FIXME resource add
         SETRETURN(FILE*, file);
 }
 
@@ -605,7 +606,7 @@ static void syscall_fopen(syscallrq_t *rq)
 static void syscall_fclose(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
-        SETERRNO(_vfs_fclose(file, false));
+        SETERRNO(_vfs_fclose(file, false));//FIXME resource release
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -877,9 +878,18 @@ static void syscall_driverrelease(syscallrq_t *rq)
 static void syscall_malloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
+
         void *mem = NULL;
-        SETERRNO(_process_memalloc(GETTASKHDL(), *size, &mem, false));
-        SETRETURN(void*, mem);
+        int   err = _kmalloc(_MM_PROG, *size, &mem);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETTASKHDL(), mem);
+                if (err != ESUCC) {
+                        _kfree(_MM_PROG, &mem);
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(void*, &static_cast(res_header_t*, mem)[1]);
 }
 
 //==============================================================================
@@ -895,9 +905,18 @@ static void syscall_malloc(syscallrq_t *rq)
 static void syscall_zalloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
+
         void *mem = NULL;
-        SETERRNO(_process_memalloc(GETTASKHDL(), *size, &mem, true));
-        SETRETURN(void*, mem);
+        int   err = _kzalloc(_MM_PROG, *size, &mem);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETTASKHDL(), mem);
+                if (err != ESUCC) {
+                        _kfree(_MM_PROG, &mem);
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(void*, &static_cast(res_header_t*, mem)[1]);
 }
 
 //==============================================================================
@@ -913,7 +932,17 @@ static void syscall_zalloc(syscallrq_t *rq)
 static void syscall_free(syscallrq_t *rq)
 {
         GETARG(void *, mem);
-        SETERRNO(_process_memfree(GETTASKHDL(), mem));
+
+        int err = _process_release_resource(GETTASKHDL(), mem, RES_TYPE_MEMORY);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: double free or corruption ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETTASKHDL()));
+
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
 }
 
 //==============================================================================

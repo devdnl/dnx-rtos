@@ -94,7 +94,7 @@
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(_HEAP_SIZE - SIZEOF_STRUCT_MEM)
+#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(HEAP_SIZE - SIZEOF_STRUCT_MEM)
 
 /*==============================================================================
   Local types, enums definitions

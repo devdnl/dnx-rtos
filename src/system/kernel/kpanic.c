@@ -102,6 +102,7 @@ bool _kernel_panic_detect(bool show_msg)
                "SEGFAULT",
                "STACKOVF",
                "CPUFAULT",
+               "INTERNAL",
                "UNKNOWN"
         };
 #endif

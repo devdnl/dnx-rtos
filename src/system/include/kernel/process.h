@@ -111,6 +111,20 @@ typedef struct {
 
 /** USERSPACE: thread attributes */
 typedef struct {
+        pid_t  pid;
+        size_t files_count;
+        size_t dir_count;
+        size_t mutexes_count;
+        size_t semaphores_count;
+        size_t queue_count;
+        size_t threads_count;
+        size_t memory_block_count;
+        size_t memory_usage;
+        size_t cpu_load_cnt;
+} process_stat_t;
+
+/** USERSPACE: thread attributes */
+typedef struct {
         size_t stack_depth;
 } thread_attr_t;
 
@@ -132,8 +146,10 @@ extern int         _process_exit                                (task_t*, int);
 extern int         _process_abort                               (task_t*);
 extern const char *_process_get_CWD                             (void);
 
-extern int         _process_register_resource                   (res_header_t*, int);
-extern int         _process_remove_resource                     (res_header_t*, int);
+extern int         _process_register_resource                   (task_t*, res_header_t*);
+extern int         _process_release_resource                    (task_t*, res_header_t*, res_type_t);
+extern int         _process_get_statistics                      (task_t*, process_stat_t*);
+extern FILE       *_process_get_stderr                          (task_t*);
 
 extern int         _process_memalloc                            (task_t*, size_t, void**, bool);
 extern int         _process_memfree                             (task_t*, void*);

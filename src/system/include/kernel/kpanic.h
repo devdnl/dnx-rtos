@@ -47,7 +47,8 @@ enum _kernel_panic_desc_cause {
         _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
         _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
         _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
-        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 3
+        _KERNEL_PANIC_DESC_CAUSE_INTERNAL = 3,
+        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 4
 };
 
 /*==============================================================================

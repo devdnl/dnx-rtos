@@ -29,11 +29,14 @@
 ==============================================================================*/
 #include <stdarg.h>
 #include <stdbool.h>
+#include <string.h>
+#include "config.h"
 #include "mm/mm.h"
 #include "mm/heap.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
 #include "kernel/ktypes.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local macros
@@ -228,7 +231,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
 int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
 {
         if (mem_usage) {
-                mem_usage->static_memory_usage      = _HEAP_RAM_SIZE - _heap_get_size();
+                mem_usage->static_memory_usage      = RAM_SIZE - _heap_get_size();
                 mem_usage->kernel_memory_usage      = memory_usage[_MM_KRN];
                 mem_usage->filesystems_memory_usage = memory_usage[_MM_FS];
                 mem_usage->network_memory_usage     = memory_usage[_MM_NET];

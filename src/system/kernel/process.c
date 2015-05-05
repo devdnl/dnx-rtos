@@ -34,6 +34,8 @@
 #include "fs/vfs.h"
 #include "kernel/process.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
+#include "kernel/printk.h"
 #include "lib/llist.h"
 #include "lib/cast.h"
 
@@ -42,7 +44,8 @@
 ==============================================================================*/
 #define USERSPACE
 #define KERNELSPACE
-#define foreach_process_resources(_v, _l) for (res_header_t *_v = _l; _v; _v = _v->next)
+#define foreach_process_resources(_v, _l)       for (res_header_t *_v = _l; _v; _v = _v->next)
+#define foreach_process(_v)                     for (process_t *_v = process_list; _v; _v = reinterpret_cast(process_t*, _v->header.next))
 
 /*==============================================================================
   Local types, enums definitions
@@ -60,10 +63,8 @@ typedef struct process {
         int              argc;                  /* number of arguments                */
         int              status;                /* program status (return value)      */
         pid_t            pid;                   /* process ID                         */
-        pid_t            ppid;                  /* parent process ID                  */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-        i32_t            usedmem;               /* used memory                        */
 } process_t;
 
 typedef struct thread {
@@ -77,22 +78,19 @@ typedef struct thread {
 ==============================================================================*/
 static void process_code(void *arg);
 static process_t *task_get_process_container(task_t *taskhdl);
-static void process_free_resources(process_t *proc);
+static void process_destroy_all_resources(process_t *proc);
+static bool resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
 static int  allocate_process_globals(process_t *proc, const struct _prog_data *usrprog);
 static int  apply_process_attributes(process_t *proc, const process_attr_t *attr);
-static void chain_push(res_header_t **chain, res_header_t *item);
-static res_header_t *chain_at(res_header_t *chain, size_t i);
-static res_header_t *chain_take(res_header_t *chain, res_header_t *target);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static pid_t      PID_cnt = 1;
-static process_t *process_list_head;
-static process_t *process_list_tail;
+static process_t *process_list;
 static process_t *active_process;
 
 /*==============================================================================
@@ -164,12 +162,6 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
                         if (result != ESUCC)
                                 goto finish;
 
-                        // get parent PID
-                        process_t *pproc = _task_get_tag(_THIS_TASK);
-                        if (pproc) {
-                                proc->ppid = pproc->pid;
-                        }
-
                         // set default program settings
                         proc->pid = PID_cnt++;
 
@@ -187,12 +179,14 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
                                 }
 
                                 _critical_section_begin();
-                                if (process_list_head == NULL) {
-                                        process_list_head = proc;
-                                        process_list_tail = proc;
-                                } else {
-                                        process_list_tail->header.next = proc;
-                                        process_list_tail = proc;
+                                {
+                                        if (process_list == NULL) {
+                                                process_list = proc;
+                                        } else {
+                                                res_header_t *next = process_list->header.next;
+                                                process_list       = proc;
+                                                proc->header.next  = next;
+                                        }
                                 }
                                 _critical_section_end();
 
@@ -201,7 +195,7 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
 
                         finish:
                         if (result != ESUCC) {
-                                process_free_resources(proc);
+                                process_destroy_all_resources(proc);
                                 _kfree(_MM_KRN, static_cast(void**, &proc));
                         }
                 }
@@ -224,30 +218,31 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
 {
         int result = EINVAL;
 
-        process_t *proc = process_list_head;
-
-        while (proc) {
-                if (proc->pid == pid) {
+        process_t *prev = NULL;
+        foreach_process(curr) {
+                if (curr->pid == pid) {
                         _critical_section_begin();
                         {
-                                process_list_head = proc->header.next;
-
-                                if (process_list_tail == proc)
-                                        process_list_tail = process_list_head;
+                                if (process_list == curr) {
+                                        process_list = static_cast(process_t*, curr->header.next);
+                                } else {
+                                        prev->header.next = curr->header.next;
+                                }
                         }
                         _critical_section_end();
 
                         if (status) {
-                                *status = proc->status;
+                                *status = curr->status;
                         }
 
-                        process_free_resources(proc);
-                        _kfree(_MM_KRN, static_cast(void**, &proc));
+                        process_destroy_all_resources(curr);
+
+                        _kfree(_MM_KRN, static_cast(void**, &curr));
 
                         result = ESUCC;
-                } else {
-                        proc = proc->header.next;
                 }
+
+                prev = curr;
         }
 
         return result;
@@ -272,7 +267,7 @@ KERNELSPACE int _process_exit(task_t *taskhdl, int status)
                 process_t *proc = task_get_process_container(taskhdl);
                 if (proc) {
                         proc->status = status;
-                        process_free_resources(proc);
+                        process_destroy_all_resources(proc);
                 }
         }
 
@@ -313,8 +308,10 @@ KERNELSPACE const char *_process_get_CWD()
         const char *cwd = "";
 
         _critical_section_begin();
-        if (active_process && active_process->cwd) {
-                cwd = active_process->cwd;
+        {
+                if (active_process && active_process->cwd) {
+                        cwd = active_process->cwd;
+                }
         }
         _critical_section_end();
 
@@ -328,54 +325,23 @@ KERNELSPACE const char *_process_get_CWD()
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _process_register_resource(res_header_t *resource, int memusage)
+KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
 {
+        int result = ESRCH;
 
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-KERNELSPACE int _process_remove_resource(res_header_t *resource, int memusage)
-{
-
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear) // FIXME to remove
-{
-        int result = EINVAL;
-
-        process_t *proc = _task_get_tag(taskhdl);
+        process_t *proc = task_get_process_container(task);
         if (proc) {
-                if (proc->header.type == RES_TYPE_THREAD) {
-                        proc = reinterpret_cast(thread_t*, proc)->process;
-                }
-
-                if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                        void *blk;
-
-                        if (clear) {
-                                result = _kzalloc(_MM_PROG, size, &blk, &proc->usedmem);
+                _critical_section_begin();
+                {
+                        if (proc->res_list == NULL) {
+                                proc->res_list = resource;
                         } else {
-                                result = _kmalloc(_MM_PROG, size, &blk, &proc->usedmem);
-                        }
-
-                        if (result == ESUCC) {
-                                chain_push(&proc->res_list, blk);
-                                *mem = &reinterpret_cast(res_header_t*, blk)[1];
+                                res_header_t *next   = proc->res_list;
+                                proc->res_list       = resource;
+                                proc->res_list->next = next;
                         }
                 }
+                _critical_section_end();
         }
 
         return result;
@@ -388,35 +354,106 @@ int _process_memalloc(task_t *taskhdl, size_t size, void **mem, bool clear) // F
  * @return ?
  */
 //==============================================================================
-int _process_memfree(task_t *taskhdl, void *mem) // FIXME to remove
+KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, res_type_t type)
 {
-        int result = EINVAL;
+        int result = ESRCH;
 
-        process_t *proc = _task_get_tag(taskhdl);
+        process_t *proc = task_get_process_container(task);
         if (proc) {
-                if (proc->header.type == RES_TYPE_THREAD) {
-                        proc = reinterpret_cast(thread_t*, proc)->process;
-                }
+                _critical_section_begin();
 
-                if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                        void *blk = reinterpret_cast(res_header_t*, mem) - 1;
+                result = ENOENT;
 
-                        foreach_process_resources(res, proc->res_list) {
-                                if (res == blk) {
-                                        result = _kfree(_MM_PROG, &blk, &proc->usedmem);
-                                        if (result == EFAULT) {
-                                                const char *msg = "*** Error: double free or corruption ***\n";
-                                                size_t wrcnt;
-                                                _vfs_fwrite(msg, strlen(msg), &wrcnt, proc->f_stderr);
+                res_header_t *prev     = NULL;
+                int           max_deep = 1024;
+
+                foreach_process_resources(curr, proc->res_list) {
+                        if (curr == resource) {
+                                if (curr->type == type) {
+                                        if (proc->res_list == curr) {
+                                                proc->res_list = proc->res_list->next;
+                                        } else {
+                                                prev->next = curr->next;
                                         }
 
+                                        if (resource_destroy(curr) == false) {
+                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                                        }
+                                } else {
+                                        result = EFAULT;
                                         break;
                                 }
                         }
+
+                        prev = curr;
+
+                        if (--max_deep == 0) {
+                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                        }
+                }
+
+                _critical_section_end();
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE int _process_get_statistics(task_t *task, process_stat_t *stat)
+{
+        int result = EINVAL;
+
+        process_t *proc = task_get_process_container(task);
+
+        if (proc && stat) {
+                memset(stat, 0, sizeof(process_stat_t));
+
+                stat->pid           = proc->pid;
+                stat->cpu_load_cnt  = proc->timecnt;
+                stat->threads_count = 1;
+
+                foreach_process_resources(res, proc->res_list) {
+                        switch (res->type) {
+                        case RES_TYPE_FILE      : stat->files_count++; break;
+                        case RES_TYPE_DIR       : stat->dir_count++; break;
+                        case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
+                        case RES_TYPE_QUEUE     : stat->queue_count++; break;
+                        case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
+                        case RES_TYPE_THREAD    : stat->threads_count++; break;
+                        case RES_TYPE_MEMORY    : stat->memory_block_count++;
+                                                  stat->memory_usage += _mm_get_block_size(res);
+                                                  break;
+                        default: break;
+                        }
                 }
         }
 
         return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE FILE *_process_get_stderr(task_t *task)
+{
+        FILE *f_stderr = NULL;
+
+        process_t *proc = task_get_process_container(task);
+        if (proc) {
+                f_stderr = proc->f_stderr;
+        }
+
+        return f_stderr;
 }
 
 //==============================================================================
@@ -517,9 +554,9 @@ USERSPACE static void process_code(void *arg)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE static process_t *task_get_process_container(task_t *taskhdl)
+static process_t *task_get_process_container(task_t *taskhdl)
 {
-        process_t *process = _task_get_tag(_THIS_TASK);
+        process_t *process = _task_get_tag(taskhdl);
 
         if (process->header.type == RES_TYPE_THREAD) {
                 process = reinterpret_cast(thread_t*, process)->process;
@@ -535,7 +572,7 @@ KERNELSPACE static process_t *task_get_process_container(task_t *taskhdl)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE static void process_free_resources(process_t *proc)
+static void process_destroy_all_resources(process_t *proc)
 {
         if (proc->task) {
                 _task_destroy(proc->task);
@@ -557,38 +594,8 @@ KERNELSPACE static void process_free_resources(process_t *proc)
 
         // free all resources
         foreach_process_resources(res, proc->res_list) {
-                res_header_t *res2free = res;
-                switch (res->type) {
-                case RES_TYPE_FILE:
-                        _vfs_fclose(static_cast(FILE*, res2free), true);
-                        break;
-
-                case RES_TYPE_DIR:
-                        _vfs_closedir(static_cast(DIR*, res2free));
-                        break;
-
-                case RES_TYPE_MEMORY:
-                        _kfree(_MM_PROG, static_cast(void*, &res2free));
-                        break;
-
-                case RES_TYPE_MUTEX:
-                        _mutex_destroy(static_cast(mutex_t*, res2free));
-                        break;
-
-                case RES_TYPE_QUEUE:
-                        _queue_destroy(static_cast(queue_t*, res2free));
-                        break;
-
-                case RES_TYPE_SEMAPHORE:
-                        _semaphore_destroy(static_cast(sem_t*, res2free));
-                        break;
-
-                case RES_TYPE_THREAD:
-                        _thread_destroy(static_cast(thread_t*, res2free));
-                        break;
-
-                default:
-                        break;
+                if (resource_destroy(res) == false) {
+                        _printk("Unknown object: %p\n", res);
                 }
         }
 
@@ -602,6 +609,53 @@ KERNELSPACE static void process_free_resources(process_t *proc)
 
 //==============================================================================
 /**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static bool resource_destroy(res_header_t *resource)
+{
+        res_header_t *res2free = resource;
+
+        switch (resource->type) {
+        case RES_TYPE_FILE:
+                _vfs_fclose(static_cast(FILE*, res2free), true);
+                break;
+
+        case RES_TYPE_DIR:
+                _vfs_closedir(static_cast(DIR*, res2free));
+                break;
+
+        case RES_TYPE_MEMORY:
+                _kfree(_MM_PROG, static_cast(void*, &res2free));
+                break;
+
+        case RES_TYPE_MUTEX:
+                _mutex_destroy(static_cast(mutex_t*, res2free));
+                break;
+
+        case RES_TYPE_QUEUE:
+                _queue_destroy(static_cast(queue_t*, res2free));
+                break;
+
+        case RES_TYPE_SEMAPHORE:
+                _semaphore_destroy(static_cast(sem_t*, res2free));
+                break;
+
+        case RES_TYPE_THREAD:
+                _thread_destroy(static_cast(thread_t*, res2free));
+                break;
+
+        default:
+                return false;
+        }
+
+        return true;
+}
+
+//==============================================================================
+/**
  * @brief Function create new table with argument pointers
  *
  * @param[in]  str              argument string
@@ -611,7 +665,7 @@ KERNELSPACE static void process_free_resources(process_t *proc)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE static int argtab_create(const char *str, int *argc, char **argv[])
+static int argtab_create(const char *str, int *argc, char **argv[])
 {
         int result = EINVAL;
 
@@ -703,7 +757,7 @@ KERNELSPACE static int argtab_create(const char *str, int *argc, char **argv[])
  * @param argv          pointer to argument table (must be ended with NULL)
  */
 //==============================================================================
-KERNELSPACE static void argtab_destroy(char **argv)
+static void argtab_destroy(char **argv)
 {
         if (argv) {
                 int n = 0;
@@ -723,7 +777,7 @@ KERNELSPACE static void argtab_destroy(char **argv)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE static int find_program(const char *name, const struct _prog_data **prog)
+static int find_program(const char *name, const struct _prog_data **prog)
 {
         static const size_t kworker_stack_depth  = STACK_DEPTH_LOW;
         static const size_t kworker_globals_size = 0;
@@ -758,20 +812,17 @@ KERNELSPACE static int find_program(const char *name, const struct _prog_data **
  * @return ?
  */
 //==============================================================================
-KERNELSPACE static int allocate_process_globals(process_t *proc, const struct _prog_data *usrprog)
+static int allocate_process_globals(process_t *proc, const struct _prog_data *usrprog)
 {
         int result = ESUCC;
 
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
-                result = _kzalloc(_MM_PROG,
-                                  *usrprog->globals_size,
-                                  static_cast(void*, &mem),
-                                  &proc->usedmem);
+                result = _kzalloc(_MM_PROG, *usrprog->globals_size, static_cast(void*, &mem));
 
                 if (result == ESUCC) {
                         proc->globals = &mem[1];
-                        chain_push(&proc->res_list, mem);
+                        _process_register_resource(proc->task, mem);
                 }
         }
 
@@ -785,7 +836,7 @@ KERNELSPACE static int allocate_process_globals(process_t *proc, const struct _p
  * @return ?
  */
 //==============================================================================
-KERNELSPACE static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
+static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
 {
         int result = ESUCC;
 
@@ -802,7 +853,7 @@ KERNELSPACE static int apply_process_attributes(process_t *proc, const process_a
                 } else if (attr->p_stdin) {
                         result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
                         if (result == ESUCC) {
-                                chain_push(&proc->res_list, reinterpret_cast(res_header_t*, proc->f_stdin));
+                                _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stdin));
                         } else {
                                 goto finish;
                         }
@@ -825,7 +876,7 @@ KERNELSPACE static int apply_process_attributes(process_t *proc, const process_a
                         } else {
                                 result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
                                 if (result == ESUCC) {
-                                        chain_push(&proc->res_list, reinterpret_cast(res_header_t*, proc->f_stdout));
+                                        _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stdout));
                                 } else {
                                         goto finish;
                                 }
@@ -853,7 +904,7 @@ KERNELSPACE static int apply_process_attributes(process_t *proc, const process_a
                         } else {
                                 result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
                                 if (result == ESUCC) {
-                                        chain_push(&proc->res_list, reinterpret_cast(res_header_t*, proc->f_stdout));
+                                        _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stderr));
                                 } else {
                                         goto finish;
                                 }
@@ -868,68 +919,6 @@ KERNELSPACE static int apply_process_attributes(process_t *proc, const process_a
 
         finish:
         return result;
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-KERNELSPACE static void chain_push(res_header_t **chain, res_header_t *item)
-{
-        if (chain) {
-                if (*chain == NULL) {
-                        *chain = item;
-                } else {
-                        res_header_t *ch = *chain;
-                        while (ch) {
-                                if (ch->next == NULL) {
-                                        ch->next = item;
-                                        break;
-                                } else {
-                                        ch = ch->next;
-                                }
-                        }
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-KERNELSPACE static res_header_t *chain_at(res_header_t *chain, size_t i)
-{
-        while (chain && i) {
-                chain = chain->next;
-                i--;
-        }
-
-        return chain;
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-KERNELSPACE static res_header_t *chain_take(res_header_t *chain, res_header_t *target)
-{
-        while (chain) {
-                if (chain->next == target) {
-                        chain->next = target->next;
-                        return target;
-                }
-        }
-
-        return NULL;
 }
 
 /*==============================================================================
