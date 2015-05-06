@@ -50,6 +50,7 @@
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
 #define GETRETURN(type, var)    type var = rq->retptr
 #define GETTASKHDL()            rq->task
+#define GETPROCESS()            _process_get_container_by_task(rq->task)
 #define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
 #define SETERRNO(var)           rq->err = var
 #define GETERRNO()              rq->err
@@ -198,8 +199,8 @@ void _syscall_init()
                 _semaphore_create(1, 1, &access_sem[i]);
         }
 
-        _process_create(NULL, NULL, "kworker");
-        _process_create(NULL, NULL, "initd");
+        _process_create("kworker", NULL, NULL);
+        _process_create("initd", NULL, NULL);
 }
 
 //==============================================================================
@@ -882,14 +883,14 @@ static void syscall_malloc(syscallrq_t *rq)
         void *mem = NULL;
         int   err = _kmalloc(_MM_PROG, *size, &mem);
         if (err == ESUCC) {
-                err = _process_register_resource(GETTASKHDL(), mem);
+                err = _process_register_resource(GETPROCESS(), mem);
                 if (err != ESUCC) {
                         _kfree(_MM_PROG, &mem);
                 }
         }
 
         SETERRNO(err);
-        SETRETURN(void*, &static_cast(res_header_t*, mem)[1]);
+        SETRETURN(void*, mem ? &static_cast(res_header_t*, mem)[1] : NULL);
 }
 
 //==============================================================================
@@ -909,14 +910,14 @@ static void syscall_zalloc(syscallrq_t *rq)
         void *mem = NULL;
         int   err = _kzalloc(_MM_PROG, *size, &mem);
         if (err == ESUCC) {
-                err = _process_register_resource(GETTASKHDL(), mem);
+                err = _process_register_resource(GETPROCESS(), mem);
                 if (err != ESUCC) {
                         _kfree(_MM_PROG, &mem);
                 }
         }
 
         SETERRNO(err);
-        SETRETURN(void*, &static_cast(res_header_t*, mem)[1]);
+        SETRETURN(void*,  mem ? &static_cast(res_header_t*, mem)[1] : NULL);
 }
 
 //==============================================================================
@@ -933,7 +934,7 @@ static void syscall_free(syscallrq_t *rq)
 {
         GETARG(void *, mem);
 
-        int err = _process_release_resource(GETTASKHDL(), mem, RES_TYPE_MEMORY);
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, mem) - 1, RES_TYPE_MEMORY);
         if (err != ESUCC) {
                 const char *msg = "*** Error: double free or corruption ***\n";
                 size_t wrcnt;
@@ -1022,7 +1023,8 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq)
 //==============================================================================
 static void syscall_abort(syscallrq_t *rq)
 {
-
+        UNUSED_ARG1(rq);
+        SETERRNO(_process_abort(GETPROCESS()));
 }
 
 //==============================================================================
@@ -1038,7 +1040,7 @@ static void syscall_abort(syscallrq_t *rq)
 static void syscall_exit(syscallrq_t *rq)
 {
         GETARG(int *, status);
-        SETERRNO(_process_exit(GETTASKHDL(), *status));
+        SETERRNO(_process_exit(GETPROCESS(), *status));
 }
 
 //==============================================================================

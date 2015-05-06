@@ -45,12 +45,12 @@
 #define USERSPACE
 #define KERNELSPACE
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
-#define foreach_process(_v)             for (process_t *_v = process_list; _v; _v = reinterpret_cast(process_t*, _v->header.next))
+#define foreach_process(_v)             for (_process_t *_v = process_list; _v; _v = reinterpret_cast(_process_t*, _v->header.next))
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef struct process {
+struct _process {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
         FILE            *f_stdin;               /* stdin file                         */
@@ -65,33 +65,32 @@ typedef struct process {
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-} process_t;
+};
 
-typedef struct thread {
+struct _thread {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
-        process_t       *process;               /* reference to process               */
-} thread_t;
+        _process_t       *process;               /* reference to process               */
+};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static void process_code(void *arg);
-static process_t *task_get_process_container(task_t *taskhdl);
-static void process_destroy_all_resources(process_t *proc);
+static void process_destroy_all_resources(_process_t *proc);
 static bool resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
-static int  allocate_process_globals(process_t *proc, const struct _prog_data *usrprog);
-static int  apply_process_attributes(process_t *proc, const process_attr_t *attr);
+static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
+static int  apply_process_attributes(_process_t *proc, const process_attr_t *attr);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static pid_t      PID_cnt = 1;
-static process_t *process_list;
-static process_t *active_process;
+static _process_t *process_list;
+static _process_t *active_process;
 
 /*==============================================================================
   Exported object definitions
@@ -137,9 +136,11 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
         int result = EINVAL;
 
         if (cmd && cmd[0] != '\0') {
-                process_t *proc;
-                result = _kzalloc(_MM_KRN, sizeof(process_t), static_cast(void**, &proc));
+                _process_t *proc;
+                result = _kzalloc(_MM_KRN, sizeof(_process_t), static_cast(void**, &proc));
                 if (result == ESUCC) {
+
+                        proc->header.type = RES_TYPE_PROCESS;
 
                         // parse program's arguments
                         result = argtab_create(cmd, &proc->argc, &proc->argv);
@@ -183,14 +184,11 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                         if (process_list == NULL) {
                                                 process_list = proc;
                                         } else {
-                                                res_header_t *next = process_list->header.next;
-                                                process_list       = proc;
-                                                proc->header.next  = next;
+                                                proc->header.next = static_cast(res_header_t*, process_list);
+                                                process_list      = proc;
                                         }
                                 }
                                 _kernel_scheduler_unlock();
-
-                                proc->header.type = RES_TYPE_PROCESS;
                         }
 
                         finish:
@@ -218,13 +216,13 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
 {
         int result = EINVAL;
 
-        process_t *prev = NULL;
+        _process_t *prev = NULL;
         foreach_process(curr) {
                 if (curr->pid == pid) {
                         _kernel_scheduler_lock();
                         {
                                 if (process_list == curr) {
-                                        process_list = static_cast(process_t*, curr->header.next);
+                                        process_list = static_cast(_process_t*, curr->header.next);
                                 } else {
                                         prev->header.next = curr->header.next;
                                 }
@@ -259,16 +257,14 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
  * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE int _process_exit(task_t *taskhdl, int status)
+KERNELSPACE int _process_exit(_process_t *proc, int status)
 {
         int result = EINVAL;
 
-        if (taskhdl) {
-                process_t *proc = task_get_process_container(taskhdl);
-                if (proc) {
-                        proc->status = status;
-                        process_destroy_all_resources(proc);
-                }
+        if (proc) {
+                proc->status = status;
+                process_destroy_all_resources(proc);
+                result = ESUCC;
         }
 
         return result;
@@ -284,16 +280,15 @@ KERNELSPACE int _process_exit(task_t *taskhdl, int status)
  * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE int _process_abort(task_t *taskhdl)
+KERNELSPACE int _process_abort(_process_t *proc)
 {
-        process_t *proc = task_get_process_container(taskhdl);
         if (proc) {
                 const char *aborted = "Aborted\n";
                 size_t      wrcnt;
                 _vfs_fwrite(aborted, strlen(aborted), &wrcnt, proc->f_stderr);
         }
 
-        return _process_exit(taskhdl, -1);
+        return _process_exit(proc, -1);
 }
 
 //==============================================================================
@@ -305,16 +300,13 @@ KERNELSPACE int _process_abort(task_t *taskhdl)
  * @return CWD path (always valid)
  */
 //==============================================================================
-KERNELSPACE const char *_process_get_CWD(task_t *task)
+KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 {
-        const char *cwd = "";
-
-        process_t *process = task_get_process_container(task);
-        if (process) {
-                cwd = process->cwd;
+        if (proc) {
+                return proc->cwd;
+        } else {
+                return "";
         }
-
-        return cwd;
 }
 
 //==============================================================================
@@ -327,26 +319,24 @@ KERNELSPACE const char *_process_get_CWD(task_t *task)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
+KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resource)
 {
-        int result = ESRCH;
-
-        process_t *proc = task_get_process_container(task);
         if (proc) {
                 _kernel_scheduler_lock();
                 {
                         if (proc->res_list == NULL) {
                                 proc->res_list = resource;
                         } else {
-                                res_header_t *next   = proc->res_list;
-                                proc->res_list       = resource;
-                                proc->res_list->next = next;
+                                resource->next = proc->res_list;
+                                proc->res_list = resource;
                         }
                 }
                 _kernel_scheduler_unlock();
-        }
 
-        return result;
+                return ESUCC;
+        } else {
+                return ESRCH;
+        }
 }
 
 //==============================================================================
@@ -360,11 +350,10 @@ KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, res_type_t type)
+KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resource, res_type_t type)
 {
         int result = ESRCH;
 
-        process_t *proc = task_get_process_container(task);
         if (proc) {
                 _kernel_scheduler_lock();
 
@@ -382,7 +371,9 @@ KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, 
                                                 prev->next = curr->next;
                                         }
 
-                                        if (resource_destroy(curr) == false) {
+                                        if (resource_destroy(curr)) {
+                                                result = ESUCC;
+                                        } else {
                                                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                                         }
                                 } else {
@@ -473,16 +464,13 @@ KERNELSPACE int _process_get_statistics(size_t seek, process_stat_t *stat)
  * @return On success file pointer is returned, otherwise NULL.
  */
 //==============================================================================
-KERNELSPACE FILE *_process_get_stderr(task_t *task)
+KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
 {
-        FILE *f_stderr = NULL;
-
-        process_t *proc = task_get_process_container(task);
         if (proc) {
-                f_stderr = proc->f_stderr;
+                return proc->f_stderr;
+        } else {
+                return NULL;
         }
-
-        return f_stderr;
 }
 
 //==============================================================================
@@ -495,21 +483,36 @@ KERNELSPACE FILE *_process_get_stderr(task_t *task)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_get_pid(task_t *task, pid_t *pid)
+KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
 {
         int result = EINVAL;
 
-        if (pid) {
-                process_t *proc = task_get_process_container(task);
-                if (proc) {
-                        *pid   = proc->pid;
-                        result = ESUCC;
-                } else {
-                        result = ESRCH;
-                }
+        if (proc && pid) {
+                *pid   = proc->pid;
+                result = ESUCC;
         }
 
         return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return process container of selected task
+ *
+ * @param  taskhdl      task
+ *
+ * @return On success process container pointer is returned, otherwise NULL.
+ */
+//==============================================================================
+KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl)
+{
+        _process_t *process = _task_get_tag(taskhdl);
+
+        if (process && process->header.type == RES_TYPE_THREAD) {
+                process = reinterpret_cast(_thread_t*, process)->process;
+        }
+
+        return process;
 }
 
 //==============================================================================
@@ -531,7 +534,7 @@ KERNELSPACE int _thread_create()
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _thread_destroy(thread_t *thread)
+KERNELSPACE int _thread_destroy(_thread_t *thread)
 {
         return EINVAL;
 }
@@ -548,11 +551,7 @@ KERNELSPACE int _thread_destroy(thread_t *thread)
 //==============================================================================
 KERNELSPACE void _copy_task_context_to_standard_variables(void)
 {
-        active_process = _task_get_tag(_THIS_TASK);
-
-        if (active_process->header.type == RES_TYPE_THREAD) {
-                active_process = reinterpret_cast(thread_t*, active_process)->process;
-        }
+        active_process = _process_get_container_by_task(_THIS_TASK);
 
         if (active_process) {
                 stdin  = active_process->f_stdin;
@@ -602,33 +601,13 @@ KERNELSPACE void _copy_standard_variables_to_task_context(void)
 USERSPACE static void process_code(void *arg)
 {
         process_func_t funcmain = arg;
-        process_t     *proc     = _task_get_tag(_THIS_TASK);
+        _process_t     *proc     = _task_get_tag(_THIS_TASK);
 
         proc->status = funcmain(proc->argc, proc->argv);
 
         syscall(SYSCALL_EXIT, &proc->status);
 
         _task_exit();
-}
-
-//==============================================================================
-/**
- * @brief  Function return process container of selected task
- *
- * @param  taskhdl      task
- *
- * @return On success process container pointer is returned, otherwise NULL.
- */
-//==============================================================================
-static process_t *task_get_process_container(task_t *taskhdl)
-{
-        process_t *process = _task_get_tag(taskhdl);
-
-        if (process->header.type == RES_TYPE_THREAD) {
-                process = reinterpret_cast(thread_t*, process)->process;
-        }
-
-        return process;
 }
 
 //==============================================================================
@@ -640,7 +619,7 @@ static process_t *task_get_process_container(task_t *taskhdl)
  * @return None
  */
 //==============================================================================
-static void process_destroy_all_resources(process_t *proc)
+static void process_destroy_all_resources(_process_t *proc)
 {
         if (proc->task) {
                 _task_destroy(proc->task);
@@ -656,7 +635,7 @@ static void process_destroy_all_resources(process_t *proc)
         // suspend all threads
         foreach_resource(res, proc->res_list) {
                 if (res->type == RES_TYPE_THREAD) {
-                        _task_suspend(reinterpret_cast(thread_t*, res)->task);
+                        _task_suspend(reinterpret_cast(_thread_t*, res)->task);
                 }
         }
 
@@ -714,7 +693,7 @@ static bool resource_destroy(res_header_t *resource)
                 break;
 
         case RES_TYPE_THREAD:
-                _thread_destroy(static_cast(thread_t*, res2free));
+                _thread_destroy(static_cast(_thread_t*, res2free));
                 break;
 
         default:
@@ -890,7 +869,7 @@ static int find_program(const char *name, const struct _prog_data **prog)
  * @return One of errno value.
  */
 //==============================================================================
-static int allocate_process_globals(process_t *proc, const struct _prog_data *usrprog)
+static int allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog)
 {
         int result = ESUCC;
 
@@ -900,7 +879,7 @@ static int allocate_process_globals(process_t *proc, const struct _prog_data *us
 
                 if (result == ESUCC) {
                         proc->globals = &mem[1];
-                        _process_register_resource(proc->task, mem);
+                        _process_register_resource(proc, mem);
                 }
         }
 
@@ -917,7 +896,7 @@ static int allocate_process_globals(process_t *proc, const struct _prog_data *us
  * @return One of errno value.
  */
 //==============================================================================
-static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
+static int apply_process_attributes(_process_t *proc, const process_attr_t *attr)
 {
         int result = ESUCC;
 
@@ -934,7 +913,7 @@ static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
                 } else if (attr->p_stdin) {
                         result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
                         if (result == ESUCC) {
-                                _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stdin));
+                                _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdin));
                         } else {
                                 goto finish;
                         }
@@ -957,7 +936,7 @@ static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
                         } else {
                                 result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
                                 if (result == ESUCC) {
-                                        _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stdout));
+                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdout));
                                 } else {
                                         goto finish;
                                 }
@@ -985,7 +964,7 @@ static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
                         } else {
                                 result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
                                 if (result == ESUCC) {
-                                        _process_register_resource(proc->task, static_cast(res_header_t*, proc->f_stderr));
+                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stderr));
                                 } else {
                                         goto finish;
                                 }

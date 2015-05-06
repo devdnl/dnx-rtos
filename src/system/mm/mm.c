@@ -379,21 +379,23 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                         size = MEM_ALIGN_SIZE(size);
 
                         size_t allocated = 0;
-                        *mem = _heap_alloc(size, &allocated);
+                        void *blk = _heap_alloc(size, &allocated);
 
-                        if (mem) {
-                                _critical_section_begin();
+                        if (blk) {
+                                _kernel_scheduler_lock();
                                 *usage += allocated;
-                                _critical_section_end();
+                                _kernel_scheduler_unlock();
 
                                 if (clear) {
-                                        memset(mem, 0, size);
+                                        memset(blk, 0, size);
                                 }
 
                                 if (mpur == _MM_PROG) {
-                                         (*reinterpret_cast(res_header_t**, mem))->next = NULL;
-                                         (*reinterpret_cast(res_header_t**, mem))->type = RES_TYPE_MEMORY;
+                                         reinterpret_cast(res_header_t*, blk)->next = NULL;
+                                         reinterpret_cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
                                 }
+
+                                *mem = blk;
 
                                 result = ESUCC;
                         } else {
