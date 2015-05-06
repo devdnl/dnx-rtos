@@ -285,7 +285,6 @@ int _syscall_kworker_master(int argc, char *argv[])
  * @brief  This syscall mount selected file system to selected path
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -304,7 +303,6 @@ static void syscall_mount(syscallrq_t *rq)
  * @brief  This syscall unmount selected file system
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -321,7 +319,6 @@ static void syscall_umount(syscallrq_t *rq)
  * @brief  This syscall return information about selected file system
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -347,7 +344,6 @@ static void syscall_getmntentry(syscallrq_t *rq)
  * @brief  This syscall create device node
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -365,7 +361,6 @@ static void syscall_mknod(syscallrq_t *rq)
  * @brief  This syscall create directory
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -383,7 +378,6 @@ static void syscall_mkdir(syscallrq_t *rq)
  * @brief  This syscall create FIFO pipe
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -401,7 +395,6 @@ static void syscall_mkfifo(syscallrq_t *rq)
  * @brief  This syscall open selected directory
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -409,8 +402,18 @@ static void syscall_mkfifo(syscallrq_t *rq)
 static void syscall_opendir(syscallrq_t *rq)
 {
         GETARG(const char *, path);
+
         DIR *dir = NULL;
-        SETERRNO(_vfs_opendir(path, &dir));//FIXME resource add
+        int  err = _vfs_opendir(path, &dir);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, dir));
+                if (err != ESUCC) {
+                        _vfs_closedir(dir);
+                        dir = NULL;
+                }
+        }
+
+        SETERRNO(err);
         SETRETURN(DIR*, dir);
 }
 
@@ -419,7 +422,6 @@ static void syscall_opendir(syscallrq_t *rq)
  * @brief  This syscall close selected directory
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -427,7 +429,7 @@ static void syscall_opendir(syscallrq_t *rq)
 static void syscall_closedir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
-        SETERRNO(_vfs_closedir(dir));//FIXME resource release
+        SETERRNO(_process_release_resource(GETPROCESS(), static_cast(res_header_t*, dir), RES_TYPE_DIR));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -436,7 +438,6 @@ static void syscall_closedir(syscallrq_t *rq)
  * @brief  This syscall read selected directory
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -454,7 +455,6 @@ static void syscall_readdir(syscallrq_t *rq)
  * @brief  This syscall remove selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -471,7 +471,6 @@ static void syscall_remove(syscallrq_t *rq)
  * @brief  This syscall rename selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -489,7 +488,6 @@ static void syscall_rename(syscallrq_t *rq)
  * @brief  This syscall change mode of selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -507,7 +505,6 @@ static void syscall_chmod(syscallrq_t *rq)
  * @brief  This syscall change owner and group of selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -526,7 +523,6 @@ static void syscall_chown(syscallrq_t *rq)
  * @brief  This syscall read statistics of selected file by path
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -544,7 +540,6 @@ static void syscall_stat(syscallrq_t *rq)
  * @brief  This syscall read statistics of selected file by FILE object
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -562,7 +557,6 @@ static void syscall_fstat(syscallrq_t *rq)
  * @brief  This syscall read statistics of file system mounted in selected path
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -580,7 +574,6 @@ static void syscall_statfs(syscallrq_t *rq)
  * @brief  This syscall open selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -589,8 +582,18 @@ static void syscall_fopen(syscallrq_t *rq)
 {
         GETARG(const char *, path);
         GETARG(const char *, mode);
+
         FILE *file = NULL;
-        SETERRNO(_vfs_fopen(path, mode, &file));//FIXME resource add
+        int   err  = _vfs_fopen(path, mode, &file);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, file));
+                if (err != ESUCC) {
+                        _vfs_fclose(file, true);
+                        file = NULL;
+                }
+        }
+
+        SETERRNO(err);
         SETRETURN(FILE*, file);
 }
 
@@ -599,7 +602,6 @@ static void syscall_fopen(syscallrq_t *rq)
  * @brief  This syscall close selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -607,7 +609,7 @@ static void syscall_fopen(syscallrq_t *rq)
 static void syscall_fclose(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
-        SETERRNO(_vfs_fclose(file, false));//FIXME resource release
+        SETERRNO(_process_release_resource(GETPROCESS(), static_cast(res_header_t*, file), RES_TYPE_FILE));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -616,7 +618,6 @@ static void syscall_fclose(syscallrq_t *rq)
  * @brief  This syscall write data to selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -638,7 +639,6 @@ static void syscall_fwrite(syscallrq_t *rq)
  * @brief  This syscall read data from selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -660,7 +660,6 @@ static void syscall_fread(syscallrq_t *rq)
  * @brief  This syscall move file pointer
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -679,7 +678,6 @@ static void syscall_fseek(syscallrq_t *rq)
  * @brief  This syscall return file pointer value
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -697,7 +695,6 @@ static void syscall_ftell(syscallrq_t *rq)
  * @brief  This syscall perform not standard operation on selected file/device
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -716,7 +713,6 @@ static void syscall_ioctl(syscallrq_t *rq)
  * @brief  This syscall flush buffers of selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -733,7 +729,6 @@ static void syscall_fflush(syscallrq_t *rq)
  * @brief  This syscall check that end-of-file occurred
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -751,7 +746,6 @@ static void syscall_feof(syscallrq_t *rq)
  * @brief  This syscall clear file errors
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -767,7 +761,6 @@ static void syscall_clearerr(syscallrq_t *rq)
  * @brief  This syscall return file error indicator
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -785,7 +778,6 @@ static void syscall_ferror(syscallrq_t *rq)
  * @brief  This syscall synchronize all buffers of filesystems
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -801,7 +793,6 @@ static void syscall_sync(syscallrq_t *rq)
  * @brief  This syscall return current time value (UTC timestamp)
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -818,7 +809,6 @@ static void syscall_gettime(syscallrq_t *rq)
  * @brief  This syscall set current system time (UTC timestamp)
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -835,7 +825,6 @@ static void syscall_settime(syscallrq_t *rq)
  * @brief  This syscall initialize selected driver and create node
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -854,7 +843,6 @@ static void syscall_driverinit(syscallrq_t *rq)
  * @brief  This syscall release selected driver
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -871,7 +859,6 @@ static void syscall_driverrelease(syscallrq_t *rq)
  * @brief  This syscall allocate memory for application
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -898,7 +885,6 @@ static void syscall_malloc(syscallrq_t *rq)
  * @brief  This syscall allocate memory for application and clear allocated block
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -925,7 +911,6 @@ static void syscall_zalloc(syscallrq_t *rq)
  * @brief  This syscall free allocated memory by application
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -951,7 +936,6 @@ static void syscall_free(syscallrq_t *rq)
  * @brief  This syscall enable system log functionality in selected file
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -968,7 +952,6 @@ static void syscall_syslogenable(syscallrq_t *rq)
  * @brief  This syscall disable system log functionality
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -984,7 +967,6 @@ static void syscall_syslogdisable(syscallrq_t *rq)
  * @brief  This syscall restart entire system
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -1000,7 +982,6 @@ static void syscall_restart(syscallrq_t *rq)
  * @brief  This syscall check if kernel panic occurred in last session
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -1016,7 +997,6 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq)
  * @brief  This syscall abort current process (caller) and set exit code as -1
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -1032,7 +1012,6 @@ static void syscall_abort(syscallrq_t *rq)
  * @brief  This syscall close current process (caller)
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */
@@ -1048,7 +1027,6 @@ static void syscall_exit(syscallrq_t *rq)
  * @brief  This syscall start shell application to run command line
  *
  * @param  rq                   syscall request
-
  *
  * @return None
  */

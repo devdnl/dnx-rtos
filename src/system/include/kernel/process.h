@@ -111,18 +111,19 @@ typedef struct {
 
 /** USERSPACE: thread attributes */
 typedef struct {
-        pid_t  pid;
-        size_t files_count;
-        size_t dir_count;
-        size_t mutexes_count;
-        size_t semaphores_count;
-        size_t queue_count;
-        size_t threads_count;
-        size_t memory_block_count;
-        size_t memory_usage;
-        size_t cpu_load_cnt;
-        size_t stack_size;
-        size_t stack_free;
+        const char *name;
+        pid_t       pid;
+        size_t      files_count;
+        size_t      dir_count;
+        size_t      mutexes_count;
+        size_t      semaphores_count;
+        size_t      queue_count;
+        size_t      threads_count;
+        size_t      memory_block_count;
+        size_t      memory_usage;
+        size_t      cpu_load_cnt;
+        size_t      stack_size;
+        size_t      stack_free;
 } process_stat_t;
 
 /** USERSPACE: thread attributes */

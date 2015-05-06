@@ -50,6 +50,8 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+typedef struct _prog_data pdata_t;
+
 struct _process {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
@@ -59,6 +61,7 @@ struct _process {
         void            *globals;               /* address to global variables        */
         res_header_t    *res_list;              /* list of used resources             */
         const char      *cwd;                   /* current working path               */
+        const pdata_t   *pdata;                 /* program data                       */
         char            **argv;                 /* program arguments                  */
         int              argc;                  /* number of arguments                */
         int              status;                /* program status (return value)      */
@@ -70,7 +73,7 @@ struct _process {
 struct _thread {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
-        _process_t       *process;               /* reference to process               */
+        _process_t       *process;              /* reference to process               */
 };
 
 /*==============================================================================
@@ -148,13 +151,12 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                 goto finish;
 
                         // find program
-                        const struct _prog_data *usrprog;
-                        result = find_program(proc->argv[0], &usrprog);
+                        result = find_program(proc->argv[0], &proc->pdata);
                         if (result != ESUCC)
                                 goto finish;
 
                         // allocate program's global variables
-                        result = allocate_process_globals(proc, usrprog);
+                        result = allocate_process_globals(proc, proc->pdata);
                         if (result != ESUCC)
                                 goto finish;
 
@@ -168,9 +170,9 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
                         // create program's task
                         result = _task_create(process_code,
-                                              usrprog->name,
-                                              *usrprog->stack_depth,
-                                              usrprog->main,
+                                              proc->pdata->name,
+                                              *proc->pdata->stack_depth,
+                                              proc->pdata->main,
                                               proc,
                                               &proc->task);
 
@@ -418,28 +420,25 @@ KERNELSPACE int _process_get_statistics(size_t seek, process_stat_t *stat)
 
                 foreach_process(proc) {
                         if (seek == 0) {
-                                const struct _prog_data *prog;
-                                result = find_program(proc->argv[0], &prog);
-                                if (result == ESUCC) {
-                                        stat->pid           = proc->pid;
-                                        stat->cpu_load_cnt  = proc->timecnt;
-                                        stat->threads_count = 1;
-                                        stat->stack_free    = _task_get_free_stack(proc->task);
-                                        stat->stack_size    = *prog->stack_depth;
+                                stat->name          = proc->pdata->name;
+                                stat->pid           = proc->pid;
+                                stat->cpu_load_cnt  = proc->timecnt;
+                                stat->stack_free    = _task_get_free_stack(proc->task);
+                                stat->stack_size    = *proc->pdata->stack_depth;
+                                stat->threads_count = 1;
 
-                                        foreach_resource(res, proc->res_list) {
-                                                switch (res->type) {
-                                                case RES_TYPE_FILE      : stat->files_count++; break;
-                                                case RES_TYPE_DIR       : stat->dir_count++; break;
-                                                case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
-                                                case RES_TYPE_QUEUE     : stat->queue_count++; break;
-                                                case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
-                                                case RES_TYPE_THREAD    : stat->threads_count++; break;
-                                                case RES_TYPE_MEMORY    : stat->memory_block_count++;
-                                                                          stat->memory_usage += _mm_get_block_size(res);
-                                                                          break;
-                                                default: break;
-                                                }
+                                foreach_resource(res, proc->res_list) {
+                                        switch (res->type) {
+                                        case RES_TYPE_FILE      : stat->files_count++; break;
+                                        case RES_TYPE_DIR       : stat->dir_count++; break;
+                                        case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
+                                        case RES_TYPE_QUEUE     : stat->queue_count++; break;
+                                        case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
+                                        case RES_TYPE_THREAD    : stat->threads_count++; break;
+                                        case RES_TYPE_MEMORY    : stat->memory_block_count++;
+                                                                  stat->memory_usage += _mm_get_block_size(res);
+                                                                  break;
+                                        default: break;
                                         }
                                 }
 
@@ -601,7 +600,7 @@ KERNELSPACE void _copy_standard_variables_to_task_context(void)
 USERSPACE static void process_code(void *arg)
 {
         process_func_t funcmain = arg;
-        _process_t     *proc     = _task_get_tag(_THIS_TASK);
+        _process_t     *proc    = _task_get_tag(_THIS_TASK);
 
         proc->status = funcmain(proc->argc, proc->argv);
 
