@@ -119,7 +119,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                        .p_stderr = "/dev/tty1"
                 };
 
-                result = _process_create(&pid, &attr, "initd --child");
+                result = _process_create("initd --child", &attr, &pid);
 
                 printf("Result: %d\n", result);
         }

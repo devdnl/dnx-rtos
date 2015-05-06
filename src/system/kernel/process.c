@@ -125,14 +125,14 @@ extern const int               _prog_table_size;
 /**
  * @brief  Create a new process
  *
- * @param[out] pid      PID of created process (can be NULL)
- * @param[in]  attr     process attributes (use NULL for default attributes)
  * @param[in]  cmd      command (name + arguments)
+ * @param[in]  attr     process attributes (use NULL for default attributes)
+ * @param[out] pid      PID of created process (can be NULL)
  *
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const char *cmd)
+KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid_t *pid)
 {
         int result = EINVAL;
 

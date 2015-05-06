@@ -85,6 +85,8 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
         SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
         SYSCALL_SYSTEM,                 // | int            | const char *command       |                           |                           |                           |
+        SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
+        SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

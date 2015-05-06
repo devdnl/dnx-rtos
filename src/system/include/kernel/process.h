@@ -142,7 +142,7 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int         _process_create                              (pid_t*, const process_attr_t*, const char*);
+extern int         _process_create                              (const char*, const process_attr_t*, pid_t*);
 extern int         _process_destroy                             (pid_t, int*);
 extern int         _process_exit                                (task_t*, int);
 extern int         _process_abort                               (task_t*);
