@@ -235,7 +235,7 @@ void _heap_free(void *rmem, size_t *freed)
 {
         if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
 
-                vTaskSuspendAll();
+                _kernel_scheduler_lock();
 
                 /* Get the corresponding struct mem ... */
                 struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
@@ -256,7 +256,7 @@ void _heap_free(void *rmem, size_t *freed)
 
                 plug_holes(mem);
 
-                xTaskResumeAll();
+                _kernel_scheduler_unlock();
         }
 }
 
@@ -294,7 +294,7 @@ void *_heap_alloc(size_t size, size_t *allocated)
         }
 
         /* protect the heap from concurrent access */
-        vTaskSuspendAll();
+        _kernel_scheduler_lock();
 
         /*
          * Scan through the heap searching for a free block that is big enough,
@@ -371,12 +371,14 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                 *allocated = used;
                         }
 
-                        xTaskResumeAll();
+                        _kernel_scheduler_unlock();
+
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
                 }
         }
 
-        xTaskResumeAll();
+        _kernel_scheduler_unlock();
+
         return NULL;
 }
 
@@ -437,14 +439,14 @@ size_t _heap_get_block_size(void *rmem)
 
     if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
 
-            vTaskSuspendAll();
+            _kernel_scheduler_lock();
 
             /* get the corresponding struct mem */
             struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
 
             blksize = (mem->next - (size_t)(((u8_t *)mem - heap)));
 
-            xTaskResumeAll();
+            _kernel_scheduler_unlock();
     }
 
     return blksize;

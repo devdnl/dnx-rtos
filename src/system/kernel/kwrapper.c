@@ -158,6 +158,35 @@ int _kernel_get_number_of_tasks(void)
 
 //==============================================================================
 /**
+ * @brief  Function lock context switch (caller task is running only).
+ *         All IRQs works normally.
+ *
+ * @param  None
+ *
+ * @return a number of tasks
+ */
+//==============================================================================
+void _kernel_scheduler_lock(void)
+{
+        vTaskSuspendAll();
+}
+
+//==============================================================================
+/**
+ * @brief  Function unlock context switch
+ *
+ * @param  None
+ *
+ * @return a number of tasks
+ */
+//==============================================================================
+void _kernel_scheduler_unlock(void)
+{
+        vTaskSuspendAll();
+}
+
+//==============================================================================
+/**
  * @brief Function create new task and if enabled add to monitor list
  *
  * Function by default allocate memory for task data (localized in task tag)

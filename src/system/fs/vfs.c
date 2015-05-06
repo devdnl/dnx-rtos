@@ -1491,7 +1491,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
 
         /* correct cwd */
         if (FIRST_CHARACTER(path) != '/') {
-                cwd = _process_get_CWD();
+                cwd = _process_get_CWD(_THIS_TASK);
                 if (cwd) {
                         cwd_len       = strlen(cwd);
                         new_path_len += cwd_len;

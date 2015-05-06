@@ -44,8 +44,8 @@
 ==============================================================================*/
 #define USERSPACE
 #define KERNELSPACE
-#define foreach_process_resources(_v, _l)       for (res_header_t *_v = _l; _v; _v = _v->next)
-#define foreach_process(_v)                     for (process_t *_v = process_list; _v; _v = reinterpret_cast(process_t*, _v->header.next))
+#define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
+#define foreach_process(_v)             for (process_t *_v = process_list; _v; _v = reinterpret_cast(process_t*, _v->header.next))
 
 /*==============================================================================
   Local types, enums definitions
@@ -178,7 +178,7 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
                                         *pid = proc->pid;
                                 }
 
-                                _critical_section_begin();
+                                _kernel_scheduler_lock();
                                 {
                                         if (process_list == NULL) {
                                                 process_list = proc;
@@ -188,7 +188,7 @@ KERNELSPACE int _process_create(pid_t *pid, const process_attr_t *attr, const ch
                                                 proc->header.next  = next;
                                         }
                                 }
-                                _critical_section_end();
+                                _kernel_scheduler_unlock();
 
                                 proc->header.type = RES_TYPE_PROCESS;
                         }
@@ -221,7 +221,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
         process_t *prev = NULL;
         foreach_process(curr) {
                 if (curr->pid == pid) {
-                        _critical_section_begin();
+                        _kernel_scheduler_lock();
                         {
                                 if (process_list == curr) {
                                         process_list = static_cast(process_t*, curr->header.next);
@@ -229,7 +229,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
                                         prev->header.next = curr->header.next;
                                 }
                         }
-                        _critical_section_end();
+                        _kernel_scheduler_unlock();
 
                         if (status) {
                                 *status = curr->status;
@@ -251,7 +251,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
 //==============================================================================
 /**
  * @brief  Clear all process resources, set exit code and close task. Process is
- *         not removed from process list.
+ *         not removed from process list (zombie state).
  *
  * @param  taskhdl      task handle (contain PID)
  * @param  status       status (exit code)
@@ -276,7 +276,7 @@ KERNELSPACE int _process_exit(task_t *taskhdl, int status)
 
 //==============================================================================
 /**
- * @brief  Works almost the same as _process_exit() but set exit code to -1 and
+ * @brief  It works almost the same as _process_exit() but set exit code to -1 and
  *         print on process's terminal suitable message.
  *
  * @param  pid          process ID
@@ -298,31 +298,33 @@ KERNELSPACE int _process_abort(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function get CWD path for selected task
+ *
+ * @param  task     task (NULL [_THIS_TASK] for current task)
+ *
+ * @return CWD path (always valid)
  */
 //==============================================================================
-KERNELSPACE const char *_process_get_CWD()
+KERNELSPACE const char *_process_get_CWD(task_t *task)
 {
         const char *cwd = "";
 
-        _critical_section_begin();
-        {
-                if (active_process && active_process->cwd) {
-                        cwd = active_process->cwd;
-                }
+        process_t *process = task_get_process_container(task);
+        if (process) {
+                cwd = process->cwd;
         }
-        _critical_section_end();
 
         return cwd;
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function register selected resource in selected task/process
+ *
+ * @param  task         task
+ * @param  resource     resource to register
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
@@ -331,7 +333,7 @@ KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
 
         process_t *proc = task_get_process_container(task);
         if (proc) {
-                _critical_section_begin();
+                _kernel_scheduler_lock();
                 {
                         if (proc->res_list == NULL) {
                                 proc->res_list = resource;
@@ -341,7 +343,7 @@ KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
                                 proc->res_list->next = next;
                         }
                 }
-                _critical_section_end();
+                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -349,9 +351,13 @@ KERNELSPACE int _process_register_resource(task_t *task, res_header_t *resource)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function release selected resource of selected type (type is confirmation)
+ *
+ * @param  task         task/process
+ * @param  resource     resource address to release
+ * @param  type         resource type
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, res_type_t type)
@@ -360,14 +366,14 @@ KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, 
 
         process_t *proc = task_get_process_container(task);
         if (proc) {
-                _critical_section_begin();
+                _kernel_scheduler_lock();
 
                 result = ENOENT;
 
                 res_header_t *prev     = NULL;
                 int           max_deep = 1024;
 
-                foreach_process_resources(curr, proc->res_list) {
+                foreach_resource(curr, proc->res_list) {
                         if (curr == resource) {
                                 if (curr->type == type) {
                                         if (proc->res_list == curr) {
@@ -392,7 +398,7 @@ KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, 
                         }
                 }
 
-                _critical_section_end();
+                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -400,38 +406,59 @@ KERNELSPACE int _process_release_resource(task_t *task, res_header_t *resource, 
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return collected process statistics
+ *
+ * @param  seek     process seek (start from 0)
+ * @param  stat     process statistics
+ *
+ * @return One of errno value (ESUCC, EINVAL, ENOENT).
  */
 //==============================================================================
-KERNELSPACE int _process_get_statistics(task_t *task, process_stat_t *stat)
+KERNELSPACE int _process_get_statistics(size_t seek, process_stat_t *stat)
 {
         int result = EINVAL;
 
-        process_t *proc = task_get_process_container(task);
-
-        if (proc && stat) {
+        if (stat) {
                 memset(stat, 0, sizeof(process_stat_t));
 
-                stat->pid           = proc->pid;
-                stat->cpu_load_cnt  = proc->timecnt;
-                stat->threads_count = 1;
+                result = ENOENT;
 
-                foreach_process_resources(res, proc->res_list) {
-                        switch (res->type) {
-                        case RES_TYPE_FILE      : stat->files_count++; break;
-                        case RES_TYPE_DIR       : stat->dir_count++; break;
-                        case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
-                        case RES_TYPE_QUEUE     : stat->queue_count++; break;
-                        case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
-                        case RES_TYPE_THREAD    : stat->threads_count++; break;
-                        case RES_TYPE_MEMORY    : stat->memory_block_count++;
-                                                  stat->memory_usage += _mm_get_block_size(res);
-                                                  break;
-                        default: break;
+                _kernel_scheduler_lock();
+
+                foreach_process(proc) {
+                        if (seek == 0) {
+                                const struct _prog_data *prog;
+                                result = find_program(proc->argv[0], &prog);
+                                if (result == ESUCC) {
+                                        stat->pid           = proc->pid;
+                                        stat->cpu_load_cnt  = proc->timecnt;
+                                        stat->threads_count = 1;
+                                        stat->stack_free    = _task_get_free_stack(proc->task);
+                                        stat->stack_size    = *prog->stack_depth;
+
+                                        foreach_resource(res, proc->res_list) {
+                                                switch (res->type) {
+                                                case RES_TYPE_FILE      : stat->files_count++; break;
+                                                case RES_TYPE_DIR       : stat->dir_count++; break;
+                                                case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
+                                                case RES_TYPE_QUEUE     : stat->queue_count++; break;
+                                                case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
+                                                case RES_TYPE_THREAD    : stat->threads_count++; break;
+                                                case RES_TYPE_MEMORY    : stat->memory_block_count++;
+                                                                          stat->memory_usage += _mm_get_block_size(res);
+                                                                          break;
+                                                default: break;
+                                                }
+                                        }
+                                }
+
+                                break;
                         }
+
+                        seek--;
                 }
+
+                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -439,9 +466,11 @@ KERNELSPACE int _process_get_statistics(task_t *task, process_stat_t *stat)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return stderr file of selected task/process
+ *
+ * @param  task         task
+ *
+ * @return On success file pointer is returned, otherwise NULL.
  */
 //==============================================================================
 KERNELSPACE FILE *_process_get_stderr(task_t *task)
@@ -454,6 +483,33 @@ KERNELSPACE FILE *_process_get_stderr(task_t *task)
         }
 
         return f_stderr;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return PID of selected task/process
+ *
+ * @param[in]  task         task
+ * @param[out] pid          process PID
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_pid(task_t *task, pid_t *pid)
+{
+        int result = EINVAL;
+
+        if (pid) {
+                process_t *proc = task_get_process_container(task);
+                if (proc) {
+                        *pid   = proc->pid;
+                        result = ESUCC;
+                } else {
+                        result = ESRCH;
+                }
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -482,8 +538,12 @@ KERNELSPACE int _thread_destroy(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function copy task context to standard variables (stdin, stdout, stderr,
- *        global, errno)
+ * @brief  Function copy task context to standard variables (stdin, stdout, stderr,
+ *         global, errno)
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 KERNELSPACE void _copy_task_context_to_standard_variables(void)
@@ -511,8 +571,12 @@ KERNELSPACE void _copy_task_context_to_standard_variables(void)
 
 //==============================================================================
 /**
- * @brief Function copy standard variables (stdin, stdout, stderr, global, errno)
- *        to task context
+ * @brief  Function copy standard variables (stdin, stdout, stderr, global, errno)
+ *         to task context
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 KERNELSPACE void _copy_standard_variables_to_task_context(void)
@@ -549,9 +613,11 @@ USERSPACE static void process_code(void *arg)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return process container of selected task
+ *
+ * @param  taskhdl      task
+ *
+ * @return On success process container pointer is returned, otherwise NULL.
  */
 //==============================================================================
 static process_t *task_get_process_container(task_t *taskhdl)
@@ -567,9 +633,11 @@ static process_t *task_get_process_container(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function destroy (release) all process resources
+ *
+ * @param  proc     selected process container
+ *
+ * @return None
  */
 //==============================================================================
 static void process_destroy_all_resources(process_t *proc)
@@ -586,14 +654,14 @@ static void process_destroy_all_resources(process_t *proc)
         }
 
         // suspend all threads
-        foreach_process_resources(res, proc->res_list) {
+        foreach_resource(res, proc->res_list) {
                 if (res->type == RES_TYPE_THREAD) {
                         _task_suspend(reinterpret_cast(thread_t*, res)->task);
                 }
         }
 
         // free all resources
-        foreach_process_resources(res, proc->res_list) {
+        foreach_resource(res, proc->res_list) {
                 if (resource_destroy(res) == false) {
                         _printk("Unknown object: %p\n", res);
                 }
@@ -609,9 +677,11 @@ static void process_destroy_all_resources(process_t *proc)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function destroy (release) selected resource
+ *
+ * @param  resource     resource to release
+ *
+ * @return On success true is returned, otherwise false.
  */
 //==============================================================================
 static bool resource_destroy(res_header_t *resource)
@@ -752,9 +822,11 @@ static int argtab_create(const char *str, int *argc, char **argv[])
 
 //==============================================================================
 /**
- * @brief Function remove argument table
+ * @brief  Function remove argument table
  *
- * @param argv          pointer to argument table (must be ended with NULL)
+ * @param  argv          pointer to argument table (must be ended with NULL)
+ *
+ * @return None
  */
 //==============================================================================
 static void argtab_destroy(char **argv)
@@ -772,9 +844,12 @@ static void argtab_destroy(char **argv)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function find program by name and return program descriptor container
+ *
+ * @param[in]  name         program name
+ * @param[out] prog         program container
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 static int find_program(const char *name, const struct _prog_data **prog)
@@ -807,9 +882,12 @@ static int find_program(const char *name, const struct _prog_data **prog)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function allocate global variable for selected process
+ *
+ * @param  proc         process
+ * @param  usrprog      program descriptor
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 static int allocate_process_globals(process_t *proc, const struct _prog_data *usrprog)
@@ -831,9 +909,12 @@ static int allocate_process_globals(process_t *proc, const struct _prog_data *us
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function apply process attributes
+ *
+ * @param  proc     process
+ * @param  atrr     attributes
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 static int apply_process_attributes(process_t *proc, const process_attr_t *attr)
