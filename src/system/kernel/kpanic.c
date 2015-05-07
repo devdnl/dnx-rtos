@@ -31,6 +31,7 @@
 #include "kernel/kpanic.h"
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
+#include "kernel/process.h"
 #include "lib/vt100.h"
 #include "lib/cast.h"
 #include "mm/mm.h"
@@ -46,10 +47,11 @@
   Local object types
 ==============================================================================*/
 struct kernel_panic_desc {
-        uint32_t                       valid1;
-        enum _kernel_panic_desc_cause  cause;
-        char                           task_name[CONFIG_RTOS_TASK_NAME_LEN];
-        uint32_t                       valid2;
+        uint32_t                       valid1;          /* validation value 1 */
+        enum _kernel_panic_desc_cause  cause;           /* kernel panic cause */
+        const char                    *name;            /* process name       */
+        bool                           master;          /* master thread      */
+        uint32_t                       valid2;          /* validation value 2 */
 };
 
 /*==============================================================================
@@ -116,15 +118,15 @@ bool _kernel_panic_detect(bool show_msg)
                                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;
                         }
 
-                        kernel_panic_descriptor->task_name[CONFIG_RTOS_TASK_NAME_LEN - 1] = '\0';
-                        if (strlen(kernel_panic_descriptor->task_name) == 0) {
-                                strncpy(kernel_panic_descriptor->task_name, "<defected>", CONFIG_RTOS_TASK_NAME_LEN);
+                        if (kernel_panic_descriptor->name == NULL) {
+                                kernel_panic_descriptor->name = "<defected>";
                         }
 
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
                         _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
-                        _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
-                        _printk("Task : %s\n\n", kernel_panic_descriptor->task_name);
+                        _printk("Cause  : %s\n", cause[kernel_panic_descriptor->cause]);
+                        _printk("Process: %s\n", kernel_panic_descriptor->name);
+                        _printk("Master : %s\n\n", kernel_panic_descriptor->master ? "T" : "F");
 #endif
                         _sleep(2);
                 }
@@ -145,9 +147,11 @@ bool _kernel_panic_detect(bool show_msg)
 //==============================================================================
 void _kernel_panic_report(enum _kernel_panic_desc_cause suggest_cause)
 {
-        const char *task_name = _task_get_name(_THIS_TASK);
+        bool        master = false;
+        _process_t *proc   = _process_get_container_by_task(_THIS_TASK, &master);
 
-        strncpy(kernel_panic_descriptor->task_name, task_name, CONFIG_RTOS_TASK_NAME_LEN);
+        kernel_panic_descriptor->name   = _process_get_name(proc);
+        kernel_panic_descriptor->master = master;
 
         if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;

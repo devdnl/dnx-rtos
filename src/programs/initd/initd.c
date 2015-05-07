@@ -37,6 +37,8 @@
 #include <dnx/thread.h>
 #include <unistd.h>
 
+#include "stm32f1/gpio_cfg.h"
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -81,13 +83,88 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         int result = 0;
 
         if (argc == 2 && strcmp(argv[1], "--child") == 0) {
+
+                process_stat_t stat;
+                if (process_stat(getpid(), &stat) == 0) {
+                        printf("Name: %s\n", stat.name);
+                        printf("PID: %d\n", stat.pid);
+                        printf("Files: %d\n", stat.files_count);
+                        printf("Dirs: %d\n", stat.dir_count);
+                        printf("Mutexes: %d\n", stat.mutexes_count);
+                        printf("Semaphores: %d\n", stat.semaphores_count);
+                        printf("Queues: %d\n", stat.queue_count);
+                        printf("Threads: %d\n", stat.threads_count);
+                        printf("Mem blocks: %d\n", stat.memory_block_count);
+                        printf("Memory usage: %d\n", stat.memory_usage);
+                        printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
+                        printf("Stack size: %d\n", stat.stack_size);
+                        printf("Stack max usage: %d\n", stat.stack_max_usage);
+                } else {
+                        perror(NULL);
+                }
+
+
+                sleep(2);
                 puts("Hello! I'm child of initd parent!");
+
+                printf("I have PID: %d\n", getpid());
 
                 global->str = "Works!";
 
                 int i = 0;
                 while (true) {
-                        printf("Sec: %d\n", i++);
+                        GPIO_SET_PIN(PB14);
+
+                        printf("=== Sec: %d\n", i++);
+
+                        process_stat_t stat;
+                        if (process_stat(getpid(), &stat) == 0) {
+                                printf("Name: %s\n", stat.name);
+                                printf("PID: %d\n", stat.pid);
+                                printf("Files: %d\n", stat.files_count);
+                                printf("Dirs: %d\n", stat.dir_count);
+                                printf("Mutexes: %d\n", stat.mutexes_count);
+                                printf("Semaphores: %d\n", stat.semaphores_count);
+                                printf("Queues: %d\n", stat.queue_count);
+                                printf("Threads: %d\n", stat.threads_count);
+                                printf("Mem blocks: %d\n", stat.memory_block_count);
+                                printf("Memory usage: %d\n", stat.memory_usage);
+                                printf("Stack size: %d\n", stat.stack_size);
+                                printf("Stack max usage: %d\n", stat.stack_max_usage);
+                                printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
+
+                                u32_t tct = get_total_CPU_usage();
+                                printf("CPU total cnt: %d\n", tct);
+
+                                printf("CPU load: %d.%02d%%\n",
+                                       stat.cpu_load_cnt * 100 / tct,
+                                       (stat.cpu_load_cnt * 1000 / tct) % 10
+                                       );
+                        } else {
+                                perror(NULL);
+                        }
+
+//                        char *blk1 = malloc(16);
+//                        if (blk1) {
+//                                memset(blk1, '1', 16);
+//
+//                                printf("blk1: %p\n", blk1);
+//
+//                                char *blk2 = malloc(16);
+//                                if (blk2) {
+//
+//                                        memset(blk2, '2', 16);
+//
+//                                        printf("blk2: %p\n", blk2);
+//
+//                                        puts("BLK OK");
+//                                        free(blk2);
+//                                }
+//
+//                                free(blk1);
+//                        }
+
+                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
                 }
 
@@ -96,6 +173,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 result = mkdir("/dev", 0777);
                 result = driver_init("gpio", "/dev/gpio");
                 result = driver_init("afiom", NULL);
+//                result = driver_init("pll", NULL);
                 result = driver_init("uart2", "/dev/ttyS0");
                 result = driver_init("tty0", "/dev/tty0");
 

@@ -124,7 +124,7 @@ typedef struct {
         size_t      memory_usage;
         size_t      cpu_load_cnt;
         size_t      stack_size;
-        size_t      stack_free;
+        size_t      stack_max_usage;
 } process_stat_t;
 
 /** USERSPACE: thread attributes */
@@ -158,9 +158,12 @@ extern const char *_process_get_CWD                     (_process_t*);
 extern int         _process_register_resource           (_process_t*, res_header_t*);
 extern int         _process_release_resource            (_process_t*, res_header_t*, res_type_t);
 extern FILE       *_process_get_stderr                  (_process_t*);
+extern const char *_process_get_name                    (_process_t*);
 extern int         _process_get_pid                     (_process_t*, pid_t*);
-extern int         _process_get_statistics              (size_t, process_stat_t*);
-extern _process_t *_process_get_container_by_task       (task_t*);
+extern int         _process_get_stat_seek               (size_t, process_stat_t*);
+extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
+extern _process_t *_process_get_container_by_task       (task_t*, bool*);
+extern u32_t       _process_get_CPU_total_time          (void);
 
 extern int         _process_memalloc                            (task_t*, size_t, void**, bool);
 extern int         _process_memfree                             (task_t*, void*);

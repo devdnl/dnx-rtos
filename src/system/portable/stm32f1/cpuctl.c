@@ -70,6 +70,10 @@ void _cpuctl_init(void)
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
+
+        #if (CONFIG_MONITOR_CPU_LOAD > 0)
+        _cpuctl_init_CPU_load_counter();
+        #endif
 }
 
 //==============================================================================

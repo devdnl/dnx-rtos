@@ -48,6 +48,7 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern int _errno;
 
 /*==============================================================================
   Exported functions
@@ -332,318 +333,6 @@ static inline pid_t process_getpid(void)
 //        return _program_wait_for_close(prog, timeout); // TODO program_wait_for_close()
 //}
 
-
-////==============================================================================
-///**
-// * @brief task_t *task_new(void (*func)(void*), const char *name, const uint stack_depth, void *arg)
-// * The function <b>task_new</b>() creates new task in system with function
-// * pointed by <i>func</i>, and name pointed by <i>name</i>. Task is created with
-// * user-defined stack size determined by <i>stack_depth</i>. An additional
-// * arguments can be passed by value pointed by <i>arg</i>. If task is created
-// * then valid object is returned, on error <b>NULL</b>.
-// *
-// * @param func            task code
-// * @param name            task name
-// * @param stack_depth     stack deep
-// * @param arg             argument pointer
-// *
-// * @errors None
-// *
-// * @return On success, valid object is returned. On error, <b>NULL</b> is
-// * returned.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         // task code
-// *
-// *         task_exit();
-// * }
-// *
-// * void some_function()
-// * {
-// *        task_t *task = task_new(my_task,
-// *                                "My task",
-// *                                STACK_DEPTH_LOW,
-// *                                NULL);
-// *
-// *        if (task) {
-// *                 // task created ...
-// *        } else {
-// *                 // task not created ...
-// *        }
-// *
-// *        // ...
-// * }
-// */
-////==============================================================================
-//static inline task_t *task_new(void (*func)(void*), const char *name, const uint stack_depth, void *arg)
-//{
-//        return _task_new(func, name, stack_depth, arg, NULL);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_delete(task_t *taskhdl)
-// * The function <b>task_delete</b>() kills task, and delete object of created task.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something (e.g. LED blinking)
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *        task_t *task = task_new(my_task,
-// *                                "My task",
-// *                                STACK_DEPTH_LOW,
-// *                                NULL);
-// *
-// *        if (task) {
-// *                 // task "My task" is created and working
-// *
-// *                 // code here do something for few seconds ...
-// *
-// *                 task_delete(task);
-// *        } else {
-// *                 // task not created ...
-// *        }
-// * }
-// */
-////==============================================================================
-//static inline void task_delete(task_t *taskhdl)
-//{
-//        return _task_kill(taskhdl);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_exit(void)
-// * The function <b>task_exit</b>() terminate task which call this function.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return This function does not return.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         // task code
-// *
-// *         // task finished specified work and can be terminated
-// *         task_exit();
-// * }
-// */
-////==============================================================================
-//static inline void task_exit(void)
-//{
-//        _task_exit();
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_suspend(task_t *taskhdl)
-// * The function <b>task_suspend</b>() switch selected task <i>taskhdl</i> to
-// * suspend state. From this state task can be switched using <b>task_resume</b>()
-// * function. Suspended task does not use CPU time.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something (e.g. LED blinking)
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *        task_t *task = task_new(my_task,
-// *                                "My task",
-// *                                STACK_DEPTH_LOW,
-// *                                NULL);
-// *
-// *        if (task) {
-// *                 // task is suspended and will be used later
-// *                 task_suspend(task);
-// *        } else {
-// *                 // task not created ...
-// *                 return;
-// *        }
-// *
-// *        // some code ...
-// *
-// *        // task is necessary, so will be resumed
-// *        task_resume(task);
-// *
-// *        // some work ...
-// *
-// *        task_delete(task);
-// * }
-// */
-////==============================================================================
-//static inline void task_suspend(task_t *taskhdl)
-//{
-//        _task_suspend(taskhdl);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_suspend_now(void)
-// * The function <b>task_suspend_now</b>() switch current task (calling) to
-// * suspend state.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something
-// *
-// *                 // task will be suspended and will wait for resume from
-// *                 // other task or event (IRQ)
-// *                 task_suspend_now();
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_suspend_now(void)
-//{
-//        _task_suspend_now();
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_resume(task_t *taskhdl)
-// * The function <b>task_resume</b>() switch selected task <i>taskhdl</i> to
-// * run state.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something (e.g. LED blinking)
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *        task_t *task = task_new(my_task,
-// *                                "My task",
-// *                                STACK_DEPTH_LOW,
-// *                                NULL);
-// *
-// *        if (task) {
-// *                 // task is suspended and will be used later
-// *                 task_suspend(task);
-// *        } else {
-// *                 // task not created ...
-// *                 return;
-// *        }
-// *
-// *        // some code ...
-// *
-// *        // task is necessary, so will be resumed
-// *        task_resume(task);
-// *
-// *        // some work ...
-// *
-// *        task_delete(task);
-// * }
-// */
-////==============================================================================
-//static inline void task_resume(task_t *taskhdl)
-//{
-//        _task_resume(taskhdl);
-//}
-//
-////==============================================================================
-///**
-// * @brief bool task_resume_from_ISR(task_t *taskhdl)
-// * The function <b>task_resume_from_ISR</b>() is similar to <b>task_resume</b>()
-// * except that can be called from interrupt routine.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return If task shall be yielded then <b>true</b> is returned. Otherwise,
-// * <b>false</b> is returned. Task yield behavior depends on used port.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something
-// *
-// *                 // task will be suspended and will wait for resume from IRQ
-// *                 task_suspend_now();
-// *         }
-// * }
-// *
-// * void IRQ(void)
-// * {
-// *         // ...
-// *
-// *         if (task_resume_form_ISR(task)) {
-// *                 task_yield_from_ISR();
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline bool task_resume_from_ISR(task_t *taskhdl)
-//{
-//        return _task_resume_from_ISR(taskhdl);
-//}
-//
 ////==============================================================================
 ///**
 // * @brief void task_yield(void)
@@ -676,126 +365,7 @@ static inline pid_t process_getpid(void)
 //{
 //        _task_yield();
 //}
-//
-////==============================================================================
-///**
-// * @brief void task_yield_from_ISR(void)
-// * The function <b>task_yield_from_ISR</b>() force context switch from interrupt
-// * routine. Some ports need force context switch after ISR API functions calls.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something
-// *
-// *                 // task will be suspended and will wait for resume from IRQ
-// *                 task_suspend_now();
-// *         }
-// * }
-// *
-// * void IRQ(void)
-// * {
-// *         // ...
-// *
-// *         bool yield = task_resume_form_ISR(task);
-// *
-// *         // ...
-// *
-// *         if (yield) {
-// *                 task_yield_from_ISR();
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_yield_from_ISR(void)
-//{
-//        _task_yield_from_ISR();
-//}
-//
-////==============================================================================
-///**
-// * @brief char *task_get_name(void)
-// * The function <b>task_get_name</b>() returns name of task which calls function.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return Task name string.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         char *name = task_get_name();
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline char *task_get_name(void)
-//{
-//        return _task_get_name();
-//}
-//
-////==============================================================================
-///**
-// * @brief char *task_get_name_of(task_t *taskhdl)
-// * The function <b>task_get_name_of</b>() returns name of selected task pointed
-// * by <i>taskhdl</i>.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return Task name string.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         char *name = task_get_name();
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *         char *name = task_get_name_of(task);
-// *
-// *         printf("The name of task is %s\n", name);
-// * }
-// */
-////==============================================================================
-//static inline char *task_get_name_of(task_t *taskhdl)
-//{
-//        return _task_get_name_of(taskhdl);
-//}
-//
+
 ////==============================================================================
 ///**
 // * @brief int task_get_priority(void)
@@ -829,437 +399,6 @@ static inline pid_t process_getpid(void)
 //static inline int task_get_priority(void)
 //{
 //        return _task_get_priority();
-//}
-//
-////==============================================================================
-///**
-// * @brief int task_get_priority_of(task_t *taskhdl)
-// * The function <b>task_get_priority_of</b>() returns priority value of selected
-// * task pointed by <i>taskhdl</i>.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return Priority value;
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         char *name = task_get_name();
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *         if (task_get_priority_of(task) < 0) {
-// *                 task_set_priority_of(task, 0);
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline int task_get_priority_of(task_t *taskhdl)
-//{
-//        return _task_get_priority_of(taskhdl);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_priority(const int priority)
-// * The function <b>task_set_priority</b>() set priority of task which calls the
-// * function to <i>priority</i>.
-// *
-// * @param priority      new priority value
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         if (task_get_priority() < 0) {
-// *                 task_set_priority(0);
-// *         }
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_priority(const int priority)
-//{
-//        _task_set_priority(priority);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_priority_of(task_t *taskhdl, const int priority)
-// * The function <b>task_set_priority_of</b>() set priority value of selected
-// * task pointed by <i>taskhdl</i> to <i>priority</i>.
-// *
-// * @param taskhdl       task handler
-// * @param priority      new priority value
-// *
-// * @errors None
-// *
-// * @return Priority value;
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         char *name = task_get_name();
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *         if (task_get_priority_of(task) < 0) {
-// *                 task_set_priority_of(task, 0);
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_priority_of(task_t *taskhdl, const int priority)
-//{
-//        _task_set_priority_of(taskhdl, priority);
-//}
-//
-////==============================================================================
-///**
-// * @brief int task_get_free_stack(void)
-// * The function <b>task_get_free_stack</b>() returns free stack value of
-// * task which calls the function.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return Free stack levels.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         free_stack = task_get_free_stack();
-// *
-// *         if (free_stack < 50) {
-// *                 // ...
-// *         }
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline int task_get_free_stack(void)
-//{
-//        return _task_get_free_stack();
-//}
-//
-////==============================================================================
-///**
-// * @brief int task_get_free_stack_of(task_t *taskhdl)
-// * The function <b>task_get_free_stack_of</b>() returns the free stack value
-// * of task pointed by <i>taskhdl</i>. If task object is not valid then -1 is
-// * returned.
-// *
-// * @param taskhdl       task handler
-// *
-// * @errors None
-// *
-// * @return Free stack level or -1 on error.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         char *name = task_get_name();
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// *
-// * void some_function()
-// * {
-// *         printf("Task free stack is %d levels\n", task_get_free_stack_of(task));
-// * }
-// */
-////==============================================================================
-//static inline int task_get_free_stack_of(task_t *taskhdl)
-//{
-//        return _task_get_free_stack_of(taskhdl);
-//}
-//
-////==============================================================================
-///**
-// * @brief task_t *task_get_handle(void)
-// * The function <b>task_get_handle</b>() returns pointer to the object of task
-// * which calls the function.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return Object of task which calls the function.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         task_t *hdl = task_get_handle();
-// *         // ...
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline task_t *task_get_handle(void)
-//{
-//        return _task_get_handle();
-//}
-//
-////==============================================================================
-///**
-// * @brief task_t *task_get_parent_handle(void)
-// * The function <b>task_get_parent_handle</b>() returns pointer to the object of
-// * parent of current task.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return Task handle of parent of the current task, or <b>NULL</b> if parent
-// * does not exist.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         task_t *parhdl = task_get_parent_handle();
-// *         // ...
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline task_t *task_get_parent_handle(void)
-//{
-//        return _task_get_parent_handle();
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_stdin(FILE *stream)
-// * The function <b>task_set_stdin</b>() set <b>stdin</b> stream for task which
-// * calls the function.
-// *
-// * @param stream        stream to set as <b>stdin</b>
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// * #include <stdio.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         FILE *std_in = arg;
-// *
-// *         char c = getc(stdin);
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_stdin(FILE *stream)
-//{
-//        _task_set_stdin(stream);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_stdout(FILE *stream)
-// * The function <b>task_set_stdout</b>() set <b>stdout</b> stream for task which
-// * calls the function.
-// *
-// * @param stream        stream to set as <b>stdout</b>
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// * #include <stdio.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         FILE *std_out = arg;
-// *
-// *         task_set_stdout(std_out);
-// *         puts("stdout is configured");
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_stdout(FILE *stream)
-//{
-//        _task_set_stdout(stream);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_stderr(FILE *stream)
-// * The function <b>task_set_stderr</b>() set <b>stderr</b> stream for task which
-// * calls the function.
-// *
-// * @param stream        stream to set as <b>stderr</b>
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// * #include <stdio.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         FILE *std_err = arg;
-// *
-// *         task_set_stderr(std_err);
-// *         fputs("stderr configured\n", stderr);
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_stderr(FILE *stream)
-//{
-//        _task_set_stderr(stream);
-//}
-//
-////==============================================================================
-///**
-// * @brief void task_set_cwd(const char *str)
-// * The function <b>task_set_cwd</b>() set current working directory for task
-// * which calls the function.
-// *
-// * @param str       path to set as current working directory
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// * #include <stdio.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         const char *cwd = arg;
-// *
-// *         task_set_cwd(cwd);
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_set_cwd(const char *str)
-//{
-//        _task_set_cwd(str);
-//}
-//
-////==============================================================================
-///**
-// * @brief bool task_is_exist(task_t *taskhdl)
-// * The function <b>task_is_exist</b>() check if task pointed by <i>taskhdl</i>
-// * exist in system. If task exist then <b>true</b> is returned, otherwise
-// * <b>false</b>.
-// *
-// * @param taskhdl       task handle
-// *
-// * @errors ESRCH
-// *
-// * @return If task exist then <b>true</b> is returned, otherwise <b>false</b>.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// *
-// * task_t *task;
-// *
-// * // ...
-// *
-// * if (task_is_exist(task)) {
-// *         // ...
-// * } else {
-// *         // ...
-// * }
-// *
-// * // ...
-// */
-////==============================================================================
-//static inline bool task_is_exist(task_t *taskhdl)
-//{
-//        return _sysm_is_task_exist(taskhdl);
 //}
 
 //==============================================================================
@@ -1316,10 +455,10 @@ static inline pid_t process_getpid(void)
  * // ...
  */
 //==============================================================================
-static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
-{
-        return _thread_new(func, stack_depth, arg);
-}
+//static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
+//{
+//        return _thread_new(func, stack_depth, arg);
+//}
 
 //==============================================================================
 /**
@@ -1389,10 +528,10 @@ static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, v
  * // ...
  */
 //==============================================================================
-static inline int thread_join(thread_t *thread)
-{
-        return _thread_join(thread);
-}
+//static inline int thread_join(thread_t *thread)
+//{
+//        return _thread_join(thread);
+//}
 
 //==============================================================================
 /**
@@ -1441,10 +580,10 @@ static inline int thread_join(thread_t *thread)
  * // ...
  */
 //==============================================================================
-static inline int thread_cancel(thread_t *thread)
-{
-        return _thread_cancel(thread);
-}
+//static inline int thread_cancel(thread_t *thread)
+//{
+//        return _thread_cancel(thread);
+//}
 
 //==============================================================================
 /**
@@ -1496,10 +635,10 @@ static inline int thread_cancel(thread_t *thread)
  * // ...
  */
 //==============================================================================
-static inline bool thread_is_finished(thread_t *thread)
-{
-        return _thread_is_finished(thread);
-}
+//static inline bool thread_is_finished(thread_t *thread)
+//{
+//        return _thread_is_finished(thread);
+//}
 
 //==============================================================================
 /**
@@ -1548,10 +687,10 @@ static inline bool thread_is_finished(thread_t *thread)
  * // ...
  */
 //==============================================================================
-static inline int thread_delete(thread_t *thread)
-{
-        return _thread_delete(thread);
-}
+//static inline int thread_delete(thread_t *thread)
+//{
+//        return _thread_delete(thread);
+//}
 
 //==============================================================================
 /**
@@ -1604,7 +743,7 @@ static inline int thread_delete(thread_t *thread)
 //==============================================================================
 static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
 {
-        return _semaphore_new(cnt_max, cnt_init);
+//        return _semaphore_new(cnt_max, cnt_init);
 }
 
 //==============================================================================
@@ -1636,7 +775,7 @@ static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
 {
-        _semaphore_delete(sem);
+//        _semaphore_delete(sem);
 }
 
 //==============================================================================
@@ -1689,7 +828,7 @@ static inline void semaphore_delete(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 {
-        return _semaphore_wait(sem, timeout);
+        return _builtinfunc(semaphore_wait, sem, timeout);
 }
 
 //==============================================================================
@@ -1739,7 +878,7 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
 {
-        return _semaphore_signal(sem);
+        return _builtinfunc(semaphore_signal, sem);
 }
 
 //==============================================================================
@@ -1796,7 +935,7 @@ static inline bool semaphore_signal(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 {
-        return _semaphore_wait_from_ISR(sem, task_woken);
+        return _builtinfunc(semaphore_wait_from_ISR, sem, task_woken);
 }
 
 //==============================================================================
@@ -1850,7 +989,7 @@ static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
-        return _semaphore_signal_from_ISR(sem, task_woken);
+        return _builtinfunc(semaphore_signal_from_ISR, sem, task_woken);
 }
 
 //==============================================================================
@@ -1921,7 +1060,7 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)
 {
-        return _mutex_new(type);
+//        return _mutex_new(type);
 }
 
 //==============================================================================
@@ -1990,7 +1129,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
 {
-        _mutex_delete(mutex);
+//        _mutex_delete(mutex);
 }
 
 //==============================================================================
@@ -2065,7 +1204,7 @@ static inline void mutex_delete(mutex_t *mutex)
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 {
-        return _mutex_lock(mutex, timeout);
+        return _builtinfunc(mutex_lock, mutex, timeout);
 }
 
 //==============================================================================
@@ -2135,7 +1274,7 @@ static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
 {
-        return _mutex_unlock(mutex);
+        return _builtinfunc(mutex_unlock, mutex);
 }
 
 //==============================================================================
@@ -2203,7 +1342,7 @@ static inline bool mutex_unlock(mutex_t *mutex)
 //==============================================================================
 static inline queue_t *queue_new(const uint length, const uint item_size)
 {
-        return _queue_new(length, item_size);
+//        return _queue_new(length, item_size);
 }
 
 //==============================================================================
@@ -2268,7 +1407,7 @@ static inline queue_t *queue_new(const uint length, const uint item_size)
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
 {
-        _queue_delete(queue);
+//        _queue_delete(queue);
 }
 
 //==============================================================================
@@ -2335,7 +1474,7 @@ static inline void queue_delete(queue_t *queue)
 //==============================================================================
 static inline void queue_reset(queue_t *queue)
 {
-        _queue_reset(queue);
+        _builtinfunc(queue_reset, queue);
 }
 
 //==============================================================================
@@ -2405,7 +1544,7 @@ static inline void queue_reset(queue_t *queue)
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const uint timeout)
 {
-        return _queue_send(queue, item, timeout);
+        return _builtinfunc(queue_send, queue, item, timeout);
 }
 
 //==============================================================================
@@ -2455,7 +1594,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const uint timeo
 //==============================================================================
 static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
-        return _queue_send_from_ISR(queue, item, task_woken);
+        return _builtinfunc(queue_send_from_ISR, queue, item, task_woken);
 }
 
 //==============================================================================
@@ -2524,7 +1663,7 @@ static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *t
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 {
-        return _queue_receive(queue, item, timeout);
+        return _builtinfunc(queue_receive, queue, item, timeout);
 }
 
 //==============================================================================
@@ -2576,7 +1715,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 //==============================================================================
 static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
-        return _queue_receive_from_ISR(queue, item, task_woken);
+        return _builtinfunc(queue_receive_from_ISR, queue, item, task_woken);
 }
 
 //==============================================================================
@@ -2647,7 +1786,7 @@ static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
 {
-        return _queue_receive_peek(queue, item, timeout);
+        return _builtinfunc(queue_receive_peek, queue, item, timeout);
 }
 
 //==============================================================================
@@ -2709,7 +1848,9 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const uint tim
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
 {
-        return _queue_get_number_of_items(queue);
+        size_t len = -1;
+        _errno = _builtinfunc(queue_get_number_of_items, queue, &len);
+        return len;
 }
 
 //==============================================================================
@@ -2751,7 +1892,9 @@ static inline int queue_get_number_of_items(queue_t *queue)
 //==============================================================================
 static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
 {
-        return _queue_get_number_of_items_from_ISR(queue);
+        size_t len = -1;
+        _errno = _builtinfunc(queue_get_number_of_items_from_ISR, queue, &len);
+        return len;
 }
 
 //==============================================================================
@@ -2786,7 +1929,9 @@ static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
 //==============================================================================
 static inline int queue_get_space_available(queue_t *queue)
 {
-        return _queue_get_space_available(queue);
+        size_t space = -1;
+        _errno = _builtinfunc(queue_get_space_available, queue, &space);
+        return space;
 }
 
 //==============================================================================
@@ -2821,7 +1966,7 @@ static inline int queue_get_space_available(queue_t *queue)
 //==============================================================================
 static inline void critical_section_begin(void)
 {
-        _critical_section_begin();
+        _builtinfunc(critical_section_begin);
 }
 
 //==============================================================================
@@ -2854,7 +1999,7 @@ static inline void critical_section_begin(void)
 //==============================================================================
 static inline void critical_section_end(void)
 {
-        _critical_section_end();
+        _builtinfunc(critical_section_end);
 }
 
 //==============================================================================
@@ -2887,7 +2032,7 @@ static inline void critical_section_end(void)
 //==============================================================================
 static inline void ISR_disable(void)
 {
-        _ISR_disable();
+        _builtinfunc(ISR_disable);
 }
 
 //==============================================================================
@@ -2920,7 +2065,7 @@ static inline void ISR_disable(void)
 //==============================================================================
 static inline void ISR_enable(void)
 {
-        _ISR_enable();
+        _builtinfunc(ISR_enable);
 }
 
 #ifdef __cplusplus

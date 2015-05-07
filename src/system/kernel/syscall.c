@@ -50,7 +50,7 @@
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
 #define GETRETURN(type, var)    type var = rq->retptr
 #define GETTASKHDL()            rq->task
-#define GETPROCESS()            _process_get_container_by_task(rq->task)
+#define GETPROCESS()            _process_get_container_by_task(rq->task, NULL)
 #define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
 #define SETERRNO(var)           rq->err = var
 #define GETERRNO()              rq->err
@@ -174,7 +174,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSTEM           ] = syscall_system,
         [SYSCALL_PROCESSCREATE    ] = syscall_processcreate,
         [SYSCALL_PROCESSDESTROY   ] = syscall_processdestroy,
-        [SYSCALL_PROCESSSTATPID   ] = syscall_processstatseek,
+        [SYSCALL_PROCESSSTATSEEK  ] = syscall_processstatseek,
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
 };
@@ -209,8 +209,12 @@ void _syscall_init()
                 _semaphore_create(1, 1, &access_sem[i]);
         }
 
-        _process_create("kworker", NULL, NULL);
-        _process_create("initd", NULL, NULL);
+        static const process_attr_t attr = {
+                .no_parent = true
+        };
+
+        _process_create("kworker", &attr, NULL);
+        _process_create("initd", &attr, NULL);
 }
 
 //==============================================================================
@@ -1094,7 +1098,7 @@ static void syscall_processstatseek(syscallrq_t *rq)
 {
         GETARG(size_t *, seek);
         GETARG(process_stat_t*, stat);
-        SETERRNO(_process_get_statistics(*seek, stat));
+        SETERRNO(_process_get_stat_seek(*seek, stat));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1109,12 +1113,11 @@ static void syscall_processstatseek(syscallrq_t *rq)
 //==============================================================================
 static void syscall_processstatpid(syscallrq_t *rq)
 {
-        GETARG(size_t *, seek);
+        GETARG(pid_t *, pid);
         GETARG(process_stat_t*, stat);
-        SETERRNO(_process_get_stat_seek(*seek, stat));
+        SETERRNO(_process_get_stat_pid(*pid, stat));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
-
 
 //==============================================================================
 /**
@@ -1127,10 +1130,9 @@ static void syscall_processstatpid(syscallrq_t *rq)
 //==============================================================================
 static void syscall_processgetpid(syscallrq_t *rq)
 {
-        GETARG(pid_t *, pid);
-        GETARG(process_stat_t*, stat);
-        SETERRNO(_process_get_stat_pid(*pid, stat));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        pid_t pid = -1;
+        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
+        SETRETURN(pid_t, pid);
 }
 
 /*==============================================================================

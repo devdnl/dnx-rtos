@@ -346,7 +346,7 @@ static inline uint get_time_ms(void)
 //==============================================================================
 static inline u32_t get_total_CPU_usage(void)
 {
-//        return _sysm_get_total_CPU_usage(); TODO get_total_CPU_usage()
+        return _builtinfunc(process_get_CPU_total_time);
 }
 
 //==============================================================================
