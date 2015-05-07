@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
+#include <dnx/thread.h>
 #include <unistd.h>
 
 /*==============================================================================
@@ -111,15 +112,16 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 puts("Starting child...");
 
-                pid_t pid = 0;
                 const process_attr_t attr = {
-                       .cwd      = "/",
-                       .p_stdin  = "/dev/tty1",
-                       .p_stdout = "/dev/tty1",
-                       .p_stderr = "/dev/tty1"
+                       .cwd       = "/",
+                       .p_stdin   = "/dev/tty1",
+                       .p_stdout  = "/dev/tty1",
+                       .p_stderr  = "/dev/tty1",
+                       .no_parent = true
                 };
 
-                result = _process_create("initd --child", &attr, &pid);
+                pid_t pid = process_create("initd --child", &attr);
+                printf("Child PID: %d\n", pid);
 
                 printf("Result: %d\n", result);
         }

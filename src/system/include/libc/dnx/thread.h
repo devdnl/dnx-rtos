@@ -56,6 +56,283 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief pid_t process_new(const char *cmd, const process_attr_t *attr)
+ * The function <b>process_new</b>() create new process according to command
+ * pointed by <i>cmd</i> and attributes pointed by <i>attr</i>. Attributes
+ * can be NULL what means that default setting will be applied. Command field
+ * is mandatory.
+ *
+ * @param cmd           program name and argument list
+ * @param attr          process attributes
+ *
+ * @errors ENOMEM, EINVAL, ENOENT
+ *
+ * @return On success, return process ID (PID), otherwise 0.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ *
+ * const process_attr_t attr = {
+ *         .f_stdin   = stdin,
+ *         .f_stdout  = stdout,
+ *         .f_stderr  = stderr,
+ *         .p_stdin   = NULL,
+ *         .p_stdout  = NULL,
+ *         .p_stderr  = NULL,
+ *         .no_parent = false
+ * }
+ *
+ * pid_t pid = process_new("ls /", &attr);
+ * if (pid) {
+ *         process_wait(pid, MAX_DELAY_MS);
+ *
+ *         int exit_code = 0;
+ *         process_delete(pid, &exit_code);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
+{
+        pid_t pid = 0;
+        syscall(SYSCALL_PROCESSCREATE, &pid, cmd, attr);
+        return pid;
+}
+
+//==============================================================================
+/**
+ * @brief int process_destroy(pid_t pid, int *status)
+ * The function <b>process_destroy</b>() delete running or closed process.
+ * Function return process exit code pointed by <i>status</i>.
+ *
+ * @param pid                   process ID
+ *
+ * @errors EINVAL, EAGAIN
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ *
+ * const process_attr_t attr = {
+ *         .f_stdin   = stdin,
+ *         .f_stdout  = stdout,
+ *         .f_stderr  = stderr,
+ *         .p_stdin   = NULL,
+ *         .p_stdout  = NULL,
+ *         .p_stderr  = NULL,
+ *         .no_parent = false
+ * }
+ *
+ * pid_t pid = process_new("ls /", &attr);
+ * if (pid) {
+ *         process_wait(pid, MAX_DELAY_MS);
+ *
+ *         int exit_code = 0;
+ *         process_delete(pid, &exit_code);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int process_destroy(pid_t pid, int *status)
+{
+        int r = -1;
+        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief int process_stat_seek(size_t seek, process_stat_t *stat)
+ * The function <b>process_stat_seek</b>() return statistics of next process selected
+ * by <i>seek</i>.
+ * <pre>
+ * typedef struct {
+ *         const char *name;
+ *         pid_t       pid;
+ *         size_t      files_count;
+ *         size_t      dir_count;
+ *         size_t      mutexes_count;
+ *         size_t      semaphores_count;
+ *         size_t      queue_count;
+ *         size_t      threads_count;
+ *         size_t      memory_block_count;
+ *         size_t      memory_usage;
+ *         size_t      cpu_load_cnt;
+ *         size_t      stack_size;
+ *         size_t      stack_free;
+ * } process_stat_t;
+ * </pre>
+ *
+ * @param seek      process index
+ * @param stat      statistics
+ *
+ * @errors EINVAL, ENOENT, ESRCH
+ *
+ * @return Return 0 on success. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * process_stat_t stat;
+ * size_t         seek = 0;
+ * while (process_stat_seek(seek++, &stat)) {
+ *         printf("Memory usage: %d\n", stat.memory_usage);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int process_stat_seek(size_t seek, process_stat_t *stat)
+{
+        int r = -1;
+        syscall(SYSCALL_PROCESSSTATSEEK, &r, &seek, stat);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief int process_stat(pid_t pid, process_stat_t *stat)
+ * The function <b>process_stat</b>() return statistics of selected process
+ * by <i>pid</i>.
+ * <pre>
+ * typedef struct {
+ *         const char *name;
+ *         pid_t       pid;
+ *         size_t      files_count;
+ *         size_t      dir_count;
+ *         size_t      mutexes_count;
+ *         size_t      semaphores_count;
+ *         size_t      queue_count;
+ *         size_t      threads_count;
+ *         size_t      memory_block_count;
+ *         size_t      memory_usage;
+ *         size_t      cpu_load_cnt;
+ *         size_t      stack_size;
+ *         size_t      stack_free;
+ * } process_stat_t;
+ * </pre>
+ *
+ * @param pid       PID
+ * @param stat      statistics
+ *
+ * @errors EINVAL, ENOENT, ESRCH
+ *
+ * @return Return 0 on success. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * process_stat_t stat;
+ * pid_t          pid = getpid(); // or process_getpid()
+ * process_stat(pid, &stat);
+ * printf("Memory usage of this process: %d\n", stat.memory_usage);
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int process_stat(pid_t pid, process_stat_t *stat)
+{
+        int r = -1;
+        syscall(SYSCALL_PROCESSSTATPID, &r, &pid, stat);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief pid_t process_getpid(void)
+ * The function <b>process_getpid</b>() return PID of current process (caller).
+ *
+ * @param None
+ *
+ * @errors EINVAL, ENOENT, ESRCH
+ *
+ * @return Return PID on success. On error, 0 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * pid_t pid = process_getpid();
+ * printf("PID of this process is: %d\n, pid);
+ *
+ * // ...
+ */
+//==============================================================================
+static inline pid_t process_getpid(void)
+{
+        pid_t pid = 0;
+        syscall(SYSCALL_PROCESSGETPID, &pid);
+        return pid;
+}
+
+//==============================================================================
+/**
+ * @brief int program_wait_for_close(prog_t *prog, const uint timeout)
+ * The function <b>program_wait_for_close</b>() wait for program close.
+ *
+ * @param prog                  program object
+ * @param timeout               wait timeout in ms
+ *
+ * @errors EINVAL, ETIME
+ *
+ * @return Return 0 on success. On error, different than 0 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         program_wait_for_close(prog, MAX_DELAY_MS);
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+//static inline int program_wait_for_close(prog_t *prog, const uint timeout)
+//{
+//        return _program_wait_for_close(prog, timeout); // TODO program_wait_for_close()
+//}
+
+
 ////==============================================================================
 ///**
 // * @brief task_t *task_new(void (*func)(void*), const char *name, const uint stack_depth, void *arg)

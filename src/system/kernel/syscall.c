@@ -115,6 +115,11 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq);
 static void syscall_abort(syscallrq_t *rq);
 static void syscall_exit(syscallrq_t *rq);
 static void syscall_system(syscallrq_t *rq);
+static void syscall_processcreate(syscallrq_t *rq);
+static void syscall_processdestroy(syscallrq_t *rq);
+static void syscall_processstatseek(syscallrq_t *rq);
+static void syscall_processstatpid(syscallrq_t *rq);
+static void syscall_processgetpid(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -167,6 +172,11 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_ABORT            ] = syscall_abort,
         [SYSCALL_EXIT             ] = syscall_exit,
         [SYSCALL_SYSTEM           ] = syscall_system,
+        [SYSCALL_PROCESSCREATE    ] = syscall_processcreate,
+        [SYSCALL_PROCESSDESTROY   ] = syscall_processdestroy,
+        [SYSCALL_PROCESSSTATPID   ] = syscall_processstatseek,
+        [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
+        [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
 };
 
 /*==============================================================================
@@ -1034,6 +1044,93 @@ static void syscall_exit(syscallrq_t *rq)
 static void syscall_system(syscallrq_t *rq)
 {
 
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new process
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processcreate(syscallrq_t *rq)
+{
+        GETARG(const char *, cmd);
+        GETARG(process_attr_t *, attr);
+        pid_t pid = 0;
+        SETERRNO(_process_create(cmd, attr, &pid));
+        SETRETURN(pid_t, pid);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy existing process
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processdestroy(syscallrq_t *rq)
+{
+        GETARG(pid_t *, pid);
+        GETARG(int *, status);
+        SETERRNO(_process_destroy(*pid, status));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall read process statistics by seek
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processstatseek(syscallrq_t *rq)
+{
+        GETARG(size_t *, seek);
+        GETARG(process_stat_t*, stat);
+        SETERRNO(_process_get_statistics(*seek, stat));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall read process statistics by pid
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processstatpid(syscallrq_t *rq)
+{
+        GETARG(size_t *, seek);
+        GETARG(process_stat_t*, stat);
+        SETERRNO(_process_get_stat_seek(*seek, stat));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+
+//==============================================================================
+/**
+ * @brief  This syscall return PID of caller process
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processgetpid(syscallrq_t *rq)
+{
+        GETARG(pid_t *, pid);
+        GETARG(process_stat_t*, stat);
+        SETERRNO(_process_get_stat_pid(*pid, stat));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 /*==============================================================================

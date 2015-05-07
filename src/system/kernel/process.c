@@ -68,6 +68,7 @@ struct _process {
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
+        bool             no_parent:1;           /* process has not parent             */
 };
 
 struct _thread {
@@ -604,7 +605,11 @@ USERSPACE static void process_code(void *arg)
 
         proc->status = funcmain(proc->argc, proc->argv);
 
-        syscall(SYSCALL_EXIT, &proc->status);
+        if (proc->no_parent) {
+                syscall(SYSCALL_PROCESSDESTROY, &proc->pid, NULL);
+        } else {
+                syscall(SYSCALL_EXIT, &proc->status);
+        }
 
         _task_exit();
 }
@@ -974,6 +979,11 @@ static int apply_process_attributes(_process_t *proc, const process_attr_t *attr
                  * Apply Current Working Directory path
                  */
                 proc->cwd = attr->cwd;
+
+                /*
+                 * Apply no-parent attribute
+                 */
+                proc->no_parent = attr->no_parent;
         }
 
         finish:

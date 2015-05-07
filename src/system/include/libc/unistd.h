@@ -271,6 +271,35 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
+ * @brief pid_t getpid(void)
+ * The function <b>getpid</b>() return PID of current process (caller).
+ *
+ * @param None
+ *
+ * @errors EINVAL, ENOENT, ESRCH
+ *
+ * @return Return PID on success. On error, 0 is returned.
+ *
+ * @example
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * pid_t pid = getpid();
+ * printf("PID of this process is: %d\n, pid);
+ *
+ * // ...
+ */
+//==============================================================================
+static inline pid_t getpid(void)
+{
+        pid_t pid = 0;
+        syscall(SYSCALL_PROCESSGETPID, &pid);
+        return pid;
+}
+
+//==============================================================================
+/**
  * @brief int chown(const char *pathname, uid_t owner, gid_t group)
  * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *

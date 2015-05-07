@@ -107,6 +107,7 @@ typedef struct {
         const char *p_stdout;           //!< stdout file path (minor)
         const char *p_stderr;           //!< stderr file path (minor)
         const char *cwd;                //!< working directory path
+        bool        no_parent;          //!< parent is not waiting for this process
 } process_attr_t;
 
 /** USERSPACE: thread attributes */
