@@ -113,10 +113,11 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 int i = 0;
                 while (true) {
-                        GPIO_SET_PIN(PB14);
+//                        GPIO_SET_PIN(PB14);
 
                         printf("=== Sec: %d\n", i++);
 
+//                        disable_CPU_load_measurement();
                         process_stat_t stat;
                         if (process_stat(getpid(), &stat) == 0) {
                                 printf("Name: %s\n", stat.name);
@@ -133,7 +134,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                                 printf("Stack max usage: %d\n", stat.stack_max_usage);
                                 printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
 
-                                u32_t tct = get_total_CPU_usage();
+                                u32_t tct = stat.cpu_load_total_cnt;
                                 printf("CPU total cnt: %d\n", tct);
 
                                 printf("CPU load: %d.%02d%%\n",
@@ -143,6 +144,11 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         } else {
                                 perror(NULL);
                         }
+                        enable_CPU_load_measurement();
+
+//                        for (int i = 0; i < 1000000; i++) {
+//                                __asm("nop");
+//                        }
 
 //                        char *blk1 = malloc(16);
 //                        if (blk1) {
@@ -164,7 +170,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 //                                free(blk1);
 //                        }
 
-                        GPIO_CLEAR_PIN(PB14);
+//                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
                 }
 

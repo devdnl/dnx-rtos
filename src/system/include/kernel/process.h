@@ -123,6 +123,7 @@ typedef struct {
         size_t      memory_block_count;
         size_t      memory_usage;
         size_t      cpu_load_cnt;
+        size_t      cpu_load_total_cnt;
         size_t      stack_size;
         size_t      stack_max_usage;
 } process_stat_t;
@@ -163,12 +164,14 @@ extern int         _process_get_pid                     (_process_t*, pid_t*);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
-extern u32_t       _process_get_CPU_total_time          (void);
 
 extern int         _process_memalloc                            (task_t*, size_t, void**, bool);
 extern int         _process_memfree                             (task_t*, void*);
-extern void        _copy_task_context_to_standard_variables     (void);
-extern void        _copy_standard_variables_to_task_context     (void);
+extern void        _task_switched_in     (void);
+extern void        _task_switched_out     (void);
+
+extern void        _CLM_enable                          (void);
+extern void        _CLM_disable                         (void);
 
 /*==============================================================================
   Exported inline functions

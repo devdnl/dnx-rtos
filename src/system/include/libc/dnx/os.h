@@ -314,43 +314,6 @@ static inline uint get_time_ms(void)
 
 //==============================================================================
 /**
- * @brief u32_t get_total_CPU_usage(void)
- * The function <b>get_total_CPU_usage</b>() return total CPU usage. The value
- * is a counter. After call of this function counter is reset.
- *
- * @param None
- *
- * @errors None
- *
- * @return CPU usage counter.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * u32_t total_cpu_usage = get_total_CPU_usage();
- * uint  number_of_tasks = get_number_of_monitored_tasks();
- *
- * for (uint i = 0; i < number_of_tasks; i++) {
- *         taskstat_t stat;
- *         get_task_stat(i, &stat);
- *
- *         printf("Task %s CPU usage: %d\n",
- *                get_task_name(i),
- *                (stat.cpu_usage * 100)  / total_cpu_usage);
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline u32_t get_total_CPU_usage(void)
-{
-        return _builtinfunc(process_get_CPU_total_time);
-}
-
-//==============================================================================
-/**
  * @brief const char *get_platform_name(void)
  * The function <b>get_platform_name</b>() return platform name.
  *
@@ -884,7 +847,7 @@ static inline bool is_driver_active(uint n)
 //==============================================================================
 static inline void disable_CPU_load_measurement(void)
 {
-//        _sysm_disable_CPU_load_measurement(); // TODO disable_CPU_load_measurement
+        _builtinfunc(CLM_disable);
 }
 
 //==============================================================================
@@ -925,7 +888,7 @@ static inline void disable_CPU_load_measurement(void)
 //==============================================================================
 static inline void enable_CPU_load_measurement(void)
 {
-//        _sysm_enable_CPU_load_measurement(); / TODO enable_CPU_load_measurement
+        _builtinfunc(CLM_enable);
 }
 
 //==============================================================================

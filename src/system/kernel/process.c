@@ -96,11 +96,15 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat);
 static pid_t       PID_cnt = 1;
 static _process_t *process_list;
 static _process_t *active_process;
-static u32_t       CPU_total_time;
+static bool        CPU_load_enabled;
+static u32_t       CPU_total_time_last;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+/* CPU total time */
+u32_t _CPU_total_time;
+
 /* standard input */
 FILE *stdin;
 
@@ -559,18 +563,36 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
- * @brief  Function return total CPU time. Function clear CPU total time.
+ * @brief  Function enables CPU load measurement
  *
  * @param  None
  *
- * @return CPU total time
+ * @return None
  */
 //==============================================================================
-USERSPACE u32_t _process_get_CPU_total_time(void)
+USERSPACE void _CLM_enable(void)
 {
-        u32_t time = CPU_total_time;
-        CPU_total_time = 0;
-        return time;
+        _kernel_scheduler_lock();
+        {
+                _CPU_total_time     = 0;
+                CPU_total_time_last = 0;
+                CPU_load_enabled    = true;
+        }
+        _kernel_scheduler_unlock();
+}
+
+//==============================================================================
+/**
+ * @brief  Function disables CPU load measurement
+ *
+ * @param  None
+ *
+ * @return None
+ */
+//==============================================================================
+USERSPACE void _CLM_disable(void)
+{
+        CPU_load_enabled = false;
 }
 
 //==============================================================================
@@ -607,12 +629,13 @@ KERNELSPACE int _thread_destroy(_thread_t *thread)
  * @return None
  */
 //==============================================================================
-#include "stm32f1/gpio_cfg.h" // TEST
-KERNELSPACE void _copy_task_context_to_standard_variables(void)
+KERNELSPACE void _task_switched_in(void)
 {
-        GPIO_SET_PIN(PB15); // TEST
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_reset_CPU_load_counter();
+        if (CPU_load_enabled) {
+                CPU_total_time_last = _CPU_total_time;
+                _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
+        }
 #endif
 
         active_process = _process_get_container_by_task(_THIS_TASK, NULL);
@@ -642,7 +665,7 @@ KERNELSPACE void _copy_task_context_to_standard_variables(void)
  * @return None
  */
 //==============================================================================
-KERNELSPACE void _copy_standard_variables_to_task_context(void)
+KERNELSPACE void _task_switched_out(void)
 {
         if (active_process) {
                 active_process->f_stdin  = stdin;
@@ -652,15 +675,18 @@ KERNELSPACE void _copy_standard_variables_to_task_context(void)
                 active_process->errnov   = _errno;
 
                 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-                active_process->timecnt += _cpuctl_get_CPU_load_counter_value();
+                if (CPU_load_enabled) {
+                        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+                        active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
+                }
+                #endif
+        } else {
+                #if (CONFIG_MONITOR_CPU_LOAD > 0)
+                        if (CPU_load_enabled) {
+                                _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+                        }
                 #endif
         }
-
-        #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        CPU_total_time += _cpuctl_get_CPU_load_counter_value();
-        #endif
-
-        GPIO_CLEAR_PIN(PB15); // TEST
 }
 
 //==============================================================================
@@ -1099,8 +1125,9 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 }
         }
 
-        stat->cpu_load_cnt = proc->timecnt;
-        proc->timecnt      = 0;
+        stat->cpu_load_total_cnt = _CPU_total_time;
+        stat->cpu_load_cnt       = proc->timecnt;
+        proc->timecnt            = 0;
 }
 
 /*==============================================================================

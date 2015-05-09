@@ -31,7 +31,7 @@
 #include "kernel/khooks.h"
 #include "kernel/kpanic.h"
 #include "kernel/process.h"
-#include "dnx/misc.h"
+#include "lib/unarg.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -56,6 +56,7 @@ u32_t uptime_divider;
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+extern u32_t _CPU_total_time;
 
 /*==============================================================================
   Function definitions
@@ -91,6 +92,8 @@ void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
+        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+
         if (++uptime_divider >= (configTICK_RATE_HZ)) {
                 uptime_divider = 0;
                 uptime_counter_sec++;
@@ -104,7 +107,7 @@ void vApplicationTickHook(void)
 //==============================================================================
 void vApplicationSwitchedIn(void)
 {
-        _copy_task_context_to_standard_variables();
+        _task_switched_in();
 }
 
 //==============================================================================
@@ -114,7 +117,7 @@ void vApplicationSwitchedIn(void)
 //==============================================================================
 void vApplicationSwitchedOut(void)
 {
-        _copy_standard_variables_to_task_context();
+        _task_switched_out();
 }
 
 //==============================================================================
