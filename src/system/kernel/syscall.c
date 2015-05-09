@@ -210,7 +210,7 @@ void _syscall_init()
         }
 
         static const process_attr_t attr = {
-                .no_parent = true
+                .no_parent = false
         };
 
         _process_create("kworker", &attr, NULL);

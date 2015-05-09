@@ -118,37 +118,53 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         printf("=== Sec: %d\n", i++);
 
 //                        disable_CPU_load_measurement();
-                        process_stat_t stat;
-                        if (process_stat(getpid(), &stat) == 0) {
-                                printf("Name: %s\n", stat.name);
-                                printf("PID: %d\n", stat.pid);
-                                printf("Files: %d\n", stat.files_count);
-                                printf("Dirs: %d\n", stat.dir_count);
-                                printf("Mutexes: %d\n", stat.mutexes_count);
-                                printf("Semaphores: %d\n", stat.semaphores_count);
-                                printf("Queues: %d\n", stat.queue_count);
-                                printf("Threads: %d\n", stat.threads_count);
-                                printf("Mem blocks: %d\n", stat.memory_block_count);
-                                printf("Memory usage: %d\n", stat.memory_usage);
-                                printf("Stack size: %d\n", stat.stack_size);
-                                printf("Stack max usage: %d\n", stat.stack_max_usage);
-                                printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
-
-                                u32_t tct = stat.cpu_load_total_cnt;
-                                printf("CPU total cnt: %d\n", tct);
-
-                                printf("CPU load: %d.%02d%%\n",
-                                       stat.cpu_load_cnt * 100 / tct,
-                                       (stat.cpu_load_cnt * 1000 / tct) % 10
-                                       );
-                        } else {
-                                perror(NULL);
-                        }
-                        enable_CPU_load_measurement();
-
-//                        for (int i = 0; i < 1000000; i++) {
-//                                __asm("nop");
+//                        process_stat_t stat;
+//                        if (process_stat(getpid(), &stat) == 0) {
+//                                printf("Name: %s\n", stat.name);
+//                                printf("PID: %d\n", stat.pid);
+//                                printf("Files: %d\n", stat.files_count);
+//                                printf("Dirs: %d\n", stat.dir_count);
+//                                printf("Mutexes: %d\n", stat.mutexes_count);
+//                                printf("Semaphores: %d\n", stat.semaphores_count);
+//                                printf("Queues: %d\n", stat.queue_count);
+//                                printf("Threads: %d\n", stat.threads_count);
+//                                printf("Mem blocks: %d\n", stat.memory_block_count);
+//                                printf("Memory usage: %d\n", stat.memory_usage);
+//                                printf("Stack size: %d\n", stat.stack_size);
+//                                printf("Stack max usage: %d\n", stat.stack_max_usage);
+//                                printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
+//
+//                                u32_t tct = stat.cpu_load_total_cnt;
+//                                printf("CPU total cnt: %d\n", tct);
+//
+//                                printf("CPU load: %d.%02d%%\n",
+//                                       stat.cpu_load_cnt * 100 / tct,
+//                                       (stat.cpu_load_cnt * 1000 / tct) % 10
+//                                       );
+//                        } else {
+//                                perror(NULL);
 //                        }
+//                        enable_CPU_load_measurement();
+
+
+                          process_stat_t stat;
+                          size_t         seek = 0;
+                          while (process_stat_seek(seek++, &stat) == 0) {
+                                  u32_t tct = stat.cpu_load_total_cnt;
+                                  printf("%d %s: %d.%02d%% %s\n",
+                                         stat.pid,
+                                         stat.name,
+                                         stat.cpu_load_cnt * 100 / tct,
+                                         (stat.cpu_load_cnt * 1000 / tct) % 10,
+                                         stat.zombie ? "Z" : "R"
+                                        );
+                          }
+                          enable_CPU_load_measurement();
+
+
+                        for (int i = 0; i < 1000000; i++) {
+                                __asm("nop");
+                        }
 
 //                        char *blk1 = malloc(16);
 //                        if (blk1) {
@@ -170,6 +186,13 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 //                                free(blk1);
 //                        }
 
+                        if (i == 3) {
+                                int status = -1;
+                                int err = process_destroy(2, &status);
+
+                                printf("Killed zombie: %d : %d\n", err, status);
+                        }
+
 //                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
                 }
@@ -182,17 +205,13 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 //                result = driver_init("pll", NULL);
                 result = driver_init("uart2", "/dev/ttyS0");
                 result = driver_init("tty0", "/dev/tty0");
-
                 result = syslog_enable("/dev/tty0");
-
                 detect_kernel_panic(true);
-
                 result = driver_init("tty1", "/dev/tty1");
 
                 stdout = fopen("/dev/tty0", "w");
 
                 printf("Hello world! I'm using syscalls!\n");
-
 
                 puts("Starting child...");
 

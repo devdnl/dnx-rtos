@@ -864,21 +864,17 @@ static inline void disable_CPU_load_measurement(void)
  *
  * @example
  * #include <dnx/os.h>
+ * #include <dnx/thread.h>
  *
  * // ...
  *
  * disable_CPU_load_measurement();
  *
- * u32_t total_cpu_usage = get_total_CPU_usage();
- * uint  number_of_tasks = get_number_of_monitored_tasks();
- *
- * for (uint i = 0; i < number_of_tasks; i++) {
- *         taskstat_t stat;
- *         get_task_stat(i, &stat);
- *
- *         printf("Task %s CPU usage: %d%%\n",
- *                get_task_name(i),
- *                (stat.cpu_usage * 100)  / total_cpu_usage);
+ * process_stat_t stat;
+ * size_t         seek = 0;
+ * while (process_stat_seek(seek++, &stat) == 0) {
+ *         printf("CPU load: %d\n",
+ *                (stat.cpu_load_cnt * 100) / stat.cpu_load_total_cnt);
  * }
  *
  * enable_CPU_load_measurement();

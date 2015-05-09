@@ -201,7 +201,7 @@ static inline int process_destroy(pid_t pid, int *status)
  *
  * process_stat_t stat;
  * size_t         seek = 0;
- * while (process_stat_seek(seek++, &stat)) {
+ * while (process_stat_seek(seek++, &stat) == 0) {
  *         printf("Memory usage: %d\n", stat.memory_usage);
  * }
  *

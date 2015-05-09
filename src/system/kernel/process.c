@@ -244,9 +244,12 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
 
                         process_destroy_all_resources(curr);
 
+                        curr->header.next = NULL;
+                        curr->header.type = RES_TYPE_UNKNOWN;
                         _kfree(_MM_KRN, static_cast(void**, &curr));
 
                         result = ESUCC;
+                        break;
                 }
 
                 prev = curr;
@@ -553,7 +556,7 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
                         }
                 } else {
                         if (master) {
-                                *master = false;
+                                *master = true;
                         }
                 }
         }
@@ -706,9 +709,9 @@ USERSPACE static void process_code(void *arg)
         proc->status = funcmain(proc->argc, proc->argv);
 
         if (proc->no_parent) {
-                syscall(SYSCALL_PROCESSDESTROY, &proc->pid, NULL);
+                syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
         } else {
-                syscall(SYSCALL_EXIT, &proc->status);
+                syscall(SYSCALL_EXIT, NULL, &proc->status);
         }
 
         _task_exit();
@@ -750,12 +753,53 @@ static void process_destroy_all_resources(_process_t *proc)
                 }
         }
 
+        proc->res_list = NULL;
         proc->f_stdin  = NULL;
         proc->f_stdout = NULL;
         proc->f_stderr = NULL;
         proc->globals  = NULL;
         proc->cwd      = NULL;
+}
 
+//==============================================================================
+/**
+ * @brief  Function gets process statistics
+ *
+ * @param  proc         process
+ * @param  stat         statistics container
+ *
+ * @return None
+ */
+//==============================================================================
+static void process_get_stat(_process_t *proc, process_stat_t *stat)
+{
+        memset(stat, 0, sizeof(process_stat_t));
+
+        stat->name            = proc->pdata->name;
+        stat->pid             = proc->pid;
+        stat->stack_size      = *proc->pdata->stack_depth;
+        stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->task);
+        stat->threads_count   = 1;
+        stat->zombie          = proc->task == NULL;
+
+        foreach_resource(res, proc->res_list) {
+                switch (res->type) {
+                case RES_TYPE_FILE      : stat->files_count++; break;
+                case RES_TYPE_DIR       : stat->dir_count++; break;
+                case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
+                case RES_TYPE_QUEUE     : stat->queue_count++; break;
+                case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
+                case RES_TYPE_THREAD    : stat->threads_count++; break;
+                case RES_TYPE_MEMORY    : stat->memory_block_count++;
+                                          stat->memory_usage += _mm_get_block_size(res);
+                                          break;
+                default: break;
+                }
+        }
+
+        stat->cpu_load_total_cnt = _CPU_total_time;
+        stat->cpu_load_cnt       = proc->timecnt;
+        proc->timecnt            = 0;
 }
 
 //==============================================================================
@@ -1088,46 +1132,6 @@ static int apply_process_attributes(_process_t *proc, const process_attr_t *attr
 
         finish:
         return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function gets process statistics
- *
- * @param  proc         process
- * @param  stat         statistics container
- *
- * @return None
- */
-//==============================================================================
-static void process_get_stat(_process_t *proc, process_stat_t *stat)
-{
-        memset(stat, 0, sizeof(process_stat_t));
-
-        stat->name            = proc->pdata->name;
-        stat->pid             = proc->pid;
-        stat->stack_size      = *proc->pdata->stack_depth;
-        stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->task);
-        stat->threads_count   = 1;
-
-        foreach_resource(res, proc->res_list) {
-                switch (res->type) {
-                case RES_TYPE_FILE      : stat->files_count++; break;
-                case RES_TYPE_DIR       : stat->dir_count++; break;
-                case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
-                case RES_TYPE_QUEUE     : stat->queue_count++; break;
-                case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
-                case RES_TYPE_THREAD    : stat->threads_count++; break;
-                case RES_TYPE_MEMORY    : stat->memory_block_count++;
-                                          stat->memory_usage += _mm_get_block_size(res);
-                                          break;
-                default: break;
-                }
-        }
-
-        stat->cpu_load_total_cnt = _CPU_total_time;
-        stat->cpu_load_cnt       = proc->timecnt;
-        proc->timecnt            = 0;
 }
 
 /*==============================================================================

@@ -126,7 +126,7 @@ bool _kernel_panic_detect(bool show_msg)
                         _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
                         _printk("Cause  : %s\n", cause[kernel_panic_descriptor->cause]);
                         _printk("Process: %s\n", kernel_panic_descriptor->name);
-                        _printk("Master : %s\n\n", kernel_panic_descriptor->master ? "T" : "F");
+                        _printk("Master : %s\n\n", kernel_panic_descriptor->master ? "Yes" : "No");
 #endif
                         _sleep(2);
                 }

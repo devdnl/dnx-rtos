@@ -126,6 +126,7 @@ typedef struct {
         size_t      cpu_load_total_cnt;
         size_t      stack_size;
         size_t      stack_max_usage;
+        bool        zombie;
 } process_stat_t;
 
 /** USERSPACE: thread attributes */
