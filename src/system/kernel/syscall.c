@@ -120,6 +120,7 @@ static void syscall_processdestroy(syscallrq_t *rq);
 static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
+static void syscall_getcwd(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -177,6 +178,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATSEEK  ] = syscall_processstatseek,
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
+        [SYSCALL_GETCWD           ] = syscall_getcwd,
 };
 
 /*==============================================================================
@@ -1133,6 +1135,29 @@ static void syscall_processgetpid(syscallrq_t *rq)
         pid_t pid = -1;
         SETERRNO(_process_get_pid(GETPROCESS(), &pid));
         SETRETURN(pid_t, pid);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return CWD of current process
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_getcwd(syscallrq_t *rq)
+{
+        GETARG(char *, buf);
+        GETARG(size_t *, size);
+
+        const char *cwd = NULL;
+        if (buf && *size) {
+                cwd = _process_get_CWD(GETPROCESS());
+                strncpy(buf, cwd, 128);
+        }
+
+        SETRETURN(char*, cwd ? buf : NULL);
 }
 
 /*==============================================================================

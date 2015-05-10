@@ -90,6 +90,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
+        SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

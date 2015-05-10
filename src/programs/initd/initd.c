@@ -111,6 +111,17 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 global->str = "Works!";
 
+                char *cwd = calloc(100, 1);
+                if (cwd) {
+                        if (getcwd(cwd, 100) == cwd) {
+                                printf("CWD is: %s\n", cwd);
+                        } else {
+                                printf("CWD returne error\n");
+                        }
+
+                        free(cwd);
+                }
+
                 int i = 0;
                 while (true) {
 //                        GPIO_SET_PIN(PB14);
@@ -200,14 +211,14 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         } else {
                 result = mount("lfs", "", "/");
                 result = mkdir("/dev", 0777);
-                result = driver_init("gpio", "/dev/gpio");
-                result = driver_init("afiom", NULL);
-//                result = driver_init("pll", NULL);
-                result = driver_init("uart2", "/dev/ttyS0");
-                result = driver_init("tty0", "/dev/tty0");
+                driver_init("gpio", "/dev/gpio");
+                driver_init("afiom", NULL);
+//                driver_init("pll", NULL);
+                driver_init("uart2", "/dev/ttyS0");
+                driver_init("tty0", "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
                 detect_kernel_panic(true);
-                result = driver_init("tty1", "/dev/tty1");
+                driver_init("tty1", "/dev/tty1");
 
                 stdout = fopen("/dev/tty0", "w");
 
@@ -216,7 +227,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 puts("Starting child...");
 
                 const process_attr_t attr = {
-                       .cwd       = "/",
+                       .cwd       = "/dev/",
                        .p_stdin   = "/dev/tty1",
                        .p_stdout  = "/dev/tty1",
                        .p_stderr  = "/dev/tty1",

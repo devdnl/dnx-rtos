@@ -266,7 +266,9 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
-//        return strncpy(buf, _task_get_descriptor()->t_cwd, size); TODO syscall
+        char *cwd;
+        syscall(SYSCALL_GETCWD, &cwd, buf, &size);
+        return cwd;
 }
 
 //==============================================================================

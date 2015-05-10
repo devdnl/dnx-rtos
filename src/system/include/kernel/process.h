@@ -98,7 +98,7 @@ struct _prog_data {
         process_func_t  main;
 };
 
-/** USERSPACE: Process attributes */
+/** USERSPACE: process attributes */
 typedef struct {
         FILE       *f_stdin;            //!< stdin  file object pointer (major)
         FILE       *f_stdout;           //!< stdout file object pointer (major)
@@ -110,22 +110,22 @@ typedef struct {
         bool        no_parent;          //!< parent is not waiting for this process
 } process_attr_t;
 
-/** USERSPACE: thread attributes */
+/** USERSPACE: process attributes */
 typedef struct {
         const char *name;
         pid_t       pid;
-        size_t      files_count;
-        size_t      dir_count;
-        size_t      mutexes_count;
-        size_t      semaphores_count;
-        size_t      queue_count;
-        size_t      threads_count;
-        size_t      memory_block_count;
         size_t      memory_usage;
-        size_t      cpu_load_cnt;
-        size_t      cpu_load_total_cnt;
-        size_t      stack_size;
-        size_t      stack_max_usage;
+        u16_t       memory_block_count;
+        u16_t       files_count;
+        u16_t       dir_count;
+        u16_t       mutexes_count;
+        u16_t       semaphores_count;
+        u16_t       queue_count;
+        u16_t       threads_count;
+        u32_t       cpu_load_cnt;
+        u32_t       cpu_load_total_cnt;
+        u16_t       stack_size;
+        u16_t       stack_max_usage;
         bool        zombie;
 } process_stat_t;
 
