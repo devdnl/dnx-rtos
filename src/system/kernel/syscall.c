@@ -1019,7 +1019,7 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq)
 //==============================================================================
 static void syscall_abort(syscallrq_t *rq)
 {
-        UNUSED_ARG1(rq);
+        UNUSED_RQ();
         SETERRNO(_process_abort(GETPROCESS()));
 }
 
@@ -1049,7 +1049,7 @@ static void syscall_exit(syscallrq_t *rq)
 //==============================================================================
 static void syscall_system(syscallrq_t *rq)
 {
-
+        //TODO syscall_system
 }
 
 //==============================================================================

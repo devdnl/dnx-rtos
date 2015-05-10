@@ -162,12 +162,13 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                           size_t         seek = 0;
                           while (process_stat_seek(seek++, &stat) == 0) {
                                   u32_t tct = stat.cpu_load_total_cnt;
-                                  printf("%d %s: %d.%02d%% %s\n",
+                                  printf("%d %s: %d.%02d%% %s TH%d\n",
                                          stat.pid,
                                          stat.name,
                                          stat.cpu_load_cnt * 100 / tct,
                                          (stat.cpu_load_cnt * 1000 / tct) % 10,
-                                         stat.zombie ? "Z" : "R"
+                                         stat.zombie ? "Z" : "R",
+                                         stat.threads_count
                                         );
                           }
                           enable_CPU_load_measurement();

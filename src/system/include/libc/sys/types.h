@@ -75,6 +75,9 @@ typedef int gid_t;
 /** process ID */
 typedef u32_t pid_t;
 
+/** thread ID */
+typedef u32_t tid_t;
+
 /** device */
 typedef int dev_t;
 

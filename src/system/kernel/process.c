@@ -74,7 +74,8 @@ struct _process {
 struct _thread {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
-        _process_t       *process;              /* reference to process               */
+        _process_t      *process;               /* process ID (thread owner)          */
+        tid_t            tid;                   /* thread ID                          */
 };
 
 /*==============================================================================
@@ -94,6 +95,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat);
   Local object definitions
 ==============================================================================*/
 static pid_t       PID_cnt = 1;
+static tid_t       TID_cnt = 1;
 static _process_t *process_list;
 static _process_t *active_process;
 static bool        CPU_load_enabled;
@@ -605,9 +607,43 @@ USERSPACE void _CLM_disable(void)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _thread_create()
+KERNELSPACE int _thread_create(thread_func_t func, thread_attr_t *attr, tid_t *tid)
 {
-        return ENOMEM;
+        int result = EINVAL;
+
+        if (func) {
+                _thread_t *thread;
+                result = _kzalloc(_MM_KRN, sizeof(_thread_t), &thread);
+                if (result == ESUCC) {
+                        thread->header.type = RES_TYPE_THREAD;
+                        thread->process     = _process_get_container_by_task(_THIS_TASK, NULL);
+                        thread->tid         = TID_cnt++;
+
+                        result = _task_create(thread_code,
+                                              "thread",
+                                              attr ? attr->stack_depth : STACK_DEPTH_LOW,
+                                              func,
+                                              thread,
+                                              &thread->task);
+
+                        if (result == ESUCC) { // TODO
+                                _task_suspend(thread->task);
+
+                                result = _process_register_resource(thread->process, thread);
+                                if (result == ESUCC) {
+                                        if (tid) {
+                                                *tid = thread->tid;
+                                        }
+
+                                        _task_resume(thread->task);
+                                } else {
+                                        _task_destroy(thread->task);
+                                }
+                        }
+                }
+        }
+
+        return result;
 }
 
 //==============================================================================

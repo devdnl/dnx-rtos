@@ -134,6 +134,9 @@ typedef struct {
         size_t stack_depth;
 } thread_attr_t;
 
+/** USERSPACE: thread function */
+typedef void (*thread_func_t)(void *arg);
+
 /** KERNELSPACE: process descriptor */
 typedef struct _process _process_t;
 
@@ -166,8 +169,8 @@ extern int         _process_get_stat_seek               (size_t, process_stat_t*
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
 
-extern int         _process_memalloc                            (task_t*, size_t, void**, bool);
-extern int         _process_memfree                             (task_t*, void*);
+extern int         _thread_create                       (thread_func_t, thread_attr_t*, tid_t*);
+
 extern void        _task_switched_in     (void);
 extern void        _task_switched_out     (void);
 
