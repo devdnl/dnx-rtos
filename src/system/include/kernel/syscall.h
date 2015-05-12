@@ -91,6 +91,8 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
+        SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
+        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

@@ -455,10 +455,12 @@ static inline pid_t process_getpid(void)
  * // ...
  */
 //==============================================================================
-//static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
-//{
-//        return _thread_new(func, stack_depth, arg);
-//}
+static inline tid_t thread_create(thread_func_t func, thread_attr_t *attr, void *arg)
+{
+        tid_t tid = 0;
+        syscall(SYSCALL_THREADCREATE, &tid, func, attr, arg);
+        return tid;
+}
 
 //==============================================================================
 /**

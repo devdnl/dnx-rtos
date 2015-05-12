@@ -75,13 +75,15 @@ struct _thread {
         res_header_t     header;                /* resource header                    */
         task_t          *task;                  /* pointer to task handle             */
         _process_t      *process;               /* process ID (thread owner)          */
+        void            *arg;                   /* thread function argument           */
         tid_t            tid;                   /* thread ID                          */
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void process_code(void *arg);
+static void process_code(void *mainfn);
+static void thread_code(void *thrfunc);
 static void process_destroy_all_resources(_process_t *proc);
 static bool resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
@@ -94,8 +96,8 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static pid_t       PID_cnt = 1;
-static tid_t       TID_cnt = 1;
+static pid_t       PID_cnt;
+static tid_t       TID_cnt;
 static _process_t *process_list;
 static _process_t *active_process;
 static bool        CPU_load_enabled;
@@ -175,7 +177,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                 goto finish;
 
                         // set default program settings
-                        proc->pid = PID_cnt++;
+                        proc->pid = ++PID_cnt;
 
                         // create program's task
                         result = _task_create(process_code,
@@ -607,39 +609,63 @@ USERSPACE void _CLM_disable(void)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _thread_create(thread_func_t func, thread_attr_t *attr, tid_t *tid)
+#include <mm/heap.h>
+KERNELSPACE int _process_thread_create(_process_t    *proc,
+                                       thread_func_t  func,
+                                       thread_attr_t *attr,
+                                       void          *arg,
+                                       tid_t         *tid)
 {
         int result = EINVAL;
 
-        if (func) {
+        if (proc && func) {
                 _thread_t *thread;
-                result = _kzalloc(_MM_KRN, sizeof(_thread_t), &thread);
+                result = _kzalloc(_MM_KRN, sizeof(_thread_t), static_cast(void*, &thread));
                 if (result == ESUCC) {
                         thread->header.type = RES_TYPE_THREAD;
-                        thread->process     = _process_get_container_by_task(_THIS_TASK, NULL);
-                        thread->tid         = TID_cnt++;
+                        thread->process     = proc;
+                        thread->arg         = arg;
 
-                        result = _task_create(thread_code,
-                                              "thread",
-                                              attr ? attr->stack_depth : STACK_DEPTH_LOW,
-                                              func,
-                                              thread,
-                                              &thread->task);
+//                        _kernel_scheduler_lock();
 
-                        if (result == ESUCC) { // TODO
-                                _task_suspend(thread->task);
+                        _critical_section_begin();
 
-                                result = _process_register_resource(thread->process, thread);
-                                if (result == ESUCC) {
-                                        if (tid) {
-                                                *tid = thread->tid;
-                                        }
-
-                                        _task_resume(thread->task);
-                                } else {
-                                        _task_destroy(thread->task);
-                                }
+//                        _kzalloc(_MM_KRN, 3000, static_cast(void*, &thread->task));
+                        thread->task = _heap_alloc(8000, NULL);
+                        if (thread->task) {
+                                memset(thread->task, 0x11, 8000);
                         }
+
+//                        _kzalloc(_MM_KRN, 3000, static_cast(void*, &thread->task));
+//                        thread->task = _heap_alloc(4000, NULL);
+//                        memset(thread->task, 0x22, 4000);
+//                        result = _task_create(thread_code,
+//                                              "thread", // FIXME
+//                                              (attr ? attr->stack_depth : STACK_DEPTH_HUGE),
+//                                              func,
+//                                              thread,
+//                                              &thread->task);
+                        if (result != ESUCC)
+                                goto finish;
+
+                        result = _process_register_resource(proc, static_cast(res_header_t*, thread));
+                        if (result != ESUCC)
+                                goto finish;
+
+                        thread->tid = ++TID_cnt;
+
+                        if (tid) {
+                                *tid = thread->tid;
+                        }
+
+                        finish:
+                        if (result != ESUCC) {
+                                _process_thread_destroy(thread);
+                        }
+
+                        _critical_section_end();
+
+//                        _kernel_scheduler_unlock();
                 }
         }
 
@@ -653,9 +679,47 @@ KERNELSPACE int _thread_create(thread_func_t func, thread_attr_t *attr, tid_t *t
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _thread_destroy(_thread_t *thread)
+KERNELSPACE int _process_thread_destroy(_thread_t *thread)
 {
-        return EINVAL;
+        int result = EINVAL;
+
+        if (thread) {
+                if (thread->task) {
+                        _task_suspend(thread->task);
+                        _task_destroy(thread->task);
+                }
+
+                _kfree(_MM_KRN, static_cast(void*, &thread));
+
+                result = ESUCC;
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid)
+{
+        _thread_t *thread = NULL;
+
+        if (proc && tid) {
+                foreach_resource(res, proc->res_list) {
+                        if (res->type == RES_TYPE_THREAD) {
+                                if (reinterpret_cast(_thread_t *, res)->tid == tid) {
+                                        thread = static_cast(_thread_t *, res);
+                                        break;
+                                }
+                        }
+                }
+        }
+
+        return thread;
 }
 
 //==============================================================================
@@ -730,16 +794,16 @@ KERNELSPACE void _task_switched_out(void)
 
 //==============================================================================
 /**
- * @brief  This function start user code [USERLAND]
+ * @brief  This function start user process code [USERLAND]
  *
- * @param  arg          process argument - process main function
+ * @param  mainfn         process argument - process main function
  *
  * @return None
  */
 //==============================================================================
-USERSPACE static void process_code(void *arg)
+USERSPACE static void process_code(void *mainfn)
 {
-        process_func_t funcmain = arg;
+        process_func_t funcmain = mainfn;
         _process_t     *proc    = _task_get_tag(_THIS_TASK);
 
         proc->status = funcmain(proc->argc, proc->argv);
@@ -749,6 +813,27 @@ USERSPACE static void process_code(void *arg)
         } else {
                 syscall(SYSCALL_EXIT, NULL, &proc->status);
         }
+
+        _task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief  This function start user thread code [USERLAND]
+ *
+ * @param  thrfunc        process argument - process main function
+ *
+ * @return None
+ */
+//==============================================================================
+USERSPACE static void thread_code(void *thrfunc)
+{
+        thread_func_t func   = thrfunc;
+        _thread_t    *thread = _task_get_tag(_THIS_TASK);
+
+        func(thread->arg);
+
+        syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
 
         _task_exit();
 }
@@ -877,7 +962,7 @@ static bool resource_destroy(res_header_t *resource)
                 break;
 
         case RES_TYPE_THREAD:
-                _thread_destroy(static_cast(_thread_t*, res2free));
+                _process_thread_destroy(static_cast(_thread_t*, res2free));
                 break;
 
         default:

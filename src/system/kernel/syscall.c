@@ -51,6 +51,7 @@
 #define GETRETURN(type, var)    type var = rq->retptr
 #define GETTASKHDL()            rq->task
 #define GETPROCESS()            _process_get_container_by_task(rq->task, NULL)
+#define GETTHREAD(_tid)         _process_thread_get_container(GETPROCESS(), _tid)
 #define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
 #define SETERRNO(var)           rq->err = var
 #define GETERRNO()              rq->err
@@ -121,6 +122,8 @@ static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
 static void syscall_getcwd(syscallrq_t *rq);
+static void syscall_threadcreate(syscallrq_t *rq);
+static void syscall_threaddestroy(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -179,6 +182,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
         [SYSCALL_GETCWD           ] = syscall_getcwd,
+        [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
+        [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
 };
 
 /*==============================================================================
@@ -1154,10 +1159,46 @@ static void syscall_getcwd(syscallrq_t *rq)
         const char *cwd = NULL;
         if (buf && *size) {
                 cwd = _process_get_CWD(GETPROCESS());
-                strncpy(buf, cwd, 128);
+                strncpy(buf, cwd, *size);
         }
 
         SETRETURN(char*, cwd ? buf : NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new thread
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_threadcreate(syscallrq_t *rq)
+{
+        GETARG(thread_func_t, func);
+        GETARG(thread_attr_t *, attr);
+        GETARG(void *, arg);
+
+        tid_t tid = 0;
+        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid));
+        SETRETURN(tid_t, tid);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy thread
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_threaddestroy(syscallrq_t *rq)
+{
+        GETARG(tid_t *, tid);
+        SETERRNO(_process_thread_destroy(GETTHREAD(*tid)));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 /*==============================================================================

@@ -66,6 +66,15 @@ GLOBAL_VARIABLES_SECTION {
   Function definitions
 ==============================================================================*/
 
+static void thread(void *arg)
+{
+//        puts("This text is from thread function!");
+//        printf("Thread arg: %p\n", arg);
+//        sleep(2);
+//        puts("Thread exit.");
+        sleep(20);
+}
+
 //==============================================================================
 /**
  * @brief Program main function
@@ -103,7 +112,6 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         perror(NULL);
                 }
 
-
                 sleep(2);
                 puts("Hello! I'm child of initd parent!");
 
@@ -113,10 +121,10 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 char *cwd = calloc(100, 1);
                 if (cwd) {
-                        if (getcwd(cwd, 100) == cwd) {
+                        if (/*strcpy(cwd, "Test")*/getcwd(cwd, 100) == cwd) {
                                 printf("CWD is: %s\n", cwd);
                         } else {
-                                printf("CWD returne error\n");
+                                printf("CWD return error\n");
                         }
 
                         free(cwd);
@@ -162,7 +170,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                           size_t         seek = 0;
                           while (process_stat_seek(seek++, &stat) == 0) {
                                   u32_t tct = stat.cpu_load_total_cnt;
-                                  printf("%d %s: %d.%02d%% %s TH%d\n",
+                                  printf("%d %s: %d.%02d%% %s TH:%d\n",
                                          stat.pid,
                                          stat.name,
                                          stat.cpu_load_cnt * 100 / tct,
@@ -178,26 +186,6 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                                 __asm("nop");
                         }
 
-//                        char *blk1 = malloc(16);
-//                        if (blk1) {
-//                                memset(blk1, '1', 16);
-//
-//                                printf("blk1: %p\n", blk1);
-//
-//                                char *blk2 = malloc(16);
-//                                if (blk2) {
-//
-//                                        memset(blk2, '2', 16);
-//
-//                                        printf("blk2: %p\n", blk2);
-//
-//                                        puts("BLK OK");
-//                                        free(blk2);
-//                                }
-//
-//                                free(blk1);
-//                        }
-
                         if (i == 3) {
                                 int status = -1;
                                 int err = process_destroy(2, &status);
@@ -205,8 +193,18 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                                 printf("Killed zombie: %d : %d\n", err, status);
                         }
 
+                        if (i == 5) {
+                                tid_t tid = thread_create(thread, NULL, (void*)0xAABBCCDD);
+                                if (tid) {
+                                        printf("Thread created: %d\n", tid);
+                                } else {
+                                        perror(NULL);
+                                }
+                        }
+
 //                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
+                        i++;
                 }
 
         } else {

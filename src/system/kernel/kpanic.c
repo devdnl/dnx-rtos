@@ -119,7 +119,7 @@ bool _kernel_panic_detect(bool show_msg)
                         }
 
                         if (kernel_panic_descriptor->name == NULL) {
-                                kernel_panic_descriptor->name = "<defected>";
+                                kernel_panic_descriptor->name = "<unknown>";
                         }
 
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
