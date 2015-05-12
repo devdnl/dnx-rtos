@@ -134,7 +134,7 @@
 
 /* modules */
 #define __ENABLE_RTCM__ _YES_
-#define __ENABLE_LOOP__ _YES_
+#define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
 #define __ENABLE_AFIOM__ _YES_
 #define __ENABLE_CRCM__ _YES_

@@ -43,6 +43,7 @@
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
 #include "kernel/time.h"
+#include "kernel/process.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "portable/cpuctl.h"
@@ -68,6 +69,10 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        tid_t   tid;
+        task_t *task;
+} thread_t;
 
 /*==============================================================================
   Exported objects
@@ -1169,91 +1174,6 @@ static inline int _sys_time_diff(uint time1, uint time2)
 
 //==============================================================================
 /**
- * @brief Function create new task and if enabled add to monitor list
- *
- * Function by default allocate memory for task data (localized in task tag)
- * which is used to cpu load calculation and standard IO and etc.
- *
- * @param[in ] func             task code
- * @param[in ] name             task name
- * @param[in ] stack_depth      stack deep
- * @param[in ] argv             argument pointer (can be NULL)
- * @param[in ] tag              user's tag (can be NULL)
- * @param[out] task             task handle (can be NULL)
- *
- * @return On of errno value.
- */
-//==============================================================================
-static inline int _sys_task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
-{
-        return _task_create(func, name, stack_depth, argv, tag, task);
-}
-
-//==============================================================================
-/**
- * @brief Function delete task
- * Function remove task from monitoring list, and next delete the task from OS
- * list. Function resume the parent task before delete.
- *
- * @param *taskHdl       task handle
- */
-//==============================================================================
-static inline void _sys_task_destroy(task_t *taskhdl)
-{
-        _task_destroy(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function wait for task exit
- */
-//==============================================================================
-static inline void _sys_task_exit()
-{
-        _task_exit();
-}
-
-//==============================================================================
-/**
- * @brief Function suspend selected task
- *
- * @param[in] *taskhdl          task handle
- */
-//==============================================================================
-static inline void _sys_task_suspend(task_t *taskhdl)
-{
-        return _task_suspend(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function resume selected task
- *
- * @param[in] *taskhdl          task handle
- */
-//==============================================================================
-static inline void _sys_task_resume(task_t *taskhdl)
-{
-        return _task_resume(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function resume selected task from ISR
- *
- * @param[in] *taskhdl          task handle
- *
- * @retval true                 if yield required
- * @retval false                if yield not required
- */
-//==============================================================================
-static inline bool _sys_task_resume_from_ISR(task_t *taskhdl)
-{
-        return _task_resume_from_ISR(taskhdl);
-}
-
-//==============================================================================
-/**
  * @brief Function create binary semaphore
  *
  * @param[in]  cnt_max          max count value (1 for binary)
@@ -1618,12 +1538,152 @@ static inline int _sys_get_number_of_tasks()
 
 //==============================================================================
 /**
+ * @brief Function create new task and if enabled add to monitor list
+ *
+ * Function by default allocate memory for task data (localized in task tag)
+ * which is used to cpu load calculation and standard IO and etc.
+ *
+ * @param[in ] func             task code
+ * @param[in ] name             task name
+ * @param[in ] stack_depth      stack deep
+ * @param[in ] argv             argument pointer (can be NULL)
+ * @param[in ] tag              user's tag (can be NULL)
+ * @param[out] task             task handle (can be NULL)
+ *
+ * @return On of errno value.
+ */
+//==============================================================================
+static inline int _sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread)
+{
+        int result = EINVAL;
+
+        if (thread) {
+                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
+                result = _process_thread_create(proc, func, attr, arg, &thread->tid, &thread->task);
+        }
+
+        return result;
+
+} // TODO
+//static inline int _sys_task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
+//{
+//        return _task_create(func, name, stack_depth, argv, tag, task);
+//}
+
+//==============================================================================
+/**
+ * @brief Function delete task
+ * Function remove task from monitoring list, and next delete the task from OS
+ * list. Function resume the parent task before delete.
+ *
+ * @param *taskHdl       task handle
+ */
+//==============================================================================
+static inline int _sys_thread_destroy(thread_t *thread)
+{
+        int result = EINVAL;
+
+        if (thread) {
+                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
+                _thread_t  *thr  = _process_thread_get_container(proc, thread->tid);
+                result           = _process_release_resource(proc,
+                                                             static_cast(res_header_t*, thr),
+                                                             RES_TYPE_THREAD);
+                if (result == ESUCC) {
+                        thread->task = NULL;
+                        thread->tid  = 0;
+                }
+        }
+
+        return result;
+}
+//TODO
+//static inline void _sys_task_destroy(task_t *taskhdl)
+//{
+//        _task_destroy(taskhdl);
+//}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline bool _sys_thread_is_valid(thread_t *thread)
+{
+        return thread && thread->tid && thread->task;
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for task exit
+ */
+//==============================================================================
+//static inline void _sys_task_exit() TODO
+//{
+//        _task_exit();
+//}
+
+//==============================================================================
+/**
+ * @brief Function suspend selected task
+ *
+ * @param[in] *taskhdl          task handle
+ */
+//==============================================================================
+static inline void _sys_thread_suspend(thread_t *thread)
+{
+        if (thread) {
+                _task_suspend(thread->task);
+        }
+}
+//static inline void _sys_task_suspend(task_t *taskhdl) TODO
+//{
+//        return _task_suspend(taskhdl);
+//}
+
+//==============================================================================
+/**
  * @brief Function suspend current task
  */
 //==============================================================================
-static inline void _sys_task_suspend_now()
+static inline void _sys_thread_suspend_now()
 {
         _task_suspend(_THIS_TASK);
+}
+
+//==============================================================================
+/**
+ * @brief Function resume selected task
+ *
+ * @param[in] *taskhdl          task handle
+ */
+//==============================================================================
+static inline void _sys_thread_resume(thread_t *thread)
+{
+        if (thread) {
+                _task_resume(thread->task);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function resume selected task from ISR
+ *
+ * @param[in] *taskhdl          task handle
+ *
+ * @retval true                 if yield required
+ * @retval false                if yield not required
+ */
+//==============================================================================
+static inline bool _sys_thread_resume_from_ISR(thread_t *thread)
+{
+        if (thread) {
+                return _task_resume_from_ISR(thread->task);
+        } else {
+                return false;
+        }
 }
 
 //==============================================================================
@@ -1631,9 +1691,34 @@ static inline void _sys_task_suspend_now()
  * @brief Function yield task
  */
 //==============================================================================
-static inline void _sys_task_yield()
+static inline void _sys_thread_yield()
 {
         _task_yield();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline int _sys_thread_self(thread_t *thread)
+{
+        int result = EINVAL;
+
+        if (thread) {
+                _thread_t *thr = _task_get_tag(_THIS_TASK);
+                if (thr && reinterpret_cast(res_header_t*, thr)->type == RES_TYPE_THREAD) {
+                        thread->task = _process_thread_get_task(thr);
+                        thread->tid  = _process_thread_get_tid(thr);
+                        result       = ESUCC;
+                } else {
+                        result = ESRCH;
+                }
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -1641,33 +1726,9 @@ static inline void _sys_task_yield()
  * @brief Function yield task from ISR
  */
 //==============================================================================
-static inline void _sys_task_yield_from_ISR()
+static inline void _sys_thread_yield_from_ISR()
 {
         _task_yield_from_ISR();
-}
-
-//==============================================================================
-/**
- * @brief Function return name of current task
- *
- * @return name of current task
- */
-//==============================================================================
-static inline char *_sys_task_get_name()
-{
-        return _task_get_name(_THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function return current task handle object address
- *
- * @return current task handle
- */
-//==============================================================================
-static inline task_t *_sys_task_get_handle()
-{
-        return _task_get_handle();
 }
 
 //==============================================================================
@@ -1677,7 +1738,7 @@ static inline task_t *_sys_task_get_handle()
  * @param[in]  priority         priority
  */
 //==============================================================================
-static inline void _sys_task_set_priority(const int priority)
+static inline void _sys_thread_set_priority(const int priority)
 {
         _task_set_priority(_THIS_TASK, priority);
 }
@@ -1689,7 +1750,7 @@ static inline void _sys_task_set_priority(const int priority)
  * @return current task priority
  */
 //==============================================================================
-static inline int _sys_task_get_priority()
+static inline int _sys_thread_get_priority()
 {
         return _task_get_priority(_THIS_TASK);
 }
@@ -1701,7 +1762,7 @@ static inline int _sys_task_get_priority()
  * @return free stack level
  */
 //==============================================================================
-static inline int _sys_task_get_free_stack()
+static inline int _sys_thread_get_free_stack()
 {
         return _task_get_free_stack(_THIS_TASK);
 }

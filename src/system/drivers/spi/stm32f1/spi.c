@@ -1033,7 +1033,7 @@ static bool handle_DMA_IRQ(u8_t major)
 void SPI1_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1047,7 +1047,7 @@ void SPI1_IRQHandler(void)
 void SPI2_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1061,7 +1061,7 @@ void SPI2_IRQHandler(void)
 void SPI3_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1075,7 +1075,7 @@ void SPI3_IRQHandler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1089,7 +1089,7 @@ void DMA1_Channel2_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1103,7 +1103,7 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA2_Channel1_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif

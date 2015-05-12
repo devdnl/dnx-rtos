@@ -63,8 +63,8 @@ struct _process {
         const char      *cwd;                   /* current working path               */
         const pdata_t   *pdata;                 /* program data                       */
         char            **argv;                 /* program arguments                  */
-        int              argc;                  /* number of arguments                */
-        int              status;                /* program status (return value)      */
+        u16_t            argc;                  /* number of arguments                */
+        u16_t            status;                /* program status (return value)      */
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
@@ -87,7 +87,7 @@ static void thread_code(void *thrfunc);
 static int  process_thread_destroy(_thread_t *thread);
 static void process_destroy_all_resources(_process_t *proc);
 static bool resource_destroy(res_header_t *resource);
-static int  argtab_create(const char *str, int *argc, char **argv[]);
+static int  argtab_create(const char *str, u16_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
 static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
@@ -576,11 +576,12 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _process_thread_create(_process_t    *proc,
-                                       thread_func_t  func,
-                                       thread_attr_t *attr,
-                                       void          *arg,
-                                       tid_t         *tid)
+KERNELSPACE int _process_thread_create(_process_t          *proc,
+                                       thread_func_t        func,
+                                       const thread_attr_t *attr,
+                                       void                *arg,
+                                       tid_t               *tid,
+                                       task_t              **task)
 {
         int result = EINVAL;
 
@@ -611,6 +612,10 @@ KERNELSPACE int _process_thread_create(_process_t    *proc,
 
                         if (tid) {
                                 *tid = thread->tid;
+                        }
+
+                        if (task) {
+                                *task = thread->task;
                         }
 
                         finish:
@@ -648,6 +653,30 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
         }
 
         return thread;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread) // TODO
+{
+        return thread ? thread->task : NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread) // TODO
+{
+        return thread ? thread->tid : 0;
 }
 
 //==============================================================================
@@ -1000,7 +1029,7 @@ static bool resource_destroy(res_header_t *resource)
  * @return One of errno value.
  */
 //==============================================================================
-static int argtab_create(const char *str, int *argc, char **argv[])
+static int argtab_create(const char *str, u16_t *argc, char **argv[])
 {
         int result = EINVAL;
 

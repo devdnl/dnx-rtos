@@ -1194,7 +1194,7 @@ static void IRQ_EV_handler(u8_t major)
                 }
         }
 
-        _sys_task_yield_from_ISR();
+        _sys_thread_yield_from_ISR();
 }
 
 //==============================================================================
@@ -1225,7 +1225,7 @@ static void IRQ_ER_handler(u8_t major)
 
         _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
-        _sys_task_yield_from_ISR();
+        _sys_thread_yield_from_ISR();
 }
 
 //==============================================================================
@@ -1245,7 +1245,7 @@ static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
 
         _sys_semaphore_signal_from_ISR(I2C->periph[major].event, NULL);
         clear_DMA_IRQ_flags(major);
-        _sys_task_yield_from_ISR();
+        _sys_thread_yield_from_ISR();
 }
 #endif
 

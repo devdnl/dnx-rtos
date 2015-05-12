@@ -19,7 +19,7 @@ __ENABLE_EXT2FS__=_NO_
 
 # modules enable flags
 __ENABLE_RTCM__=_YES_
-__ENABLE_LOOP__=_YES_
+__ENABLE_LOOP__=_NO_
 __ENABLE_GPIO__=_YES_
 __ENABLE_AFIOM__=_YES_
 __ENABLE_CRCM__=_YES_

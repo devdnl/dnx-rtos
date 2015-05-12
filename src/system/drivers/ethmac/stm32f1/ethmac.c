@@ -785,7 +785,7 @@ void ETH_IRQHandler(void)
                 ETH_DMAClearITPendingBit(ETH_DMA_IT_NIS | ETH_DMA_IT_R);
 
                 if (woken) {
-                        _sys_task_yield_from_ISR();
+                        _sys_thread_yield_from_ISR();
                 }
         }
 }

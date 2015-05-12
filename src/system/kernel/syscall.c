@@ -1181,7 +1181,7 @@ static void syscall_threadcreate(syscallrq_t *rq)
         GETARG(void *, arg);
 
         tid_t tid = 0;
-        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid));
+        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid, NULL));
         SETRETURN(tid_t, tid);
 }
 

@@ -32,6 +32,8 @@
 #include "noarch/loop_def.h"
 #include "noarch/loop_ioctl.h"
 
+// TODO loop: module to reimplementation because of system mechanisms change
+
 /*==============================================================================
   Local macros
 ==============================================================================*/

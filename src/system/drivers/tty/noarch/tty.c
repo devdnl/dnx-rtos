@@ -64,10 +64,10 @@ typedef struct {
 struct module {
         FILE           *infile;
         FILE           *outfile;
-        task_t         *service_in;
-        task_t         *service_out;
         queue_t        *queue_cmd;
         tty_t          *tty[_TTY_NUMBER];
+        thread_t        service_out;
+        thread_t        service_in;
         int             current_tty;
 };
 
@@ -88,13 +88,16 @@ static void     switch_terminal         (int term_no);
 MODULE_NAME(TTY);
 
 static struct module *tty_module;
-static const char    *service_in_name           = "tty-in";
-static const char    *service_out_name          = "tty-out";
-static const uint     service_in_stack_depth    = 96; // FIXME stack size adjustment needed (tty)
-static const uint     service_out_stack_depth   = 96; // FIXME stack size adjustment needed (tty)
+//static const char    *service_in_name           = "tty-in"; TODO
+//static const char    *service_out_name          = "tty-out"; TODO
+//static const uint     service_in_stack_depth    = 96; // FIXME stack size adjustment needed (tty)
+//static const uint     service_out_stack_depth   = 96; // FIXME stack size adjustment needed (tty)
 static const int      service_in_priority       = PRIORITY_NORMAL;
 static const int      service_out_priority      = PRIORITY_NORMAL;
 static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
+
+static const thread_attr_t service_in_attr  = {.stack_depth = 96}; // TODO stack size
+static const thread_attr_t service_out_attr = {.stack_depth = 96}; // TODO stack size
 
 /*==============================================================================
   Function definitions
@@ -135,21 +138,11 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
-                result = _sys_task_create(service_in,
-                                          service_in_name,
-                                          service_in_stack_depth,
-                                          NULL,
-                                          NULL,
-                                          &tty_module->service_in);
+                result = _sys_thread_create(service_in, &service_in_attr, NULL, &tty_module->service_in);
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
-                result = _sys_task_create(service_out,
-                                          service_out_name,
-                                          service_out_stack_depth,
-                                          NULL,
-                                          NULL,
-                                          &tty_module->service_out);
+                result = _sys_thread_create(service_out, &service_out_attr, NULL, &tty_module->service_out);
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
@@ -163,11 +156,11 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         if (tty_module->outfile)
                                 _sys_fclose(tty_module->outfile);
 
-                        if (tty_module->service_in)
-                                _sys_task_destroy(tty_module->service_in);
+                        if (_sys_thread_is_valid(&tty_module->service_in))
+                                _sys_thread_destroy(&tty_module->service_in);
 
-                        if (tty_module->service_out)
-                                _sys_task_destroy(tty_module->service_out);
+                        if (_sys_thread_is_valid(&tty_module->service_out))
+                                _sys_thread_destroy(&tty_module->service_out);
 
                         if (tty_module->queue_cmd)
                                 _sys_queue_destroy(tty_module->queue_cmd);
@@ -265,8 +258,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 }
 
                 if (release_TTY) {
-                        _sys_task_destroy(tty_module->service_in);
-                        _sys_task_destroy(tty_module->service_out);
+                        _sys_thread_destroy(&tty_module->service_in);
+                        _sys_thread_destroy(&tty_module->service_out);
                         _sys_fclose(tty_module->infile);
                         _sys_fclose(tty_module->outfile);
                         _sys_queue_destroy(tty_module->queue_cmd);
@@ -550,14 +543,14 @@ static void service_in(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _sys_task_set_priority(service_in_priority);
+        _sys_thread_set_priority(service_in_priority);
 
         for (;;) {
                 char c = '\0'; size_t rdcnt;
                 if (_sys_fread(&c, 1, &rdcnt, tty_module->infile) == ESUCC) {
-                        _sys_task_set_priority(PRIORITY_HIGHEST);
+                        _sys_thread_set_priority(PRIORITY_HIGHEST);
                         send_cmd(CMD_INPUT, c);
-                        _sys_task_set_priority(service_in_priority);
+                        _sys_thread_set_priority(service_in_priority);
                 }
         }
 }
@@ -571,7 +564,7 @@ static void service_out(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _sys_task_set_priority(service_out_priority);
+        _sys_thread_set_priority(service_out_priority);
 
         vt100_init();
 

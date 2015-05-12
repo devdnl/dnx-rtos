@@ -168,8 +168,10 @@ extern int         _process_get_pid                     (_process_t*, pid_t*);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
-extern int         _process_thread_create               (_process_t*, thread_func_t, thread_attr_t*, void*, tid_t*);
+extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, void*, tid_t*, task_t**);
 extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
+extern task_t     *_process_thread_get_task             (_thread_t*);
+extern tid_t       _process_thread_get_tid              (_thread_t*);
 
 extern void        _task_switched_in                    (void);
 extern void        _task_switched_out                   (void);

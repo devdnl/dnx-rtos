@@ -605,7 +605,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
 void EXTI0_IRQHandler(void)
 {
         if (IRQ_handler(0)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -617,7 +617,7 @@ void EXTI0_IRQHandler(void)
 void EXTI1_IRQHandler(void)
 {
         if (IRQ_handler(1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -629,7 +629,7 @@ void EXTI1_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
         if (IRQ_handler(2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -641,7 +641,7 @@ void EXTI2_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
         if (IRQ_handler(3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -653,7 +653,7 @@ void EXTI3_IRQHandler(void)
 void EXTI4_IRQHandler(void)
 {
         if (IRQ_handler(4)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -671,7 +671,7 @@ void EXTI9_5_IRQHandler(void)
         }
 
         if (woken) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -689,7 +689,7 @@ void EXTI15_10_IRQHandler(void)
         }
 
         if (woken) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
