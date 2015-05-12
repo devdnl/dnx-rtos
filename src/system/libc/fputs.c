@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /*==============================================================================
   Local macros
@@ -75,10 +76,18 @@ static int f_puts(const char *s, FILE *file, bool puts)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (file) {
-                int n = fwrite(s, sizeof(char), strlen(s), file);
+                int n = EOF;
 
                 if (puts) {
-                        n += fwrite("\n", sizeof(char), 1, file);
+                        char *buf = malloc(strlen(s) + 2);
+                        if (buf) {
+                                strcpy(buf, s);
+                                strcat(buf, "\n");
+                                n = fwrite(buf, sizeof(char), strlen(buf), file);
+                                free(buf);
+                        }
+                } else {
+                        n = fwrite(s, sizeof(char), strlen(s), file);
                 }
 
                 if (n != 0) {
@@ -86,9 +95,7 @@ static int f_puts(const char *s, FILE *file, bool puts)
                 }
         }
 #else
-        UNUSED_ARG1(s);
-        UNUSED_ARG1(file);
-        UNUSED_ARG1(puts);
+        UNUSED_ARG3(s, file, puts);
 #endif
         return EOF;
 }

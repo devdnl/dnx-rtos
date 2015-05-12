@@ -264,7 +264,7 @@ void _task_destroy(task_t *taskHdl)
 void _task_exit(void)
 {
         /* request to delete task */
-        _task_set_priority(_THIS_TASK, PRIORITY_LOWEST);
+        _task_set_priority(_THIS_TASK, PRIORITY_NORMAL);
         _task_destroy(_THIS_TASK);
 
         /* wait for exit */

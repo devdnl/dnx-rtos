@@ -65,14 +65,28 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+static void thread2(void *arg)
+{
+        puts("I'm a thread in thread!");
+}
 
 static void thread(void *arg)
 {
-//        puts("This text is from thread function!");
-//        printf("Thread arg: %p\n", arg);
-//        sleep(2);
-//        puts("Thread exit.");
-        sleep(20);
+        puts("This text is from thread function!");
+        printf("Thread arg: %p\n", arg);
+
+        thread_create(thread2, NULL, NULL);
+
+        int i = 0;
+        while (i++ < 10) {
+                for (int i = 0; i < 1000000; i++) {
+                        __asm("nop");
+                }
+        }
+
+        sleep(3);
+
+        puts("Thread exit.");
 }
 
 //==============================================================================
@@ -136,6 +150,9 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                         printf("=== Sec: %d\n", i++);
 
+                        int t = _kernel_get_number_of_tasks();
+                        printf("Number of tasks %d\n", t);
+
 //                        disable_CPU_load_measurement();
 //                        process_stat_t stat;
 //                        if (process_stat(getpid(), &stat) == 0) {
@@ -193,18 +210,15 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                                 printf("Killed zombie: %d : %d\n", err, status);
                         }
 
-                        if (i == 5) {
-                                tid_t tid = thread_create(thread, NULL, (void*)0xAABBCCDD);
-                                if (tid) {
-                                        printf("Thread created: %d\n", tid);
-                                } else {
-                                        perror(NULL);
-                                }
+                        if (i == 50 || i == 100 || i == 200) {
+                                tid_t tid1 = thread_create(thread, NULL, (void*)0xAABBCCDD);
+                                tid_t tid2 = thread_create(thread, NULL, (void*)0xDEADBEEF);
+
+                                printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
                         }
 
 //                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
-                        i++;
                 }
 
         } else {

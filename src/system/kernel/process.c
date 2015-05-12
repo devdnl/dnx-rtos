@@ -84,13 +84,14 @@ struct _thread {
 ==============================================================================*/
 static void process_code(void *mainfn);
 static void thread_code(void *thrfunc);
+static int  process_thread_destroy(_thread_t *thread);
 static void process_destroy_all_resources(_process_t *proc);
 static bool resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, int *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
 static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
-static int  apply_process_attributes(_process_t *proc, const process_attr_t *attr);
+static int  process_apply_attributes(_process_t *proc, const process_attr_t *attr);
 static void process_get_stat(_process_t *proc, process_stat_t *stat);
 
 /*==============================================================================
@@ -172,7 +173,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                 goto finish;
 
                         // set configured program settings
-                        result = apply_process_attributes(proc, attr);
+                        result = process_apply_attributes(proc, attr);
                         if (result != ESUCC)
                                 goto finish;
 
@@ -570,46 +571,11 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
- * @brief  Function enables CPU load measurement
- *
- * @param  None
- *
- * @return None
- */
-//==============================================================================
-USERSPACE void _CLM_enable(void)
-{
-        _kernel_scheduler_lock();
-        {
-                _CPU_total_time     = 0;
-                CPU_total_time_last = 0;
-                CPU_load_enabled    = true;
-        }
-        _kernel_scheduler_unlock();
-}
-
-//==============================================================================
-/**
- * @brief  Function disables CPU load measurement
- *
- * @param  None
- *
- * @return None
- */
-//==============================================================================
-USERSPACE void _CLM_disable(void)
-{
-        CPU_load_enabled = false;
-}
-
-//==============================================================================
-/**
  * @brief  ?
  * @param  ?
  * @return ?
  */
 //==============================================================================
-#include <mm/heap.h>
 KERNELSPACE int _process_thread_create(_process_t    *proc,
                                        thread_func_t  func,
                                        thread_attr_t *attr,
@@ -626,25 +592,14 @@ KERNELSPACE int _process_thread_create(_process_t    *proc,
                         thread->process     = proc;
                         thread->arg         = arg;
 
-//                        _kernel_scheduler_lock();
+                        _kernel_scheduler_lock();
 
-                        _critical_section_begin();
-
-//                        _kzalloc(_MM_KRN, 3000, static_cast(void*, &thread->task));
-                        thread->task = _heap_alloc(8000, NULL);
-                        if (thread->task) {
-                                memset(thread->task, 0x11, 8000);
-                        }
-
-//                        _kzalloc(_MM_KRN, 3000, static_cast(void*, &thread->task));
-//                        thread->task = _heap_alloc(4000, NULL);
-//                        memset(thread->task, 0x22, 4000);
-//                        result = _task_create(thread_code,
-//                                              "thread", // FIXME
-//                                              (attr ? attr->stack_depth : STACK_DEPTH_HUGE),
-//                                              func,
-//                                              thread,
-//                                              &thread->task);
+                        result = _task_create(thread_code,
+                                              "thread", // FIXME
+                                              (attr ? attr->stack_depth : STACK_DEPTH_HUGE),
+                                              func,
+                                              thread,
+                                              &thread->task);
                         if (result != ESUCC)
                                 goto finish;
 
@@ -660,38 +615,11 @@ KERNELSPACE int _process_thread_create(_process_t    *proc,
 
                         finish:
                         if (result != ESUCC) {
-                                _process_thread_destroy(thread);
+                                process_thread_destroy(thread);
                         }
 
-                        _critical_section_end();
-
-//                        _kernel_scheduler_unlock();
+                        _kernel_scheduler_unlock();
                 }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-KERNELSPACE int _process_thread_destroy(_thread_t *thread)
-{
-        int result = EINVAL;
-
-        if (thread) {
-                if (thread->task) {
-                        _task_suspend(thread->task);
-                        _task_destroy(thread->task);
-                }
-
-                _kfree(_MM_KRN, static_cast(void*, &thread));
-
-                result = ESUCC;
         }
 
         return result;
@@ -724,72 +652,36 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
 
 //==============================================================================
 /**
- * @brief  Function copy task context to standard variables (stdin, stdout, stderr,
- *         global, errno)
+ * @brief  Function enables CPU load measurement
  *
  * @param  None
  *
  * @return None
  */
 //==============================================================================
-KERNELSPACE void _task_switched_in(void)
+USERSPACE void _CLM_enable(void)
 {
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
-        if (CPU_load_enabled) {
-                CPU_total_time_last = _CPU_total_time;
-                _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
+        _kernel_scheduler_lock();
+        {
+                _CPU_total_time     = 0;
+                CPU_total_time_last = 0;
+                CPU_load_enabled    = true;
         }
-#endif
-
-        active_process = _process_get_container_by_task(_THIS_TASK, NULL);
-
-        if (active_process) {
-                stdin  = active_process->f_stdin;
-                stdout = active_process->f_stdout;
-                stderr = active_process->f_stderr;
-                global = active_process->globals;
-                _errno = active_process->errnov;
-        } else {
-                stdin  = NULL;
-                stdout = NULL;
-                stderr = NULL;
-                global = NULL;
-                _errno = 0;
-        }
+        _kernel_scheduler_unlock();
 }
 
 //==============================================================================
 /**
- * @brief  Function copy standard variables (stdin, stdout, stderr, global, errno)
- *         to task context
+ * @brief  Function disables CPU load measurement
  *
  * @param  None
  *
  * @return None
  */
 //==============================================================================
-KERNELSPACE void _task_switched_out(void)
+USERSPACE void _CLM_disable(void)
 {
-        if (active_process) {
-                active_process->f_stdin  = stdin;
-                active_process->f_stdout = stdout;
-                active_process->f_stderr = stderr;
-                active_process->globals  = global;
-                active_process->errnov   = _errno;
-
-                #if (CONFIG_MONITOR_CPU_LOAD > 0)
-                if (CPU_load_enabled) {
-                        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
-                        active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
-                }
-                #endif
-        } else {
-                #if (CONFIG_MONITOR_CPU_LOAD > 0)
-                        if (CPU_load_enabled) {
-                                _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
-                        }
-                #endif
-        }
+        CPU_load_enabled = false;
 }
 
 //==============================================================================
@@ -836,6 +728,31 @@ USERSPACE static void thread_code(void *thrfunc)
         syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
 
         _task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int process_thread_destroy(_thread_t *thread)
+{
+        int result = EINVAL;
+
+        if (thread) {
+                if (thread->task) {
+                        _task_suspend(thread->task);
+                        _task_destroy(thread->task);
+                }
+
+                _kfree(_MM_KRN, static_cast(void*, &thread));
+
+                result = ESUCC;
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -925,6 +842,106 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 
 //==============================================================================
 /**
+ * @brief  Function apply process attributes
+ *
+ * @param  proc     process
+ * @param  atrr     attributes
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int process_apply_attributes(_process_t *proc, const process_attr_t *attr)
+{
+        int result = ESUCC;
+
+        if (attr) {
+                /*
+                 * Apply stdin settings
+                 * - if f_stdin is set then function use this resource as reference
+                 * - if f_stdin is NULL and p_stdin is NULL then function set stdin as NULL
+                 * - if f_stdin is NULL and p_stdin is valid then function open new file and use as stdin
+                 */
+                if (attr->f_stdin) {
+                        proc->f_stdin = attr->f_stdin;
+
+                } else if (attr->p_stdin) {
+                        result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
+                        if (result == ESUCC) {
+                                _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdin));
+                        } else {
+                                goto finish;
+                        }
+                }
+
+                /*
+                 * Apply stdout settings
+                 * - if f_stdout is set then function use this resource as reference
+                 * - if f_stdout is NULL and p_stdout is NULL then function set stdout as NULL
+                 * - if f_stdout is NULL and p_stdout is valid then function open new file and use as stdout
+                 * - if p_stdout is the same as p_stdin then function use stdin as reference of stdout
+                 */
+                if (attr->f_stdout) {
+                        proc->f_stdout = attr->f_stdout;
+
+                } else if (attr->p_stdout) {
+                        if (strcmp(attr->p_stdout, attr->p_stdin) == 0) {
+                                proc->f_stdout = proc->f_stdin;
+
+                        } else {
+                                result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
+                                if (result == ESUCC) {
+                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdout));
+                                } else {
+                                        goto finish;
+                                }
+                        }
+                }
+
+                /*
+                 * Apply stderr settings
+                 * - if f_stderr is set then function use this resource as reference
+                 * - if f_stderr is NULL and p_stderr is NULL then function set stderr as NULL
+                 * - if f_stderr is NULL and p_stderr is valid then function open new file and use as stderr
+                 * - if p_stderr is the same as p_stdin then function use stdin as reference of stderr
+                 * - if p_stderr is the same as p_stdout then function use stdout as reference of stderr
+                 */
+                if (attr->f_stderr) {
+                        proc->f_stderr = attr->f_stderr;
+
+                } else if (attr->p_stderr) {
+                        if (strcmp(attr->p_stderr, attr->p_stdin) == 0) {
+                                proc->f_stderr = proc->f_stdin;
+
+                        } else if (strcmp(attr->p_stderr, attr->p_stdout) == 0) {
+                                proc->f_stderr = proc->f_stdout;
+
+                        } else {
+                                result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
+                                if (result == ESUCC) {
+                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stderr));
+                                } else {
+                                        goto finish;
+                                }
+                        }
+                }
+
+                /*
+                 * Apply Current Working Directory path
+                 */
+                proc->cwd = attr->cwd;
+
+                /*
+                 * Apply no-parent attribute
+                 */
+                proc->no_parent = attr->no_parent;
+        }
+
+        finish:
+        return result;
+}
+
+//==============================================================================
+/**
  * @brief  Function destroy (release) selected resource
  *
  * @param  resource     resource to release
@@ -962,7 +979,7 @@ static bool resource_destroy(res_header_t *resource)
                 break;
 
         case RES_TYPE_THREAD:
-                _process_thread_destroy(static_cast(_thread_t*, res2free));
+                process_thread_destroy(static_cast(_thread_t*, res2free));
                 break;
 
         default:
@@ -1157,102 +1174,72 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 
 //==============================================================================
 /**
- * @brief  Function apply process attributes
+ * @brief  Function copy task context to standard variables (stdin, stdout, stderr,
+ *         global, errno)
  *
- * @param  proc     process
- * @param  atrr     attributes
+ * @param  None
  *
- * @return One of errno value.
+ * @return None
  */
 //==============================================================================
-static int apply_process_attributes(_process_t *proc, const process_attr_t *attr)
+KERNELSPACE void _task_switched_in(void)
 {
-        int result = ESUCC;
-
-        if (attr) {
-                /*
-                 * Apply stdin settings
-                 * - if f_stdin is set then function use this resource as reference
-                 * - if f_stdin is NULL and p_stdin is NULL then function set stdin as NULL
-                 * - if f_stdin is NULL and p_stdin is valid then function open new file and use as stdin
-                 */
-                if (attr->f_stdin) {
-                        proc->f_stdin = attr->f_stdin;
-
-                } else if (attr->p_stdin) {
-                        result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
-                        if (result == ESUCC) {
-                                _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdin));
-                        } else {
-                                goto finish;
-                        }
-                }
-
-                /*
-                 * Apply stdout settings
-                 * - if f_stdout is set then function use this resource as reference
-                 * - if f_stdout is NULL and p_stdout is NULL then function set stdout as NULL
-                 * - if f_stdout is NULL and p_stdout is valid then function open new file and use as stdout
-                 * - if p_stdout is the same as p_stdin then function use stdin as reference of stdout
-                 */
-                if (attr->f_stdout) {
-                        proc->f_stdout = attr->f_stdout;
-
-                } else if (attr->p_stdout) {
-                        if (strcmp(attr->p_stdout, attr->p_stdin) == 0) {
-                                proc->f_stdout = proc->f_stdin;
-
-                        } else {
-                                result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
-                                if (result == ESUCC) {
-                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdout));
-                                } else {
-                                        goto finish;
-                                }
-                        }
-                }
-
-                /*
-                 * Apply stderr settings
-                 * - if f_stderr is set then function use this resource as reference
-                 * - if f_stderr is NULL and p_stderr is NULL then function set stderr as NULL
-                 * - if f_stderr is NULL and p_stderr is valid then function open new file and use as stderr
-                 * - if p_stderr is the same as p_stdin then function use stdin as reference of stderr
-                 * - if p_stderr is the same as p_stdout then function use stdout as reference of stderr
-                 */
-                if (attr->f_stderr) {
-                        proc->f_stderr = attr->f_stderr;
-
-                } else if (attr->p_stderr) {
-                        if (strcmp(attr->p_stderr, attr->p_stdin) == 0) {
-                                proc->f_stderr = proc->f_stdin;
-
-                        } else if (strcmp(attr->p_stderr, attr->p_stdout) == 0) {
-                                proc->f_stderr = proc->f_stdout;
-
-                        } else {
-                                result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
-                                if (result == ESUCC) {
-                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stderr));
-                                } else {
-                                        goto finish;
-                                }
-                        }
-                }
-
-                /*
-                 * Apply Current Working Directory path
-                 */
-                proc->cwd = attr->cwd;
-
-                /*
-                 * Apply no-parent attribute
-                 */
-                proc->no_parent = attr->no_parent;
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+        if (CPU_load_enabled) {
+                CPU_total_time_last = _CPU_total_time;
+                _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
         }
+#endif
 
-        finish:
-        return result;
+        active_process = _process_get_container_by_task(_THIS_TASK, NULL);
+
+        if (active_process) {
+                stdin  = active_process->f_stdin;
+                stdout = active_process->f_stdout;
+                stderr = active_process->f_stderr;
+                global = active_process->globals;
+                _errno = active_process->errnov;
+        } else {
+                stdin  = NULL;
+                stdout = NULL;
+                stderr = NULL;
+                global = NULL;
+                _errno = 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function copy standard variables (stdin, stdout, stderr, global, errno)
+ *         to task context
+ *
+ * @param  None
+ *
+ * @return None
+ */
+//==============================================================================
+KERNELSPACE void _task_switched_out(void)
+{
+        if (active_process) {
+                active_process->f_stdin  = stdin;
+                active_process->f_stdout = stdout;
+                active_process->f_stderr = stderr;
+                active_process->globals  = global;
+                active_process->errnov   = _errno;
+
+                #if (CONFIG_MONITOR_CPU_LOAD > 0)
+                if (CPU_load_enabled) {
+                        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+                        active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
+                }
+                #endif
+        } else {
+                #if (CONFIG_MONITOR_CPU_LOAD > 0)
+                        if (CPU_load_enabled) {
+                                _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+                        }
+                #endif
+        }
 }
 
 /*==============================================================================

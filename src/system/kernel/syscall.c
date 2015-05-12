@@ -1197,7 +1197,9 @@ static void syscall_threadcreate(syscallrq_t *rq)
 static void syscall_threaddestroy(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
-        SETERRNO(_process_thread_destroy(GETTHREAD(*tid)));
+        SETERRNO(_process_release_resource(GETPROCESS(),
+                                           static_cast(res_header_t*, GETTHREAD(*tid)),
+                                           RES_TYPE_THREAD));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
