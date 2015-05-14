@@ -555,8 +555,17 @@ static inline int thread_cancel(tid_t tid)
 //==============================================================================
 static inline int thread_join(tid_t tid)
 {
-        int r = -1;
-        syscall(SYSCALL_THREADJOIN, &r, &tid);
+        int r      = -1;
+        sem_t *sem = NULL;
+
+        syscall(SYSCALL_THREADJOIN, &r, &tid, &sem);
+
+        if (sem && r == 0) {
+                _builtinfunc(semaphore_wait, sem, MAX_DELAY_MS);
+
+                syscall(SYSCALL_THREADJOIN, &r, &tid, NULL);
+        }
+
         return r;
 }
 

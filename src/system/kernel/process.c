@@ -76,6 +76,7 @@ struct _thread {
         task_t          *task;                  /* pointer to task handle             */
         _process_t      *process;               /* process ID (thread owner)          */
         void            *arg;                   /* thread function argument           */
+        sem_t           *exit_sem;              /* thread exit semaphore (join func.) */
         tid_t            tid;                   /* thread ID                          */
 };
 
@@ -613,7 +614,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 {
         int result = EINVAL;
 
-        if (proc && func) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS && func) {
                 _thread_t *thread;
                 result = _kzalloc(_MM_KRN, sizeof(_thread_t), static_cast(void*, &thread));
                 if (result == ESUCC) {
@@ -621,7 +622,11 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         thread->process     = proc;
                         thread->arg         = arg;
 
-                        _kernel_scheduler_lock();
+                        _semaphore_create(1, 0, &thread->exit_sem);
+                        if (result != ESUCC)
+                                goto finish;
+
+//                        _kernel_scheduler_lock(); // FIXME is it necessary?
 
                         result = _task_create(thread_code,
                                               "thread", // FIXME
@@ -655,7 +660,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                                 process_thread_destroy(thread);
                         }
 
-                        _kernel_scheduler_unlock();
+//                        _kernel_scheduler_unlock(); // FIXME is it necessary?
                 }
         }
 
@@ -673,7 +678,7 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
 {
         _thread_t *thread = NULL;
 
-        if (proc && tid) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS && tid) {
                 foreach_resource(res, proc->res_list) {
                         if (res->type == RES_TYPE_THREAD) {
                                 if (reinterpret_cast(_thread_t *, res)->tid == tid) {
@@ -696,7 +701,7 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
 //==============================================================================
 KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
 {
-        return thread ? thread->task : NULL;
+        return thread && thread->header.type == RES_TYPE_THREAD ? thread->task : NULL;
 }
 
 //==============================================================================
@@ -708,7 +713,7 @@ KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
 //==============================================================================
 KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
 {
-        return thread ? thread->tid : 0;
+        return thread && thread->header.type == RES_TYPE_THREAD ? thread->tid : 0;
 }
 
 //==============================================================================
@@ -718,18 +723,57 @@ KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
  * @return ?
  */
 //==============================================================================
-KERNELSPACE int _process_thread_join(_process_t *proc, tid_t tid) // TODO
+KERNELSPACE int _process_thread_exit(_thread_t *thread)
 {
         int result = EINVAL;
 
-        if (proc && tid) {
+        if (thread && thread->header.type == RES_TYPE_THREAD) {
+                if (thread->task) {
+                        _task_suspend(thread->task);
+                        _task_destroy(thread->task);
+                        thread->task = NULL;
+                }
+
+                if (thread->exit_sem) {
+                        result = _semaphore_signal(thread->exit_sem);
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return exit semaphore that is used to synchronize parent
+ *         thread (process) with child process. If sem pointer is set then
+ *         exit semaphore is returned.
+ *         If sem pointer is set to NULL then thread is removed from resource
+ *         list.
+ *
+ * @param  proc         process object
+ * @param  tid          thread ID
+ * @param  sem          semaphore pointer
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_thread_join(_process_t *proc, tid_t tid, sem_t **sem)
+{
+        int result = EINVAL;
+
+        if (proc && proc->header.type == RES_TYPE_PROCESS && tid) {
                 _kernel_scheduler_lock();
 
                 foreach_resource(res, proc->res_list) {
                         if (  res->type == RES_TYPE_THREAD
                            && reinterpret_cast(_thread_t*, res)->tid == tid) {
 
-
+                                if (sem) {
+                                        *sem   = reinterpret_cast(_thread_t*, res)->exit_sem;
+                                        result = ESUCC;
+                                } else {
+                                        result = _process_release_resource(proc, res, RES_TYPE_THREAD);
+                                }
                         }
                 }
 
@@ -814,7 +858,7 @@ USERSPACE static void thread_code(void *thrfunc)
 
         func(thread->arg);
 
-        syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
+        syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
 
         _task_exit();
 }
@@ -834,11 +878,15 @@ static int process_thread_destroy(_thread_t *thread)
                 if (thread->task) {
                         _task_suspend(thread->task);
                         _task_destroy(thread->task);
+                        thread->task = NULL;
                 }
 
-                _kfree(_MM_KRN, static_cast(void*, &thread));
+                if (thread->exit_sem) {
+                        _semaphore_destroy(thread->exit_sem);
+                        thread->exit_sem = NULL;
+                }
 
-                result = ESUCC;
+                result = _kfree(_MM_KRN, static_cast(void*, &thread));
         }
 
         return result;

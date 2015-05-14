@@ -125,6 +125,7 @@ static void syscall_processgetprio(syscallrq_t *rq);
 static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threaddestroy(syscallrq_t *rq);
+static void syscall_threadexit(syscallrq_t *rq);
 static void syscall_threadjoin(syscallrq_t *rq);
 static void syscall_semaphorecreate(syscallrq_t *rq);
 static void syscall_semaphoredestroy(syscallrq_t *rq);
@@ -193,6 +194,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_GETCWD           ] = syscall_getcwd,
         [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
         [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
+        [SYSCALL_THREADEXIT       ] = syscall_threadexit,
         [SYSCALL_THREADJOIN       ] = syscall_threadjoin,
         [SYSCALL_SEMAPHORECREATE  ] = syscall_semaphorecreate,
         [SYSCALL_SEMAPHOREDESTROY ] = syscall_semaphoredestroy,
@@ -1257,6 +1259,21 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
+ * @brief  This syscall destroy thread
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_threadexit(syscallrq_t *rq)
+{
+        GETARG(tid_t *, tid);
+        SETERRNO(_process_thread_exit(GETTHREAD(*tid)));
+}
+
+//==============================================================================
+/**
  * @brief  This syscall join thread with parent (parent wait until thread finish)
  *
  * @param  rq                   syscall request
@@ -1267,7 +1284,8 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 static void syscall_threadjoin(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
-        SETERRNO(_process_thread_join(GETPROCESS(),*tid));
+        GETARG(sem_t **, sem);
+        SETERRNO(_process_thread_join(GETPROCESS(), *tid, sem));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

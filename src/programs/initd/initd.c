@@ -67,25 +67,20 @@ GLOBAL_VARIABLES_SECTION {
 ==============================================================================*/
 static void thread2(void *arg)
 {
-        sem_t *sem = arg;
+        UNUSED_ARG1(arg);
 
         puts("I'm a thread in thread!");
-
-        semaphore_wait(sem, MAX_DELAY_MS);
-
         puts("Thread exit;");
 }
 
 static void thread(void *arg)
 {
-        sem_t *sem = arg;
-
         puts("This text is from thread function!");
-        printf("Thread arg: %p\n", arg);
+        printf("Thread arg: %d\n", (int)arg);
 
-        semaphore_wait(sem, MAX_DELAY_MS);
 
-        thread_create(thread2, NULL, NULL);
+        tid_t tid = thread_create(thread2, NULL, NULL);
+        thread_join(tid);
 
         int i = 0;
         while (i++ < 10) {
@@ -227,16 +222,16 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                         if (i == 5 || i == 100 || i == 200) {
 
-                                sem_t *sem = semaphore_new(1, 0);
-
-                                tid_t tid1 = thread_create(thread, NULL, sem);
-                                tid_t tid2 = thread_create(thread, NULL, sem);
-
-                                sleep(2);
-
-                                semaphore_delete(sem);
+                                tid_t tid1 = thread_create(thread, NULL, (void*)0);
+                                tid_t tid2 = thread_create(thread, NULL, (void*)1);
 
                                 printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
+
+                                thread_join(tid1);
+                                puts("Thread 1 joined");
+
+                                thread_join(tid2);
+                                puts("Thread 2 joined");
                         }
 
 //                        GPIO_CLEAR_PIN(PB14);

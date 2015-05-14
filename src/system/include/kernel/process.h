@@ -176,7 +176,8 @@ extern int         _process_thread_create               (_process_t*, thread_fun
 extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_thread_t*);
 extern tid_t       _process_thread_get_tid              (_thread_t*);
-extern int         _process_thread_join                 (_process_t*, tid_t);
+extern int         _process_thread_exit                 (_thread_t*);
+extern int         _process_thread_join                 (_process_t*, tid_t, sem_t**);
 
 extern void        _task_switched_in                    (void);
 extern void        _task_switched_out                   (void);

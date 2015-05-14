@@ -94,7 +94,8 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
         SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
-        SYSCALL_THREADJOIN,             // | int            | tid_t *tid                |                           |                           |                           |
+        SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                           |                           |                           |
+        SYSCALL_THREADJOIN,             // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
         SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                           |                           |                           |
         SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                           |                           |                           |
