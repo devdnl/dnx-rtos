@@ -82,7 +82,7 @@ int _mount(const char *FS_name, const char *src_path, const char *mount_point)
                 for (uint i = 0; i < _FS_table_size; i++) {
                         if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
                                 result = _vfs_mount(src_path, mount_point,
-                                                    (struct vfs_FS_itf *)&_FS_table[i].FS_if);
+                                                    &_FS_table[i].FS_if);
                                 break;
                         }
                 }

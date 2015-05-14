@@ -175,7 +175,7 @@ typedef struct vfs_FS_itf {
         int (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
         int (*fs_statfs )(void *fshdl, struct statfs *statfs);
         int (*fs_sync   )(void *fshdl);
-        uint32_t   fs_magic;
+        uint32_t fs_magic;
 } vfs_FS_itf_t;
 
 /** file flags */
@@ -207,7 +207,7 @@ typedef struct vfs_file FILE;
   Exported API functions
 ==============================================================================*/
 extern int  _vfs_init       (void);
-extern int  _vfs_mount      (const char*, const char*, struct vfs_FS_itf*);
+extern int  _vfs_mount      (const char*, const char*, const struct vfs_FS_itf*);
 extern int  _vfs_umount     (const char*);
 extern int  _vfs_getmntentry(int, struct mntent*);
 extern int  _vfs_mknod      (const char*, dev_t);

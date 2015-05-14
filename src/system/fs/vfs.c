@@ -113,7 +113,7 @@ int _vfs_init(void)
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_itf *fsif)
+int _vfs_mount(const char *src_path, const char *mount_point, const struct vfs_FS_itf *fsif)
 {
         if (  !mount_point
            || !src_path
@@ -136,7 +136,8 @@ int _vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_itf 
            || !fsif->fs_chown
            || !fsif->fs_stat
            || !fsif->fs_statfs
-           || !fsif->fs_sync) {
+           || !fsif->fs_sync
+           || fsif->fs_magic != _VFS_FILE_SYSTEM_MAGIC_NO) {
 
                 return EINVAL;
         }

@@ -67,13 +67,23 @@ GLOBAL_VARIABLES_SECTION {
 ==============================================================================*/
 static void thread2(void *arg)
 {
+        sem_t *sem = arg;
+
         puts("I'm a thread in thread!");
+
+        semaphore_wait(sem, MAX_DELAY_MS);
+
+        puts("Thread exit;");
 }
 
 static void thread(void *arg)
 {
+        sem_t *sem = arg;
+
         puts("This text is from thread function!");
         printf("Thread arg: %p\n", arg);
+
+        semaphore_wait(sem, MAX_DELAY_MS);
 
         thread_create(thread2, NULL, NULL);
 
@@ -83,8 +93,6 @@ static void thread(void *arg)
                         __asm("nop");
                 }
         }
-
-        sleep(3);
 
         puts("Thread exit.");
 }
@@ -210,9 +218,23 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                                 printf("Killed zombie: %d : %d\n", err, status);
                         }
 
-                        if (i == 50 || i == 100 || i == 200) {
-                                tid_t tid1 = thread_create(thread, NULL, (void*)0xAABBCCDD);
-                                tid_t tid2 = thread_create(thread, NULL, (void*)0xDEADBEEF);
+                        if (i == 4) {
+                                perror("perror(): test");
+                                fputs("stdout test\n", stdout);
+                                fputs("stderr test\n", stderr);
+                        }
+
+
+                        if (i == 5 || i == 100 || i == 200) {
+
+                                sem_t *sem = semaphore_new(1, 0);
+
+                                tid_t tid1 = thread_create(thread, NULL, sem);
+                                tid_t tid2 = thread_create(thread, NULL, sem);
+
+                                sleep(2);
+
+                                semaphore_delete(sem);
 
                                 printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
                         }
@@ -244,7 +266,8 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                        .p_stdin   = "/dev/tty1",
                        .p_stdout  = "/dev/tty1",
                        .p_stderr  = "/dev/tty1",
-                       .no_parent = true
+                       .no_parent = true,
+                       .priority  = PRIORITY_NORMAL,
                 };
 
                 pid_t pid = process_create("initd --child", &attr);

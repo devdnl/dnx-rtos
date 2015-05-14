@@ -90,9 +90,17 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
+        SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                           |                           |                           |
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
         SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
+        SYSCALL_THREADJOIN,             // | int            | tid_t *tid                |                           |                           |                           |
+        SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
+        SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                           |                           |                           |
+        SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                           |                           |                           |
+        SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                           |                           |                           |
+        SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size   |                           |                           |
+        SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                           |                           |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

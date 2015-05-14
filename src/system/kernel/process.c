@@ -189,6 +189,10 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                               &proc->task);
 
                         if (result == ESUCC) {
+                                if (attr) {
+                                        _task_set_priority(proc->task, attr->priority);
+                                }
+
                                 if (pid) {
                                         *pid = proc->pid;
                                 }
@@ -278,7 +282,7 @@ KERNELSPACE int _process_exit(_process_t *proc, int status)
 {
         int result = EINVAL;
 
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 proc->status = status;
                 process_destroy_all_resources(proc);
                 result = ESUCC;
@@ -299,7 +303,7 @@ KERNELSPACE int _process_exit(_process_t *proc, int status)
 //==============================================================================
 KERNELSPACE int _process_abort(_process_t *proc)
 {
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 const char *aborted = "Aborted\n";
                 size_t      wrcnt;
                 _vfs_fwrite(aborted, strlen(aborted), &wrcnt, proc->f_stderr);
@@ -319,7 +323,7 @@ KERNELSPACE int _process_abort(_process_t *proc)
 //==============================================================================
 KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 {
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 return proc->cwd;
         } else {
                 return "";
@@ -338,7 +342,7 @@ KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 //==============================================================================
 KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resource)
 {
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 _kernel_scheduler_lock();
                 {
                         if (proc->res_list == NULL) {
@@ -371,7 +375,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 {
         int result = ESRCH;
 
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 _kernel_scheduler_lock();
 
                 result = ENOENT;
@@ -491,7 +495,7 @@ KERNELSPACE int _process_get_stat_pid(pid_t pid, process_stat_t *stat)
 //==============================================================================
 KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
 {
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 return proc->f_stderr;
         } else {
                 return NULL;
@@ -509,7 +513,7 @@ KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
 //==============================================================================
 KERNELSPACE const char *_process_get_name(_process_t *proc)
 {
-        if (proc) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 return proc->pdata->name;
         } else {
                 return NULL;
@@ -530,9 +534,33 @@ KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
 {
         int result = EINVAL;
 
-        if (proc && pid) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS && pid) {
                 *pid   = proc->pid;
                 result = ESUCC;
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
+{
+        int result = EINVAL;
+
+        if (pid && prio) {
+                foreach_process(proc) {
+                        if (proc->pid == pid) {
+                                *prio  = _task_get_priority(proc->task);
+                                result = ESUCC;
+                                break;
+                        }
+                }
         }
 
         return result;
@@ -610,6 +638,10 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 
                         thread->tid = ++TID_cnt;
 
+                        if (attr) {
+                                _task_set_priority(thread->task, attr->priority);
+                        }
+
                         if (tid) {
                                 *tid = thread->tid;
                         }
@@ -662,7 +694,7 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
  * @return ?
  */
 //==============================================================================
-KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread) // TODO
+KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
 {
         return thread ? thread->task : NULL;
 }
@@ -674,9 +706,37 @@ KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread) // TODO
  * @return ?
  */
 //==============================================================================
-KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread) // TODO
+KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
 {
         return thread ? thread->tid : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+KERNELSPACE int _process_thread_join(_process_t *proc, tid_t tid) // TODO
+{
+        int result = EINVAL;
+
+        if (proc && tid) {
+                _kernel_scheduler_lock();
+
+                foreach_resource(res, proc->res_list) {
+                        if (  res->type == RES_TYPE_THREAD
+                           && reinterpret_cast(_thread_t*, res)->tid == tid) {
+
+
+                        }
+                }
+
+                _kernel_scheduler_unlock();
+        }
+
+        return result;
 }
 
 //==============================================================================
@@ -848,6 +908,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->task);
         stat->threads_count   = 1;
         stat->zombie          = proc->task == NULL;
+        stat->priority        = _task_get_priority(proc->task);
 
         foreach_resource(res, proc->res_list) {
                 switch (res->type) {

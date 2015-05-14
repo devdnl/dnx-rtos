@@ -462,7 +462,7 @@ void *_task_get_tag(task_t *taskhdl)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
+int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
 {
         int result = EINVAL;
 
@@ -727,7 +727,7 @@ int _mutex_unlock(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_create(const uint length, const uint item_size, queue_t **queue)
+int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
 {
         int result = EINVAL;
 

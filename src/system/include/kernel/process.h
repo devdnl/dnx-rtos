@@ -107,6 +107,7 @@ typedef struct {
         const char *p_stdout;           //!< stdout file path (minor)
         const char *p_stderr;           //!< stderr file path (minor)
         const char *cwd;                //!< working directory path
+        i16_t       priority;           //!< process priority
         bool        no_parent;          //!< parent is not waiting for this process
 } process_attr_t;
 
@@ -126,12 +127,14 @@ typedef struct {
         u32_t       cpu_load_total_cnt;
         u16_t       stack_size;
         u16_t       stack_max_usage;
+        i16_t       priority;
         bool        zombie;
 } process_stat_t;
 
 /** USERSPACE: thread attributes */
 typedef struct {
-        size_t stack_depth;
+        size_t stack_depth;             //!< stack depth
+        i16_t  priority;                //!< thread priority
 } thread_attr_t;
 
 /** USERSPACE: thread function */
@@ -165,6 +168,7 @@ extern int         _process_release_resource            (_process_t*, res_header
 extern FILE       *_process_get_stderr                  (_process_t*);
 extern const char *_process_get_name                    (_process_t*);
 extern int         _process_get_pid                     (_process_t*, pid_t*);
+extern int         _process_get_priority                (pid_t, int*);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
@@ -172,6 +176,7 @@ extern int         _process_thread_create               (_process_t*, thread_fun
 extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_thread_t*);
 extern tid_t       _process_thread_get_tid              (_thread_t*);
+extern int         _process_thread_join                 (_process_t*, tid_t);
 
 extern void        _task_switched_in                    (void);
 extern void        _task_switched_out                   (void);

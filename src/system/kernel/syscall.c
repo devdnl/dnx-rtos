@@ -121,9 +121,17 @@ static void syscall_processdestroy(syscallrq_t *rq);
 static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
+static void syscall_processgetprio(syscallrq_t *rq);
 static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threaddestroy(syscallrq_t *rq);
+static void syscall_threadjoin(syscallrq_t *rq);
+static void syscall_semaphorecreate(syscallrq_t *rq);
+static void syscall_semaphoredestroy(syscallrq_t *rq);
+static void syscall_mutexcreate(syscallrq_t *rq);
+static void syscall_mutexdestroy(syscallrq_t *rq);
+static void syscall_queuecreate(syscallrq_t *rq);
+static void syscall_queuedestroy(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -181,9 +189,17 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATSEEK  ] = syscall_processstatseek,
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
+        [SYSCALL_PROCESSGETPRIO   ] = syscall_processgetprio,
         [SYSCALL_GETCWD           ] = syscall_getcwd,
         [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
         [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
+        [SYSCALL_THREADJOIN       ] = syscall_threadjoin,
+        [SYSCALL_SEMAPHORECREATE  ] = syscall_semaphorecreate,
+        [SYSCALL_SEMAPHOREDESTROY ] = syscall_semaphoredestroy,
+        [SYSCALL_MUTEXCREATE      ] = syscall_mutexcreate,
+        [SYSCALL_MUTEXDESTROY     ] = syscall_mutexdestroy,
+        [SYSCALL_QUEUECREATE      ] = syscall_queuecreate,
+        [SYSCALL_QUEUEDESTROY     ] = syscall_queuedestroy,
 };
 
 /*==============================================================================
@@ -450,8 +466,18 @@ static void syscall_opendir(syscallrq_t *rq)
 static void syscall_closedir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
-        SETERRNO(_process_release_resource(GETPROCESS(), static_cast(res_header_t*, dir), RES_TYPE_DIR));
+
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, dir), RES_TYPE_DIR);
+        if (err == EFAULT) {
+                const char *msg = "*** Error: object is not a dir! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
 }
 
 //==============================================================================
@@ -630,8 +656,18 @@ static void syscall_fopen(syscallrq_t *rq)
 static void syscall_fclose(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
-        SETERRNO(_process_release_resource(GETPROCESS(), static_cast(res_header_t*, file), RES_TYPE_FILE));
+
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, file), RES_TYPE_FILE);
+        if (err == EFAULT) {
+                const char *msg = "*** Error: object is not a file! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
 }
 
 //==============================================================================
@@ -944,8 +980,7 @@ static void syscall_free(syscallrq_t *rq)
         if (err != ESUCC) {
                 const char *msg = "*** Error: double free or corruption ***\n";
                 size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETTASKHDL()));
-
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
                 syscall_abort(rq);
         }
 
@@ -1144,6 +1179,23 @@ static void syscall_processgetpid(syscallrq_t *rq)
 
 //==============================================================================
 /**
+ * @brief  This syscall return PID's priority
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processgetprio(syscallrq_t *rq)
+{
+        GETARG(pid_t *, pid);
+        int prio = 0;
+        SETERRNO(_process_get_priority(*pid, &prio));
+        SETRETURN(int, prio);
+}
+
+//==============================================================================
+/**
  * @brief  This syscall return CWD of current process
  *
  * @param  rq                   syscall request
@@ -1201,6 +1253,177 @@ static void syscall_threaddestroy(syscallrq_t *rq)
                                            static_cast(res_header_t*, GETTHREAD(*tid)),
                                            RES_TYPE_THREAD));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall join thread with parent (parent wait until thread finish)
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_threadjoin(syscallrq_t *rq)
+{
+        GETARG(tid_t *, tid);
+        SETERRNO(_process_thread_join(GETPROCESS(),*tid));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new semaphore
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_semaphorecreate(syscallrq_t *rq)
+{
+        GETARG(const size_t *, cnt_max);
+        GETARG(const size_t *, cnt_init);
+
+        sem_t *sem = NULL;
+        int err    = _semaphore_create(*cnt_max, *cnt_init, &sem);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, sem));
+                if (err != ESUCC) {
+                        _semaphore_destroy(sem);
+                        sem = NULL;
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(sem_t*, sem);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy selected semaphore
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_semaphoredestroy(syscallrq_t *rq)
+{
+        GETARG(sem_t *, sem);
+
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, sem), RES_TYPE_SEMAPHORE);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: object is not a semaphore! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new mutex
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_mutexcreate(syscallrq_t *rq)
+{
+        GETARG(const enum mutex_type *, type);
+
+        mutex_t *mtx = NULL;
+        int err      = _mutex_create(*type, &mtx);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, mtx));
+                if (err != ESUCC) {
+                        _mutex_destroy(mtx);
+                        mtx = NULL;
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(mutex_t*, mtx);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy selected mutex
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_mutexdestroy(syscallrq_t *rq)
+{
+        GETARG(mutex_t *, mtx);
+
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, mtx), RES_TYPE_MUTEX);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: object is not a mutex! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new queue
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_queuecreate(syscallrq_t *rq)
+{
+        GETARG(const size_t *, length);
+        GETARG(const size_t *, item_size);
+
+        queue_t *q = NULL;
+        int err    = _queue_create(*length, *item_size, &q);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, q));
+                if (err != ESUCC) {
+                        _queue_destroy(q);
+                        q = NULL;
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(queue_t*, q);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy selected queue
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_queuedestroy(syscallrq_t *rq)
+{
+        GETARG(queue_t *, q);
+
+        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, q), RES_TYPE_QUEUE);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: object is not a queue! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
 }
 
 /*==============================================================================

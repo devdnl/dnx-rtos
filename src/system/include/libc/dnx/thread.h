@@ -333,73 +333,42 @@ static inline pid_t process_getpid(void)
 //        return _program_wait_for_close(prog, timeout); // TODO program_wait_for_close()
 //}
 
-////==============================================================================
-///**
-// * @brief void task_yield(void)
-// * The function <b>task_yield</b>() force context switch. To release CPU for
-// * other task use better <b>sleep</b>() family functions, because you can
-// * control release time.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return None
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * void my_task(void *arg)
-// * {
-// *         while (true) {
-// *                 // task do something
-// *
-// *                 // task will be suspended and will wait for resume from IRQ
-// *                 task_yield();
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline void task_yield(void)
-//{
-//        _task_yield();
-//}
-
-////==============================================================================
-///**
-// * @brief int task_get_priority(void)
-// * The function <b>task_get_priority</b>() returns priority value of task which
-// * calls function.
-// *
-// * @param None
-// *
-// * @errors None
-// *
-// * @return Priority value.
-// *
-// * @example
-// * #include <dnx/thread.h>
-// * #include <stdbool.h>
-// *
-// * task_t *task;
-// *
-// * void my_task(void *arg)
-// * {
-// *         if (task_get_priority() < 0) {
-// *                 task_set_priority(0);
-// *         }
-// *
-// *         while (true) {
-// *                 // task do something
-// *         }
-// * }
-// */
-////==============================================================================
-//static inline int task_get_priority(void)
-//{
-//        return _task_get_priority();
-//}
+//==============================================================================
+/**
+ * @brief int task_get_priority(void)
+ * The function <b>task_get_priority</b>() returns priority value of task which
+ * calls function.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Priority value.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * task_t *task;
+ *
+ * void my_task(void *arg)
+ * {
+ *         if (task_get_priority() < 0) {
+ *                 task_set_priority(0);
+ *         }
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
+ */
+//==============================================================================
+static inline int process_get_priority(pid_t pid)
+{
+        int prio = 0;
+        syscall(SYSCALL_PROCESSGETPRIO, &prio, &pid);
+        return prio;
+}
 
 //==============================================================================
 /**
@@ -460,6 +429,60 @@ static inline tid_t thread_create(thread_func_t func, thread_attr_t *attr, void 
         tid_t tid = 0;
         syscall(SYSCALL_THREADCREATE, &tid, func, attr, arg);
         return tid;
+}
+
+//==============================================================================
+/**
+ * @brief int thread_cancel(thread_t *thread)
+ * The function <b>thread_cancel</b>() kills running thread <i>tid</i>.
+ *
+ * @param thread        thread object
+ *
+ * @errors EINVAL
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (thread_cancel(thread) != true) {
+ *                         sleep_ms(10);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int thread_cancel(tid_t tid)
+{
+        int r = -1;
+        syscall(SYSCALL_THREADDESTROY, &r, &tid);
+        return r;
 }
 
 //==============================================================================
@@ -530,169 +553,12 @@ static inline tid_t thread_create(thread_func_t func, thread_attr_t *attr, void 
  * // ...
  */
 //==============================================================================
-//static inline int thread_join(thread_t *thread)
-//{
-//        return _thread_join(thread);
-//}
-
-//==============================================================================
-/**
- * @brief int thread_cancel(thread_t *thread)
- * The function <b>thread_cancel</b>() kills running thread pointet by <i>thread</i>.
- *
- * @param thread        thread object
- *
- * @errors EINVAL
- *
- * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
- * is set appropriately.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
- *
- *         if (thread) {
- *                 // some code ...
- *
- *                 while (thread_cancel(thread) != true) {
- *                         sleep_ms(10);
- *                 }
- *
- *                 thread_delete(thread);
- *         } else {
- *                 perror("Thread error");
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-//static inline int thread_cancel(thread_t *thread)
-//{
-//        return _thread_cancel(thread);
-//}
-
-//==============================================================================
-/**
- * @brief bool thread_is_finished(thread_t *thread)
- * The function <b>thread_is_finished</b>() examine that selected thread pointed
- * by <i>thread</i> is finished. If thread is finished then <b>true</b> is
- * returned, otherwise <b>false</b>. Function can be used to poll that selected
- * thread is finished. If would you like to wait for thread close, then use
- * <b>thread_join</b>() instead.
- *
- * @param thread        thread object
- *
- * @errors EINVAL
- *
- * @return If thread is finished then <b>true</b> is returned, otherwise
- * <b>false</b>, and <b>errno</b> is set appropriately.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
- *         if (thread) {
- *                 // some code ...
- *
- *                 while (!thread_is_finished(thread)) {
- *                         sleep_ms(1);
- *                 }
- *
- *                 thread_delete(thread);
- *         } else {
- *                 perror("Thread error");
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-//static inline bool thread_is_finished(thread_t *thread)
-//{
-//        return _thread_is_finished(thread);
-//}
-
-//==============================================================================
-/**
- * @brief int thread_delete(thread_t *thread)
- * The function <b>thread_delete</b>() removes unused thread object pointed by
- * <i>thread</i>. This function can delete object only if thread is finished.
- * To kill running thread use <b>thread_cancel</b>() function. If thread object
- * was deleted then function returns 0, otherwise 1.
- *
- * @param thread        thread object
- *
- * @errors EINVAL, EAGAIN
- *
- * @return If thread object was deleted then function returns 0, otherwise 1, and
- * <b>errno</b> is set appropriately.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
- *         if (thread) {
- *                 // some code ...
- *
- *                 thread_join(thread);
- *
- *                 thread_delete(thread);
- *         } else {
- *                 perror("Thread error");
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-//static inline int thread_delete(thread_t *thread)
-//{
-//        return _thread_delete(thread);
-//}
+static inline int thread_join(tid_t tid)
+{
+        int r = -1;
+        syscall(SYSCALL_THREADJOIN, &r, &tid);
+        return r;
+}
 
 //==============================================================================
 /**
@@ -743,9 +609,11 @@ static inline tid_t thread_create(thread_func_t func, thread_attr_t *attr, void 
  * // ...
  */
 //==============================================================================
-static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
+static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 {
-//        return _semaphore_new(cnt_max, cnt_init);
+        sem_t *sem = NULL;
+        syscall(SYSCALL_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
+        return sem;
 }
 
 //==============================================================================
@@ -777,7 +645,7 @@ static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
 {
-//        _semaphore_delete(sem);
+        syscall(SYSCALL_SEMAPHOREDESTROY, NULL, sem);
 }
 
 //==============================================================================
@@ -1062,7 +930,9 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)
 {
-//        return _mutex_new(type);
+        mutex_t *mtx = NULL;
+        syscall(SYSCALL_MUTEXCREATE, &mtx, &type);
+        return mtx;
 }
 
 //==============================================================================
@@ -1131,7 +1001,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
 {
-//        _mutex_delete(mutex);
+        syscall(SYSCALL_MUTEXDESTROY, NULL, mutex);
 }
 
 //==============================================================================
@@ -1342,9 +1212,11 @@ static inline bool mutex_unlock(mutex_t *mutex)
  * }
  */
 //==============================================================================
-static inline queue_t *queue_new(const uint length, const uint item_size)
+static inline queue_t *queue_new(const size_t length, const size_t item_size)
 {
-//        return _queue_new(length, item_size);
+        queue_t *queue = NULL;
+        syscall(SYSCALL_QUEUECREATE, &queue, &length, &item_size);
+        return queue;
 }
 
 //==============================================================================
@@ -1409,7 +1281,7 @@ static inline queue_t *queue_new(const uint length, const uint item_size)
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
 {
-//        _queue_delete(queue);
+        syscall(SYSCALL_QUEUEDESTROY, NULL, queue);
 }
 
 //==============================================================================
