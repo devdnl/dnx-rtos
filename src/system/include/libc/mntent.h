@@ -58,7 +58,7 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int getmntentry(int item, struct mntent *mntent)
+ * @brief int getmntentry(int seek, struct mntent *mntent)
  * Function return file system describe object.<p>
  *
  * <b>mntent</b> structure:
@@ -89,10 +89,10 @@ extern "C" {
  * }
  */
 //==============================================================================
-static inline int getmntentry(int item, struct mntent *mntent)
+static inline int getmntentry(int seek, struct mntent *mntent)
 {
         int r = -1;
-        syscall(SYSCALL_OPENDIR, &r, &item, mntent);
+        syscall(SYSCALL_GETMNTENTRY, &r, &seek, mntent);
         return r;
 }
 
