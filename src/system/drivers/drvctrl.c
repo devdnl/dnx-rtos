@@ -33,6 +33,7 @@
 #include "kernel/kwrapper.h"
 #include "drivers/drvctrl.h"
 #include "kernel/printk.h"
+#include "kernel/process.h"
 #include "lib/vt100.h"
 #include "fs/vfs.h"
 #include "dnx/misc.h"
@@ -40,6 +41,7 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#undef errno
 
 /*==============================================================================
   Local object types
@@ -48,6 +50,8 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static bool is_device_valid(dev_t id);
+static int  getpid(pid_t *pid);
 
 /*==============================================================================
   Local objects
@@ -107,8 +111,21 @@ static bool is_device_valid(dev_t id)
                 }
         }
 
-        errno = EFAULT;
         return false;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return current process ID
+ *
+ * @param  pid          pointer to process ID variable
+ *
+ * @return One of errno value
+ */
+//==============================================================================
+static int getpid(pid_t *pid)
+{
+        return _process_get_pid(_process_get_container_by_task(_task_get_handle(), NULL), pid);
 }
 
 //==============================================================================
@@ -523,25 +540,28 @@ bool _is_driver_active(uint n)
  *
  * @param *dev_lock     pointer to device lock object
  *
- * @return true if device is successfully locked, otherwise false
+ * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-bool _lock_device(dev_lock_t *dev_lock)
+int _lock_device(dev_lock_t *dev_lock)
 {
-        bool status = false;
+        int result = EINVAL;
 
         if (dev_lock) {
-                _critical_section_begin();
-                if (*dev_lock == NULL) {
-                        *dev_lock = _task_get_handle();
-                        status = true;
+                _kernel_scheduler_lock();
+                if (*dev_lock == 0) {
+                        pid_t pid = 0;
+                        result    = getpid(&pid);
+                        if (result == ESUCC) {
+                                *dev_lock = pid;
+                        }
                 } else {
-                        errno = EBUSY;
+                        result = EBUSY;
                 }
-                _critical_section_end();
+                _kernel_scheduler_unlock();
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -550,17 +570,29 @@ bool _lock_device(dev_lock_t *dev_lock)
  *
  * @param *dev_lock     pointer to device lock object
  * @param  force        true: force unlock
+ *
+ * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-void _unlock_device(dev_lock_t *dev_lock, bool force)
+int _unlock_device(dev_lock_t *dev_lock, bool force)
 {
+        int result = EINVAL;
+
         if (dev_lock) {
-                _critical_section_begin();
-                if (*dev_lock == _task_get_handle() || force) {
-                        *dev_lock = NULL;
+                _kernel_scheduler_lock();
+                pid_t pid = 0;
+                result    = getpid(&pid);
+                if (result == ESUCC) {
+                        if (*dev_lock == pid || force) {
+                                *dev_lock = 0;
+                        } else {
+                                result = EBUSY;
+                        }
                 }
-                _critical_section_end();
+                _kernel_scheduler_unlock();
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -569,22 +601,26 @@ void _unlock_device(dev_lock_t *dev_lock, bool force)
  *
  * @param *dev_lock     pointer to device lock object
  *
- * @return true if access granted, otherwise false
+ * @return One of errno value (ESUCC for access granted)
  */
 //==============================================================================
-bool _is_device_access_granted(dev_lock_t *dev_lock)
+int _access_to_device(dev_lock_t *dev_lock)
 {
-        bool status = false;
+        int result = EINVAL;
 
         if (dev_lock) {
-                _critical_section_begin();
-                if (*dev_lock == _task_get_handle()) {
-                        status = true;
+                _kernel_scheduler_lock();
+                pid_t pid = 0;
+                result    = getpid(&pid);
+                if (result == ESUCC) {
+                        if (*dev_lock != pid) {
+                                result = EBUSY;
+                        }
                 }
-                _critical_section_end();
+                _kernel_scheduler_unlock();
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -598,17 +634,13 @@ bool _is_device_access_granted(dev_lock_t *dev_lock)
 //==============================================================================
 bool _is_device_locked(dev_lock_t *dev_lock)
 {
-        bool status = false;
+        bool result = false;
 
         if (dev_lock) {
-                _critical_section_begin();
-                if (*dev_lock != NULL) {
-                        status = true;
-                }
-                _critical_section_end();
+                result = *dev_lock != 0;
         }
 
-        return status;
+        return result;
 }
 
 /*==============================================================================

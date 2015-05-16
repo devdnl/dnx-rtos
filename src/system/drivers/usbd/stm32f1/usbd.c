@@ -359,7 +359,7 @@ API_MOD_OPEN(USBD, void *device_handle, u32_t flags)
 
         USB_ep_t *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->dev_lock) ? ESUCC : EBUSY;
+        return _sys_device_lock(&hdl->dev_lock);
 }
 
 //==============================================================================
@@ -377,8 +377,7 @@ API_MOD_CLOSE(USBD, void *device_handle, bool force)
         USB_ep_t *hdl = device_handle;
 
         if (_sys_device_is_access_granted(&hdl->dev_lock) || force) {
-                _sys_device_unlock(&hdl->dev_lock, force);
-                return ESUCC;
+                return _sys_device_unlock(&hdl->dev_lock, force);
         } else {
                 return EBUSY;
         }

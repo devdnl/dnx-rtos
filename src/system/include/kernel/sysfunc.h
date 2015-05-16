@@ -1564,11 +1564,7 @@ static inline int _sys_thread_create(thread_func_t func, const thread_attr_t *at
 
         return result;
 
-} // TODO
-//static inline int _sys_task_create(void (*func)(void*), const char *name, const uint stack_depth, void *argv, void *tag, task_t **task)
-//{
-//        return _task_create(func, name, stack_depth, argv, tag, task);
-//}
+}
 
 //==============================================================================
 /**
@@ -1597,11 +1593,6 @@ static inline int _sys_thread_destroy(thread_t *thread)
 
         return result;
 }
-//TODO
-//static inline void _sys_task_destroy(task_t *taskhdl)
-//{
-//        _task_destroy(taskhdl);
-//}
 
 //==============================================================================
 /**
@@ -1617,16 +1608,6 @@ static inline bool _sys_thread_is_valid(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function wait for task exit
- */
-//==============================================================================
-//static inline void _sys_task_exit() TODO
-//{
-//        _task_exit();
-//}
-
-//==============================================================================
-/**
  * @brief Function suspend selected task
  *
  * @param[in] *taskhdl          task handle
@@ -1638,10 +1619,6 @@ static inline void _sys_thread_suspend(thread_t *thread)
                 _task_suspend(thread->task);
         }
 }
-//static inline void _sys_task_suspend(task_t *taskhdl) TODO
-//{
-//        return _task_suspend(taskhdl);
-//}
 
 //==============================================================================
 /**
@@ -1805,6 +1782,30 @@ static inline void _sys_ISR_disable()
 static inline void _sys_ISR_enable()
 {
         _sys_ISR_enable();
+}
+
+//==============================================================================
+/**
+ * @brief  Function lock context switch
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+static inline void _sys_context_switch_lock()
+{
+        _kernel_scheduler_lock();
+}
+
+//==============================================================================
+/**
+ * @brief  Function unlock context switch
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+static inline void _sys_context_switch_unlock()
+{
+        _kernel_scheduler_unlock();
 }
 
 //==============================================================================

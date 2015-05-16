@@ -128,7 +128,7 @@ API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                return _sys_device_lock(&hdl->file_lock) ? ESUCC : EBUSY;
+                return _sys_device_lock(&hdl->file_lock);
         } else {
                 return ESUCC;
         }
@@ -149,12 +149,7 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
-                        _sys_device_unlock(&hdl->file_lock, force);
-                        return ESUCC;
-                } else {
-                        return EBUSY;
-                }
+                return _sys_device_unlock(&hdl->file_lock, force);
         } else {
                 return ESUCC;
         }
@@ -208,13 +203,7 @@ API_MOD_READ(WDG,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(dst);
-        UNUSED_ARG1(count);
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(rdcnt);
-        UNUSED_ARG1(fattr);
-
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
         return ENOTSUP;
 }
 
@@ -235,18 +224,19 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 
         WDG_t *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->file_lock)) {
+        int result = _sys_device_access(&hdl->file_lock);
+        if (result == ESUCC) {
                 switch (request) {
                 case IOCTL_WDG__RESET:
                         reset_wdg();
-                        return ESUCC;
+                        break;
 
                 default:
                         return EBADRQC;
                 }
-        } else {
-                return EACCES;
         }
+
+        return result;
 }
 
 //==============================================================================

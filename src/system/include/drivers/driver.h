@@ -102,45 +102,47 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function lock device for this task
+ * @brief Function lock device for this process
  *
  * ERRNO: EBUSY
  *
  * @param *dev_lock     pointer to device lock object
  *
- * @return true if device is successfully locked, otherwise false
+ * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline bool _sys_device_lock(dev_lock_t *dev_lock)
+static inline int _sys_device_lock(dev_lock_t *dev_lock)
 {
         return _lock_device(dev_lock);
 }
 
 //==============================================================================
 /**
- * @brief Function unlock before locked device
+ * @brief Function unlock device locked by _sys_device_lock()
  *
  * @param *dev_lock     pointer to device lock object
  * @param  force        true: force unlock
+ *
+ * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline void _sys_device_unlock(dev_lock_t *dev_lock, bool force)
+static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
 {
-        _unlock_device(dev_lock, force);
+        return _unlock_device(dev_lock, force);
 }
 
 //==============================================================================
 /**
- * @brief Function check that current task has access to device
+ * @brief Function get device access
  *
  * @param *dev_lock     pointer to device lock object
  *
- * @return true if access granted, otherwise false
+ * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline bool _sys_device_is_access_granted(dev_lock_t *dev_lock)
+static inline int _sys_device_access(dev_lock_t *dev_lock)
 {
-        return _is_device_access_granted(dev_lock);
+        return _access_to_device(dev_lock);
 }
 
 //==============================================================================

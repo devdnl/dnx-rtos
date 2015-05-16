@@ -384,7 +384,7 @@ API_MOD_OPEN(I2C, void *device_handle, u32_t flags)
 
         I2C_dev_t *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->lock) ? ESUCC : EBUSY;
+        return _sys_device_lock(&hdl->lock);
 }
 
 //==============================================================================
@@ -401,12 +401,7 @@ API_MOD_CLOSE(I2C, void *device_handle, bool force)
 {
         I2C_dev_t *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->lock) || force) {
-                _sys_device_unlock(&hdl->lock, force);
-                return ESUCC;
-        } else {
-                return EBUSY;
-        }
+        return _sys_device_unlock(&hdl->lock, force);
 }
 
 //==============================================================================

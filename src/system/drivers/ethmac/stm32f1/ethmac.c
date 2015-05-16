@@ -267,7 +267,7 @@ API_MOD_OPEN(ETHMAC, void *device_handle, u32_t flags)
 
         struct ethmac *hdl = device_handle;
 
-        return (_sys_device_lock(&hdl->dev_lock) ? ESUCC : EBUSY);
+        return _sys_device_lock(&hdl->dev_lock);
 }
 
 //==============================================================================
@@ -284,12 +284,13 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
         struct ethmac *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->dev_lock) || force) {
-                _sys_device_unlock(&hdl->dev_lock, force);
-                return ESUCC;
-        } else {
-                return EBUSY;
+        int result = _sys_device_access(&hdl->dev_lock);
+
+        if (result == ESUCC) {
+                result = _sys_device_unlock(&hdl->dev_lock, force);
         }
+
+        return result;
 }
 
 //==============================================================================

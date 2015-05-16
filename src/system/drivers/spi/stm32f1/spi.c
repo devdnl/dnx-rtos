@@ -397,7 +397,9 @@ API_MOD_RELEASE(SPI, void *device_handle)
 {
         struct spi_virtual *hdl = device_handle;
 
-        if (_sys_device_is_unlocked(hdl->file_lock)) {
+        int result = EBUSY;
+
+        if (_sys_device_is_unlocked(&hdl->file_lock)) {
 
                 _sys_critical_section_begin();
 
@@ -437,12 +439,10 @@ API_MOD_RELEASE(SPI, void *device_handle)
                 _sys_critical_section_end();
 
                 /* free virtual spi memory */
-                _sys_free(device_handle);
-
-                return ESUCC;
-        } else {
-                return EBUSY;
+                result = _sys_free(device_handle);
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -461,7 +461,7 @@ API_MOD_OPEN(SPI, void *device_handle, u32_t flags)
 
         struct spi_virtual *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->file_lock) ? ESUCC : EBUSY;
+        return _sys_device_lock(&hdl->file_lock);
 }
 
 //==============================================================================
@@ -478,12 +478,7 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
         struct spi_virtual *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
-                _sys_device_unlock(&hdl->file_lock, force);
-                return ESUCC;
-        } else {
-                return EBUSY;
-        }
+        return _sys_device_unlock(&hdl->file_lock, force);
 }
 
 //==============================================================================
