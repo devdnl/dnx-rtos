@@ -80,7 +80,7 @@ extern int _errno;
  *
  * errno = 0;
  *
- * const process_attr_t attr = {
+ * static const process_attr_t attr = {
  *         .f_stdin   = stdin,
  *         .f_stdout  = stdout,
  *         .f_stderr  = stderr,
@@ -90,7 +90,7 @@ extern int _errno;
  *         .no_parent = false
  * }
  *
- * pid_t pid = process_new("ls /", &attr);
+ * pid_t pid = process_create("ls /", &attr);
  * if (pid) {
  *         process_wait(pid, MAX_DELAY_MS);
  *
@@ -119,6 +119,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  * Function return process exit code pointed by <i>status</i>.
  *
  * @param pid                   process ID
+ * @param status                child process exit status (it can be NULL)
  *
  * @errors EINVAL, EAGAIN
  *
@@ -132,7 +133,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  *
  * errno = 0;
  *
- * const process_attr_t attr = {
+ * static const process_attr_t attr = {
  *         .f_stdin   = stdin,
  *         .f_stdout  = stdout,
  *         .f_stderr  = stderr,
@@ -142,12 +143,12 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  *         .no_parent = false
  * }
  *
- * pid_t pid = process_new("ls /", &attr);
+ * pid_t pid = process_create("ls /", &attr);
  * if (pid) {
  *         process_wait(pid, MAX_DELAY_MS);
  *
  *         int exit_code = 0;
- *         process_delete(pid, &exit_code);
+ *         process_destroy(pid, &exit_code);
  * } else {
  *         perror("Program not started");
  *
@@ -161,6 +162,66 @@ static inline int process_destroy(pid_t pid, int *status)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief int process_wait(pid_t pid, const uint timeout)
+ * The function <b>process_wait</b>() wait for program close.
+ *
+ * @param pid                   process ID
+ * @param timeout               wait timeout in ms
+ *
+ * @errors EINVAL, ETIME, ...
+ *
+ * @return Return 0 on success. On error -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ *
+ * static const process_attr_t attr = {
+ *         .f_stdin   = stdin,
+ *         .f_stdout  = stdout,
+ *         .f_stderr  = stderr,
+ *         .p_stdin   = NULL,
+ *         .p_stdout  = NULL,
+ *         .p_stderr  = NULL,
+ *         .no_parent = false
+ * }
+ *
+ * pid_t pid = process_create("ls /", &attr);
+ * if (pid) {
+ *         process_wait(pid, MAX_DELAY_MS);
+ *
+ *         int exit_code = 0;
+ *         process_destroy(pid, &exit_code);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int process_wait(pid_t pid, const uint timeout)
+{
+        int r      = -1;
+        sem_t *sem = NULL;
+
+        syscall(SYSCALL_PROCESSGETEXITSEM, &r, &pid, &sem);
+
+        if (sem && r == 0) {
+                _errno = _builtinfunc(semaphore_wait, sem, timeout);
+                r      = _errno ? -1 : 0;
+        }
+
         return r;
 }
 
@@ -294,44 +355,6 @@ static inline pid_t process_getpid(void)
         syscall(SYSCALL_PROCESSGETPID, &pid);
         return pid;
 }
-
-//==============================================================================
-/**
- * @brief int program_wait_for_close(prog_t *prog, const uint timeout)
- * The function <b>program_wait_for_close</b>() wait for program close.
- *
- * @param prog                  program object
- * @param timeout               wait timeout in ms
- *
- * @errors EINVAL, ETIME
- *
- * @return Return 0 on success. On error, different than 0 is returned, and
- * <b>errno</b> is set appropriately.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * errno = 0;
- * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
- * if (prog) {
- *         program_wait_for_close(prog, MAX_DELAY_MS);
- *
- *         program_delete(prog);
- * } else {
- *         perror("Program not started");
- *
- *         // ...
- * }
- *
- * // ...
- */
-//==============================================================================
-//static inline int program_wait_for_close(prog_t *prog, const uint timeout)
-//{
-//        return _program_wait_for_close(prog, timeout); // TODO program_wait_for_close()
-//}
 
 //==============================================================================
 /**
@@ -558,12 +581,11 @@ static inline int thread_join(tid_t tid)
         int r      = -1;
         sem_t *sem = NULL;
 
-        syscall(SYSCALL_THREADJOIN, &r, &tid, &sem);
+        syscall(SYSCALL_THREADGETEXITSEM, &r, &tid, &sem);
 
         if (sem && r == 0) {
                 _builtinfunc(semaphore_wait, sem, MAX_DELAY_MS);
-
-                syscall(SYSCALL_THREADJOIN, &r, &tid, NULL);
+                syscall(SYSCALL_THREADDESTROY, &r, &tid);
         }
 
         return r;
@@ -707,7 +729,8 @@ static inline void semaphore_delete(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 {
-        return _builtinfunc(semaphore_wait, sem, timeout);
+        _errno = _builtinfunc(semaphore_wait, sem, timeout);
+        return !_errno;
 }
 
 //==============================================================================
@@ -757,118 +780,8 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
 {
-        return _builtinfunc(semaphore_signal, sem);
-}
-
-//==============================================================================
-/**
- * @brief bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
- * The function <b>semaphore_wait_from_ISR</b>() is similar to <b>semaphore_wait</b>()
- * except that can be called from interrupt. Function have limited application.
- *
- * @param sem           semaphore object pointer
- * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
- *
- * @errors None
- *
- * @return On success, <b>true</b> is returned. On timeout or if semaphore is
- * not signaled <b>false</b> is returned.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
- *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // ...
- *
- * void thread1(void *arg)
- * {
- *         while (true) {
- *                 if (...) {
- *                         semaphore_signal(sem);
- *                 }
- *
- *                 // ...
- *         }
- * }
- *
- * void ISR(void)
- * {
- *         // ...
- *
- *         bool woken = false;
- *         if (semaphore_wait_from_ISR(sem, &woken)) {
- *                 // ...
- *         }
- *
- *         if (woken) {
- *                 task_yield_from_ISR();
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
-{
-        return _builtinfunc(semaphore_wait_from_ISR, sem, task_woken);
-}
-
-//==============================================================================
-/**
- * @brief bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
- * The function <b>semaphore_signal_from_ISR</b>() is similar to
- * <b>semaphore_signal</b>() except that can be called from interrupt.
- *
- * @param sem           semaphore object pointer
- * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
- *
- * @errors None
- *
- * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
- * be signaled or object is invalid then <b>false</b> is returned.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
- *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // ...
- *
- * void thread1(void *arg)
- * {
- *         while (true) {
- *                 // this task will wait for semaphore signal
- *                 semaphore_wait(sem, MAX_DELAY_MS);
- *
- *                 // ...
- *         }
- * }
- *
- * void ISR(void)
- * {
- *         // ...
- *
- *         bool woken = false;
- *         semaphore_signal_from_ISR(sem, &woken);
- *
- *         if (woken) {
- *                 task_yield_from_ISR();
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
-{
-        return _builtinfunc(semaphore_signal_from_ISR, sem, task_woken);
+        _errno = _builtinfunc(semaphore_signal, sem);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1085,7 +998,82 @@ static inline void mutex_delete(mutex_t *mutex)
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 {
-        return _builtinfunc(mutex_lock, mutex, timeout);
+        _errno = _builtinfunc(mutex_lock, mutex, timeout);
+        return !_errno;
+}
+
+//==============================================================================
+/**
+ * @brief bool mutex_trylock(mutex_t *mutex)
+ * The function <b>mutex_trylock</b>() lock mutex pointed by <i>mutex</i>.
+ * If mutex is recursive then task can lock mutex recursively, and
+ * the same times shall be unlocked. If normal mutex is used then task can lock
+ * mutex only one time (not recursively). Function is equivalent to
+ * mutex_lock(mtx, 0) call.
+ *
+ * @param mutex     mutex
+ *
+ * @errors EINVAL, ETIME, ...
+ *
+ * @return If mutex is locked then <b>true</b> is returned. If mutex is used
+ * or object is incorrect, then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_trylock(mtx)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_trylock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         tid_t t1 = thread_create(thread1, NULL, mtx);
+ *         tid_t t1 = thread_create(thread2, NULL, mtx);
+ *
+ *         thread_join(t1);
+ *         thread_join(t2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
+ */
+//==============================================================================
+static inline bool mutex_trylock(mutex_t *mutex)
+{
+        return mutex_lock(mutex, 0);
 }
 
 //==============================================================================
@@ -1155,7 +1143,8 @@ static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
 {
-        return _builtinfunc(mutex_unlock, mutex);
+        _errno = _builtinfunc(mutex_unlock, mutex);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1295,15 +1284,15 @@ static inline void queue_delete(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief void queue_reset(queue_t *queue)
- * The function <b>queue_delete</b>() reset the selected queue pointed by
+ * @brief bool queue_reset(queue_t *queue)
+ * The function <b>queue_reset</b>() reset the selected queue pointed by
  * <i>queue</i>.
  *
  * @param queue     queue object
  *
  * @errors None
  *
- * @return None
+ * @return On success true is returned, otherwise false.
  *
  * @example
  * #include <dnx/thread.h>
@@ -1355,9 +1344,10 @@ static inline void queue_delete(queue_t *queue)
  * }
  */
 //==============================================================================
-static inline void queue_reset(queue_t *queue)
+static inline bool queue_reset(queue_t *queue)
 {
-        _builtinfunc(queue_reset, queue);
+        _errno = _builtinfunc(queue_reset, queue);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1427,57 +1417,8 @@ static inline void queue_reset(queue_t *queue)
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const uint timeout)
 {
-        return _builtinfunc(queue_send, queue, item, timeout);
-}
-
-//==============================================================================
-/**
- * @brief bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
- * The function <b>queue_send_from_ISR</b>() is similar to  <b>queue_send</b>(),
- * expect that can be called from interrupt. The <i>task_woken</i> is set to
- * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
- *
- * @param queue         queue object
- * @param item          item to send
- * @param task_woken    context switch request
- *
- * @errors None
- *
- * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
- *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * queue_t *queue = queue_new(10, sizeof(char));
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         char c;
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void uart_rx_isr(void)
- * {
- *         char c = UART1->DR;
- *
- *         bool woken = false;
- *         queue_send_from_ISR(queue, &c, &woken);
- *
- *         if (woken) {
- *                 task_yield_from_ISR();
- *         }
- * }
- */
-//==============================================================================
-static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
-{
-        return _builtinfunc(queue_send_from_ISR, queue, item, task_woken);
+        _errno = _builtinfunc(queue_send, queue, item, timeout);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1546,59 +1487,8 @@ static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *t
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 {
-        return _builtinfunc(queue_receive, queue, item, timeout);
-}
-
-//==============================================================================
-/**
- * @brief bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
- * The function <b>queue_recieve_from_ISR</b>() is similar to  <b>queue_recieve</b>(),
- * expect that can be called from interrupt. The <i>task_woken</i> is set to
- * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
- *
- * @param queue         queue object
- * @param item          item destination
- * @param task_woken    context switch request
- *
- * @errors None
- *
- * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
- *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * queue_t *queue = queue_new(10, sizeof(char));
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void some_isr(void)
- * {
- *         char c;
- *
- *         bool woken = false;
- *         if (queue_receive_from_ISR(queue, &c, &woken)) {
- *                 // some operations
- *         }
- *
- *         if (woken) {
- *                 task_yield_from_ISR();
- *         }
- * }
- */
-//==============================================================================
-static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
-{
-        return _builtinfunc(queue_receive_from_ISR, queue, item, task_woken);
+        _errno = _builtinfunc(queue_receive, queue, item, timeout);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1669,7 +1559,8 @@ static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
 {
-        return _builtinfunc(queue_receive_peek, queue, item, timeout);
+        _errno = _builtinfunc(queue_receive_peek, queue, item, timeout);
+        return !_errno;
 }
 
 //==============================================================================
@@ -1738,50 +1629,6 @@ static inline int queue_get_number_of_items(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief int queue_get_number_of_items_from_ISR(queue_t *queue)
- * The function <b>queue_get_number_of_items_from_ISR</b>() is similar to
- * <b>queue_get_number_of_items</b>(), except that can be called from interrupt.
- *
- * @param queue     queue object
- *
- * @errors None
- *
- * @return Number of items stored in the queue. On error, -1 is returned.
- *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * queue_t *queue;
- *
- * // ...
- *
- * void thread1(void *arg)
- * {
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void some_isr(void *arg)
- * {
- *         int len = queue_get_number_of_items_from_ISR(queue);
- *
- *         // ...
- * }
- */
-//==============================================================================
-static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
-{
-        size_t len = -1;
-        _errno = _builtinfunc(queue_get_number_of_items_from_ISR, queue, &len);
-        return len;
-}
-
-//==============================================================================
-/**
  * @brief int queue_get_space_available(queue_t *queue)
  * The function <b>queue_get_space_available</b>() returns a number of free
  * items available in the queue pointed by <i>queue</i>.
@@ -1815,140 +1662,6 @@ static inline int queue_get_space_available(queue_t *queue)
         size_t space = -1;
         _errno = _builtinfunc(queue_get_space_available, queue, &space);
         return space;
-}
-
-//==============================================================================
-/**
- * @brief void critical_section_begin(void)
- * The function <b>critical_section_begin</b>() enters the code to the
- * critical section. From critical section masked interrupts and context switch
- * does not work. The critical section routine shall be short as possible.
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/thread.h>
- *
- * void some_function(void)
- * {
- *         // ...
- *
- *         critical_section_begin();
- *
- *         // some short operations ...
- *
- *         critical_section_end();
- *
- *         // ...
- * }
- */
-//==============================================================================
-static inline void critical_section_begin(void)
-{
-        _builtinfunc(critical_section_begin);
-}
-
-//==============================================================================
-/**
- * @brief void critical_section_end(void)
- * The function <b>critical_section_end</b>() exit from critical section.
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/thread.h>
- *
- * void some_function(void)
- * {
- *         // ...
- *
- *         critical_section_begin();
- *
- *         // some short operations ...
- *
- *         critical_section_end();
- *
- *         // ...
- * }
- */
-//==============================================================================
-static inline void critical_section_end(void)
-{
-        _builtinfunc(critical_section_end);
-}
-
-//==============================================================================
-/**
- * @brief void ISR_disable(void)
- * The function <b>ISR_disable</b>() disable interrupts.
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/thread.h>
- *
- * void some_function(void)
- * {
- *         // ...
- *
- *         ISR_disable();
- *
- *         // some short operations ...
- *
- *         ISR_enable();
- *
- *         // ...
- * }
- */
-//==============================================================================
-static inline void ISR_disable(void)
-{
-        _builtinfunc(ISR_disable);
-}
-
-//==============================================================================
-/**
- * @brief void ISR_enable(void)
- * The function <b>ISR_enable</b>() enable interrupts.
- *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <dnx/thread.h>
- *
- * void some_function(void)
- * {
- *         // ...
- *
- *         ISR_disable();
- *
- *         // some short operations ...
- *
- *         ISR_enable();
- *
- *         // ...
- * }
- */
-//==============================================================================
-static inline void ISR_enable(void)
-{
-        _builtinfunc(ISR_enable);
 }
 
 #ifdef __cplusplus

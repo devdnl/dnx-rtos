@@ -87,6 +87,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_SYSTEM,                 // | int            | const char *command       |                           |                           |                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
         SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status               |                           |                           |
+        SYSCALL_PROCESSGETEXITSEM,      // | int            | pid_t *pid                | sem_t **sem               |                           |                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
@@ -95,7 +96,7 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
         SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
         SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                           |                           |                           |
-        SYSCALL_THREADJOIN,             // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
+        SYSCALL_THREADGETEXITSEM,       // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
         SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                           |                           |                           |
         SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                           |                           |                           |

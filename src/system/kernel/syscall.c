@@ -118,6 +118,7 @@ static void syscall_exit(syscallrq_t *rq);
 static void syscall_system(syscallrq_t *rq);
 static void syscall_processcreate(syscallrq_t *rq);
 static void syscall_processdestroy(syscallrq_t *rq);
+static void syscall_processgetexitsem(syscallrq_t *rq);
 static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
@@ -126,7 +127,7 @@ static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threaddestroy(syscallrq_t *rq);
 static void syscall_threadexit(syscallrq_t *rq);
-static void syscall_threadjoin(syscallrq_t *rq);
+static void syscall_threadgetexitsem(syscallrq_t *rq);
 static void syscall_semaphorecreate(syscallrq_t *rq);
 static void syscall_semaphoredestroy(syscallrq_t *rq);
 static void syscall_mutexcreate(syscallrq_t *rq);
@@ -187,6 +188,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSTEM           ] = syscall_system,
         [SYSCALL_PROCESSCREATE    ] = syscall_processcreate,
         [SYSCALL_PROCESSDESTROY   ] = syscall_processdestroy,
+        [SYSCALL_PROCESSGETEXITSEM] = syscall_processgetexitsem,
         [SYSCALL_PROCESSSTATSEEK  ] = syscall_processstatseek,
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
@@ -195,7 +197,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
         [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
         [SYSCALL_THREADEXIT       ] = syscall_threadexit,
-        [SYSCALL_THREADJOIN       ] = syscall_threadjoin,
+        [SYSCALL_THREADGETEXITSEM ] = syscall_threadgetexitsem,
         [SYSCALL_SEMAPHORECREATE  ] = syscall_semaphorecreate,
         [SYSCALL_SEMAPHOREDESTROY ] = syscall_semaphoredestroy,
         [SYSCALL_MUTEXCREATE      ] = syscall_mutexcreate,
@@ -234,8 +236,8 @@ void _syscall_init()
                 _semaphore_create(1, 1, &access_sem[i]);
         }
 
-        static const process_attr_t attr = {
-                .no_parent = false
+        static const process_attr_t attr = { // TEST
+                .has_parent = true
         };
 
         _process_create("kworker", &attr, NULL);
@@ -1131,6 +1133,24 @@ static void syscall_processdestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
+ * @brief  This syscall return exit semaphore
+ *         then
+ *
+ * @param  rq                   syscall request
+ *
+ * @return None
+ */
+//==============================================================================
+static void syscall_processgetexitsem(syscallrq_t *rq)
+{
+        GETARG(pid_t *, pid);
+        GETARG(sem_t **, sem);
+        SETERRNO(_process_get_exit_sem(*pid, sem));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
  * @brief  This syscall read process statistics by seek
  *
  * @param  rq                   syscall request
@@ -1281,11 +1301,11 @@ static void syscall_threadexit(syscallrq_t *rq)
  * @return None
  */
 //==============================================================================
-static void syscall_threadjoin(syscallrq_t *rq)
+static void syscall_threadgetexitsem(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
         GETARG(sem_t **, sem);
-        SETERRNO(_process_thread_join(GETPROCESS(), *tid, sem));
+        SETERRNO(_process_thread_get_exit_sem(GETPROCESS(), *tid, sem));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

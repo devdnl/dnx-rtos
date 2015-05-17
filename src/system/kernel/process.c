@@ -62,13 +62,14 @@ struct _process {
         res_header_t    *res_list;              /* list of used resources             */
         const char      *cwd;                   /* current working path               */
         const pdata_t   *pdata;                 /* program data                       */
+        sem_t           *exit_sem;              /* process exit semaphore             */
         char            **argv;                 /* program arguments                  */
         u16_t            argc;                  /* number of arguments                */
         u16_t            status;                /* program status (return value)      */
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-        bool             no_parent:1;           /* process has not parent             */
+        bool             has_parent:1;          /* process has parent                 */
 };
 
 struct _thread {
@@ -248,6 +249,11 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
                         }
                         _kernel_scheduler_unlock();
 
+                        if (curr->exit_sem) {
+                                _semaphore_destroy(curr->exit_sem);
+                                curr->exit_sem = NULL;
+                        }
+
                         if (status) {
                                 *status = curr->status;
                         }
@@ -305,8 +311,8 @@ KERNELSPACE int _process_exit(_process_t *proc, int status)
 KERNELSPACE int _process_abort(_process_t *proc)
 {
         if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                const char *aborted = "Aborted\n";
-                size_t      wrcnt;
+                static const char *aborted = "Aborted\n";
+                size_t wrcnt;
                 _vfs_fwrite(aborted, strlen(aborted), &wrcnt, proc->f_stderr);
         }
 
@@ -545,6 +551,37 @@ KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
 
 //==============================================================================
 /**
+ * @brief  Function return exit semaphore handle
+ *
+ * @param  proc         process container
+ * @param  sem          pointer to semaphore pointer
+ *
+ * @return One of errno value
+ */
+//==============================================================================
+KERNELSPACE int _process_get_exit_sem(pid_t pid, sem_t **sem)
+{
+        int result = EINVAL;
+
+        if (pid && sem) {
+                _kernel_scheduler_lock();
+
+                foreach_process(proc) {
+                        if (proc->pid == pid) {
+                                *sem   = proc->exit_sem;
+                                result = ESUCC;
+                                break;
+                        }
+                }
+
+                _kernel_scheduler_unlock();
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
  * @brief  ?
  * @param  ?
  * @return ?
@@ -555,6 +592,8 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
         int result = EINVAL;
 
         if (pid && prio) {
+                _kernel_scheduler_lock();
+
                 foreach_process(proc) {
                         if (proc->pid == pid) {
                                 *prio  = _task_get_priority(proc->task);
@@ -562,6 +601,8 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
                                 break;
                         }
                 }
+
+                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -745,10 +786,7 @@ KERNELSPACE int _process_thread_exit(_thread_t *thread)
 //==============================================================================
 /**
  * @brief  Function return exit semaphore that is used to synchronize parent
- *         thread (process) with child process. If sem pointer is set then
- *         exit semaphore is returned.
- *         If sem pointer is set to NULL then thread is removed from resource
- *         list.
+ *         thread (process) with child process.
  *
  * @param  proc         process object
  * @param  tid          thread ID
@@ -757,23 +795,19 @@ KERNELSPACE int _process_thread_exit(_thread_t *thread)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_thread_join(_process_t *proc, tid_t tid, sem_t **sem)
+KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t **sem)
 {
         int result = EINVAL;
 
-        if (proc && proc->header.type == RES_TYPE_PROCESS && tid) {
+        if (proc && proc->header.type == RES_TYPE_PROCESS && tid && sem) {
                 _kernel_scheduler_lock();
 
                 foreach_resource(res, proc->res_list) {
-                        if (  res->type == RES_TYPE_THREAD
-                           && reinterpret_cast(_thread_t*, res)->tid == tid) {
-
-                                if (sem) {
-                                        *sem   = reinterpret_cast(_thread_t*, res)->exit_sem;
-                                        result = ESUCC;
-                                } else {
-                                        result = _process_release_resource(proc, res, RES_TYPE_THREAD);
-                                }
+                        _thread_t *thread = static_cast(_thread_t*, res);
+                        if (thread->header.type == RES_TYPE_THREAD && thread->tid == tid) {
+                                *sem   = thread->exit_sem;
+                                result = ESUCC;
+                                break;
                         }
                 }
 
@@ -833,10 +867,10 @@ USERSPACE static void process_code(void *mainfn)
 
         proc->status = funcmain(proc->argc, proc->argv);
 
-        if (proc->no_parent) {
-                syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
-        } else {
+        if (proc->has_parent) {
                 syscall(SYSCALL_EXIT, NULL, &proc->status);
+        } else {
+                syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
         }
 
         _task_exit();
@@ -903,6 +937,10 @@ static int process_thread_destroy(_thread_t *thread)
 //==============================================================================
 static void process_destroy_all_resources(_process_t *proc)
 {
+        if (proc->exit_sem) {
+                _semaphore_signal(proc->exit_sem);
+        }
+
         if (proc->task) {
                 _task_destroy(proc->task);
                 proc->task = NULL;
@@ -1064,14 +1102,24 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 }
 
                 /*
-                 * Apply Current Working Directory path
+                 * Create exit semaphore object if parent exist
                  */
-                proc->cwd = attr->cwd;
+                if (attr->has_parent) {
+                        result = _semaphore_create(1, 0, &proc->exit_sem);
+                        if (result != ESUCC) {
+                                goto finish;
+                        }
+                }
 
                 /*
                  * Apply no-parent attribute
                  */
-                proc->no_parent = attr->no_parent;
+                proc->has_parent = attr->has_parent;
+
+                /*
+                 * Apply Current Working Directory path
+                 */
+                proc->cwd = attr->cwd;
         }
 
         finish:

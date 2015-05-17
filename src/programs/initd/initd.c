@@ -89,6 +89,8 @@ static void thread(void *arg)
                 }
         }
 
+        global->str = "Text from thread!";
+
         puts("Thread exit.");
 }
 
@@ -232,11 +234,18 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                                 thread_join(tid2);
                                 puts("Thread 2 joined");
+
+                                puts(global->str);
                         }
 
 //                        GPIO_CLEAR_PIN(PB14);
                         sleep(1);
                 }
+
+        } if (argc == 2 && strcmp(argv[1], "--wait") == 0) {
+                puts("I'm process that wait 2 seconds");
+                sleep(2);
+                puts("Bye!");
 
         } else {
                 result = mount("lfs", "", "/");
@@ -256,17 +265,34 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 puts("Starting child...");
 
-                const process_attr_t attr = {
-                       .cwd       = "/dev/",
-                       .p_stdin   = "/dev/tty1",
-                       .p_stdout  = "/dev/tty1",
-                       .p_stderr  = "/dev/tty1",
-                       .no_parent = true,
-                       .priority  = PRIORITY_NORMAL,
+                static const process_attr_t attr1 = {
+                       .cwd        = "/dev/",
+                       .p_stdin    = "/dev/tty1",
+                       .p_stdout   = "/dev/tty1",
+                       .p_stderr   = "/dev/tty1",
+                       .has_parent = false,
+                       .priority   = PRIORITY_NORMAL,
                 };
 
-                pid_t pid = process_create("initd --child", &attr);
+                pid_t pid = process_create("initd --child", &attr1);
                 printf("Child PID: %d\n", pid);
+                process_wait(pid, MAX_DELAY_MS);
+
+
+                static const process_attr_t attr2 = {
+                       .cwd        = "/dev/",
+                       .p_stdin    = "/dev/tty1",
+                       .p_stdout   = "/dev/tty1",
+                       .p_stderr   = "/dev/tty1",
+                       .has_parent = true,
+                       .priority   = PRIORITY_NORMAL,
+                };
+                pid = process_create("initd --wait", &attr2);
+                printf("[initd --wait] PID: %d\n", pid);
+                process_wait(pid, MAX_DELAY_MS);
+                process_destroy(pid, NULL);
+                puts("Process closed");
+
 
                 printf("Result: %d\n", result);
         }
