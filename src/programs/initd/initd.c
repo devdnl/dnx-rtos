@@ -188,20 +188,20 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 //                        enable_CPU_load_measurement();
 
 
-                          process_stat_t stat;
-                          size_t         seek = 0;
-                          while (process_stat_seek(seek++, &stat) == 0) {
-                                  u32_t tct = stat.cpu_load_total_cnt;
-                                  printf("%d %s: %d.%02d%% %s TH:%d\n",
-                                         stat.pid,
-                                         stat.name,
-                                         stat.cpu_load_cnt * 100 / tct,
-                                         (stat.cpu_load_cnt * 1000 / tct) % 10,
-                                         stat.zombie ? "Z" : "R",
-                                         stat.threads_count
-                                        );
-                          }
-                          enable_CPU_load_measurement();
+//                          process_stat_t stat;
+//                          size_t         seek = 0;
+//                          while (process_stat_seek(seek++, &stat) == 0) {
+//                                  u32_t tct = stat.cpu_load_total_cnt;
+//                                  printf("%d %s: %d.%02d%% %s TH:%d\n",
+//                                         stat.pid,
+//                                         stat.name,
+//                                         stat.cpu_load_cnt * 100 / tct,
+//                                         (stat.cpu_load_cnt * 1000 / tct) % 10,
+//                                         stat.zombie ? "Z" : "R",
+//                                         stat.threads_count
+//                                        );
+//                          }
+//                          enable_CPU_load_measurement();
 
 
                         for (int i = 0; i < 1000000; i++) {
@@ -258,12 +258,24 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 result = syslog_enable("/dev/tty0");
                 detect_kernel_panic(true);
                 driver_init("tty1", "/dev/tty1");
+                driver_init("tty2", "/dev/tty2");
 
                 stdout = fopen("/dev/tty0", "w");
 
                 printf("Hello world! I'm using syscalls!\n");
 
                 puts("Starting child...");
+
+                static const process_attr_t attr3 = {
+                       .cwd        = "/",
+                       .p_stdin    = "/dev/tty2",
+                       .p_stdout   = "/dev/tty2",
+                       .p_stderr   = "/dev/tty2",
+                       .has_parent = false,
+                       .priority   = PRIORITY_NORMAL,
+                };
+                pid_t pid = process_create("top", &attr3);
+                printf("[top]: %d\n", pid);
 
                 static const process_attr_t attr1 = {
                        .cwd        = "/dev/",
@@ -274,7 +286,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                        .priority   = PRIORITY_NORMAL,
                 };
 
-                pid_t pid = process_create("initd --child", &attr1);
+                pid = process_create("initd --child", &attr1);
                 printf("Child PID: %d\n", pid);
                 process_wait(pid, MAX_DELAY_MS);
 
@@ -292,7 +304,6 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 process_wait(pid, MAX_DELAY_MS);
                 process_destroy(pid, NULL);
                 puts("Process closed");
-
 
                 printf("Result: %d\n", result);
         }

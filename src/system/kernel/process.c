@@ -671,7 +671,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 
                         result = _task_create(thread_code,
                                               "thread", // FIXME
-                                              (attr ? attr->stack_depth : STACK_DEPTH_HUGE),
+                                              (attr ? attr->stack_depth : STACK_DEPTH_LOW),
                                               func,
                                               thread,
                                               &thread->task);

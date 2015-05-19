@@ -345,7 +345,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         }
 
                         while ((chr = *result_ptr++) && arg_size--) {
-                                if (spaces && chr == '0' && arg_size > 1) {
+                                if (spaces && chr == '0' && arg_size > 0) {
                                         chr = ' ';
                                 } else {
                                         spaces = false;

@@ -48,6 +48,8 @@ extern "C" {
 #define VT100_ERASE_LINE                        "\033[2K"
 #define VT100_ERASE_LINE_END                    "\033[K"
 #define VT100_CURSOR_HOME                       "\033[H"
+#define VT100_CURSOR_UP(n)                     "\033["#n"A"
+#define VT100_CURSOR_DOWN(n)                    "\033["#n"B"
 #define VT100_CURSOR_FORWARD(n)                 "\033["#n"C"
 #define VT100_CURSOR_BACKWARD(n)                "\033["#n"D"
 #define VT100_CURSOR_OFF                        "\033[?25l"

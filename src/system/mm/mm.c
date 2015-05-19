@@ -100,8 +100,8 @@ extern void      *__ram_size;
 //==============================================================================
 int _mm_init(void)
 {
-        return _kmalloc(_MM_KRN,
-                        _drvreg_number_of_modules,
+        return _kzalloc(_MM_KRN,
+                        _drvreg_number_of_modules * sizeof(i32_t),
                         static_cast(void*, &module_memory_usage));
 }
 
@@ -238,7 +238,7 @@ int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
                 mem_usage->programs_memory_usage    = memory_usage[_MM_PROG];
                 mem_usage->modules_memory_usage     = 0;
 
-                for (size_t i = 0; _drvreg_number_of_modules; i++) {
+                for (size_t i = 0; i < _drvreg_number_of_modules; i++) {
                         mem_usage->modules_memory_usage += module_memory_usage[i];
                 }
 
