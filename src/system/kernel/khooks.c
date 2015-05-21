@@ -50,8 +50,8 @@
   Local object definitions
 ==============================================================================*/
 /** uptime counter */
-u32_t uptime_counter_sec;
-u32_t uptime_divider;
+static u32_t uptime_counter_sec;
+static u32_t sec_divider;
 
 /*==============================================================================
   Exported object definitions
@@ -94,9 +94,10 @@ void vApplicationTickHook(void)
 {
         _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
 
-        if (++uptime_divider >= (configTICK_RATE_HZ)) {
-                uptime_divider = 0;
+        if (++sec_divider >= configTICK_RATE_HZ) {
+                sec_divider = 0;
                 uptime_counter_sec++;
+                _calculate_CPU_load();
         }
 }
 

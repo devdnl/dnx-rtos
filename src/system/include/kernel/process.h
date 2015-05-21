@@ -123,8 +123,7 @@ typedef struct {
         u16_t       semaphores_count;
         u16_t       queue_count;
         u16_t       threads_count;
-        u32_t       cpu_load_cnt;
-        u32_t       cpu_load_total_cnt;
+        u16_t       CPU_load;
         u16_t       stack_size;
         u16_t       stack_max_usage;
         i16_t       priority;
@@ -183,8 +182,7 @@ extern int         _process_thread_get_exit_sem         (_process_t*, tid_t, sem
 extern void        _task_switched_in                    (void);
 extern void        _task_switched_out                   (void);
 
-extern void        _CLM_enable                          (void);
-extern void        _CLM_disable                         (void);
+extern void        _calculate_CPU_load                  (void);
 
 /*==============================================================================
   Exported inline functions

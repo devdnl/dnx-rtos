@@ -64,11 +64,12 @@ struct _process {
         const pdata_t   *pdata;                 /* program data                       */
         sem_t           *exit_sem;              /* process exit semaphore             */
         char            **argv;                 /* program arguments                  */
-        u16_t            argc;                  /* number of arguments                */
-        u16_t            status;                /* program status (return value)      */
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
+        u16_t            CPU_load;              /* CPU load * 1000 (100.0%)           */
+        u8_t             argc;                  /* number of arguments                */
+        i8_t             status;                /* program status (return value)      */
         bool             has_parent:1;          /* process has parent                 */
 };
 
@@ -89,7 +90,7 @@ static void thread_code(void *thrfunc);
 static int  process_thread_destroy(_thread_t *thread);
 static void process_destroy_all_resources(_process_t *proc);
 static bool resource_destroy(res_header_t *resource);
-static int  argtab_create(const char *str, u16_t *argc, char **argv[]);
+static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
 static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
@@ -103,7 +104,6 @@ static pid_t       PID_cnt;
 static tid_t       TID_cnt;
 static _process_t *process_list;
 static _process_t *active_process;
-static bool        CPU_load_enabled;
 static u32_t       CPU_total_time_last;
 
 /*==============================================================================
@@ -667,10 +667,8 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         if (result != ESUCC)
                                 goto finish;
 
-//                        _kernel_scheduler_lock(); // FIXME is it necessary?
-
                         result = _task_create(thread_code,
-                                              "thread", // FIXME
+                                              "th",
                                               (attr ? attr->stack_depth : STACK_DEPTH_LOW),
                                               func,
                                               thread,
@@ -700,8 +698,6 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         if (result != ESUCC) {
                                 process_thread_destroy(thread);
                         }
-
-//                        _kernel_scheduler_unlock(); // FIXME is it necessary?
                 }
         }
 
@@ -819,36 +815,22 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
 
 //==============================================================================
 /**
- * @brief  Function enables CPU load measurement
+ * @brief  Function calculate CPU load of all processes in 1 second interval
  *
  * @param  None
  *
  * @return None
  */
 //==============================================================================
-USERSPACE void _CLM_enable(void)
+KERNELSPACE void _calculate_CPU_load(void)
 {
-        _kernel_scheduler_lock();
-        {
-                _CPU_total_time     = 0;
-                CPU_total_time_last = 0;
-                CPU_load_enabled    = true;
+        foreach_process(proc) {
+                proc->CPU_load = proc->timecnt / (_CPU_total_time / 1000);
+                proc->timecnt  = 0;
         }
-        _kernel_scheduler_unlock();
-}
 
-//==============================================================================
-/**
- * @brief  Function disables CPU load measurement
- *
- * @param  None
- *
- * @return None
- */
-//==============================================================================
-USERSPACE void _CLM_disable(void)
-{
-        CPU_load_enabled = false;
+        _CPU_total_time     = 0;
+        CPU_total_time_last = 0;
 }
 
 //==============================================================================
@@ -992,9 +974,10 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->pid             = proc->pid;
         stat->stack_size      = *proc->pdata->stack_depth;
         stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->task);
-        stat->threads_count   = 1;
+        stat->threads_count   = proc->task ? 1 : 0;
         stat->zombie          = proc->task == NULL;
         stat->priority        = _task_get_priority(proc->task);
+        stat->CPU_load        = proc->CPU_load;
 
         foreach_resource(res, proc->res_list) {
                 switch (res->type) {
@@ -1010,10 +993,6 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 default: break;
                 }
         }
-
-        stat->cpu_load_total_cnt = _CPU_total_time;
-        stat->cpu_load_cnt       = proc->timecnt;
-        proc->timecnt            = 0;
 }
 
 //==============================================================================
@@ -1186,7 +1165,7 @@ static bool resource_destroy(res_header_t *resource)
  * @return One of errno value.
  */
 //==============================================================================
-static int argtab_create(const char *str, u16_t *argc, char **argv[])
+static int argtab_create(const char *str, u8_t *argc, char **argv[])
 {
         int result = EINVAL;
 
@@ -1371,10 +1350,8 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 KERNELSPACE void _task_switched_in(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        if (CPU_load_enabled) {
-                CPU_total_time_last = _CPU_total_time;
-                _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
-        }
+        _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
+        CPU_total_time_last = _CPU_total_time;
 #endif
 
         active_process = _process_get_container_by_task(_THIS_TASK, NULL);
@@ -1414,16 +1391,17 @@ KERNELSPACE void _task_switched_out(void)
                 active_process->errnov   = _errno;
 
                 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-                if (CPU_load_enabled) {
-                        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
-                        active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
+                _CPU_total_time         += _cpuctl_get_CPU_load_counter_delta();
+                active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
+
+                if ((i32_t)(_CPU_total_time - CPU_total_time_last) < 0) {
+                        __asm("nop");
                 }
+
                 #endif
         } else {
                 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-                        if (CPU_load_enabled) {
-                                _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
-                        }
+                _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
                 #endif
         }
 }

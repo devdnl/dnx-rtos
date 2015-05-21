@@ -75,12 +75,12 @@ static void thread2(void *arg)
 
 static void thread(void *arg)
 {
-        puts("This text is from thread function!");
-        printf("Thread arg: %d\n", (int)arg);
-
-
-        tid_t tid = thread_create(thread2, NULL, NULL);
-        thread_join(tid);
+//        puts("This text is from thread function!");
+//        printf("Thread arg: %d\n", (int)arg);
+//
+//
+//        tid_t tid = thread_create(thread2, NULL, NULL);
+//        thread_join(tid);
 
         int i = 0;
         while (i++ < 10) {
@@ -89,9 +89,9 @@ static void thread(void *arg)
                 }
         }
 
-        global->str = "Text from thread!";
-
-        puts("Thread exit.");
+//        global->str = "Text from thread!";
+//
+//        puts("Thread exit.");
 }
 
 //==============================================================================
@@ -124,7 +124,6 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         printf("Threads: %d\n", stat.threads_count);
                         printf("Mem blocks: %d\n", stat.memory_block_count);
                         printf("Memory usage: %d\n", stat.memory_usage);
-                        printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
                         printf("Stack size: %d\n", stat.stack_size);
                         printf("Stack max usage: %d\n", stat.stack_max_usage);
                 } else {
@@ -153,10 +152,10 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 while (true) {
 //                        GPIO_SET_PIN(PB14);
 
-                        printf("=== Sec: %d\n", i++);
-
-                        int t = _kernel_get_number_of_tasks();
-                        printf("Number of tasks %d\n", t);
+//                        printf("=== Sec: %d\n", i++);
+//
+//                        int t = _kernel_get_number_of_tasks();
+//                        printf("Number of tasks %d\n", t);
 
 //                        disable_CPU_load_measurement();
 //                        process_stat_t stat;
@@ -204,42 +203,42 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 //                          enable_CPU_load_measurement();
 
 
-                        for (int i = 0; i < 1000000; i++) {
-                                __asm("nop");
-                        }
+//                        for (int i = 0; i < 10000000; i++) {
+//                                __asm("nop");
+//                        }
 
-                        if (i == 3) {
-                                int status = -1;
-                                int err = process_destroy(2, &status);
-
-                                printf("Killed zombie: %d : %d\n", err, status);
-                        }
-
-                        if (i == 4) {
-                                perror("perror(): test");
-                                fputs("stdout test\n", stdout);
-                                fputs("stderr test\n", stderr);
-                        }
-
-
-                        if (i == 5 || i == 100 || i == 200) {
-
-                                tid_t tid1 = thread_create(thread, NULL, (void*)0);
-                                tid_t tid2 = thread_create(thread, NULL, (void*)1);
-
-                                printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
-
-                                thread_join(tid1);
-                                puts("Thread 1 joined");
-
-                                thread_join(tid2);
-                                puts("Thread 2 joined");
-
-                                puts(global->str);
-                        }
+//                        if (i == 3) {
+//                                int status = -1;
+//                                int err = process_destroy(2, &status);
+//
+//                                printf("Killed zombie: %d : %d\n", err, status);
+//                        }
+//
+//                        if (i == 4) {
+//                                perror("perror(): test");
+//                                fputs("stdout test\n", stdout);
+//                                fputs("stderr test\n", stderr);
+//                        }
+//
+//
+//                        if (i == 5 || i == 100 || i == 200) {
+//
+//                                tid_t tid1 = thread_create(thread, NULL, (void*)0);
+//                                tid_t tid2 = thread_create(thread, NULL, (void*)1);
+//
+//                                printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
+//
+//                                thread_join(tid1);
+//                                puts("Thread 1 joined");
+//
+//                                thread_join(tid2);
+//                                puts("Thread 2 joined");
+//
+//                                puts(global->str);
+//                        }
 
 //                        GPIO_CLEAR_PIN(PB14);
-                        sleep(1);
+//                        sleep(1);
                 }
 
         } if (argc == 2 && strcmp(argv[1], "--wait") == 0) {

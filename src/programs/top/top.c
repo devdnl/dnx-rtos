@@ -128,17 +128,16 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
                 println("%s - %dd %d:%02d up\n", argv[0], udays, uhrs, umins);
 
-                println("Bytes Mem: %d total, %d used, %d free\n",
+                println("Mem: %d total, %d used, %d free\n",
                         get_memory_size(), get_used_memory(), get_free_memory());
 
-
                 get_memory_usage_details(&global->mem);
-                println("Bytes Mem: %d static, %d kernel, %d filesys\n",
+                println("Mem: %d static, %d kernel, %d filesystem\n",
                         global->mem.static_memory_usage,
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);
 
-                println("Bytes Mem: %d network, %d modules, %d programs\n",
+                println("Mem: %d network, %d modules, %d programs\n",
                         global->mem.network_memory_usage,
                         global->mem.modules_memory_usage,
                         global->mem.programs_memory_usage);
@@ -157,8 +156,8 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
                                 snprintf(cpu_load_str, 6, "zombi");
                         } else {
                                 snprintf(cpu_load_str, 6, " %2d.%d",
-                                         global->pstat.cpu_load_cnt * 100 / global->pstat.cpu_load_total_cnt,
-                                         (global->pstat.cpu_load_cnt * 100 / global->pstat.cpu_load_total_cnt) % 10);
+                                         global->pstat.CPU_load / 10,
+                                         global->pstat.CPU_load % 10);
                         }
 
                         println("%5d %2d %7d %4d %4d %s %2d %3d %s\n",
@@ -174,8 +173,6 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
                                 + global->pstat.semaphores_count,
                                 global->pstat.name);
                 }
-
-                enable_CPU_load_measurement();
 
                 printf(VT100_CURSOR_HOME VT100_CURSOR_DOWN(2));
 
