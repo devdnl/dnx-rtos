@@ -49,13 +49,12 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-/** uptime counter */
-static u32_t uptime_counter_sec;
 static u32_t sec_divider;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+u32_t        _uptime_counter_sec;
 extern u32_t _CPU_total_time;
 
 /*==============================================================================
@@ -96,7 +95,7 @@ void vApplicationTickHook(void)
 
         if (++sec_divider >= configTICK_RATE_HZ) {
                 sec_divider = 0;
-                uptime_counter_sec++;
+                _uptime_counter_sec++;
                 _calculate_CPU_load();
         }
 }
@@ -130,7 +129,7 @@ void vApplicationSwitchedOut(void)
 //==============================================================================
 u32_t _get_uptime_counter(void)
 {
-        return uptime_counter_sec;
+        return _uptime_counter_sec;
 }
 
 /*==============================================================================

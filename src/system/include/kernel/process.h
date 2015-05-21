@@ -136,6 +136,13 @@ typedef struct {
         i16_t  priority;                //!< thread priority
 } thread_attr_t;
 
+/** USERSPACE: average CPU load */
+typedef struct {
+        u16_t min1;                     //!< average CPU load within 1 minute (*1000%)
+        u16_t min5;                     //!< average CPU load within 5 minutes (*1000%)
+        u16_t min15;                    //!< average CPU load within 15 minutes (*1000%)
+} avg_CPU_load_t;
+
 /** USERSPACE: thread function */
 typedef void (*thread_func_t)(void *arg);
 
@@ -183,6 +190,7 @@ extern void        _task_switched_in                    (void);
 extern void        _task_switched_out                   (void);
 
 extern void        _calculate_CPU_load                  (void);
+extern int         _get_average_CPU_load                (avg_CPU_load_t*);
 
 /*==============================================================================
   Exported inline functions

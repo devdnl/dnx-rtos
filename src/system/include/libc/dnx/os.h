@@ -258,6 +258,37 @@ static inline u32_t get_uptime(void)
 
 //==============================================================================
 /**
+ * @brief int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
+ * The function <b>get_average_CPU_load</b>() fill average CPU load container
+ * pointed by <i>avg_CPU_load</i>.
+ *
+ * @param avg_CPU_load          average CPU load container
+ *
+ * @errors None
+ *
+ * @return On success 0 is returned, otherwise -1.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * avg_CPU_load_t avg;
+ * get_average_CPU_load(&avg);
+ *
+ * printf("Average CPU load: %2d.%d%%, %2d.%d%%, %2d.%d%%\n",
+ *         avg.min1, avg.min5, avg.min15);
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
+{
+        return _builtinfunc(get_average_CPU_load, avg_CPU_load);
+}
+
+//==============================================================================
+/**
  * @brief uint get_tick_counter(void)
  * The function <b>get_tick_counter</b>() return number of system clock ticks.
  *

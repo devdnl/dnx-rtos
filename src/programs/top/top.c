@@ -124,9 +124,16 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
 
-                println(VT100_CLEAR_SCREEN);
+                println(VT100_CLEAR_SCREEN VT100_CURSOR_OFF);
 
-                println("%s - %dd %d:%02d up\n", argv[0], udays, uhrs, umins);
+                avg_CPU_load_t avg = {0, 0, 0};
+                get_average_CPU_load(&avg);
+
+                println("%s - %dd %d:%02d up, avg. load %%: %2d.%d, %2d.%d, %2d.%d\n",
+                        argv[0], udays, uhrs, umins,
+                        avg.min1  / 10, avg.min1  % 10,
+                        avg.min5  / 10, avg.min5  % 10,
+                        avg.min15 / 10, avg.min15 % 10);
 
                 println("Mem: %d total, %d used, %d free\n",
                         get_memory_size(), get_used_memory(), get_free_memory());
@@ -174,7 +181,20 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
                                 global->pstat.name);
                 }
 
-                printf(VT100_CURSOR_HOME VT100_CURSOR_DOWN(2));
+//                printf(VT100_CURSOR_HOME VT100_CURSOR_DOWN(2));
+
+                if (key == 'k') {
+                        printf(VT100_CURSOR_HOME VT100_CURSOR_DOWN(2) VT100_CURSOR_ON);
+                        printf("kill PID: ");
+                        fflush(stdout);
+
+                        int pid = 0;
+                        scanf("%d", &pid);
+
+
+                } else if (key == 'q') {
+                        break;
+                }
 
 
 //                int task_number = get_number_of_monitored_tasks();
@@ -268,7 +288,9 @@ int_main(top, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 //                }
         }
 
-        puts("Quit");
+        puts("Quit"); // TEST
+
+        printf(VT100_CURSOR_ON);
 
         ioctl(stdin, IOCTL_TTY__ECHO_ON);
 

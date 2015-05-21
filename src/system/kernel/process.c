@@ -100,11 +100,13 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static pid_t       PID_cnt;
-static tid_t       TID_cnt;
-static _process_t *process_list;
-static _process_t *active_process;
-static u32_t       CPU_total_time_last;
+static pid_t          PID_cnt;
+static tid_t          TID_cnt;
+static _process_t    *process_list;
+static _process_t    *active_process;
+static u32_t          CPU_total_time_last;
+static avg_CPU_load_t avg_CPU_load_calc;
+static avg_CPU_load_t avg_CPU_load_result;
 
 /*==============================================================================
   Exported object definitions
@@ -132,6 +134,7 @@ struct _GVAR_STRUCT_NAME *global;
 ==============================================================================*/
 extern const struct _prog_data _prog_table[];
 extern const int               _prog_table_size;
+extern u32_t                   _uptime_counter_sec;
 
 /*==============================================================================
   Function definitions
@@ -824,13 +827,60 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
 //==============================================================================
 KERNELSPACE void _calculate_CPU_load(void)
 {
+        // calculate 1 second CPU load of all processes
+        u16_t total_cpu_load = 0;
+
         foreach_process(proc) {
-                proc->CPU_load = proc->timecnt / (_CPU_total_time / 1000);
-                proc->timecnt  = 0;
+                proc->CPU_load  = proc->timecnt / (_CPU_total_time / 1000);
+                proc->timecnt   = 0;
+                total_cpu_load += proc->CPU_load;
         }
 
         _CPU_total_time     = 0;
         CPU_total_time_last = 0;
+
+        // calculate 1 minute average CPU load
+        avg_CPU_load_calc.min1 += total_cpu_load;
+        avg_CPU_load_calc.min1 /= 2;
+        if (_uptime_counter_sec % 60 == 0) {
+                avg_CPU_load_result.min1 = avg_CPU_load_calc.min1;
+                avg_CPU_load_calc.min1   = 0;
+        }
+
+        // calculate 5 minutes average CPU load
+        avg_CPU_load_calc.min5 += total_cpu_load;
+        avg_CPU_load_calc.min5 /= 2;
+        if (_uptime_counter_sec % 300 == 0) {
+                avg_CPU_load_result.min5 = avg_CPU_load_calc.min5;
+                avg_CPU_load_calc.min5   = 0;
+        }
+
+        // calculate 15 minutes average CPU load
+        avg_CPU_load_calc.min15 += total_cpu_load;
+        avg_CPU_load_calc.min15 /= 2;
+        if (_uptime_counter_sec % 900 == 0) {
+                avg_CPU_load_result.min15 = avg_CPU_load_calc.min15;
+                avg_CPU_load_calc.min15   = 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function calculate CPU load of all processes in 1 second interval
+ *
+ * @param  None
+ *
+ * @return None
+ */
+//==============================================================================
+USERSPACE int _get_average_CPU_load(avg_CPU_load_t *avg)
+{
+        if (avg) {
+                *avg = avg_CPU_load_result;
+                return 0;
+        } else {
+                return -1;
+        }
 }
 
 //==============================================================================
