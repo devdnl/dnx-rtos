@@ -42,7 +42,37 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum {                          // | RETURN TYPE    | ARG 1                     | ARG 2                     | ARG 3                     | ARG 4                     |
+typedef enum {// NAME                      | RETURN TYPE    | ARG 1                     | ARG 2                     | ARG 3                     | ARG 4                     |
+        SYSCALL_FTELL,                  // | i64_t          | FILE *file                |                           |                           |                           |
+        SYSCALL_FEOF,                   // | int            | FILE *file                |                           |                           |                           |
+        SYSCALL_FERROR,                 // | int            | FILE *file                |                           |                           |                           |
+        SYSCALL_CLEARERROR,             // | void           | FILE *file                |                           |                           |                           |
+        SYSCALL_MALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
+        SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
+        SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
+        SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
+        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
+        SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
+        SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
+        SYSCALL_PROCESSGETEXITSEM,      // | int            | pid_t *pid                | sem_t **sem               |                           |                           |
+        SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
+        SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
+        SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
+        SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                           |                           |                           |
+        SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
+        SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
+        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
+        SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                           |                           |                           |
+        SYSCALL_THREADGETEXITSEM,       // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
+        SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
+        SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                           |                           |                           |
+        SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                           |                           |                           |
+        SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                           |                           |                           |
+        SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size   |                           |                           |
+        SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                           |                           |                           |
+        _SYSCALL_BLOCKING_,
+        SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
+        SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status               |                           |                           |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
         SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                           |                           |                           |
         SYSCALL_GETMNTENTRY,            // | int            | int *seek                 | struct mntent *mntent     |                           |                           |
@@ -63,46 +93,17 @@ typedef enum {                          // | RETURN TYPE    | ARG 1             
         SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *size              | size_t *count             | FILE *file                |
         SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *size              | size_t *count             | FILE *file                |
         SYSCALL_FSEEK,                  // | int            | FILE *file                | i64_t  *seek              | int    *origin            |                           |
-        SYSCALL_FTELL,                  // | i64_t          | FILE *file                |                           |                           |                           |
         SYSCALL_IOCTL,                  // | int            | FILE *file                | int *request              | va_list *arg              |                           |
         SYSCALL_FSTAT,                  // | int            | FILE *file                | struct stat *buf          |                           |                           |
         SYSCALL_FFLUSH,                 // | int            | FILE *file                |                           |                           |                           |
-        SYSCALL_FEOF,                   // | int            | FILE *file                |                           |                           |                           |
-        SYSCALL_CLEARERROR,             // | void           | FILE *file                |                           |                           |                           |
-        SYSCALL_FERROR,                 // | int            | FILE *file                |                           |                           |                           |
         SYSCALL_SYNC,                   // | void           |                           |                           |                           |                           |
         SYSCALL_GETTIME,                // | time_t         |                           |                           |                           |                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                           |                           |                           |
         SYSCALL_DRIVERINIT,             // | int            | const char *drv_name      | const char *node_path     |                           |                           |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *drv_name      |                           |                           |                           |
-        SYSCALL_MALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
-        SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
-        SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
         SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                           |                           |                           |
         SYSCALL_SYSLOGDISABLE,          // | int            |                           |                           |                           |                           |
-        SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
-        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
-        SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
-        SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
-        SYSCALL_SYSTEM,                 // | int            | const char *command       |                           |                           |                           |
-        SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
-        SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status               |                           |                           |
-        SYSCALL_PROCESSGETEXITSEM,      // | int            | pid_t *pid                | sem_t **sem               |                           |                           |
-        SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
-        SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
-        SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                           |                           |                           |
-        SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                           |                           |                           |
-        SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
-        SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
-        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
-        SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                           |                           |                           |
-        SYSCALL_THREADGETEXITSEM,       // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
-        SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
-        SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                           |                           |                           |
-        SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                           |                           |                           |
-        SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                           |                           |                           |
-        SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size   |                           |                           |
-        SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                           |                           |                           |
+        SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                | sem_t **exit_sem          |                           |
         _SYSCALL_COUNT
 } syscall_t;
 

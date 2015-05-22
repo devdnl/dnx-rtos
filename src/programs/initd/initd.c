@@ -287,7 +287,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 pid = process_create("initd --child", &attr1);
                 printf("Child PID: %d\n", pid);
-                process_wait(pid, MAX_DELAY_MS);
+                process_wait(pid, NULL, MAX_DELAY_MS);
 
 
                 static const process_attr_t attr2 = {
@@ -300,7 +300,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 };
                 pid = process_create("initd --wait", &attr2);
                 printf("[initd --wait] PID: %d\n", pid);
-                process_wait(pid, MAX_DELAY_MS);
+                process_wait(pid, NULL, MAX_DELAY_MS);
                 process_destroy(pid, NULL);
                 puts("Process closed");
 

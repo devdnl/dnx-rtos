@@ -1047,7 +1047,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->zombie          = proc->task == NULL;
         stat->priority        = _task_get_priority(proc->task);
         stat->CPU_load        = proc->CPU_load;
-
+// FIXME size of objects should be added to memory size (?)
         foreach_resource(res, proc->res_list) {
                 switch (res->type) {
                 case RES_TYPE_FILE      : stat->files_count++; break;

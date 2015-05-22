@@ -38,6 +38,7 @@ extern "C" {
 #include <lib/conv.h>
 #include <lib/cast.h>
 #include <kernel/syscall.h>
+#include <kernel/kwrapper.h>
 #include <machine/ieeefp.h>
 #include <_ansi.h>
 
@@ -564,7 +565,7 @@ static inline void abort(void)
 static inline void exit(int status)
 {
         syscall(SYSCALL_EXIT, NULL, &status);
-        for (;;); // no return function - this makes C++ compiler happy
+        for (;;); // no return function - this makes compiler happy
 }
 
 //==============================================================================
@@ -577,8 +578,8 @@ static inline void exit(int status)
  *
  * @errors None
  *
- * @return Returns 0 if program was successfully executed. On error 1 and negative
- * values are returned.
+ * @return Returns shell status if program was successfully executed.
+ * On error -1 value is returned.
  *
  * @example
  * // ...
@@ -587,8 +588,20 @@ static inline void exit(int status)
 //==============================================================================
 static inline int system(const char *command)
 {
-        int r = -1;
-        syscall(SYSCALL_SYSTEM, &r, command);
+        int    r      = -1;    // TEST system()
+        pid_t  pid    = 0;
+        sem_t *sem    = NULL;
+        syscall(SYSCALL_SYSTEM, &r, command, &pid, &sem);
+        if (sem && r == 0) {
+                if (_builtinfunc(semaphore_wait, sem, MAX_DELAY_MS) == 0) {
+                        int status = -1;
+                        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, &status);
+                        if (r == 0) {
+                                 r = status;
+                        }
+                }
+        }
+
         return r;
 }
 

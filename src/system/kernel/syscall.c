@@ -1093,6 +1093,10 @@ static void syscall_exit(syscallrq_t *rq)
 //==============================================================================
 static void syscall_system(syscallrq_t *rq)
 {
+        GETARG(const char *, cmd);
+        GETARG(pid_t *, pid);
+        GETARG(sem_t **, exit_sem);
+
         //TODO syscall_system
 }
 

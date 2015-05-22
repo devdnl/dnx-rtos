@@ -114,8 +114,8 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 
 //==============================================================================
 /**
- * @brief int process_destroy(pid_t pid, int *status)
- * The function <b>process_destroy</b>() delete running or closed process.
+ * @brief int process_kill(pid_t pid, int *status)
+ * The function <b>process_kill</b>() delete running or closed process.
  * Function return process exit code pointed by <i>status</i>.
  *
  * @param pid                   process ID
@@ -140,15 +140,14 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  *         .p_stdin   = NULL,
  *         .p_stdout  = NULL,
  *         .p_stderr  = NULL,
- *         .no_parent = false
+ *         .parent    = true
  * }
  *
- * pid_t pid = process_create("ls /", &attr);
+ * int   status = -1;
+ * pid_t pid    = process_create("ls /", &attr);
  * if (pid) {
- *         process_wait(pid, MAX_DELAY_MS);
- *
- *         int exit_code = 0;
- *         process_destroy(pid, &exit_code);
+ *         sleep(1); // child execute time
+ *         process_kill(pid, &status);
  * } else {
  *         perror("Program not started");
  *
@@ -158,7 +157,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  * // ...
  */
 //==============================================================================
-static inline int process_destroy(pid_t pid, int *status)
+static inline int process_kill(pid_t pid, int *status)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
@@ -167,10 +166,13 @@ static inline int process_destroy(pid_t pid, int *status)
 
 //==============================================================================
 /**
- * @brief int process_wait(pid_t pid, const uint timeout)
- * The function <b>process_wait</b>() wait for program close.
+ * @brief int process_wait(pid_t pid, int status, const uint timeout)
+ * The function <b>process_wait</b>() wait for program close. Function destroy
+ * child process when finish successfully in the selected timeout. In case of
+ * timeout then process is not destroyed.
  *
  * @param pid                   process ID
+ * @param status                child process exit status (it can be NULL)
  * @param timeout               wait timeout in ms
  *
  * @errors EINVAL, ETIME, ...
@@ -195,12 +197,10 @@ static inline int process_destroy(pid_t pid, int *status)
  *         .no_parent = false
  * }
  *
- * pid_t pid = process_create("ls /", &attr);
+ * int   status = -1;
+ * pid_t pid    = process_create("ls /", &attr);
  * if (pid) {
- *         process_wait(pid, MAX_DELAY_MS);
- *
- *         int exit_code = 0;
- *         process_destroy(pid, &exit_code);
+ *         process_wait(pid, &status, MAX_DELAY_MS);
  * } else {
  *         perror("Program not started");
  *
@@ -210,16 +210,17 @@ static inline int process_destroy(pid_t pid, int *status)
  * // ...
  */
 //==============================================================================
-static inline int process_wait(pid_t pid, const uint timeout)
+static inline int process_wait(pid_t pid, int status, const uint timeout)
 {
         int r      = -1;
         sem_t *sem = NULL;
-
         syscall(SYSCALL_PROCESSGETEXITSEM, &r, &pid, &sem);
-
         if (sem && r == 0) {
                 _errno = _builtinfunc(semaphore_wait, sem, timeout);
-                r      = _errno ? -1 : 0;
+                if (_errno == 0) {
+                        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
+                }
+                r = _errno ? -1 : 0;
         }
 
         return r;
