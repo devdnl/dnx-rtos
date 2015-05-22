@@ -291,7 +291,7 @@ void syscall(syscall_t syscall, void *retptr, ...)
 
 //==============================================================================
 /**
- * @brief  Main syscall process (master) [KERNELLAND]
+ * @brief  Main syscall process (master) [KERNELSPACE]
  *
  * @param  argc         argument count
  * @param  argv         arguments

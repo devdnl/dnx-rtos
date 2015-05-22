@@ -67,7 +67,7 @@ struct _process {
         pid_t            pid;                   /* process ID                         */
         int              errnov;                /* program error number               */
         u32_t            timecnt;               /* counter used to calculate CPU load */
-        u16_t            CPU_load;              /* CPU load * 1000 (100.0%)           */
+        u16_t            CPU_load;              /* CPU load * 1000 (10 = 1%)          */
         u8_t             argc;                  /* number of arguments                */
         i8_t             status;                /* program status (return value)      */
         bool             has_parent:1;          /* process has parent                 */
@@ -846,19 +846,19 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
 KERNELSPACE void _calculate_CPU_load(void)
 {
         // calculate 1 second CPU load of all processes
-        u16_t total_cpu_load = 0;
+        avg_CPU_load_calc.sec1 = 0;
 
         foreach_process(proc) {
-                proc->CPU_load  = proc->timecnt / (_CPU_total_time / 1000);
-                proc->timecnt   = 0;
-                total_cpu_load += proc->CPU_load;
+                proc->CPU_load          = proc->timecnt / (_CPU_total_time / 1000);
+                proc->timecnt           = 0;
+                avg_CPU_load_calc.sec1 += proc->CPU_load;
         }
 
         _CPU_total_time     = 0;
         CPU_total_time_last = 0;
 
         // calculates 1 minute average CPU load
-        avg_CPU_load_calc.min1 += total_cpu_load;
+        avg_CPU_load_calc.min1 += avg_CPU_load_calc.sec1;
         avg_CPU_load_calc.min1 /= 2;
         if (_uptime_counter_sec % 60 == 0) {
                 avg_CPU_load_result.min1 = avg_CPU_load_calc.min1;
@@ -866,7 +866,7 @@ KERNELSPACE void _calculate_CPU_load(void)
         }
 
         // calculates 5 minutes average CPU load
-        avg_CPU_load_calc.min5 += total_cpu_load;
+        avg_CPU_load_calc.min5 += avg_CPU_load_calc.sec1;
         avg_CPU_load_calc.min5 /= 2;
         if (_uptime_counter_sec % 300 == 0) {
                 avg_CPU_load_result.min5 = avg_CPU_load_calc.min5;
@@ -874,7 +874,7 @@ KERNELSPACE void _calculate_CPU_load(void)
         }
 
         // calculates 15 minutes average CPU load
-        avg_CPU_load_calc.min15 += total_cpu_load;
+        avg_CPU_load_calc.min15 += avg_CPU_load_calc.sec1;
         avg_CPU_load_calc.min15 /= 2;
         if (_uptime_counter_sec % 900 == 0) {
                 avg_CPU_load_result.min15 = avg_CPU_load_calc.min15;
