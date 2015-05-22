@@ -682,7 +682,7 @@ int_main(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 }
 
                 if (is_exit_cmd(cmd)) {
-                        break;;
+                        break;
                 }
 
                 if (analyze_line(cmd)) {

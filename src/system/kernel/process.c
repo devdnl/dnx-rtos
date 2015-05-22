@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    progman.c
+@file    process.c
 
 @author  Daniel Zorychta
 
-@brief   This file support programs layer
+@brief   This file support processes
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -585,9 +585,12 @@ KERNELSPACE int _process_get_exit_sem(pid_t pid, sem_t **sem)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return priority of selected process
+ *
+ * @param  pid      process ID
+ * @param  prio     priority
+ *
+ * @return One of errno value
  */
 //==============================================================================
 KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
@@ -596,7 +599,6 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
 
         if (pid && prio) {
                 _kernel_scheduler_lock();
-
                 foreach_process(proc) {
                         if (proc->pid == pid) {
                                 *prio  = _task_get_priority(proc->task);
@@ -644,9 +646,16 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function create a new thread for selected process
+ *
+ * @param[in ]  proc         process container
+ * @param[in ]  func         thread function
+ * @param[in ]  attr         thread attributes
+ * @param[in ]  arg          thread argument
+ * @param[out]  tid          thread ID
+ * @param[out]  task         kernel task
+ *
+ * @return One of errno value.
  */
 //==============================================================================
 KERNELSPACE int _process_thread_create(_process_t          *proc,
@@ -709,9 +718,12 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function gets thread container from selected process object
+ *
+ * @param  proc         process object
+ * @param  tid          thread ID
+ *
+ * @return On success thread object pointer is returned, otherwise NULL
  */
 //==============================================================================
 KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid)
@@ -734,9 +746,11 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return task handle of selected thread object
+ *
+ * @param  thread       thread object
+ *
+ * @return On success task handle is returned, otherwise NULL
  */
 //==============================================================================
 KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
@@ -746,9 +760,11 @@ KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return thread ID
+ *
+ * @param  thread       thread object
+ *
+ * @return On success thread ID is returned, otherwise 0
  */
 //==============================================================================
 KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
@@ -758,9 +774,11 @@ KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function signalise thread exit (thread is prepared to destroy)
+ *
+ * @param  thread       thread object
+ *
+ * @return One of errno value
  */
 //==============================================================================
 KERNELSPACE int _process_thread_exit(_thread_t *thread)
@@ -839,7 +857,7 @@ KERNELSPACE void _calculate_CPU_load(void)
         _CPU_total_time     = 0;
         CPU_total_time_last = 0;
 
-        // calculate 1 minute average CPU load
+        // calculates 1 minute average CPU load
         avg_CPU_load_calc.min1 += total_cpu_load;
         avg_CPU_load_calc.min1 /= 2;
         if (_uptime_counter_sec % 60 == 0) {
@@ -847,7 +865,7 @@ KERNELSPACE void _calculate_CPU_load(void)
                 avg_CPU_load_calc.min1   = 0;
         }
 
-        // calculate 5 minutes average CPU load
+        // calculates 5 minutes average CPU load
         avg_CPU_load_calc.min5 += total_cpu_load;
         avg_CPU_load_calc.min5 /= 2;
         if (_uptime_counter_sec % 300 == 0) {
@@ -855,7 +873,7 @@ KERNELSPACE void _calculate_CPU_load(void)
                 avg_CPU_load_calc.min5   = 0;
         }
 
-        // calculate 15 minutes average CPU load
+        // calculates 15 minutes average CPU load
         avg_CPU_load_calc.min15 += total_cpu_load;
         avg_CPU_load_calc.min15 /= 2;
         if (_uptime_counter_sec % 900 == 0) {
@@ -931,9 +949,11 @@ USERSPACE static void thread_code(void *thrfunc)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function destroy selected thread object
+ *
+ * @param  thread       thread object
+ *
+ * @return One of errno value
  */
 //==============================================================================
 static int process_thread_destroy(_thread_t *thread)
@@ -1390,7 +1410,7 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 //==============================================================================
 /**
  * @brief  Function copy task context to standard variables (stdin, stdout, stderr,
- *         global, errno)
+ *         global, errno). Function is called when this task is already switched.
  *
  * @param  None
  *
@@ -1424,7 +1444,8 @@ KERNELSPACE void _task_switched_in(void)
 //==============================================================================
 /**
  * @brief  Function copy standard variables (stdin, stdout, stderr, global, errno)
- *         to task context
+ *         to task context. Function is called before this task context to be
+ *         switched.
  *
  * @param  None
  *
@@ -1443,11 +1464,6 @@ KERNELSPACE void _task_switched_out(void)
                 #if (CONFIG_MONITOR_CPU_LOAD > 0)
                 _CPU_total_time         += _cpuctl_get_CPU_load_counter_delta();
                 active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
-
-                if ((i32_t)(_CPU_total_time - CPU_total_time_last) < 0) {
-                        __asm("nop");
-                }
-
                 #endif
         } else {
                 #if (CONFIG_MONITOR_CPU_LOAD > 0)

@@ -277,7 +277,9 @@ static inline u32_t get_uptime(void)
  * get_average_CPU_load(&avg);
  *
  * printf("Average CPU load: %2d.%d%%, %2d.%d%%, %2d.%d%%\n",
- *         avg.min1, avg.min5, avg.min15);
+ *         avg.min1  / 10, avg.min1  % 10,
+ *         avg.min5  / 10, avg.min5  % 10,
+ *         avg.min15 / 10, avg.min15 % 10);
  *
  * // ...
  */
