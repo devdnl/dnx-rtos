@@ -104,7 +104,7 @@ static void thread(void *arg)
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
@@ -251,7 +251,7 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 result = mkdir("/dev", 0777);
                 driver_init("gpio", "/dev/gpio");
                 driver_init("afiom", NULL);
-//                driver_init("pll", NULL);
+                driver_init("pll", NULL);
                 driver_init("uart2", "/dev/ttyS0");
                 driver_init("tty0", "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
@@ -301,10 +301,12 @@ int_main(initd, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 pid = process_create("initd --wait", &attr2);
                 printf("[initd --wait] PID: %d\n", pid);
                 process_wait(pid, NULL, MAX_DELAY_MS);
-                process_destroy(pid, NULL);
+                process_kill(pid, NULL);
                 puts("Process closed");
 
                 printf("Result: %d\n", result);
+
+                sleep(5);
         }
 
         return result;

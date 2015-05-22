@@ -166,7 +166,7 @@ static inline int process_kill(pid_t pid, int *status)
 
 //==============================================================================
 /**
- * @brief int process_wait(pid_t pid, int status, const uint timeout)
+ * @brief int process_wait(pid_t pid, int *status, const uint timeout)
  * The function <b>process_wait</b>() wait for program close. Function destroy
  * child process when finish successfully in the selected timeout. In case of
  * timeout then process is not destroyed.
@@ -210,7 +210,7 @@ static inline int process_kill(pid_t pid, int *status)
  * // ...
  */
 //==============================================================================
-static inline int process_wait(pid_t pid, int status, const uint timeout)
+static inline int process_wait(pid_t pid, int *status, const uint timeout)
 {
         int r      = -1;
         sem_t *sem = NULL;
