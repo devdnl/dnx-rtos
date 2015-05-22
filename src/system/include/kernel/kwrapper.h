@@ -47,8 +47,8 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
-#undef free
-#undef malloc
+//#undef free
+//#undef malloc
 
 /** KERNEL NAME */
 #define _KERNEL_NAME                    "FreeRTOS"

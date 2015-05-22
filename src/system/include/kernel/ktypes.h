@@ -47,21 +47,6 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** KERNELSPACE: task type */
-typedef void task_t;
-
-/** KERNELSPACE: task function type */
-typedef void (*task_func_t)(void*);
-
-/** KERNELSPACE/USERSPACE: sempahore type */
-typedef struct sem sem_t;
-
-/** KERNELSPACE/USERSPACE: queue type */
-typedef struct queue queue_t;
-
-/** KERNELSPACE/USERSPACE: mutex type */
-typedef struct mutex mutex_t;
-
 /** KERNELSPACE: resource type */
 typedef enum {
         RES_TYPE_UNKNOWN       = 0,
@@ -80,6 +65,31 @@ typedef struct res_header {
         struct res_header *next;
         res_type_t         type;
 } res_header_t;
+
+/** KERNELSPACE: task type */
+typedef void task_t;
+
+/** KERNELSPACE: task function type */
+typedef void (*task_func_t)(void*);
+
+/** KERNELSPACE/USERSPACE: semaphore type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+} sem_t;
+
+/** KERNELSPACE/USERSPACE: queue type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+} queue_t;
+
+/** KERNELSPACE/USERSPACE: mutex type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+        bool          recursive;
+} mutex_t;
 
 /*==============================================================================
    Exported object declarations

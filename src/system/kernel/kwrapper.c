@@ -43,21 +43,6 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct mutex {
-        res_header_t  header;
-        void         *object;
-        bool          recursive;
-};
-
-struct queue {
-        res_header_t  header;
-        void         *object;
-};
-
-struct sem {
-        res_header_t  header;
-        void         *object;
-};
 
 /*==============================================================================
   Local function prototypes
@@ -467,7 +452,7 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
         int result = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                result = _kzalloc(_MM_KRN, sizeof(struct sem), static_cast(void**, sem));
+                result = _kzalloc(_MM_KRN, sizeof(sem_t), static_cast(void**, sem));
                 if (result == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -622,7 +607,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
         int result = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                result = _kzalloc(_MM_KRN, sizeof(struct mutex), static_cast(void**, mtx));
+                result = _kzalloc(_MM_KRN, sizeof(mutex_t), static_cast(void**, mtx));
                 if (result == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutex();
@@ -732,7 +717,7 @@ int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
         int result = EINVAL;
 
         if (length && item_size && queue) {
-                result = _kzalloc(_MM_KRN, sizeof(struct queue), static_cast(void**, queue));
+                result = _kzalloc(_MM_KRN, sizeof(queue_t), static_cast(void**, queue));
                 if (result == ESUCC) {
                         (*queue)->object = xQueueCreate(length, item_size);
                         if ((*queue)->object) {

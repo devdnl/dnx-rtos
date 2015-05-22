@@ -95,7 +95,7 @@ void *pvReturn;
 
 	vTaskSuspendAll();
 	{
-		pvReturn = malloc( xWantedSize );
+		pvReturn = _kernelmalloc( xWantedSize );
 		traceMALLOC( pvReturn, xWantedSize );
 	}
 	( void ) xTaskResumeAll();
@@ -120,7 +120,7 @@ void vPortFree( void *pv )
 	{
 		vTaskSuspendAll();
 		{
-			free( pv );
+			_kernelfree( pv );
 			traceFREE( pv, 0 );
 		}
 		( void ) xTaskResumeAll();

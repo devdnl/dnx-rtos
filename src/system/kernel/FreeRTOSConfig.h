@@ -153,8 +153,8 @@ extern void  vApplicationSwitchedOut(void);
 /* dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
 static inline void *_kernelmalloc(size_t size)  {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
 static inline void  _kernelfree(void *mem)      {_kfree(_MM_KRN, &mem);}
-#define malloc(size)                            _kernelmalloc(size)
-#define free(mem)                               _kernelfree(mem)
+//#define malloc(size)                            _kernelmalloc(size)
+//#define free(mem)                               _kernelfree(mem)
 
 /* required functions by sysmoni */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
