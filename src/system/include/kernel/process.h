@@ -49,7 +49,7 @@ extern "C" {
 #define STACK_DEPTH_VERY_LARGE          ((32  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_HUGE                ((64  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_VERY_HUGE           ((128 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_USER(depth)         (depth)
+#define STACK_DEPTH_CUSTOM(depth)       (depth)
 
 #define _GVAR_STRUCT_NAME               global_variables
 #define GLOBAL_VARIABLES_SECTION        struct _GVAR_STRUCT_NAME

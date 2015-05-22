@@ -79,6 +79,7 @@ struct _thread {
         _process_t      *process;               /* process ID (thread owner)          */
         void            *arg;                   /* thread function argument           */
         sem_t           *exit_sem;              /* thread exit semaphore (join func.) */
+        size_t           stack_depth;           /* stack size                         */
         tid_t            tid;                   /* thread ID                          */
 };
 
@@ -237,7 +238,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 //==============================================================================
 KERNELSPACE int _process_destroy(pid_t pid, int *status)
 {
-        int result = EINVAL;
+        int result = ESRCH;
 
         _process_t *prev = NULL;
         foreach_process(curr) {
@@ -516,13 +517,17 @@ KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
 /**
  * @brief  Function return name of selected task/process
  *
- * @param  proc         process container
+ * @param  proc         process container (it can be NULL - active process)
  *
  * @return On success process name is returned, otherwise NULL.
  */
 //==============================================================================
 KERNELSPACE const char *_process_get_name(_process_t *proc)
 {
+        if (proc == NULL) {
+                proc = active_process;
+        }
+
         if (proc && proc->header.type == RES_TYPE_PROCESS) {
                 return proc->pdata->name;
         } else {
@@ -774,7 +779,7 @@ KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
 
 //==============================================================================
 /**
- * @brief  Function signalise thread exit (thread is prepared to destroy)
+ * @brief  Function signals thread exit (thread is prepared to destroy)
  *
  * @param  thread       thread object
  *
@@ -988,8 +993,11 @@ static int process_thread_destroy(_thread_t *thread)
 //==============================================================================
 static void process_destroy_all_resources(_process_t *proc)
 {
-        if (proc->exit_sem) {
-                _semaphore_signal(proc->exit_sem);
+        // suspend all threads
+        foreach_resource(res, proc->res_list) {
+                if (res->type == RES_TYPE_THREAD) {
+                        _task_suspend(reinterpret_cast(_thread_t*, res)->task);
+                }
         }
 
         if (proc->task) {
@@ -997,17 +1005,14 @@ static void process_destroy_all_resources(_process_t *proc)
                 proc->task = NULL;
         }
 
+        if (proc->exit_sem) {
+                _semaphore_signal(proc->exit_sem);
+        }
+
         if (proc->argv) {
                 argtab_destroy(proc->argv);
                 proc->argv = NULL;
                 proc->argc = 0;
-        }
-
-        // suspend all threads
-        foreach_resource(res, proc->res_list) {
-                if (res->type == RES_TYPE_THREAD) {
-                        _task_suspend(reinterpret_cast(_thread_t*, res)->task);
-                }
         }
 
         // free all resources
@@ -1041,25 +1046,61 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 
         stat->name            = proc->pdata->name;
         stat->pid             = proc->pid;
-        stat->stack_size      = *proc->pdata->stack_depth;
-        stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->task);
+        stat->stack_size      = proc->task ? *proc->pdata->stack_depth : 0;
+        stat->stack_max_usage = proc->task ? (stat->stack_size - _task_get_free_stack(proc->task)) : 0;
         stat->threads_count   = proc->task ? 1 : 0;
         stat->zombie          = proc->task == NULL;
-        stat->priority        = _task_get_priority(proc->task);
+        stat->priority        = proc->task ? _task_get_priority(proc->task) : 0;
         stat->CPU_load        = proc->CPU_load;
-// FIXME size of objects should be added to memory size (?)
+        stat->memory_usage   += sizeof(_process_t);
+        stat->memory_usage   += proc->task ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
+        stat->memory_usage   += proc->cwd ? strnlen(proc->cwd, 256) : 0;
+        stat->memory_usage   += proc->exit_sem ? sizeof(sem_t) : 0;
+
+        for (int i = 0; proc->argv && i < proc->argc; i++) {
+                stat->memory_usage += strnlen(proc->argv[i], 256);
+        }
+
         foreach_resource(res, proc->res_list) {
                 switch (res->type) {
-                case RES_TYPE_FILE      : stat->files_count++; break;
-                case RES_TYPE_DIR       : stat->dir_count++; break;
-                case RES_TYPE_MUTEX     : stat->mutexes_count++; break;
-                case RES_TYPE_QUEUE     : stat->queue_count++; break;
-                case RES_TYPE_SEMAPHORE : stat->semaphores_count++; break;
-                case RES_TYPE_THREAD    : stat->threads_count++; break;
-                case RES_TYPE_MEMORY    : stat->memory_block_count++;
-                                          stat->memory_usage += _mm_get_block_size(res);
-                                          break;
-                default: break;
+                case RES_TYPE_FILE:
+                        stat->files_count++;
+                        stat->memory_usage += sizeof(FILE);
+                        break;
+
+                case RES_TYPE_DIR:
+                        stat->dir_count++;
+                        stat->memory_usage += sizeof(DIR);
+                        break;
+
+                case RES_TYPE_MUTEX:
+                        stat->mutexes_count++;
+                        stat->memory_usage += sizeof(mutex_t);
+                        break;
+
+                case RES_TYPE_QUEUE:
+                        stat->queue_count++;
+                        stat->memory_usage += sizeof(queue_t);
+                        break;
+
+                case RES_TYPE_SEMAPHORE:
+                        stat->semaphores_count++;
+                        stat->memory_usage += sizeof(sem_t);
+                        break;
+
+                case RES_TYPE_THREAD:
+                        stat->threads_count++;
+                        stat->memory_usage += sizeof(_thread_t);
+                        stat->memory_usage += reinterpret_cast(_thread_t*, res)->stack_depth * sizeof(StackType_t);
+                        break;
+
+                case RES_TYPE_MEMORY:
+                        stat->memory_block_count++;
+                        stat->memory_usage += _mm_get_block_size(res);
+                        break;
+
+                default:
+                        break;
                 }
         }
 }

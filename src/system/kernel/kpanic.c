@@ -50,7 +50,6 @@ struct kernel_panic_desc {
         uint32_t                       valid1;          /* validation value 1 */
         enum _kernel_panic_desc_cause  cause;           /* kernel panic cause */
         const char                    *name;            /* process name       */
-        bool                           master;          /* master thread      */
         uint32_t                       valid2;          /* validation value 2 */
 };
 
@@ -126,7 +125,6 @@ bool _kernel_panic_detect(bool show_msg)
                         _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
                         _printk("Cause  : %s\n", cause[kernel_panic_descriptor->cause]);
                         _printk("Process: %s\n", kernel_panic_descriptor->name);
-                        _printk("Master : %s\n\n", kernel_panic_descriptor->master ? "Yes" : "No");
 #endif
                         _sleep(2);
                 }
@@ -147,11 +145,7 @@ bool _kernel_panic_detect(bool show_msg)
 //==============================================================================
 void _kernel_panic_report(enum _kernel_panic_desc_cause suggest_cause)
 {
-        bool        master = false;
-        _process_t *proc   = _process_get_container_by_task(_THIS_TASK, &master);
-
-        kernel_panic_descriptor->name   = _process_get_name(proc);
-        kernel_panic_descriptor->master = master;
+        kernel_panic_descriptor->name = _process_get_name(NULL);
 
         if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
