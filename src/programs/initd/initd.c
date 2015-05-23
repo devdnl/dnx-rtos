@@ -251,7 +251,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 result = mkdir("/dev", 0777);
                 driver_init("gpio", "/dev/gpio");
                 driver_init("afiom", NULL);
-                driver_init("pll", NULL);
+//                driver_init("pll", NULL);
                 driver_init("uart2", "/dev/ttyS0");
                 driver_init("tty0", "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
@@ -276,6 +276,8 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 pid_t pid = process_create("top", &attr3);
                 printf("[top]: %d\n", pid);
 
+
+
                 static const process_attr_t attr1 = {
                        .cwd        = "/dev/",
                        .p_stdin    = "/dev/tty1",
@@ -288,6 +290,21 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 pid = process_create("initd --child", &attr1);
                 printf("Child PID: %d\n", pid);
                 process_wait(pid, NULL, MAX_DELAY_MS);
+
+
+                static const process_attr_t attr1b = {
+                       .cwd        = "/dev/",
+                       .p_stdin    = "/dev/tty1",
+                       .p_stdout   = "/dev/tty1",
+                       .p_stderr   = "/dev/tty1",
+                       .has_parent = false,
+                       .priority   = PRIORITY_NORMAL,
+                };
+
+                pid = process_create("dsh", &attr1b);
+                printf("dsh PID: %d\n", pid);
+                process_wait(pid, NULL, MAX_DELAY_MS);
+
 
 
                 static const process_attr_t attr2 = {

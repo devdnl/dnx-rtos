@@ -84,8 +84,8 @@ enum mutex_type {
 // TODO kwrapper: automatically detected ISR functions
 
 extern void     _kernel_start                      (void);
-extern uint     _kernel_get_time_ms                (void);
-extern uint     _kernel_get_tick_counter           (void);
+extern u32_t    _kernel_get_time_ms                (void);
+extern u32_t    _kernel_get_tick_counter           (void);
 extern int      _kernel_get_number_of_tasks        (void);
 extern void     _kernel_scheduler_lock             (void);
 extern void     _kernel_scheduler_unlock           (void);

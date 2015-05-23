@@ -165,7 +165,7 @@ static inline struct dirent *readdir(DIR *dir)
 {
         struct dirent *dirent = NULL;
         syscall(SYSCALL_READDIR, &dirent, dir);
-        return dir;
+        return dirent;
 }
 
 #ifdef __cplusplus

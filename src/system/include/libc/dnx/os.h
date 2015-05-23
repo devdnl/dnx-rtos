@@ -291,7 +291,7 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 
 //==============================================================================
 /**
- * @brief uint get_tick_counter(void)
+ * @brief u32_t get_tick_counter(void)
  * The function <b>get_tick_counter</b>() return number of system clock ticks.
  *
  * @param None
@@ -310,14 +310,14 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
  * // ...
  */
 //==============================================================================
-static inline uint get_tick_counter(void)
+static inline u32_t get_tick_counter(void)
 {
         return _builtinfunc(kernel_get_tick_counter);
 }
 
 //==============================================================================
 /**
- * @brief int get_time_ms(void)
+ * @brief u32_t get_time_ms(void)
  * The function <b>get_time_ms</b>() return number of milliseconds which
  * elapsed after kernel start. Function is similar to <b>get_uptime</b>(), except
  * that return milliseconds instead of seconds. In this function the tick
@@ -340,7 +340,7 @@ static inline uint get_tick_counter(void)
  * // ...
  */
 //==============================================================================
-static inline uint get_time_ms(void)
+static inline u32_t get_time_ms(void)
 {
         return _builtinfunc(kernel_get_time_ms);
 }

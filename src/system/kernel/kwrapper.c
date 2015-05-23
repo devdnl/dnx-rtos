@@ -112,9 +112,9 @@ void _kernel_start(void)
  * @return a OS time in milliseconds
  */
 //==============================================================================
-uint _kernel_get_time_ms(void)
+u32_t _kernel_get_time_ms(void)
 {
-        return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
+        return (xTaskGetTickCount() * (1000/(configTICK_RATE_HZ)));
 }
 
 //==============================================================================
@@ -124,9 +124,9 @@ uint _kernel_get_time_ms(void)
  * @return a tick counter value
  */
 //==============================================================================
-uint _kernel_get_tick_counter(void)
+u32_t _kernel_get_tick_counter(void)
 {
-        return (uint)xTaskGetTickCount();
+        return (u32_t)xTaskGetTickCount();
 }
 
 //==============================================================================

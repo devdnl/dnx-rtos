@@ -35,10 +35,11 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
 #include <dnx/misc.h>
-#include <sys/stat.h>
+#include <dnx/vt100.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -75,12 +76,14 @@ static bool  analyze_line         (char *cmd);
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        char  line[PROMPT_LINE_LEN];
-        char  history[PROMPT_LINE_LEN];
-        char  cwd[CWD_PATH_LEN];
-        bool  prompt_enable;
-        FILE *input;
-        bool  stream_closed;
+        char            line[PROMPT_LINE_LEN];
+        char            history[PROMPT_LINE_LEN];
+        char            cwd[CWD_PATH_LEN];
+        bool            prompt_enable;
+        FILE           *input;
+        bool            stream_closed;
+        process_attr_t  pidmaster_attr;
+        process_attr_t  pidslave_attr;
 };
 
 const char *pipe_file = "/tmp/dsh-";
@@ -111,8 +114,11 @@ static void clear_prompt()
 static void print_prompt(void)
 {
         if (global->prompt_enable && global->input == stdin) {
-                printf(FONT_COLOR_GREEN"%s@%s:%s"RESET_ATTRIBUTES"\n", get_user_name(), get_host_name(), global->cwd);
-                printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
+                printf(VT100_FONT_COLOR_GREEN"%s@%s:%s"VT100_RESET_ATTRIBUTES"\n",
+                       get_user_name(), get_host_name(), global->cwd);
+
+                printf(VT100_FONT_COLOR_GREEN"$ "VT100_RESET_ATTRIBUTES);
+
                 fflush(stdout);
         }
 }
@@ -427,10 +433,10 @@ static bool start_program(char *master, char *slave, char *file)
         errno              = 0;
         FILE    *pipe      = NULL;
         FILE    *fout      = NULL;
-        prog_t  *pm        = NULL;
-        prog_t  *ps        = NULL;
         char    *pipe_name = NULL;
         bool     status    = true;
+        pid_t    pidmaster = 0;
+        pid_t    pidslave  = 0;
 
         if (master) {
                 master = remove_leading_spaces(master);
@@ -455,7 +461,7 @@ static bool start_program(char *master, char *slave, char *file)
         if (master && slave) {
                 pipe_name = calloc(sizeof(char), strlen(pipe_file) + 7);
                 if (pipe_name) {
-                        u32_t uptime = get_time_ms() & 0xFFFFFFF;
+                        u32_t uptime = get_time_ms();
                         snprintf(pipe_name, strlen(pipe_file) + 7, "%s%x", pipe_file, uptime);
 
                         if (mkfifo(pipe_name, 0666)) {
@@ -475,58 +481,94 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (master && slave && file) {
-                pm = program_new(master, global->cwd, stdin, pipe, pipe);
-                if (!pm) {
+                global->pidmaster_attr.f_stdin    = stdin;
+                global->pidmaster_attr.f_stdout   = pipe;
+                global->pidmaster_attr.f_stderr   = pipe;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                ps = program_new(slave, global->cwd, pipe, fout, fout);
-                if (!ps) {
-                        program_kill(pm);
+                global->pidslave_attr.f_stdin    = pipe;
+                global->pidslave_attr.f_stdout   = fout;
+                global->pidslave_attr.f_stderr   = fout;
+                global->pidslave_attr.cwd        = global->cwd;
+                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.priority   = PRIORITY_NORMAL;
+                pidslave = process_create(slave, &global->pidslave_attr);
+                if (pidslave == 0) {
+                        process_kill(pidmaster, NULL);
                         print_fail_message(slave);
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY_MS);
+                process_wait(pidmaster, NULL, MAX_DELAY_MS);
                 ioctl(pipe, IOCTL_PIPE__CLOSE);
-                program_wait_for_close(ps, MAX_DELAY_MS);
+                process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && slave) {
-                pm = program_new(master, global->cwd, stdin, pipe, pipe);
-                if (!pm) {
+                global->pidmaster_attr.f_stdin    = stdin;
+                global->pidmaster_attr.f_stdout   = pipe;
+                global->pidmaster_attr.f_stderr   = pipe;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                ps = program_new(slave, global->cwd, pipe, stdout, stderr);
-                if (!ps) {
-                        program_kill(pm);
+                global->pidslave_attr.f_stdin    = pipe;
+                global->pidslave_attr.f_stdout   = stdout;
+                global->pidslave_attr.f_stderr   = stderr;
+                global->pidslave_attr.cwd        = global->cwd;
+                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.priority   = PRIORITY_NORMAL;
+                pidslave = process_create(slave, &global->pidslave_attr);
+                if (pidslave == 0) {
+                        process_kill(pidmaster, NULL);
                         print_fail_message(slave);
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY_MS);
+                process_wait(pidmaster, NULL, MAX_DELAY_MS);
                 ioctl(pipe, IOCTL_PIPE__CLOSE);
-                program_wait_for_close(ps, MAX_DELAY_MS);
+                process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file) {
-                pm = program_new(master, global->cwd, stdin, fout, fout);
-                if (!pm) {
+                global->pidmaster_attr.f_stdin    = stdin;
+                global->pidmaster_attr.f_stdout   = fout;
+                global->pidmaster_attr.f_stderr   = fout;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY_MS);
+                process_wait(pidmaster, NULL, MAX_DELAY_MS);
 
         } else if (master) {
-                pm = program_new(master, global->cwd, stdin, stdout, stderr);
-                if (!pm) {
+                global->pidmaster_attr.f_stdin    = stdin;
+                global->pidmaster_attr.f_stdout   = stdout;
+                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY_MS);
+                process_wait(pidmaster, NULL, MAX_DELAY_MS);
 
         } else {
                 status = false;
@@ -544,14 +586,6 @@ free_resources:
 
         if (pipe_name) {
                 free(pipe_name);
-        }
-
-        if (pm) {
-                program_delete(pm);
-        }
-
-        if (ps) {
-                program_delete(ps);
         }
 
         return status;
@@ -655,7 +689,6 @@ int_main(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         }
 
         getcwd(global->cwd, CWD_PATH_LEN);
-        task_set_cwd(global->cwd);
 
         for (;;) {
                 clear_prompt();

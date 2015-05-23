@@ -70,7 +70,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                           |                           |                           |
         SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size   |                           |                           |
         SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                           |                           |                           |
-        _SYSCALL_BLOCKING_,
+        #define _FIRST_BLOCKING_SYSCALL SYSCALL_PROCESSCREATE
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
         SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status               |                           |                           |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
