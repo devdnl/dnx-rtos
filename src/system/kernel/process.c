@@ -53,34 +53,36 @@
 typedef struct _prog_data pdata_t;
 
 struct _process {
-        res_header_t     header;                /* resource header                    */
-        task_t          *task;                  /* pointer to task handle             */
-        FILE            *f_stdin;               /* stdin file                         */
-        FILE            *f_stdout;              /* stdout file                        */
-        FILE            *f_stderr;              /* stderr file                        */
-        void            *globals;               /* address to global variables        */
-        res_header_t    *res_list;              /* list of used resources             */
-        const char      *cwd;                   /* current working path               */
-        const pdata_t   *pdata;                 /* program data                       */
-        sem_t           *exit_sem;              /* process exit semaphore             */
-        char            **argv;                 /* program arguments                  */
-        pid_t            pid;                   /* process ID                         */
-        int              errnov;                /* program error number               */
-        u32_t            timecnt;               /* counter used to calculate CPU load */
-        u16_t            CPU_load;              /* CPU load * 1000 (10 = 1%)          */
-        u8_t             argc;                  /* number of arguments                */
-        i8_t             status;                /* program status (return value)      */
-        bool             has_parent:1;          /* process has parent                 */
+        res_header_t     header;                /* resource header                      */
+        task_t          *task;                  /* pointer to task handle               */
+        FILE            *f_stdin;               /* stdin file                           */
+        FILE            *f_stdout;              /* stdout file                          */
+        FILE            *f_stderr;              /* stderr file                          */
+        void            *globals;               /* address to global variables          */
+        res_header_t    *res_list;              /* list of used resources               */
+        const char      *cwd;                   /* current working path                 */
+        const pdata_t   *pdata;                 /* program data                         */
+        sem_t           *exit_sem;              /* process exit semaphore               */
+        sem_t           *syscall_sem;           /* syscall semaphore                    */
+        char            **argv;                 /* program arguments                    */
+        pid_t            pid;                   /* process ID                           */
+        int              errnov;                /* program error number                 */
+        u32_t            timecnt;               /* counter used to calculate CPU load   */
+        u16_t            CPU_load;              /* CPU load * 1000 (10 = 1%)            */
+        u8_t             argc;                  /* number of arguments                  */
+        i8_t             status;                /* program status (return value)        */
+        bool             has_parent:1;          /* process has parent                   */
 };
 
 struct _thread {
-        res_header_t     header;                /* resource header                    */
-        task_t          *task;                  /* pointer to task handle             */
-        _process_t      *process;               /* process ID (thread owner)          */
-        void            *arg;                   /* thread function argument           */
-        sem_t           *exit_sem;              /* thread exit semaphore (join func.) */
-        size_t           stack_depth;           /* stack size                         */
-        tid_t            tid;                   /* thread ID                          */
+        res_header_t     header;                /* resource header                      */
+        task_t          *task;                  /* pointer to task handle               */
+        _process_t      *process;               /* process ID (thread owner)            */
+        void            *arg;                   /* thread function argument             */
+        sem_t           *exit_sem;              /* thread exit semaphore (join func.)   */
+        sem_t           *syscall_sem;           /* syscall semaphore                    */
+        size_t           stack_depth;           /* stack size                           */
+        tid_t            tid;                   /* thread ID                            */
 };
 
 /*==============================================================================
@@ -90,7 +92,7 @@ static void process_code(void *mainfn);
 static void thread_code(void *thrfunc);
 static int  process_thread_destroy(_thread_t *thread);
 static void process_destroy_all_resources(_process_t *proc);
-static bool resource_destroy(res_header_t *resource);
+static int  resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
@@ -173,6 +175,11 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                         if (result != ESUCC)
                                 goto finish;
 
+                        // create syscall semaphore
+                        result = _semaphore_create(1, 0, &proc->syscall_sem);
+                        if (result != ESUCC)
+                                goto finish;
+
                         // allocate program's global variables
                         result = allocate_process_globals(proc, proc->pdata);
                         if (result != ESUCC)
@@ -186,25 +193,25 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                         // set default program settings
                         proc->pid = ++PID_cnt;
 
-                        // create program's task
-                        result = _task_create(process_code,
-                                              proc->pdata->name,
-                                              *proc->pdata->stack_depth,
-                                              proc->pdata->main,
-                                              proc,
-                                              &proc->task);
+                        _kernel_scheduler_lock();
+                        {
+                                // create program's task
+                                result = _task_create(process_code,
+                                                      proc->pdata->name,
+                                                      *proc->pdata->stack_depth,
+                                                      proc->pdata->main,
+                                                      proc,
+                                                      &proc->task);
 
-                        if (result == ESUCC) {
-                                if (attr) {
-                                        _task_set_priority(proc->task, attr->priority);
-                                }
+                                if (result == ESUCC) {
+                                        if (attr) {
+                                                _task_set_priority(proc->task, attr->priority);
+                                        }
 
-                                if (pid) {
-                                        *pid = proc->pid;
-                                }
+                                        if (pid) {
+                                                *pid = proc->pid;
+                                        }
 
-                                _kernel_scheduler_lock();
-                                {
                                         if (process_list == NULL) {
                                                 process_list = proc;
                                         } else {
@@ -212,8 +219,8 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                                 process_list      = proc;
                                         }
                                 }
-                                _kernel_scheduler_unlock();
                         }
+                        _kernel_scheduler_unlock();
 
                         finish:
                         if (result != ESUCC) {
@@ -403,11 +410,12 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
                                                 prev->next = curr->next;
                                         }
 
-                                        if (resource_destroy(curr)) {
-                                                result = ESUCC;
-                                        } else {
+                                        result = resource_destroy(curr);
+                                        if (result != ESUCC) {
                                                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                                         }
+
+                                        break;
                                 } else {
                                         result = EFAULT;
                                         break;
@@ -651,11 +659,41 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
+ * @brief  Function return syscall semaphore handle of selected process/thread
+ *
+ * @param  taskhdl      task handle (NULL for current task)
+ *
+ * @return On success semaphore handle, otherwise NULL
+ */
+//==============================================================================
+KERNELSPACE sem_t *_process_get_syscall_sem(task_t *taskhdl)
+{
+        sem_t *sem = NULL;
+
+        _kernel_scheduler_lock();
+        {
+                res_header_t *res = _task_get_tag(taskhdl);
+
+                if (res->type == RES_TYPE_PROCESS) {
+                        sem = reinterpret_cast(_process_t*, res)->syscall_sem;
+
+                } else if (res->type == RES_TYPE_THREAD) {
+                        sem = reinterpret_cast(_thread_t*, res)->syscall_sem;
+                }
+        }
+        _kernel_scheduler_unlock();
+
+        return sem;
+}
+
+//==============================================================================
+/**
  * @brief  Function create a new thread for selected process
  *
  * @param[in ]  proc         process container
  * @param[in ]  func         thread function
  * @param[in ]  attr         thread attributes
+ * @param[in ]  sys          system thread
  * @param[in ]  arg          thread argument
  * @param[out]  tid          thread ID
  * @param[out]  task         kernel task
@@ -666,6 +704,7 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 KERNELSPACE int _process_thread_create(_process_t          *proc,
                                        thread_func_t        func,
                                        const thread_attr_t *attr,
+                                       bool                 sys,
                                        void                *arg,
                                        tid_t               *tid,
                                        task_t              **task)
@@ -680,36 +719,46 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         thread->process     = proc;
                         thread->arg         = arg;
 
-                        _semaphore_create(1, 0, &thread->exit_sem);
-                        if (result != ESUCC)
-                                goto finish;
+                        if (sys == false) {
+                                result = _semaphore_create(1, 0, &thread->exit_sem);
+                                if (result != ESUCC)
+                                        goto finish;
 
-                        result = _task_create(thread_code,
-                                              "th",
-                                              (attr ? attr->stack_depth : STACK_DEPTH_LOW),
-                                              func,
-                                              thread,
-                                              &thread->task);
-                        if (result != ESUCC)
-                                goto finish;
-
-                        result = _process_register_resource(proc, static_cast(res_header_t*, thread));
-                        if (result != ESUCC)
-                                goto finish;
-
-                        thread->tid = ++TID_cnt;
-
-                        if (attr) {
-                                _task_set_priority(thread->task, attr->priority);
+                                result = _semaphore_create(1, 0, &thread->syscall_sem);
+                                if (result != ESUCC)
+                                        goto finish;
                         }
 
-                        if (tid) {
-                                *tid = thread->tid;
-                        }
+                        _kernel_scheduler_lock();
+                        {
+                                result = _task_create(thread_code,
+                                                      "th",
+                                                      (attr ? attr->stack_depth : STACK_DEPTH_LOW),
+                                                      func,
+                                                      thread,
+                                                      &thread->task);
+                                if (result == ESUCC) {
+                                        result = _process_register_resource(proc, static_cast(res_header_t*, thread));
+                                        if (result == ESUCC) {
 
-                        if (task) {
-                                *task = thread->task;
+                                                thread->tid = ++TID_cnt;
+
+                                                if (attr) {
+                                                        _task_set_priority(thread->task, attr->priority);
+                                                        thread->stack_depth = attr->stack_depth;
+                                                }
+
+                                                if (tid) {
+                                                        *tid = thread->tid;
+                                                }
+
+                                                if (task) {
+                                                        *task = thread->task;
+                                                }
+                                        }
+                                }
                         }
+                        _kernel_scheduler_unlock();
 
                         finish:
                         if (result != ESUCC) {
@@ -946,7 +995,16 @@ USERSPACE static void thread_code(void *thrfunc)
 
         func(thread->arg);
 
-        syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
+        if (thread->exit_sem) {
+                // userspace thread
+                syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
+        } else {
+                // system thread
+                thread->task = NULL;    // object release at the end of thread
+                _process_release_resource(thread->process,
+                                          static_cast(res_header_t*, thread),
+                                          RES_TYPE_THREAD);
+        }
 
         _task_exit();
 }
@@ -974,6 +1032,11 @@ static int process_thread_destroy(_thread_t *thread)
                 if (thread->exit_sem) {
                         _semaphore_destroy(thread->exit_sem);
                         thread->exit_sem = NULL;
+                }
+
+                if (thread->syscall_sem) {
+                        _semaphore_destroy(thread->syscall_sem);
+                        thread->syscall_sem = NULL;
                 }
 
                 result = _kfree(_MM_KRN, static_cast(void*, &thread));
@@ -1007,6 +1070,12 @@ static void process_destroy_all_resources(_process_t *proc)
 
         if (proc->exit_sem) {
                 _semaphore_signal(proc->exit_sem);
+                proc->exit_sem = NULL;
+        }
+
+        if (proc->syscall_sem) {
+                _semaphore_signal(proc->syscall_sem);
+                proc->syscall_sem = NULL;
         }
 
         if (proc->argv) {
@@ -1017,7 +1086,7 @@ static void process_destroy_all_resources(_process_t *proc)
 
         // free all resources
         foreach_resource(res, proc->res_list) {
-                if (resource_destroy(res) == false) {
+                if (resource_destroy(res) != ESUCC) {
                         _printk("Unknown object: %p\n", res);
                 }
         }
@@ -1054,8 +1123,8 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->CPU_load        = proc->CPU_load;
         stat->memory_usage   += sizeof(_process_t);
         stat->memory_usage   += proc->task ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
-        stat->memory_usage   += proc->cwd ? strnlen(proc->cwd, 256) : 0;
         stat->memory_usage   += proc->exit_sem ? sizeof(sem_t) : 0;
+        stat->memory_usage   += proc->syscall_sem ? sizeof(sem_t) : 0;
 
         for (int i = 0; proc->argv && i < proc->argc; i++) {
                 stat->memory_usage += strnlen(proc->argv[i], 256);
@@ -1091,6 +1160,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 case RES_TYPE_THREAD:
                         stat->threads_count++;
                         stat->memory_usage += sizeof(_thread_t);
+                        stat->memory_usage += reinterpret_cast(_thread_t*, res)->syscall_sem ? sizeof(sem_t) : 0;
                         stat->memory_usage += reinterpret_cast(_thread_t*, res)->stack_depth * sizeof(StackType_t);
                         break;
 
@@ -1221,10 +1291,10 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
  *
  * @param  resource     resource to release
  *
- * @return On success true is returned, otherwise false.
+ * @return One of errno value
  */
 //==============================================================================
-static bool resource_destroy(res_header_t *resource)
+static int resource_destroy(res_header_t *resource)
 {
         res_header_t *res2free = resource;
 
@@ -1258,10 +1328,10 @@ static bool resource_destroy(res_header_t *resource)
                 break;
 
         default:
-                return false;
+                return EINVAL;
         }
 
-        return true;
+        return ESUCC;
 }
 
 //==============================================================================

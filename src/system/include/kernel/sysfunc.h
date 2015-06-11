@@ -1559,7 +1559,7 @@ static inline int _sys_thread_create(thread_func_t func, const thread_attr_t *at
 
         if (thread) {
                 _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
-                result = _process_thread_create(proc, func, attr, arg, &thread->tid, &thread->task);
+                result = _process_thread_create(proc, func, attr, true, arg, &thread->tid, &thread->task);
         }
 
         return result;

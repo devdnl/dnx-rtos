@@ -75,7 +75,8 @@ extern "C" {
 #define EMEDIUMTYPE     34      /* Wrong medium type */
 #define ECANCELED       35      /* Operation Canceled */
 #define ENOTSUP         36      /* Not supported */
-#define _ENUMBER        37      /* total supported errors */
+#define ENOSYS          37      /* Function not implemented */
+#define _ENUMBER        38      /* total supported errors */
 
 /*==============================================================================
   Exported object types

@@ -258,72 +258,46 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 detect_kernel_panic(true);
                 driver_init("tty1", "/dev/tty1");
                 driver_init("tty2", "/dev/tty2");
+                driver_init("tty3", "/dev/tty3");
 
-                stdout = fopen("/dev/tty0", "w");
 
-                printf("Hello world! I'm using syscalls!\n");
+                syslog_enable("/dev/tty3");
 
-                puts("Starting child...");
-
-                static const process_attr_t attr3 = {
-                       .cwd        = "/",
-                       .p_stdin    = "/dev/tty2",
-                       .p_stdout   = "/dev/tty2",
-                       .p_stderr   = "/dev/tty2",
+                static const process_attr_t attr0 = {
+                       .cwd = "/",
+                       .f_stderr   = NULL,
+                       .f_stdin    = NULL,
+                       .f_stdout   = NULL,
                        .has_parent = false,
-                       .priority   = PRIORITY_NORMAL,
+                       .p_stderr   = "/dev/tty0",
+                       .p_stdin    = "/dev/tty0",
+                       .p_stdout   = "/dev/tty0"
                 };
-                pid_t pid = process_create("top", &attr3);
-                printf("[top]: %d\n", pid);
-
-
+                process_create("dsh", &attr0);
 
                 static const process_attr_t attr1 = {
-                       .cwd        = "/dev/",
-                       .p_stdin    = "/dev/tty1",
-                       .p_stdout   = "/dev/tty1",
-                       .p_stderr   = "/dev/tty1",
+                       .cwd = "/",
+                       .f_stderr   = NULL,
+                       .f_stdin    = NULL,
+                       .f_stdout   = NULL,
                        .has_parent = false,
-                       .priority   = PRIORITY_NORMAL,
-                };
-
-                pid = process_create("initd --child", &attr1);
-                printf("Child PID: %d\n", pid);
-                process_wait(pid, NULL, MAX_DELAY_MS);
-
-
-                static const process_attr_t attr1b = {
-                       .cwd        = "/dev/",
-                       .p_stdin    = "/dev/tty1",
-                       .p_stdout   = "/dev/tty1",
                        .p_stderr   = "/dev/tty1",
-                       .has_parent = false,
-                       .priority   = PRIORITY_NORMAL,
+                       .p_stdin    = "/dev/tty1",
+                       .p_stdout   = "/dev/tty1"
                 };
-
-                pid = process_create("dsh", &attr1b);
-                printf("dsh PID: %d\n", pid);
-                process_wait(pid, NULL, MAX_DELAY_MS);
-
-
+                process_create("dsh", &attr1);
 
                 static const process_attr_t attr2 = {
-                       .cwd        = "/dev/",
-                       .p_stdin    = "/dev/tty1",
-                       .p_stdout   = "/dev/tty1",
-                       .p_stderr   = "/dev/tty1",
-                       .has_parent = true,
-                       .priority   = PRIORITY_NORMAL,
+                       .cwd = "/",
+                       .f_stderr   = NULL,
+                       .f_stdin    = NULL,
+                       .f_stdout   = NULL,
+                       .has_parent = false,
+                       .p_stderr   = "/dev/tty2",
+                       .p_stdin    = "/dev/tty2",
+                       .p_stdout   = "/dev/tty2"
                 };
-                pid = process_create("initd --wait", &attr2);
-                printf("[initd --wait] PID: %d\n", pid);
-                process_wait(pid, NULL, MAX_DELAY_MS);
-                process_kill(pid, NULL);
-                puts("Process closed");
-
-                printf("Result: %d\n", result);
-
-                sleep(5);
+                process_create("dsh", &attr2);
         }
 
         return result;

@@ -63,7 +63,6 @@
 typedef struct {
         void     *retptr;
         task_t   *task;
-        sem_t    *done_sem;
         syscall_t syscall;
         va_list   args;
         int       err;
@@ -74,6 +73,8 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void syscall_done(syscallrq_t *rq);
+static void syscall_kworker_slave(void *arg);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 static void syscall_getmntentry(syscallrq_t *rq);
@@ -139,8 +140,7 @@ static void syscall_queuedestroy(syscallrq_t *rq);
   Local objects
 ==============================================================================*/
 static queue_t *call_request;
-static sem_t   *access_sem[NUMBER_OF_SYS_THREADS];
-static sem_t   *try_sem;
+static sem_t   *tsk_sem;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -229,19 +229,16 @@ static const syscallfunc_t syscalltab[] = {
 //==============================================================================
 void _syscall_init()
 {
-        _queue_create(NUMBER_OF_SYS_THREADS, sizeof(syscallrq_t*), &call_request);
-        _semaphore_create(1, 0, &try_sem);
+        int result = ESUCC;
 
-        for (int i = 0; i < NUMBER_OF_SYS_THREADS; i++) {
-                _semaphore_create(1, 1, &access_sem[i]);
+        result |= _queue_create(NUMBER_OF_SYS_THREADS, sizeof(syscallrq_t*), &call_request);
+        result |= _semaphore_create(NUMBER_OF_SYS_THREADS, NUMBER_OF_SYS_THREADS, &tsk_sem);
+        result |= _process_create("kworker", NULL, NULL);
+        result |= _process_create("initd", NULL, NULL);
+
+        if (result != ESUCC) {
+                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
         }
-
-        static const process_attr_t attr = { // TEST
-                .has_parent = true
-        };
-
-        _process_create("kworker", &attr, NULL);
-        _process_create("initd", &attr, NULL);
 }
 
 //==============================================================================
@@ -257,36 +254,31 @@ void _syscall_init()
 //==============================================================================
 void syscall(syscall_t syscall, void *retptr, ...)
 {
-        syscallrq_t syscallrq;
-        syscallrq.syscall = syscall;
-        syscallrq.task    = _builtinfunc(task_get_handle);
-        syscallrq.retptr  = retptr;
-        syscallrq.err     = ESUCC;
-        va_start(syscallrq.args, retptr);
+        if (syscall < _SYSCALL_COUNT) {
+                sem_t *syscall_sem = _builtinfunc(process_get_syscall_sem, _THIS_TASK);
+                if (syscall_sem) {
 
-        while (true) {
-                for (int i = 0; i < NUMBER_OF_SYS_THREADS; i++) {
-                        if (_builtinfunc(semaphore_wait, access_sem[i], 0) == ESUCC) {
-                                syscallrq.done_sem = access_sem[i];
+                        syscallrq_t syscallrq;
+                        syscallrq.syscall = syscall;
+                        syscallrq.task    = _builtinfunc(task_get_handle);
+                        syscallrq.retptr  = retptr;
+                        syscallrq.err     = ESUCC;
+
+                        va_start(syscallrq.args, retptr);
+                        {
                                 syscallrq_t *syscallrq_ptr = &syscallrq;
-                                int result = _builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS);
-                                if (result == ESUCC) {
-                                        if (_builtinfunc(semaphore_wait, access_sem[i], MAX_DELAY_MS) == ESUCC) {
+
+                                if (_builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS) ==  ESUCC) {
+                                        if (_builtinfunc(semaphore_wait, syscall_sem, MAX_DELAY_MS) == ESUCC) {
                                                 _errno = syscallrq.err;
-                                                _builtinfunc(semaphore_signal, access_sem[i]);
-                                                goto finish;
                                         }
-                                } else {
-                                        _builtinfunc(semaphore_signal, access_sem[i]);
                                 }
                         }
+                        va_end(syscallrq.args);
                 }
-
-                _builtinfunc(semaphore_wait, try_sem, MAX_DELAY_MS);
+        } else {
+                _errno = ENOSYS;
         }
-
-        finish:
-        va_end(syscallrq.args);
 }
 
 //==============================================================================
@@ -299,26 +291,109 @@ void syscall(syscall_t syscall, void *retptr, ...)
  * @return Never exit (0)
  */
 //==============================================================================
+
+
 int _syscall_kworker_master(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
+        _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
+
+        static const thread_attr_t thread_attr = {
+                .stack_depth = STACK_DEPTH_CUSTOM(140),
+                .priority    = PRIORITY_NORMAL
+        };
+
+        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-
-                        if (rq->syscall < _SYSCALL_COUNT) {
-                                syscalltab[rq->syscall](rq);
-                        } else {
-                                rq->err = EBADRQC;
-                        }
-
-                        _semaphore_signal(rq->done_sem);
-                        _semaphore_signal(try_sem);
+                        syscalltab[rq->syscall](rq);
+                        syscall_done(rq);
                 }
+
+                _semaphore_signal(tsk_sem);
         }
 
+
+//        for (;;) {
+//                syscallrq_t *rq;
+//                if (_queue_receive_peek(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+
+
+
+//                        if (rq->syscall >= _SYSCALL_BLOCKING) {
+//
+//                                if (_semaphore_wait(tsk_sem, 0) == ESUCC) {
+//                                        _process_thread_create(proc,
+//                                                               syscall_kworker_slave,
+//                                                               &thread_attr,
+//                                                               true,
+//                                                               NULL,
+//                                                               NULL,
+//                                                               NULL);
+//
+//                                        _task_yield();
+//                                } else {
+//                                        _kernel_scheduler_lock();
+//                                        _queue_receive(call_request, &rq, 0);
+//                                        _queue_send(call_request, &rq, 0);
+//                                        _kernel_scheduler_unlock();
+//                                        _task_yield();
+//                                }
+//                        } else {
+//                                syscallrq_t *rq;
+//                                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+//                                        syscalltab[rq->syscall](rq);
+//                                        syscall_done(rq);
+//                                }
+//                        }
+//                }
+//        }
+
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_kworker_slave(void *arg)
+{
+//        syscallrq_t *rq = arg;
+//        syscalltab[rq->syscall](rq);
+//        syscall_done(rq);
+
+        for (;;) {
+                syscallrq_t *rq;
+                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+                        syscalltab[rq->syscall](rq);
+                        syscall_done(rq);
+                }
+
+                _semaphore_signal(tsk_sem);
+        }
+
+//        _task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_done(syscallrq_t *rq)
+{
+        _semaphore_signal(_process_get_syscall_sem(GETTASKHDL()));
 }
 
 //==============================================================================
@@ -1259,7 +1334,7 @@ static void syscall_threadcreate(syscallrq_t *rq)
         GETARG(void *, arg);
 
         tid_t tid = 0;
-        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid, NULL));
+        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, false, arg, &tid, NULL));
         SETRETURN(tid_t, tid);
 }
 

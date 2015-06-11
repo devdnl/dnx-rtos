@@ -675,7 +675,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-int_main(dsh, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
