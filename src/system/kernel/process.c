@@ -47,6 +47,11 @@
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
 #define foreach_process(_v)             for (_process_t *_v = process_list; _v; _v = reinterpret_cast(_process_t*, _v->header.next))
 
+#define catcherrno(_x)                  for (int _ = 0; _ < 1; _++) for (int *__ = &_x; __; __ = 0)
+#define try(_x)                         if ((*__ = (_x)) != 0) break
+#define onsuccess(_x)                   if ((_x) == 0)
+#define onfailure(_x)                   if ((_x) != 0)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -156,79 +161,57 @@ extern u32_t                   _uptime_counter_sec;
 //==============================================================================
 KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid_t *pid)
 {
-        int result = EINVAL;
+        int         result = EINVAL;
+        _process_t *proc   = NULL;
 
-        if (cmd && cmd[0] != '\0') {
-                _process_t *proc;
-                result = _kzalloc(_MM_KRN, sizeof(_process_t), static_cast(void**, &proc));
-                if (result == ESUCC) {
+        catcherrno(result) {
+                try(!cmd || cmd[0] == '\0' ? EINVAL : ESUCC);
+                try(_kzalloc(_MM_KRN, sizeof(_process_t), static_cast(void**, &proc)));
 
-                        proc->header.type = RES_TYPE_PROCESS;
+                proc->header.type = RES_TYPE_PROCESS;
 
-                        // parse program's arguments
-                        result = argtab_create(cmd, &proc->argc, &proc->argv);
-                        if (result != ESUCC)
-                                goto finish;
+                try(argtab_create(cmd, &proc->argc, &proc->argv));
+                try(find_program(proc->argv[0], &proc->pdata));
+                try(_semaphore_create(1, 0, &proc->syscall_sem));
+                try(allocate_process_globals(proc, proc->pdata));
+                try(process_apply_attributes(proc, attr));
 
-                        // find program
-                        result = find_program(proc->argv[0], &proc->pdata);
-                        if (result != ESUCC)
-                                goto finish;
+                proc->pid = ++PID_cnt;
 
-                        // create syscall semaphore
-                        result = _semaphore_create(1, 0, &proc->syscall_sem);
-                        if (result != ESUCC)
-                                goto finish;
+                _kernel_scheduler_lock();
+                {
+                        catcherrno(result) {
+                                try(_task_create(process_code,
+                                                 proc->pdata->name,
+                                                 *proc->pdata->stack_depth,
+                                                 proc->pdata->main,
+                                                 proc,
+                                                 &proc->task));
+                        } onsuccess(result) {
+                                if (attr) {
+                                        _task_set_priority(proc->task, attr->priority);
+                                }
 
-                        // allocate program's global variables
-                        result = allocate_process_globals(proc, proc->pdata);
-                        if (result != ESUCC)
-                                goto finish;
+                                if (pid) {
+                                        *pid = proc->pid;
+                                }
 
-                        // set configured program settings
-                        result = process_apply_attributes(proc, attr);
-                        if (result != ESUCC)
-                                goto finish;
-
-                        // set default program settings
-                        proc->pid = ++PID_cnt;
-
-                        _kernel_scheduler_lock();
-                        {
-                                // create program's task
-                                result = _task_create(process_code,
-                                                      proc->pdata->name,
-                                                      *proc->pdata->stack_depth,
-                                                      proc->pdata->main,
-                                                      proc,
-                                                      &proc->task);
-
-                                if (result == ESUCC) {
-                                        if (attr) {
-                                                _task_set_priority(proc->task, attr->priority);
-                                        }
-
-                                        if (pid) {
-                                                *pid = proc->pid;
-                                        }
-
-                                        if (process_list == NULL) {
-                                                process_list = proc;
-                                        } else {
-                                                proc->header.next = static_cast(res_header_t*, process_list);
-                                                process_list      = proc;
-                                        }
+                                if (process_list == NULL) {
+                                        process_list = proc;
+                                } else {
+                                        proc->header.next = static_cast(res_header_t*, process_list);
+                                        process_list      = proc;
                                 }
                         }
-                        _kernel_scheduler_unlock();
+                }
+                _kernel_scheduler_unlock();
 
-                        finish:
-                        if (result != ESUCC) {
+                } onfailure(result) {
+                        if (proc) {
                                 process_destroy_all_resources(proc);
                                 _kfree(_MM_KRN, static_cast(void**, &proc));
                         }
                 }
-        }
 
         return result;
 }
