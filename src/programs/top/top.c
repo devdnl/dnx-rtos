@@ -43,7 +43,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC * 0.01)
-#define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 0.1)
+#define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
 
 /*==============================================================================
   Local types, enums definitions

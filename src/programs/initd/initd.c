@@ -251,7 +251,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 result = mkdir("/dev", 0777);
                 driver_init("gpio", "/dev/gpio");
                 driver_init("afiom", NULL);
-//                driver_init("pll", NULL);
+                driver_init("pll", NULL);
                 driver_init("uart2", "/dev/ttyS0");
                 driver_init("tty0", "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
@@ -273,7 +273,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                        .p_stdin    = "/dev/tty0",
                        .p_stdout   = "/dev/tty0"
                 };
-                process_create("dsh", &attr0);
+                process_create("top", &attr0);
 
                 static const process_attr_t attr1 = {
                        .cwd = "/",

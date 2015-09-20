@@ -51,9 +51,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                           |                           |                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                           |                           |                           |
         SYSCALL_RESTART,                // | void           |                           |                           |                           |                           |
-        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
-        SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
-        SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
         SYSCALL_PROCESSGETEXITSEM,      // | int            | pid_t *pid                | sem_t **sem               |                           |                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat      |                           |                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat      |                           |                           |
@@ -61,7 +58,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                           |                           |                           |
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size              |                           |                           |
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr       | void *arg                 |                           |
-        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
         SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                           |                           |                           |
         SYSCALL_THREADGETEXITSEM,       // | int            | tid_t *tid                | sem_t **sem               |                           |                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init    |                           |                           |
@@ -70,7 +66,11 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                           |                           |                           |
         SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size   |                           |                           |
         SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                           |                           |                           |
-        #define _SYSCALL_BLOCKING SYSCALL_PROCESSCREATE
+#define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY    /* this group ends at this syscall */
+        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                           |                           |                           |
+        SYSCALL_ABORT,                  // | void           |                           |                           |                           |                           |
+        SYSCALL_EXIT,                   // | void           | int *status               |                           |                           |                           |
+        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                           |                           |                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr      |                           |                           |
         SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status               |                           |                           |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
@@ -104,7 +104,9 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                           |                           |                           |
         SYSCALL_SYSLOGDISABLE,          // | int            |                           |                           |                           |                           |
         SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                | sem_t **exit_sem          |                           |
+#define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_SYSTEM          /* this group ends at this syscall */
         _SYSCALL_COUNT
+#define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* not used group */
 } syscall_t;
 
 /*==============================================================================

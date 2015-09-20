@@ -129,6 +129,7 @@ static struct mem *lfree;
 
 /** heap usage */
 static size_t heap_used;
+static size_t heap_used_max;
 
 /*==============================================================================
   Exported object definitions
@@ -343,7 +344,6 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                 }
 
                                 used = (size + SIZEOF_STRUCT_MEM);
-                                heap_used += used;
                         } else {
                                 /* (a mem2 struct does no fit into the user data space of
                                  *  mem and mem->next will always
@@ -357,7 +357,6 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                 mem->used = 1;
 
                                 used = (mem->next - (size_t)((u8_t *)mem - heap));
-                                heap_used += used;
                         }
 
                         if (mem == lfree) {
@@ -366,6 +365,9 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                         lfree = (struct mem *)(void *)&heap[lfree->next];
                                 }
                         }
+
+                        heap_used    += used;
+                        heap_used_max = heap_used_max < heap_used ? heap_used : heap_used_max;
 
                         if (allocated) {
                                 *allocated = used;

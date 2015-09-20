@@ -45,7 +45,7 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define NUMBER_OF_SYS_THREADS   2
+#define SYSCALL_QUEUE_LENGTH    8
 
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
 #define GETRETURN(type, var)    type var = rq->retptr
@@ -74,8 +74,7 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
   Local function prototypes
 ==============================================================================*/
 static void syscall_done(syscallrq_t *rq);
-static void syscall_kworker_thread_regular(void *arg);
-static void syscall_kworker_thread_weak(void *arg);
+static void syscall_kworker_thread(void *arg);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 static void syscall_getmntentry(syscallrq_t *rq);
@@ -141,7 +140,8 @@ static void syscall_queuedestroy(syscallrq_t *rq);
   Local objects
 ==============================================================================*/
 static queue_t *call_request;
-static sem_t   *tsk_cnt_sem;
+static int      thread_count;
+static int      thread_count_max;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -232,8 +232,7 @@ void _syscall_init()
 {
         int result = ESUCC;
 
-        result |= _queue_create(NUMBER_OF_SYS_THREADS, sizeof(syscallrq_t*), &call_request);
-        result |= _semaphore_create(NUMBER_OF_SYS_THREADS, NUMBER_OF_SYS_THREADS, &tsk_cnt_sem);
+        result |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
         result |= _process_create("kworker", NULL, NULL);
         result |= _process_create("initd", NULL, NULL);
 
@@ -296,33 +295,55 @@ int _syscall_kworker_process(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        static const thread_attr_t thread_attr = {
+        static const thread_attr_t fs_blocking_thread_attr = {
                 .stack_depth = STACK_DEPTH_CUSTOM(140),
                 .priority    = PRIORITY_NORMAL
         };
 
-        _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
-        _process_thread_create(proc, syscall_kworker_thread_regular, &thread_attr, true, NULL, NULL, NULL);
+        static const thread_attr_t net_blocking_thread_attr = {
+                .stack_depth = STACK_DEPTH_CUSTOM(140),
+                .priority    = PRIORITY_NORMAL
+        };
 
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-                        // TODO limitowanie watkow (semaforem).
-                        // TODO 1 watek ktory zawsze dziala (tworzenie i usuwanie watkow jest kosztowne)
-                        // TODO staly watek ma wyzszy piorytet niz master do momentu odebrania requestu,
-                        //      przez co glowny watek nie bedzie pochopnie tworzyl nowych watkow
-
-                        if (_process_thread_create(proc,
-                                                   syscall_kworker_thread_weak,
-                                                   &thread_attr,
-                                                   true,
-                                                   rq,
-                                                   NULL,
-                                                   NULL) == ESUCC) {
-
-                                _task_yield();
+                        if (rq->syscall <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
+                                syscalltab[rq->syscall](rq);
+                                syscall_done(rq);
                         } else {
-                                _queue_send(call_request, &rq, MAX_DELAY_MS);
+                                const thread_attr_t *thread_attr = NULL;
+                                if (rq->syscall <= _SYSCALL_GROUP_1_FS_BLOCKING) {
+                                        thread_attr = &fs_blocking_thread_attr;
+                                } else if (rq->syscall <= _SYSCALL_GROUP_2_NET_BLOCKING) {
+                                        thread_attr = &net_blocking_thread_attr;
+                                } else {
+                                        // FIXME what do if here is unknown group syscall?
+                                        continue;
+                                }
+
+                                if (_process_thread_create(_process_get_container_by_task(_THIS_TASK, NULL),
+                                                           syscall_kworker_thread,
+                                                           thread_attr,
+                                                           true,
+                                                           rq,
+                                                           NULL,
+                                                           NULL) == ESUCC) {
+
+//                                        _kernel_scheduler_lock();
+//                                        {
+//                                                thread_count++;
+//
+//                                                thread_count_max = thread_count > thread_count_max ? thread_count : thread_count_max;
+//                                        }
+//                                        _kernel_scheduler_unlock();
+
+                                        _task_yield();
+                                } else {
+                                        _queue_send(call_request, &rq, MAX_DELAY_MS);
+                                        _sleep_ms(25);
+                                        // FIXME what do when out of memory and queue is full?
+                                }
                         }
                 }
         }
@@ -337,32 +358,17 @@ int _syscall_kworker_process(int argc, char *argv[])
  * @return ?
  */
 //==============================================================================
-static void syscall_kworker_thread_regular(void *arg)
-{
-        for (;;) {
-                _task_set_priority(_THIS_TASK, PRIORITY_NORMAL + 1);
-
-                syscallrq_t *rq;
-                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-                        _task_set_priority(_THIS_TASK, PRIORITY_NORMAL);
-                        syscalltab[rq->syscall](rq);
-                        syscall_done(rq);
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-static void syscall_kworker_thread_weak(void *arg)
+static void syscall_kworker_thread(void *arg)
 {
         syscallrq_t *rq = arg;
         syscalltab[rq->syscall](rq);
         syscall_done(rq);
+
+//        _kernel_scheduler_lock();
+//        {
+//                thread_count--;
+//        }
+//        _kernel_scheduler_unlock();
 }
 
 //==============================================================================
