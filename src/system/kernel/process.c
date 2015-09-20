@@ -1452,7 +1452,7 @@ static int find_program(const char *name, const struct _prog_data **prog)
         static const size_t kworker_stack_depth  = STACK_DEPTH_LOW;
         static const size_t kworker_globals_size = 0;
         static const struct _prog_data kworker   = {.globals_size = &kworker_globals_size,
-                                                    .main         = _syscall_kworker_master,
+                                                    .main         = _syscall_kworker_process,
                                                     .name         = "kworker",
                                                     .stack_depth  = &kworker_stack_depth};
 

@@ -74,7 +74,8 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
   Local function prototypes
 ==============================================================================*/
 static void syscall_done(syscallrq_t *rq);
-static void syscall_kworker_slave(void *arg);
+static void syscall_kworker_thread_regular(void *arg);
+static void syscall_kworker_thread_weak(void *arg);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 static void syscall_getmntentry(syscallrq_t *rq);
@@ -140,7 +141,7 @@ static void syscall_queuedestroy(syscallrq_t *rq);
   Local objects
 ==============================================================================*/
 static queue_t *call_request;
-static sem_t   *tsk_sem;
+static sem_t   *tsk_cnt_sem;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -232,7 +233,7 @@ void _syscall_init()
         int result = ESUCC;
 
         result |= _queue_create(NUMBER_OF_SYS_THREADS, sizeof(syscallrq_t*), &call_request);
-        result |= _semaphore_create(NUMBER_OF_SYS_THREADS, NUMBER_OF_SYS_THREADS, &tsk_sem);
+        result |= _semaphore_create(NUMBER_OF_SYS_THREADS, NUMBER_OF_SYS_THREADS, &tsk_cnt_sem);
         result |= _process_create("kworker", NULL, NULL);
         result |= _process_create("initd", NULL, NULL);
 
@@ -291,28 +292,17 @@ void syscall(syscall_t syscall, void *retptr, ...)
  * @return Never exit (0)
  */
 //==============================================================================
-
-
-int _syscall_kworker_master(int argc, char *argv[])
+int _syscall_kworker_process(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
-
-        _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
 
         static const thread_attr_t thread_attr = {
                 .stack_depth = STACK_DEPTH_CUSTOM(140),
                 .priority    = PRIORITY_NORMAL
         };
 
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-
+        _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
+        _process_thread_create(proc, syscall_kworker_thread_regular, &thread_attr, true, NULL, NULL, NULL);
 
         for (;;) {
                 syscallrq_t *rq;
@@ -322,52 +312,22 @@ int _syscall_kworker_master(int argc, char *argv[])
                         // TODO staly watek ma wyzszy piorytet niz master do momentu odebrania requestu,
                         //      przez co glowny watek nie bedzie pochopnie tworzyl nowych watkow
 
-                        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, rq, NULL, NULL);
-                        _task_yield();
-//                        syscalltab[rq->syscall](rq);
-//                        syscall_done(rq);
-                }
+                        if (_process_thread_create(proc,
+                                                   syscall_kworker_thread_weak,
+                                                   &thread_attr,
+                                                   true,
+                                                   rq,
+                                                   NULL,
+                                                   NULL) == ESUCC) {
 
-//                _semaphore_signal(tsk_sem);
+                                _task_yield();
+                        } else {
+                                _queue_send(call_request, &rq, MAX_DELAY_MS);
+                        }
+                }
         }
 
-
-//        for (;;) {
-//                syscallrq_t *rq;
-//                if (_queue_receive_peek(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-
-
-
-//                        if (rq->syscall >= _SYSCALL_BLOCKING) {
-//
-//                                if (_semaphore_wait(tsk_sem, 0) == ESUCC) {
-//                                        _process_thread_create(proc,
-//                                                               syscall_kworker_slave,
-//                                                               &thread_attr,
-//                                                               true,
-//                                                               NULL,
-//                                                               NULL,
-//                                                               NULL);
-//
-//                                        _task_yield();
-//                                } else {
-//                                        _kernel_scheduler_lock();
-//                                        _queue_receive(call_request, &rq, 0);
-//                                        _queue_send(call_request, &rq, 0);
-//                                        _kernel_scheduler_unlock();
-//                                        _task_yield();
-//                                }
-//                        } else {
-//                                syscallrq_t *rq;
-//                                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-//                                        syscalltab[rq->syscall](rq);
-//                                        syscall_done(rq);
-//                                }
-//                        }
-//                }
-//        }
-
-        return 0;
+        return -1;
 }
 
 //==============================================================================
@@ -377,21 +337,32 @@ int _syscall_kworker_master(int argc, char *argv[])
  * @return ?
  */
 //==============================================================================
-static void syscall_kworker_slave(void *arg)
+static void syscall_kworker_thread_regular(void *arg)
+{
+        for (;;) {
+                _task_set_priority(_THIS_TASK, PRIORITY_NORMAL + 1);
+
+                syscallrq_t *rq;
+                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+                        _task_set_priority(_THIS_TASK, PRIORITY_NORMAL);
+                        syscalltab[rq->syscall](rq);
+                        syscall_done(rq);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void syscall_kworker_thread_weak(void *arg)
 {
         syscallrq_t *rq = arg;
         syscalltab[rq->syscall](rq);
         syscall_done(rq);
-
-//        for (;;) {
-//                syscallrq_t *rq;
-//                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-//                        syscalltab[rq->syscall](rq);
-//                        syscall_done(rq);
-//                }
-//        }
-
-//        _task_exit();
 }
 
 //==============================================================================

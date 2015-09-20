@@ -43,7 +43,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC * 0.01)
-#define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
+#define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 0.1)
 
 /*==============================================================================
   Local types, enums definitions
@@ -117,7 +117,7 @@ int_main(top, STACK_DEPTH_CUSTOM(140), int argc, char *argv[])
                         get_memory_size(), get_used_memory(), get_free_memory());
 
                 get_memory_usage_details(&global->mem);
-                printf("Mem: %d static, %d kernel, %d filesystem\n",
+                printf("Mem: %d static, %d kernel, %d filesystems\n",
                         global->mem.static_memory_usage,
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);

@@ -116,7 +116,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
 ==============================================================================*/
 extern void syscall(syscall_t syscall, void *retptr, ...);
 extern void _syscall_init();
-extern int  _syscall_kworker_master(int, char**);
+extern int  _syscall_kworker_process(int, char**);
 
 /*==============================================================================
   Exported inline functions
