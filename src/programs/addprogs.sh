@@ -33,7 +33,7 @@ function check_args()
 function get_program_list()
 {
     #echo $(ls -F "$1" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
-    echo -ne "initd\ntop\ndsh"
+    echo -ne "initd\ntop\ndsh\nuname"
 }
 
 #-------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ function create_makefile()
     echo '# Makefile for GNU make - file generated at build process' > "$Makefile_path"
     echo '' >> "$Makefile_path"
 
-    echo 'CSRC_PROGRAMS += program_registration.c' >> "$Makefile_path" 
+    echo 'CSRC_PROGRAMS += program_registration.c' >> "$Makefile_path"
     for prog in $program_list; do
         echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
     done
