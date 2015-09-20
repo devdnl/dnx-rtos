@@ -1156,6 +1156,8 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                         break;
                 }
         }
+
+        stat->memory_usage = _mm_align(stat->memory_usage);
 }
 
 //==============================================================================

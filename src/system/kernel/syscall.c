@@ -304,19 +304,31 @@ int _syscall_kworker_master(int argc, char *argv[])
                 .priority    = PRIORITY_NORMAL
         };
 
-        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
-        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
 //        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
 //        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+//        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, NULL, NULL, NULL);
+
 
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-                        syscalltab[rq->syscall](rq);
-                        syscall_done(rq);
+                        // TODO limitowanie watkow (semaforem).
+                        // TODO 1 watek ktory zawsze dziala (tworzenie i usuwanie watkow jest kosztowne)
+                        // TODO staly watek ma wyzszy piorytet niz master do momentu odebrania requestu,
+                        //      przez co glowny watek nie bedzie pochopnie tworzyl nowych watkow
+
+                        _process_thread_create(proc, syscall_kworker_slave, &thread_attr, true, rq, NULL, NULL);
+                        _task_yield();
+//                        syscalltab[rq->syscall](rq);
+//                        syscall_done(rq);
                 }
 
-                _semaphore_signal(tsk_sem);
+//                _semaphore_signal(tsk_sem);
         }
 
 
@@ -367,19 +379,17 @@ int _syscall_kworker_master(int argc, char *argv[])
 //==============================================================================
 static void syscall_kworker_slave(void *arg)
 {
-//        syscallrq_t *rq = arg;
-//        syscalltab[rq->syscall](rq);
-//        syscall_done(rq);
+        syscallrq_t *rq = arg;
+        syscalltab[rq->syscall](rq);
+        syscall_done(rq);
 
-        for (;;) {
-                syscallrq_t *rq;
-                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-                        syscalltab[rq->syscall](rq);
-                        syscall_done(rq);
-                }
-
-                _semaphore_signal(tsk_sem);
-        }
+//        for (;;) {
+//                syscallrq_t *rq;
+//                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+//                        syscalltab[rq->syscall](rq);
+//                        syscall_done(rq);
+//                }
+//        }
 
 //        _task_exit();
 }
