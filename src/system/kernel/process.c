@@ -948,8 +948,8 @@ USERSPACE int _get_average_CPU_load(avg_CPU_load_t *avg)
 //==============================================================================
 USERSPACE static void process_code(void *mainfn)
 {
-        process_func_t funcmain = mainfn;
-        _process_t     *proc    = _task_get_tag(_THIS_TASK);
+        process_func_t  funcmain = mainfn;
+        _process_t     *proc     = _task_get_tag(_THIS_TASK);
 
         proc->status = funcmain(proc->argc, proc->argv);
 
@@ -959,6 +959,7 @@ USERSPACE static void process_code(void *mainfn)
                 syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
         }
 
+        /* should never achieve this function */
         _task_exit();
 }
 
@@ -1052,12 +1053,12 @@ static void process_destroy_all_resources(_process_t *proc)
         }
 
         if (proc->exit_sem) {
-                _semaphore_signal(proc->exit_sem);
+                _semaphore_destroy(proc->exit_sem);
                 proc->exit_sem = NULL;
         }
 
         if (proc->syscall_sem) {
-                _semaphore_signal(proc->syscall_sem);
+                _semaphore_destroy(proc->syscall_sem);
                 proc->syscall_sem = NULL;
         }
 
