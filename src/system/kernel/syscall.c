@@ -140,8 +140,6 @@ static void syscall_queuedestroy(syscallrq_t *rq);
   Local objects
 ==============================================================================*/
 static queue_t *call_request;
-static int      thread_count;
-static int      thread_count_max;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
@@ -312,16 +310,21 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 syscalltab[rq->syscall](rq);
                                 syscall_done(rq);
                         } else {
+                                /* select stack size according to syscall group */
                                 const thread_attr_t *thread_attr = NULL;
                                 if (rq->syscall <= _SYSCALL_GROUP_1_FS_BLOCKING) {
                                         thread_attr = &fs_blocking_thread_attr;
                                 } else if (rq->syscall <= _SYSCALL_GROUP_2_NET_BLOCKING) {
                                         thread_attr = &net_blocking_thread_attr;
                                 } else {
-                                        // FIXME what do if here is unknown group syscall?
+                                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                                         continue;
                                 }
 
+                                /* give time for kernel to free resources after last syscall task */
+                                _sleep_ms(1);
+
+                                /* create new syscall task */
                                 if (_process_thread_create(_process_get_container_by_task(_THIS_TASK, NULL),
                                                            syscall_kworker_thread,
                                                            thread_attr,
@@ -330,18 +333,10 @@ int _syscall_kworker_process(int argc, char *argv[])
                                                            NULL,
                                                            NULL) == ESUCC) {
 
-//                                        _kernel_scheduler_lock();
-//                                        {
-//                                                thread_count++;
-//
-//                                                thread_count_max = thread_count > thread_count_max ? thread_count : thread_count_max;
-//                                        }
-//                                        _kernel_scheduler_unlock();
-
                                         _task_yield();
                                 } else {
                                         _queue_send(call_request, &rq, MAX_DELAY_MS);
-                                        _sleep_ms(25);
+                                        _sleep_ms(5);
                                         // FIXME what do when out of memory and queue is full?
                                 }
                         }
@@ -353,34 +348,34 @@ int _syscall_kworker_process(int argc, char *argv[])
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  This thread is responsible for handle syscall
+ *
+ * @param  arg          thread argument
+ *
+ * @return None
  */
 //==============================================================================
 static void syscall_kworker_thread(void *arg)
 {
+        UNUSED_ARG1(arg);
+
         syscallrq_t *rq = arg;
         syscalltab[rq->syscall](rq);
         syscall_done(rq);
-
-//        _kernel_scheduler_lock();
-//        {
-//                thread_count--;
-//        }
-//        _kernel_scheduler_unlock();
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function inform syscall owner about finished request
+ *
+ * @param  rq           request information
+ *
+ * @return None
  */
 //==============================================================================
 static void syscall_done(syscallrq_t *rq)
 {
-        _semaphore_signal(_process_get_syscall_sem(GETTASKHDL()));
+        _semaphore_signal(_process_get_syscall_sem(rq->task));
 }
 
 //==============================================================================
