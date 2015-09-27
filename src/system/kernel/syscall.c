@@ -294,14 +294,17 @@ int _syscall_kworker_process(int argc, char *argv[])
         UNUSED_ARG2(argc, argv);
 
         static const thread_attr_t fs_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(140),
+                .stack_depth = STACK_DEPTH_CUSTOM(140), // FIXME fs stack size from configuration
                 .priority    = PRIORITY_NORMAL
         };
 
         static const thread_attr_t net_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(140),
+                .stack_depth = STACK_DEPTH_CUSTOM(140), // FIXME net stack size from configuration
                 .priority    = PRIORITY_NORMAL
         };
+
+        /* remove exit semaphore for this process because is not necessary */
+        _semaphore_destroy(_process_get_syscall_sem(_THIS_TASK));
 
         for (;;) {
                 syscallrq_t *rq;
@@ -337,7 +340,6 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 } else {
                                         _queue_send(call_request, &rq, MAX_DELAY_MS);
                                         _sleep_ms(5);
-                                        // FIXME what do when out of memory and queue is full?
                                 }
                         }
                 }

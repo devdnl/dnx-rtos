@@ -82,9 +82,6 @@ typedef struct {
   Exported functions
 ==============================================================================*/
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
 //==============================================================================
 /**
  * @brief Function convert string to double
@@ -651,10 +648,7 @@ static inline int _sys_mkfifo(const char *path, mode_t mode)
  * @return One of errno values
  */
 //==============================================================================
-static inline int _sys_opendir(const char *path, DIR **dir)
-{
-        return _vfs_opendir(path, dir);
-}
+extern int _sys_opendir(const char *path, DIR **dir);
 
 //==============================================================================
 /**
@@ -665,10 +659,7 @@ static inline int _sys_opendir(const char *path, DIR **dir)
  * @return One of errno values
  */
 //==============================================================================
-static inline int _sys_closedir(DIR *dir)
-{
-        return _vfs_closedir(dir);
-}
+extern int _sys_closedir(DIR *dir);
 
 //==============================================================================
 /**
@@ -789,10 +780,7 @@ static inline int _sys_statfs(const char *path, struct statfs *statfs)
  * @return One of errno values
  */
 //==============================================================================
-static inline int _sys_fopen(const char *name, const char *mode, FILE **file)
-{
-        return _vfs_fopen(name, mode, file);
-}
+extern int _sys_fopen(const char *name, const char *mode, FILE **file);
 
 //==============================================================================
 /**
@@ -803,10 +791,7 @@ static inline int _sys_fopen(const char *name, const char *mode, FILE **file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static inline int _sys_fclose(FILE *file)
-{
-        return _vfs_fclose(file, false);
-}
+extern int _sys_fclose(FILE *file);
 
 //==============================================================================
 /**
@@ -1183,10 +1168,7 @@ static inline int _sys_time_diff(uint time1, uint time2)
  * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
-{
-        return _semaphore_create(cnt_max, cnt_init, sem);
-}
+extern int _sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem);
 
 //==============================================================================
 /**
@@ -1195,10 +1177,7 @@ static inline int _sys_semaphore_create(const uint cnt_max, const uint cnt_init,
  * @param[in] *sem      semaphore object
  */
 //==============================================================================
-static inline int _sys_semaphore_destroy(sem_t *sem)
-{
-        return _semaphore_destroy(sem);
-}
+extern int _sys_semaphore_destroy(sem_t *sem);
 
 //==============================================================================
 /**
@@ -1269,10 +1248,7 @@ static inline bool _sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_mutex_create(enum mutex_type type, mutex_t **mtx)
-{
-        return _mutex_create(type, mtx);
-}
+extern int _sys_mutex_create(enum mutex_type type, mutex_t **mtx);
 
 //==============================================================================
 /**
@@ -1283,10 +1259,7 @@ static inline int _sys_mutex_create(enum mutex_type type, mutex_t **mtx)
  * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_mutex_destroy(mutex_t *mutex)
-{
-        return _mutex_destroy(mutex);
-}
+extern int _sys_mutex_destroy(mutex_t *mutex);
 
 //==============================================================================
 /**
@@ -1342,10 +1315,7 @@ static inline int _sys_mutex_unlock(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_queue_create(const uint length, const uint item_size, queue_t **queue)
-{
-        return _queue_create(length, item_size, queue);
-}
+extern int _sys_queue_create(const uint length, const uint item_size, queue_t **queue);
 
 //==============================================================================
 /**
@@ -1356,10 +1326,7 @@ static inline int _sys_queue_create(const uint length, const uint item_size, que
  * @return One of errno values.
  */
 //==============================================================================
-static inline int _sys_queue_destroy(queue_t *queue)
-{
-        return _queue_destroy(queue);
-}
+extern int _sys_queue_destroy(queue_t *queue);
 
 //==============================================================================
 /**
@@ -1553,18 +1520,7 @@ static inline int _sys_get_number_of_tasks()
  * @return On of errno value.
  */
 //==============================================================================
-static inline int _sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread)
-{
-        int result = EINVAL;
-
-        if (thread) {
-                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
-                result = _process_thread_create(proc, func, attr, true, arg, &thread->tid, &thread->task);
-        }
-
-        return result;
-
-}
+extern int _sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread);
 
 //==============================================================================
 /**
@@ -1575,24 +1531,7 @@ static inline int _sys_thread_create(thread_func_t func, const thread_attr_t *at
  * @param *taskHdl       task handle
  */
 //==============================================================================
-static inline int _sys_thread_destroy(thread_t *thread)
-{
-        int result = EINVAL;
-
-        if (thread) {
-                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
-                _thread_t  *thr  = _process_thread_get_container(proc, thread->tid);
-                result           = _process_release_resource(proc,
-                                                             static_cast(res_header_t*, thr),
-                                                             RES_TYPE_THREAD);
-                if (result == ESUCC) {
-                        thread->task = NULL;
-                        thread->tid  = 0;
-                }
-        }
-
-        return result;
-}
+extern int _sys_thread_destroy(thread_t *thread);
 
 //==============================================================================
 /**
@@ -1665,7 +1604,11 @@ static inline bool _sys_thread_resume_from_ISR(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function yield task
+ * @brief Function yield task (thread)
+ *
+ * @param None
+ *
+ * @return None
  */
 //==============================================================================
 static inline void _sys_thread_yield()
@@ -1675,28 +1618,14 @@ static inline void _sys_thread_yield()
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return this thread object
+ *
+ * @param[out] thread   thread information
+ *
+ * @return One of errno value
  */
 //==============================================================================
-static inline int _sys_thread_self(thread_t *thread)
-{
-        int result = EINVAL;
-
-        if (thread) {
-                _thread_t *thr = _task_get_tag(_THIS_TASK);
-                if (thr && reinterpret_cast(res_header_t*, thr)->type == RES_TYPE_THREAD) {
-                        thread->task = _process_thread_get_task(thr);
-                        thread->tid  = _process_thread_get_tid(thr);
-                        result       = ESUCC;
-                } else {
-                        result = ESRCH;
-                }
-        }
-
-        return result;
-}
+extern int _sys_thread_self(thread_t *thread);
 
 //==============================================================================
 /**

@@ -231,38 +231,34 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
         int result = ESRCH;
 
         _process_t *prev = NULL;
-        foreach_process(curr) {
-                if (curr->pid == pid) {
+        foreach_process(process) {
+                if (process->pid == pid) {
                         _kernel_scheduler_lock();
                         {
-                                if (process_list == curr) {
-                                        process_list = static_cast(_process_t*, curr->header.next);
+                                if (process_list == process) {
+                                        process_list = static_cast(_process_t*, process->header.next);
                                 } else {
-                                        prev->header.next = curr->header.next;
+                                        prev->header.next = process->header.next;
                                 }
                         }
                         _kernel_scheduler_unlock();
 
-                        if (curr->exit_sem) {
-                                _semaphore_destroy(curr->exit_sem);
-                                curr->exit_sem = NULL;
-                        }
-
                         if (status) {
-                                *status = curr->status;
+                                *status = process->status;
                         }
 
-                        process_destroy_all_resources(curr);
+                        process->has_parent = false;
+                        process_destroy_all_resources(process);
 
-                        curr->header.next = NULL;
-                        curr->header.type = RES_TYPE_UNKNOWN;
-                        _kfree(_MM_KRN, static_cast(void**, &curr));
+                        process->header.next = NULL;
+                        process->header.type = RES_TYPE_UNKNOWN;
+                        _kfree(_MM_KRN, static_cast(void**, &process));
 
                         result = ESUCC;
                         break;
                 }
 
-                prev = curr;
+                prev = process;
         }
 
         return result;
@@ -1053,8 +1049,13 @@ static void process_destroy_all_resources(_process_t *proc)
         }
 
         if (proc->exit_sem) {
-                _semaphore_destroy(proc->exit_sem);
-                proc->exit_sem = NULL;
+                if (proc->has_parent) {
+                        _semaphore_signal(proc->exit_sem);
+                        proc->has_parent = false;
+                } else {
+                        _semaphore_destroy(proc->exit_sem);
+                        proc->exit_sem   = NULL;
+                }
         }
 
         if (proc->syscall_sem) {
