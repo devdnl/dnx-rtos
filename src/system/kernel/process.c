@@ -879,36 +879,36 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
 KERNELSPACE void _calculate_CPU_load(void)
 {
         // calculates 1 second CPU load of all processes
-        avg_CPU_load_calc.sec1 = 0;
+        avg_CPU_load_calc.avg1sec = 0;
 
         foreach_process(proc) {
                 proc->CPU_load          = proc->timecnt / (_CPU_total_time / 1000);
                 proc->timecnt           = 0;
-                avg_CPU_load_calc.sec1 += proc->CPU_load;
+                avg_CPU_load_calc.avg1sec += proc->CPU_load;
         }
 
         _CPU_total_time     = 0;
         CPU_total_time_last = 0;
 
         // calculates 1 min average CPU load
-        avg_CPU_load_calc.min1 += avg_CPU_load_calc.sec1;
-        avg_CPU_load_calc.min1 /= 2;
+        avg_CPU_load_calc.avg1min += avg_CPU_load_calc.avg1sec;
+        avg_CPU_load_calc.avg1min /= 2;
         if (_uptime_counter_sec % 60 == 0) {
-                avg_CPU_load_result.min1 = avg_CPU_load_calc.min1;
+                avg_CPU_load_result.avg1min = avg_CPU_load_calc.avg1min;
 
                 // calculates 5 min average CPU load
-                avg_CPU_load_calc.min5  += avg_CPU_load_calc.min1;
-                avg_CPU_load_calc.min5  /= 2;
+                avg_CPU_load_calc.avg5min  += avg_CPU_load_calc.avg1min;
+                avg_CPU_load_calc.avg5min  /= 2;
 
                 if (_uptime_counter_sec % 300 == 0) {
-                        avg_CPU_load_result.min5 = avg_CPU_load_calc.min5;
+                        avg_CPU_load_result.avg5min = avg_CPU_load_calc.avg5min;
 
                         // calculates 15 min average CPU load
-                        avg_CPU_load_calc.min15 += avg_CPU_load_calc.min5;
-                        avg_CPU_load_calc.min15 /= 2;
+                        avg_CPU_load_calc.avg15min += avg_CPU_load_calc.avg5min;
+                        avg_CPU_load_calc.avg15min /= 2;
 
                         if (_uptime_counter_sec % 900 == 0) {
-                                avg_CPU_load_result.min15 = avg_CPU_load_calc.min15;
+                                avg_CPU_load_result.avg15min = avg_CPU_load_calc.avg15min;
                         }
                 }
         }

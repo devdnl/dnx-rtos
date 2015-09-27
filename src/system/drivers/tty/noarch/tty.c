@@ -88,16 +88,12 @@ static void     switch_terminal         (int term_no);
 MODULE_NAME(TTY);
 
 static struct module *tty_module;
-//static const char    *service_in_name           = "tty-in"; TODO
-//static const char    *service_out_name          = "tty-out"; TODO
-//static const uint     service_in_stack_depth    = 96; // FIXME stack size adjustment needed (tty)
-//static const uint     service_out_stack_depth   = 96; // FIXME stack size adjustment needed (tty)
 static const int      service_in_priority       = PRIORITY_NORMAL;
 static const int      service_out_priority      = PRIORITY_NORMAL;
 static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
 
-static const thread_attr_t service_in_attr  = {.stack_depth = 96}; // TODO stack size
-static const thread_attr_t service_out_attr = {.stack_depth = 96}; // TODO stack size
+static const thread_attr_t service_in_attr  = {.stack_depth = 96, .priority = PRIORITY_NORMAL}; // TODO stack size
+static const thread_attr_t service_out_attr = {.stack_depth = 96, .priority = PRIORITY_NORMAL}; // TODO stack size
 
 /*==============================================================================
   Function definitions
@@ -380,7 +376,7 @@ API_MOD_READ(TTY,
                 if (fattr.non_blocking_rd) {
                         if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
                                 const char *str = ttyedit_get_value(tty->editline);
-                                copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
+                                copy_string_to_queue(str, tty->queue_out, false, 10);
                                 ttyedit_clear(tty->editline);
                                 _sys_mutex_unlock(tty->secure_mtx);
                         } else {
@@ -796,7 +792,9 @@ static void vt100_analyze(const char c)
 static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend, uint timeout)
 {
         for (uint i = 0; i < strlen(str); i++) {
-                _sys_queue_send(queue, &str[i], timeout);
+                if (_sys_queue_send(queue, &str[i], timeout) != ESUCC) {
+                        break;
+                }
         }
 
         if (lfend) {

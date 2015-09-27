@@ -109,20 +109,20 @@ int_main(top, STACK_DEPTH_CUSTOM(140), int argc, char *argv[])
 
                 printf("%s - %dd %d:%02d up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
                         argv[0], udays, uhrs, umins,
-                        avg.min1  / 10, avg.min1  % 10,
-                        avg.min5  / 10, avg.min5  % 10,
-                        avg.min15 / 10, avg.min15 % 10);
+                        avg.avg1min  / 10, avg.avg1min  % 10,
+                        avg.avg5min  / 10, avg.avg5min  % 10,
+                        avg.avg15min / 10, avg.avg15min % 10);
 
-                printf("Mem: %d total, %d used, %d free\n",
+                printf("B Mem: %d total, %d used, %d free\n",
                         get_memory_size(), get_used_memory(), get_free_memory());
 
                 get_memory_usage_details(&global->mem);
-                printf("Mem: %d static, %d kernel, %d filesystems\n",
+                printf("%d static, %d kernel, %d filesystems\n",
                         global->mem.static_memory_usage,
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);
 
-                printf("Mem: %d network, %d modules, %d programs\n",
+                printf("%d network, %d modules, %d programs\n",
                         global->mem.network_memory_usage,
                         global->mem.modules_memory_usage,
                         global->mem.programs_memory_usage);
