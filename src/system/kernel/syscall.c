@@ -294,12 +294,12 @@ int _syscall_kworker_process(int argc, char *argv[])
         UNUSED_ARG2(argc, argv);
 
         static const thread_attr_t fs_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(140), // FIXME fs stack size from configuration
+                .stack_depth = STACK_DEPTH_CUSTOM(CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH),
                 .priority    = PRIORITY_NORMAL
         };
 
         static const thread_attr_t net_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(140), // FIXME net stack size from configuration
+                .stack_depth = STACK_DEPTH_CUSTOM(CONFIG_RTOS_NETWORK_STACK_DEPTH),
                 .priority    = PRIORITY_NORMAL
         };
 
@@ -1152,11 +1152,13 @@ static void syscall_exit(syscallrq_t *rq)
 //==============================================================================
 static void syscall_system(syscallrq_t *rq)
 {
-        GETARG(const char *, cmd);
-        GETARG(pid_t *, pid);
-        GETARG(sem_t **, exit_sem);
+        UNUSED_ARG1(rq);
 
-        //TODO syscall_system
+//        GETARG(const char *, cmd);
+//        GETARG(pid_t *, pid);
+//        GETARG(sem_t **, exit_sem);
+
+        //TODO syscall system()
 }
 
 //==============================================================================

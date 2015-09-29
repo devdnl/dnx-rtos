@@ -167,32 +167,35 @@ extern const int                _prog_table_size;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int         _process_create                  (const char*, const process_attr_t*, pid_t*);
-extern int         _process_destroy                 (pid_t, int*);
-extern int         _process_exit                    (_process_t*, int);
-extern int         _process_abort                   (_process_t*);
-extern const char *_process_get_CWD                 (_process_t*);
-extern int         _process_register_resource       (_process_t*, res_header_t*);
-extern int         _process_release_resource        (_process_t*, res_header_t*, res_type_t);
-extern FILE       *_process_get_stderr              (_process_t*);
-extern const char *_process_get_name                (_process_t*);
-extern int         _process_get_pid                 (_process_t*, pid_t*);
-extern int         _process_get_exit_sem            (pid_t, sem_t **);
-extern int         _process_get_priority            (pid_t, int*);
-extern int         _process_get_stat_seek           (size_t, process_stat_t*);
-extern int         _process_get_stat_pid            (pid_t, process_stat_t*);
-extern _process_t *_process_get_container_by_task   (task_t*, bool*);
-extern sem_t      *_process_get_syscall_sem         (task_t*);
-extern int         _process_thread_create           (_process_t*, thread_func_t, const thread_attr_t*, bool, void*, tid_t*, task_t**);
-extern _thread_t  *_process_thread_get_container    (_process_t*, tid_t);
-extern task_t     *_process_thread_get_task         (_thread_t*);
-extern tid_t       _process_thread_get_tid          (_thread_t*);
-extern int         _process_thread_exit             (_thread_t*);
-extern int         _process_thread_get_exit_sem     (_process_t*, tid_t, sem_t**);
-extern void        _task_switched_in                (void);
-extern void        _task_switched_out               (void);
-extern void        _calculate_CPU_load              (void);
-extern int         _get_average_CPU_load            (avg_CPU_load_t*);
+extern int         _process_create                      (const char*, const process_attr_t*, pid_t*);
+extern int         _process_destroy                     (pid_t, int*);
+extern int         _process_exit                        (_process_t*, int);
+extern int         _process_abort                       (_process_t*);
+extern const char *_process_get_CWD                     (_process_t*);
+extern int         _process_register_resource           (_process_t*, res_header_t*);
+extern int         _process_release_resource            (_process_t*, res_header_t*, res_type_t);
+extern FILE       *_process_get_stderr                  (_process_t*);
+extern const char *_process_get_name                    (_process_t*);
+extern _process_t *_process_get_active                  ();
+extern int         _process_get_pid                     (_process_t*, pid_t*);
+extern int         _process_get_exit_sem                (pid_t, sem_t **);
+extern int         _process_get_priority                (pid_t, int*);
+extern int         _process_get_stat_seek               (size_t, process_stat_t*);
+extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
+extern _process_t *_process_get_container_by_task       (task_t*, bool*);
+extern sem_t      *_process_get_syscall_sem             (task_t*);
+extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, bool, void*, tid_t*, task_t**);
+extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
+extern _thread_t  *_process_thread_get_container_by_task(task_t *taskhdl);
+extern _thread_t  *_process_thread_get_active           (void);
+extern int         _process_thread_get_task             (_thread_t*, task_t**);
+extern int         _process_thread_get_tid              (_thread_t*, tid_t*);
+extern int         _process_thread_exit                 (_thread_t*);
+extern int         _process_thread_get_exit_sem         (_process_t*, tid_t, sem_t**);
+extern void        _task_switched_in                    (void);
+extern void        _task_switched_out                   (void);
+extern void        _calculate_CPU_load                  (void);
+extern int         _get_average_CPU_load                (avg_CPU_load_t*);
 
 /*==============================================================================
   Exported inline functions

@@ -91,10 +91,11 @@
 
 /* os configuration */
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
-#define __OS_FILE_SYSTEM_STACK_DEPTH__ 48
+#define __OS_FILE_SYSTEM_STACK_DEPTH__ 140
+#define __OS_NETWORK_STACK_DEPTH__ 140
+#define __OS_SYSCALL_STACK_DEPTH__ 140
 #define __OS_IRQ_STACK_DEPTH__ 16
 #define __OS_INITD_STACK_DEPTH__ 300
-#define __OS_SYSCALL_STACK_DEPTH__ 200
 #define __OS_TASK_MAX_PRIORITIES__ 7
 #define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000

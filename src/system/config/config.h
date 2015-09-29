@@ -61,12 +61,18 @@
 #define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (__OS_TASK_MIN_STACK_DEPTH__)
 
 /**
- * File system stack depth [levels] // TEST file system stack not necessary
+ * File system stack depth [levels]
  */
 #define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (__OS_FILE_SYSTEM_STACK_DEPTH__)
 
 /**
- * System call thread stack depht [levels]
+ * File system stack depth [levels]
+ */
+#define CONFIG_RTOS_NETWORK_STACK_DEPTH                (__OS_NETWORK_STACK_DEPTH__)
+
+
+/**
+ * System call thread stack depth [levels]
  */
 #define CONFIG_RTOS_SYSCALL_STACK_DEPTH                 (__OS_SYSCALL_STACK_DEPTH__)
 

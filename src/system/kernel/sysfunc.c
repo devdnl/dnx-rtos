@@ -245,12 +245,11 @@ int _sys_queue_destroy(queue_t *queue)
  * Function by default allocate memory for task data (localized in task tag)
  * which is used to cpu load calculation and standard IO and etc.
  *
- * @param[in ] func             task code
- * @param[in ] name             task name
- * @param[in ] stack_depth      stack deep
- * @param[in ] argv             argument pointer (can be NULL)
- * @param[in ] tag              user's tag (can be NULL)
- * @param[out] task             task handle (can be NULL)
+ * @param[in ] func             thread code
+ * @param[in ] attr             thread attribute (NULL for default)
+ * @param[in ] arg              argument pointer (can be NULL)
+ * @param[in ] thread           thread parameters (task and ID) (can be NULL)
+ * @param[out] task             task handle
  *
  * @return On of errno value.
  */
@@ -309,9 +308,8 @@ int _sys_thread_self(thread_t *thread)
         if (thread) {
                 _thread_t *thr = _task_get_tag(_THIS_TASK);
                 if (thr && reinterpret_cast(res_header_t*, thr)->type == RES_TYPE_THREAD) {
-                        thread->task = _process_thread_get_task(thr);
-                        thread->tid  = _process_thread_get_tid(thr);
-                        result       = ESUCC;
+                        result  = _process_thread_get_task(thr, &thread->task);
+                        result |= _process_thread_get_tid(thr, &thread->tid);
                 } else {
                         result = ESRCH;
                 }

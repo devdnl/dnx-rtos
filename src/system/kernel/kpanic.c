@@ -50,6 +50,8 @@ struct kernel_panic_desc {
         uint32_t                       valid1;          /* validation value 1 */
         enum _kernel_panic_desc_cause  cause;           /* kernel panic cause */
         const char                    *name;            /* process name       */
+        pid_t                          pid;             /* process ID         */
+        tid_t                          tid;             /* thread ID          */
         uint32_t                       valid2;          /* validation value 2 */
 };
 
@@ -121,12 +123,13 @@ bool _kernel_panic_detect(bool show_msg)
                                 kernel_panic_descriptor->name = "<unknown>";
                         }
 
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+                      #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
                         _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
-                        _printk("Cause  : %s\n", cause[kernel_panic_descriptor->cause]);
-                        _printk("Process: %s\n", kernel_panic_descriptor->name);
-#endif
-                        _sleep(2);
+                        _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
+                        _printk("PID  : %d (%s)\n", kernel_panic_descriptor->pid, kernel_panic_descriptor->name);
+                        _printk("TID  : %d\n", kernel_panic_descriptor->tid);
+                      #endif
+                        _sleep(3);
                 }
 
                 kernel_panic_descriptor->valid1 = 0;
@@ -143,14 +146,29 @@ bool _kernel_panic_detect(bool show_msg)
  * @return None
  */
 //==============================================================================
-void _kernel_panic_report(enum _kernel_panic_desc_cause suggest_cause)
+void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
 {
-        kernel_panic_descriptor->name = _process_get_name(NULL);
+        _ISR_disable();
 
-        if (suggest_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
+        _process_t *proc   = _process_get_active();
+        _thread_t  *thread = _process_thread_get_active();
+
+        if (proc) {
+                pid_t pid = 0;
+                _process_get_pid(proc, &pid);
+
+                tid_t tid = 0;
+                _process_thread_get_tid(thread, &tid);
+
+                kernel_panic_descriptor->name = _process_get_name(proc);
+                kernel_panic_descriptor->pid  = pid;
+                kernel_panic_descriptor->tid  = tid;
+        }
+
+        if (suggested_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
         } else {
-                kernel_panic_descriptor->cause = suggest_cause;
+                kernel_panic_descriptor->cause = suggested_cause;
         }
 
         kernel_panic_descriptor->valid1 = _KERNEL_PANIC_DESC_VALID1;

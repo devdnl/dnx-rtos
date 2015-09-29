@@ -112,6 +112,7 @@ static pid_t          PID_cnt;
 static tid_t          TID_cnt;
 static _process_t    *process_list;
 static _process_t    *active_process;
+static _thread_t     *active_thread;
 static u32_t          CPU_total_time_last;
 static avg_CPU_load_t avg_CPU_load_calc;
 static avg_CPU_load_t avg_CPU_load_result;
@@ -524,6 +525,20 @@ KERNELSPACE const char *_process_get_name(_process_t *proc)
 
 //==============================================================================
 /**
+ * @brief  Function return active process
+ *
+ * @param  None
+ *
+ * @return Object of active process or NULL if unknown process (e.g. idle task)
+ */
+//==============================================================================
+KERNELSPACE _process_t *_process_get_active()
+{
+        return active_process;
+}
+
+//==============================================================================
+/**
  * @brief  Function return PID of selected task/process
  *
  * @param[in]  proc         process container
@@ -782,13 +797,35 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
  * @brief  Function return task handle of selected thread object
  *
  * @param  thread       thread object
+ * @param  task         task pointer
  *
- * @return On success task handle is returned, otherwise NULL
+ * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
+KERNELSPACE int _process_thread_get_task(_thread_t *thread, task_t **task)
 {
-        return thread && thread->header.type == RES_TYPE_THREAD ? thread->task : NULL;
+        int result = EINVAL;
+
+        if (thread && task) {
+                *task  = thread->header.type == RES_TYPE_THREAD ? thread->task : NULL;
+                result = ESUCC;
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return container of active thread
+ *
+ * @param  None
+ *
+ * @return Pointer to active thread or NULL if not exist (e.g. main thread)
+ */
+//==============================================================================
+KERNELSPACE _thread_t *_process_thread_get_active(void)
+{
+        return active_thread;
 }
 
 //==============================================================================
@@ -796,13 +833,43 @@ KERNELSPACE task_t *_process_thread_get_task(_thread_t *thread)
  * @brief  Function return thread ID
  *
  * @param  thread       thread object
+ * @param  tid          thread ID
  *
- * @return On success thread ID is returned, otherwise 0
+ * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE tid_t _process_thread_get_tid(_thread_t *thread)
+KERNELSPACE int _process_thread_get_tid(_thread_t *thread, tid_t *tid)
 {
-        return thread && thread->header.type == RES_TYPE_THREAD ? thread->tid : 0;
+        int result = EINVAL;
+
+        if (thread && tid) {
+                *tid   = thread->header.type == RES_TYPE_THREAD ? thread->tid : 0;
+                result = ESUCC;
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return thread container of selected task
+ *
+ * @param  taskhdl      task
+ *
+ * @return On success thread container pointer is returned, otherwise NULL.
+ */
+//==============================================================================
+KERNELSPACE _thread_t *_process_thread_get_container_by_task(task_t *taskhdl)
+{
+        _thread_t *thread = _task_get_tag(taskhdl);
+
+        if (thread) {
+                if (thread->header.type != RES_TYPE_THREAD) {
+                        thread = NULL;
+                }
+        }
+
+        return thread;
 }
 
 //==============================================================================
@@ -1451,7 +1518,7 @@ static void argtab_destroy(char **argv)
 //==============================================================================
 static int find_program(const char *name, const struct _prog_data **prog)
 {
-        static const size_t kworker_stack_depth  = STACK_DEPTH_LOW;
+        static const size_t kworker_stack_depth  = CONFIG_RTOS_SYSCALL_STACK_DEPTH;
         static const size_t kworker_globals_size = 0;
         static const struct _prog_data kworker   = {.globals_size = &kworker_globals_size,
                                                     .main         = _syscall_kworker_process,
@@ -1522,6 +1589,7 @@ KERNELSPACE void _task_switched_in(void)
 #endif
 
         active_process = _process_get_container_by_task(_THIS_TASK, NULL);
+        active_thread  = _process_thread_get_container_by_task(_THIS_TASK);
 
         if (active_process) {
                 stdin  = active_process->f_stdin;

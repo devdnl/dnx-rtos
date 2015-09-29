@@ -92,8 +92,8 @@ static const int      service_in_priority       = PRIORITY_NORMAL;
 static const int      service_out_priority      = PRIORITY_NORMAL;
 static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
 
-static const thread_attr_t service_in_attr  = {.stack_depth = 96, .priority = PRIORITY_NORMAL}; // TODO stack size
-static const thread_attr_t service_out_attr = {.stack_depth = 96, .priority = PRIORITY_NORMAL}; // TODO stack size
+static const thread_attr_t service_in_attr  = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
+static const thread_attr_t service_out_attr = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
 
 /*==============================================================================
   Function definitions
@@ -376,7 +376,7 @@ API_MOD_READ(TTY,
                 if (fattr.non_blocking_rd) {
                         if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
                                 const char *str = ttyedit_get_value(tty->editline);
-                                copy_string_to_queue(str, tty->queue_out, false, 10);
+                                copy_string_to_queue(str, tty->queue_out, false, 1);
                                 ttyedit_clear(tty->editline);
                                 _sys_mutex_unlock(tty->secure_mtx);
                         } else {
