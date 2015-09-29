@@ -172,6 +172,7 @@ extern int         _process_destroy                     (pid_t, int*);
 extern int         _process_exit                        (_process_t*, int);
 extern int         _process_abort                       (_process_t*);
 extern const char *_process_get_CWD                     (_process_t*);
+extern int         _process_set_CWD                     (_process_t*, const char*);
 extern int         _process_register_resource           (_process_t*, res_header_t*);
 extern int         _process_release_resource            (_process_t*, res_header_t*, res_type_t);
 extern FILE       *_process_get_stderr                  (_process_t*);

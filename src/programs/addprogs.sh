@@ -33,7 +33,7 @@ function check_args()
 function get_program_list()
 {
     #echo $(ls -F "$1" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
-    echo -ne "initd\ntop\ndsh\nuname"
+    echo -ne "initd\ntop\ndsh\nuname\nls\nclear\nmkdir\nrm"
 }
 
 #-------------------------------------------------------------------------------

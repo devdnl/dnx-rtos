@@ -330,6 +330,26 @@ KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 
 //==============================================================================
 /**
+ * @brief  Function get CWD path for selected task
+ *
+ * @param  proc         process container
+ * @param  CWD          current working directory path (can be NULL)
+ *
+ * @return One of errno value
+ */
+//==============================================================================
+KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
+{
+        if (proc && proc->header.type == RES_TYPE_PROCESS) {
+                proc->cwd = CWD;
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Function register selected resource in selected task/process
  *
  * @param  proc         process container

@@ -73,7 +73,7 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void syscall_done(syscallrq_t *rq);
+static void syscall_do(syscallrq_t *rq);
 static void syscall_kworker_thread(void *arg);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
@@ -310,8 +310,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
                         if (rq->syscall <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
-                                syscalltab[rq->syscall](rq);
-                                syscall_done(rq);
+                                syscall_do(rq);
                         } else {
                                 /* select stack size according to syscall group */
                                 const thread_attr_t *thread_attr = NULL;
@@ -359,11 +358,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 //==============================================================================
 static void syscall_kworker_thread(void *arg)
 {
-        UNUSED_ARG1(arg);
-
-        syscallrq_t *rq = arg;
-        syscalltab[rq->syscall](rq);
-        syscall_done(rq);
+        syscall_do(arg);
 }
 
 //==============================================================================
@@ -375,8 +370,13 @@ static void syscall_kworker_thread(void *arg)
  * @return None
  */
 //==============================================================================
-static void syscall_done(syscallrq_t *rq)
+static void syscall_do(syscallrq_t *rq)
 {
+        _process_t *client = GETPROCESS();
+        _process_t *server = _process_get_container_by_task(_THIS_TASK, NULL);
+
+        _process_set_CWD(server, _process_get_CWD(client));
+        syscalltab[rq->syscall](rq);
         _semaphore_signal(_process_get_syscall_sem(rq->task));
 }
 
