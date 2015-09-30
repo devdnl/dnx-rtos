@@ -172,10 +172,16 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 proc->header.type = RES_TYPE_PROCESS;
 
                 try(argtab_create(cmd, &proc->argc, &proc->argv));
+
                 try(find_program(proc->argv[0], &proc->pdata));
-                try(_semaphore_create(1, 0, &proc->syscall_sem));
+
                 try(allocate_process_globals(proc, proc->pdata));
+
                 try(process_apply_attributes(proc, attr));
+
+                if (proc->pdata->main != _syscall_kworker_process) {
+                        try(_semaphore_create(1, 0, &proc->syscall_sem));
+                }
 
                 proc->pid = ++PID_cnt;
 
@@ -1335,7 +1341,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 }
 
                 /*
-                 * Create exit semaphore object if parent exist
+                 * Create exit semaphore object if parent exists
                  */
                 if (attr->has_parent) {
                         result = _semaphore_create(1, 0, &proc->exit_sem);

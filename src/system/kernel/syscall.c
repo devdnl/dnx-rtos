@@ -303,9 +303,6 @@ int _syscall_kworker_process(int argc, char *argv[])
                 .priority    = PRIORITY_NORMAL
         };
 
-        /* remove exit semaphore for this process because is not necessary */
-        _semaphore_destroy(_process_get_syscall_sem(_THIS_TASK));
-
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
@@ -376,7 +373,9 @@ static void syscall_do(syscallrq_t *rq)
         _process_t *server = _process_get_container_by_task(_THIS_TASK, NULL);
 
         _process_set_CWD(server, _process_get_CWD(client));
+
         syscalltab[rq->syscall](rq);
+
         _semaphore_signal(_process_get_syscall_sem(rq->task));
 }
 
