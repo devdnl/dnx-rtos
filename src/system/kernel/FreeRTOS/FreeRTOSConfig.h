@@ -86,7 +86,7 @@ extern void  vApplicationSwitchedOut(void);
 #define configMAX_PRIORITIES                    CONFIG_RTOS_TASK_MAX_PRIORITIES
 #define configMINIMAL_STACK_SIZE                CONFIG_RTOS_TASK_MIN_STACK_DEPTH
 #define configTOTAL_HEAP_SIZE                   0
-#define configMAX_TASK_NAME_LEN                 CONFIG_RTOS_TASK_NAME_LEN
+#define configMAX_TASK_NAME_LEN                 1
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 0
 #define configUSE_MUTEXES                       1
