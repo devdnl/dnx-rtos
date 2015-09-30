@@ -97,7 +97,6 @@
 #define __OS_IRQ_STACK_DEPTH__ 16
 #define __OS_INITD_STACK_DEPTH__ 300
 #define __OS_TASK_MAX_PRIORITIES__ 7
-#define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
 #define __OS_SLEEP_ON_IDLE__ _NO_
 #define __OS_PRINTF_ENABLE__ _YES_

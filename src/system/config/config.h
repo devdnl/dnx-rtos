@@ -87,11 +87,6 @@
 #define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (__OS_TASK_MAX_PRIORITIES__)
 
 /**
- * Task name length [bytes]
- */
-#define CONFIG_RTOS_TASK_NAME_LEN                       (__OS_TASK_NAME_LEN__)
-
-/**
  * Task schedule frequency [Hz]
  */
 #define CONFIG_RTOS_TASK_SCHED_FREQ                     (__OS_TASK_SCHED_FREQ__)
