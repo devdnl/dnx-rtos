@@ -253,7 +253,7 @@ void _syscall_init()
 void syscall(syscall_t syscall, void *retptr, ...)
 {
         if (syscall < _SYSCALL_COUNT) {
-                sem_t *syscall_sem = _builtinfunc(process_get_syscall_sem, _THIS_TASK);
+                sem_t *syscall_sem = _builtinfunc(process_get_syscall_sem_by_task, _THIS_TASK);
                 if (syscall_sem) {
 
                         syscallrq_t syscallrq;
@@ -371,12 +371,21 @@ static void syscall_do(syscallrq_t *rq)
 {
         _process_t *client = GETPROCESS();
         _process_t *server = _process_get_container_by_task(_THIS_TASK, NULL);
+        sem_t      *sem    = _process_get_syscall_sem_by_task(rq->task);
 
-        _process_set_CWD(server, _process_get_CWD(client));
+        if (_process_set_CWD(server, _process_get_CWD(client)) != ESUCC) {
+                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+        }
+
+        if (_process_set_syscall_sem_by_task(_THIS_TASK, sem) != ESUCC) {
+                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+        }
 
         syscalltab[rq->syscall](rq);
 
-        _semaphore_signal(_process_get_syscall_sem(rq->task));
+        _process_set_syscall_sem_by_task(_THIS_TASK, NULL);
+
+        _semaphore_signal(sem);
 }
 
 //==============================================================================

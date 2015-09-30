@@ -284,7 +284,7 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
         struct ethmac *hdl = device_handle;
 
-        int result = _sys_device_access(&hdl->dev_lock);
+        int result = _sys_device_get_access(&hdl->dev_lock);
 
         if (result == ESUCC) {
                 result = _sys_device_unlock(&hdl->dev_lock, force);

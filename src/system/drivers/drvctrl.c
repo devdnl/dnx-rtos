@@ -51,7 +51,6 @@
   Local function prototypes
 ==============================================================================*/
 static bool is_device_valid(dev_t id);
-static int  getpid(pid_t *pid);
 
 /*==============================================================================
   Local objects
@@ -112,20 +111,6 @@ static bool is_device_valid(dev_t id)
         }
 
         return false;
-}
-
-//==============================================================================
-/**
- * @brief  Function return current process ID
- *
- * @param  pid          pointer to process ID variable
- *
- * @return One of errno value
- */
-//==============================================================================
-static int getpid(pid_t *pid)
-{
-        return _process_get_pid(_process_get_container_by_task(_task_get_handle(), NULL), pid);
 }
 
 //==============================================================================
@@ -549,14 +534,15 @@ int _lock_device(dev_lock_t *dev_lock)
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
-                if (*dev_lock == 0) {
-                        pid_t pid = 0;
-                        result    = getpid(&pid);
-                        if (result == ESUCC) {
-                                *dev_lock = pid;
+                {
+                        if (*dev_lock == NULL) {
+                                *dev_lock = _process_get_syscall_sem_by_task(_THIS_TASK);
+                                if (*dev_lock) {
+                                        result = ESUCC;
+                                }
+                        } else {
+                                result = EBUSY;
                         }
-                } else {
-                        result = EBUSY;
                 }
                 _kernel_scheduler_unlock();
         }
@@ -580,11 +566,10 @@ int _unlock_device(dev_lock_t *dev_lock, bool force)
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
-                pid_t pid = 0;
-                result    = getpid(&pid);
-                if (result == ESUCC) {
-                        if (*dev_lock == pid || force) {
-                                *dev_lock = 0;
+                {
+                        if (*dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK) || force) {
+                                *dev_lock = NULL;
+                                result    = ESUCC;
                         } else {
                                 result = EBUSY;
                         }
@@ -604,16 +589,16 @@ int _unlock_device(dev_lock_t *dev_lock, bool force)
  * @return One of errno value (ESUCC for access granted)
  */
 //==============================================================================
-int _access_to_device(dev_lock_t *dev_lock)
+int _get_access_to_device(dev_lock_t *dev_lock)
 {
         int result = EINVAL;
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
-                pid_t pid = 0;
-                result    = getpid(&pid);
-                if (result == ESUCC) {
-                        if (*dev_lock != pid) {
+                {
+                        if (*dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK)) {
+                                result = ESUCC;
+                        } else {
                                 result = EBUSY;
                         }
                 }
@@ -637,7 +622,7 @@ bool _is_device_locked(dev_lock_t *dev_lock)
         bool result = false;
 
         if (dev_lock) {
-                result = *dev_lock != 0;
+                result = *dev_lock != NULL;
         }
 
         return result;

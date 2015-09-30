@@ -679,14 +679,14 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
- * @brief  Function return syscall semaphore handle of selected process/thread
+ * @brief  Function return syscall semaphore handle of selected task
  *
  * @param  taskhdl      task handle (NULL for current task)
  *
  * @return On success semaphore handle, otherwise NULL
  */
 //==============================================================================
-KERNELSPACE sem_t *_process_get_syscall_sem(task_t *taskhdl)
+KERNELSPACE sem_t *_process_get_syscall_sem_by_task(task_t *taskhdl)
 {
         sem_t *sem = NULL;
 
@@ -704,6 +704,37 @@ KERNELSPACE sem_t *_process_get_syscall_sem(task_t *taskhdl)
         _kernel_scheduler_unlock();
 
         return sem;
+}
+
+//==============================================================================
+/**
+ * @brief  Function set syscall semaphore of selected task
+ *
+ * @param  taskhdl      task handle (NULL for current task)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
+{
+        int result = EINVAL;
+
+        _kernel_scheduler_lock();
+        {
+                res_header_t *res = _task_get_tag(taskhdl);
+
+                if (res->type == RES_TYPE_PROCESS) {
+                        reinterpret_cast(_process_t*, res)->syscall_sem = sem;
+                        result = ESUCC;
+
+                } else if (res->type == RES_TYPE_THREAD) {
+                        reinterpret_cast(_thread_t*, res)->syscall_sem = sem;
+                        result = ESUCC;
+                }
+        }
+        _kernel_scheduler_unlock();
+
+        return result;
 }
 
 //==============================================================================

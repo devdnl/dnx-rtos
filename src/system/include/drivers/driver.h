@@ -140,9 +140,9 @@ static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
  * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline int _sys_device_access(dev_lock_t *dev_lock)
+static inline int _sys_device_get_access(dev_lock_t *dev_lock)
 {
-        return _access_to_device(dev_lock);
+        return _get_access_to_device(dev_lock);
 }
 
 //==============================================================================

@@ -93,7 +93,11 @@ struct _driver_entry {
         const u8_t               minor;
 };
 
-typedef pid_t dev_lock_t;
+/*
+ * To lock device, system uses syscall semaphore pointer as process/thread
+ * identification. Semaphore in this case is not used.
+ */
+typedef sem_t* dev_lock_t;
 
 /*==============================================================================
   Exported objects
@@ -121,7 +125,7 @@ extern const char *_get_driver_module_name      (uint);
 extern bool        _is_driver_active            (uint);
 extern int         _lock_device                 (dev_lock_t*);
 extern int         _unlock_device               (dev_lock_t*, bool);
-extern int         _access_to_device            (dev_lock_t*);
+extern int         _get_access_to_device        (dev_lock_t*);
 extern bool        _is_device_locked            (dev_lock_t*);
 
 #ifdef __cplusplus

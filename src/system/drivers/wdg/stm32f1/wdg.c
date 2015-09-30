@@ -224,7 +224,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 
         WDG_t *hdl = device_handle;
 
-        int result = _sys_device_access(&hdl->file_lock);
+        int result = _sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
                 switch (request) {
                 case IOCTL_WDG__RESET:
