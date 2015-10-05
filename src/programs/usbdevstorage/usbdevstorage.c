@@ -547,13 +547,18 @@ static void ep1_handler(void *arg)
  * @brief Storage main function
  */
 //==============================================================================
-PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;
 
-        FILE     *ep0        = fopen("/dev/usbd-ep0", "r+");
-        thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
+        static const thread_attr_t attr = {
+                 .priority    = PRIORITY_NORMAL,
+                 .stack_depth = STACK_DEPTH_LOW
+        };
+
+        FILE *ep0        = fopen("/dev/usbd-ep0", "r+");
+        tid_t ep1_thread = thread_create(ep1_handler, &attr, NULL);
 
         if (ep0 && ep1_thread) {
                 usbd_setup_container_t setup = {.timeout = 250};
@@ -708,12 +713,12 @@ PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                 ioctl(ep0, IOCTL_USBD__STOP);
         }
 
-        if (ep0)
+        if (ep0) {
                 fclose(ep0);
+        }
 
         if (ep1_thread) {
                 thread_cancel(ep1_thread);
-                thread_delete(ep1_thread);
         }
 
         puts("Exit.");

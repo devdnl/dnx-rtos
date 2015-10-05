@@ -57,6 +57,7 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION_END    };
 
 #ifdef __cplusplus
+#       include <stdlib.h>
         inline void* operator new     (size_t size) {return malloc(size);}
         inline void* operator new[]   (size_t size) {return malloc(size);}
         inline void  operator delete  (void* ptr  ) {free(ptr);}

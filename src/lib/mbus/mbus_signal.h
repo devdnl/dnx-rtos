@@ -31,6 +31,7 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include <mbus.h>
 #include <sys/types.h>
 
 #ifdef __cplusplus

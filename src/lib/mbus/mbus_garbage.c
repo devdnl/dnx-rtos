@@ -29,8 +29,8 @@
  ==============================================================================*/
 #include "mbus_garbage.h"
 #include <stdlib.h>
+#include <time.h>
 #include <dnx/misc.h>
-#include <dnx/timer.h>
 
 /*==============================================================================
  Local macros
@@ -43,7 +43,7 @@
 struct _mbus_garbage {
         void            *data;
         void            *self;
-        timer_t          timer;
+        time_t           timer;
 };
 
 /*==============================================================================
@@ -93,7 +93,7 @@ _mbus_garbage_t *_mbus_garbage_new(void *data)
         _mbus_garbage_t *this = malloc(sizeof(_mbus_garbage_t));
         if (this) {
                 this->data  = data;
-                this->timer = timer_reset();
+                this->timer = time(NULL);
                 this->self  = this;
         }
 
@@ -129,7 +129,7 @@ void _mbus_garbage_delete(_mbus_garbage_t *this)
 bool _mbus_garbage_is_time_expired(_mbus_garbage_t *this)
 {
         if (garbage_is_valid(this)) {
-                return timer_is_expired(this->timer, GARBAGE_LIVE_TIME);
+                return difftime(time(NULL), this->timer) >= GARBAGE_LIVE_TIME;
         } else {
                 return false;
         }

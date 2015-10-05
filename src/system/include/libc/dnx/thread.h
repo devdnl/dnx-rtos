@@ -168,8 +168,8 @@ static inline int process_kill(pid_t pid, int *status)
 /**
  * @brief int process_wait(pid_t pid, int *status, const uint timeout)
  * The function <b>process_wait</b>() wait for program close. Function destroy
- * child process when finish successfully in the selected timeout. In case of
- * timeout then process is not destroyed.
+ * child process when finish successfully at the selected timeout. In case of
+ * timeout the process is not destroyed.
  *
  * @param pid                   process ID
  * @param status                child process exit status (it can be NULL)
@@ -448,7 +448,7 @@ static inline int process_get_priority(pid_t pid)
  * // ...
  */
 //==============================================================================
-static inline tid_t thread_create(thread_func_t func, thread_attr_t *attr, void *arg)
+static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
 {
         tid_t tid = 0;
         syscall(SYSCALL_THREADCREATE, &tid, func, attr, arg);

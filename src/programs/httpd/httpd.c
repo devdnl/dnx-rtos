@@ -31,7 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <dnx/net.h>
+//#include <dnx/net.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -115,28 +115,28 @@ static const char index_html[] =
  * @return None
  */
 //==============================================================================
-static void serve(net_conn_t *conn)
-{
-        net_buf_t *inbuf;
-        if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
-
-                char *buf;
-                u16_t buf_len;
-                net_buf_data(inbuf, (void**)&buf, &buf_len);
-
-                if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
-                        net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
-                        net_conn_write(conn, index_html, sizeof(index_html) - 1, NET_CONN_FLAG_NOCOPY);
-                }
-
-                puts("Connection closed");
-
-                net_buf_delete(inbuf);
-        }
-
-        net_conn_close(conn);
-        net_conn_delete(conn);
-}
+//static void serve(net_conn_t *conn)
+//{
+//        net_buf_t *inbuf;
+//        if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
+//
+//                char *buf;
+//                u16_t buf_len;
+//                net_buf_data(inbuf, (void**)&buf, &buf_len);
+//
+//                if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
+//                        net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
+//                        net_conn_write(conn, index_html, sizeof(index_html) - 1, NET_CONN_FLAG_NOCOPY);
+//                }
+//
+//                puts("Connection closed");
+//
+//                net_buf_delete(inbuf);
+//        }
+//
+//        net_conn_close(conn);
+//        net_conn_delete(conn);
+//}
 
 //==============================================================================
 /**
@@ -153,29 +153,31 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
-        if (conn) {
-                if (net_conn_bind(conn, NULL, 80) == NET_ERR_OK) {
-                        if (net_conn_listen(conn) == NET_ERR_OK) {
-                                puts("Listen connection");
+#warning httpd: TODO network sockets
 
-                                net_err_t err;
-                                do {
-                                        net_conn_t *new_conn;
-                                        err = net_conn_accept(conn, &new_conn);
-                                        if (err == NET_ERR_OK) {
-                                                puts("Accept connection");
-                                                serve(new_conn);
-                                        }
-
-                                } while (err == NET_ERR_OK);
-                        }
-                }
-
-                net_conn_delete(conn);
-        }
-
-        puts("Exit");
+//        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
+//        if (conn) {
+//                if (net_conn_bind(conn, NULL, 80) == NET_ERR_OK) {
+//                        if (net_conn_listen(conn) == NET_ERR_OK) {
+//                                puts("Listen connection");
+//
+//                                net_err_t err;
+//                                do {
+//                                        net_conn_t *new_conn;
+//                                        err = net_conn_accept(conn, &new_conn);
+//                                        if (err == NET_ERR_OK) {
+//                                                puts("Accept connection");
+//                                                serve(new_conn);
+//                                        }
+//
+//                                } while (err == NET_ERR_OK);
+//                        }
+//                }
+//
+//                net_conn_delete(conn);
+//        }
+//
+//        puts("Exit");
 
         return 0;
 }

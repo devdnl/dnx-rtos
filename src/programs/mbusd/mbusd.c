@@ -32,8 +32,9 @@
 #include <string.h>
 #include <errno.h>
 #include <dnx/os.h>
+#include <dnx/vt100.h>
 #include <unistd.h>
-#include "mbus.h"
+#include "lib/mbus/mbus.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -112,7 +113,8 @@ static int print_signal_list()
                                 default                       : perm_str = "Invalid";    break;
                                 }
 
-                                printf("%s "FONT_COLOR_GRAY"[type: %s, size: %dB, mode: %s]"RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
+                                printf("%s "VT100_FONT_COLOR_GRAY"[type: %s, size: %dB, mode: %s]"
+                                       VT100_RESET_ATTRIBUTES"\n", info.name, type_str, info.size, perm_str);
                         } else {
                                 break;
                         }

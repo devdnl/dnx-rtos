@@ -29,9 +29,12 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 #include <dnx/os.h>
+#include <dnx/thread.h>
 #include <sys/types.h>
 
 /*==============================================================================
@@ -90,16 +93,23 @@ int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
         u32_t start_time = get_time_ms();
 
-        prog_t *prog = program_new(global->cmd, global->cwd, stdin, stdout, stderr);
-        if (prog) {
-                program_wait_for_close(prog, MAX_DELAY_MS);
-                program_delete(prog);
+        process_attr_t attr;
+        memset(&attr, 0, sizeof(attr));
+        attr.cwd        = global->cwd;
+        attr.f_stdin    = stdin;
+        attr.f_stdout   = stdout;
+        attr.f_stderr   = stderr;
+        attr.has_parent = true;
+
+        pid_t pid = process_create(global->cmd, &attr);
+        if (pid) {
+                process_wait(pid, NULL, MAX_DELAY_MS);
         } else {
                 perror(argv[1]);
         }
 
-        u32_t stop_time = get_time_ms() - start_time;
-        printf("\nreal\t%dm%d.%03ds\n", stop_time / 60000, (stop_time / 1000) % 60, stop_time % 1000);
+        u32_t total_time = get_time_ms() - start_time;
+        printf("\nreal\t%dm%d.%03ds\n", total_time / 60000, (total_time / 1000) % 60, total_time % 1000);
 
         return EXIT_SUCCESS;
 }

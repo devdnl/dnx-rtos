@@ -89,7 +89,7 @@ int_main(top, STACK_DEPTH_CUSTOM(140), int argc, char *argv[])
                 ioctl(stdin, IOCTL_VFS__DEFAULT_RD_MODE);
 
                 if (!strchr("k,.", key)) {
-                        if (difftime(clock(), timer) < REFRESH_INTERVAL_SEC) {
+                        if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
                                 sleep_ms(KEY_READ_INTERVAL_SEC);
                                 continue;
                         } else {

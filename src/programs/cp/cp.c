@@ -30,16 +30,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <errno.h>
 #include <dnx/os.h>
-#include <dnx/timer.h>
 #include <sys/stat.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
 #define BUFFER_MAX_SIZE                 16384
-#define INFO_REFRESH_TIME_MS            1000
+#define INFO_REFRESH_TIME_MS            (1 * CLOCKS_PER_SEC)
 #define PATH_MAX_SIZE                   128
 
 /*==============================================================================
@@ -108,8 +108,8 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint  start_time = get_time_ms();
-        uint  info_timer = timer_set_expired();
+        time_t start_time = time(NULL);
+        time_t info_timer = time(NULL) + INFO_REFRESH_TIME_MS + 1;
         u64_t lcopy_size = 0;
         int   n;
 
@@ -119,8 +119,8 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                         break;
                 }
 
-                if (timer_is_expired(info_timer, INFO_REFRESH_TIME_MS)) {
-                        info_timer = timer_reset();
+                if (difftime(time(NULL), info_timer) >= INFO_REFRESH_TIME_MS) {
+                        info_timer = time(NULL);
 
                         u32_t file_size = lfile_size / 1024;
                         u32_t copy_size = lcopy_size / 1024;
@@ -142,8 +142,8 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 lcopy_size += n;
         }
 
-        uint  stop_time = get_time_ms() - start_time;
-        u32_t copy_size = lcopy_size;
+        time_t stop_time = time(NULL) - start_time;
+        u32_t  copy_size = lcopy_size;
         struct stat stat;
         stat.st_size = 0;
         fstat(src_file, &stat);
@@ -162,10 +162,10 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         printf("\rCopied %d%sB in %d.%03d seconds (%d.%03d KiB/s)\n",
                copy_size,
                pre,
-               stop_time / 1000,
-               stop_time % 1000,
-               (((u32_t)lcopy_size / stop_time) * 1000) / 1024,
-               (((u32_t)lcopy_size / stop_time) * 1000) % 1024);
+               stop_time / CLOCKS_PER_SEC,
+               stop_time % CLOCKS_PER_SEC,
+               (((u32_t)lcopy_size / stop_time) * CLOCKS_PER_SEC) / 1024,
+               (((u32_t)lcopy_size / stop_time) * CLOCKS_PER_SEC) % 1024);
 
         fclose(src_file);
         fclose(dst_file);

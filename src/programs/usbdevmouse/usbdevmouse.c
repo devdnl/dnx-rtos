@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <dnx/misc.h>
+#include <dnx/vt100.h>
 #include <unistd.h>
 
 /*==============================================================================
@@ -341,7 +342,7 @@ start:
 
                                 if (operation == 0) {
                                         if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != 0) {
-                                                puts(FONT_COLOR_RED" ERROR"RESET_ATTRIBUTES);
+                                                puts(VT100_FONT_COLOR_RED" ERROR"VT100_RESET_ATTRIBUTES);
                                         } else {
                                                 puts(" OK");
                                         }
@@ -403,7 +404,7 @@ start:
                                 if (size && data) {
                                         size_t n = fwrite(data, 1, size, ep0);
                                         if (n == 0) {
-                                                printf(FONT_COLOR_RED" (%d/%d)"RESET_ATTRIBUTES"\n", n, size);
+                                                printf(VT100_FONT_COLOR_RED" (%d/%d)"VT100_RESET_ATTRIBUTES"\n", n, size);
                                         } else {
                                                 printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
                                         }

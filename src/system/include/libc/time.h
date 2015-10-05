@@ -362,7 +362,7 @@ static inline clock_t clock(void)
 //==============================================================================
 static inline double difftime(time_t end, time_t beginning)
 {
-        return end - beginning;
+        return (double)(end - beginning) / (double)CLOCKS_PER_SEC;
 }
 
 //==============================================================================

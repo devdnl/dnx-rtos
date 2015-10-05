@@ -32,6 +32,7 @@
 #include <string.h>
 #include <mntent.h>
 #include <dnx/misc.h>
+#include <dnx/vt100.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -74,8 +75,8 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf(FONT_BOLD"File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
-               "Free"CURSOR_FORWARD(6)"%%Used  Mount point"RESET_ATTRIBUTES"\n");
+        printf(VT100_FONT_BOLD"File system"VT100_CURSOR_FORWARD(5)"Total"VT100_CURSOR_FORWARD(5)
+               "Free"VT100_CURSOR_FORWARD(6)"%%Used  Mount point"VT100_RESET_ATTRIBUTES"\n");
 
         struct mntent mnt;
         int           i = 0;
@@ -84,28 +85,28 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t dfree;
                 const char *unit;
 
-                if (mnt.total > 10*GiB) {
-                        dtotal = CONVERT_TO_GiB(mnt.total);
-                        dfree  = CONVERT_TO_GiB(mnt.free);
+                if (mnt.mnt_total > 10*GiB) {
+                        dtotal = CONVERT_TO_GiB(mnt.mnt_total);
+                        dfree  = CONVERT_TO_GiB(mnt.mnt_free);
                         unit   = "GiB";
-                } else if (mnt.total > 10*MiB) {
-                        dtotal = CONVERT_TO_MiB(mnt.total);
-                        dfree  = CONVERT_TO_MiB(mnt.free);
+                } else if (mnt.mnt_total > 10*MiB) {
+                        dtotal = CONVERT_TO_MiB(mnt.mnt_total);
+                        dfree  = CONVERT_TO_MiB(mnt.mnt_free);
                         unit   = "MiB";
-                } else if (mnt.total > 10*KiB) {
-                        dtotal = CONVERT_TO_KiB(mnt.total);
-                        dfree  = CONVERT_TO_KiB(mnt.free);
+                } else if (mnt.mnt_total > 10*KiB) {
+                        dtotal = CONVERT_TO_KiB(mnt.mnt_total);
+                        dfree  = CONVERT_TO_KiB(mnt.mnt_free);
                         unit   = "KiB";
                 } else {
-                        dtotal = mnt.total;
-                        dfree  = mnt.free;
+                        dtotal = mnt.mnt_total;
+                        dfree  = mnt.mnt_free;
                         unit   = "B";
                 }
 
-                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
-                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
-                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
-                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
+                printf("%s"  VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(16)
+                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(26)
+                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(36)
+                       "%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(43)
                        "%s\n",
                        mnt.mnt_fsname, dtotal, unit, dfree, unit,
                        ((dtotal - dfree) * 100)/dtotal, mnt.mnt_dir);

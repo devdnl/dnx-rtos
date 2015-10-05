@@ -54,7 +54,7 @@ static void PrintFunction(const Proto* f, int full);
 #define PROGNAME        "luac"          /* default program name */
 #define OUTPUT          PROGNAME ".out" /* default output file */
 
-GLOBAL_VARIABLES {
+GLOBAL_VARIABLES_SECTION {
         int listing; /* list bytecodes? */
         int dumping; /* dump bytecodes? */
         int stripping; /* strip debug information? */

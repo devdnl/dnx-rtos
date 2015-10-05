@@ -30,8 +30,7 @@ function check_args()
 #-------------------------------------------------------------------------------
 function get_library_list()
 {
-    #echo $(ls -F "$1" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
-    echo ""
+    echo $(ls -F "$1" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
 }
 
 #-------------------------------------------------------------------------------
@@ -45,7 +44,7 @@ function create_makefile()
     echo '' >> "$Makefile_path"
 
     for lib in $library_list; do
-        echo '-include $(LIB_LOC)/'"$lib"'/Makefile' >> "$Makefile_path"
+        echo '-include $(APP_LIB_LOC)/'"$lib"'/Makefile' >> "$Makefile_path"
     done
 }
 

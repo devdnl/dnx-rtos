@@ -71,7 +71,7 @@ int_main(uptime, STACK_DEPTH_LOW, int argc, char *argv[])
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
 
-        printf("up %ud %2u:%2u\n", udays, uhrs, umins);
+        printf("up %ud %2u:%02u\n", udays, uhrs, umins);
 
         return EXIT_SUCCESS;
 }

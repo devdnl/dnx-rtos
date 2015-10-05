@@ -351,8 +351,13 @@ int_main(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argc;
         (void)argv;
 
-        FILE     *ep0        = fopen("/dev/usbd-ep0", "r+");
-        thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
+        static const thread_attr_t attr = {
+                 .priority    = PRIORITY_NORMAL,
+                 .stack_depth = STACK_DEPTH_LOW
+        };
+
+        FILE *ep0        = fopen("/dev/usbd-ep0", "r+");
+        tid_t ep1_thread = thread_create(ep1_handler, &attr, NULL);
 
         if (ep0 && ep1_thread) {
                 usbd_setup_container_t setup = {.timeout = 250};
@@ -541,7 +546,6 @@ int_main(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
 
         if (ep1_thread) {
                 thread_cancel(ep1_thread);
-                thread_delete(ep1_thread);
         }
 
         puts("Exit.");
