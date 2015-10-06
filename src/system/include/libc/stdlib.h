@@ -464,7 +464,9 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-        syscall(SYSCALL_FREE, NULL, ptr);
+        if (ptr) {
+                syscall(SYSCALL_FREE, NULL, ptr);
+        }
 }
 
 //==============================================================================
