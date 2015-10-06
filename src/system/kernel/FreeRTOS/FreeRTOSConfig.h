@@ -113,7 +113,7 @@ extern void  vApplicationSwitchedOut(void);
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                   0
-#define configMAX_CO_ROUTINE_PRIORITIES         1
+#define configMAX_CO_ROUTINE_PRIORITIES         0
 
 /* Software timer related definitions. */
 #define configUSE_TIMERS                        0
