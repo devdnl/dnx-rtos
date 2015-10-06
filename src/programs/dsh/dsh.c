@@ -84,9 +84,10 @@ GLOBAL_VARIABLES_SECTION {
         bool            stream_closed;
         process_attr_t  pidmaster_attr;
         process_attr_t  pidslave_attr;
+        const char     *pipe_file;
 };
 
-const char *pipe_file = "/tmp/dsh-";
+//const char *pipe_file = "/tmp/dsh-";
 
 /*==============================================================================
   Exported object definitions
@@ -459,10 +460,10 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (master && slave) {
-                pipe_name = calloc(sizeof(char), strlen(pipe_file) + 7);
+                pipe_name = calloc(sizeof(char), strlen(global->pipe_file) + 7);
                 if (pipe_name) {
                         u32_t uptime = get_time_ms();
-                        snprintf(pipe_name, strlen(pipe_file) + 7, "%s%x", pipe_file, uptime);
+                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%x", global->pipe_file, uptime);
 
                         if (mkfifo(pipe_name, 0666)) {
                                 perror("sh");
@@ -679,6 +680,7 @@ int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
+        global->pipe_file     = "/tmp/dsh-";
 
         if (argc == 2) {
                 global->input = fopen(argv[1], "r");

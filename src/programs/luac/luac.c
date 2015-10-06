@@ -60,19 +60,18 @@ GLOBAL_VARIABLES_SECTION {
         int stripping; /* strip debug information? */
         char* output; /* actual output file name */
         char Output[100]; /* default output file name */
+        const char *progname;
 };
-
-static const char* progname = PROGNAME; /* actual program name */
 
 static void fatal(const char* message)
 {
-        fprintf(stderr, "%s: %s\n", progname, message);
+        fprintf(stderr, "%s: %s\n", global->progname, message);
         exit(EXIT_FAILURE);
 }
 
 static void cannot(const char* what)
 {
-        fprintf(stderr, "%s: cannot %s %s: %s\n", progname, what,
+        fprintf(stderr, "%s: cannot %s %s: %s\n", global->progname, what,
                 global->output, strerror(errno));
         exit(EXIT_FAILURE);
 }
@@ -80,10 +79,10 @@ static void cannot(const char* what)
 static void usage(const char* message)
 {
         if (*message == '-')
-                fprintf(stderr, "%s: unrecognized option '%s'\n", progname,
+                fprintf(stderr, "%s: unrecognized option '%s'\n", global->progname,
                         message);
         else
-                fprintf(stderr, "%s: %s\n", progname, message);
+                fprintf(stderr, "%s: %s\n", global->progname, message);
         fprintf(stderr, "usage: %s [options] [filenames]\n"
                 "Available options are:\n"
                 "  -l       list (use -l -l for full listing)\n"
@@ -93,7 +92,7 @@ static void usage(const char* message)
                 "  -v       show version information\n"
                 "  --       stop handling options\n"
                 "  -        stop handling options and process stdin\n",
-                progname, global->Output);
+                global->progname, global->Output);
         exit(EXIT_FAILURE);
 }
 
@@ -104,7 +103,7 @@ static int doargs(int argc, char* argv[])
         int i;
         int version = 0;
         if (argv[0] != NULL && *argv[0] != 0)
-                progname = argv[0];
+                global->progname = argv[0];
         for (i = 1; i < argc; i++) {
                 if (*argv[i] != '-') /* end of options; keep it */
                         break;
@@ -230,6 +229,7 @@ int_main(luac, STACK_DEPTH_LARGE, int argc, char* argv[])
         global->stripping = 0; /* strip debug information? */
         memcpy(global->Output, OUTPUT, strlen(OUTPUT)); /* default output file name */
         global->output = global->Output;
+        global->progname = PROGNAME;
 
         lua_State* L;
         int i = doargs(argc, argv);
