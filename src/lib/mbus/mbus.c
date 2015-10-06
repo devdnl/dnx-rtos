@@ -599,7 +599,7 @@ mbus_t *mbus_new()
 {
         mbus_t *this = NULL;
 
-        if (mbus && getpid() == mbus->mbus_owner) {
+        if (mbus && getpid() != mbus->mbus_owner) {
 
                 this = malloc(sizeof(mbus_t));
                 if (this) {
