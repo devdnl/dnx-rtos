@@ -382,8 +382,9 @@ static int lfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                         result = _sys_driver_stat((dev_t)child->data, &dev_stat);
                         if (result == ESUCC) {
                                 child->size     = dev_stat.st_size;
-                                dir->dirent.dev = (dev_t)child->data;
                         }
+
+                        dir->dirent.dev = (dev_t)child->data;
                 } else {
                         result = ESUCC;
                 }
