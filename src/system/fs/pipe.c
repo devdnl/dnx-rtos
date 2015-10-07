@@ -180,7 +180,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
                                 break;
                         }
 
-                        if (!_queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : pipe_read_timeout)) {
+                        if (_queue_receive(pipe->queue, &buf[n], non_blocking || n ? 10 : pipe_read_timeout) != ESUCC) {
                                 break;
                         }
                 }
@@ -219,7 +219,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                                 break;
                         }
 
-                        if (!_queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout)) {
+                        if (_queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout) != ESUCC) {
                                 break;
                         }
                 }
