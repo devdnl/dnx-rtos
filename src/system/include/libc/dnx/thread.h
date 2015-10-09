@@ -505,7 +505,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 static inline int thread_cancel(tid_t tid)
 {
         int r = -1;
-        syscall(SYSCALL_THREADDESTROY, &r, &tid);
+        while (syscall(SYSCALL_THREADDESTROY, &r, &tid), r == 8 /*EAGAIN*/);
         return r;
 }
 

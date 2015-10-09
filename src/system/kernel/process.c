@@ -77,6 +77,7 @@ struct _process {
         u8_t             argc;                  /* number of arguments                  */
         i8_t             status;                /* program status (return value)        */
         bool             has_parent:1;          /* process has parent                   */
+        bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
 struct _thread {
@@ -88,6 +89,7 @@ struct _thread {
         sem_t           *syscall_sem;           /* syscall semaphore                    */
         size_t           stack_depth;           /* stack size                           */
         tid_t            tid;                   /* thread ID                            */
+        bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
 /*==============================================================================
@@ -733,6 +735,72 @@ KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
                 }
         }
         _kernel_scheduler_unlock();
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function set syscall in progress flag
+ *
+ * @param  taskhdl      task
+ * @param  state        flag state
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
+{
+        int result = EINVAL;
+
+        _kernel_scheduler_lock();
+        {
+                res_header_t *res = _task_get_tag(taskhdl);
+
+                if (res->type == RES_TYPE_PROCESS) {
+                        reinterpret_cast(_process_t*, res)->syscall_pending = state;
+                        result = ESUCC;
+
+                } else if (res->type == RES_TYPE_THREAD) {
+                        reinterpret_cast(_thread_t*, res)->syscall_pending = state;
+                        result = ESUCC;
+                }
+        }
+        _kernel_scheduler_unlock();
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function set syscall in progress flag
+ *
+ * @param  taskhdl      task
+ * @param  state        flag state
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
+{
+        int result = EINVAL;
+
+        if (state) {
+                _kernel_scheduler_lock();
+                {
+                        res_header_t *res = _task_get_tag(taskhdl);
+
+                        if (res->type == RES_TYPE_PROCESS) {
+                                *state = reinterpret_cast(_process_t*, res)->syscall_pending;
+                                result = ESUCC;
+
+                        } else if (res->type == RES_TYPE_THREAD) {
+                                *state = reinterpret_cast(_thread_t*, res)->syscall_pending;
+                                result = ESUCC;
+                        }
+                }
+                _kernel_scheduler_unlock();
+        }
 
         return result;
 }

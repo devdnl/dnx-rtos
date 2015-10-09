@@ -267,9 +267,11 @@ void syscall(syscall_t syscall, void *retptr, ...)
                                 syscallrq_t *syscallrq_ptr = &syscallrq;
 
                                 if (_builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS) ==  ESUCC) {
+                                        _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, true);
                                         if (_builtinfunc(semaphore_wait, syscall_sem, MAX_DELAY_MS) == ESUCC) {
                                                 _errno = syscallrq.err;
                                         }
+                                        _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, false);
                                 }
                         }
                         va_end(syscallrq.args);
@@ -1344,10 +1346,22 @@ static void syscall_threadcreate(syscallrq_t *rq)
 static void syscall_threaddestroy(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
-        SETERRNO(_process_release_resource(GETPROCESS(),
-                                           static_cast(res_header_t*, GETTHREAD(*tid)),
-                                           RES_TYPE_THREAD));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        task_t *task = NULL;
+        if (_process_thread_get_task(GETTHREAD(*tid), &task) == ESUCC) {
+                bool flag = true;
+                if (_process_get_syscall_pending_flag(task, &flag) == ESUCC && flag == false) {
+                        SETERRNO(_process_release_resource(GETPROCESS(),
+                                                           static_cast(res_header_t*, GETTHREAD(*tid)),
+                                                           RES_TYPE_THREAD));
+                        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+                } else {
+                        SETRETURN(int, EAGAIN);
+                }
+        } else {
+                SETERRNO(ESRCH);
+                SETRETURN(int, -1);
+        }
 }
 
 //==============================================================================
