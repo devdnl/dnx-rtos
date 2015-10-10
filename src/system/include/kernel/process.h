@@ -132,6 +132,7 @@ typedef struct {
         u16_t       mutexes_count;      //!< number of used mutexes
         u16_t       semaphores_count;   //!< number of used sempahores
         u16_t       queue_count;        //!< number of used queues
+        u16_t       socket_count;       //!< number of used sockets
         u16_t       threads_count;      //!< number of threads
         u16_t       CPU_load;           //!< CPU load (1% = 10)
         u16_t       stack_size;         //!< stack size
@@ -178,7 +179,8 @@ extern int         _process_register_resource           (_process_t*, res_header
 extern int         _process_release_resource            (_process_t*, res_header_t*, res_type_t);
 extern FILE       *_process_get_stderr                  (_process_t*);
 extern const char *_process_get_name                    (_process_t*);
-extern _process_t *_process_get_active                  ();
+extern size_t      _process_get_count                   (void);
+extern _process_t *_process_get_active                  (void);
 extern int         _process_get_pid                     (_process_t*, pid_t*);
 extern int         _process_get_exit_sem                (pid_t, sem_t **);
 extern int         _process_get_priority                (pid_t, int*);

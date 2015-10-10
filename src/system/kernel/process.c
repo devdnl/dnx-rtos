@@ -553,6 +553,30 @@ KERNELSPACE const char *_process_get_name(_process_t *proc)
 
 //==============================================================================
 /**
+ * @brief  Function return number of processes
+ *
+ * @param  None
+ *
+ * @return Number of processes
+ */
+//==============================================================================
+KERNELSPACE size_t _process_get_count(void)
+{
+        size_t count = 0;
+
+        _kernel_scheduler_lock();
+        {
+                foreach_process(proc) {
+                        count++;
+                }
+        }
+        _kernel_scheduler_unlock();
+
+        return count;
+}
+
+//==============================================================================
+/**
  * @brief  Function return active process
  *
  * @param  None
@@ -560,7 +584,7 @@ KERNELSPACE const char *_process_get_name(_process_t *proc)
  * @return Object of active process or NULL if unknown process (e.g. idle task)
  */
 //==============================================================================
-KERNELSPACE _process_t *_process_get_active()
+KERNELSPACE _process_t *_process_get_active(void)
 {
         return active_process;
 }
@@ -1302,6 +1326,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->memory_usage   += proc->task ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
         stat->memory_usage   += proc->exit_sem ? sizeof(sem_t) : 0;
         stat->memory_usage   += proc->syscall_sem ? sizeof(sem_t) : 0;
+        stat->socket_count    = 0;
 
         for (int i = 0; proc->argv && i < proc->argc; i++) {
                 stat->memory_usage += strnlen(proc->argv[i], 256);

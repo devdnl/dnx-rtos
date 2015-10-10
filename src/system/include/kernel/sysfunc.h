@@ -1505,6 +1505,50 @@ static inline int _sys_get_number_of_tasks()
 
 //==============================================================================
 /**
+ * @brief  Function return collected process statistics
+ *
+ * @param  pid      PID
+ * @param  stat     process statistics
+ *
+ * @return One of errno value (ESUCC, EINVAL, ENOENT).
+ */
+//==============================================================================
+static inline int _sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
+{
+        return _process_get_stat_pid(pid, stat);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return collected process statistics
+ *
+ * @param  seek     process seek (start from 0)
+ * @param  stat     process statistics
+ *
+ * @return One of errno value (ESUCC, EINVAL, ENOENT).
+ */
+//==============================================================================
+static inline int _sys_process_get_stat_seek(size_t seek, process_stat_t *stat)
+{
+        return _process_get_stat_seek(seek, stat);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return number of processes
+ *
+ * @param  None
+ *
+ * @return Number of processes
+ */
+//==============================================================================
+static inline size_t _sys_process_get_count(void)
+{
+        return _process_get_count();
+}
+
+//==============================================================================
+/**
  * @brief Function create new task and if enabled add to monitor list
  *
  * Function by default allocate memory for task data (localized in task tag)
