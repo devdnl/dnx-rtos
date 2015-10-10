@@ -13,7 +13,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # file system enable flags
 __ENABLE_LFS__=_YES_
 __ENABLE_DEVFS__=_NO_
-__ENABLE_PROCFS__=_NO_
+__ENABLE_PROCFS__=_YES_
 __ENABLE_FATFS__=_NO_
 __ENABLE_EXT2FS__=_NO_
 
