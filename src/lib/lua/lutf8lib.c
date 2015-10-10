@@ -193,7 +193,7 @@ static int byteoffset (lua_State *L) {
     lua_pushinteger(L, posi + 1);
   else  /* no such character */
     lua_pushnil(L);
-  return 1;  
+  return 1;
 }
 
 
@@ -234,7 +234,7 @@ static int iter_codes (lua_State *L) {
 #define UTF8PATT	"[\0-\x7F\xC2-\xF4][\x80-\xBF]*"
 
 
-static struct luaL_Reg funcs[] = {
+static const struct luaL_Reg funcs[] = {
   {"offset", byteoffset},
   {"codepoint", codepoint},
   {"char", utfchar},
