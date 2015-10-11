@@ -109,6 +109,7 @@ APP_LIB_LOC     = src/lib
 SYS_LOC         = src/system
 
 SYS_DRV_LOC     = $(SYS_LOC)/drivers
+SYS_DRV_INC_LOC = $(SYS_LOC)/include/drivers
 SYS_FS_LOC      = $(SYS_LOC)/fs
 SYS_INIT_LOC    = $(SYS_LOC)/init
 SYS_KRN_LOC     = $(SYS_LOC)/kernel
@@ -144,6 +145,7 @@ CODECHECK  = cppcheck
 ADDPROGS   = ./$(APP_PRG_LOC)/addprogs.sh
 ADDLIBS    = ./$(APP_LIB_LOC)/addlibs.sh
 ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
@@ -302,6 +304,9 @@ generate :
 	
 	@$(ECHO) "Adding file systems to the project..."	
 	@$(ADDFS) ./$(SYS_FS_LOC)
+	
+	@$(ECHO) "Adding file systems to the project..."
+	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository

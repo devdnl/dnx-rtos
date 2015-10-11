@@ -5,4 +5,4 @@ CSRC_CORE   += fs/fs_registration.c
 CSRC_CORE   += fs/vfs.c
 HDRLOC_CORE += fs
 
-include $(SYS_FS_LOC)/Makefile.in
+-include $(SYS_FS_LOC)/Makefile.in

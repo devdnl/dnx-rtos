@@ -64,7 +64,9 @@ extern "C" {
  * determines the number of driver to use. This depends on system configuration.
  *
  * @param pathname      node name
- * @param dev           device number
+ * @param mod_name      module name
+ * @param major         driver major number
+ * @param minor         driver minor number
  *
  * @errors EINVAL, ENOMEM, ...
  *
@@ -80,10 +82,10 @@ extern "C" {
  * // ...
  */
 //==============================================================================
-static inline int mknod(const char *pathname, dev_t dev)
+static inline int mknod(const char *pathname, const char *mod_name, int major, int minor)
 {
         int r;
-        syscall(SYSCALL_MKNOD, &r, pathname, &dev);
+        syscall(SYSCALL_MKNOD, &r, pathname, mod_name, &major, &minor);
         return r;
 }
 

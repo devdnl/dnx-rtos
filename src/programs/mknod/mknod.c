@@ -63,13 +63,15 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(mknod, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        if (argc < 3) {
-                printf("%s <file> <dev id>\n", argv[0]);
+        if (argc < 5) {
+                printf("%s <file> <module name> <major> <minor>\n", argv[0]);
                 return EXIT_SUCCESS;
         }
 
-        int node = atoi(argv[2]);
-        if (mknod(argv[1], node) != 0) {
+        int major = atoi(argv[3]);
+        int minor = atoi(argv[4]);
+
+        if (mknod(argv[1], argv[2], major, minor) != 0) {
                 perror(argv[1]);
                 return EXIT_FAILURE;
         }

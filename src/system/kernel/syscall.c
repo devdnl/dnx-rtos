@@ -461,8 +461,10 @@ static void syscall_getmntentry(syscallrq_t *rq)
 static void syscall_mknod(syscallrq_t *rq)
 {
         GETARG(const char *, pathname);
-        GETARG(dev_t *, dev);
-        SETERRNO(_vfs_mknod(pathname, *dev));
+        GETARG(const char *, mod_name);
+        GETARG(int *, major);
+        GETARG(int *, minor);
+        SETERRNO(_vfs_mknod(pathname, _dev_t__create(_module_get_ID(mod_name), *major, *minor)));
         SETRETURN(int, GETERRNO() ? 0 : -1);
 }
 
@@ -961,11 +963,13 @@ static void syscall_settime(syscallrq_t *rq)
 //==============================================================================
 static void syscall_driverinit(syscallrq_t *rq)
 {
-        GETARG(const char *, drv_name);
+        GETARG(const char *, mod_name);
+        GETARG(int *, major);
+        GETARG(int *, minor);
         GETARG(const char *, node_path);
         dev_t drvid = -1;
-        SETERRNO(_driver_init(drv_name, node_path, &drvid));
-        SETRETURN(int, drvid);
+        SETERRNO(_driver_init(mod_name, *major, *minor,  node_path, &drvid));
+        SETRETURN(dev_t, drvid);
 }
 
 //==============================================================================
@@ -979,8 +983,10 @@ static void syscall_driverinit(syscallrq_t *rq)
 //==============================================================================
 static void syscall_driverrelease(syscallrq_t *rq)
 {
-        GETARG(const char *, drv_name);
-        SETERRNO(_driver_release(drv_name));
+        GETARG(const char *, mod_name);
+        GETARG(int *, major);
+        GETARG(int *, minor);
+        SETERRNO(_driver_release(_dev_t__create(_module_get_ID(mod_name), *major, *minor)));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

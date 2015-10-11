@@ -76,7 +76,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path      | const char *mount_point   |                           |
         SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                           |                           |                           |
         SYSCALL_GETMNTENTRY,            // | int            | int *seek                 | struct mntent *mntent     |                           |                           |
-        SYSCALL_MKNOD,                  // | int            | const char *pathname      | dev_t *device             |                           |                           |
+        SYSCALL_MKNOD,                  // | int            | const char *pathname      | const char *mod_name      | int *major                | int *minor                |
         SYSCALL_MKDIR,                  // | int            | const char *pathname      | mode_t *mode              |                           |                           |
         SYSCALL_MKFIFO,                 // | int            | const char *pathname      | mode_t *mode              |                           |                           |
         SYSCALL_OPENDIR,                // | DIR*           | const char *pathname      |                           |                           |                           |
@@ -99,8 +99,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SYNC,                   // | void           |                           |                           |                           |                           |
         SYSCALL_GETTIME,                // | time_t         |                           |                           |                           |                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                           |                           |                           |
-        SYSCALL_DRIVERINIT,             // | int            | const char *drv_name      | const char *node_path     |                           |                           |
-        SYSCALL_DRIVERRELEASE,          // | int            | const char *drv_name      |                           |                           |                           |
+        SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                | int *minor                | const char *node_path     |
+        SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                | int *minor                |                           |
         SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                           |                           |                           |
         SYSCALL_SYSLOGDISABLE,          // | int            |                           |                           |                           |                           |
         SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                | sem_t **exit_sem          |                           |

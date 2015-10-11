@@ -67,7 +67,7 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 static void show_help(const char *name)
 {
-        printf("Usage: %s [OPTIONS] <module name> [module node]\n", name);
+        printf("Usage: %s [OPTIONS] <module name> <major> <minor> [module node]\n", name);
         puts("  -r            release module");
         puts("  -h, --help    this help");
 }
@@ -79,7 +79,7 @@ static void show_help(const char *name)
 //==============================================================================
 int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        if (argc < 2) {
+        if (argc < 4) {
                 show_help(argv[0]);
                 return 0;
         }
@@ -100,12 +100,17 @@ int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
 
         int status;
         if (release) {
-                status = driver_release(argv[2]) ? -1 : 0;
+                int major = atoi(argv[3]);
+                int minor = atoi(argv[4]);
+                status = driver_release(argv[2], major, minor) ? -1 : 0;
         } else {
-                if (argc == 2) {
-                        status = driver_init(argv[1], NULL);
+                int major = atoi(argv[2]);
+                int minor = atoi(argv[3]);
+
+                if (argc == 4) {
+                        status = driver_init(argv[1], major, minor, NULL);
                 } else {
-                        status = driver_init(argv[1], argv[2]);
+                        status = driver_init(argv[1], major, minor, argv[4]);
                 }
         }
 

@@ -323,7 +323,7 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
 //==============================================================================
 int _vfs_mknod(const char *path, dev_t dev)
 {
-        if (!path || dev < 0) {
+        if (!path) {
                 return EINVAL;
         }
 

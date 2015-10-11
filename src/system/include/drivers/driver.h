@@ -49,13 +49,13 @@ extern "C" {
 #undef errno
 
 #undef  _sys_zalloc
-#define _sys_zalloc(size_t__size, void__ppmem)                    _kzalloc(_MM_MOD, size_t__size, void__ppmem, _get_module_number(_module_name_))
+#define _sys_zalloc(size_t__size, void__ppmem)                    _kzalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  _sys_malloc
-#define _sys_malloc(size_t__size, void__ppmem)                    _kmalloc(_MM_MOD, size_t__size, void__ppmem, _get_module_number(_module_name_))
+#define _sys_malloc(size_t__size, void__ppmem)                    _kmalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  _sys_free
-#define _sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _get_module_number(_module_name_))
+#define _sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  _sys_llist_create
 #define _sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\

@@ -71,24 +71,23 @@ int_main(lsmod, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argc;
         (void)argv;
 
-        puts(VT100_FONT_BOLD"Driver"VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(16)"Module"
-             VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(32)"MID"
-             VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(37)"DID"
-             VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(42)"Active"
+        puts(VT100_FONT_BOLD"Driver"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(16)"Module ID"
              VT100_RESET_ATTRIBUTES);
 
-        int drv_number = get_number_of_drivers();
-        for (int i = 0; i < drv_number; i++) {
-                const char *mod_name  = get_driver_module_name(i);
-                const char *drv_name  = get_driver_name(i);
-                int         mod_id    = get_module_number(mod_name);
-                bool        is_active = is_driver_active(i);
+        ssize_t drv_number = get_number_of_loaded_drivers();
+        for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
+                const char *name;
+                int         major;
+                int         minor;
 
-                printf("%s"VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(16)"%s"
-                           VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(32)"%i"
-                           VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(37)"%u"
-                           VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(42)"%c\n",
-                       drv_name, mod_name, mod_id, i, is_active ? '*': ' ');
+                if (get_loaded_driver_info(i, &name, &major, &minor) == 0) {
+                        printf("%s%d-%d"VT100_CURSOR_BACKWARD(99)
+                               VT100_CURSOR_FORWARD(16)"%s\n",
+                               name, major, minor, get_module_ID(name));
+                } else {
+                        break;
+                }
         }
 
         return EXIT_SUCCESS;

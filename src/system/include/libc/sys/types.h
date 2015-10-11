@@ -78,8 +78,8 @@ typedef u32_t pid_t;
 /** thread ID */
 typedef u32_t tid_t;
 
-/** device */
-typedef int dev_t;
+/** device ID [15b module ID + 8b major + 8b minor] */
+typedef i32_t dev_t;
 
 /** time type */
 struct tm {

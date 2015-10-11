@@ -34,6 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "ioctl_groups.h"
 
 /*==============================================================================
   Exported macros
@@ -42,28 +43,6 @@ extern "C" {
 #define _IOR(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 #define _IOW(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 #define _IOWR(g, n, t)          (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-
-/* CT: IO group list */
-enum _IO_GROUP {
-        _IO_GROUP_PIPE,
-        _IO_GROUP_STORAGE,
-        _IO_GROUP_VFS,
-        _IO_GROUP_AFIO,
-        _IO_GROUP_CRCM,
-        _IO_GROUP_ETHMAC,
-        _IO_GROUP_GPIO,
-        _IO_GROUP_PLL,
-        _IO_GROUP_SDSPI,
-        _IO_GROUP_SPI,
-        _IO_GROUP_TTY,
-        _IO_GROUP_UART,
-        _IO_GROUP_WDG,
-        _IO_GROUP_I2C,
-        _IO_GROUP_USBD,
-        _IO_GROUP_IRQ,
-        _IO_GROUP_LOOP,
-        _IO_GROUP_RTCM,
-};
 
 /* predefined requests*/
 /**

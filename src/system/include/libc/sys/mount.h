@@ -144,8 +144,8 @@ static inline int umount(const char *mount_point)
 
 //==============================================================================
 /**
- * @brief int driver_init(const char *drv_name, const char *node_path)
- * The <b>driver_init<b>() function initialize driver pointed by <i>drv_name</i>
+ * @brief dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
+ * The <b>driver_init<b>() function initialize driver pointed by <i>mod_name</i>
  * and create file node pointed by <i>node_path</i>. If there is no need to
  * create node, then <i>node_path</i> can be <b>NULL</b>. Node can be created
  * later using <b>mknod</b>() function.<p>
@@ -153,8 +153,10 @@ static inline int umount(const char *mount_point)
  * Driver must exist in system to perform initialization. Driver's nodes can
  * be created only on file system which support it.
  *
- * @param drv_name      driver_name
- * @param node_path     path to node which should be created (or NULL)
+ * @param mod_name      module name
+ * @param major         major driver number
+ * @param minor         minor driver number
+ * @param node_path     path where driver node should be created (or NULL)
  *
  * @errors EINVAL, ENOMEM, EADDRINUSE
  *
@@ -164,28 +166,30 @@ static inline int umount(const char *mount_point)
  * @example
  * // ...
  *
- * driver_init("crc", "/dev/crc");   // with node
- * driver_init("afio", NULL);        // without node
+ * driver_init("UART", 0, 0, "/dev/uart0");   // UART0 as /dev/uart0
+ * driver_init("AFIO", 0, 0, NULL);           // driver without node
  *
  * // ...
  */
 //==============================================================================
-static inline int driver_init(const char *drv_name, const char *node_path)
+static inline dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
 {
-        int r;
-        syscall(SYSCALL_DRIVERINIT, &r, drv_name, node_path);
+        dev_t r;
+        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor, node_path);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int driver_release(const char *drv_name)
- * The <b>driver_release<b>() function release driver pointed by <i>drv_name</i>.
+ * @brief int driver_release(const char *mod_name, int major, int minor)
+ * The <b>driver_release<b>() function release driver pointed by <i>mod_name</i>.
  * If driver was released when node is created and pointed to driver then
  * node is node removed. From this time, device node is pointing to not
  * existing (initialized) device, resulting that user can't access to file.
  *
- * @param drv_name      driver_name
+ * @param mod_name      driver_name
+ * @param major         major driver number
+ * @param minor         minor driver number
  *
  * @errors EINVAL, ...
  *
@@ -200,10 +204,10 @@ static inline int driver_init(const char *drv_name, const char *node_path)
  * // ...
  */
 //==============================================================================
-static inline int driver_release(const char *drv_name)
+static inline int driver_release(const char *mod_name, int major, int minor)
 {
         int r;
-        syscall(SYSCALL_DRIVERINIT, &r, drv_name);
+        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor);
         return r;
 }
 
