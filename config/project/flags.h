@@ -123,7 +123,7 @@
 #include "network_flags.h"
 
 /* file systems */
-#define __ENABLE_DEVFS__ _NO_
+#define __ENABLE_DEVFS__ _YES_
 #define __ENABLE_LFS__ _YES_
 #define __ENABLE_FATFS__ _NO_
 #define __ENABLE_PROCFS__ _YES_

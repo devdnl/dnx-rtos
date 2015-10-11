@@ -143,6 +143,7 @@ CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
 ADDPROGS   = ./$(APP_PRG_LOC)/addprogs.sh
 ADDLIBS    = ./$(APP_LIB_LOC)/addlibs.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
@@ -210,7 +211,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : add_programs apply_git_hooks
+all : generate apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -291,11 +292,16 @@ status :
 # ./src/programs/Makefile, and ./src/lib/Makefile files required in the
 # build process
 ####################################################################################################
-.PHONY : add_programs
-add_programs :
-	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDPROGS) ./src/programs
-	@$(ADDLIBS) ./src/lib
+.PHONY : generate
+generate :
+	@$(ECHO) "Adding user's programs to the project..."
+	@$(ADDPROGS) ./$(APP_PRG_LOC)
+	
+	@$(ECHO) "Adding user's libraries to the project..."
+	@$(ADDLIBS) ./$(APP_LIB_LOC)
+	
+	@$(ECHO) "Adding file systems to the project..."	
+	@$(ADDFS) ./$(SYS_FS_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository
