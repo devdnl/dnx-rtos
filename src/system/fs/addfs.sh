@@ -2,9 +2,11 @@
 
 # configuration
 Makefile_name="Makefile.in"
+Regfile_name="fs_registration.c"
 
 # variables
 Makefile_path=
+Regfile_path=
 list=
 
 #-------------------------------------------------------------------------------
@@ -34,7 +36,7 @@ function get_list()
 }
 
 #-------------------------------------------------------------------------------
-# @brief  Creates empty Makefile
+# @brief  Creates Makefile
 # @param  None
 # @return None
 #-------------------------------------------------------------------------------
@@ -52,6 +54,39 @@ function create_makefile()
 }
 
 #-------------------------------------------------------------------------------
+# @brief  Creates registration file
+# @param  None
+# @return None
+#-------------------------------------------------------------------------------
+function create_registration_file()
+{
+    echo '// file generated automatically at build process' > "$Regfile_path"
+    echo '' >> "$Regfile_path"
+    echo '#include "fs/fsctrl.h"' >> "$Regfile_path"
+    echo '#include "fs/fs.h"' >> "$Regfile_path"
+    echo '#include <dnx/misc.h>' >> "$Regfile_path"
+    echo '' >> "$Regfile_path"
+
+    for fs in $list; do
+        echo '#if (__ENABLE_'${fs^^}'__)' >> "$Regfile_path"
+        echo "_IMPORT_FILE_SYSTEM($fs);" >> "$Regfile_path"
+        echo '#endif' >> "$Regfile_path"
+    done
+
+    echo '' >> "$Regfile_path"
+    echo 'const struct _FS_entry _FS_table[] = {' >> "$Regfile_path"
+    for fs in $list; do
+        echo '    #if (__ENABLE_'${fs^^}'__)' >> "$Regfile_path"
+        echo "    _FILE_SYSTEM_INTERFACE($fs)," >> "$Regfile_path"
+        echo '    #endif' >> "$Regfile_path"
+    done
+    echo '};' >> "$Regfile_path"
+    echo '' >> "$Regfile_path"
+
+    echo 'const uint _FS_table_size = ARRAY_SIZE(_FS_table);' >> "$Regfile_path"
+}
+
+#-------------------------------------------------------------------------------
 # @brief  Script main function
 # @param  1st argument
 # @return None
@@ -61,9 +96,11 @@ function main()
     check_args "$1"
 
     Makefile_path="$1/$Makefile_name"
+    Regfile_path="$1/$Regfile_name"
     list=$(get_list "$1")
 
     create_makefile
+    create_registration_file
 }
 
 main "$1"
