@@ -182,7 +182,7 @@ int _driver_init(const char *module, int major, int minor, const char *node_path
                         drvinfo.mem   = NULL;
 
                         // check if module is already initialized
-                        result = _mutex_lock(drvlst_mtx, MAX_DELAY_MS);
+//                        result = _mutex_lock(drvlst_mtx, MAX_DELAY_MS);
                         if (result == ESUCC) {
                                 if (_llist_find_begin(drvlst, &drvinfo) == -1) {
 
@@ -223,7 +223,7 @@ int _driver_init(const char *module, int major, int minor, const char *node_path
                                         result = EADDRINUSE;
                                 }
 
-                                _mutex_unlock(drvlst_mtx);
+//                                _mutex_unlock(drvlst_mtx);
                         }
                 } else {
                         _printk(MOD_NOT_EXIST_FMT, module);

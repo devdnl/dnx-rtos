@@ -256,16 +256,16 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 result = mount("procfs", "", "/proc");
 
                 driver_init("GPIO", 0, 0, "/dev/gpio");
-                driver_init("afiom", 0, 0, NULL);
-                driver_init("pll", 0, 0, NULL);
-                driver_init("uart2", 0, 0, "/dev/ttyS0");
-                driver_init("tty0", 0, 0, "/dev/tty0");
+                driver_init("AFIOM", 0, 0, NULL);
+                driver_init("PLL", 0, 0, NULL);
+                driver_init("UART", 0, 0, "/dev/ttyS0");
+                driver_init("TTY", 0, 0, "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
                 detect_kernel_panic(true);
-                driver_init("tty1", 1, 0, "/dev/tty1");
-                driver_init("tty2", 2, 0, "/dev/tty2");
-                driver_init("tty3", 3, 0, "/dev/tty3");
-                driver_init("crcm", 0, 0, "/dev/crc");
+                driver_init("TTY", 1, 0, "/dev/tty1");
+                driver_init("TTY", 2, 0, "/dev/tty2");
+                driver_init("TTY", 3, 0, "/dev/tty3");
+                driver_init("CRCM", 0, 0, "/dev/crc");
 
 
                 syslog_enable("/dev/tty3");

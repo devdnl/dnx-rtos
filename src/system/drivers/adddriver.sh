@@ -18,9 +18,6 @@ list=
 #-------------------------------------------------------------------------------
 function check_args()
 {
-    echo "1: $1"
-    echo "2: $2"
-
     if [ "$1" == "" ] || [ "$2" == "" ]; then
         echo "Usage: $(basename $0) <path_to_scan> <path_to_ioctl_group_definitions>"
         exit 1
@@ -105,9 +102,9 @@ function create_module_enum()
 {
     echo '// file generated automatically at build process' > "$Groupfile_path"
     echo 'enum _IO_GROUP {' >> "$Groupfile_path"
-    echo '        _IO_GROUP_PIPE,       // built-in request' >> "$Groupfile_path"
-    echo '        _IO_GROUP_STORAGE,    // built-in request' >> "$Groupfile_path"
-    echo '        _IO_GROUP_VFS,        // built-in request' >> "$Groupfile_path"
+    echo '        _IO_GROUP_PIPE,       // system request' >> "$Groupfile_path"
+    echo '        _IO_GROUP_STORAGE,    // system request' >> "$Groupfile_path"
+    echo '        _IO_GROUP_VFS,        // system request' >> "$Groupfile_path"
     for module in $list; do
         echo "        _IO_GROUP_${module^^}," >> "$Groupfile_path"
     done
