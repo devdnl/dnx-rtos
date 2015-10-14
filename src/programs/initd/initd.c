@@ -269,6 +269,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 
 
                 syslog_enable("/dev/tty3");
+                sleep(2);
 
                 static const process_attr_t attr0 = {
                        .cwd = "/",

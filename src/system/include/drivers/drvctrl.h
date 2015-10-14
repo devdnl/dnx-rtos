@@ -134,7 +134,7 @@ extern bool        _is_device_locked            (dev_lock_t*);
 //==============================================================================
 static inline dev_t _dev_t__create(u16_t modid, u8_t major, u8_t minor)
 {
-        return ((modid & 0x7FFF) << 16) | ((major && 0xFF) << 8) | (minor & 0xFF);
+        return ((modid & 0x7FFF) << 16) | ((major & 0xFF) << 8) | (minor & 0xFF);
 }
 
 //==============================================================================
