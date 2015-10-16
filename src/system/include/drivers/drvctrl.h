@@ -75,7 +75,7 @@ struct _module_if {
         int (*drv_close  )(void *drvhdl, bool force);
         int (*drv_write  )(void *drvhdl, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
         int (*drv_read   )(void *drvhdl, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
-        int (*drv_ioctl  )(void *drvhdl, int iorq, void *args);
+        int (*drv_ioctl  )(void *drvhdl, int iorq, void *arg);
         int (*drv_flush  )(void *drvhdl);
         int (*drv_stat   )(void *drvhdl, struct vfs_dev_stat *info);
 };
@@ -98,25 +98,24 @@ typedef sem_t* dev_lock_t;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int         _driver_init                 (const char*, int, int, const char*, dev_t*);
-extern int         _driver_release              (dev_t);
-extern int         _driver_open                 (dev_t, u32_t);
-extern int         _driver_close                (dev_t, bool);
-extern int         _driver_write                (dev_t, const u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
-extern int         _driver_read                 (dev_t, u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
-extern int         _driver_ioctl                (dev_t, int, void*);
-extern int         _driver_flush                (dev_t);
-extern int         _driver_stat                 (dev_t, struct vfs_dev_stat*);
-extern const char *_module_get_name             (size_t);
-extern size_t      _module_get_count            (void);
-extern int         _module_get_ID               (const char*);
-extern int         _module_is_active            (size_t, bool*);
-extern ssize_t     _module_get_count_loaded     (void);
-extern int         _module_get_driver_info      (size_t, const char**, int*, int*);
-extern int         _lock_device                 (dev_lock_t*);
-extern int         _unlock_device               (dev_lock_t*, bool);
-extern int         _get_access_to_device        (dev_lock_t*);
-extern bool        _is_device_locked            (dev_lock_t*);
+extern int         _driver_init                   (const char*, u8_t, u8_t, const char*, dev_t*);
+extern int         _driver_release                (dev_t);
+extern int         _driver_open                   (dev_t, u32_t);
+extern int         _driver_close                  (dev_t, bool);
+extern int         _driver_write                  (dev_t, const u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
+extern int         _driver_read                   (dev_t, u8_t*, size_t, fpos_t*, size_t*, struct vfs_fattr);
+extern int         _driver_ioctl                  (dev_t, int, void*);
+extern int         _driver_flush                  (dev_t);
+extern int         _driver_stat                   (dev_t, struct vfs_dev_stat*);
+extern const char *_module_get_name               (size_t);
+extern size_t      _module_get_count              (void);
+extern int         _module_get_ID                 (const char*);
+extern ssize_t     _module_get_number_of_instances(size_t);
+extern int         _module_get_driver_info        (size_t, const char**, int*, int*);
+extern int         _device_lock                   (dev_lock_t*);
+extern int         _device_unlock                 (dev_lock_t*, bool);
+extern int         _device_get_access             (dev_lock_t*);
+extern bool        _device_is_locked              (dev_lock_t*);
 
 /*==============================================================================
   Exported inline functions

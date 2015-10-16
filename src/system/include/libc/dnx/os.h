@@ -608,11 +608,11 @@ static inline const char *get_user_name(void)
 
 //==============================================================================
 /**
- * @brief const char *get_module_name(size_t modid)
- * The function <b>get_module_name</b>() return module name selected by <i>modid</i>
+ * @brief const char *get_module_name(size_t modno)
+ * The function <b>get_module_name</b>() return module name selected by <i>modno</i>
  * index.
  *
- * @param modid     module ID
+ * @param modno     module number
  *
  * @errors None
  *
@@ -628,9 +628,9 @@ static inline const char *get_user_name(void)
  * // ...
  */
 //==============================================================================
-static inline const char *get_module_name(size_t modid)
+static inline const char *get_module_name(size_t modno)
 {
-        return _builtinfunc(module_get_name, modid);
+        return _builtinfunc(module_get_name, modno);
 }
 
 //==============================================================================
@@ -692,87 +692,6 @@ static inline uint get_number_of_modules(void)
 
 //==============================================================================
 /**
- * @brief ssize_t get_number_of_loaded_drivers(void)
- * The function <b>get_number_of_loaded_drivers</b>() return number of loaded
- * drivers. Each module can contains many drivers e.g. UART module can handle
- * UART1, UART2, etc.
- *
- * @param None
- *
- * @errors None
- *
- * @return Return number of drivers registered in system.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * ssize_t number_of_drivers = get_number_of_loaded_drivers();
- * for (ssize_t i = 0; i > -1 && i < number_of_drivers; i++) {
- *         const char *name;
- *         int         major;
- *         int         minor;
- *
- *         if (get_loaded_driver_info(i, name, major, minor) == ESUCC) {
- *               printf("Driver: %s%d-%d\n", name, major, minor));
- *         } else {
- *               break;
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline ssize_t get_number_of_loaded_drivers(void)
-{
-        return _builtinfunc(module_get_count_loaded);
-}
-
-//==============================================================================
-/**
- * @brief int get_loaded_driver_info(size_t seek, const char **name, int *major, int *minor)
- * The function <b>get_loaded_driver_info</b>() returns module name pointed by
- * <i>name</i> and major and minor numbers pointed by <i>major</i> and <i>minor</i>
- * pointers. To select driver the <i>seek</i> value is used.
- *
- * @param seek          driver seek
- * @param name          module name
- * @param major         driver major number
- * @param minor         driver minor number
- *
- * @errors None
- *
- * @return On success ESUCC is returned. On error EINVAL is returned.
- *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * ssize_t number_of_drivers = get_number_of_loaded_drivers();
- * for (ssize_t i = 0; i > -1 && i < number_of_drivers; i++) {
- *         const char *name;
- *         int         major;
- *         int         minor;
- *
- *         if (get_loaded_driver_info(i, name, major, minor) == ESUCC) {
- *               printf("Driver: %s%d-%d\n", name, major, minor));
- *         } else {
- *               break;
- *         }
- * }
- *
- * // ...
- */
-//==============================================================================
-static inline int get_loaded_driver_info(size_t seek, const char **name, int *major, int *minor)
-{
-        return _builtinfunc(module_get_driver_info, seek, name, major, minor);
-}
-
-//==============================================================================
-/**
  * @brief int is_module_active(size_t n, bool *active)
  * The function <b>is_module_active</b>() return <b>true</b> if module is activated,
  * otherwise <b>false</b>.
@@ -799,9 +718,9 @@ static inline int get_loaded_driver_info(size_t seek, const char **name, int *ma
  * // ...
  */
 //==============================================================================
-static inline int is_module_active(size_t n, bool *active)
+static inline ssize_t get_number_of_module_instances(size_t n)
 {
-        return _builtinfunc(module_is_active, n, active);
+        return _builtinfunc(module_get_number_of_instances, n);
 }
 
 //==============================================================================

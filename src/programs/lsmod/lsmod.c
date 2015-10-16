@@ -71,23 +71,17 @@ int_main(lsmod, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argc;
         (void)argv;
 
-        puts(VT100_FONT_BOLD"Driver"VT100_CURSOR_BACKWARD(99)
-             VT100_CURSOR_FORWARD(16)"Module ID"
-             VT100_RESET_ATTRIBUTES);
+        puts(VT100_FONT_BOLD"ID"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(5)"Name"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(16)"Instances"VT100_RESET_ATTRIBUTES);
 
-        ssize_t drv_number = get_number_of_loaded_drivers();
+        ssize_t drv_number = get_number_of_modules();
         for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
-                const char *name;
-                int         major;
-                int         minor;
 
-                if (get_loaded_driver_info(i, &name, &major, &minor) == 0) {
-                        printf("%s%d-%d"VT100_CURSOR_BACKWARD(99)
-                               VT100_CURSOR_FORWARD(16)"%s\n",
-                               name, major, minor, get_module_ID(name));
-                } else {
-                        break;
-                }
+                printf("%d"VT100_CURSOR_BACKWARD(99)
+                       VT100_CURSOR_FORWARD(5)"%s"VT100_CURSOR_BACKWARD(99)
+                       VT100_CURSOR_FORWARD(16)"%d",
+                       i, get_module_name(i), get_number_of_module_instances(i));
         }
 
         return EXIT_SUCCESS;

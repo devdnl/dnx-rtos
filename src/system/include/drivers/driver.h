@@ -113,7 +113,7 @@ extern "C" {
 //==============================================================================
 static inline int _sys_device_lock(dev_lock_t *dev_lock)
 {
-        return _lock_device(dev_lock);
+        return _device_lock(dev_lock);
 }
 
 //==============================================================================
@@ -128,7 +128,7 @@ static inline int _sys_device_lock(dev_lock_t *dev_lock)
 //==============================================================================
 static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
 {
-        return _unlock_device(dev_lock, force);
+        return _device_unlock(dev_lock, force);
 }
 
 //==============================================================================
@@ -142,7 +142,7 @@ static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
 //==============================================================================
 static inline int _sys_device_get_access(dev_lock_t *dev_lock)
 {
-        return _get_access_to_device(dev_lock);
+        return _device_get_access(dev_lock);
 }
 
 //==============================================================================
@@ -156,7 +156,7 @@ static inline int _sys_device_get_access(dev_lock_t *dev_lock)
 //==============================================================================
 static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
 {
-        return _is_device_locked(dev_lock);
+        return _device_is_locked(dev_lock);
 }
 
 //==============================================================================
@@ -170,7 +170,7 @@ static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
 //==============================================================================
 static inline bool _sys_device_is_unlocked(dev_lock_t *dev_lock)
 {
-        return !_is_device_locked(dev_lock);
+        return !_device_is_locked(dev_lock);
 }
 
 #ifdef __cplusplus
