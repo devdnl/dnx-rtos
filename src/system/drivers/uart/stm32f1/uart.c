@@ -44,39 +44,40 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-/* UART minor number */
-#define _UART_MINOR_NUMBER      0
-
-/* port names */
-enum
-{
-        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
+//* UARTs */
+enum {
+        #if defined(RCC_APB2ENR_USART1EN)
         _UART1,
         #endif
-        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
+        #if defined(RCC_APB1ENR_USART2EN)
         _UART2,
         #endif
-        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
+        #if defined(RCC_APB1ENR_USART3EN)
         _UART3,
         #endif
-        #if defined(RCC_APB1ENR_UART4EN) && (_UART4_ENABLE > 0)
+        #if defined(RCC_APB1ENR_UART4EN)
         _UART4,
         #endif
-        #if defined(RCC_APB1ENR_UART5EN) && (_UART5_ENABLE > 0)
+        #if defined(RCC_APB1ENR_UART5EN)
         _UART5,
         #endif
-        _UART_NUMBER
+        _UART_COUNT
 };
 
-
-/* irq configuration */
-struct irq_cfg {
-        IRQn_Type irqn;
-        u32_t     priority;
-};
+/* UART registers */
+typedef struct {
+        USART_t        *UART;
+        __IO uint32_t  *APBENR;
+        __IO uint32_t  *APBRSTR;
+        const uint32_t  APBENR_UARTEN;
+        const uint32_t  APBRSTR_UARTRST;
+        const IRQn_Type IRQn;
+        const u32_t     PRIORITY;
+} UART_regs_t;
 
 /* USART handling structure */
-struct UART_data {
+struct UART_mem {
+        // Rx FIFO
         struct Rx_FIFO {
                 u8_t            buffer[_UART_RX_BUFFER_SIZE];
                 u16_t           buffer_level;
@@ -84,11 +85,13 @@ struct UART_data {
                 u16_t           write_index;
         } Rx_FIFO;
 
+        // Tx FIFO
         struct Tx_buffer {
                 const u8_t     *src_ptr;
                 size_t          data_size;
         } Tx_buffer;
 
+        // UART control
         sem_t                  *data_write_sem;
         sem_t                  *data_read_sem;
         mutex_t                *port_lock_rx_mtx;
@@ -100,58 +103,79 @@ struct UART_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int  uart_turn_on  (USART_t *uart);
-static int  uart_turn_off (USART_t *uart);
-static void configure_uart(u8_t major, struct UART_config *config);
-static bool fifo_write    (struct Rx_FIFO *fifo, u8_t *data);
-static bool fifo_read     (struct Rx_FIFO *fifo, u8_t *data);
-static void handle_irq    (u8_t major);
+static int  UART_turn_on  (const UART_regs_t *UART);
+static int  UART_turn_off (const UART_regs_t *UART);
+static void UART_configure(u8_t major, const struct UART_config *config);
+static bool FIFO_write    (struct Rx_FIFO *fifo, u8_t *data);
+static bool FIFO_read     (struct Rx_FIFO *fifo, u8_t *data);
+static void IRQ_handle    (u8_t major);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 MODULE_NAME(UART);
 
-/* addresses of UART devices */
-static USART_t *const uart[_UART_NUMBER] = {
-        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
-        USART1,
+// all registers which are need to control particular UART peripheral
+static const UART_regs_t UART[] = {
+        #if defined(RCC_APB2ENR_USART1EN)
+        {
+                .UART            = USART1,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
+                .IRQn            = USART1_IRQn,
+                .PRIORITY        = _UART1_IRQ_PRIORITY
+        },
         #endif
-        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
-        USART2,
+        #if defined(RCC_APB1ENR_USART2EN)
+        {
+                .UART            = USART2,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
+                .IRQn            = USART2_IRQn,
+                .PRIORITY        = _UART2_IRQ_PRIORITY
+        },
         #endif
-        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
-        USART3,
+        #if defined(RCC_APB1ENR_USART3EN)
+        {
+                .UART            = USART3,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
+                .IRQn            = USART3_IRQn,
+                .PRIORITY        = _UART3_IRQ_PRIORITY
+        },
         #endif
-        #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
-        UART4,
+        #if defined(RCC_APB1ENR_UART4EN)
+        {
+                .UART            = UART4,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
+                .IRQn            = UART4_IRQn,
+                .PRIORITY        = _UART4_IRQ_PRIORITY
+        },
         #endif
-        #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
-        UART5,
+        #if defined(RCC_APB1ENR_UART5EN)
+        {
+                .UART            = UART5,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
+                .IRQn            = UART5_IRQn,
+                .PRIORITY        = _UART5_IRQ_PRIORITY
+        }
         #endif
 };
 
-/* irq configuration */
-static const struct irq_cfg uart_irq[_UART_NUMBER] = {
-        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
-        {.irqn = USART1_IRQn, .priority = _UART1_IRQ_PRIORITY},
-        #endif
-        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
-        {.irqn = USART2_IRQn, .priority = _UART2_IRQ_PRIORITY},
-        #endif
-        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
-        {.irqn = USART3_IRQn, .priority = _UART3_IRQ_PRIORITY},
-        #endif
-        #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
-        {.irqn = UART4_IRQn, .priority = _UART4_IRQ_PRIORITY},
-        #endif
-        #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
-        {.irqn = UART5_IRQn, .priority = _UART5_IRQ_PRIORITY}
-        #endif
-};
-
-/* uart default configuration */
-static const struct UART_config uart_default_config = {
+/* UART default configuration */
+static const struct UART_config UART_DEFAULT_CONFIG = {
         .parity             = _UART_DEFAULT_PARITY,
         .stop_bits          = _UART_DEFAULT_STOP_BITS,
         .LIN_break_length   = _UART_DEFAULT_LIN_BREAK_LEN,
@@ -164,7 +188,7 @@ static const struct UART_config uart_default_config = {
 };
 
 /* structure which identify USARTs data in the IRQs */
-static struct UART_data *uart_data[_UART_NUMBER];
+static struct UART_mem *UART_mem[_UART_COUNT];
 
 /*==============================================================================
   Function definitions
@@ -185,55 +209,55 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG1(minor);
 
-        if (major >= _UART_NUMBER || minor != _UART_MINOR_NUMBER) {
+        if (major >= _UART_COUNT || minor != 0) {
                 return ENODEV;
         }
 
-        int result = _sys_zalloc(sizeof(struct UART_data), device_handle);
+        int result = _sys_zalloc(sizeof(struct UART_mem), device_handle);
         if (result == ESUCC) {
-                uart_data[major] = *device_handle;
+                UART_mem[major] = *device_handle;
 
-                result = _sys_semaphore_create(1, 0, &uart_data[major]->data_write_sem);
+                result = _sys_semaphore_create(1, 0, &UART_mem[major]->data_write_sem);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &uart_data[major]->data_read_sem);
+                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &UART_mem[major]->data_read_sem);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &uart_data[major]->port_lock_rx_mtx);
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_rx_mtx);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &uart_data[major]->port_lock_tx_mtx);
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_tx_mtx);
                 if (result != ESUCC)
                         goto finish;
 
-                result = uart_turn_on(uart[major]);
+                result = UART_turn_on(&UART[major]);
                 if (result == ESUCC) {
-                        uart_data[major]->major  = major;
-                        uart_data[major]->config = uart_default_config;
-                        NVIC_EnableIRQ(uart_irq[major].irqn);
-                        NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
-                        configure_uart(major, (struct UART_config *)&uart_default_config);
+                        UART_mem[major]->major  = major;
+                        UART_mem[major]->config = UART_DEFAULT_CONFIG;
+                        NVIC_EnableIRQ(UART[major].IRQn);
+                        NVIC_SetPriority(UART[major].IRQn, UART[major].PRIORITY);
+                        UART_configure(major, &UART_DEFAULT_CONFIG);
                 }
 
                 finish:
                 if (result != ESUCC) {
-                        if (uart_data[major]->port_lock_tx_mtx)
-                                _sys_mutex_destroy(uart_data[major]->port_lock_tx_mtx);
+                        if (UART_mem[major]->port_lock_tx_mtx)
+                                _sys_mutex_destroy(UART_mem[major]->port_lock_tx_mtx);
 
-                        if (uart_data[major]->port_lock_rx_mtx)
-                                _sys_mutex_destroy(uart_data[major]->port_lock_rx_mtx);
+                        if (UART_mem[major]->port_lock_rx_mtx)
+                                _sys_mutex_destroy(UART_mem[major]->port_lock_rx_mtx);
 
-                        if (uart_data[major]->data_write_sem)
-                                _sys_semaphore_destroy(uart_data[major]->data_write_sem);
+                        if (UART_mem[major]->data_write_sem)
+                                _sys_semaphore_destroy(UART_mem[major]->data_write_sem);
 
-                        if (uart_data[major]->data_write_sem)
-                                _sys_semaphore_destroy(uart_data[major]->data_write_sem);
+                        if (UART_mem[major]->data_write_sem)
+                                _sys_semaphore_destroy(UART_mem[major]->data_write_sem);
 
                         _sys_free(device_handle);
-                        uart_data[major] = NULL;
+                        UART_mem[major] = NULL;
                 }
         }
 
@@ -251,25 +275,26 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(UART, void *device_handle)
 {
-        struct UART_data *hdl = device_handle;
+        struct UART_mem *hdl = device_handle;
 
         if (_sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT) == ESUCC) {
                 if (_sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT) == ESUCC) {
 
                         _sys_critical_section_begin();
+                        {
+                                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
+                                _sys_mutex_unlock(hdl->port_lock_tx_mtx);
 
-                        _sys_mutex_unlock(hdl->port_lock_rx_mtx);
-                        _sys_mutex_unlock(hdl->port_lock_tx_mtx);
+                                _sys_mutex_destroy(hdl->port_lock_rx_mtx);
+                                _sys_mutex_destroy(hdl->port_lock_tx_mtx);
 
-                        _sys_mutex_destroy(hdl->port_lock_rx_mtx);
-                        _sys_mutex_destroy(hdl->port_lock_tx_mtx);
+                                _sys_semaphore_destroy(hdl->data_write_sem);
 
-                        _sys_semaphore_destroy(hdl->data_write_sem);
-                        uart_turn_off(uart[hdl->major]);
+                                UART_turn_off(&UART[hdl->major]);
 
-                        uart_data[hdl->major] = NULL;
-                        _sys_free(device_handle);
-
+                                UART_mem[hdl->major] = NULL;
+                                _sys_free(device_handle);
+                        }
                         _sys_critical_section_end();
 
                         return ESUCC;
@@ -293,8 +318,7 @@ API_MOD_RELEASE(UART, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(UART, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(flags);
+        UNUSED_ARG2(device_handle, flags);
 
         return ESUCC;
 }
@@ -311,8 +335,7 @@ API_MOD_OPEN(UART, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(UART, void *device_handle, bool force)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(force);
+        UNUSED_ARG2(device_handle, force);
 
         return ESUCC;
 }
@@ -339,20 +362,18 @@ API_MOD_WRITE(UART,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
-        struct UART_data *hdl = device_handle;
+        struct UART_mem *hdl = device_handle;
 
         int result = _sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
         if (result == ESUCC) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
-                SET_BIT(uart[hdl->major]->CR1, USART_CR1_TXEIE);
+                SET_BIT(UART[hdl->major].UART->CR1, USART_CR1_TXEIE);
 
                 result = _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
-
                 if (result == ESUCC) {
                         *wrcnt = count - hdl->Tx_buffer.data_size;
                 }
@@ -385,10 +406,9 @@ API_MOD_READ(UART,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
-        struct UART_data *hdl = device_handle;
+        struct UART_mem *hdl = device_handle;
 
         int result = _sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT);
         if (result == ESUCC) {
@@ -397,12 +417,12 @@ API_MOD_READ(UART,
                 while (count--) {
                         result = _sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
                         if (result == ESUCC) {
-                                CLEAR_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
-                                if (fifo_read(&hdl->Rx_FIFO, dst)) {
+                                CLEAR_BIT(UART[hdl->major].UART->CR1, USART_CR1_RXNEIE);
+                                if (FIFO_read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
                                         (*rdcnt)++;
                                 }
-                                SET_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
+                                SET_BIT(UART[hdl->major].UART->CR1, USART_CR1_RXNEIE);
                         }
                 }
 
@@ -425,37 +445,37 @@ API_MOD_READ(UART,
 //==============================================================================
 API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 {
-        struct UART_data *hdl    = device_handle;
-        int               status = EINVAL;
+        struct UART_mem *hdl    = device_handle;
+        int              result = EINVAL;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
-                        configure_uart(hdl->major, arg);
-                        hdl->config = *(struct UART_config *)arg;
-                        status = ESUCC;
+                        UART_configure(hdl->major, arg);
+                        hdl->config = *static_cast(struct UART_config *, arg);
+                        result = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
-                        *(struct UART_config *)arg = hdl->config;
-                        status = ESUCC;
+                        *static_cast(struct UART_config *, arg) = hdl->config;
+                        result = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CHAR_UNBLOCKING:
-                        if (!fifo_read(&hdl->Rx_FIFO, arg)) {
-                                status = EAGAIN;
+                        if (!FIFO_read(&hdl->Rx_FIFO, arg)) {
+                                result = EAGAIN;
                         } else {
-                                status = ESUCC;
+                                result = ESUCC;
                         }
                         break;
 
                 default:
-                        status = EBADRQC;
+                        result = EBADRQC;
                         break;
                 }
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -486,10 +506,10 @@ API_MOD_FLUSH(UART, void *device_handle)
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG1(device_handle);
+        struct UART_mem *hdl = device_handle;
 
         device_stat->st_size  = 0;
-        device_stat->st_major = 0;
+        device_stat->st_major = hdl->major;
         device_stat->st_minor = 0;
 
         return ESUCC;
@@ -499,132 +519,38 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 /**
  * @brief Function enable USART clock
  *
- * @param[in] *USART            peripheral address
+ * @param[in] UART              UART registers
  *
  * @return One of errno value
  */
 //==============================================================================
-static int uart_turn_on(USART_t *USART)
+static int UART_turn_on(const UART_regs_t *UART)
 {
-        switch ((u32_t)USART) {
-        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
-        case USART1_BASE:
-                if (!(RCC->APB2ENR & RCC_APB2ENR_USART1EN)) {
-                        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
-                } else {
-                        return EADDRINUSE;
-                }
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
-        case USART2_BASE:
-                if (!(RCC->APB1ENR & RCC_APB1ENR_USART2EN)) {
-                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
-                } else {
-                        return EADDRINUSE;
-                }
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
-        case USART3_BASE:
-                if (!(RCC->APB1ENR & RCC_APB1ENR_USART3EN)) {
-                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
-                } else {
-                        return EADDRINUSE;
-                }
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
-        case UART4_BASE:
-                if (!(RCC->APB1ENR & RCC_APB1ENR_UART4EN)) {
-                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
-                } else {
-                        return EADDRINUSE;
-                }
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
-        case UART5_BASE:
-                if (!(RCC->APB1ENR & RCC_APB1ENR_UART5EN)) {
-                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
-                } else {
-                        return EADDRINUSE;
-                }
-                break;
-        #endif
-        default:
-                return ENODEV;
+        if (!(*UART->APBENR & UART->APBENR_UARTEN)) {
+                SET_BIT(*UART->APBRSTR, UART->APBRSTR_UARTRST);
+                CLEAR_BIT(*UART->APBRSTR, UART->APBRSTR_UARTRST);
+                SET_BIT(*UART->APBENR, UART->APBENR_UARTEN);
+                return ESUCC;
+        } else {
+                return EADDRINUSE;
         }
-
-        return ESUCC;
 }
 
 //==============================================================================
 /**
  * @brief Function disable USART clock
  *
- * @param[in] *USART            peripheral address
+ * @param[in] UART              UART registers
  *
  * @return One of errno value.
  */
 //==============================================================================
-static int uart_turn_off(USART_t *USART)
+static int UART_turn_off(const UART_regs_t *UART)
 {
-        switch ((u32_t)USART) {
-        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
-        case USART1_BASE:
-                NVIC_DisableIRQ(USART1_IRQn);
-                SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_USART1RST);
-                CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
-        case USART2_BASE:
-                NVIC_DisableIRQ(USART2_IRQn);
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART2RST);
-                CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_USART2EN);
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
-        case USART3_BASE:
-                NVIC_DisableIRQ(USART3_IRQn);
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_USART3RST);
-                CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_USART3EN);
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_UART4EN)  && (_UART4_ENABLE > 0)
-        case UART4_BASE:
-                NVIC_DisableIRQ(UART4_IRQn);
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART4RST);
-                CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_UART4EN);
-                break;
-        #endif
-        #if defined(RCC_APB1ENR_UART5EN)  && (_UART5_ENABLE > 0)
-        case UART5_BASE:
-                NVIC_DisableIRQ(UART5_IRQn);
-                SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_UART5RST);
-                CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_UART5EN);
-                break;
-        #endif
-        default:
-                return ENODEV;
-        }
-
+        NVIC_DisableIRQ(UART->IRQn);
+        SET_BIT(*UART->APBRSTR, UART->APBRSTR_UARTRST);
+        CLEAR_BIT(*UART->APBRSTR, UART->APBRSTR_UARTRST);
+        CLEAR_BIT(*UART->APBENR, UART->APBENR_UARTEN);
         return ESUCC;
 }
 
@@ -636,99 +562,94 @@ static int uart_turn_off(USART_t *USART)
  * @param config        configuration structure
  */
 //==============================================================================
-static void configure_uart(u8_t major, struct UART_config *config)
+static void UART_configure(u8_t major, const struct UART_config *config)
 {
-        USART_t *UART = uart[major];
+        const UART_regs_t *DEV = &UART[major];
 
         /* set baud */
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
 
-        u32_t PCLK;
-        if ((u32_t)UART == USART1_BASE) {
-                PCLK = freq.PCLK2_Frequency;
-        } else {
-                PCLK = freq.PCLK1_Frequency;
-        }
+        u32_t PCLK = (DEV->UART == USART1) ? freq.PCLK2_Frequency : freq.PCLK1_Frequency;
 
-        UART->BRR = (PCLK / (config->baud)) + 1;
+        DEV->UART->BRR = (PCLK / (config->baud)) + 1;
 
         /* set 8 bit word length and wake idle line */
-        CLEAR_BIT(UART->CR1, USART_CR1_M | USART_CR1_WAKE);
+        CLEAR_BIT(DEV->UART->CR1, USART_CR1_M | USART_CR1_WAKE);
 
         /* set parity */
         switch (config->parity) {
         case UART_PARITY_OFF:
-                CLEAR_BIT(UART->CR1, USART_CR1_PCE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 break;
         case UART_PARITY_EVEN:
-                SET_BIT(UART->CR1, USART_CR1_PCE);
-                CLEAR_BIT(UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PS);
                 break;
         case UART_PARITY_ODD:
-                SET_BIT(UART->CR1, USART_CR1_PCE);
-                SET_BIT(UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PS);
                 break;
         }
 
         /* transmitter enable */
         if (config->tx_enable) {
-                SET_BIT(UART->CR1, USART_CR1_TE);
+                SET_BIT(DEV->UART->CR1, USART_CR1_TE);
         } else {
-                CLEAR_BIT(UART->CR1, USART_CR1_TE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_TE);
         }
 
         /* receiver enable */
         if (config->rx_enable) {
-                SET_BIT(UART->CR1, USART_CR1_RE);
+                SET_BIT(DEV->UART->CR1, USART_CR1_RE);
         } else {
-                CLEAR_BIT(UART->CR1, USART_CR1_RE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_RE);
         }
 
         /* enable LIN if configured */
         if (config->LIN_mode_enable) {
-                SET_BIT(UART->CR2, USART_CR2_LINEN);
+                SET_BIT(DEV->UART->CR2, USART_CR2_LINEN);
         } else {
-                CLEAR_BIT(UART->CR2, USART_CR2_LINEN);
+                CLEAR_BIT(DEV->UART->CR2, USART_CR2_LINEN);
         }
 
         /* configure stop bits */
         if (config->stop_bits == UART_STOP_BIT_1) {
-                CLEAR_BIT(UART->CR2, USART_CR2_STOP);
+                CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
         } else {
-                CLEAR_BIT(UART->CR2, USART_CR2_STOP);
-                SET_BIT(UART->CR2, USART_CR2_STOP_1);
+                CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
+                SET_BIT(DEV->UART->CR2, USART_CR2_STOP_1);
         }
 
         /* clock configuration (synchronous mode) */
-        CLEAR_BIT(UART->CR2, USART_CR2_CLKEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL);
+        CLEAR_BIT(DEV->UART->CR2, USART_CR2_CLKEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL);
 
         /* LIN break detection length */
         if (config->LIN_break_length == UART_LIN_BREAK_10_BITS) {
-                CLEAR_BIT(UART->CR2, USART_CR2_LBDL);
+                CLEAR_BIT(DEV->UART->CR2, USART_CR2_LBDL);
         } else {
-                SET_BIT(UART->CR2, USART_CR2_LBDL);
+                SET_BIT(DEV->UART->CR2, USART_CR2_LBDL);
         }
 
         /* hardware flow control */
         if (config->hardware_flow_ctrl) {
-                SET_BIT(UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
+                SET_BIT(DEV->UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
         } else {
-                CLEAR_BIT(UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
+                CLEAR_BIT(DEV->UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
         }
 
         /* configure single wire mode */
         if (config->single_wire_mode) {
-                SET_BIT(UART->CR3, USART_CR3_HDSEL);
+                SET_BIT(DEV->UART->CR3, USART_CR3_HDSEL);
         } else {
-                CLEAR_BIT(UART->CR3, USART_CR3_HDSEL);
+                CLEAR_BIT(DEV->UART->CR3, USART_CR3_HDSEL);
         }
 
         /* enable RXNE interrupt */
-        SET_BIT(UART->CR1, USART_CR1_RXNEIE);
+        SET_BIT(DEV->UART->CR1, USART_CR1_RXNEIE);
 
         /* enable UART */
-        SET_BIT(UART->CR1, USART_CR1_UE);
+        SET_BIT(DEV->UART->CR1, USART_CR1_UE);
 }
 
 //==============================================================================
@@ -741,7 +662,7 @@ static void configure_uart(u8_t major, struct UART_config *config)
  * @return true if success, false on error
  */
 //==============================================================================
-static bool fifo_write(struct Rx_FIFO *fifo, u8_t *data)
+static bool FIFO_write(struct Rx_FIFO *fifo, u8_t *data)
 {
         if (fifo->buffer_level < _UART_RX_BUFFER_SIZE) {
                 fifo->buffer[fifo->write_index++] = *data;
@@ -768,7 +689,7 @@ static bool fifo_write(struct Rx_FIFO *fifo, u8_t *data)
  * @return true if success, false on error
  */
 //==============================================================================
-static bool fifo_read(struct Rx_FIFO *fifo, u8_t *data)
+static bool FIFO_read(struct Rx_FIFO *fifo, u8_t *data)
 {
         if (fifo->buffer_level > 0) {
                 *data = fifo->buffer[fifo->read_index++];
@@ -792,41 +713,41 @@ static bool fifo_read(struct Rx_FIFO *fifo, u8_t *data)
  * @param major         major device number
  */
 //==============================================================================
-static void handle_irq(u8_t major)
+static void IRQ_handle(u8_t major)
 {
-        USART_t *UART = uart[major];
+        const UART_regs_t *DEV = &UART[major];
 
         /* receiver interrupt handler */
-        if ((UART->CR1 & USART_CR1_RXNEIE) && (UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
-                u8_t DR = UART->DR;
+        if ((DEV->UART->CR1 & USART_CR1_RXNEIE) && (DEV->UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
+                u8_t DR = DEV->UART->DR;
 
-                if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
-                        _sys_semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
+                if (FIFO_write(&UART_mem[major]->Rx_FIFO, &DR)) {
+                        _sys_semaphore_signal_from_ISR(UART_mem[major]->data_read_sem, NULL);
                         _sys_thread_yield_from_ISR();
                 }
         }
 
         /* transmitter interrupt handler */
-        if ((UART->CR1 & USART_CR1_TXEIE) && (UART->SR & USART_SR_TXE)) {
+        if ((DEV->UART->CR1 & USART_CR1_TXEIE) && (DEV->UART->SR & USART_SR_TXE)) {
 
-                if (uart_data[major]->Tx_buffer.data_size && uart_data[major]->Tx_buffer.src_ptr) {
-                        UART->DR = *(uart_data[major]->Tx_buffer.src_ptr++);
+                if (UART_mem[major]->Tx_buffer.data_size && UART_mem[major]->Tx_buffer.src_ptr) {
+                        DEV->UART->DR = *(UART_mem[major]->Tx_buffer.src_ptr++);
 
-                        if (--uart_data[major]->Tx_buffer.data_size == 0) {
-                                UART->SR = ~USART_SR_TC;
-                                SET_BIT(UART->CR1, USART_CR1_TCIE);
-                                CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
-                                uart_data[major]->Tx_buffer.src_ptr = NULL;
+                        if (--UART_mem[major]->Tx_buffer.data_size == 0) {
+                                CLEAR_BIT(DEV->UART->SR, USART_SR_TC);
+                                SET_BIT(DEV->UART->CR1, USART_CR1_TCIE);
+                                CLEAR_BIT(DEV->UART->CR1, USART_CR1_TXEIE);
+                                UART_mem[major]->Tx_buffer.src_ptr = NULL;
                         }
                 } else {
                         /* this shall never happen */
-                        CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
-                        _sys_semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                        CLEAR_BIT(DEV->UART->CR1, USART_CR1_TXEIE);
+                        _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
                 }
-        } else if ((UART->CR1 & USART_CR1_TCIE) && (UART->SR & USART_SR_TC)) {
+        } else if ((DEV->UART->CR1 & USART_CR1_TCIE) && (DEV->UART->SR & USART_SR_TC)) {
 
-                CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
-                _sys_semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_TCIE);
+                _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
                 _sys_thread_yield_from_ISR();
         }
 }
@@ -836,10 +757,10 @@ static void handle_irq(u8_t major)
  * @brief USART1 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
+#if defined(RCC_APB2ENR_USART1EN)
 void USART1_IRQHandler(void)
 {
-        handle_irq(_UART1);
+        IRQ_handle(_UART1);
 }
 #endif
 
@@ -848,10 +769,10 @@ void USART1_IRQHandler(void)
  * @brief USART2 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
+#if defined(RCC_APB1ENR_USART2EN)
 void USART2_IRQHandler(void)
 {
-        handle_irq(_UART2);
+        IRQ_handle(_UART2);
 }
 #endif
 
@@ -860,10 +781,10 @@ void USART2_IRQHandler(void)
  * @brief USART3 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
+#if defined(RCC_APB1ENR_USART3EN)
 void USART3_IRQHandler(void)
 {
-        handle_irq(_UART3);
+        IRQ_handle(_UART3);
 }
 #endif
 
@@ -872,10 +793,10 @@ void USART3_IRQHandler(void)
  * @brief UART4 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART4EN) && (_UART4_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART4EN)
 void UART4_IRQHandler(void)
 {
-        handle_irq(_UART4);
+        IRQ_handle(_UART4);
 }
 #endif
 
@@ -884,10 +805,10 @@ void UART4_IRQHandler(void)
  * @brief UART5 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART5EN) && (_UART5_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART5EN)
 void UART5_IRQHandler(void)
 {
-        handle_irq(_UART5);
+        IRQ_handle(_UART5);
 }
 #endif
 

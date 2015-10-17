@@ -87,13 +87,13 @@ static void     switch_terminal         (int term_no);
 ==============================================================================*/
 MODULE_NAME(TTY);
 
-static struct module *tty_module;
-static const int      SERVICE_IN_PRIORITY       = PRIORITY_NORMAL;
-static const int      SERVICE_OUT_PRIORITY      = PRIORITY_NORMAL;
-static const uint     QUEUE_CMD_LEN             = _TTY_TERMINAL_ROWS;
+static struct module      *tty_module;
 
-static const thread_attr_t SERVICE_IN_ATTR  = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
-static const thread_attr_t SERVICE_OUT_ATTR = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
+static const int           SERVICE_IN_PRIORITY  = PRIORITY_NORMAL;
+static const int           SERVICE_OUT_PRIORITY = PRIORITY_NORMAL;
+static const uint          QUEUE_CMD_LEN        = _TTY_TERMINAL_ROWS;
+static const thread_attr_t SERVICE_IN_ATTR      = {.stack_depth = 110, .priority = PRIORITY_NORMAL};
+static const thread_attr_t SERVICE_OUT_ATTR     = {.stack_depth = 140, .priority = PRIORITY_NORMAL};
 
 /*==============================================================================
   Function definitions

@@ -250,15 +250,15 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 result = mount("lfs", "", "/");
 
                 result = mkdir("/dev", 0777);
-                result = mkdir("/proc", 0777);
+//                result = mkdir("/proc", 0777);
 
-                result = mount("devfs", "", "/dev");
-                result = mount("procfs", "", "/proc");
+//                result = mount("devfs", "", "/dev");
+//                result = mount("procfs", "", "/proc");
 
                 driver_init("GPIO", 0, 0, "/dev/gpio");
                 driver_init("AFIOM", 0, 0, NULL);
                 driver_init("PLL", 0, 0, NULL);
-                driver_init("UART", 0, 0, "/dev/ttyS0");
+                driver_init("UART", 1, 0, "/dev/ttyS0");
                 driver_init("TTY", 0, 0, "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
                 detect_kernel_panic(true);
