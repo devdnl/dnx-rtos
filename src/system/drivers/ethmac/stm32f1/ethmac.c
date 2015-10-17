@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "ethmac_cfg.h"
-#include "ethmac_def.h"
+#include "ethmac_ioctl.h"
 #include "stm32f10x.h"
 #include "stm32_eth_driver/stm32_eth.h"
 
@@ -102,6 +102,10 @@ extern ETH_DMADESCTypeDef *DMATxDescToSet;
 API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG2(major, minor);
+
+        if (major != 0 || minor != 0) {
+                return ENODEV;
+        }
 
         int result = _sys_zalloc(sizeof(struct ethmac), device_handle);
         if (result == ESUCC) {
@@ -613,8 +617,8 @@ API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
         UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
-        device_stat->st_major = _ETHMAC_MAJOR_NUMBER;
-        device_stat->st_minor = _ETHMAC_MINOR_NUMBER;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return ESUCC;
 }

@@ -30,8 +30,7 @@
 #include "drivers/driver.h"
 #include "stm32f1/stm32f10x.h"
 #include "usbd_cfg.h"
-#include "usbd_def.h"
-#include "usbd_ioctl.h"
+#include "../usbd_ioctl.h"
 #include "stm32f1/gpio_cfg.h"
 
 /*==============================================================================
@@ -63,6 +62,20 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+#define _USBD_MAJOR_NUMBER      0
+
+enum {
+        _USBD_MINOR_NUMBER_EP_0 = 0,
+        _USBD_MINOR_NUMBER_EP_1,
+        _USBD_MINOR_NUMBER_EP_2,
+        _USBD_MINOR_NUMBER_EP_3,
+        _USBD_MINOR_NUMBER_EP_4,
+        _USBD_MINOR_NUMBER_EP_5,
+        _USBD_MINOR_NUMBER_EP_6,
+        _USBD_MINOR_NUMBER_EP_7,
+};
+
+
 /**
  * Endpoint statuses
  */

@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+// TODO GPIO shall be more universal. Investigate that GPIO shall be divided controlled separately
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -64,7 +66,7 @@ enum {
 };
 
 /**
- * Type represent pin number. Use GPIO_PIN() macro to easly set this type
+ * Type represent pin number. Use GPIO_PIN() macro to easily set this type
  */
 typedef struct {
         u8_t port_index : 4;

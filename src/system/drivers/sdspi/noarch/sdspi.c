@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "noarch/sdspi_cfg.h"
-#include "noarch/sdspi_def.h"
 #include "sys/ioctl.h"
+#include "../sdspi_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -57,6 +57,26 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/* major device number */
+enum {
+        #if SDSPI_NUMBER_OF_CARDS >= 1
+        _SDSPI_CARD_0,
+        #endif
+        #if SDSPI_NUMBER_OF_CARDS >= 2
+        _SDSPI_CARD_1,
+        #endif
+        _NUMBER_OF_SDSPI_CARDS
+};
+
+/* minor numbers */
+enum {
+        _SDSPI_FULL_VOLUME,
+        _SDSPI_PARTITION_1,
+        _SDSPI_PARTITION_2,
+        _SDSPI_PARTITION_3,
+        _SDSPI_PARTITION_4
+};
+
 /** card command definitions */
 typedef enum {
         CMD0   = (0x40+0 ),     /* GO_IDLE_STATE */

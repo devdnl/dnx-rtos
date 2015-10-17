@@ -36,28 +36,8 @@ extern "C" {
 ==============================================================================*/
 #include <stdarg.h>
 #include <drivers/ioctl_macros.h>
+#include <drivers/ioctl_requests.h>
 #include <kernel/syscall.h>
-
-/* ioctl requests */
-#ifdef ARCH_noarch
-#       include <noarch/loop_ioctl.h>
-#       include <noarch/tty_ioctl.h>
-#       include <noarch/sdspi_ioctl.h>
-#endif
-#ifdef ARCH_stm32f1
-#       include <stm32f1/rtcm_ioctl.h>
-#       include <stm32f1/afiom_ioctl.h>
-#       include <stm32f1/crcm_ioctl.h>
-#       include <stm32f1/ethmac_ioctl.h>
-#       include <stm32f1/gpio_ioctl.h>
-#       include <stm32f1/pll_ioctl.h>
-#       include <stm32f1/spi_ioctl.h>
-#       include <stm32f1/uart_ioctl.h>
-#       include <stm32f1/usbd_ioctl.h>
-#       include <stm32f1/irq_ioctl.h>
-#       include <stm32f1/i2c_ioctl.h>
-#       include <stm32f1/wdg_ioctl.h>
-#endif
 
 /*==============================================================================
   Exported macros

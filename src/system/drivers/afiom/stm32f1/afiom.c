@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/afiom_cfg.h"
-#include "stm32f1/afiom_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../afiom_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -231,8 +231,7 @@ API_MOD_RELEASE(AFIOM, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(flags);
+        UNUSED_ARG2(device_handle, flags);
 
         return ESUCC;
 }
@@ -249,8 +248,7 @@ API_MOD_OPEN(AFIOM, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(AFIOM, void *device_handle, bool force)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(force);
+        UNUSED_ARG2(device_handle, force);
 
         return ESUCC;
 }
@@ -277,13 +275,7 @@ API_MOD_WRITE(AFIOM,
               size_t          *wrcnt,
               struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(src);
-        UNUSED_ARG1(count);
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(wrcnt);
-        UNUSED_ARG1(fattr);
-        UNUSED_ARG1(wrcnt);
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
 
         return ENOTSUP;
 }
@@ -310,12 +302,7 @@ API_MOD_READ(AFIOM,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(dst);
-        UNUSED_ARG1(count);
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(rdcnt);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
 
         return ENOTSUP;
 }
@@ -333,8 +320,7 @@ API_MOD_READ(AFIOM,
 //==============================================================================
 API_MOD_IOCTL(AFIOM, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(arg);
+        UNUSED_ARG2(device_handle, arg);
 
         switch (request) {
         default:

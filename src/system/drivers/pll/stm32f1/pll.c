@@ -29,9 +29,9 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/pll_cfg.h"
-#include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "../pll_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

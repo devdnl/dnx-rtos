@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/spi_cfg.h"
-#include "stm32f1/spi_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../spi_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -42,6 +42,34 @@
   Local object types
 ==============================================================================*/
 MODULE_NAME(SPI);
+
+// TODO SPI module shall be redesigned a little bit
+/** major number */
+enum {
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        _SPI1,
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        _SPI2,
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        _SPI3,
+        #endif
+        _NUMBER_OF_SPI_PERIPHERALS
+};
+
+/** minor number */
+enum {
+        _SPI_CS0 = 0,
+        _SPI_CS1 = 1,
+        _SPI_CS2 = 2,
+        _SPI_CS3 = 3,
+        _SPI_CS4 = 4,
+        _SPI_CS5 = 5,
+        _SPI_CS6 = 6,
+        _SPI_CS7 = 7
+};
+
 
 /* configuration of single CS line (port and pin) */
 struct cs_pin_cfg {

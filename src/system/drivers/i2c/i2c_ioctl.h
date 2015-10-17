@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    crcm_def.h
+@file    i2c_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   CRC driver
+@brief   This driver support I2C peripherals.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,28 +24,45 @@
 
 *//*==========================================================================*/
 
-#ifndef _CRCM_DEF_H_
-#define _CRCM_DEF_H_
+#ifndef _I2C_IOCTL_H_
+#define _I2C_IOCTL_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/crcm_cfg.h"
-#include "stm32f1/crcm_ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Exported macros
-==============================================================================*/
-#define _CRCM_MAJOR_NUMBER               0
-#define _CRCM_MINOR_NUMBER               0
-
-/*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        u32_t frequency_Hz;     // SCL line frequency in Hz
+        u16_t address;          // device address 8 or 10 bit
+        u8_t  subaddrlen;       // 0-3: number of bytes of sub-address (EEPROM, RTC)
+        bool  addr10bit;        // true: 10 bit mode address enabled
+} i2c_config_t;
+
+/*==============================================================================
+  Exported macros
+==============================================================================*/
+/**
+ * @brief  Changes a device address TODO I2C SET ADDRESS to remove
+ * @param  int*         a new address (7 or 10-bit)
+ * @return Returns  0 on success.
+ *         Returns -1 on error and appropriate error number is set.
+ */
+#define IOCTL_I2C__SET_ADDRESS          _IOW(I2C, 0, int*) // FIXME unnecessary
+
+/** TODO I2C configure
+ * @brief  Configure device
+ * @param  i2c_config_t*        device configuration
+ * @return Returns  0 on success.
+ *         Returns -1 on error and appropriate error number is set.
+ */
+#define IOCTL_I2C__CONFIGURE            _IOW(I2C, 1, i2c_config_t*)
 
 /*==============================================================================
   Exported objects
@@ -63,7 +80,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _CRCM_DEF_H_ */
+#endif /* _I2C_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/wdg_cfg.h"
-#include "stm32f1/wdg_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../wdg_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -79,7 +79,7 @@ MODULE_NAME(WDG);
 //==============================================================================
 API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major == _WDG_MAJOR_NUMBER && minor == _WDG_MINOR_NUMBER) {
+        if (major == 0 && minor == 0) {
 
                 int result = _sys_zalloc(sizeof(WDG_t), device_handle);
                 if (result == ESUCC) {
@@ -269,8 +269,8 @@ API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG1(device_handle);
 
-        device_stat->st_major = _WDG_MAJOR_NUMBER;
-        device_stat->st_minor = _WDG_MINOR_NUMBER;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
         device_stat->st_size  = 0;
 
         return ESUCC;

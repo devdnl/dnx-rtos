@@ -2,14 +2,16 @@
 
 # configuration
 Makefile_name="Makefile.in"
-Regfile_name="driver_registration.c"
-Groupfile_name="ioctl_groups.h"
+driver_registration_file_name="driver_registration.c"
+ioctl_groups_file_name="ioctl_groups.h"
+ioctl_requests_file_name="ioctl_requests.h"
 
 # variables
 Makefile_path=
-Regfile_path=
-Groupfile_path=
-list=
+driver_registration_file_path=
+ioctl_groups_file_path=
+ioctl_requests_file_path=
+module_list=
 
 #-------------------------------------------------------------------------------
 # @brief  Check incoming arguments
@@ -42,12 +44,12 @@ function get_list()
 #-------------------------------------------------------------------------------
 function create_makefile()
 {
-    echo '# Makefile for GNU make - file generated at build process' > "$Makefile_path"
-    echo '' >> "$Makefile_path"
-
-    for module in $list; do
-        echo '-include $(SYS_DRV_LOC)/'$module'/Makefile' >> "$Makefile_path"
+    local content='# Makefile for GNU make - file generated at build process\n\n'
+    for module in $module_list; do
+        content="$content-include "'$(SYS_DRV_LOC)'"/$module/Makefile\n"
     done
+
+    echo -e $content > "$Makefile_path"
 }
 
 #-------------------------------------------------------------------------------
@@ -55,42 +57,39 @@ function create_makefile()
 # @param  None
 # @return None
 #-------------------------------------------------------------------------------
-function create_registration_file()
+function create_driver_registration_file()
 {
-    echo '// file generated automatically at build process' > "$Regfile_path"
-    echo '' >> "$Regfile_path"
-    echo '#include "drivers/drvctrl.h"' >> "$Regfile_path"
-    echo '#include "drivers/driver.h"' >> "$Regfile_path"
-    echo '#include "dnx/misc.h"' >> "$Regfile_path"
-    echo '#include "config.h"' >> "$Regfile_path"
-    echo '' >> "$Regfile_path"
+    local content=""
+    local ifimport=""
+    local modtable="const struct _module_entry _drvreg_module_table[] = {\n"
+    for module in $module_list; do
+        archlist=$(get_list "$1/$module")
 
-    for module in $list; do
-        arch=$(get_list "$1/$module")
+        enable="#if (__ENABLE_${module^^}__) && ("
+        or=""
+        for arch in $archlist; do enable=$enable"$or""defined(ARCH_$arch)"; or=" || "; done
+        enable=$enable")\n"
 
-        echo '#if (__ENABLE_'${module^^}'__)' >> "$Regfile_path"
-        echo "  _IMPORT_MODULE_INTERFACE(${module^^});" >> "$Regfile_path"
+        ifimport="$ifimport$enable"
+        ifimport="$ifimport\t_IMPORT_MODULE_INTERFACE(${module^^});\n"
+        ifimport="$ifimport#endif\n"
 
-        for arch in $arch; do
-            echo "  #ifdef ARCH_$arch" >> "$Regfile_path"
-            echo "    #include \"$arch/$module""_def.h\"" >> "$Regfile_path"
-            echo "  #endif" >> "$Regfile_path"
-        done
-
-        echo '#endif' >> "$Regfile_path"
+        modtable="$modtable\t$enable"
+        modtable="$modtable\t\t_MODULE_INTERFACE(${module^^}),\n"
+        modtable="$modtable\t#endif\n"
     done
+    modtable=$modtable"};\n"
 
-    echo '' >> "$Regfile_path"
-    echo 'const struct _module_entry _drvreg_module_table[] = {' >> "$Regfile_path"
-    for module in $list; do
-        echo '        #if (__ENABLE_'${module^^}'__)' >> "$Regfile_path"
-        echo "                _MODULE_INTERFACE(${module^^})," >> "$Regfile_path"
-        echo '        #endif' >> "$Regfile_path"
-    done
-    echo '};' >> "$Regfile_path"
-    echo '' >> "$Regfile_path"
+    content=$content'// file generated automatically at build process\n\n'
+    content=$content'#include "drivers/drvctrl.h"\n'
+    content=$content'#include "drivers/driver.h"\n'
+    content=$content'#include "dnx/misc.h"\n'
+    content=$content'#include "config.h"\n\n'
+    content=$content$ifimport
+    content=$content$modtable
+    content=$content'const size_t _drvreg_number_of_modules = ARRAY_SIZE(_drvreg_module_table);'
 
-    echo 'const size_t _drvreg_number_of_modules = ARRAY_SIZE(_drvreg_module_table);' >> "$Regfile_path"
+    echo -e $content > "$driver_registration_file_path"
 }
 
 #-------------------------------------------------------------------------------
@@ -98,17 +97,32 @@ function create_registration_file()
 # @param  None
 # @return None
 #-------------------------------------------------------------------------------
-function create_module_enum()
+function create_ioctl_groups_file()
 {
-    echo '// file generated automatically at build process' > "$Groupfile_path"
-    echo 'enum _IO_GROUP {' >> "$Groupfile_path"
-    echo '        _IO_GROUP_PIPE,       // system request' >> "$Groupfile_path"
-    echo '        _IO_GROUP_STORAGE,    // system request' >> "$Groupfile_path"
-    echo '        _IO_GROUP_VFS,        // system request' >> "$Groupfile_path"
-    for module in $list; do
-        echo "        _IO_GROUP_${module^^}," >> "$Groupfile_path"
+    enum="// file generated automatically at build process\n"
+    enum=$enum"enum _IO_GROUP {\n"
+    enum=$enum"\t_IO_GROUP_PIPE,\n"
+    enum=$enum"\t_IO_GROUP_STORAGE,\n"
+    enum=$enum"\t_IO_GROUP_VFS,\n"
+    for module in $module_list; do enum=$enum"\t_IO_GROUP_${module^^},\n"; done
+    enum=$enum"};"
+
+    echo -e $enum > "$ioctl_groups_file_path"
+}
+
+#-------------------------------------------------------------------------------
+# @brief  Creates module enumerator file
+# @param  None
+# @return None
+#-------------------------------------------------------------------------------
+function create_ioctl_requests_file()
+{
+    content="// file generated automatically at build process\n"
+    for module in $module_list; do
+        content="$content#include \""$module"_ioctl.h\"\n"
     done
-    echo '};' >> "$Groupfile_path"
+
+    echo -ne $content > "$ioctl_requests_file_path"
 }
 
 #-------------------------------------------------------------------------------
@@ -121,13 +135,15 @@ function main()
     check_args "$1" "$2"
 
     Makefile_path="$1/$Makefile_name"
-    Regfile_path="$1/$Regfile_name"
-    Groupfile_path="$2/$Groupfile_name"
-    list=$(get_list "$1")
+    driver_registration_file_path="$1/$driver_registration_file_name"
+    ioctl_groups_file_path="$2/$ioctl_groups_file_name"
+    ioctl_requests_file_path="$2/$ioctl_requests_file_name"
+    module_list=$(get_list "$1")
 
     create_makefile
-    create_registration_file $1
-    create_module_enum
+    create_driver_registration_file $1
+    create_ioctl_groups_file
+    create_ioctl_requests_file $1
 }
 
 main "$1" "$2"

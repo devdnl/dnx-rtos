@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    spi_ioctl.h
+@file    pll_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   SPI module ioctl request codes.
+@brief   PLL ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _SPI_IOCTL_H_
-#define _SPI_IOCTL_H_
+#ifndef _PLL_IOCTL_H_
+#define _PLL_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -36,88 +36,56 @@
 extern "C" {
 #endif
 
+// TODO PLL module shall be more universal
+
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/**
- *  @brief  Set SPI configuration
- *  @param  struct SPI_config *
+/** @brief  Gets SYSCLK frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, struct SPI_config*)
+#define IOCTL_PLL__GET_SYSCLK_FREQ      _IOR(PLL, 0x00, u32_t*)
 
-/**
- *  @brief  Gets SPI configuration
- *  @param  struct SPI_config *
+/** @brief  Gets HCLK frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, struct SPI_config*)
+#define IOCTL_PLL__GET_HCLK_FREQ        _IOR(PLL, 0x01, u32_t*)
 
-/**
- *  @brief  Select specified slave (CS = 0) [RAW mode]
- *  @param  None
+/** @brief  Gets PCLK1 frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__SELECT               _IO(SPI, 0x02)
+#define IOCTL_PLL__GET_PCLK1_FREQ       _IOR(PLL, 0x02, u32_t*)
 
-/**
- *  @brief  Deselect specified slave (CS = 1) [RAW mode]
- *  @param  None
+/** @brief  Gets PCLK2 frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__DESELECT             _IO(SPI, 0x03)
+#define IOCTL_PLL__GET_PCLK2_FREQ       _IOR(PLL, 0x03, u32_t*)
 
-/**
- *  @brief  Transmit and receive specified buffer
- *  @param  struct SPI_transive *
+/** @brief  Gets ADCCLK frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, struct SPI_transive*)
+#define IOCTL_PLL__GET_ADCCLK_FREQ      _IOR(PLL, 0x04, u32_t*)
 
-/**
- *  @brief  Transmit without selection
- *  @param  int         byte to transfer
+/** @brief  Gets PCLK1 frequency [Hz]
+ *  @param  u32_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__TRANSMIT_NO_SELECT   _IOW(SPI, 0x05, int)
+#define IOCTL_PLL__GET_PCLK1_TIM_FREQ   _IOR(PLL, 0x05, u32_t*)
+
+/** @brief  Gets PCLK2 frequency [Hz]
+ *  @param  u32_t *
+ *  @return On success 0 is returned, otherwise -1
+ */
+#define IOCTL_PLL__GET_PCLK2_TIM_FREQ   _IOR(PLL, 0x06, u32_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/* SPI clock divider */
-enum SPI_clk_divider {
-        SPI_CLK_DIV_2,
-        SPI_CLK_DIV_4,
-        SPI_CLK_DIV_8,
-        SPI_CLK_DIV_16,
-        SPI_CLK_DIV_32,
-        SPI_CLK_DIV_64,
-        SPI_CLK_DIV_128,
-        SPI_CLK_DIV_256
-};
-
-/* SPI modes */
-enum SPI_mode {
-        SPI_MODE_0,     /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
-        SPI_MODE_1,     /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
-        SPI_MODE_2,     /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
-        SPI_MODE_3      /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
-};
-
-/* SPI configuration type */
-struct SPI_config {
-        u8_t                    dummy_byte  : 8;
-        enum SPI_clk_divider    clk_divider : 3;
-        enum SPI_mode           mode        : 2;
-        bool                    msb_first   : 1;
-};
-
-/* SPI transmit and receive type */
-struct SPI_transceive {
-        const u8_t             *tx_buffer;      /* TX buffer pointer  */
-        u8_t                   *rx_buffer;      /* RX buffer pointer  */
-        size_t                  count;          /* RX/TX buffer size  */
-};
 
 /*==============================================================================
   Exported objects
@@ -135,7 +103,7 @@ struct SPI_transceive {
 }
 #endif
 
-#endif /* _SPI_IOCTL_H_ */
+#endif /* _PLL_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -31,8 +31,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/i2c_cfg.h"
-#include "stm32f1/i2c_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../i2c_ioctl.h"
 #include "lib/stm32f10x_rcc.h"
 
 /*==============================================================================
@@ -51,6 +51,28 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+enum _I2C_major {
+#if defined(I2C1) && (_I2C1_ENABLE > 0)
+        _I2C1,
+#endif
+#if defined(I2C2) && (_I2C2_ENABLE > 0)
+        _I2C2,
+#endif
+        _I2C_NUMBER_OF_PERIPHERALS
+};
+
+enum _I2C_minor {
+        _I2C_DEV_0,
+        _I2C_DEV_1,
+        _I2C_DEV_2,
+        _I2C_DEV_3,
+        _I2C_DEV_4,
+        _I2C_DEV_5,
+        _I2C_DEV_6,
+        _I2C_DEV_7
+};
+
+
 /// type defines possible modes of sub-addressing sequence (used e.g. in EEPROM)
 typedef enum {
         I2C_SUB_ADDR_MODE__DISABLED = 0,                //!< sub-addressing disabled
@@ -296,8 +318,9 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         /* creates basic module structures */
         if (I2C == NULL) {
                 result = _sys_zalloc(sizeof(I2C_mem_t), static_cast(void**, &I2C));
-                if (result != ESUCC)
+                if (result != ESUCC) {
                         goto finish;
+                }
         }
 
         if (I2C->periph[major].lock == NULL) {
@@ -309,14 +332,16 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
         if (I2C->periph[major].event == NULL) {
                 result = _sys_semaphore_create(1, 0, &I2C->periph[major].event);
-                if (result != ESUCC)
+                if (result != ESUCC) {
                         goto finish;
+                }
         }
 
         if (I2C->periph[major].initialized == false) {
                 result = enable_I2C(major);
-                if (result != ESUCC)
+                if (result != ESUCC) {
                         goto finish;
+                }
         }
 
         /* creates device structure */

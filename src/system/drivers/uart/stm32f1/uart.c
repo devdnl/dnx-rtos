@@ -29,9 +29,9 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/uart_cfg.h"
-#include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "../uart_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -44,6 +44,31 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/* UART minor number */
+#define _UART_MINOR_NUMBER      0
+
+/* port names */
+enum
+{
+        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN) && (_UART4_ENABLE > 0)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN) && (_UART5_ENABLE > 0)
+        _UART5,
+        #endif
+        _UART_NUMBER
+};
+
+
 /* irq configuration */
 struct irq_cfg {
         IRQn_Type irqn;

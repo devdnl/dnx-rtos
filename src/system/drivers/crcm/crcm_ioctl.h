@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    gpio_def.h
+@file    crcm_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO definitions
+@brief   CRC driver ioctl request codes.
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,41 +24,60 @@
 
 *//*==========================================================================*/
 
-#ifndef _GPIO_DEF_H_
-#define _GPIO_DEF_H_
+#ifndef _CRCM_IOCTL_H_
+#define _CRCM_IOCTL_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "drivers/ioctl_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
-#include "stm32f1/gpio_ioctl.h"
+/** @brief  Set CRC input mode
+ *  @param  enum CRC_input_mode *
+ *  @return On success 0 is returned, otherwise -1 and errno code is set
+ */
+#define IOCTL_CRCM__SET_INPUT_MODE       _IOW(CRCM, 0x00, enum CRC_input_mode*)
+
+/** @brief  Get CRC input mode
+ *  @param  enum CRC_input_mode *
+ *  @return On success 0 is returned, otherwise -1 and errno code is set
+ */
+#define IOCTL_CRCM__GET_INPUT_MODE       _IOR(CRCM, 0x01, enum CRC_input_mode*)
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
-#define _GPIO_MAJOR_NUMBER      0
-#define _GPIO_MINOR_NUMBER      0
+/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
+enum CRCM_input_mode {
+        CRCM_INPUT_MODE_8BIT,            /* base word is u8_t  */
+        CRCM_INPUT_MODE_16BIT,           /* base word is u16_t */
+        CRCM_INPUT_MODE_32BIT            /* base word is u32_t */
+};
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _GPIO_DEF_H_ */
+#endif /* _CRCM_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

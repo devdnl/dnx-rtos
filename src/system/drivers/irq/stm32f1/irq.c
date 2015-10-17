@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/irq_cfg.h"
-#include "stm32f1/irq_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../irq_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -109,7 +109,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
         int result = ENODEV;
 
-        if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
+        if (major == 0 && minor == 0) {
                 result = _sys_zalloc(sizeof(IRQ_t), device_handle);
                 if (result == ESUCC) {
                         IRQ_t *hdl = *device_handle;
@@ -414,8 +414,8 @@ API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
         UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
-        device_stat->st_major = _IRQ_MAJOR_NUMBER;
-        device_stat->st_minor = _IRQ_MINOR_NUMBER;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return ESUCC;
 }

@@ -32,11 +32,15 @@
 ==============================================================================*/
 #include "drivers/ioctl_macros.h"
 #include "usb_std.h"
-#include "usbd_cfg.h"
+#if defined(ARCH_stm32f1)
+#include "stm32f1/usbd_cfg.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// TODO USBD module shall be more universal
 
 /*==============================================================================
   Exported macros

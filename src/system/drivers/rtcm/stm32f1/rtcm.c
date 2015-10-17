@@ -29,10 +29,9 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/rtcm_cfg.h"
-#include "stm32f1/rtcm_def.h"
-#include "stm32f1/rtcm_ioctl.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "../rtcm_ioctl.h"
 
 /*==============================================================================
   Local macros

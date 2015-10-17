@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "stm32f1/crcm_cfg.h"
-#include "stm32f1/crcm_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../crcm_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -75,10 +75,11 @@ MODULE_NAME(CRCM);
 //==============================================================================
 API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
 {
-        if (  major != _CRCM_MAJOR_NUMBER
-           || minor != _CRCM_MINOR_NUMBER
-           || (RCC->AHBENR & RCC_AHBENR_CRCEN) ) {
+        if (  major != 0 || minor != 0) {
+                return ENODEV;
+        }
 
+        if (RCC->AHBENR & RCC_AHBENR_CRCEN) {
                 return EADDRINUSE;
         }
 
@@ -87,7 +88,7 @@ API_MOD_INIT(CRCM, void **device_handle, u8_t major, u8_t minor)
                 CRCM *hdl = *device_handle;
 
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                hdl->input_mode = CRCM_INPUT_MODE_WORD;
+                hdl->input_mode = CRCM_INPUT_MODE_32BIT;
         }
 
         return result;
@@ -106,18 +107,18 @@ API_MOD_RELEASE(CRCM, void *device_handle)
 {
         CRCM *hdl = device_handle;
 
-        _sys_critical_section_begin();
-
         int status;
 
-        if (_sys_device_is_unlocked(&hdl->file_lock)) {
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                _sys_free(static_cast(void**, &hdl));
-                status = ESUCC;
-        } else {
-                status = EBUSY;
+        _sys_critical_section_begin();
+        {
+                if (_sys_device_is_unlocked(&hdl->file_lock)) {
+                        CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
+                        _sys_free(static_cast(void**, &hdl));
+                        status = ESUCC;
+                } else {
+                        status = EBUSY;
+                }
         }
-
         _sys_critical_section_end();
 
         return status;
@@ -187,8 +188,7 @@ API_MOD_WRITE(CRCM,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
         CRCM *hdl = device_handle;
 
@@ -198,13 +198,13 @@ API_MOD_WRITE(CRCM,
 
                 size_t n = 0;
 
-                if (hdl->input_mode == CRCM_INPUT_MODE_BYTE) {
+                if (hdl->input_mode == CRCM_INPUT_MODE_8BIT) {
 
                         for (n = 0; n < (size_t)count; n++) {
                                 CRC->DR = src[n];
                         }
 
-                } else if (hdl->input_mode == CRCM_INPUT_MODE_HALF_WORD) {
+                } else if (hdl->input_mode == CRCM_INPUT_MODE_16BIT) {
 
                         size_t len = count / sizeof(u16_t);
                         u16_t *ptr = (u16_t *)src;
@@ -255,8 +255,7 @@ API_MOD_READ(CRCM,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
         CRCM *hdl = device_handle;
 
@@ -303,7 +302,7 @@ API_MOD_IOCTL(CRCM, void *device_handle, int request, void *arg)
                 case IOCTL_CRCM__SET_INPUT_MODE:
                         if (arg) {
                                 enum CRCM_input_mode mode = *(enum CRCM_input_mode *)arg;
-                                if (mode <= CRCM_INPUT_MODE_WORD) {
+                                if (mode <= CRCM_INPUT_MODE_32BIT) {
                                         hdl->input_mode = mode;
                                         return ESUCC;
                                 }
@@ -358,8 +357,8 @@ API_MOD_STAT(CRCM, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG1(device_handle);
 
-        device_stat->st_major = _CRCM_MAJOR_NUMBER;
-        device_stat->st_minor = _CRCM_MINOR_NUMBER;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
         device_stat->st_size  = 4;
 
         return ESUCC;

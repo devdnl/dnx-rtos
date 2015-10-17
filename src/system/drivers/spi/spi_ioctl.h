@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    tty_ioctl.h
+@file    spi_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This file support TTY ioctl request codes.
+@brief   SPI module ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _TTY_IOCTL_H_
-#define _TTY_IOCTL_H_
+#ifndef _SPI_IOCTL_H_
+#define _SPI_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -40,79 +40,86 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Gets current TTY number
- *  @param  int *
+ *  @brief  Set SPI configuration
+ *  @param  struct SPI_config *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__GET_CURRENT_TTY              _IOR(TTY, 0x00, int*)
+#define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, struct SPI_config*)
 
 /**
- *  @brief  Swtich terminal to selected one
- *  @param  int
+ *  @brief  Gets SPI configuration
+ *  @param  struct SPI_config *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__SWITCH_TTY_TO                _IOW(TTY, 0x01, int )
+#define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, struct SPI_config*)
 
 /**
- *  @brief  Gets number of columns
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_TTY__GET_COL                      _IOR(TTY, 0x02, int*)
-
-/**
- *  @brief  Gets number of rows
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_TTY__GET_ROW                      _IOR(TTY, 0x03, int*)
-
-/**
- *  @brief  Clear screen
+ *  @brief  Select specified slave (CS = 0) [RAW mode]
  *  @param  None
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__CLEAR_SCR                    _IO(TTY, 0x04)
+#define IOCTL_SPI__SELECT               _IO(SPI, 0x02)
 
 /**
- *  @brief  Enable terminal echo
+ *  @brief  Deselect specified slave (CS = 1) [RAW mode]
  *  @param  None
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__ECHO_ON                      _IO(TTY, 0x05)
+#define IOCTL_SPI__DESELECT             _IO(SPI, 0x03)
 
 /**
- *  @brief  Disable terminal echo
- *  @param  None
+ *  @brief  Transmit and receive specified buffer
+ *  @param  struct SPI_transive *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__ECHO_OFF                     _IO(TTY, 0x06)
+#define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, struct SPI_transive*)
 
 /**
- *  @brief  Set edit line to specified user's text (string)
- *  @param  const char *
+ *  @brief  Transmit without selection
+ *  @param  int         byte to transfer
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_TTY__SET_EDITLINE                 _IOW(TTY, 0x07, const char*)
-
-
-/**
- *  @brief  Gets number of virtual terminals
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(TTY, 0x08, int*)
-
-/**
- *  @brief  Refreshes last line
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x09)
+#define IOCTL_SPI__TRANSMIT_NO_SELECT   _IOW(SPI, 0x05, int)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/* SPI clock divider */
+enum SPI_clk_divider {
+        SPI_CLK_DIV_2,
+        SPI_CLK_DIV_4,
+        SPI_CLK_DIV_8,
+        SPI_CLK_DIV_16,
+        SPI_CLK_DIV_32,
+        SPI_CLK_DIV_64,
+        SPI_CLK_DIV_128,
+        SPI_CLK_DIV_256
+};
+
+/* SPI modes */
+enum SPI_mode {
+        SPI_MODE_0,     /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
+        SPI_MODE_1,     /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
+        SPI_MODE_2,     /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
+        SPI_MODE_3      /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
+};
+
+/* SPI configuration type */
+struct SPI_config {
+        u8_t                    dummy_byte  : 8;
+        enum SPI_clk_divider    clk_divider : 3;
+        enum SPI_mode           mode        : 2;
+        bool                    msb_first   : 1;
+        u8_t                    CS_port_idx;
+        u8_t                    CS_pin_idx;
+};
+
+/* SPI transmit and receive type */
+struct SPI_transceive {
+        const u8_t             *tx_buffer;      /* TX buffer pointer  */
+        u8_t                   *rx_buffer;      /* RX buffer pointer  */
+        size_t                  count;          /* RX/TX buffer size  */
+};
 
 /*==============================================================================
   Exported objects
@@ -130,7 +137,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _TTY_IOCTL_H_ */
+#endif /* _SPI_IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

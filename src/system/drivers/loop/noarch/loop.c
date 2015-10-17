@@ -29,8 +29,7 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "noarch/loop_cfg.h"
-#include "noarch/loop_def.h"
-#include "noarch/loop_ioctl.h"
+#include "../loop_ioctl.h"
 
 // TODO loop: module to reimplementation because of system mechanisms change
 
@@ -115,43 +114,39 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG1(minor);
 
-        int result = ENODEV;
+        int result = _sys_zalloc(sizeof(loop_t), device_handle);
+        if (result == ESUCC) {
+                loop_t *hdl = *device_handle;
 
-        if (major < _LOOP_NUMBER_OF_DEVICES) {
-                result = _sys_zalloc(sizeof(loop_t), device_handle);
-                if (result == ESUCC) {
-                        loop_t *hdl = *device_handle;
+                hdl->major  = major;
 
-                        hdl->major  = major;
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->lock);
+                if (result != ESUCC) {
+                        goto finish;
+                }
 
-                        result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->lock);
-                        if (result != ESUCC) {
-                                goto finish;
-                        }
+                result = _sys_semaphore_create(1, 0, &hdl->event_req);
+                if (result != ESUCC) {
+                        goto finish;
+                }
 
-                        result = _sys_semaphore_create(1, 0, &hdl->event_req);
-                        if (result != ESUCC) {
-                                goto finish;
-                        }
+                result = _sys_semaphore_create(1, 0, &hdl->event_res);
+                if (result != ESUCC) {
+                        goto finish;
+                }
 
-                        result = _sys_semaphore_create(1, 0, &hdl->event_res);
-                        if (result != ESUCC) {
-                                goto finish;
-                        }
+                finish:
+                if (result != ESUCC) {
+                        if (hdl->lock)
+                                _sys_mutex_destroy(hdl->lock);
 
-                        finish:
-                        if (result != ESUCC) {
-                                if (hdl->lock)
-                                        _sys_mutex_destroy(hdl->lock);
+                        if (hdl->event_req)
+                                _sys_semaphore_destroy(hdl->event_req);
 
-                                if (hdl->event_req)
-                                        _sys_semaphore_destroy(hdl->event_req);
+                        if (hdl->event_res)
+                                _sys_semaphore_destroy(hdl->event_res);
 
-                                if (hdl->event_res)
-                                        _sys_semaphore_destroy(hdl->event_res);
-
-                                _sys_free(device_handle);
-                        }
+                        _sys_free(device_handle);
                 }
         }
 
@@ -590,7 +585,7 @@ API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
         int      status;
 
         device_stat->st_major = hdl->major;
-        device_stat->st_minor = _LOOP_MINOR_NUMBER;
+        device_stat->st_minor = 0;
         device_stat->st_size  = 0;
 
         if (hdl->host) {

@@ -29,8 +29,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "tty_cfg.h"
-#include "tty_def.h"
 #include "tty.h"
+#include "../tty_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -65,7 +65,7 @@ struct module {
         FILE           *infile;
         FILE           *outfile;
         queue_t        *queue_cmd;
-        tty_t          *tty[_TTY_NUMBER];
+        tty_t          *tty[_TTY_NUMBER_OF_VT];
         thread_t        service_out;
         thread_t        service_in;
         int             current_tty;
@@ -88,12 +88,12 @@ static void     switch_terminal         (int term_no);
 MODULE_NAME(TTY);
 
 static struct module *tty_module;
-static const int      service_in_priority       = PRIORITY_NORMAL;
-static const int      service_out_priority      = PRIORITY_NORMAL;
-static const uint     queue_cmd_len             = _TTY_TERMINAL_ROWS;
+static const int      SERVICE_IN_PRIORITY       = PRIORITY_NORMAL;
+static const int      SERVICE_OUT_PRIORITY      = PRIORITY_NORMAL;
+static const uint     QUEUE_CMD_LEN             = _TTY_TERMINAL_ROWS;
 
-static const thread_attr_t service_in_attr  = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
-static const thread_attr_t service_out_attr = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
+static const thread_attr_t SERVICE_IN_ATTR  = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
+static const thread_attr_t SERVICE_OUT_ATTR = {.stack_depth = 100, .priority = PRIORITY_NORMAL};
 
 /*==============================================================================
   Function definitions
@@ -116,7 +116,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
         int result = ENODEV;
 
-        if (major >= _TTY_NUMBER || minor != 0) {
+        if (major >= _TTY_NUMBER_OF_VT || minor != 0) {
                 return result;
         }
 
@@ -134,15 +134,15 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
-                result = _sys_thread_create(service_in, &service_in_attr, NULL, &tty_module->service_in);
+                result = _sys_thread_create(service_in, &SERVICE_IN_ATTR, NULL, &tty_module->service_in);
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
-                result = _sys_thread_create(service_out, &service_out_attr, NULL, &tty_module->service_out);
+                result = _sys_thread_create(service_out, &SERVICE_OUT_ATTR, NULL, &tty_module->service_out);
                 if (result != ESUCC)
                         goto module_alloc_finish;
 
-                result = _sys_queue_create(queue_cmd_len, sizeof(tty_cmd_t), &tty_module->queue_cmd);
+                result = _sys_queue_create(QUEUE_CMD_LEN, sizeof(tty_cmd_t), &tty_module->queue_cmd);
 
                 module_alloc_finish:
                 if (result != ESUCC) {
@@ -249,7 +249,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
 
                 /* de-initialize entire module if all TTYs are released */
                 bool release_TTY = true;
-                for (int i = 0; i < _TTY_NUMBER && release_TTY; i++) {
+                for (int i = 0; i < _TTY_NUMBER_OF_VT && release_TTY; i++) {
                         release_TTY = !tty_module->tty[i];
                 }
 
@@ -281,8 +281,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(flags);
+        UNUSED_ARG2(device_handle, flags);
 
         return ESUCC;
 }
@@ -299,8 +298,7 @@ API_MOD_OPEN(TTY, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(TTY, void *device_handle, bool force)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(force);
+        UNUSED_ARG2(device_handle, force);
 
         return ESUCC;
 }
@@ -327,8 +325,7 @@ API_MOD_WRITE(TTY,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
         tty_t *tty = device_handle;
 
@@ -448,7 +445,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__SWITCH_TTY_TO:
-                send_cmd(CMD_SWITCH_TTY, reinterpret_cast(int, arg));
+                send_cmd(CMD_SWITCH_TTY, *reinterpret_cast(int*, arg));
                 status = ESUCC;
                 break;
 
@@ -469,7 +466,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = _TTY_NUMBER;
+                        *reinterpret_cast(int*, arg) = _TTY_NUMBER_OF_VT;
                 }
                 break;
 
@@ -525,7 +522,7 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 
         device_stat->st_size  = 0;
         device_stat->st_major = tty->major;
-        device_stat->st_minor = _TTY_MINOR_NUMBER;
+        device_stat->st_minor = 0;
 
         return ESUCC;
 }
@@ -539,14 +536,14 @@ static void service_in(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _sys_thread_set_priority(service_in_priority);
+        _sys_thread_set_priority(SERVICE_IN_PRIORITY);
 
         for (;;) {
                 char c = '\0'; size_t rdcnt;
                 if (_sys_fread(&c, 1, &rdcnt, tty_module->infile) == ESUCC) {
                         _sys_thread_set_priority(PRIORITY_HIGHEST);
                         send_cmd(CMD_INPUT, c);
-                        _sys_thread_set_priority(service_in_priority);
+                        _sys_thread_set_priority(SERVICE_IN_PRIORITY);
                 }
         }
 }
@@ -560,7 +557,7 @@ static void service_out(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _sys_thread_set_priority(service_out_priority);
+        _sys_thread_set_priority(SERVICE_OUT_PRIORITY);
 
         vt100_init();
 
@@ -575,7 +572,7 @@ static void service_out(void *arg)
                         }
 
                         case CMD_CLEAR_TTY: {
-                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
+                                if (rq.arg < _TTY_NUMBER_OF_VT && tty_module->tty[rq.arg]) {
                                         tty_t *tty = tty_module->tty[rq.arg];
 
                                         if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
@@ -597,7 +594,7 @@ static void service_out(void *arg)
                         }
 
                         case CMD_LINE_ADDED: {
-                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg] && rq.arg == tty_module->current_tty) {
+                                if (rq.arg < _TTY_NUMBER_OF_VT && tty_module->tty[rq.arg] && rq.arg == tty_module->current_tty) {
                                         tty_t *tty = tty_module->tty[rq.arg];
 
                                         if (_sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
@@ -812,7 +809,7 @@ static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend, ui
 //==============================================================================
 static void switch_terminal(int term_no)
 {
-        if (term_no < _TTY_NUMBER && tty_module->tty[term_no] && tty_module->current_tty != term_no) {
+        if (term_no < _TTY_NUMBER_OF_VT && tty_module->tty[term_no] && tty_module->current_tty != term_no) {
                 tty_t *tty = tty_module->tty[tty_module->current_tty];
 
                 if (ttycmd_is_idle(tty->vtcmd)) {
