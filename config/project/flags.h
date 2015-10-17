@@ -91,7 +91,7 @@
 
 /* os configuration */
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
-#define __OS_FILE_SYSTEM_STACK_DEPTH__ 140
+#define __OS_FILE_SYSTEM_STACK_DEPTH__ 160
 #define __OS_NETWORK_STACK_DEPTH__ 140
 #define __OS_SYSCALL_STACK_DEPTH__ 140
 #define __OS_IRQ_STACK_DEPTH__ 16

@@ -111,7 +111,7 @@ static int driver__get_module_no_and_mem(dev_t id, u16_t *modno, void **mem)
         if (modno && mem) {
                 result = ENODEV;
 
-                *modno = _dev_t__extract_modid(id);
+                *modno = _dev_t__extract_modno(id);
 
                 _kernel_scheduler_lock();
                 {
@@ -167,9 +167,13 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
                                         (*drv)->mem   = NULL;
                                         (*drv)->next  = NULL;
 
-                                        drvmem_t *chain = drvmem[modno];
-                                        for (; chain; chain = chain->next);
-                                        chain = *drv;
+                                        if (drvmem[modno] == NULL) {
+                                                drvmem[modno] = *drv;
+                                        } else {
+                                                drvmem_t *curr = drvmem[modno];
+                                                for (; curr->next; curr = curr->next);
+                                                curr->next = *drv;
+                                        }
                                 }
                         }
                 }
@@ -190,29 +194,31 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
 //==============================================================================
 static void driver__remove(dev_t devid)
 {
-        u16_t modno = _dev_t__extract_modid(devid);
+        u16_t modno = _dev_t__extract_modno(devid);
 
         if (modno < _drvreg_number_of_modules) {
 
                 _kernel_scheduler_lock();
                 {
-                        drvmem_t *parent = NULL;
-                        drvmem_t *curr   = drvmem[modno];
+                        drvmem_t *prev = NULL;
+                        drvmem_t *curr = drvmem[modno];
 
-                        for (; curr; parent = curr, curr = curr->next) {
+                        for (; curr; curr = curr->next) {
                                 if (curr->devid == devid) {
                                         void *tofree = curr;
 
-                                        if (parent) {
-                                                parent->next = curr->next;
+                                        if (prev) {
+                                                prev->next = curr->next;
                                         } else {
-                                                curr = curr->next;
+                                                drvmem[modno] = curr->next;
                                         }
 
                                         _kfree(_MM_KRN, &tofree);
 
                                         break;
                                 }
+
+                                prev = curr;
                         }
                 }
                 _kernel_scheduler_unlock();

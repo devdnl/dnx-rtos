@@ -662,6 +662,86 @@ static inline int get_module_ID(const char *name)
 
 //==============================================================================
 /**
+ * @brief int get_module_ID2(dev_t dev)
+ * The function <b>get_module_ID2</b>() return module ID stored in dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @errors None
+ *
+ * @return Return module ID.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Module ID: %d\n", get_module_ID2(dev));
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_module_ID2(dev_t dev)
+{
+        return _builtinfunc(dev_t__extract_modno, dev);
+}
+
+//==============================================================================
+/**
+ * @brief int get_module_major(dev_t dev)
+ * The function <b>get_module_major</b>() return module major number stored in
+ * dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @errors None
+ *
+ * @return Return module major number.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Module ID: %d\n", get_module_major(dev));
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_module_major(dev_t dev)
+{
+        return _builtinfunc(dev_t__extract_major, dev);
+}
+
+//==============================================================================
+/**
+ * @brief int get_module_minor(dev_t dev)
+ * The function <b>get_module_minor</b>() return module minor number stored in
+ * dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @errors None
+ *
+ * @return Return module minor number.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Module ID: %d\n", get_module_minor(dev));
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_module_minor(dev_t dev)
+{
+        return _builtinfunc(dev_t__extract_minor, dev);
+}
+
+//==============================================================================
+/**
  * @brief uint get_number_of_modules(void)
  * The function <b>get_number_of_modules</b>() return number of registered
  * modules in system.

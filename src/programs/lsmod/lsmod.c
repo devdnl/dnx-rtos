@@ -72,15 +72,15 @@ int_main(lsmod, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argv;
 
         puts(VT100_FONT_BOLD"ID"VT100_CURSOR_BACKWARD(99)
-             VT100_CURSOR_FORWARD(5)"Name"VT100_CURSOR_BACKWARD(99)
-             VT100_CURSOR_FORWARD(16)"Instances"VT100_RESET_ATTRIBUTES);
+             VT100_CURSOR_FORWARD(4)"Name"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(20)"Instances"VT100_RESET_ATTRIBUTES);
 
         ssize_t drv_number = get_number_of_modules();
         for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
 
                 printf("%d"VT100_CURSOR_BACKWARD(99)
-                       VT100_CURSOR_FORWARD(5)"%s"VT100_CURSOR_BACKWARD(99)
-                       VT100_CURSOR_FORWARD(16)"%d",
+                       VT100_CURSOR_FORWARD(4)"%s"VT100_CURSOR_BACKWARD(99)
+                       VT100_CURSOR_FORWARD(20)"%d\n",
                        i, get_module_name(i), get_number_of_module_instances(i));
         }
 

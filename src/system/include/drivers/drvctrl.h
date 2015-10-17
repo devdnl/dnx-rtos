@@ -145,7 +145,7 @@ static inline dev_t _dev_t__create(u16_t modid, u8_t major, u8_t minor)
  * @return Module ID
  */
 //==============================================================================
-static inline u16_t _dev_t__extract_modid(dev_t devid)
+static inline u16_t _dev_t__extract_modno(dev_t devid)
 {
         return (devid >> 16) & 0x7FFF;
 }

@@ -207,7 +207,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
         int r;
-        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor);
+        syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
         return r;
 }
 
