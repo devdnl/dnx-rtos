@@ -799,7 +799,7 @@ static void turn_off_SPI(u8_t major)
 //==============================================================================
 static void apply_SPI_config(struct spi_virtual *vspi)
 {
-        const u16_t divider_mask[SPI_CLK_DIV_256 + 1] = {
+        static const u16_t divider_mask[] = {
                 [SPI_CLK_DIV_2  ] = 0x00,
                 [SPI_CLK_DIV_4  ] = SPI_CR1_BR_0,
                 [SPI_CLK_DIV_8  ] = SPI_CR1_BR_1,
@@ -810,7 +810,7 @@ static void apply_SPI_config(struct spi_virtual *vspi)
                 [SPI_CLK_DIV_256] = SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0,
         };
 
-        const u16_t spi_mode_mask[SPI_MODE_3 + 1] = {
+        static const u16_t spi_mode_mask[] = {
                 [SPI_MODE_0] = 0x00,
                 [SPI_MODE_1] = SPI_CR1_CPHA,
                 [SPI_MODE_2] = SPI_CR1_CPOL,

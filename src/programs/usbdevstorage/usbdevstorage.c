@@ -239,8 +239,9 @@ static const scsi_mode_parameter_header10_t mode_sense10 = {
         .block_descriptor_length        = 0
 };
 
-static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN__NONE;
+static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions
@@ -281,7 +282,7 @@ static void ep1_handler(void *arg)
 {
         (void)arg;
 
-        FILE *gpio   = fopen("/dev/gpio", "r+");
+        FILE *gpio   = fopen(GPIO_PORT_PATH, "r+");
         FILE *ep1    = fopen("/dev/usbd-ep1", "r+");
         FILE *sda    = fopen("/dev/sda", "r+");
 
@@ -322,7 +323,7 @@ static void ep1_handler(void *arg)
         request_sense6.specific[2]                      = 0;
         request_sense6.specific[3]                      = 0;
 
-        while (ep1 && gpio) {
+        while (ep1) {
                 size_t n = fread(&global->msc.CBW, 1, BULK_BUF_SIZE, ep1);
                 if (n == 0)
                         continue;
@@ -434,7 +435,7 @@ static void ep1_handler(void *arg)
                                 break;
 
                         case SCSI_REQUEST__READ_10:
-                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &led_green);
+                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_GREEN);
 
                                 lba = global->msc.CBW.CBWCB[2] << 24
                                     | global->msc.CBW.CBWCB[3] << 16
@@ -465,11 +466,11 @@ static void ep1_handler(void *arg)
                                 }
 
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
-                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &led_green);
+                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_GREEN);
                                 break;
 
                         case SCSI_REQUEST__WRITE_10:
-                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &led_red);
+                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_RED);
 
                                 lba = global->msc.CBW.CBWCB[2] << 24
                                     | global->msc.CBW.CBWCB[3] << 16
@@ -497,7 +498,7 @@ static void ep1_handler(void *arg)
                                 }
 
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
-                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &led_red);
+                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_RED);
                                 break;
 
                         default:

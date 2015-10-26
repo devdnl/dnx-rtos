@@ -40,6 +40,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/** define number of pins per port */
+#define PINS_PER_PORT   16
+
 /** define CRL configuration macro */
 #define GPIO_SET_CRL(CFG, PIN)                  ( (CFG) << (4 * (PIN)) )
 
@@ -71,11 +74,12 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct gpio_reg_val {
+struct GPIO_reg {
         GPIO_t  *const GPIO;
-        const uint32_t CRL;
-        const uint32_t CRH;
-        const uint16_t ODR;
+        uint32_t       IOPEN;
+        uint32_t       CRL;
+        uint32_t       CRH;
+        uint16_t       ODR;
 };
 
 /*==============================================================================
@@ -85,28 +89,28 @@ struct gpio_reg_val {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const struct gpio_reg_val GPIOx[] = {
-#if _GPIOA_EN
-        {.GPIO = GPIOA, .CRL = GPIOx_CRL(GPIOA), .CRH = GPIOx_CRH(GPIOA), .ODR = GPIOx_ODR(GPIOA)},
-#endif
-#if _GPIOB_EN
-        {.GPIO = GPIOB, .CRL = GPIOx_CRL(GPIOB), .CRH = GPIOx_CRH(GPIOB), .ODR = GPIOx_ODR(GPIOB)},
-#endif
-#if _GPIOC_EN
-        {.GPIO = GPIOC, .CRL = GPIOx_CRL(GPIOC), .CRH = GPIOx_CRH(GPIOC), .ODR = GPIOx_ODR(GPIOC)},
-#endif
-#if _GPIOD_EN
-        {.GPIO = GPIOD, .CRL = GPIOx_CRL(GPIOD), .CRH = GPIOx_CRH(GPIOD), .ODR = GPIOx_ODR(GPIOD)},
-#endif
-#if _GPIOE_EN
-        {.GPIO = GPIOE, .CRL = GPIOx_CRL(GPIOE), .CRH = GPIOx_CRH(GPIOE), .ODR = GPIOx_ODR(GPIOE)},
-#endif
-#if _GPIOF_EN
-        {.GPIO = GPIOF, .CRL = GPIOx_CRL(GPIOF), .CRH = GPIOx_CRH(GPIOF), .ODR = GPIOx_ODR(GPIOF)},
-#endif
-#if _GPIOG_EN
-        {.GPIO = GPIOG, .CRL = GPIOx_CRL(GPIOG), .CRH = GPIOx_CRH(GPIOG), .ODR = GPIOx_ODR(GPIOG)},
-#endif
+static const struct GPIO_reg GPIOx[] = {
+        #if defined(RCC_APB2ENR_IOPAEN)
+        {.GPIO = GPIOA, .IOPEN = RCC_APB2ENR_IOPAEN, .CRL = GPIOx_CRL(GPIOA), .CRH = GPIOx_CRH(GPIOA), .ODR = GPIOx_ODR(GPIOA)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPBEN)
+        {.GPIO = GPIOB, .IOPEN = RCC_APB2ENR_IOPBEN, .CRL = GPIOx_CRL(GPIOB), .CRH = GPIOx_CRH(GPIOB), .ODR = GPIOx_ODR(GPIOB)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPCEN)
+        {.GPIO = GPIOC, .IOPEN = RCC_APB2ENR_IOPCEN, .CRL = GPIOx_CRL(GPIOC), .CRH = GPIOx_CRH(GPIOC), .ODR = GPIOx_ODR(GPIOC)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPDEN)
+        {.GPIO = GPIOD, .IOPEN = RCC_APB2ENR_IOPDEN, .CRL = GPIOx_CRL(GPIOD), .CRH = GPIOx_CRH(GPIOD), .ODR = GPIOx_ODR(GPIOD)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPEEN)
+        {.GPIO = GPIOE, .IOPEN = RCC_APB2ENR_IOPEEN, .CRL = GPIOx_CRL(GPIOE), .CRH = GPIOx_CRH(GPIOE), .ODR = GPIOx_ODR(GPIOE)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPFEN)
+        {.GPIO = GPIOF, .IOPEN = RCC_APB2ENR_IOPFEN, .CRL = GPIOx_CRL(GPIOF), .CRH = GPIOx_CRH(GPIOF), .ODR = GPIOx_ODR(GPIOF)},
+        #endif
+        #if defined(RCC_APB2ENR_IOPGEN)
+        {.GPIO = GPIOG, .IOPEN = RCC_APB2ENR_IOPGEN, .CRL = GPIOx_CRL(GPIOG), .CRH = GPIOx_CRH(GPIOG), .ODR = GPIOx_ODR(GPIOG)},
+        #endif
 };
 
 /*==============================================================================
@@ -130,39 +134,19 @@ static const struct gpio_reg_val GPIOx[] = {
 //==============================================================================
 API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(major);
-        UNUSED_ARG1(minor);
+        if (major < ARRAY_SIZE(GPIOx) && minor == 0) {
+                SET_BIT(RCC->APB2ENR, GPIOx[major].IOPEN);
 
-#if (_GPIOA_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
-#endif
-#if (_GPIOB_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
-#endif
-#if (_GPIOC_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
-#endif
-#if (_GPIOD_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
-#endif
-#if (_GPIOE_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
-#endif
-#if (_GPIOF_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
-#endif
-#if (_GPIOG_EN > 0)
-        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
-#endif
+                GPIOx[major].GPIO->ODR = GPIOx[major].ODR;
+                GPIOx[major].GPIO->CRL = GPIOx[major].CRL;
+                GPIOx[major].GPIO->CRH = GPIOx[major].CRH;
 
-        for (uint i = 0; i < ARRAY_SIZE(GPIOx); i++) {
-                GPIOx[i].GPIO->ODR = GPIOx[i].ODR;
-                GPIOx[i].GPIO->CRL = GPIOx[i].CRL;
-                GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
+                *device_handle = const_cast(void*, &GPIOx[major]);
+
+                return ESUCC;
+        } else {
+                return ENODEV;
         }
-
-        return ESUCC;
 }
 
 //==============================================================================
@@ -176,43 +160,11 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(GPIO, void *device_handle)
 {
-        UNUSED_ARG1(device_handle);
+        const struct GPIO_reg *hdl = device_handle;
 
-#if (_GPIOA_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPARST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPARST);
-#endif
-#if (_GPIOB_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPBRST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPBRST);
-#endif
-#if (_GPIOC_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPCRST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPCRST);
-#endif
-#if (_GPIOD_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPDRST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPDRST);
-#endif
-#if (_GPIOE_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPERST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPERST);
-#endif
-#if (_GPIOF_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPFRST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPFRST);
-#endif
-#if (_GPIOG_EN > 0)
-        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
-        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPGRST);
-        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_IOPGRST);
-#endif
+        CLEAR_BIT(RCC->APB2ENR, hdl->IOPEN);
+        SET_BIT(RCC->APB2RSTR, hdl->IOPEN);
+        CLEAR_BIT(RCC->APB2RSTR, hdl->IOPEN);
 
         return ESUCC;
 }
@@ -229,8 +181,7 @@ API_MOD_RELEASE(GPIO, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(GPIO, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(flags);
+        UNUSED_ARG2(device_handle, flags);
 
         return ESUCC;
 }
@@ -247,8 +198,7 @@ API_MOD_OPEN(GPIO, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(GPIO, void *device_handle, bool force)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(force);
+        UNUSED_ARG2(device_handle, force);
 
         return ESUCC;
 }
@@ -275,14 +225,19 @@ API_MOD_WRITE(GPIO,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(src);
-        UNUSED_ARG1(count);
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(wrcnt);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
-        return ENOTSUP;
+        const struct GPIO_reg *hdl = device_handle;
+
+        if (count >= 2) {
+                for (size_t i = 0; i < count / 2; i++) {
+                        hdl->GPIO->ODR = static_cast(u16_t*, src)[i];
+                }
+
+                *wrcnt = count & ~(1);
+        }
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -307,14 +262,19 @@ API_MOD_READ(GPIO,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(dst);
-        UNUSED_ARG1(count);
-        UNUSED_ARG1(fpos);
-        UNUSED_ARG1(rdcnt);
-        UNUSED_ARG1(fattr);
+        UNUSED_ARG2(fpos, fattr);
 
-        return ENOTSUP;
+        const struct GPIO_reg *hdl = device_handle;
+
+        if (count >= 2) {
+                for (size_t i = 0; i < count / 2; i++) {
+                        static_cast(u16_t*, dst)[i] = hdl->GPIO->IDR;
+                }
+
+                *rdcnt = count & ~(1);
+        }
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -330,46 +290,68 @@ API_MOD_READ(GPIO,
 //==============================================================================
 API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG1(device_handle);
+        int result = EINVAL;
+
+        const struct GPIO_reg *hdl = device_handle;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_GPIO__SET_PIN: {
-                        GPIO_pin_t *io = arg;
-                        if (io->port_index == _GPIO_IOCTL_NONE) break;
-                        GPIOx[io->port_index].GPIO->BSRR = (1 << io->pin_number);
+                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        if (pin < PINS_PER_PORT) {
+                                hdl->GPIO->BSRR = (1 << pin);
+                                result = ESUCC;
+                        }
                         break;
                 }
 
                 case IOCTL_GPIO__CLEAR_PIN: {
-                        GPIO_pin_t *io = arg;
-                        if (io->port_index == _GPIO_IOCTL_NONE) break;
-                        GPIOx[io->port_index].GPIO->BRR = (1 << io->pin_number);
+                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        if (pin < PINS_PER_PORT) {
+                                hdl->GPIO->BRR = (1 << pin);
+                                result = ESUCC;
+                        }
                         break;
                 }
 
                 case IOCTL_GPIO__TOGGLE_PIN: {
-                        GPIO_pin_t *io = arg;
-                        if (io->port_index == _GPIO_IOCTL_NONE) break;
-                        GPIOx[io->port_index].GPIO->ODR ^= (1 << io->pin_number);
+                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        if (pin < PINS_PER_PORT) {
+                                hdl->GPIO->ODR ^= (1 << pin);
+                                result = ESUCC;
+                        }
                         break;
                 }
 
-                case IOCTL_GPIO__GET_PIN: {
-                        GPIO_pin_state_t *io = arg;
-                        if (io->pin->port_index == _GPIO_IOCTL_NONE) break;
-                        io->state = (GPIOx[io->pin->port_index].GPIO->IDR & (1 << io->pin->pin_number)) ? true : false;
+                case IOCTL_GPIO__SET_PIN_STATE: {
+                        GPIO_pin_state_t *pinstate = arg;
+                        if (pinstate->pin < PINS_PER_PORT) {
+                                if (pinstate->state) {
+                                        hdl->GPIO->BSRR = (1 << pinstate->pin);
+                                } else {
+                                        hdl->GPIO->BRR  = (1 << pinstate->pin);
+                                }
+                                result = ESUCC;
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__GET_PIN_STATE: {
+                        GPIO_pin_state_t *pinstate = arg;
+                        if (pinstate->pin < PINS_PER_PORT) {
+                                pinstate->state = (hdl->GPIO->IDR & (1 << pinstate->pin)) ? true : false;
+                                result = ESUCC;
+                        }
                         break;
                 }
 
                 default:
-                        return EBADRQC;
+                        result = EBADRQC;
+                        break;
                 }
-
-                return ESUCC;
-        } else {
-                return EINVAL;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -400,15 +382,15 @@ API_MOD_FLUSH(GPIO, void *device_handle)
 //==============================================================================
 API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG1(device_handle);
+        const struct GPIO_reg *hdl = device_handle;
 
-        device_stat->st_size  = 0;
-        device_stat->st_major = 0;
+        device_stat->st_size  = 2;
+        device_stat->st_major = (hdl->IOPEN >> 4);
         device_stat->st_minor = 0;
 
         return ESUCC;
 }
 
 /*==============================================================================
-                                             End of file
+  End of file
 ==============================================================================*/

@@ -255,7 +255,12 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 //                result = mount("devfs", "", "/dev");
 //                result = mount("procfs", "", "/proc");
 
-                driver_init("GPIO", 0, 0, "/dev/gpio");
+                driver_init("GPIO", 0, 0, "/dev/GPIOA");
+                driver_init("GPIO", 1, 0, "/dev/GPIOB");
+                driver_init("GPIO", 2, 0, "/dev/GPIOC");
+                driver_init("GPIO", 3, 0, "/dev/GPIOD");
+                driver_init("GPIO", 4, 0, "/dev/GPIOE");
+
                 driver_init("AFIOM", 0, 0, NULL);
                 driver_init("PLL", 0, 0, NULL);
                 driver_init("UART", 1, 0, "/dev/ttyS0");

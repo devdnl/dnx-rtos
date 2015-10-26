@@ -259,9 +259,10 @@ static const usb_serial_state_notification_t serial_state = {
 };
 
 
-static const GPIO_pin_t pin_led_white = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t pin_led_green = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t pin_led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t GPIO_LED_WHITE = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN__NONE;
+static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions
@@ -304,13 +305,13 @@ static void ep1_handler(void *arg)
 
         FILE *ep1  = fopen("/dev/usbd-ep1", "r+");
         FILE *ep2  = fopen("/dev/usbd-ep2", "r+");
-        FILE *gpio = fopen("/dev/gpio", "r+");
+        FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
 
         while (!global->configured) {
                 sleep_ms(100);
         }
 
-        if (ep1 && ep2 && gpio) {
+        if (ep1 && ep2) {
                 fwrite("", 1, 1, ep1);
                 fwrite(&serial_state, 1, sizeof(usb_serial_state_notification_t), ep2);
 
@@ -326,9 +327,9 @@ static void ep1_handler(void *arg)
 
                                 char c = global->buffer[0];
                                 if (c == 'W') {
-                                        ioctl(gpio, IOCTL_GPIO__SET_PIN, &pin_led_white);
+                                        ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_WHITE);
                                 } else if (c == 'w') {
-                                        ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &pin_led_white);
+                                        ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_WHITE);
                                 } else if (c == 'h') {
                                         static const char *hello = "Welcome to dnxRTOS!\r\n";
                                         static const char *help  = "Press 'W' to turn on and 'w' to turn off the white LED\r\n";
@@ -414,19 +415,19 @@ int_main(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
                                                        (setup.packet.wValue & (1 << 0)) >> 0,
                                                        (setup.packet.wValue & (1 << 1)) >> 1);
 
-                                                FILE *gpio = fopen("/dev/gpio", "r+");
+                                                FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
                                                 if (gpio) {
 
                                                         if (setup.packet.wValue & (1 << 0)) {
-                                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &pin_led_green);
+                                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_GREEN);
                                                         } else {
-                                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &pin_led_green);
+                                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_GREEN);
                                                         }
 
                                                         if (setup.packet.wValue & (1 << 1)) {
-                                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &pin_led_red);
+                                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_RED);
                                                         } else {
-                                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &pin_led_red);
+                                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_RED);
                                                         }
 
                                                         fclose(gpio);
