@@ -35,7 +35,7 @@
 #include <dnx/os.h>
 #include <dnx/misc.h>
 #include "netif/etharp.h"
-#include "netman.h"
+#include "net/netman.h"
 
 /*==============================================================================
   Local macros
@@ -182,29 +182,32 @@ void _netman_HW_deinit(netman_t *netman)
 //==============================================================================
 void _netman_handle_input(netman_t *netman, uint input_timeout)
 {
-        int packet_size = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, input_timeout);
-        while (packet_size > 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", packet_size));
+        ethmac_packet_wait_t pw = {.timeout = input_timeout};
+        int r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+
+        while (r == 0 && pw.size > 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.size));
 
                 // NOTE: subtract packet size by 4 to discard CRC32
-                struct pbuf *p = pbuf_alloc(PBUF_RAW, packet_size - 4, PBUF_RAM);
+                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.size - 4, PBUF_RAM);
                 if (p) {
-                        int received = ioctl(netman->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
-                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: received = %d\n", received));
+                        r = ioctl(netman->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
 
-                        if (received > 0) {
+                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: received = %d\n", p->tot_len));
+
+                        if (r == 0) {
                                 if (netman->netif.input(p, &netman->netif) != ERR_OK) {
                                         pbuf_free(p);
                                 } else {
                                         netman->rx_packets++;
-                                        netman->rx_bytes += received;
+                                        netman->rx_bytes += p->tot_len;
                                 }
                         } else {
                                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: receive error\n"));
                                 pbuf_free(p);
                         }
 
-                        packet_size = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, input_timeout);
+                        r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
                         sleep_ms(10);
@@ -238,7 +241,7 @@ err_t _netman_handle_output(struct netif *netif, struct pbuf *p)
 {
       netman_t *netman = netif->state;
 
-      if (ioctl(netman->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == STD_RET_OK) {
+      if (ioctl(netman->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == 0) {
               netman->tx_packets++;
               netman->tx_bytes += p->tot_len;
               return ERR_OK;
@@ -298,9 +301,9 @@ err_t _netman_netif_init(struct netif *netif)
 //==============================================================================
 bool _netman_is_link_connected(netman_t *netman)
 {
-        int status = ioctl(netman->if_file, IOCTL_ETHMAC__GET_LINK_STATUS);
-        if (status != -1) {
-                return status == ETHMAC_LINK_STATUS_CONNECTED;
+        ethmac_link_status_t linkstat;
+        if (ioctl(netman->if_file, IOCTL_ETHMAC__GET_LINK_STATUS) == 0) {
+                return linkstat == ETHMAC_LINK_STATUS_CONNECTED;
         } else {
                 return false;
         }

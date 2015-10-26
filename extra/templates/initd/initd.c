@@ -166,6 +166,8 @@ static int run_level_2(void)
 //==============================================================================
 static int run_level_exit(void)
 {
+        sync();
+
         critical_section_begin();
         ISR_disable();
 

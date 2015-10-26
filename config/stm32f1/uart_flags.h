@@ -34,8 +34,8 @@
 #ifndef _UART_FLAGS_H_
 #define _UART_FLAGS_H_
 
-#define __UART_UART1_ENABLE__ _YES_
-#define __UART_UART2_ENABLE__ _NO_
+#define __UART_UART1_ENABLE__ _NO_
+#define __UART_UART2_ENABLE__ _YES_
 #define __UART_UART3_ENABLE__ _NO_
 #define __UART_UART4_ENABLE__ _NO_
 #define __UART_UART5_ENABLE__ _NO_

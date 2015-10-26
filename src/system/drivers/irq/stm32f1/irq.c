@@ -27,10 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/irq_cfg.h"
-#include "stm32f1/irq_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../irq_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -102,15 +102,20 @@ static IRQ_t *IRQ;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
-                IRQ_t *hdl = calloc(1, sizeof(IRQ_t));
-                if (hdl) {
+        int result = ENODEV;
+
+        if (major == 0 && minor == 0) {
+                result = _sys_zalloc(sizeof(IRQ_t), device_handle);
+                if (result == ESUCC) {
+                        IRQ_t *hdl = *device_handle;
+
+                        IRQ = hdl;
+
                         for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
                                 switch (default_config[i].mode) {
                                 default:
@@ -137,32 +142,26 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                 if (default_config[i].mode != _IRQ_MODE_DISABLED) {
                                         set_EXTI_IRQ_priority(i, default_config[i].priority);
 
-                                        hdl->irqsem[i] = _sys_semaphore_new(1, 0);
-                                        if (hdl->irqsem[i] == NULL) {
+                                        result = _sys_semaphore_create(1, 0, &hdl->irqsem[i]);
+                                        if (result != ESUCC) {
                                                 for (int s = 0; s < NUMBER_OF_IRQs; s++) {
                                                         disable_EXTI_IRQ(s);
 
                                                         if (hdl->irqsem[s]) {
-                                                                _sys_semaphore_delete(hdl->irqsem[s]);
+                                                                _sys_semaphore_destroy(hdl->irqsem[s]);
                                                                 hdl->irqsem[s] = NULL;
                                                         }
                                                 }
 
-                                                free(hdl);
+                                                _sys_free(device_handle);
                                                 IRQ = NULL;
-                                                return STD_RET_ERROR;
                                         }
                                 }
                         }
-
-                        *device_handle = hdl;
-                        IRQ = hdl;
-
-                        return STD_RET_OK;
                 }
         }
 
-        return STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
@@ -171,8 +170,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
@@ -185,17 +183,17 @@ API_MOD_RELEASE(IRQ, void *device_handle)
                 disable_EXTI_IRQ(i);
 
                 if (hdl->irqsem[i]) {
-                        _sys_semaphore_delete(hdl->irqsem[i]);
+                        _sys_semaphore_destroy(hdl->irqsem[i]);
                         hdl->irqsem[i] = NULL;
                 }
         }
 
-        free(hdl);
+        _sys_free(device_handle);
         IRQ = NULL;
 
         _sys_critical_section_end();
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -205,16 +203,15 @@ API_MOD_RELEASE(IRQ, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(IRQ, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(IRQ, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -224,16 +221,15 @@ API_MOD_OPEN(IRQ, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(IRQ, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -244,22 +240,23 @@ API_MOD_CLOSE(IRQ, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(IRQ, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(IRQ,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -270,22 +267,23 @@ API_MOD_WRITE(IRQ, void *device_handle, const u8_t *src, size_t count, fpos_t *f
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(IRQ, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(IRQ,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -296,15 +294,16 @@ API_MOD_READ(IRQ, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return On success return 0 or 1. On error, -1 is returned, and errno set
- *         appropriately.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         IRQ_t *hdl = device_handle;
+
+        int result = EINVAL;
 
         if (arg) {
                 switch (request) {
@@ -312,18 +311,21 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         const IRQ_catch_t *irqn = arg;
                         if (irqn->irq_number < NUMBER_OF_IRQs) {
                                 if (hdl->irqsem[irqn->irq_number]) {
-                                        return _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
+                                        result = _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
+                                } else {
+                                        return ENODEV;
                                 }
                         }
-
                         break;
                 }
 
                 case IOCTL_IRQ__TRIGGER: {
-                        const int irqn = (int)arg;
+                        const int irqn = reinterpret_cast(int, arg);
                         if (irqn < NUMBER_OF_IRQs) {
                                 WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << irqn);
-                                return 0;
+                                return ESUCC;
+                        } else {
+                                return EINVAL;
                         }
 
                         break;
@@ -336,14 +338,15 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                                         disable_EXTI_IRQ(cfg->irq_number);
 
                                         if (hdl->irqsem[cfg->irq_number]) {
-                                                _sys_semaphore_delete(hdl->irqsem[cfg->irq_number]);
+                                                _sys_semaphore_destroy(hdl->irqsem[cfg->irq_number]);
                                                 hdl->irqsem[cfg->irq_number] = NULL;
                                         }
                                 } else {
                                         if (hdl->irqsem[cfg->irq_number] == NULL) {
-                                                hdl->irqsem[cfg->irq_number] = _sys_semaphore_new(1, 0);
-                                                if (hdl->irqsem[cfg->irq_number] == NULL)
-                                                        break;
+                                                int result = _sys_semaphore_create(1, 0, &hdl->irqsem[cfg->irq_number]);
+                                                if (result != ESUCC) {
+                                                        return result;
+                                                }
                                         }
 
                                         bool falling, rising;
@@ -365,20 +368,19 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                                         enable_EXTI_IRQ(cfg->irq_number);
                                 }
 
-                                return 0;
+                                return ESUCC;
+                        } else {
+                                return EINVAL;
                         }
-
                         break;
                 }
 
                 default:
-                        errno = EBADRQC;
-                        return -1;
+                        result = EBADRQC;
                 }
         }
 
-        errno = EINVAL;
-        return -1;
+        return result;
 }
 
 //==============================================================================
@@ -387,15 +389,14 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(IRQ, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -405,19 +406,18 @@ API_MOD_FLUSH(IRQ, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
-        device_stat->st_major = _IRQ_MAJOR_NUMBER;
-        device_stat->st_minor = _IRQ_MINOR_NUMBER;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -605,7 +605,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
 void EXTI0_IRQHandler(void)
 {
         if (IRQ_handler(0)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -617,7 +617,7 @@ void EXTI0_IRQHandler(void)
 void EXTI1_IRQHandler(void)
 {
         if (IRQ_handler(1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -629,7 +629,7 @@ void EXTI1_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
         if (IRQ_handler(2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -641,7 +641,7 @@ void EXTI2_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
         if (IRQ_handler(3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -653,7 +653,7 @@ void EXTI3_IRQHandler(void)
 void EXTI4_IRQHandler(void)
 {
         if (IRQ_handler(4)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -671,7 +671,7 @@ void EXTI9_5_IRQHandler(void)
         }
 
         if (woken) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 
@@ -689,7 +689,7 @@ void EXTI15_10_IRQHandler(void)
         }
 
         if (woken) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 

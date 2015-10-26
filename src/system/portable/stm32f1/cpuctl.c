@@ -59,7 +59,12 @@ static const u32_t timer_frequency = 1000000;
 
 //==============================================================================
 /**
- * @brief Basic (first) CPU/microcontroller configuration
+ * @brief  Basic (first) CPU/microcontroller configuration. This function is
+ *         called before system start.
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_init(void)
@@ -70,11 +75,20 @@ void _cpuctl_init(void)
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
+
+        #if (CONFIG_MONITOR_CPU_LOAD > 0)
+        _cpuctl_init_CPU_load_counter();
+        #endif
 }
 
 //==============================================================================
 /**
- * @brief Restart CPU
+ * @brief  This function restart CPU (by using system reset flag, watchdog
+ *         reset, or so on)
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_restart_system(void)
@@ -84,7 +98,12 @@ void _cpuctl_restart_system(void)
 
 //==============================================================================
 /**
- * @brief Start counter used in CPU load measurement
+ * @brief  Start counter used for CPU load measurement. Timer should be set
+ *         to at least 1MHz and should not overflow until 1 second.
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
@@ -100,8 +119,9 @@ void _cpuctl_init_CPU_load_counter(void)
         /* configure timer */
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
-        if (RCC->CFGR & RCC_CFGR_PPRE1_2)
+        if (RCC->CFGR & RCC_CFGR_PPRE1_2) {
                 freq.PCLK1_Frequency *= 2;
+        }
 
         TIM2->PSC = (freq.PCLK1_Frequency/timer_frequency) - 1;
         TIM2->ARR = 0xFFFF;
@@ -111,31 +131,31 @@ void _cpuctl_init_CPU_load_counter(void)
 
 //==============================================================================
 /**
- * @brief Function called after task go to ready state
+ * @brief  Function return valut that was counted from last call of this function.
+ *         This function must reset timer after read. Function is called from
+ *         IRQs.
+ *
+ * @param  None
+ *
+ * @return Timer value for last read (time delta).
  */
 //==============================================================================
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-void _cpuctl_reset_CPU_load_counter(void)
+u32_t _cpuctl_get_CPU_load_counter_delta(void)
 {
-        TIM2->CNT = 0;
+        u32_t diff = TIM2->CNT;
+        TIM2->CNT  = 0;
+        return diff;
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Function called when task go out ready state
- */
-//==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
-u32_t _cpuctl_get_CPU_load_counter_value(void)
-{
-        return TIM2->CNT;
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function sleep CPU (is not a deep sleep, wake up by any IRQ)
+ * @brief  Function sleep CPU weakly. All IRQs must be able to wake up CPU.
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_sleep(void)
@@ -145,10 +165,13 @@ void _cpuctl_sleep(void)
 
 //==============================================================================
 /**
- * @brief Function update all system clock after CPU frequency change
+ * @brief  Function update all system clock after CPU frequency change.
+ *         Function must update all devices which base on main clock oscillator.
+ *         Function is called after clock/frequency change from clock management driver.
  *
- * Function shall update all devices which base on main clock oscillator.
- * Function is called after clock/frequency change from clock management driver.
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_update_system_clocks(void)

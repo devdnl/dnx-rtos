@@ -32,8 +32,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/llist.h"
+#include <lib/llist.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 static inline "C" {
@@ -43,10 +44,10 @@ static inline "C" {
   Exported macros
 ==============================================================================*/
 // list foreach iterator
-#define llist_foreach(type, element, llist_t__list) _llist_foreach(type, element, llist_t__list)
+#define llist_foreach(type, element, llist_t__list) _builtinfunc(llist_foreach, type, element, llist_t__list)
 
 // list reversed foreach iterator
-#define llist_foreach_reverse(type, element, llist_t__list) _llist_foreach_reverse(type, element, llist_t__list)
+#define llist_foreach_reverse(type, element, llist_t__list) _builtinfunc(llist_foreach_reverse, type, element, llist_t__list)
 
 // list iterator
 #define llist_foreach_iterator _iterator
@@ -68,7 +69,9 @@ static inline "C" {
 //==============================================================================
 static inline llist_t *llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor)
 {
-        return _llist_new(malloc, free, functor, obj_dtor);
+        llist_t *list = NULL;
+        errno = _builtinfunc(llist_create_usr, malloc, free, functor, obj_dtor, &list);
+        return list;
 }
 
 //==============================================================================
@@ -80,7 +83,7 @@ static inline llist_t *llist_new(llist_cmp_functor_t functor, llist_obj_dtor_t o
 //==============================================================================
 static inline int llist_delete(llist_t *list)
 {
-        return _llist_delete(list);
+        return _builtinfunc(llist_destroy, list);
 }
 
 //==============================================================================
@@ -92,7 +95,7 @@ static inline int llist_delete(llist_t *list)
 //==============================================================================
 static inline bool llist_empty(llist_t *list)
 {
-        return _llist_empty(list);
+        return _builtinfunc(llist_empty, list);
 }
 
 //==============================================================================
@@ -104,7 +107,7 @@ static inline bool llist_empty(llist_t *list)
 //==============================================================================
 static inline int llist_size(llist_t *list)
 {
-        return _llist_size(list);
+        return _builtinfunc(llist_size, list);
 }
 
 //==============================================================================
@@ -118,7 +121,7 @@ static inline int llist_size(llist_t *list)
 //==============================================================================
 static inline void *llist_push_emplace_front(llist_t *list, size_t size, const void *data)
 {
-        return _llist_push_emplace_front(list, size, data);
+        return _builtinfunc(llist_push_emplace_front, list, size, data);
 }
 
 //==============================================================================
@@ -131,7 +134,7 @@ static inline void *llist_push_emplace_front(llist_t *list, size_t size, const v
 //==============================================================================
 static inline void *llist_push_front(llist_t *list, void *object)
 {
-        return _llist_push_front(list, object);
+        return _builtinfunc(llist_push_front, list, object);
 }
 
 //==============================================================================
@@ -143,7 +146,7 @@ static inline void *llist_push_front(llist_t *list, void *object)
 //==============================================================================
 static inline int llist_pop_front(llist_t *list)
 {
-        return _llist_pop_front(list);
+        return _builtinfunc(llist_pop_front, list);
 }
 
 //==============================================================================
@@ -157,7 +160,7 @@ static inline int llist_pop_front(llist_t *list)
 //==============================================================================
 static inline void *llist_push_emplace_back(llist_t *list, size_t size, const void *data)
 {
-        return _llist_push_emplace_back(list, size, data);
+        return _builtinfunc(llist_push_emplace_back, list, size, data);
 }
 
 //==============================================================================
@@ -169,7 +172,7 @@ static inline void *llist_push_emplace_back(llist_t *list, size_t size, const vo
 //==============================================================================
 static inline void *llist_push_back(llist_t *list, void *object)
 {
-        return _llist_push_back(list, object);
+        return _builtinfunc(llist_push_back, list, object);
 }
 
 //==============================================================================
@@ -181,7 +184,7 @@ static inline void *llist_push_back(llist_t *list, void *object)
 //==============================================================================
 static inline int llist_pop_back(llist_t *list)
 {
-        return _llist_pop_back(list);
+        return _builtinfunc(llist_pop_back, list);
 }
 
 //==============================================================================
@@ -196,7 +199,7 @@ static inline int llist_pop_back(llist_t *list)
 //==============================================================================
 static inline void *llist_emplace(llist_t *list, int position, size_t size, const void *data)
 {
-        return _llist_emplace(list, position, size, data);
+        return _builtinfunc(llist_emplace, list, position, size, data);
 }
 
 //==============================================================================
@@ -210,7 +213,7 @@ static inline void *llist_emplace(llist_t *list, int position, size_t size, cons
 //==============================================================================
 static inline void *llist_insert(llist_t *list, int position, void *object)
 {
-        return _llist_insert(list, position, object);
+        return _builtinfunc(llist_insert, list, position, object);
 }
 
 //==============================================================================
@@ -223,7 +226,7 @@ static inline void *llist_insert(llist_t *list, int position, void *object)
 //==============================================================================
 static inline int llist_erase(llist_t *list, int position)
 {
-        return _llist_erase(list, position);
+        return _builtinfunc(llist_erase, list, position);
 }
 
 //==============================================================================
@@ -236,7 +239,7 @@ static inline int llist_erase(llist_t *list, int position)
 //==============================================================================
 static inline void *llist_take(llist_t *list, int position)
 {
-        return _llist_take(list, position);
+        return _builtinfunc(llist_take, list, position);
 }
 
 //==============================================================================
@@ -248,7 +251,7 @@ static inline void *llist_take(llist_t *list, int position)
 //==============================================================================
 static inline void *llist_take_front(llist_t *list)
 {
-        return _llist_take_front(list);
+        return _builtinfunc(llist_take_front, list);
 }
 
 //==============================================================================
@@ -260,7 +263,7 @@ static inline void *llist_take_front(llist_t *list)
 //==============================================================================
 static inline void *llist_take_back(llist_t *list)
 {
-        return _llist_take_back(list);
+        return _builtinfunc(llist_take_back, list);
 }
 
 //==============================================================================
@@ -272,7 +275,7 @@ static inline void *llist_take_back(llist_t *list)
 //==============================================================================
 static inline int llist_clear(llist_t *list)
 {
-        return _llist_clear(list);
+        return _builtinfunc(llist_clear, list);
 }
 
 //==============================================================================
@@ -286,7 +289,7 @@ static inline int llist_clear(llist_t *list)
 //==============================================================================
 static inline int llist_swap(llist_t *list, int j, int k)
 {
-        return _llist_swap(list, j, k);
+        return _builtinfunc(llist_swap, list, j, k);
 }
 
 //==============================================================================
@@ -298,7 +301,7 @@ static inline int llist_swap(llist_t *list, int j, int k)
 //==============================================================================
 static inline void llist_sort(llist_t *list)
 {
-        _llist_sort(list);
+        _builtinfunc(llist_sort, list);
 }
 
 //==============================================================================
@@ -310,7 +313,7 @@ static inline void llist_sort(llist_t *list)
 //==============================================================================
 static inline void llist_unique(llist_t *list)
 {
-        _llist_unique(list);
+        _builtinfunc(llist_unique, list);
 }
 
 //==============================================================================
@@ -322,7 +325,7 @@ static inline void llist_unique(llist_t *list)
 //==============================================================================
 static inline void llist_reverse(llist_t *list)
 {
-        _llist_reverse(list);
+        _builtinfunc(llist_reverse, list);
 }
 
 //==============================================================================
@@ -335,7 +338,7 @@ static inline void llist_reverse(llist_t *list)
 //==============================================================================
 static inline void *llist_at(llist_t *list, int position)
 {
-        return _llist_at(list, position);
+        return _builtinfunc(llist_at, list, position);
 }
 
 //==============================================================================
@@ -348,7 +351,7 @@ static inline void *llist_at(llist_t *list, int position)
 //==============================================================================
 static inline int llist_contains(llist_t *list, const void *object)
 {
-        return _llist_contains(list, object);
+        return _builtinfunc(llist_contains, list, object);
 }
 
 //==============================================================================
@@ -361,7 +364,7 @@ static inline int llist_contains(llist_t *list, const void *object)
 //==============================================================================
 static inline int llist_find_begin(llist_t *list, const void *object)
 {
-        return _llist_find_begin(list, object);
+        return _builtinfunc(llist_find_begin, list, object);
 }
 
 //==============================================================================
@@ -374,7 +377,7 @@ static inline int llist_find_begin(llist_t *list, const void *object)
 //==============================================================================
 static inline int llist_find_end(llist_t *list, const void *object)
 {
-        return _llist_find_end(list, object);
+        return _builtinfunc(llist_find_end, list, object);
 }
 
 //==============================================================================
@@ -386,7 +389,7 @@ static inline int llist_find_end(llist_t *list, const void *object)
 //==============================================================================
 static inline void *llist_front(llist_t *list)
 {
-        return _llist_front(list);
+        return _builtinfunc(llist_front, list);
 }
 
 //==============================================================================
@@ -398,7 +401,7 @@ static inline void *llist_front(llist_t *list)
 //==============================================================================
 static inline void *llist_back(llist_t *list)
 {
-        return _llist_back(list);
+        return _builtinfunc(llist_back, list);
 }
 
 //==============================================================================
@@ -410,7 +413,7 @@ static inline void *llist_back(llist_t *list)
 //==============================================================================
 static inline llist_iterator_t llist_iterator(llist_t *list)
 {
-        return _llist_iterator(list);
+        return _builtinfunc(llist_iterator, list);
 }
 
 //==============================================================================
@@ -422,7 +425,7 @@ static inline llist_iterator_t llist_iterator(llist_t *list)
 //==============================================================================
 static inline void *llist_begin(llist_iterator_t *iterator)
 {
-        return _llist_begin(iterator);
+        return _builtinfunc(llist_begin, iterator);
 }
 
 //==============================================================================
@@ -434,7 +437,7 @@ static inline void *llist_begin(llist_iterator_t *iterator)
 //==============================================================================
 static inline void *llist_end(llist_iterator_t *iterator)
 {
-        return _llist_end(iterator);
+        return _builtinfunc(llist_end, iterator);
 }
 
 //==============================================================================
@@ -448,7 +451,7 @@ static inline void *llist_end(llist_iterator_t *iterator)
 //==============================================================================
 static inline void *llist_range(llist_iterator_t *iterator, int begin, int end)
 {
-        return _llist_range(iterator, begin, end);
+        return _builtinfunc(llist_range, iterator, begin, end);
 }
 
 //==============================================================================
@@ -460,7 +463,7 @@ static inline void *llist_range(llist_iterator_t *iterator, int begin, int end)
 //==============================================================================
 static inline void *llist_iterator_next(llist_iterator_t *iterator)
 {
-        return _llist_iterator_next(iterator);
+        return _builtinfunc(llist_iterator_next, iterator);
 }
 
 //==============================================================================
@@ -472,7 +475,7 @@ static inline void *llist_iterator_next(llist_iterator_t *iterator)
 //==============================================================================
 static inline void *llist_iterator_prev(llist_iterator_t *iterator)
 {
-        return _llist_iterator_prev(iterator);
+        return _builtinfunc(llist_iterator_prev, iterator);
 }
 
 //==============================================================================
@@ -484,7 +487,7 @@ static inline void *llist_iterator_prev(llist_iterator_t *iterator)
 //==============================================================================
 static inline int llist_erase_by_iterator(llist_iterator_t *iterator)
 {
-        return _llist_erase_by_iterator(iterator);
+        return _builtinfunc(llist_erase_by_iterator, iterator);
 }
 
 //==============================================================================
@@ -499,7 +502,7 @@ static inline int llist_erase_by_iterator(llist_iterator_t *iterator)
 //==============================================================================
 static inline int llist_functor_cmp_pointers(const void *a, const void *b)
 {
-        return _llist_functor_cmp_pointers(a, b);
+        return _builtinfunc(llist_functor_cmp_pointers, a, b);
 }
 
 //==============================================================================
@@ -514,7 +517,7 @@ static inline int llist_functor_cmp_pointers(const void *a, const void *b)
 //==============================================================================
 static inline int llist_functor_cmp_strings(const void *a, const void *b)
 {
-        return _llist_functor_cmp_strings(a, b);
+        return _builtinfunc(llist_functor_cmp_strings, a, b);
 }
 
 #ifdef __cplusplus

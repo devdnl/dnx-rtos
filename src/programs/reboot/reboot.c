@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <dnx/os.h>
 
 /*==============================================================================
@@ -66,6 +67,7 @@ int_main(reboot, STACK_DEPTH_MINIMAL, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
+        sync();
         restart_system();
 
         return EXIT_SUCCESS;

@@ -38,46 +38,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define VT100_ERASE_LINE_FROM_CUR               "\033[K"
-#define VT100_SHIFT_CURSOR_RIGHT(t)             "\033["#t"C"
-#define VT100_SHIFT_CURSOR_LEFT(t)              "\033["#t"D"
-#define VT100_CLEAR_SCREEN                      "\033[2J"
-#define VT100_CLEAR_LINE                        "\r\033[K"
-#define VT100_RESET_ATTRIBUTES                  "\033[0m"
-#define VT100_DISABLE_LINE_WRAP                 "\033[7l"
-#define VT100_CURSOR_OFF                        "\033[?25l"
-#define VT100_CURSOR_ON                         "\033[?25h"
-#define VT100_CURSOR_HOME                       "\033[H"
-#define VT100_SAVE_CURSOR_POSITION              "\0337"
-#define VT100_RESTORE_CURSOR_POSITION           "\0338"
-#define VT100_SET_CURSOR_POSITION(r, c)         "\033["#r";"#c"H"
-#define VT100_QUERY_CURSOR_POSITION             "\033[6n"
-#define VT100_ARROW_UP                          "\033[A"
-#define VT100_ARROW_UP_STDOUT                   "\033^[A"
-#define VT100_ARROW_DOWN                        "\033[B"
-#define VT100_ARROW_DOWN_STDOUT                 "\033^[B"
-#define VT100_TAB                               "\033^[T"
-#define VT100_ARROW_LEFT                        "\033[D"
-#define VT100_ARROW_RIGHT                       "\033[C"
-#define VT100_HOME                              "\033[1~"
-#define VT100_INS                               "\033[2~"
-#define VT100_DEL                               "\033[3~"
-#define VT100_END_1                             "\033[4~"
-#define VT100_END_2                             "\033OF"
-#define VT100_PGUP                              "\033[5~"
-#define VT100_PGDN                              "\033[6~"
-#define VT100_F1                                "\033OP"
-#define VT100_F2                                "\033OQ"
-#define VT100_F3                                "\033OR"
-#define VT100_F4                                "\033OS"
-#define VT100_F5                                "\033[16~"
-#define VT100_F6                                "\033[17~"
-#define VT100_F7                                "\033[18~"
-#define VT100_F8                                "\033[19~"
-#define VT100_F9                                "\033[20~"
-#define VT100_F10                               "\033[21~"
-#define VT100_F11                               "\033[23~"
-#define VT100_F12                               "\033[24~"
 
 /*==============================================================================
   Exported object types
@@ -122,8 +82,8 @@ typedef enum ttycmd_resp {
   Exported functions
 ==============================================================================*/
 /* buffer support ----------------------------------------------------------- */
-extern ttybfr_t        *ttybfr_new                      ();
-extern void             ttybfr_delete                   (ttybfr_t*);
+extern int              ttybfr_create                   (ttybfr_t**);
+extern int              ttybfr_destroy                  (ttybfr_t*);
 extern void             ttybfr_put                      (ttybfr_t*, const char*, size_t);
 extern void             ttybfr_flush                    (ttybfr_t*);
 extern void             ttybfr_clear                    (ttybfr_t*);
@@ -132,8 +92,8 @@ extern const char      *ttybfr_get_fresh_line           (ttybfr_t*);
 extern void             ttybfr_clear_fresh_line_counter (ttybfr_t*);
 
 /* editline support --------------------------------------------------------- */
-extern ttyedit_t       *ttyedit_new                     (FILE*);
-extern void             ttyedit_delete                  (ttyedit_t*);
+extern int              ttyedit_create                  (FILE*, ttyedit_t**);
+extern int              ttyedit_destroy                 (ttyedit_t*);
 extern void             ttyedit_enable_echo             (ttyedit_t*);
 extern void             ttyedit_disable_echo            (ttyedit_t*);
 extern bool             ttyedit_is_echo_enabled         (ttyedit_t*);
@@ -149,8 +109,8 @@ extern void             ttyedit_move_cursor_home        (ttyedit_t*);
 extern void             ttyedit_move_cursor_end         (ttyedit_t*);
 
 /* vt100 command analyze ---------------------------------------------------- */
-extern ttycmd_t        *ttycmd_new                      ();
-extern void             ttycmd_delete                   (ttycmd_t*);
+extern int              ttycmd_create                   (ttycmd_t**);
+extern int              ttycmd_destroy                  (ttycmd_t*);
 extern ttycmd_resp_t    ttycmd_analyze                  (ttycmd_t*, const char);
 extern bool             ttycmd_is_idle                  (ttycmd_t*);
 

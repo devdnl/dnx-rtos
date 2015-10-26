@@ -34,6 +34,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#define _BYTE_ORDER_LITTLE_ENDIAN       0
+#define _BYTE_ORDER_BIG_ENDIAN          1
+
 #if defined(ARCH_stm32f1)
 #       include "stm32f1/cpuctl.h"
 #endif

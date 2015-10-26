@@ -217,9 +217,10 @@ static const usb_max_string_descriptor_t *string[] = {
         reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
-static const GPIO_pin_t gpio_led_white = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t gpio_led_red   = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t gpio_led_green = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t GPIO_LED_WHITE = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN__NONE;
+static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions
@@ -263,8 +264,9 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
 
         FILE *ep0  = fopen("/dev/usbd-ep0", "r+");
         FILE *ep1  = fopen("/dev/usbd-ep1", "r+");
-        FILE *gpio = fopen("/dev/gpio", "r+");
-        if (ep0 && ep1 && gpio) {
+        FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
+
+        if (ep0 && ep1) {
                 usbd_setup_container_t setup     = {.timeout = 25};
                 bool                  configured = false;
                 int                   operation  = -1;
@@ -336,14 +338,15 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                        sizeof(report));
                         }
 
-                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == 0) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
+                        bool was_reset = false;
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET, &was_reset);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -353,7 +356,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
                                                         ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
@@ -379,7 +382,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != 0) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");
@@ -455,21 +458,21 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         printf("(%d/1)\n", fread(&report, 1, 1, ep0));
 
                                         if (report & USB_KEYBOARD_CAPS_LOCK_LED) {
-                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_white);
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_WHITE);
                                         } else {
-                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_white);
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_WHITE);
                                         }
 
                                         if (report & USB_KEYBOARD_NUM_LOCK_LED) {
-                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_green);
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_GREEN);
                                         } else {
-                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_green);
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_GREEN);
                                         }
 
                                         if (report & USB_KEYBOARD_SCROLL_LOCK_LED) {
-                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &gpio_led_red);
+                                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_RED);
                                         } else {
-                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &gpio_led_red);
+                                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_RED);
                                         }
                                         break;
 

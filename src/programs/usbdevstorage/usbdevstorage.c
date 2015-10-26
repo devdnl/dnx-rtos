@@ -239,8 +239,9 @@ static const scsi_mode_parameter_header10_t mode_sense10 = {
         .block_descriptor_length        = 0
 };
 
-static const GPIO_pin_t led_green = GPIO_PIN(GPIO_PIN__NONE);
-static const GPIO_pin_t led_red   = GPIO_PIN(GPIO_PIN__NONE);
+static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN__NONE;
+static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN__NONE;
+static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions
@@ -281,7 +282,7 @@ static void ep1_handler(void *arg)
 {
         (void)arg;
 
-        FILE *gpio   = fopen("/dev/gpio", "r+");
+        FILE *gpio   = fopen(GPIO_PORT_PATH, "r+");
         FILE *ep1    = fopen("/dev/usbd-ep1", "r+");
         FILE *sda    = fopen("/dev/sda", "r+");
 
@@ -322,7 +323,7 @@ static void ep1_handler(void *arg)
         request_sense6.specific[2]                      = 0;
         request_sense6.specific[3]                      = 0;
 
-        while (ep1 && gpio) {
+        while (ep1) {
                 size_t n = fread(&global->msc.CBW, 1, BULK_BUF_SIZE, ep1);
                 if (n == 0)
                         continue;
@@ -434,7 +435,7 @@ static void ep1_handler(void *arg)
                                 break;
 
                         case SCSI_REQUEST__READ_10:
-                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &led_green);
+                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_GREEN);
 
                                 lba = global->msc.CBW.CBWCB[2] << 24
                                     | global->msc.CBW.CBWCB[3] << 16
@@ -465,11 +466,11 @@ static void ep1_handler(void *arg)
                                 }
 
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
-                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &led_green);
+                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_GREEN);
                                 break;
 
                         case SCSI_REQUEST__WRITE_10:
-                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &led_red);
+                                ioctl(gpio, IOCTL_GPIO__SET_PIN, &GPIO_LED_RED);
 
                                 lba = global->msc.CBW.CBWCB[2] << 24
                                     | global->msc.CBW.CBWCB[3] << 16
@@ -497,7 +498,7 @@ static void ep1_handler(void *arg)
                                 }
 
                                 CSW_status = USB_MASS_STORAGE_BOT_CSW_COMMAND_PASSED;
-                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &led_red);
+                                ioctl(gpio, IOCTL_GPIO__CLEAR_PIN, &GPIO_LED_RED);
                                 break;
 
                         default:
@@ -547,13 +548,18 @@ static void ep1_handler(void *arg)
  * @brief Storage main function
  */
 //==============================================================================
-PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;
 
-        FILE     *ep0        = fopen("/dev/usbd-ep0", "r+");
-        thread_t *ep1_thread = thread_new(ep1_handler, STACK_DEPTH_LOW, NULL);
+        static const thread_attr_t attr = {
+                 .priority    = PRIORITY_NORMAL,
+                 .stack_depth = STACK_DEPTH_LOW
+        };
+
+        FILE *ep0        = fopen("/dev/usbd-ep0", "r+");
+        tid_t ep1_thread = thread_create(ep1_handler, &attr, NULL);
 
         if (ep0 && ep1_thread) {
                 usbd_setup_container_t setup = {.timeout = 250};
@@ -569,14 +575,15 @@ PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                         }
 
                         /* wait for SETUP packet */
-                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == STD_RET_OK) {
+                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == 0) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
                         }
 
                         /* clears USB reset indicator */
-                        ioctl(ep0, IOCTL_USBD__WAS_RESET);
+                        bool was_reset = false;
+                        ioctl(ep0, IOCTL_USBD__WAS_RESET, &was_reset);;
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -586,7 +593,7 @@ PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == STD_RET_OK) {
+                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
                                                         ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
@@ -626,7 +633,7 @@ PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != STD_RET_OK) {
+                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != 0) {
                                                 puts(" ERROR");
                                         } else {
                                                 puts(" OK");
@@ -707,12 +714,12 @@ PROGRAM_MAIN(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                 ioctl(ep0, IOCTL_USBD__STOP);
         }
 
-        if (ep0)
+        if (ep0) {
                 fclose(ep0);
+        }
 
         if (ep1_thread) {
                 thread_cancel(ep1_thread);
-                thread_delete(ep1_thread);
         }
 
         puts("Exit.");

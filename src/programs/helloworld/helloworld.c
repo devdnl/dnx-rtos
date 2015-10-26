@@ -29,8 +29,6 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include <dnx/os.h>
-#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -48,7 +46,6 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        /* put here global variables */
 };
 
 /*==============================================================================
@@ -72,10 +69,6 @@ GLOBAL_VARIABLES_SECTION {
 int_main(helloworld, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         puts("Hello world!");
-        printf("Free stack: %d\n", task_get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
 
         printf("Program arguments:\n");
         for (int i = 0; i < argc; i++) {

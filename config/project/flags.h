@@ -80,7 +80,7 @@
 
 /* CPU configuration */
 #define  _CPU_START_FREQ_ _CPU_START_FREQUENCY_
-#define __CPU_OSC_FREQ__ 8000000
+#define __CPU_OSC_FREQ__ 25000000
 #define  _IRQ_RTOS_KERNEL_PRIORITY_ _CPU_IRQ_RTOS_KERNEL_PRIORITY_
 #define  _IRQ_RTOS_SYSCALL_PRIORITY_  _CPU_IRQ_RTOS_SYSCALL_PRIORITY_
 #define __IRQ_USER_PRIORITY__ 0xDF
@@ -91,11 +91,12 @@
 
 /* os configuration */
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
-#define __OS_FILE_SYSTEM_STACK_DEPTH__ 48
+#define __OS_FILE_SYSTEM_STACK_DEPTH__ 160
+#define __OS_NETWORK_STACK_DEPTH__ 140
+#define __OS_SYSCALL_STACK_DEPTH__ 140
 #define __OS_IRQ_STACK_DEPTH__ 16
-#define __OS_INITD_STACK_DEPTH__ 220
+#define __OS_INITD_STACK_DEPTH__ 300
 #define __OS_TASK_MAX_PRIORITIES__ 7
-#define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
 #define __OS_SLEEP_ON_IDLE__ _NO_
 #define __OS_PRINTF_ENABLE__ _YES_
@@ -111,40 +112,42 @@
 #define __OS_MONITOR_MODULE_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_CPU_LOAD__ _YES_
-#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _NO_
+#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ _YES_
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
 #define __OS_RTC_FILE_PATH__ "/dev/rtc"
-#define __OS_SYSTEM_STOP_MACRO__ _NO_
+#define __OS_SYSTEM_STOP_MACRO__ _YES_
 
 /* network configuration */
 #define __NETWORK_ENABLE__ _NO_
 #include "network_flags.h"
 
 /* file systems */
-#define __ENABLE_DEVFS__ _NO_
+#define __ENABLE_DEVFS__ _YES_
 #define __ENABLE_LFS__ _YES_
 #define __ENABLE_FATFS__ _NO_
-#define __ENABLE_PROCFS__ _NO_
+#define __ENABLE_PROCFS__ _YES_
+#define __ENABLE_EXT2FS__ _NO_
+#define __EXT2FS_CACHE_SIZE__ 4
 #define __FATFS_LFN_ENABLE__ _YES_
 #define __FATFS_LFN_CODEPAGE__ 852
 
 /* modules */
-#define __ENABLE_RTCM__ _NO_
+#define __ENABLE_RTCM__ _YES_
 #define __ENABLE_LOOP__ _NO_
 #define __ENABLE_GPIO__ _YES_
-#define __ENABLE_AFIOM__ _NO_
-#define __ENABLE_CRCM__ _NO_
-#define __ENABLE_ETHMAC__ _NO_
-#define __ENABLE_PLL__ _NO_
-#define __ENABLE_SDSPI__ _NO_
-#define __ENABLE_SPI__ _NO_
+#define __ENABLE_AFIOM__ _YES_
+#define __ENABLE_CRCM__ _YES_
+#define __ENABLE_ETHMAC__ _YES_
+#define __ENABLE_PLL__ _YES_
+#define __ENABLE_SDSPI__ _YES_
+#define __ENABLE_SPI__ _YES_
 #define __ENABLE_TTY__ _YES_
 #define __ENABLE_UART__ _YES_
-#define __ENABLE_WDG__ _NO_
+#define __ENABLE_WDG__ _YES_
 #define __ENABLE_USBD__ _NO_
-#define __ENABLE_I2C__ _NO_
-#define __ENABLE_IRQ__ _NO_
+#define __ENABLE_I2C__ _YES_
+#define __ENABLE_IRQ__ _YES_
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

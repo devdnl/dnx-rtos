@@ -27,17 +27,18 @@
 /*==============================================================================
  Include files
  ==============================================================================*/
-#include "mbus.h"
 #include "mbus_signal.h"
 #include "mbus_garbage.h"
-#include "llist.h"
+#include <mbus.h>
+#include <llist.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <time.h>
 #include <dnx/thread.h>
 #include <dnx/misc.h>
-#include <dnx/timer.h>
 
 /*==============================================================================
  Local macros
@@ -58,9 +59,9 @@ struct mbus {
 
 struct mbus_mem {
         queue_t         *request;
-        task_t          *mbus_owner;
         llist_t         *signals;
         llist_t         *garbage;
+        pid_t            mbus_owner;
         _mbus_owner_ID_t owner_ID_cnt;
 };
 
@@ -489,8 +490,8 @@ mbus_errno_t mbus_daemon()
         mbus_errno_t err = MBUS_ERRNO__DAEMON_IS_ALREADY_STARTED;
 
         // check if mbus is orphaned
-        if (mbus && !task_is_exist(mbus->mbus_owner)) {
-                mbus->mbus_owner = task_get_handle();
+        if (mbus && mbus->mbus_owner == 0) {
+                mbus->mbus_owner = getpid();
         } else if (mbus) {
                 return err;
         }
@@ -510,7 +511,7 @@ mbus_errno_t mbus_daemon()
                         mbus->signals      = signals;
                         mbus->garbage      = garbage;
                         mbus->owner_ID_cnt = 0;
-                        mbus->mbus_owner   = task_get_handle();
+                        mbus->mbus_owner   = getpid();
 
                 } else {
                         err = MBUS_ERRNO__NOT_ENOUGH_FREE_MEMORY;
@@ -598,7 +599,7 @@ mbus_t *mbus_new()
 {
         mbus_t *this = NULL;
 
-        if (mbus && task_is_exist(mbus->mbus_owner)) {
+        if (mbus && getpid() != mbus->mbus_owner) {
 
                 this = malloc(sizeof(mbus_t));
                 if (this) {

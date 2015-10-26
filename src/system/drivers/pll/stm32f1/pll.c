@@ -27,11 +27,11 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/pll_cfg.h"
-#include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "../pll_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -46,11 +46,11 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void     set_flash_latency       (u32_t latency);
-static void     enable_prefetch_buffer  (void);
-static stdret_t wait_for_flag           (u32_t flag, uint timeout);
-static bool     is_APB1_divided         (void);
-static bool     is_APB2_divided         (void);
+static void set_flash_latency       (u32_t latency);
+static void enable_prefetch_buffer  (void);
+static int  wait_for_flag           (u32_t flag, uint timeout);
+static bool is_APB1_divided         (void);
+static bool is_APB2_divided         (void);
 
 /*==============================================================================
   Local object definitions
@@ -72,25 +72,27 @@ static bool     is_APB2_divided         (void);
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(major);
+        UNUSED_ARG1(minor);
 
         RCC_DeInit();
 
         set_flash_latency(_PLL_CFG__FLASH_LATENCY);
         enable_prefetch_buffer();
 
+        int status;
+
         if (_PLL_CFG__LSI_ON) {
                 RCC_LSICmd(_PLL_CFG__LSI_ON);
-                if (wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                status = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
+                if (status != ESUCC)
+                        return status;
         }
 
         if (_PLL_CFG__LSE_ON) {
@@ -106,8 +108,9 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         if (_PLL_CFG__HSE_ON) {
                 RCC_HSEConfig(_PLL_CFG__HSE_ON);
-                if (wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                status = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
+                if (status != ESUCC)
+                        return status;
         }
 
         if (  (  (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _PLL_CFG__LSE_ON)
@@ -127,15 +130,17 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         if (_PLL_CFG__PLL2_ON) {
                 RCC_PLL2Config(_PLL_CFG__PLL2_MUL);
                 RCC_PLL2Cmd(_PLL_CFG__PLL2_ON);
-                if (wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                status = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
+                if (status != ESUCC)
+                        return status;
         }
 
         if (_PLL_CFG__PLL3_ON) {
                 RCC_PLL3Config(_PLL_CFG__PLL3_MUL);
                 RCC_PLL3Cmd(_PLL_CFG__PLL3_ON);
-                if (wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS) == STD_RET_ERROR)
-                        return STD_RET_ERROR;
+                status = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
+                if (status != ESUCC)
+                        return status;
         }
 
         RCC_I2S2CLKConfig(_PLL_CFG__I2S2_SRC);
@@ -149,8 +154,9 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         RCC_PLLConfig(_PLL_CFG__PLL_SRC, _PLL_CFG__PLL_MUL);
         RCC_PLLCmd(_PLL_CFG__PLL_ON);
-        if (wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS) == STD_RET_ERROR)
-                return STD_RET_ERROR;
+        status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+        if (status != ESUCC)
+                return status;
 
         RCC_ADCCLKConfig(_PLL_CFG__ADC_PRE);
         RCC_PCLK2Config(_PLL_CFG__APB2_PRE);
@@ -162,7 +168,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         _sys_update_system_clocks();
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -171,18 +177,17 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(PLL, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         RCC_DeInit();
         _sys_update_system_clocks();
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -192,16 +197,15 @@ API_MOD_RELEASE(PLL, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(PLL, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(PLL, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -211,16 +215,15 @@ API_MOD_OPEN(PLL, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(PLL, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -231,22 +234,28 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(PLL,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(src);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(wrcnt);
+        UNUSED_ARG1(fattr);
 
-        errno = EPERM;
-
-        return -1;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -257,22 +266,28 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, fpos_t *f
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(PLL,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(dst);
+        UNUSED_ARG1(count);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(rdcnt);
+        UNUSED_ARG1(fattr);
 
-        errno = EPERM;
-
-        return -1;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -283,15 +298,14 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        stdret_t status = STD_RET_OK;
+        int status = ESUCC;
 
         if (arg) {
                 RCC_ClocksTypeDef freq;
@@ -335,13 +349,11 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
                         break;
 
                 default:
-                        errno  = EBADRQC;
-                        status = STD_RET_ERROR;
+                        status = EBADRQC;
                         break;
                 }
         } else {
-                errno  = EINVAL;
-                status = STD_RET_ERROR;
+                status = EINVAL;
         }
 
         return status;
@@ -353,15 +365,14 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(PLL, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -371,19 +382,18 @@ API_MOD_FLUSH(PLL, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -417,20 +427,19 @@ static void enable_prefetch_buffer(void)
  *
  * @param flag          flag
  *
- * @return STD_RET_OK if success, STD_RET_ERROR on error
+ * @return ESUCC if success, ETIME on error
  */
 //==============================================================================
-static stdret_t wait_for_flag(u32_t flag, uint timeout)
+static int wait_for_flag(u32_t flag, uint timeout)
 {
         uint timer = _sys_time_get_reference();
         while (RCC_GetFlagStatus(flag) == RESET) {
                 if (_sys_time_is_expired(timer, timeout)) {
-                        errno = EIO;
-                        return STD_RET_ERROR;
+                        return ETIME;
                 }
         }
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================

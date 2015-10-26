@@ -103,8 +103,9 @@ typedef LUAI_UACINT l_uacInt;
 #define UNUSED(x)	((void)(x))	/* to avoid warnings */
 #endif
 
-
+#if !defined(cast)
 #define cast(t, exp)	((t)(exp))
+#endif
 
 #define cast_void(i)	cast(void, (i))
 #define cast_byte(i)	cast(lu_byte, (i))

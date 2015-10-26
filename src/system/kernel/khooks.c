@@ -29,9 +29,9 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/printx.h"
-#include "core/sysmoni.h"
-#include "core/progman.h"
+#include "kernel/kpanic.h"
+#include "kernel/process.h"
+#include "lib/unarg.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -49,13 +49,13 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-/** uptime counter */
-u32_t uptime_counter_sec;
-u32_t uptime_divider;
+static u32_t sec_divider;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+u32_t        _uptime_counter_sec;
+extern u32_t _CPU_total_time;
 
 /*==============================================================================
   Function definitions
@@ -80,8 +80,8 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 {
-        (void)taskHdl;
-        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        UNUSED_ARG2(taskHdl, taskName);
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================
@@ -91,9 +91,12 @@ void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
-        if (++uptime_divider >= (configTICK_RATE_HZ)) {
-                uptime_divider = 0;
-                uptime_counter_sec++;
+        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+
+        if (++sec_divider >= configTICK_RATE_HZ) {
+                sec_divider = 0;
+                _uptime_counter_sec++;
+                _calculate_CPU_load();
         }
 }
 
@@ -104,8 +107,7 @@ void vApplicationTickHook(void)
 //==============================================================================
 void vApplicationSwitchedIn(void)
 {
-        _copy_task_context_to_standard_variables();
-        _sysm_task_switched_in();
+        _task_switched_in();
 }
 
 //==============================================================================
@@ -115,8 +117,7 @@ void vApplicationSwitchedIn(void)
 //==============================================================================
 void vApplicationSwitchedOut(void)
 {
-        _copy_standard_variables_to_task_context();
-        _sysm_task_switched_out();
+        _task_switched_out();
 }
 
 //==============================================================================
@@ -128,7 +129,7 @@ void vApplicationSwitchedOut(void)
 //==============================================================================
 u32_t _get_uptime_counter(void)
 {
-        return uptime_counter_sec;
+        return _uptime_counter_sec;
 }
 
 /*==============================================================================

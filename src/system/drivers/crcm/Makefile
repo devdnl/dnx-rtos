@@ -2,6 +2,8 @@
 HDRLOC_ARCH += drivers/crcm
 
 ifeq ($(__ENABLE_CRCM__), _YES_)
-   CSRC_ARCH   += drivers/crcm/$(TARGET)/crcm.c
-   CXXSRC_ARCH += 
+	ifeq ($(TARGET), stm32f1)
+      CSRC_ARCH   += drivers/crcm/$(TARGET)/crcm.c
+      CXXSRC_ARCH +=
+   endif 
 endif

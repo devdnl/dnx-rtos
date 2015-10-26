@@ -1,0 +1,17 @@
+# Makefile for GNU make
+CSRC_CORE   += libc/strerror.c
+CSRC_CORE   += libc/perror.c
+CSRC_CORE   += libc/fputc.c
+CSRC_CORE   += libc/fputs.c
+CSRC_CORE   += libc/getc.c
+CSRC_CORE   += libc/fgets.c
+CSRC_CORE   += libc/vfprintf.c
+CSRC_CORE   += libc/vsnprintf.c
+CSRC_CORE   += libc/vsscanf.c
+CSRC_CORE   += libc/vfscanf.c
+CSRC_CORE   += libc/strftime.c
+CSRC_CORE   += libc/ctime_r.c
+CSRC_CORE   += libc/mktime.c
+CSRC_CORE   += libc/gmtime_r.c
+CSRC_CORE   += libc/localtime_r.c
+HDRLOC_CORE += libc

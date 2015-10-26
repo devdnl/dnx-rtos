@@ -92,7 +92,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 
         (void)prio;
 
-        return _task_new(thread, name, stacksize, arg);
+        return _task_new(thread, name, stacksize, arg, NULL);
 }
 
 //==============================================================================

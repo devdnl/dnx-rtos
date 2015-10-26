@@ -27,10 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/spi_cfg.h"
-#include "stm32f1/spi_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../spi_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -42,6 +42,34 @@
   Local object types
 ==============================================================================*/
 MODULE_NAME(SPI);
+
+// TODO SPI module shall be redesigned a little bit
+/** major number */
+enum {
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        _SPI1,
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        _SPI2,
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        _SPI3,
+        #endif
+        _NUMBER_OF_SPI_PERIPHERALS
+};
+
+/** minor number */
+enum {
+        _SPI_CS0 = 0,
+        _SPI_CS1 = 1,
+        _SPI_CS2 = 2,
+        _SPI_CS3 = 3,
+        _SPI_CS4 = 4,
+        _SPI_CS5 = 5,
+        _SPI_CS6 = 6,
+        _SPI_CS7 = 7
+};
+
 
 /* configuration of single CS line (port and pin) */
 struct cs_pin_cfg {
@@ -92,13 +120,13 @@ struct module {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t turn_on_SPI          (u8_t major);
+static int      turn_on_SPI          (u8_t major);
 static void     turn_off_SPI         (u8_t major);
 static void     apply_SPI_config     (struct spi_virtual *vspi);
 static void     apply_SPI_safe_config(u8_t major);
 static void     select_slave         (u8_t major, u8_t minor);
 static void     deselect_slave       (u8_t major);
-static bool     transceive           (struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count);
+static int      transceive           (struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count);
 
 /*==============================================================================
   Local objects
@@ -285,107 +313,103 @@ static struct module *SPIM;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
+        int result = ENXIO;
+
         if (major >= _NUMBER_OF_SPI_PERIPHERALS) {
-                errno = ENXIO;
-                return STD_RET_ERROR;
+                return result;
         }
 
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         if (major == _SPI1 && minor >= _SPI1_NUMBER_OF_SLAVES) {
-                errno = ENXIO;
-                return STD_RET_ERROR;
+                return result;
         }
 #endif
 
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         if (major == _SPI2 && minor >= _SPI2_NUMBER_OF_SLAVES) {
-                errno = ENXIO;
-                return STD_RET_ERROR;
+                return result;
         }
 #endif
 
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         if (major == _SPI3 && minor >= _SPI3_NUMBER_OF_SLAVES) {
-                errno = ENXIO;
-                return STD_RET_ERROR;
+                return result;
         }
 #endif
 
-        /* allocate module general data if initialized first time */
+        /* allocate module memory */
         if (!SPIM) {
-                SPIM = calloc(1, sizeof(struct module));
-                if (!SPIM) {
-                        return STD_RET_ERROR;
-                }
+                result = _sys_zalloc(sizeof(struct module), static_cast(void**, &SPIM));
+                if (result != ESUCC)
+                        return result;
         }
 
-        /* create irq semaphore */
-        if (!SPIM->wait_irq_sem[major]) {
-                SPIM->wait_irq_sem[major] = _sys_semaphore_new(1, 0);
-                if (!SPIM->wait_irq_sem[major]) {
-                        return STD_RET_ERROR;
-                }
-        }
+        /* create SPI peripheral instance */
+        if (SPIM->wait_irq_sem[major] == NULL) {
+                result = _sys_semaphore_create(1, 0, &SPIM->wait_irq_sem[major]);
+                if (result != ESUCC)
+                        goto finish;
 
-        /* create protection mutex and start device if initialized first time */
-        if (!SPIM->device_protect_mtx[major]) {
-                SPIM->device_protect_mtx[major] = _sys_mutex_new(MUTEX_RECURSIVE);
-                if (!SPIM->device_protect_mtx[major]) {
-                        _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
-                        SPIM->wait_irq_sem[major] = NULL;
-                        return STD_RET_ERROR;
-                } else {
-                        if (turn_on_SPI(major) == STD_RET_OK) {
-                                if (SPI_cfg[major].DMA) {
-                                        #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
-                                        RCC->AHBENR |= SPI_cfg[major].DMA_enable_mask;
+                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPIM->device_protect_mtx[major]);
+                if (result != ESUCC)
+                        goto finish;
 
-                                        u32_t DMA_IRQ_mask = (DMA_ISR_GIF1 | DMA_ISR_TCIF1 | DMA_ISR_TEIF1);
-                                        u8_t  ch_position  = (SPI_cfg[major].DMA_Rx_channel_number - 1) * 4;
-                                        SPI_cfg[major].DMA->IFCR = (DMA_IRQ_mask << ch_position);
-                                        SPI_cfg[major].DMA->ISR |= (DMA_IRQ_mask << ch_position);
+                result = turn_on_SPI(major);
+                if (result == ESUCC) {
+                        if (SPI_cfg[major].DMA) {
+                                #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
+                                RCC->AHBENR |= SPI_cfg[major].DMA_enable_mask;
 
-                                        NVIC_EnableIRQ(SPI_cfg[major].DMA_Rx_IRQn);
-                                        NVIC_SetPriority(SPI_cfg[major].DMA_Rx_IRQn, SPI_cfg[major].IRQ_priority);
-                                        #endif
-                                } else {
-                                        #if (_SPI1_USE_DMA == 0 && _SPI1_ENABLE) || (_SPI2_USE_DMA == 0 && _SPI2_ENABLE) || (_SPI3_USE_DMA == 0 && _SPI3_ENABLE)
-                                        NVIC_EnableIRQ(SPI_cfg[major].IRQn);
-                                        NVIC_SetPriority(SPI_cfg[major].IRQn, SPI_cfg[major].IRQ_priority);
-                                        #endif
-                                }
+                                u32_t DMA_IRQ_mask = (DMA_ISR_GIF1 | DMA_ISR_TCIF1 | DMA_ISR_TEIF1);
+                                u8_t  ch_position  = (SPI_cfg[major].DMA_Rx_channel_number - 1) * 4;
+                                SPI_cfg[major].DMA->IFCR = (DMA_IRQ_mask << ch_position);
+                                SPI_cfg[major].DMA->ISR |= (DMA_IRQ_mask << ch_position);
 
+                                NVIC_EnableIRQ(SPI_cfg[major].DMA_Rx_IRQn);
+                                NVIC_SetPriority(SPI_cfg[major].DMA_Rx_IRQn, SPI_cfg[major].IRQ_priority);
+                                #endif
                         } else {
-                                _sys_semaphore_delete(SPIM->wait_irq_sem[major]);
+                                #if (_SPI1_USE_DMA == 0 && _SPI1_ENABLE) || (_SPI2_USE_DMA == 0 && _SPI2_ENABLE) || (_SPI3_USE_DMA == 0 && _SPI3_ENABLE)
+                                NVIC_EnableIRQ(SPI_cfg[major].IRQn);
+                                NVIC_SetPriority(SPI_cfg[major].IRQn, SPI_cfg[major].IRQ_priority);
+                                #endif
+                        }
+                }
+
+                finish:
+                if (result != ESUCC) {
+                        if (SPIM->wait_irq_sem[major]) {
+                                _sys_semaphore_destroy(SPIM->wait_irq_sem[major]);
                                 SPIM->wait_irq_sem[major] = NULL;
-                                _sys_mutex_delete(SPIM->device_protect_mtx[major]);
+                        }
+
+                        if (SPIM->device_protect_mtx[major]) {
+                                _sys_mutex_destroy(SPIM->device_protect_mtx[major]);
                                 SPIM->device_protect_mtx[major] = NULL;
-                                errno = EADDRINUSE;
-                                return STD_RET_ERROR;
                         }
                 }
         }
 
-        /* create new instance for specified major-minor number (virtual spi) */
-        struct spi_virtual *hdl = calloc(1, sizeof(struct spi_virtual));
-        if (hdl) {
-                hdl->config    = spi_default_cfg;
-                hdl->major     = major;
-                hdl->minor     = minor;
-                *device_handle = hdl;
+        /* create new instance for specified major-minor number (virtual SPI) */
+        if (SPIM->wait_irq_sem[major]) {
+                result = _sys_zalloc(sizeof(struct spi_virtual), device_handle);
+                if (result == ESUCC) {
+                        struct spi_virtual *hdl = *device_handle;
 
-                SPIM->number_of_virtual_spi[major]++;
-        } else {
-                return STD_RET_ERROR;
+                        hdl->config = spi_default_cfg;
+                        hdl->major  = major;
+                        hdl->minor  = minor;
+
+                        SPIM->number_of_virtual_spi[major]++;
+                }
         }
 
-        return STD_RET_OK;
+        return result;
 }
 
 //==============================================================================
@@ -394,17 +418,16 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(SPI, void *device_handle)
 {
         struct spi_virtual *hdl = device_handle;
 
-        stdret_t status = STD_RET_ERROR;
+        int result = EBUSY;
 
-        if (_sys_device_is_unlocked(hdl->file_lock)) {
+        if (_sys_device_is_unlocked(&hdl->file_lock)) {
 
                 _sys_critical_section_begin();
 
@@ -412,10 +435,12 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
                 /* deinitialize major device if all minor devices are deinitialized */
                 if (SPIM->number_of_virtual_spi[hdl->major] == 0) {
-                        _sys_mutex_delete(SPIM->device_protect_mtx[hdl->major]);
+                        _sys_mutex_destroy(SPIM->device_protect_mtx[hdl->major]);
                         SPIM->device_protect_mtx[hdl->major] = NULL;
-                        _sys_semaphore_delete(SPIM->wait_irq_sem[hdl->major]);
+
+                        _sys_semaphore_destroy(SPIM->wait_irq_sem[hdl->major]);
                         SPIM->wait_irq_sem[hdl->major] = NULL;
+
                         turn_off_SPI(hdl->major);
 
                         if (SPI_cfg[hdl->major].DMA) {
@@ -436,21 +461,16 @@ API_MOD_RELEASE(SPI, void *device_handle)
                 }
 
                 if (free_module_mem) {
-                        free(SPIM);
-                        SPIM = NULL;
+                        _sys_free(reinterpret_cast(void**, &SPIM));
                 }
 
                 _sys_critical_section_end();
 
                 /* free virtual spi memory */
-                free(hdl);
-
-                status = STD_RET_OK;
-        } else {
-                errno = EBUSY;
+                result = _sys_free(device_handle);
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -460,17 +480,16 @@ API_MOD_RELEASE(SPI, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(SPI, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(flags);
 
         struct spi_virtual *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        return _sys_device_lock(&hdl->file_lock);
 }
 
 //==============================================================================
@@ -480,21 +499,14 @@ API_MOD_OPEN(SPI, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
         struct spi_virtual *hdl = device_handle;
 
-        if (_sys_device_is_access_granted(&hdl->file_lock) || force) {
-                _sys_device_unlock(&hdl->file_lock, force);
-                return STD_RET_OK;
-        } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
-        }
+        return _sys_device_unlock(&hdl->file_lock, force);
 }
 
 //==============================================================================
@@ -509,82 +521,88 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(SPI,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
-        struct spi_virtual *hdl = device_handle;
+        struct spi_virtual *hdl    = device_handle;
 
-        ssize_t n = -1;
-
-        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        int status = _sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT);
+        if (status == ESUCC) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
                         select_slave(hdl->major, hdl->minor);
                 }
 
-                if (transceive(hdl, src, NULL, count)) {
-                        n = count;
+                status = transceive(hdl, src, NULL, count);
+                if (status == ESUCC) {
+                        *wrcnt = count;
                 }
 
                 _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-        } else {
-                errno = ETIME;
         }
 
-        return n;
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Read data from device. Function does not check that current task is
- *        allowed to write. This is filtered by the open() function. This design
- *        helps to handle other modules that uses directly files to transfer
- *        data. This allows modules to access file from other tasks
- *        (application tasks that not opened SPI file).
+ * @brief Read data from device
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(SPI,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fpos);
+        UNUSED_ARG1(fattr);
 
-        struct spi_virtual *hdl = device_handle;
+        struct spi_virtual *hdl    = device_handle;
 
-        ssize_t n = -1;
-
-        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+        int status = _sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], MUTEX_TIMOUT);
+        if (status == ESUCC) {
                 if (SPIM->RAW[hdl->major] == false) {
                         deselect_slave(hdl->major);
                         apply_SPI_config(hdl);
                         select_slave(hdl->major, hdl->minor);
                 }
 
-                if (transceive(hdl, NULL, dst, count)) {
-                        n = count;
+                status = transceive(hdl, NULL, dst, count);
+                if (status == ESUCC) {
+                        *rdcnt = count;
                 }
 
                 _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-        } else {
-                errno = ETIME;
         }
 
-        return n;
+        return status;
 }
 
 //==============================================================================
@@ -599,56 +617,55 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 {
         struct spi_virtual *hdl    = device_handle;
-        stdret_t            status = STD_RET_ERROR;
+        int                 status = EIO;
 
         switch (request) {
         case IOCTL_SPI__SET_CONFIGURATION:
                 if (arg) {
                         hdl->config = *reinterpret_cast(struct SPI_config*, arg);
-                        status      = STD_RET_OK;
+                        status      = ESUCC;
                 } else {
-                        errno = EINVAL;
+                        status = EINVAL;
                 }
                 break;
 
         case IOCTL_SPI__GET_CONFIGURATION:
                 if (arg) {
                         *reinterpret_cast(struct SPI_config*, arg) = hdl->config;
-                        status = STD_RET_OK;
+                        status = ESUCC;
                 } else {
-                        errno = EINVAL;
+                        status = EINVAL;
                 }
                 break;
 
         case IOCTL_SPI__SELECT:
-                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                         SPIM->RAW[hdl->major] = true;
                         apply_SPI_config(hdl);
                         deselect_slave(hdl->major);
                         select_slave(hdl->major, hdl->minor);
-                        status = STD_RET_OK;
+                        status = ESUCC;
                 } else {
-                        errno = EBUSY;
+                        status = EBUSY;
                 }
                 break;
 
         case IOCTL_SPI__DESELECT:
-                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                         deselect_slave(hdl->major);
                         apply_SPI_safe_config(hdl->major);
                         SPIM->RAW[hdl->major] = false;
                         _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                         _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
-                        status = STD_RET_OK;
+                        status = ESUCC;
                 } else {
-                        errno = EBUSY;
+                        status = EBUSY;
                 }
                 break;
 
@@ -657,24 +674,22 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         struct SPI_transceive *tr = reinterpret_cast(struct SPI_transceive*, arg);
 
                         if (tr->count) {
-                                if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                                if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                                         if (SPIM->RAW[hdl->major] == false) {
                                                 deselect_slave(hdl->major);
                                                 apply_SPI_config(hdl);
                                                 select_slave(hdl->major, hdl->minor);
                                         }
 
-                                        if (transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count)) {
-                                                status = STD_RET_OK;
-                                        }
+                                        status = transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
 
                                         _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                                 }
                         } else {
-                                errno = EINVAL;
+                                status = EINVAL;
                         }
                 } else {
-                        errno = EINVAL;
+                        status = EINVAL;
                 }
                 break;
 
@@ -682,23 +697,23 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         int byte = reinterpret_cast(int, arg);
 
-                        if (_sys_mutex_lock(SPIM->device_protect_mtx[hdl->major], 0)) {
+                        if (_sys_mutex_trylock(SPIM->device_protect_mtx[hdl->major]) == ESUCC) {
                                 deselect_slave(hdl->major);
                                 apply_SPI_config(hdl);
 
                                 if (transceive(hdl, static_cast(u8_t*, &byte), NULL, 1)) {
-                                        status = STD_RET_OK;
+                                        status = ESUCC;
                                 }
 
                                 _sys_mutex_unlock(SPIM->device_protect_mtx[hdl->major]);
                         }
                 } else {
-                        errno = EINVAL;
+                        status = EINVAL;
                 }
                 break;
 
         default:
-                errno = EBADRQC;
+                status = EBADRQC;
                 break;
         }
 
@@ -711,15 +726,14 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(SPI, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -729,8 +743,7 @@ API_MOD_FLUSH(SPI, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -741,25 +754,25 @@ API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = hdl->minor;
         device_stat->st_size  = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
 /**
  * @brief Function enable SPI interface
  * @param[in] major     SPI major number
- * @return STD_RET_OK, STD_RET_ERROR
+ * @return One of errno value.
  */
 //==============================================================================
-static stdret_t turn_on_SPI(u8_t major)
+static int turn_on_SPI(u8_t major)
 {
         if (!(*SPI_cfg[major].APBENR & SPI_cfg[major].APBRSTRENR_mask)) {
                 *SPI_cfg[major].APBRSTR |=  SPI_cfg[major].APBRSTRENR_mask;
                 *SPI_cfg[major].APBRSTR &= ~SPI_cfg[major].APBRSTRENR_mask;
                 *SPI_cfg[major].APBENR  |=  SPI_cfg[major].APBRSTRENR_mask;
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                return STD_RET_ERROR;
+                return EADDRINUSE;
         }
 }
 
@@ -786,7 +799,7 @@ static void turn_off_SPI(u8_t major)
 //==============================================================================
 static void apply_SPI_config(struct spi_virtual *vspi)
 {
-        const u16_t divider_mask[SPI_CLK_DIV_256 + 1] = {
+        static const u16_t divider_mask[] = {
                 [SPI_CLK_DIV_2  ] = 0x00,
                 [SPI_CLK_DIV_4  ] = SPI_CR1_BR_0,
                 [SPI_CLK_DIV_8  ] = SPI_CR1_BR_1,
@@ -797,7 +810,7 @@ static void apply_SPI_config(struct spi_virtual *vspi)
                 [SPI_CLK_DIV_256] = SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0,
         };
 
-        const u16_t spi_mode_mask[SPI_MODE_3 + 1] = {
+        static const u16_t spi_mode_mask[] = {
                 [SPI_MODE_0] = 0x00,
                 [SPI_MODE_1] = SPI_CR1_CPHA,
                 [SPI_MODE_2] = SPI_CR1_CPOL,
@@ -894,10 +907,10 @@ static void deselect_slave(u8_t major)
  * @param  tx           source buffer
  * @param  rx           destination buffer
  * @param  count        number of bytes to transfer
- * @return On success true is returned, otherwise false (timeout)
+ * @return One of errno value
  */
 //==============================================================================
-static bool transceive(struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count)
+static int transceive(struct spi_virtual *hdl, const u8_t *tx, u8_t *rx, size_t count)
 {
         if (SPI_cfg[hdl->major].DMA) {
                 #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
@@ -1043,7 +1056,7 @@ static bool handle_DMA_IRQ(u8_t major)
 void SPI1_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1057,7 +1070,7 @@ void SPI1_IRQHandler(void)
 void SPI2_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1071,7 +1084,7 @@ void SPI2_IRQHandler(void)
 void SPI3_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1085,7 +1098,7 @@ void SPI3_IRQHandler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI1)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1099,7 +1112,7 @@ void DMA1_Channel2_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI2)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1113,7 +1126,7 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA2_Channel1_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI3)) {
-                _sys_task_yield_from_ISR();
+                _sys_thread_yield_from_ISR();
         }
 }
 #endif

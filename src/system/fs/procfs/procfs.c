@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/lib/stm32f10x_rcc.h"
@@ -36,24 +36,18 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/* task ID string length (8B name + \0). ID is 32b hex number converted to string */
-#define TASK_ID_STR_LEN                 9
+#define DIR_ROOT                        "/"
+#define DIR_PID_NAME                    "pid"
+#define DIR_BIN_NAME                    "bin"
+#define FILE_CPUINFO_NAME               "cpuinfo"
 
-#define FILE_DATA_SIZE                  256
+#define PATH_ROOT                       DIR_ROOT
+#define PATH_ROOT_PID                   (DIR_ROOT DIR_PID_NAME "/")
+#define PATH_ROOT_BIN                   (DIR_ROOT DIR_BIN_NAME "/")
+#define PATH_ROOT_CPUINFO               (DIR_ROOT FILE_CPUINFO_NAME)
 
-#define DIR_TASKID_STR                  "taskid"
-#define DIR_TASKNAME_STR                "taskname"
-#define DIR_BIN_STR                     "bin"
-#define FILE_CPUINFO_STR                "cpuinfo"
-#define FILE_TASK_NAME_STR              "name"
-#define FILE_TASK_PRIO_STR              "priority"
-#define FILE_TASK_FREESTACK_STR         "freestack"
-#define FILE_TASK_USEDMEM_STR           "usedmem"
-#define FILE_TASK_OPENFILES_STR         "openfiles"
-
-#define MTX_BLOCK_TIME                  10
-
-#define SECOND_CHARACTER(_s)            _s[1]
+#define FILE_BUFFER                     384
+#define PID_STR_LEN                     12
 
 /*==============================================================================
   Local types, enums definitions
@@ -64,33 +58,25 @@ struct procfs {
 };
 
 struct file_info {
-      task_t *taskhdl;
+      pid_t pid;
 
       enum file_content {
-              FILE_CONTENT_TASK_NAME,
-              FILE_CONTENT_TASK_PRIO,
-              FILE_CONTENT_TASK_FREESTACK,
-              FILE_CONTENT_TASK_USEDMEM,
-              FILE_CONTENT_TASK_OPENFILES,
+              FILE_CONTENT_PID,
               FILE_CONTENT_CPUINFO,
-              FILE_CONTENT_COUNT,
-              FILE_CONTENT_NONE
-      } file_content;
+              FILE_CONTENT_BIN,
+              FILE_CONTENT_COUNT
+      } content;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t    procfs_closedir_freedd  (void *fs_handle, DIR *dir);
-static stdret_t    procfs_closedir_generic (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_root     (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskname (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_bin      (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskid   (void *fs_handle, DIR *dir);
-static dirent_t   *procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
-static inline void mutex_force_lock        (mutex_t *mtx);
-static stdret_t    add_file_info_to_list   (struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd);
-static uint        get_file_content        (struct file_info *file_info, char *buff, uint size);
+static int    procfs_closedir_generic(void *fs_handle, DIR *dir);
+static int    procfs_readdir_root    (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int    procfs_readdir_pid     (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int    procfs_readdir_bin     (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int    add_file_to_list       (struct procfs *fsctx, pid_t pid, enum file_content content, void **object);
+static size_t get_file_content       (struct file_info *file_info, char *buff, size_t size);
 
 /*==============================================================================
   Local object definitions
@@ -111,39 +97,38 @@ static uint        get_file_content        (struct file_info *file_info, char *b
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
-        UNUSED_ARG(src_path);
+        UNUSED_ARG1(src_path);
 
-        struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        llist_t       *file_list = _sys_llist_new(_sys_llist_functor_cmp_pointers, NULL);
-        mutex_t       *mtx       = _sys_mutex_new(MUTEX_NORMAL);
+        int result = _sys_zalloc(sizeof(struct procfs), fs_handle);
+        if (result == ESUCC) {
+                struct procfs *procfs = *fs_handle;
 
-        if (procfs && file_list && mtx) {
-                procfs->file_list    = file_list;
-                procfs->resource_mtx = mtx;
+                result = _sys_llist_create(_sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
+                if (result != ESUCC)
+                        goto finish;
 
-                *fs_handle = procfs;
-                return STD_RET_OK;
-        } else {
-                if (file_list) {
-                        _sys_llist_delete(file_list);
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
+                if (result != ESUCC)
+                        goto finish;
+
+                finish:
+                if (result != ESUCC) {
+                        if (procfs->file_list)
+                                _sys_llist_destroy(procfs->file_list);
+
+                        if (procfs->resource_mtx)
+                                _sys_mutex_destroy(procfs->resource_mtx);
+
+                        _sys_free(fs_handle);
                 }
-
-                if (mtx) {
-                        _sys_mutex_delete(mtx);
-                }
-
-                if (procfs) {
-                        free(procfs);
-                }
-
-                return STD_RET_ERROR;
         }
+
+        return result;
 }
 
 //==============================================================================
@@ -152,31 +137,32 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RELEASE(procfs, void *fs_handle)
 {
         struct procfs *procfs = fs_handle;
 
-        if (_sys_mutex_lock(procfs->resource_mtx, 100)) {
+        if (_sys_mutex_lock(procfs->resource_mtx, 100) == ESUCC) {
                 if (_sys_llist_size(procfs->file_list) != 0) {
                         _sys_mutex_unlock(procfs->resource_mtx);
-                        errno = EBUSY;
-                        return STD_RET_ERROR;
+                        return EBUSY;
                 }
 
                 _sys_critical_section_begin();
-                _sys_mutex_unlock(procfs->resource_mtx);
-                _sys_mutex_delete(procfs->resource_mtx);
-                _sys_llist_delete(procfs->file_list);
-                free(procfs);
+                {
+                        _sys_mutex_unlock(procfs->resource_mtx);
+                        _sys_mutex_destroy(procfs->resource_mtx);
+                        _sys_llist_destroy(procfs->file_list);
+                        _sys_free(&fs_handle);
+                }
                 _sys_critical_section_end();
-                return STD_RET_OK;
+
+                return ESUCC;
+
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -191,99 +177,55 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG1(fd);
 
-        struct procfs *procmem = fs_handle;
+        struct procfs *fsctx = fs_handle;
 
-        if (flags != O_RDONLY) {
-                errno = EROFS;
-                return STD_RET_ERROR;
+        int result = EROFS;
+
+        if (flags == O_RDONLY) {
+                *fpos = 0;
+
+                if (strncmp(path, PATH_ROOT_PID, strlen(PATH_ROOT_PID)) == 0) {
+                        if (LAST_CHARACTER(path) != '/') {
+                                path += strlen(PATH_ROOT_PID);
+
+                                i32_t pid = 0;
+                                _sys_strtoi(path, 10, &pid);
+
+                                process_stat_t stat;
+                                if (_sys_process_get_stat_pid(pid, &stat) == ESUCC) {
+                                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, extra);
+                                } else {
+                                        result = ENOENT;
+                                }
+                        } else {
+                                result = ENOENT;
+                        }
+
+                } else if (strncmp(path, PATH_ROOT_BIN, strlen(PATH_ROOT_BIN)) == 0) {
+                        path += strlen(PATH_ROOT_BIN);
+
+                        for (int i = 0; i < _sys_get_programs_table_size(); i++) {
+                                if (strcmp(path, _sys_get_programs_table()[i].name) == 0) {
+                                        return add_file_to_list(fsctx, 0, FILE_CONTENT_BIN, extra);
+                                }
+                        }
+
+                } else if (strcmp(path, PATH_ROOT_CPUINFO) == 0) {
+                        return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, extra);
+
+                } else {
+                        result = ENOENT;
+                }
         }
 
-        *fpos = 0;
-
-        if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
-                path += strlen("/"DIR_TASKID_STR"/");
-
-                task_t *taskhdl = NULL;
-                path = _strtoi((char*)path, 16, (i32_t*)&taskhdl);
-
-                struct _sysmoni_taskstat task_data;
-                if (_sysm_get_task_stat(taskhdl, &task_data) != STD_RET_OK) {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
-                }
-
-                path = strrchr(path, '/');
-                if (path == NULL) {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
-                } else {
-                        path++;
-                }
-
-                enum file_content file_content;
-
-                if (strcmp((char*) path, FILE_TASK_NAME_STR) == 0) {
-                        file_content = FILE_CONTENT_TASK_NAME;
-                } else if (strcmp((char*) path, FILE_TASK_FREESTACK_STR) == 0) {
-                        file_content = FILE_CONTENT_TASK_FREESTACK;
-                } else if (strcmp((char*) path, FILE_TASK_OPENFILES_STR) == 0) {
-                        file_content = FILE_CONTENT_TASK_OPENFILES;
-                } else if (strcmp((char*) path, FILE_TASK_PRIO_STR) == 0) {
-                        file_content = FILE_CONTENT_TASK_PRIO;
-                } else if (strcmp((char*) path, FILE_TASK_USEDMEM_STR) == 0) {
-                        file_content = FILE_CONTENT_TASK_USEDMEM;
-                } else {
-                        errno = ENOENT;
-                        return STD_RET_ERROR;
-                }
-
-                return add_file_info_to_list(procmem, taskhdl, file_content, fd);
-
-        } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen("/"DIR_TASKNAME_STR"/")) == 0) {
-
-                path += strlen("/"DIR_TASKNAME_STR"/");
-
-                u16_t n = _sysm_get_number_of_monitored_tasks();
-                u16_t i = 0;
-
-                struct _sysmoni_taskstat task_data;
-                while (n-- && _sysm_get_ntask_stat(i++, &task_data) == STD_RET_OK) {
-                        if (strcmp(path, task_data.task_name) == 0) {
-                                return add_file_info_to_list(procmem,
-                                                             task_data.task_handle,
-                                                             FILE_CONTENT_NONE, fd);
-                        }
-                }
-
-                errno = ENOENT;
-                return STD_RET_ERROR;
-
-        } else if (strcmp(path, "/"FILE_CPUINFO_STR) == 0) {
-                return add_file_info_to_list(procmem, NULL, FILE_CONTENT_CPUINFO, fd);
-
-        } else if (strncmp(path, "/"DIR_BIN_STR"/", strlen("/"DIR_BIN_STR"/")) == 0) {
-                path += strlen("/"DIR_BIN_STR"/");
-
-                for (int i = 0; i < _sys_get_programs_table_size(); i++) {
-                        if (strcmp(path, _sys_get_programs_table()[i].program_name) == 0) {
-                                return add_file_info_to_list(procmem, NULL, FILE_CONTENT_NONE, fd);
-                        }
-                }
-
-                errno = ENOENT;
-                return STD_RET_ERROR;
-        } else {
-                errno = ENOENT;
-                return STD_RET_ERROR;
-        }
+        return result;
 }
 
 //==============================================================================
@@ -295,25 +237,24 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
-        UNUSED_ARG(extra);
-        UNUSED_ARG(force);
+        UNUSED_ARG2(fd, force);
 
-        struct procfs *procmem = fs_handle;
+        struct procfs *fsctx = fs_handle;
 
-        mutex_force_lock(procmem->resource_mtx);
+        int result = _sys_mutex_lock(fsctx->resource_mtx, 1000);
+        if (result == ESUCC) {
+                int pos = _sys_llist_find_begin(fsctx->file_list, extra);
+                result  = _sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
 
-        int      pos    = _sys_llist_find_begin(procmem->file_list, reinterpret_cast(void *, fd));
-        stdret_t status = _sys_llist_erase(procmem->file_list, pos) ? STD_RET_OK : STD_RET_ERROR;
+                _sys_mutex_unlock(fsctx->resource_mtx);
+        }
 
-        _sys_mutex_unlock(procmem->resource_mtx);
-
-        return status;
+        return result;
 }
 
 //==============================================================================
@@ -326,22 +267,25 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
- * @return number of written bytes, -1 if error
+ * @param[out]          *wrcnt                  number of written bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos)
+API_FS_WRITE(procfs,
+             void            *fs_handle,
+             void            *extra,
+             fd_t             fd,
+             const u8_t      *src,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *wrcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
+        UNUSED_ARG8(fs_handle, extra, fd, src, count, wrcnt, fpos, fattr);
 
-        errno = EROFS;
-
-        return -1;
+        return EROFS;
 }
 
 //==============================================================================
@@ -354,51 +298,47 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
- * @return number of read bytes, -1 if error
+ * @param[out]          *rdcnt                  number of read bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos)
+API_FS_READ(procfs,
+            void            *fs_handle,
+            void            *extra,
+            fd_t             fd,
+            u8_t            *dst,
+            size_t           count,
+            fpos_t          *fpos,
+            size_t          *rdcnt,
+            struct vfs_fattr fattr)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG3(fs_handle, fd, fattr);
 
-        struct procfs *procmem = fs_handle;
+        struct file_info *file   = extra;
+        int               result = ENOENT;
 
-        mutex_force_lock(procmem->resource_mtx);
-        struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
-        _sys_mutex_unlock(procmem->resource_mtx);
+        if (file && file->content < FILE_CONTENT_COUNT) {
 
-        if (file_info == NULL) {
-                errno = ENOENT;
-                return -1;
-        }
+                char *content;
+                int result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                if (result == ESUCC) {
+                        size_t data_size = get_file_content(file, content, FILE_BUFFER);
+                        size_t seek      = min(*fpos, SIZE_MAX);
+                        if (seek > data_size) {
+                                *rdcnt = 0;
+                        } else {
+                                size_t n = (data_size - seek <= count) ? data_size - seek : count;
+                                strncpy((char *)dst, content + seek, n);
+                                *rdcnt = n;
+                        }
 
-        if (file_info->file_content == FILE_CONTENT_NONE) {
-                return 0;
-        }
-
-        if (file_info->file_content >= FILE_CONTENT_COUNT) {
-                errno = ENOENT;
-                return -1;
-        }
-
-        ssize_t n    = -1;
-        char   *data = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
-                uint data_size = get_file_content(file_info, data, FILE_DATA_SIZE);
-
-                size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
-                if (seek > data_size) {
-                        n = 0;
-                } else {
-                        n = (data_size - seek <= count) ? data_size - seek : count;
-                        strncpy((char *)dst, data + seek, n);
+                        _sys_free(static_cast(void**, &content));
                 }
-
-                free(data);
         }
 
-        return n;
+        return result;
 }
 
 //==============================================================================
@@ -411,21 +351,14 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG5(fs_handle, extra, fd, request, arg);
 
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -436,19 +369,14 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
+        UNUSED_ARG3(fs_handle, extra, fd);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -460,46 +388,34 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
  * @param[in ]           fd                     file descriptor
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
-        UNUSED_ARG(extra);
+        UNUSED_ARG2(fs_handle, fd);
 
-        struct procfs *procmem = fs_handle;
+        struct file_info *file   = extra;
+        int               result = ENOENT;
 
-        mutex_force_lock(procmem->resource_mtx);
-        struct file_info *file_info = reinterpret_cast(struct file_info*, fd);
-        _sys_mutex_unlock(procmem->resource_mtx);
+        if (file && file->content < FILE_CONTENT_COUNT) {
+                stat->st_dev   = 0;
+                stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
+                stat->st_mtime = 0;
+                stat->st_size  = 0;
+                stat->st_gid   = 0;
+                stat->st_uid   = 0;
+                stat->st_type  = FILE_TYPE_REGULAR;
 
-        if (file_info == NULL) {
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                char *content;
+                int result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                if (result == ESUCC) {
+                        stat->st_size = get_file_content(file, content, FILE_BUFFER);
+                        _sys_free(static_cast(void**, &content));
+                }
         }
 
-        if (file_info->file_content >= FILE_CONTENT_COUNT) {
-                errno = ENOENT;
-                return STD_RET_ERROR;
-        }
-
-        stat->st_dev   = 0;
-        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
-        stat->st_mtime = 0;
-        stat->st_size  = 0;
-        stat->st_gid   = 0;
-        stat->st_uid   = 0;
-        stat->st_type  = FILE_TYPE_REGULAR;
-
-        char *data = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
-                stat->st_size = get_file_content(file_info, data, FILE_DATA_SIZE);
-                free(data);
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
@@ -510,19 +426,14 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @param[in ]          *path                   name of created directory
  * @param[in ]           mode                   dir mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG3(fs_handle, path, mode);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -533,20 +444,14 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created pipe
  * @param[in ]           mode                   pipe mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG3(fs_handle, path, mode);
 
-        /* not supported by this file system */
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -557,20 +462,14 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created node
  * @param[in ]           dev                    driver number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(dev);
+        UNUSED_ARG3(fs_handle, path, dev);
 
-        /* not supported by this file system */
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -581,106 +480,41 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
  * @param[in ]          *path                   name of opened directory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         dir->f_seek = 0;
+        dir->f_dd   = NULL;
 
-        if (strcmp(path, "/") == 0) {
+        int result = ENOENT;
+
+        if (strcmp(path, PATH_ROOT) == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = 4;
+                dir->f_items    = 3;
                 dir->f_readdir  = procfs_readdir_root;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
-        } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
+                result          = ESUCC;
+
+        } else if (strcmp(path, PATH_ROOT_PID) == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _sysm_get_number_of_monitored_tasks();
-                dir->f_readdir  = procfs_readdir_taskname;
+                dir->f_items    = _sys_process_get_count();
+                dir->f_readdir  = procfs_readdir_pid;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
-        } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
-                dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
-                dir->f_items    = _sysm_get_number_of_monitored_tasks();
-                dir->f_readdir  = procfs_readdir_taskid;
-                dir->f_closedir = procfs_closedir_freedd;
-                return STD_RET_OK;
-        } else if (strcmp(path, "/"DIR_BIN_STR"/") == 0) {
+                result          = ESUCC;
+
+        } else if (strcmp(path, PATH_ROOT_BIN) == 0) {
                 dir->f_dd       = NULL;
                 dir->f_items    = _sys_get_programs_table_size();
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
-                return STD_RET_OK;
-        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
-                path += strlen("/"DIR_TASKID_STR"/");
-
-                i32_t taskval = 0;
-                path = _strtoi((char*)path, 16, &taskval);
-
-                if (FIRST_CHARACTER(path) == '/' && SECOND_CHARACTER(path) == '\0') {
-                        struct _sysmoni_taskstat taskdata;
-                        task_t                 *taskHdl = (task_t *)taskval;
-                        if (_sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
-                                dir->f_dd       = taskHdl;
-                                dir->f_items    = FILE_CONTENT_COUNT;
-                                dir->f_readdir  = procfs_readdir_taskid_n;
-                                dir->f_closedir = procfs_closedir_generic;
-                                return STD_RET_OK;
-                        }
-                }
+                result          = ESUCC;
         }
 
-        errno = ENOENT;
-        return STD_RET_ERROR;
-}
-
-//==============================================================================
-/**
- * @brief Function close opened dir (is used when dd contains pointer to
- *        allocated block)
- *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
-{
-        UNUSED_ARG(fs_handle);
-
-        if (dir->f_dd) {
-                free(dir->f_dd);
-                dir->f_dd = NULL;
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
-        }
-}
-
-//==============================================================================
-/**
- * @brief Function close opened dir (is used when dd contains data which cannot
- *        be freed)
- *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
-{
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
-
-        return STD_RET_OK;
+        return result;
 }
 
 //==============================================================================
@@ -690,18 +524,14 @@ static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of removed file/directory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_REMOVE(procfs, void *fs_handle, const char *path)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        UNUSED_ARG2(fs_handle, path);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -712,19 +542,14 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
  * @param[in ]          *old_name               old object name
  * @param[in ]          *new_name               new object name
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(old_name);
-        UNUSED_ARG(new_name);
+        UNUSED_ARG3(fs_handle, old_name, new_name);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -735,19 +560,14 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
  * @param[in ]          *path                   file path
  * @param[in ]           mode                   new file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG3(fs_handle, path, mode);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -759,20 +579,14 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]           owner                  new file owner
  * @param[in ]           group                  new file group
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(owner);
-        UNUSED_ARG(group);
+        UNUSED_ARG4(fs_handle, path, owner, group);
 
-        errno = EROFS;
-
-        return STD_RET_ERROR;
+        return EROFS;
 }
 
 //==============================================================================
@@ -783,14 +597,12 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
  * @param[in ]          *path                   file path
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
+        UNUSED_ARG2(fs_handle, path);
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
@@ -800,7 +612,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -810,13 +622,12 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[out]          *statfs                 file system status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
@@ -825,7 +636,7 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
         statfs->f_type   = 1;
         statfs->f_fsname = "procfs";
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -839,325 +650,298 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(procfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
+
+        return ESUCC;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Function close opened dir (is used when dd contains data which cannot
+ *        be freed)
  *
  * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
- * @return Pointer to directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_root(void *fs_handle, DIR *dir)
+static int procfs_closedir_generic(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
-        dirent_t *dirent = &dir->dirent;
+        if (dir->f_dd) {
+                return _sys_free(&dir->f_dd);
+        } else {
+                return ESUCC;
+        }
+}
 
-        dir->dirent.filetype = FILE_TYPE_DIR;
-        dir->dirent.size     = 0;
+//==============================================================================
+/**
+ * @brief Read directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
+{
+        UNUSED_ARG1(fs_handle);
+
+        int result;
+
+        *dirent         = &dir->dirent;
+        dir->dirent.dev = 0;
 
         switch (dir->f_seek++) {
         case 0:
-                dir->dirent.name = DIR_TASKID_STR;
+                dir->dirent.name     = DIR_BIN_NAME;
+                dir->dirent.filetype = FILE_TYPE_DIR;
+                dir->dirent.size     = 0;
+                result               = ESUCC;
                 break;
 
         case 1:
-                dir->dirent.name = DIR_TASKNAME_STR;
+                dir->dirent.name     = DIR_PID_NAME;
+                dir->dirent.filetype = FILE_TYPE_DIR;
+                dir->dirent.size     = 0;
+                result               = ESUCC;
                 break;
 
-        case 2:
-                dir->dirent.name = DIR_BIN_STR;
-                break;
-
-        case 3: {
-                char *data = calloc(FILE_DATA_SIZE, 1);
-                if (data) {
-                        struct file_info file_info;
-                        file_info.file_content = FILE_CONTENT_CPUINFO;
-                        dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
-                        free(data);
+        case 2: {
+                char *content;
+                result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                if (result == ESUCC) {
+                        struct file_info file = {.content = FILE_CONTENT_CPUINFO};
+                        dir->dirent.name      = FILE_CPUINFO_NAME;
+                        dir->dirent.filetype  = FILE_TYPE_REGULAR;
+                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
+                        result                = _sys_free(static_cast(void**, &content));
                 }
-
-                dir->dirent.name     = FILE_CPUINFO_STR;
-                dir->dirent.filetype = FILE_TYPE_REGULAR;
                 break;
         }
 
         default:
-                dirent = NULL;
+                *dirent = NULL;
+                result  = ENOENT;
                 break;
         }
 
-        return dirent;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_taskname(void *fs_handle, DIR *dir)
+static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
-        dirent_t *dirent = NULL;
+        process_stat_t stat;
+        int result = _sys_process_get_stat_seek(dir->f_seek++, &stat);
+        if (result == ESUCC) {
+                char *content;
+                result  = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                if (result == ESUCC) {
 
-        struct _sysmoni_taskstat taskdata;
-        if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
-                dir->dirent.filetype = FILE_TYPE_REGULAR;
-                dir->dirent.name     = taskdata.task_name;
-                dir->dirent.size     = 0;
+                        if (dir->f_dd) {
+                                _sys_free(&dir->f_dd);
+                        }
 
-                dir->f_seek++;
+                        result = _sys_zalloc(PID_STR_LEN, &dir->f_dd);
+                        if (result == ESUCC) {
+                                /*
+                                 * Note: freed in next cycle or dir close
+                                 */
+                                _sys_snprintf(dir->f_dd, PID_STR_LEN, "%u", stat.pid);
 
-                dirent = &dir->dirent;
-        } else {
-                errno = 0;
-        }
+                                dir->dirent.name      = dir->f_dd;
+                                dir->dirent.filetype  = FILE_TYPE_REGULAR;
+                                dir->dirent.dev       = 0;
 
-        return dirent;
-}
+                                struct file_info file = {.pid = stat.pid, .content = FILE_CONTENT_PID};
+                                dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
 
-//==============================================================================
-/**
- * @brief Read item from opened directory
- *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
- *
- * @return directory entry
- */
-//==============================================================================
-static dirent_t *procfs_readdir_bin(void *fs_handle, DIR *dir)
-{
-        UNUSED_ARG(fs_handle);
+                                *dirent               = &dir->dirent;
+                        }
 
-        dirent_t *dirent = NULL;
-
-        if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
-                dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                dir->dirent.name     = _sys_get_programs_table()[dir->f_seek].program_name;
-                dir->dirent.size     = 0;
-
-                dir->f_seek++;
-
-                dirent = &dir->dirent;
-        }
-
-        return dirent;
-}
-
-//==============================================================================
-/**
- * @brief Read item from opened directory
- *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
- *
- * @return directory entry
- */
-//==============================================================================
-static dirent_t *procfs_readdir_taskid(void *fs_handle, DIR *dir)
-{
-        UNUSED_ARG(fs_handle);
-
-        dirent_t *dirent = NULL;
-
-        if (dir->f_dd && dir->f_seek < (size_t)_sysm_get_number_of_monitored_tasks()) {
-                struct _sysmoni_taskstat taskdata;
-                if (_sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
-                        _sys_snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
-
-                        dir->dirent.filetype = FILE_TYPE_DIR;
-                        dir->dirent.name     = dir->f_dd;
-                        dir->dirent.size     = 0;
-
-                        dir->f_seek++;
-
-                        dirent = &dir->dirent;
+                        result = _sys_free(static_cast(void**, &content));
                 }
         }
 
-        return dirent;
+        return result;
 }
 
 //==============================================================================
 /**
- * @brief Read item from opened directory
+ * @brief Read directory
  *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ * @param[out]          **dirent                directory entry
  *
- * @return directory entry
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t *procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
+static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
 
-        dirent_t *dirent = NULL;
+        if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
+                dir->dirent.filetype = FILE_TYPE_PROGRAM;
+                dir->dirent.name     = const_cast(char*, _sys_get_programs_table()[dir->f_seek].name);
+                dir->dirent.size     = 0;
+                *dirent              = &dir->dirent;
+                dir->f_seek++;
 
-        if (dir->f_seek >= FILE_CONTENT_COUNT) {
-                return NULL;
-        }
-
-        dir->dirent.filetype = FILE_TYPE_REGULAR;
-
-        switch (dir->f_seek) {
-        case FILE_CONTENT_TASK_NAME     : dir->dirent.name = FILE_TASK_NAME_STR; break;
-        case FILE_CONTENT_TASK_PRIO     : dir->dirent.name = FILE_TASK_PRIO_STR; break;
-        case FILE_CONTENT_TASK_FREESTACK: dir->dirent.name = FILE_TASK_FREESTACK_STR; break;
-        case FILE_CONTENT_TASK_USEDMEM  : dir->dirent.name = FILE_TASK_USEDMEM_STR; break;
-        case FILE_CONTENT_TASK_OPENFILES: dir->dirent.name = FILE_TASK_OPENFILES_STR; break;
-        }
-
-        char *data = calloc(FILE_DATA_SIZE, 1);
-        if (data) {
-                struct file_info file_info;
-                file_info.file_content = dir->f_seek;
-                file_info.taskhdl      = dir->f_dd;
-
-                dir->dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
-
-                dirent = &dir->dirent;
-
-                free(data);
+                return ESUCC;
         } else {
-                dir->dirent.size = 0;
+                return ENOENT;
         }
-
-        dir->f_seek++;
-        return dirent;
-}
-
-//==============================================================================
-/**
- * @brief Force lock mutex
- *
- * @param mtx           mutex
- */
-//==============================================================================
-static inline void mutex_force_lock(mutex_t *mtx)
-{
-        while (_sys_mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================
 /**
  * @brief Add file info to list
  *
- * @param procmem               FS context
- * @param taskhdl               task handle to write in file info
- * @param file_content          file content to write in file info
- * @param fd                    file descriptor (result)
+ * @param fsctx                 FS context
+ * @param pid                   pid number
+ * @param content               file content to write in file info
+ * @param object                file object (result)
  *
- * @return STD_RET_OK if success, STD_RET_ERROR on error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
+static int add_file_to_list(struct procfs *fsctx, pid_t pid, enum file_content content, void **object)
 {
-        struct file_info *file_info = calloc(1, sizeof(struct file_info));
-        if (file_info) {
-                file_info->taskhdl      = taskhdl;
-                file_info->file_content = file_content;
+        struct file_info *file;
+        int result = _sys_zalloc(sizeof(struct file_info), static_cast(void**, &file));
+        if (result == ESUCC) {
+                file->pid     = pid;
+                file->content = content;
 
-                mutex_force_lock(procmem->resource_mtx);
+                result = _sys_mutex_lock(fsctx->resource_mtx, 1000);
+                if (result == ESUCC) {
+                        if (_sys_llist_push_back(fsctx->file_list, file)) {
+                                *object = file;
+                                result  = ESUCC;
+                        } else {
+                                _sys_free(static_cast(void**, &file));
+                                result = ENOMEM;
+                        }
 
-                if (_sys_llist_push_back(procmem->file_list, file_info)) {
-                        *fd = (fd_t)file_info;
-
-                } else {
-                        free(file_info);
-                        file_info = NULL;
+                        _sys_mutex_unlock(fsctx->resource_mtx);
                 }
-
-                _sys_mutex_unlock(procmem->resource_mtx);
         }
 
-        return file_info ? STD_RET_OK : STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
 /**
  * @brief Function return file content and size
  *
- * @param file_info     file information
+ * @param file          file information
  * @param buff          buffer
  * @param size          buffer size
  *
  * @return number of bytes written to buffer
  */
 //==============================================================================
-static uint get_file_content(struct file_info *file_info, char *buff, uint size)
+static size_t get_file_content(struct file_info *file, char *buff, size_t size)
 {
-        struct _sysmoni_taskstat task_info;
-        if (file_info->file_content < FILE_CONTENT_CPUINFO) {
-                if (_sysm_get_task_stat(file_info->taskhdl, &task_info) != STD_RET_OK) {
-                        return 0;
+        size_t         len = 0;
+        process_stat_t stat;
+
+        switch (file->content) {
+        case FILE_CONTENT_BIN:
+                /* none */
+                break;
+
+        case FILE_CONTENT_PID:
+                if (_sys_process_get_stat_pid(file->pid, &stat) == ESUCC) {
+                        len = _sys_snprintf(buff, size,
+                                            "Name: %s\n"
+                                            "PID: %d\n"
+                                            "Memory usage: %d bytes\n"
+                                            "Memory Block Count: %d\n"
+                                            "Open Files: %d\n"
+                                            "Open Dirs: %d\n"
+                                            "Open Mutexes: %d\n"
+                                            "Open Semaphores: %d\n"
+                                            "Open Queues: %d\n"
+                                            "Open Sockets: %d\n"
+                                            "Threads: %d\n"
+                                            "CPU Load: %d.%d%%\n"
+                                            "Stack Size: %d\n"
+                                            "Stack Usage: %d\n"
+                                            "Priority: %d\n"
+                                            "Zombie: %d\n",
+                                            stat.name,
+                                            stat.pid,
+                                            stat.memory_usage,
+                                            stat.memory_block_count,
+                                            stat.files_count,
+                                            stat.dir_count,
+                                            stat.mutexes_count,
+                                            stat.semaphores_count,
+                                            stat.queue_count,
+                                            stat.socket_count,
+                                            stat.threads_count,
+                                            stat.CPU_load / 10, stat.CPU_load % 10,
+                                            stat.stack_size,
+                                            stat.stack_max_usage,
+                                            stat.priority,
+                                            stat.zombie);
                 }
-        }
+                break;
 
-        switch (file_info->file_content) {
-        case FILE_CONTENT_TASK_FREESTACK:
-                return _sys_snprintf(buff, size, "%u\n", task_info.free_stack);
+        case FILE_CONTENT_CPUINFO:
+                len = _sys_snprintf(buff, size,
+                                    "CPU name  : %s\n"
+                                    "CPU vendor: %s\n",
+                                    _CPUCTL_PLATFORM_NAME,
+                                    _CPUCTL_VENDOR_NAME);
 
-        case FILE_CONTENT_TASK_NAME:
-                return _sys_snprintf(buff, size, "%s\n", task_info.task_name);
-
-        case FILE_CONTENT_TASK_OPENFILES:
-                return _sys_snprintf(buff, size, "%u\n", task_info.opened_files);
-
-        case FILE_CONTENT_TASK_PRIO:
-                return _sys_snprintf(buff, size, "%d\n", task_info.priority);
-
-        case FILE_CONTENT_TASK_USEDMEM:
-                return _sys_snprintf(buff, size, "%u\n", task_info.memory_usage);
-
-        case FILE_CONTENT_CPUINFO: {
                 #if defined(ARCH_stm32f1)
                 RCC_ClocksTypeDef freq;
                 RCC_GetClocksFreq(&freq);
-                #endif
 
-                return _sys_snprintf(buff, size,
-                                    "CPU name  : %s\n"
-                                    "CPU vendor: %s\n"
-                            #if defined(ARCH_stm32f1)
-                                    "CPU     Hz: %d\n"
-                                    "SYSCLK  Hz: %d\n"
-                                    "PCLK1   Hz: %d\n"
-                                    "PCLK1T  Hz: %d\n"
-                                    "PCLK2   Hz: %d\n"
-                                    "PCLK2T  Hz: %d\n"
-                                    "ADCCLK  Hz: %d\n"
-                            #endif
-                                    ,_CPUCTL_PLATFORM_NAME
-                                    ,_CPUCTL_VENDOR_NAME
-                            #if defined(ARCH_stm32f1)
-                                    ,freq.HCLK_Frequency
-                                    ,freq.SYSCLK_Frequency
-                                    ,freq.PCLK1_Frequency
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency
-                                    ,freq.PCLK2_Frequency
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency
-                                    ,freq.ADCCLK_Frequency
-                            #endif
-                );
-        }
+                len += _sys_snprintf(buff + len, size - len,
+                                     "CPU     Hz: %d\n"
+                                     "SYSCLK  Hz: %d\n"
+                                     "PCLK1   Hz: %d\n"
+                                     "PCLK1T  Hz: %d\n"
+                                     "PCLK2   Hz: %d\n"
+                                     "PCLK2T  Hz: %d\n"
+                                     "ADCCLK  Hz: %d\n",
+                                     freq.HCLK_Frequency,
+                                     freq.SYSCLK_Frequency,
+                                     freq.PCLK1_Frequency,
+                                     (RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency,
+                                     freq.PCLK2_Frequency,
+                                     (RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency,
+                                     freq.ADCCLK_Frequency);
+                        #endif
+                break;
 
         default:
-                return 0;
+                break;
         }
+
+        return len;
 }
 
 /*==============================================================================

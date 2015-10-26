@@ -43,7 +43,8 @@ extern "C" {
 /** macro creates an enumerator with pin data */
 #define _PIN_CONFIGURATION(port, number, pin_name, mode, state) \
 enum port##_##number##_CFG {\
-        pin_name,\
+        _CONCAT(IOCTL_GPIO_PIN__, pin_name),\
+        _CONCAT(IOCTL_GPIO_PIN_MASK__, pin_name) = (1 << (number)),\
         _CONCAT(_GPIO_, pin_name) = port##_BASE,\
         _CONCAT(_BP_, pin_name) = (number),\
         _CONCAT(_BM_, pin_name) = (1 << (number)),\
@@ -51,33 +52,12 @@ enum port##_##number##_CFG {\
         _##port##_PIN_##number##_STATE = (state)\
 }
 
-/** enable (1) or disable (0) GPIOA port */
-#define _GPIOA_EN                               __GPIO_PA_ENABLE__
-
-/** enable (1) or disable (0) GPIOB port */
-#define _GPIOB_EN                               __GPIO_PB_ENABLE__
-
-/** enable (1) or disable (0) GPIOC port */
-#define _GPIOC_EN                               __GPIO_PC_ENABLE__
-
-/** enable (1) or disable (0) GPIOD port */
-#define _GPIOD_EN                               __GPIO_PD_ENABLE__
-
-/** enable (1) or disable (0) GPIOE port */
-#define _GPIOE_EN                               __GPIO_PE_ENABLE__
-
-/** enable (1) or disable (0) GPIOF port */
-#define _GPIOF_EN                               __GPIO_PF_ENABLE__
-
-/** enable (1) or disable (0) GPIOG port */
-#define _GPIOG_EN                               __GPIO_PG_ENABLE__
-
 /** GPIO pin NONE definition */
-#define GPIO_NONE_BASE 0
-_PIN_CONFIGURATION(GPIO_NONE, 0, NONE, _GPIO_ANALOG, _GPIO_IN_FLOAT);
+#define _GPIO_NONE_BASE 0
+_PIN_CONFIGURATION(_GPIO_NONE, 17, NONE, _GPIO_ANALOG, _GPIO_IN_FLOAT);
 
 /** GPIOA pins configuration */
-#if _GPIOA_EN
+#if defined(RCC_APB2ENR_IOPAEN)
 _PIN_CONFIGURATION(GPIOA,  0, __GPIO_PA_PIN_0_NAME__ , __GPIO_PA_PIN_0_MODE__ , __GPIO_PA_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOA,  1, __GPIO_PA_PIN_1_NAME__ , __GPIO_PA_PIN_1_MODE__ , __GPIO_PA_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOA,  2, __GPIO_PA_PIN_2_NAME__ , __GPIO_PA_PIN_2_MODE__ , __GPIO_PA_PIN_2_STATE__ );
@@ -97,7 +77,7 @@ _PIN_CONFIGURATION(GPIOA, 15, __GPIO_PA_PIN_15_NAME__, __GPIO_PA_PIN_15_MODE__, 
 #endif
 
 /** GPIOB pins configuration */
-#if _GPIOB_EN
+#if defined(RCC_APB2ENR_IOPBEN)
 _PIN_CONFIGURATION(GPIOB,  0, __GPIO_PB_PIN_0_NAME__ , __GPIO_PB_PIN_0_MODE__ , __GPIO_PB_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOB,  1, __GPIO_PB_PIN_1_NAME__ , __GPIO_PB_PIN_1_MODE__ , __GPIO_PB_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOB,  2, __GPIO_PB_PIN_2_NAME__ , __GPIO_PB_PIN_2_MODE__ , __GPIO_PB_PIN_2_STATE__ );
@@ -117,7 +97,7 @@ _PIN_CONFIGURATION(GPIOB, 15, __GPIO_PB_PIN_15_NAME__, __GPIO_PB_PIN_15_MODE__, 
 #endif
 
 /** GPIOC pins configuration */
-#if _GPIOC_EN
+#if defined(RCC_APB2ENR_IOPCEN)
 _PIN_CONFIGURATION(GPIOC,  0, __GPIO_PC_PIN_0_NAME__ , __GPIO_PC_PIN_0_MODE__ , __GPIO_PC_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOC,  1, __GPIO_PC_PIN_1_NAME__ , __GPIO_PC_PIN_1_MODE__ , __GPIO_PC_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOC,  2, __GPIO_PC_PIN_2_NAME__ , __GPIO_PC_PIN_2_MODE__ , __GPIO_PC_PIN_2_STATE__ );
@@ -137,7 +117,7 @@ _PIN_CONFIGURATION(GPIOC, 15, __GPIO_PC_PIN_15_NAME__, __GPIO_PC_PIN_15_MODE__, 
 #endif
 
 /** GPIOD pins configuration */
-#if _GPIOD_EN
+#if defined(RCC_APB2ENR_IOPDEN)
 _PIN_CONFIGURATION(GPIOD,  0, __GPIO_PD_PIN_0_NAME__ , __GPIO_PD_PIN_0_MODE__ , __GPIO_PD_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOD,  1, __GPIO_PD_PIN_1_NAME__ , __GPIO_PD_PIN_1_MODE__ , __GPIO_PD_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOD,  2, __GPIO_PD_PIN_2_NAME__ , __GPIO_PD_PIN_2_MODE__ , __GPIO_PD_PIN_2_STATE__ );
@@ -157,7 +137,7 @@ _PIN_CONFIGURATION(GPIOD, 15, __GPIO_PD_PIN_15_NAME__, __GPIO_PD_PIN_15_MODE__, 
 #endif
 
 /** GPIOE pins configuration */
-#if _GPIOE_EN
+#if defined(RCC_APB2ENR_IOPEEN)
 _PIN_CONFIGURATION(GPIOE,  0, __GPIO_PE_PIN_0_NAME__ , __GPIO_PE_PIN_0_MODE__ , __GPIO_PE_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOE,  1, __GPIO_PE_PIN_1_NAME__ , __GPIO_PE_PIN_1_MODE__ , __GPIO_PE_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOE,  2, __GPIO_PE_PIN_2_NAME__ , __GPIO_PE_PIN_2_MODE__ , __GPIO_PE_PIN_2_STATE__ );
@@ -177,7 +157,7 @@ _PIN_CONFIGURATION(GPIOE, 15, __GPIO_PE_PIN_15_NAME__, __GPIO_PE_PIN_15_MODE__, 
 #endif
 
 /** GPIOF pins configuration */
-#if _GPIOF_EN
+#if defined(RCC_APB2ENR_IOPFEN)
 _PIN_CONFIGURATION(GPIOF,  0, __GPIO_PF_PIN_0_NAME__ , __GPIO_PF_PIN_0_MODE__ , __GPIO_PF_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOF,  1, __GPIO_PF_PIN_1_NAME__ , __GPIO_PF_PIN_1_MODE__ , __GPIO_PF_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOF,  2, __GPIO_PF_PIN_2_NAME__ , __GPIO_PF_PIN_2_MODE__ , __GPIO_PF_PIN_2_STATE__ );
@@ -197,7 +177,7 @@ _PIN_CONFIGURATION(GPIOF, 15, __GPIO_PF_PIN_15_NAME__, __GPIO_PF_PIN_15_MODE__, 
 #endif
 
 /** GPIOG pins configuration */
-#if _GPIOG_EN
+#if defined(RCC_APB2ENR_IOPGEN)
 _PIN_CONFIGURATION(GPIOG,  0, __GPIO_PG_PIN_0_NAME__ , __GPIO_PG_PIN_0_MODE__ , __GPIO_PG_PIN_0_STATE__ );
 _PIN_CONFIGURATION(GPIOG,  1, __GPIO_PG_PIN_1_NAME__ , __GPIO_PG_PIN_1_MODE__ , __GPIO_PG_PIN_1_STATE__ );
 _PIN_CONFIGURATION(GPIOG,  2, __GPIO_PG_PIN_2_NAME__ , __GPIO_PG_PIN_2_MODE__ , __GPIO_PG_PIN_2_STATE__ );

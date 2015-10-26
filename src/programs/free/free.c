@@ -28,8 +28,10 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <dnx/os.h>
+#include <dnx/vt100.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -73,7 +75,7 @@ int_main(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
         }
 
         memstat_t sysmem;
-        get_detailed_memory_usage(&sysmem);
+        get_memory_usage_details(&sysmem);
 
         for (uint module = 0; module < drv_count; module++) {
                 modmem[module] = get_module_memory_usage(module);
@@ -89,15 +91,18 @@ int_main(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
         if (strcmp(argv[1], "-d") == 0) {
                 printf("\nDetailed memory usage:\n");
-                printf("  Kernel  : %d\n", sysmem.used_kernel_memory);
-                printf("  System  : %d\n", sysmem.used_system_memory);
-                printf("  Modules : %d\n", sysmem.used_modules_memory);
-                printf("  Network : %d\n", sysmem.used_network_memory);
-                printf("  Programs: %d\n\n", sysmem.used_programs_memory);
+                printf("  Kernel     : %d\n", sysmem.kernel_memory_usage);
+                printf("  File System: %d\n", sysmem.filesystems_memory_usage);
+                printf("  Modules    : %d\n", sysmem.modules_memory_usage);
+                printf("  Network    : %d\n", sysmem.network_memory_usage);
+                printf("  Programs   : %d\n", sysmem.programs_memory_usage);
+                printf("  Static     : %d\n\n", sysmem.static_memory_usage);
 
                 printf("Detailed modules memory usage:\n");
                 for (uint module = 0; module < drv_count; module++) {
-                        printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
+                        printf("  %s"VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(14)": %d\n",
+                               get_module_name(module),
+                               get_module_memory_usage(module));
                 }
         }
 

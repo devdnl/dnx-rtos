@@ -49,7 +49,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"                    /* dnx file system support */
+#include "fs/fs.h"                      /* dnx file system support */
 #include "libfat_conf.h"                /* FatFs configuration options */
 
 /*==============================================================================

@@ -27,10 +27,11 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "noarch/loop_cfg.h"
-#include "noarch/loop_def.h"
-#include "noarch/loop_ioctl.h"
+#include "../loop_ioctl.h"
+
+// TODO loop: module to reimplementation because of system mechanisms change
 
 /*==============================================================================
   Local macros
@@ -52,7 +53,6 @@ typedef struct {
                 struct {
                         void *arg;
                         int   rq;
-                        int   status;
                 } ioctl;
 
                 struct {
@@ -107,43 +107,50 @@ static uint host_request_timeout = MAX_DELAY_MS;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(minor);
+        UNUSED_ARG1(minor);
 
-        if (major < _LOOP_NUMBER_OF_DEVICES) {
-                loop_t *hdl = calloc(1, sizeof(loop_t));
-                if (hdl) {
-                        hdl->lock      = _sys_mutex_new(MUTEX_NORMAL);
-                        hdl->event_req = _sys_semaphore_new(1, 0);
-                        hdl->event_res = _sys_semaphore_new(1, 0);
-                        hdl->major   = major;
+        int result = _sys_zalloc(sizeof(loop_t), device_handle);
+        if (result == ESUCC) {
+                loop_t *hdl = *device_handle;
 
-                        if (hdl->lock && hdl->event_req && hdl->event_res) {
-                                *device_handle = hdl;
-                                return STD_RET_OK;
+                hdl->major  = major;
 
-                        } else {
-                                if (hdl->lock) {
-                                        _sys_mutex_delete(hdl->lock);
-                                }
+                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->lock);
+                if (result != ESUCC) {
+                        goto finish;
+                }
 
-                                if (hdl->event_req) {
-                                        _sys_semaphore_delete(hdl->event_req);
-                                }
+                result = _sys_semaphore_create(1, 0, &hdl->event_req);
+                if (result != ESUCC) {
+                        goto finish;
+                }
 
-                                if (hdl->event_res) {
-                                        _sys_semaphore_delete(hdl->event_res);
-                                }
-                        }
+                result = _sys_semaphore_create(1, 0, &hdl->event_res);
+                if (result != ESUCC) {
+                        goto finish;
+                }
+
+                finish:
+                if (result != ESUCC) {
+                        if (hdl->lock)
+                                _sys_mutex_destroy(hdl->lock);
+
+                        if (hdl->event_req)
+                                _sys_semaphore_destroy(hdl->event_req);
+
+                        if (hdl->event_res)
+                                _sys_semaphore_destroy(hdl->event_res);
+
+                        _sys_free(device_handle);
                 }
         }
 
-        return STD_RET_ERROR;
+        return result;
 }
 
 //==============================================================================
@@ -152,26 +159,24 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(LOOP, void *device_handle)
 {
         loop_t *hdl = device_handle;
 
-        if (_sys_mutex_lock(hdl->lock, release_timeout)) {
+        if (_sys_mutex_lock(hdl->lock, release_timeout) == ESUCC) {
                 _sys_critical_section_begin();
                 _sys_mutex_unlock(hdl->lock);
-                _sys_mutex_delete(hdl->lock);
-                _sys_semaphore_delete(hdl->event_req);
-                _sys_semaphore_delete(hdl->event_res);
-                free(hdl);
+                _sys_mutex_destroy(hdl->lock);
+                _sys_semaphore_destroy(hdl->event_req);
+                _sys_semaphore_destroy(hdl->event_res);
+                _sys_free(device_handle);
                 _sys_critical_section_end();
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return EBUSY;
         }
 }
 
@@ -182,16 +187,15 @@ API_MOD_RELEASE(LOOP, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(LOOP, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(LOOP, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -201,16 +205,15 @@ API_MOD_OPEN(LOOP, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(LOOP, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -221,51 +224,55 @@ API_MOD_CLOSE(LOOP, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(LOOP, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(LOOP,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         loop_t *hdl = device_handle;
 
-        ssize_t n = 0;
-
         if (hdl->host == NULL)
-                return n;
+                return ESRCH;
 
-        if (_sys_mutex_lock(hdl->lock, operation_timeout)) {
+        int result = _sys_mutex_lock(hdl->lock, operation_timeout);
+        if (result == ESUCC) {
 
                 hdl->operation.cmd         = LOOP_CMD_TRANSMISSION_CLIENT2HOST;
                 hdl->operation.arg.rw.data = const_cast(u8_t*, src);
                 hdl->operation.arg.rw.size = count;
                 hdl->operation.arg.rw.seek = *fpos;
 
-                _sys_semaphore_signal(hdl->event_req);
+                result = _sys_semaphore_signal(hdl->event_req);
+                if (result == ESUCC) {
 
-                if (_sys_semaphore_wait(hdl->event_res, request_timeout)) {
+                        result = _sys_semaphore_wait(hdl->event_res, request_timeout);
+                        if (result == ESUCC) {
 
-                        if (hdl->operation.errno_val == ESUCC) {
-                                n = count - hdl->operation.arg.rw.size;
-                        } else {
-                                errno = hdl->operation.errno_val;
-                                n = -1;
+                                if (hdl->operation.errno_val == ESUCC) {
+                                        *wrcnt = count - hdl->operation.arg.rw.size;
+                                } else {
+                                        result = hdl->operation.errno_val;
+                                }
                         }
 
-                } else {
-                        errno = ETIME;
-                        n = -1;
+                        hdl->operation.cmd = LOOP_CMD_IDLE;
+
+                        _sys_mutex_unlock(hdl->lock);
                 }
-
-                hdl->operation.cmd = LOOP_CMD_IDLE;
-
-                _sys_mutex_unlock(hdl->lock);
         }
 
-        return n;
+        return result;
 }
 
 //==============================================================================
@@ -276,23 +283,29 @@ API_MOD_WRITE(LOOP, void *device_handle, const u8_t *src, size_t count, fpos_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(LOOP,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(fattr);
 
         loop_t *hdl = device_handle;
 
-        ssize_t n = 0;
-
         if (hdl->host == NULL)
-                return n;
+                return ESRCH;
 
-        if (_sys_mutex_lock(hdl->lock, operation_timeout)) {
+        int result = _sys_mutex_lock(hdl->lock, operation_timeout);
+        if (result == ESUCC) {
 
                 hdl->operation.cmd         = LOOP_CMD_TRANSMISSION_HOST2CLIENT;
                 hdl->operation.arg.rw.data = dst;
@@ -300,37 +313,36 @@ API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
 
                 while (count) {
                         hdl->operation.arg.rw.size = count;
-                        _sys_semaphore_signal(hdl->event_req);
+                        result = _sys_semaphore_signal(hdl->event_req);
+                        if (result == ESUCC) {
+                                result = _sys_semaphore_wait(hdl->event_res, request_timeout);
+                                if (result == ESUCC) {
 
-                        if (_sys_semaphore_wait(hdl->event_res, request_timeout)) {
+                                        if (hdl->operation.errno_val == ESUCC) {
 
-                                if (hdl->operation.errno_val == ESUCC) {
+                                                if (hdl->operation.arg.rw.size == 0) {
+                                                        break;
 
-                                        if (hdl->operation.arg.rw.size == 0) {
+                                                } else if (hdl->operation.arg.rw.size > count) {
+                                                        hdl->operation.arg.rw.size = count;
+                                                }
+
+                                                if (hdl->operation.arg.rw.size && hdl->operation.arg.rw.data) {
+                                                        memcpy(dst, hdl->operation.arg.rw.data, hdl->operation.arg.rw.size);
+                                                }
+
+                                                dst    += hdl->operation.arg.rw.size;
+                                                count  -= hdl->operation.arg.rw.size;
+                                                *rdcnt += hdl->operation.arg.rw.size;
+
+                                        } else {
+                                                result = hdl->operation.errno_val;
                                                 break;
-
-                                        } else if (hdl->operation.arg.rw.size > count) {
-                                                hdl->operation.arg.rw.size = count;
                                         }
-
-                                        if (hdl->operation.arg.rw.size && hdl->operation.arg.rw.data) {
-                                                memcpy(dst, hdl->operation.arg.rw.data, hdl->operation.arg.rw.size);
-                                        }
-
-                                        dst   += hdl->operation.arg.rw.size;
-                                        count -= hdl->operation.arg.rw.size;
-                                        n     += hdl->operation.arg.rw.size;
 
                                 } else {
-                                        errno = hdl->operation.errno_val;
-                                        n = -1;
                                         break;
                                 }
-
-                        } else {
-                                errno = ETIME;
-                                n = -1;
-                                break;
                         }
                 }
 
@@ -339,7 +351,7 @@ API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
                 _sys_mutex_unlock(hdl->lock);
         }
 
-        return n;
+        return result;
 }
 
 //==============================================================================
@@ -350,42 +362,43 @@ API_MOD_READ(LOOP, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 {
         loop_t *hdl = device_handle;
 
-        stdret_t status = -1;
+        int status = EINVAL;
 
         switch (request) {
         case IOCTL_LOOP__HOST_OPEN:
                 _sys_critical_section_begin();
                         if (hdl->host == NULL) {
                                 hdl->host = _sys_task_get_handle();
-                                status = STD_RET_OK;
+                                status = ESUCC;
                         } else {
-                                errno = EBUSY;
+                                status = EBUSY;
                         }
                 _sys_critical_section_end();
                 break;
 
         case IOCTL_LOOP__HOST_CLOSE:
                 if (hdl->host == _sys_task_get_handle()) {
-                        _sys_semaphore_wait(hdl->event_req, 0);
-                        _sys_semaphore_wait(hdl->event_res, 0);
-                        hdl->host = NULL;
-                        status = STD_RET_OK;
+                        status = _sys_semaphore_wait(hdl->event_req, 0);
+                        if (status == ESUCC) {
+                                status = _sys_semaphore_wait(hdl->event_res, 0);
+                                hdl->host = NULL;
+                        }
                 } else {
-                        errno = EPERM;
+                        status = EPERM;
                 }
                 break;
 
         case IOCTL_LOOP__HOST_WAIT_FOR_REQUEST:
                 if (arg && hdl->host == _sys_task_get_handle()) {
-                        if (_sys_semaphore_wait(hdl->event_req, host_request_timeout)) {
+                        status = _sys_semaphore_wait(hdl->event_req, host_request_timeout);
+                        if (status == ESUCC) {
                                 loop_request_t *req = static_cast(loop_request_t*, arg);
 
                                 req->cmd = hdl->operation.cmd;
@@ -407,13 +420,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                 case LOOP_CMD_FLUSH_BUFFERS:
                                         break;
                                 }
-
-                                status = STD_RET_OK;
-                        } else {
-                                errno = ETIME;
                         }
-                } else {
-                        errno = EINVAL;
                 }
                 break;
 
@@ -434,20 +441,15 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                 }
 
                                 if (hdl->operation.arg.rw.size == 0 || buf->size == 0 || !buf->data) {
-                                        _sys_semaphore_signal(hdl->event_res);
-                                        status = 0;
+                                        status = _sys_semaphore_signal(hdl->event_res);
                                 } else {
-                                        status = 1;
+                                        status = ESUCC;
                                 }
 
                         } else {
                                 hdl->operation.errno_val = buf->errno_val;
-                                _sys_semaphore_signal(hdl->event_res);
-                                status = 0;
+                                status = _sys_semaphore_signal(hdl->event_res);
                         }
-
-                } else {
-                        errno = EINVAL;
                 }
                 break;
 
@@ -457,11 +459,11 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 
                         if (buf->errno_val == ESUCC) {
                                 if (buf->size == 0 || !buf->data || buf->size == hdl->operation.arg.rw.size) {
-                                        status = 0;
+                                        status = ESUCC;
 
                                 } else if (buf->size >= hdl->operation.arg.rw.size) {
                                         buf->size = hdl->operation.arg.rw.size;
-                                        status = 0;
+                                        status = ESUCC;
 
                                 } else {
                                         status = 1;
@@ -474,20 +476,12 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                 _sys_semaphore_signal(hdl->event_res);
 
                                 if (status) {
-                                        if (_sys_semaphore_wait(hdl->event_req, host_request_timeout) == false) {
-                                                errno  = ETIME;
-                                                status = -1;
-                                        }
+                                        status = _sys_semaphore_wait(hdl->event_req, host_request_timeout);
                                 }
-
                         } else {
                                 hdl->operation.errno_val = buf->errno_val;
-                                _sys_semaphore_signal(hdl->event_res);
-                                status = 0;
+                                status = _sys_semaphore_signal(hdl->event_res);
                         }
-
-                } else {
-                        errno = EINVAL;
                 }
                 break;
 
@@ -495,14 +489,9 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 if (arg && hdl->host == _sys_task_get_handle()) {
                         loop_ioctl_response_t *res  = static_cast(loop_ioctl_response_t*, arg);
 
-                        hdl->operation.arg.ioctl.status = res->status;
-                        hdl->operation.errno_val        = res->errno_val;
+                        hdl->operation.errno_val = res->errno_val;
 
-                        _sys_semaphore_signal(hdl->event_res);
-
-                        status = 0;
-                } else {
-                        errno = EINVAL;
+                        status = _sys_semaphore_signal(hdl->event_res);
                 }
                 break;
 
@@ -513,21 +502,14 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         hdl->operation.arg.stat.size = res->size;
                         hdl->operation.errno_val     = res->errno_val;
 
-                        _sys_semaphore_signal(hdl->event_res);
-
-                        status = 0;
-                } else {
-                        errno = EINVAL;
+                        status = _sys_semaphore_signal(hdl->event_res);
                 }
                 break;
 
         case IOCTL_LOOP__HOST_FLUSH_DONE:
                 if (hdl->host == _sys_task_get_handle()) {
                         hdl->operation.errno_val = reinterpret_cast(int, arg);
-                        _sys_semaphore_signal(hdl->event_res);
-                        status = STD_RET_OK;
-                } else {
-                        errno = EPERM;
+                        status = _sys_semaphore_signal(hdl->event_res);
                 }
                 break;
 
@@ -538,14 +520,12 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         hdl->operation.arg.ioctl.rq  = request;
                         _sys_semaphore_signal(hdl->event_req);
 
-                        if (_sys_semaphore_wait(hdl->event_res, request_timeout)) {
-                                errno  = hdl->operation.errno_val;
-                                status = hdl->operation.arg.ioctl.status;
-                        } else {
-                                errno  = ETIME;
+                        status = _sys_semaphore_wait(hdl->event_res, request_timeout);
+                        if (status == ESUCC) {
+                                status = hdl->operation.errno_val;
                         }
                 } else {
-                        errno = ESRCH;
+                        status = ESRCH;
                 }
                 break;
         }
@@ -559,33 +539,31 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(LOOP, void *device_handle)
 {
         loop_t  *hdl    = device_handle;
-        stdret_t status = STD_RET_ERROR;
+        int      status;
 
         if (hdl->host) {
                 hdl->operation.cmd = LOOP_CMD_FLUSH_BUFFERS;
                 _sys_semaphore_signal(hdl->event_req);
 
-                if (_sys_semaphore_wait(hdl->event_res, request_timeout)) {
+                status = _sys_semaphore_wait(hdl->event_res, request_timeout);
+                if (status == ESUCC) {
                         if (hdl->operation.errno_val == ESUCC) {
-                                status = STD_RET_OK;
+                                status = ESUCC;
                         } else {
-                                errno = hdl->operation.errno_val;
+                                status = hdl->operation.errno_val;
                         }
 
-                } else {
-                        errno = ETIME;
                 }
 
                 hdl->operation.cmd = LOOP_CMD_IDLE;
         } else {
-                status = STD_RET_OK;
+                status = ESUCC;
         }
 
         return status;
@@ -598,39 +576,37 @@ API_MOD_FLUSH(LOOP, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         loop_t  *hdl    = device_handle;
-        stdret_t status = STD_RET_ERROR;
+        int      status;
 
         device_stat->st_major = hdl->major;
-        device_stat->st_minor = _LOOP_MINOR_NUMBER;
+        device_stat->st_minor = 0;
         device_stat->st_size  = 0;
 
         if (hdl->host) {
                 hdl->operation.cmd = LOOP_CMD_DEVICE_STAT;
                 _sys_semaphore_signal(hdl->event_req);
 
-                if (_sys_semaphore_wait(hdl->event_res, request_timeout)) {
+                status = _sys_semaphore_wait(hdl->event_res, request_timeout);
+                if (status == ESUCC) {
 
                         if (hdl->operation.errno_val == ESUCC) {
                                 device_stat->st_size = hdl->operation.arg.stat.size;
-                                status = STD_RET_OK;
+                                status = ESUCC;
                         } else {
-                                errno = hdl->operation.errno_val;
+                                status = hdl->operation.errno_val;
                         }
 
-                } else {
-                        errno = ETIME;
                 }
 
                 hdl->operation.cmd = LOOP_CMD_IDLE;
         } else {
-                status = STD_RET_OK;
+                status = ESUCC;
         }
 
         return status;

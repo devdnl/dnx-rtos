@@ -31,6 +31,7 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include <mbus.h>
 
 #ifdef __cplusplus
 extern "C" {

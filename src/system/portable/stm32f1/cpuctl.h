@@ -40,14 +40,15 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/* CPU/platform name */
+#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
+#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
+#define _CPUCTL_BYTE_ORDER                      _BYTE_ORDER_LITTLE_ENDIAN
+
 /* renames of interrupts vectors for kernel purposes */
 #define xPortPendSVHandler                      PendSV_Handler
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
-
-/* CPU/platform name */
-#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
-#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
 
 /*==============================================================================
   Exported types, enums definitions
@@ -63,8 +64,7 @@ extern void  _cpuctl_update_system_clocks       (void);
 
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
 extern void  _cpuctl_init_CPU_load_counter      (void);
-extern void  _cpuctl_reset_CPU_load_counter     (void);
-extern u32_t _cpuctl_get_CPU_load_counter_value (void);
+extern u32_t _cpuctl_get_CPU_load_counter_delta  (void);
 #endif
 
 #ifdef __cplusplus

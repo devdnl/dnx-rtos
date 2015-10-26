@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "tty.h"
 #include "tty_cfg.h"
 
@@ -82,19 +82,21 @@ static inline bool is_valid(ttycmd_t *this)
 
 //==============================================================================
 /**
- * @brief Initialize command object
+ * @brief  Initialize command object
  *
- * @return pointer to object if success, NULL on error
+ * @param  ttycmd        pointer to target pointer of created object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-ttycmd_t *ttycmd_new()
+int ttycmd_create(ttycmd_t **ttycmd)
 {
-        ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
-        if (ttycmd) {
-                ttycmd->self = ttycmd;
+        int result = _sys_zalloc(sizeof(ttycmd_t), static_cast(void**, ttycmd));
+        if (result == ESUCC) {
+                (*ttycmd)->self = *ttycmd;
         }
 
-        return ttycmd;
+        return result;
 }
 
 //==============================================================================
@@ -104,11 +106,14 @@ ttycmd_t *ttycmd_new()
  * @param this          command analyze object
  */
 //==============================================================================
-void ttycmd_delete(ttycmd_t *this)
+int ttycmd_destroy(ttycmd_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                free(this);
+                _sys_free(static_cast(void**, &this));
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 

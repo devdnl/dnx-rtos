@@ -47,10 +47,49 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/** KERNELSPACE: resource type */
+typedef enum {
+        RES_TYPE_UNKNOWN       = 0,
+        RES_TYPE_PROCESS       = 0x958701BA,
+        RES_TYPE_THREAD        = 0x1EE62243,
+        RES_TYPE_MUTEX         = 0x300C6B74,
+        RES_TYPE_SEMAPHORE     = 0x4E59901B,
+        RES_TYPE_QUEUE         = 0x83D50ADB,
+        RES_TYPE_FILE          = 0x7D129250,
+        RES_TYPE_DIR           = 0x19586E97,
+        RES_TYPE_MEMORY        = 0x9E834645
+} res_type_t;
+
+/** KERNELSPACE: object header (must be the first in object) */
+typedef struct res_header {
+        struct res_header *next;
+        res_type_t         type;
+} res_header_t;
+
+/** KERNELSPACE: task type */
 typedef void task_t;
-typedef struct sem sem_t;
-typedef struct queue queue_t;
-typedef struct mutex mutex_t;
+
+/** KERNELSPACE: task function type */
+typedef void (*task_func_t)(void*);
+
+/** KERNELSPACE/USERSPACE: semaphore type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+} sem_t;
+
+/** KERNELSPACE/USERSPACE: queue type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+} queue_t;
+
+/** KERNELSPACE/USERSPACE: mutex type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+        bool          recursive;
+} mutex_t;
 
 /*==============================================================================
    Exported object declarations

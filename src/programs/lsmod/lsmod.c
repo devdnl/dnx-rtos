@@ -33,6 +33,7 @@
 #include <stdbool.h>
 #include <sys/mount.h>
 #include <dnx/os.h>
+#include <dnx/vt100.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -70,24 +71,17 @@ int_main(lsmod, STACK_DEPTH_LOW, int argc, char *argv[])
         (void)argc;
         (void)argv;
 
-        puts(FONT_BOLD"Driver"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"Module"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"MID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"DID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"Active"
-             RESET_ATTRIBUTES);
+        puts(VT100_FONT_BOLD"ID"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(4)"Name"VT100_CURSOR_BACKWARD(99)
+             VT100_CURSOR_FORWARD(20)"Instances"VT100_RESET_ATTRIBUTES);
 
-        int drv_number = get_number_of_drivers();
-        for (int i = 0; i < drv_number; i++) {
-                const char *mod_name  = get_driver_module_name(i);
-                const char *drv_name  = get_driver_name(i);
-                int         mod_id    = get_module_number(mod_name);
-                bool        is_active = is_driver_active(i);
+        ssize_t drv_number = get_number_of_modules();
+        for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
 
-                printf("%s"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"%s"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"%i"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"%u"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"%c\n",
-                       drv_name, mod_name, mod_id, i, is_active ? '*': ' ');
+                printf("%d"VT100_CURSOR_BACKWARD(99)
+                       VT100_CURSOR_FORWARD(4)"%s"VT100_CURSOR_BACKWARD(99)
+                       VT100_CURSOR_FORWARD(20)"%d\n",
+                       i, get_module_name(i), get_number_of_module_instances(i));
         }
 
         return EXIT_SUCCESS;

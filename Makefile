@@ -104,15 +104,20 @@ OBJ_DIR_NAME    = obj
 DEP_FILE_NAME   = $(PROJECT).d
 
 # folder localizations
-PROG_LOC   = src/programs
-SYS_LOC    = src/system
-LIB_LOC    = src/lib
-CORE_LOC   = $(SYS_LOC)/core
-FS_LOC     = $(SYS_LOC)/fs
-KERNEL_LOC = $(SYS_LOC)/kernel
-NET_LOC    = $(SYS_LOC)/net
-DRV_LOC    = $(SYS_LOC)/drivers
-PORT_LOC   = $(SYS_LOC)/portable
+APP_PRG_LOC     = src/programs
+APP_LIB_LOC     = src/lib
+SYS_LOC         = src/system
+
+SYS_DRV_LOC     = $(SYS_LOC)/drivers
+SYS_DRV_INC_LOC = $(SYS_LOC)/include/drivers
+SYS_FS_LOC      = $(SYS_LOC)/fs
+SYS_INIT_LOC    = $(SYS_LOC)/init
+SYS_KRN_LOC     = $(SYS_LOC)/kernel
+SYS_LIB_LOC     = $(SYS_LOC)/lib
+SYS_MM_LOC      = $(SYS_LOC)/mm
+SYS_NET_LOC     = $(SYS_LOC)/net
+SYS_PORT_LOC    = $(SYS_LOC)/portable
+SYS_LIBC_LOC    = $(SYS_LOC)/libc
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -137,8 +142,10 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
-ADDPROGS   = ./tools/progsearch.sh
-ADDLIBS    = ./tools/libsearch.sh
+ADDPROGS   = ./$(APP_PRG_LOC)/addprogs.sh
+ADDLIBS    = ./$(APP_LIB_LOC)/addlibs.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
@@ -170,28 +177,28 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
--include $(PROG_LOC)/Makefile   # file is created in the add_programs target
--include $(LIB_LOC)/Makefile    # file is created in the add_programs target
+-include $(APP_PRG_LOC)/Makefile   # file is created in the add_programs target
+-include $(APP_LIB_LOC)/Makefile   # file is created in the add_programs target
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
-HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(HDRLOC_LIB),$(LIB_LOC)/$(file)) \
+HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file)) \
           src/
 
 # defines all C sources
-CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CSRC_LIB),$(LIB_LOC)/$(file)) \
+CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(CSRC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all C++ sources
-CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CXXSRC_LIB),$(LIB_LOC)/$(file)) \
+CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_ARCH),$(SYS_LOC)/$(file))
@@ -206,7 +213,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : add_programs apply_git_hooks
+all : generate apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -287,11 +294,19 @@ status :
 # ./src/programs/Makefile, and ./src/lib/Makefile files required in the
 # build process
 ####################################################################################################
-.PHONY : add_programs
-add_programs :
-	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDPROGS) ./src/programs
-	@$(ADDLIBS) ./src/lib
+.PHONY : generate
+generate :
+	@$(ECHO) "Adding user's programs to the project..."
+	@$(ADDPROGS) ./$(APP_PRG_LOC)
+	
+	@$(ECHO) "Adding user's libraries to the project..."
+	@$(ADDLIBS) ./$(APP_LIB_LOC)
+	
+	@$(ECHO) "Adding file systems to the project..."	
+	@$(ADDFS) ./$(SYS_FS_LOC)
+	
+	@$(ECHO) "Adding file systems to the project..."
+	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository

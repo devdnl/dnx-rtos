@@ -66,6 +66,17 @@
 #define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (__OS_FILE_SYSTEM_STACK_DEPTH__)
 
 /**
+ * File system stack depth [levels]
+ */
+#define CONFIG_RTOS_NETWORK_STACK_DEPTH                (__OS_NETWORK_STACK_DEPTH__)
+
+
+/**
+ * System call thread stack depth [levels]
+ */
+#define CONFIG_RTOS_SYSCALL_STACK_DEPTH                 (__OS_SYSCALL_STACK_DEPTH__)
+
+/**
  * Interrupt stack depth [levels]
  */
 #define CONFIG_RTOS_IRQ_STACK_DEPTH                     (__OS_IRQ_STACK_DEPTH__)
@@ -74,11 +85,6 @@
  * Task priorities
  */
 #define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (__OS_TASK_MAX_PRIORITIES__)
-
-/**
- * Task name length [bytes]
- */
-#define CONFIG_RTOS_TASK_NAME_LEN                       (__OS_TASK_NAME_LEN__)
 
 /**
  * Task schedule frequency [Hz]

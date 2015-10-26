@@ -27,12 +27,11 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/rtcm_cfg.h"
-#include "stm32f1/rtcm_def.h"
-#include "stm32f1/rtcm_ioctl.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "../rtcm_ioctl.h"
 
 /*==============================================================================
   Local macros
@@ -74,16 +73,15 @@ MODULE_NAME(RTCM);
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(major);
-        UNUSED_ARG(minor);
-        UNUSED_ARG(_module_name_);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(major);
+        UNUSED_ARG1(minor);
+        UNUSED_ARG1(_module_name_);
 
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
         SET_BIT(PWR->CR, PWR_CR_DBP);
@@ -96,8 +94,7 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
                         while (!(RTC->CRL & RTC_CRL_RTOFF)) {
                                 if (--attempts == 0) {
                                         _sys_critical_section_end();
-                                        errno = EIO;
-                                        return STD_RET_ERROR;
+                                        return EIO;
                                 }
                         }
 
@@ -118,7 +115,7 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
                 _sys_critical_section_end();
         }
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -127,15 +124,14 @@ API_MOD_INIT(RTCM, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(RTCM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -145,16 +141,15 @@ API_MOD_RELEASE(RTCM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(RTCM, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(RTCM, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -164,16 +159,15 @@ API_MOD_OPEN(RTCM, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(RTCM, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -184,15 +178,22 @@ API_MOD_CLOSE(RTCM, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(RTCM,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(fattr);
 
         if (*fpos == 0) {
                 count = count > sizeof(time_t) ? sizeof(time_t) : count;
@@ -206,8 +207,7 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
                         while (!(RTC->CRL & RTC_CRL_RTOFF)) {
                                 if (--attempts == 0) {
                                         _sys_critical_section_end();
-                                        errno = EIO;
-                                        return 0;
+                                        return EIO;
                                 }
                         }
 
@@ -219,10 +219,11 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
                 }
                 _sys_critical_section_end();
 
-                return count;
+                *wrcnt = count;
+
+                return ESUCC;
         } else {
-                errno = ESPIPE;
-                return -1;
+                return ESPIPE;
         }
 }
 
@@ -234,15 +235,22 @@ API_MOD_WRITE(RTCM, void *device_handle, const u8_t *src, size_t count, fpos_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(RTCM,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(fattr);
 
         if (*fpos == 0) {
                 count = count > sizeof(time_t) ? sizeof(time_t) : count;
@@ -253,10 +261,11 @@ API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
 
                 memcpy(dst, &cnt, count);
 
-                return count;
+                *rdcnt = count;
+
+                return ESUCC;
         } else {
-                errno = ESPIPE;
-                return -1;
+                return ESPIPE;
         }
 }
 
@@ -268,19 +277,16 @@ API_MOD_READ(RTCM, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, s
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return Value depends on request. To obtain more information see module's
- *         ioctl request definitions.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(RTCM, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(device_handle);
+        UNUSED_ARG1(request);
+        UNUSED_ARG1(arg);
 
-        errno = EBADRQC;
-
-        return STD_RET_ERROR;
+        return EBADRQC;
 }
 
 //==============================================================================
@@ -289,15 +295,14 @@ API_MOD_IOCTL(RTCM, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(RTCM, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -307,19 +312,18 @@ API_MOD_FLUSH(RTCM, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(RTCM, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
         device_stat->st_size  = sizeof(time_t);
         device_stat->st_major = 0;
         device_stat->st_minor = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 /*==============================================================================

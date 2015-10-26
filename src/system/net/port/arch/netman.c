@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "netman.h"
+#include "net/netman.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -200,7 +200,7 @@ static void restore_configuration()
 //==============================================================================
 static void network_interface_thread(void *arg)
 {
-        UNUSED_ARG(arg);
+        UNUSED_ARG1(arg);
 
         /* open interface file */
         while (netman->if_file == NULL) {
@@ -229,7 +229,7 @@ static void network_interface_thread(void *arg)
                 _netman_ifmem_free(netman);
         }
 
-        task_exit();
+        _task_exit();
 }
 
 //==============================================================================
@@ -242,10 +242,10 @@ static void network_interface_thread(void *arg)
 //==============================================================================
 void _netman_init()
 {
-        netman = _sysm_netcalloc(1, sizeof(netman_t));
+        netman = _netcalloc(1, sizeof(netman_t));
         if (netman) {
-                netman->access    = _mutex_new(MUTEX_RECURSIVE);
-                netman->if_thread = _task_new(network_interface_thread, "netifd", STACK_DEPTH_LOW, NULL);
+                netman->access    = _mutex_new(MUTEX_TYPE_RECURSIVE);
+                netman->if_thread = _task_new(network_interface_thread, "netifd", STACK_DEPTH_LOW, NULL, NULL);
 
                 if (netman->access && netman->if_thread) {
 
@@ -265,7 +265,7 @@ void _netman_init()
                         if (netman->if_thread)
                                 _task_delete(netman->if_thread);
 
-                        _sysm_netfree(netman);
+                        _netfree(netman);
                         netman = NULL;
                 }
         }

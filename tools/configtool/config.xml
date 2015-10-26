@@ -19,6 +19,7 @@
             <ENABLE_DEVFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_DEVFS__</key></ENABLE_DEVFS_MK>
             <ENABLE_PROCFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_MK>
             <ENABLE_FATFS_MK><path>../../config/project/Makefile</path><key>__ENABLE_FATFS__</key></ENABLE_FATFS_MK>
+            <ENABLE_EXT2FS_MK><path>../../config/project/Makefile</path><key>__ENABLE_EXT2FS__</key></ENABLE_EXT2FS_MK>
             <_DRV_MK_ENABLE_FLAGS_></_DRV_MK_ENABLE_FLAGS_>
             <ENABLE_RTCM_MK><path>../../config/project/Makefile</path><key>__ENABLE_RTCM__</key></ENABLE_RTCM_MK>
             <ENABLE_A_MK><path>../../config/project/Makefile</path><key>__ENABLE_A__</key></ENABLE_A_MK>
@@ -252,6 +253,8 @@
             <FATFS_LFN_ENABLE><path>../../config/project/flags.h</path><key>__FATFS_LFN_ENABLE__</key></FATFS_LFN_ENABLE>
             <FATFS_LFN_CODEPAGE><path>../../config/project/flags.h</path><key>__FATFS_LFN_CODEPAGE__</key></FATFS_LFN_CODEPAGE>
             <ENABLE_PROCFS_H><path>../../config/project/flags.h</path><key>__ENABLE_PROCFS__</key></ENABLE_PROCFS_H>
+            <ENABLE_EXT2FS_H><path>../../config/project/flags.h</path><key>__ENABLE_EXT2FS__</key></ENABLE_EXT2FS_H>
+            <EXT2FS_CACHE_SIZE><path>../../config/project/flags.h</path><key>__EXT2FS_CACHE_SIZE__</key></EXT2FS_CACHE_SIZE>
             <_DRV_ENABLE_FLAGS_></_DRV_ENABLE_FLAGS_>
             <ENABLE_RTCM_H><path>../../config/project/flags.h</path><key>__ENABLE_RTCM__</key></ENABLE_RTCM_H>
             <ENABLE_LOOP_H><path>../../config/project/flags.h</path><key>__ENABLE_LOOP__</key></ENABLE_LOOP_H>
@@ -322,7 +325,7 @@
             <ioctl_macros_file>../../src/system/include/core/ioctl_macros.h</ioctl_macros_file>
             <xml_config_file>./config.xml</xml_config_file>
             <bsp_dir>../../BSP</bsp_dir>
-            <dnx_os_h>../../src/system/include/stdc/dnx/os.h</dnx_os_h>
+            <dnx_os_h>../../src/system/include/libc/dnx/os.h</dnx_os_h>
             <program_template_src_file>../../extra/templates/program/program.c</program_template_src_file>
             <program_template_hdr_file>../../extra/templates/program/program.h</program_template_hdr_file>
             <program_template_makefile>../../extra/templates/program/Makefile</program_template_makefile>
