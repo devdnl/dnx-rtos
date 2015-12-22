@@ -93,22 +93,22 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef struct ethmac_packet_chain {
-        struct ethmac_packet_chain *next;
+typedef struct ETHMAC_packet_chain {
+        struct ETHMAC_packet_chain *next;
         void                       *payload;
         u16_t                       total_size;
         u16_t                       payload_size;
-} ethmac_packet_chain_t;
+} ETHMAC_packet_chain_t;
 
 typedef enum {
-        ETHMAC_LINK_STATUS_CONNECTED,
-        ETHMAC_LINK_STATUS_DISCONNECTED
-} ethmac_link_status_t;
+        ETHMAC_LINK_STATUS__CONNECTED,
+        ETHMAC_LINK_STATUS__DISCONNECTED
+} ETHMAC_link_status_t;
 
 typedef struct {
-        int    timeout;    // set user at request
-        size_t size;       // set system at response
-} ethmac_packet_wait_t;
+        int    timeout;    // value is set by user at request
+        size_t pkt_size;   // value is set by system at response
+} ETHMAC_packet_wait_t;
 
 /*==============================================================================
   Exported objects

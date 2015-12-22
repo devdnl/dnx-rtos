@@ -39,9 +39,14 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- * Pin connected to pull-up resistor used by system to indicate USB connection
+ * Port index (PA = 0, ...)
  */
-#define _USBD_CONFIG_PIN_PULLUP         __USBD_PULLUP_PIN__
+#define _USBD_CONFIG_PULLUP_PORT_IDX    __USBD_PULLUP_PORT_INDEX__
+
+/**
+ * Pin index (0..15)
+ */
+#define _USBD_CONFIG__PULLUP_PIN_IDX    __USBD_PULLUP_PIN_INDEX__
 
 /**
  * Interrupt priority

@@ -3,7 +3,7 @@
 cd $(dirname $0)
 
 get_target_name() {
-    echo $(cat ../config/project/Makefile | grep __PROJECT_CPU_ARCH__ | sed 's/__PROJECT_CPU_ARCH__\s*=\s*//g')
+    echo $(cat ../config/project/project_flags.h | grep  -oP '^#\s*define\s+__CPU_ARCH__\s+(.*)' | sed 's/^#s*define __CPU_ARCH__ //g')
 }
 
 create_gdb_command() {

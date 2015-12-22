@@ -95,7 +95,7 @@ extern "C" {
 #define VT100_F12                               "\033[24~"
 
 
-#if (CONFIG_COLOR_TERMINAL_ENABLE > 0)
+#if (__OS_COLOR_TERMINAL_ENABLE__ > 0)
 #       define VT100_RESET_ATTRIBUTES           "\033[0m"
 #       define VT100_FONT_BLINKING              "\033[5m"
 #       define VT100_FONT_UNDERLINE             "\033[4m"

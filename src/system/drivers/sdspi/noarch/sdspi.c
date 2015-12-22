@@ -226,12 +226,12 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                         if (result != ESUCC)
                                 goto finish;
 
-                        struct SPI_config cfg;
+                        SPI_config_t cfg;
                         result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
                         if (result == ESUCC) {
 
-                                cfg.dummy_byte = 0xFF;
-                                cfg.mode       = SPI_MODE_0;
+                                cfg.flush_byte = 0xFF;
+                                cfg.mode       = SPI_MODE__0;
                                 cfg.msb_first  = true;
 
                                 result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
@@ -586,12 +586,12 @@ static void SPI_deselect_card(sdpart_t *hdl)
 //==============================================================================
 static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 {
-        struct SPI_transceive desc;
-        desc.count     = 1;
-        desc.rx_buffer = &out;
-        desc.tx_buffer = &out;
+        SPI_transceive_t tr;
+        tr.count     = 1;
+        tr.rx_buffer = &out;
+        tr.tx_buffer = &out;
 
-        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &desc) == 0) {
+        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &tr) == 0) {
                 return out;
         } else {
                 return 0x00;

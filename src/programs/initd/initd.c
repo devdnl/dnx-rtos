@@ -247,7 +247,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 puts("Bye!");
 
         } else {
-                result = mount("lfs", "", "/");
+                result = mount("ramfs", "", "/");
 
                 result = mkdir("/dev", 0777);
 //                result = mkdir("/proc", 0777);
@@ -261,8 +261,8 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 driver_init("GPIO", 3, 0, "/dev/GPIOD");
                 driver_init("GPIO", 4, 0, "/dev/GPIOE");
 
-                driver_init("AFIOM", 0, 0, NULL);
-                driver_init("PLL", 0, 0, NULL);
+                driver_init("AFIO", 0, 0, NULL);
+                driver_init("PLL", 0, 0, "/dev/pll");
                 driver_init("UART", 1, 0, "/dev/ttyS0");
                 driver_init("TTY", 0, 0, "/dev/tty0");
                 result = syslog_enable("/dev/tty0");
@@ -270,11 +270,27 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 driver_init("TTY", 1, 0, "/dev/tty1");
                 driver_init("TTY", 2, 0, "/dev/tty2");
                 driver_init("TTY", 3, 0, "/dev/tty3");
-                driver_init("CRCM", 0, 0, "/dev/crc");
+                driver_init("CRC", 0, 0, "/dev/crc");
+
+                driver_init("SPI", 2, 0, "/dev/SPI3-0");
+                driver_init("SPI", 2, 1, "/dev/SPI3-1");
+                driver_init("SPI", 2, 2, "/dev/SPI3-2");
+                driver_init("SPI", 2, 3, "/dev/SPI3-3");
+
+                driver_init("LOOP", 0, 0, "/dev/l0");
+
+                driver_init("RTC", 0, 0, "/dev/rtc");
+
+//                driver_release("SPI", 2, 0);
+//                driver_release("SPI", 2, 1);
+//                driver_release("SPI", 2, 2);
+//                driver_release("SPI", 2, 3);
+
+
 
 
                 syslog_enable("/dev/tty3");
-                sleep(2);
+                sleep(3);
 
                 static const process_attr_t attr0 = {
                        .cwd = "/",

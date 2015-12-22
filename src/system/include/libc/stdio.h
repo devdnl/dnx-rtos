@@ -46,7 +46,7 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /** stdio buffer size */
-#define BUFSIZ                  CONFIG_STREAM_BUFFER_LENGTH
+#define BUFSIZ                  __OS_STREAM_BUFFER_LENGTH__
 
 #define _IOFBF                  0               /* setvbuf should set fully buffered */
 #define _IOLBF                  1               /* setvbuf should set line buffered */

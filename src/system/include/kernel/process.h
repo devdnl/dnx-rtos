@@ -41,14 +41,14 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** STANDARD STACK SIZES */
-#define STACK_DEPTH_MINIMAL             ((1   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LOW            ((2   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_LOW                 ((4   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_MEDIUM              ((8   * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_LARGE               ((16  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LARGE          ((32  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_HUGE                ((64  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
-#define STACK_DEPTH_VERY_HUGE           ((128 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
+#define STACK_DEPTH_MINIMAL             ((1   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_VERY_LOW            ((2   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_LOW                 ((4   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_MEDIUM              ((8   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_LARGE               ((16  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_VERY_LARGE          ((32  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_HUGE                ((64  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_VERY_HUGE           ((128 * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
 #define STACK_DEPTH_CUSTOM(depth)       (depth)
 
 #define _GVAR_STRUCT_NAME               global_variables

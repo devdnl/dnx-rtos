@@ -40,6 +40,7 @@ extern "C" {
 #include <string.h>
 #include <errno.h>
 #include "drivers/drvctrl.h"
+#include "drivers/ioctl_requests.h"
 #include "kernel/sysfunc.h"
 #include "kernel/process.h"
 #include "fs/pipe.h"

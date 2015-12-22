@@ -51,7 +51,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static FILE *printk_file;
 #endif
 
@@ -79,7 +79,7 @@ static FILE *printk_file;
 //==============================================================================
 int _printk_enable(const char *filename)
 {
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         if (printk_file) {
                 _vfs_fclose(printk_file, false);
                 printk_file = NULL;
@@ -103,7 +103,7 @@ int _printk_enable(const char *filename)
 //==============================================================================
 int _printk_disable(void)
 {
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         if (printk_file) {
                 int result  = _vfs_fclose(printk_file, false);
                 printk_file = NULL;
@@ -124,7 +124,7 @@ int _printk_disable(void)
 //==============================================================================
 void _printk(const char *format, ...)
 {
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         va_list args;
 
         if (printk_file) {

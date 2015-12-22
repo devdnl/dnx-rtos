@@ -51,7 +51,7 @@
  * program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
  * byte alignment -> define MEM_ALIGNMENT to 2.
  */
-#define MEM_ALIGNMENT                   CONFIG_HEAP_ALIGN
+#define MEM_ALIGNMENT                   _HEAP_ALIGN_
 
 /**
  * Calculate memory size for an aligned buffer - returns the next highest
@@ -363,11 +363,19 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 case _MM_PROG:
                         size += sizeof(res_header_t);
-                        // go thorough
+                        usage = &memory_usage[mpur];
+                        break;
+
+                case _MM_NET:
+                        if (memory_usage[_MM_NET] >= __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__) {
+                                result = ENOMEM;
+                        } else {
+                                usage = &memory_usage[mpur];
+                        }
+                        break;
 
                 case _MM_KRN:
                 case _MM_FS:
-                case _MM_NET:
                         usage = &memory_usage[mpur];
                         break;
 

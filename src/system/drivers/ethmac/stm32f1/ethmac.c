@@ -449,8 +449,8 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__WAIT_FOR_PACKET:
 
                 if (arg) {
-                        ethmac_packet_wait_t *pw = reinterpret_cast(ethmac_packet_wait_t*, arg);
-                        pw->size = wait_for_packet(hdl, pw->timeout);
+                        ETHMAC_packet_wait_t *pw = reinterpret_cast(ETHMAC_packet_wait_t*, arg);
+                        pw->pkt_size = wait_for_packet(hdl, pw->timeout);
                         return ESUCC;
                 } else {
                         return EINVAL;
@@ -469,7 +469,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN:
                 if (arg) {
                         if (_sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
-                                ethmac_packet_chain_t *pkt = reinterpret_cast(ethmac_packet_chain_t*, arg);
+                                ETHMAC_packet_chain_t *pkt = reinterpret_cast(ETHMAC_packet_chain_t*, arg);
 
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
                                         _sys_sleep_ms(1);
@@ -484,7 +484,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                         u8_t  *buffer = get_buffer_address(DMATxDescToSet);
                                         size_t offset = 0;
 
-                                        for (ethmac_packet_chain_t *p = pkt; p != NULL; p = p->next) {
+                                        for (ETHMAC_packet_chain_t *p = pkt; p != NULL; p = p->next) {
                                                 memcpy(&buffer[offset], p->payload, p->payload_size);
                                                 offset += p->payload_size;
                                         }
@@ -508,7 +508,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN:
                 if (arg) {
                         if (_sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS) == ESUCC) {
-                                ethmac_packet_chain_t *pkt = reinterpret_cast(ethmac_packet_chain_t*, arg);
+                                ETHMAC_packet_chain_t *pkt = reinterpret_cast(ETHMAC_packet_chain_t*, arg);
 
                                 if (  pkt->payload
                                    && pkt->payload_size
@@ -523,7 +523,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                                 u8_t  *buffer = get_buffer_address(DMARxDescToGet);
                                                 size_t offset = 0;
 
-                                                for (ethmac_packet_chain_t *p = pkt; p != NULL; p = p->next) {
+                                                for (ETHMAC_packet_chain_t *p = pkt; p != NULL; p = p->next) {
                                                         memcpy(p->payload, &buffer[offset], p->payload_size);
                                                         offset += p->payload_size;
                                                 }
@@ -562,12 +562,12 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         case IOCTL_ETHMAC__GET_LINK_STATUS:
                 if (arg) {
-                        ethmac_link_status_t *linkstat = reinterpret_cast(ethmac_link_status_t*, arg);
+                        ETHMAC_link_status_t *linkstat = cast(ETHMAC_link_status_t*, arg);
 
                         if (ETH_ReadPHYRegister(ETHMAC_PHY_ADDRESS, PHY_BSR) & PHY_BSR_LINK_STATUS) {
-                                *linkstat = ETHMAC_LINK_STATUS_CONNECTED;
+                                *linkstat = ETHMAC_LINK_STATUS__CONNECTED;
                         } else {
-                                *linkstat = ETHMAC_LINK_STATUS_DISCONNECTED;
+                                *linkstat = ETHMAC_LINK_STATUS__DISCONNECTED;
                         }
 
                         return ESUCC;

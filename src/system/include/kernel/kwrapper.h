@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include <sys/types.h>
 #include "kernel/builtinfunc.h"
 #include "kernel/ktypes.h"
 #include "FreeRTOS.h"
@@ -136,10 +137,10 @@ extern void     _critical_section_end              (void);
 extern void     _ISR_disable                       (void);
 extern void     _ISR_enable                        (void);
 
-extern void     _sleep_ms                          (const uint);
-extern void     _sleep                             (const uint);
-extern void     _sleep_until_ms                    (const uint, int*);
-extern void     _sleep_until                       (const uint, int*);
+extern void     _sleep_ms                          (const u32_t);
+extern void     _sleep                             (const u32_t);
+extern void     _sleep_until_ms                    (const u32_t, u32_t*);
+extern void     _sleep_until                       (const u32_t, u32_t*);
 
 /*==============================================================================
   Exported inline functions

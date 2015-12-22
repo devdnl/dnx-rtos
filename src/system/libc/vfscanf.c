@@ -77,7 +77,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
 {
         int n = 0;
 
-#if (CONFIG_SCANF_ENABLE > 0)
+#if (__OS_SCANF_ENABLE__ > 0)
         char *str = calloc(BUFSIZ, sizeof(char));
         if (!str)
                 return 0;

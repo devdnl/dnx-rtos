@@ -305,58 +305,74 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG1(device_handle);
 
-        int status = ESUCC;
+        int result = EINVAL;
 
         if (arg) {
-                RCC_ClocksTypeDef freq;
-                RCC_GetClocksFreq(&freq);
+                if (request == IOCTL_PLL__GET_CLK_INFO) {
+                        RCC_ClocksTypeDef freq;
+                        RCC_GetClocksFreq(&freq);
 
-                switch (request) {
-                case IOCTL_PLL__GET_SYSCLK_FREQ:
-                        *(u32_t *)arg = freq.SYSCLK_Frequency;
-                        break;
+                        PLL_clk_info_t *clkinf = arg;
 
-                case IOCTL_PLL__GET_HCLK_FREQ:
-                        *(u32_t *)arg = freq.HCLK_Frequency;
-                        break;
+                        switch (clkinf->iterator) {
+                        case 0:
+                                clkinf->clock_Hz   = freq.SYSCLK_Frequency;
+                                clkinf->clock_name = "SYSCLK";
+                                break;
 
-                case IOCTL_PLL__GET_PCLK1_FREQ:
-                        *(u32_t *)arg = freq.PCLK1_Frequency;
-                        break;
+                        case 1:
+                                clkinf->clock_Hz   = freq.HCLK_Frequency;
+                                clkinf->clock_name = "HCLK";
+                                break;
 
-                case IOCTL_PLL__GET_PCLK2_FREQ:
-                        *(u32_t *)arg = freq.PCLK2_Frequency;
-                        break;
+                        case 2:
+                                clkinf->clock_Hz   = freq.PCLK1_Frequency;
+                                clkinf->clock_name = "PCLK1";
+                                break;
 
-                case IOCTL_PLL__GET_ADCCLK_FREQ:
-                        *(u32_t *)arg = freq.ADCCLK_Frequency;
-                        break;
+                        case 3:
+                                clkinf->clock_Hz   = freq.PCLK2_Frequency;
+                                clkinf->clock_name = "PCLK2";
+                                break;
 
-                case IOCTL_PLL__GET_PCLK1_TIM_FREQ:
-                        if (is_APB1_divided()) {
-                                *(u32_t *)arg = freq.PCLK1_Frequency * 2;
-                        } else {
-                                *(u32_t *)arg = freq.PCLK1_Frequency;
+                        case 4:
+                                clkinf->clock_Hz   = freq.ADCCLK_Frequency;
+                                clkinf->clock_name = "ADCCLK";
+                                break;
+
+                        case 5:
+                                if (is_APB1_divided()) {
+                                        clkinf->clock_Hz = freq.PCLK1_Frequency * 2;
+                                } else {
+                                        clkinf->clock_Hz = freq.PCLK1_Frequency;
+                                }
+                                clkinf->clock_name = "PCLK1_TIM";
+                                break;
+
+                        case 6:
+                                if (is_APB2_divided()) {
+                                        clkinf->clock_Hz = freq.PCLK2_Frequency * 2;
+                                } else {
+                                        clkinf->clock_Hz = freq.PCLK2_Frequency;
+                                }
+                                clkinf->clock_name = "PCLK2_TIM";
+                                break;
+
+                        default:
+                                clkinf->clock_Hz   = 0;
+                                clkinf->clock_name = NULL;
+                                break;
                         }
-                        break;
 
-                case IOCTL_PLL__GET_PCLK2_TIM_FREQ:
-                        if (is_APB2_divided()) {
-                                *(u32_t *)arg = freq.PCLK2_Frequency * 2;
-                        } else {
-                                *(u32_t *)arg = freq.PCLK2_Frequency;
-                        }
-                        break;
+                        clkinf->iterator++;
 
-                default:
-                        status = EBADRQC;
-                        break;
+                        result = ESUCC;
+                } else {
+                        result = EBADRQC;
                 }
-        } else {
-                status = EINVAL;
         }
 
-        return status;
+        return result;
 }
 
 //==============================================================================

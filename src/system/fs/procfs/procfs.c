@@ -29,13 +29,11 @@
 ==============================================================================*/
 #include "fs/fs.h"
 
-#if defined(ARCH_stm32f1)
-#include "stm32f1/lib/stm32f10x_rcc.h"
-#endif
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define PLL_FILE_PATH                   "/dev/pll"
+
 #define DIR_ROOT                        "/"
 #define DIR_PID_NAME                    "pid"
 #define DIR_BIN_NAME                    "bin"
@@ -915,26 +913,27 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                     _CPUCTL_PLATFORM_NAME,
                                     _CPUCTL_VENDOR_NAME);
 
-                #if defined(ARCH_stm32f1)
-                RCC_ClocksTypeDef freq;
-                RCC_GetClocksFreq(&freq);
+                FILE *pll;
+                int result = _sys_fopen(PLL_FILE_PATH, "r+", &pll);
+                if (result == ESUCC) {
+                        PLL_clk_info_t clkinf;
+                        clkinf.iterator = 0;
 
-                len += _sys_snprintf(buff + len, size - len,
-                                     "CPU     Hz: %d\n"
-                                     "SYSCLK  Hz: %d\n"
-                                     "PCLK1   Hz: %d\n"
-                                     "PCLK1T  Hz: %d\n"
-                                     "PCLK2   Hz: %d\n"
-                                     "PCLK2T  Hz: %d\n"
-                                     "ADCCLK  Hz: %d\n",
-                                     freq.HCLK_Frequency,
-                                     freq.SYSCLK_Frequency,
-                                     freq.PCLK1_Frequency,
-                                     (RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 2) : freq.PCLK1_Frequency,
-                                     freq.PCLK2_Frequency,
-                                     (RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 2) : freq.PCLK2_Frequency,
-                                     freq.ADCCLK_Frequency);
-                        #endif
+                        while (  _sys_ioctl(pll, IOCTL_PLL__GET_CLK_INFO, &clkinf) == ESUCC
+                              && clkinf.clock_name) {
+
+                                len += _sys_snprintf(buff + len,
+                                                     size - len,
+                                                     "%16s: %d Hz\n",
+                                                     clkinf.clock_name,
+                                                     cast(int, clkinf.clock_Hz));
+                        }
+
+                        _sys_fclose(pll);
+                } else {
+                        len += _sys_snprintf(buff + len, size - len,
+                                             "<No '"PLL_FILE_PATH"' file to show clock frequencies>\n");
+                }
                 break;
 
         default:

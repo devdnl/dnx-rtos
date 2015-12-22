@@ -41,17 +41,17 @@ extern "C" {
 ==============================================================================*/
 /**
  *  @brief  Set SPI configuration
- *  @param  struct SPI_config *
+ *  @param  SPI_config_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, struct SPI_config*)
+#define IOCTL_SPI__SET_CONFIGURATION    _IOW(SPI, 0x00, const SPI_config_t*)
 
 /**
  *  @brief  Gets SPI configuration
- *  @param  struct SPI_config *
+ *  @param  SPI_config_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, struct SPI_config*)
+#define IOCTL_SPI__GET_CONFIGURATION    _IOR(SPI, 0x01, SPI_config_t*)
 
 /**
  *  @brief  Select specified slave (CS = 0) [RAW mode]
@@ -69,57 +69,57 @@ extern "C" {
 
 /**
  *  @brief  Transmit and receive specified buffer
- *  @param  struct SPI_transive *
+ *  @param  SPI_transceive_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, struct SPI_transive*)
+#define IOCTL_SPI__TRANSCEIVE           _IOWR(SPI, 0x04, SPI_transceive_t*)
 
 /**
  *  @brief  Transmit without selection
- *  @param  int         byte to transfer
+ *  @param  u8_t*        byte to transfer
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_SPI__TRANSMIT_NO_SELECT   _IOW(SPI, 0x05, int)
+#define IOCTL_SPI__TRANSMIT_NO_SELECT   _IOW(SPI, 0x05, const u8_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 /* SPI clock divider */
-enum SPI_clk_divider {
-        SPI_CLK_DIV_2,
-        SPI_CLK_DIV_4,
-        SPI_CLK_DIV_8,
-        SPI_CLK_DIV_16,
-        SPI_CLK_DIV_32,
-        SPI_CLK_DIV_64,
-        SPI_CLK_DIV_128,
-        SPI_CLK_DIV_256
+enum SPI_clk_div {
+        SPI_CLK_DIV__2,
+        SPI_CLK_DIV__4,
+        SPI_CLK_DIV__8,
+        SPI_CLK_DIV__16,
+        SPI_CLK_DIV__32,
+        SPI_CLK_DIV__64,
+        SPI_CLK_DIV__128,
+        SPI_CLK_DIV__256
 };
 
 /* SPI modes */
 enum SPI_mode {
-        SPI_MODE_0,     /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
-        SPI_MODE_1,     /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
-        SPI_MODE_2,     /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
-        SPI_MODE_3      /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
+        SPI_MODE__0,    /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
+        SPI_MODE__1,    /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
+        SPI_MODE__2,    /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
+        SPI_MODE__3     /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
 };
 
 /* SPI configuration type */
-struct SPI_config {
-        u8_t                    dummy_byte  : 8;
-        enum SPI_clk_divider    clk_divider : 3;
-        enum SPI_mode           mode        : 2;
-        bool                    msb_first   : 1;
-        u8_t                    CS_port_idx;
-        u8_t                    CS_pin_idx;
-};
+typedef struct {
+        u8_t             flush_byte  : 8;
+        enum SPI_clk_div clk_divider : 3;
+        enum SPI_mode    mode        : 2;
+        bool             msb_first   : 1;
+        u8_t             CS_port_idx;
+        u8_t             CS_pin_idx;
+} SPI_config_t;
 
 /* SPI transmit and receive type */
-struct SPI_transceive {
-        const u8_t             *tx_buffer;      /* TX buffer pointer  */
-        u8_t                   *rx_buffer;      /* RX buffer pointer  */
-        size_t                  count;          /* RX/TX buffer size  */
-};
+typedef struct {
+        const u8_t      *tx_buffer;      /* TX buffer pointer  */
+        u8_t            *rx_buffer;      /* RX buffer pointer  */
+        size_t           count;          /* RX/TX buffer size  */
+} SPI_transceive_t;
 
 /*==============================================================================
   Exported objects

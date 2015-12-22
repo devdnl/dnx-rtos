@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This driver support external interrupts (EXTI).
+@brief   This driver support external interrupts.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -35,64 +35,42 @@
 extern "C" {
 #endif
 
-// TODO IRQ module shall be more universal
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef struct {
-        uint timeout;           // total wait time for interrupt trigger
-        uint irq_number;        // EXTI line number (0-15)
-} IRQ_catch_t;
-
-typedef struct {
-        uint irq_number:8;      // EXTI line number (0-15)
-        enum IRQ_config_mode {  // EXTI line mode
-                IRQ_CONFIG_MODE__IRQ_DISABLED,
-                IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_EDGE,
-                IRQ_CONFIG_MODE__TRIGGER_ON_RISING_EDGE,
-                IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_AND_RISING_EDGE
-        } mode:8;
+typedef enum {
+        IRQ_CONFIG__IRQ_DISABLED,
+        IRQ_CONFIG__TRIGGER_ON_FALLING_EDGE,
+        IRQ_CONFIG__TRIGGER_ON_RISING_EDGE,
+        IRQ_CONFIG__TRIGGER_ON_BOTH_EDGES,
+        IRQ_CONFIG__TRIGGER_ON_LOW_LEVEL,
+        IRQ_CONFIG__TRIGGER_ON_HIGH_LEVEL,
 } IRQ_config_t;
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
 /**
- * @brief  Macro can be used to initialize IRQ_catch_t type
- * @param  irq_number          interrupt number (0-15)
- * @param  timeout             wait timeout
- * @return Initialized catch structure
+ * @brief  Wait for selected interrupt number
+ * @param  u32_t*       timeout in milliseconds
+ * @return Returns  0 on success.
+ *         Returns -1 on error and errno value is set.
  */
-#define IRQ_CATCH_SETUP(uint__irq_number, uint__timeout) {.irq_number = uint__irq_number, .timeout = uint__timeout}
-
-/**
- * @brief  Macro can be used to initialize IRQ_config_t type
- * @param  irq_number          number of interrupt to configure
- * @param  mode                interrupt mode
- * @return Initialized configuration structure
- */
-#define IRQ_CONFIG_SETUP(uint__irq_number, enum_IRQ_config_mode__mode) {.irq_number = uint__irq_number, .mode = enum_IRQ_config_mode__mode}
-
-
-/**
- * @brief  Wait for slected interrupt number
- * @param  IRQ_catch_t *      pointer to interrupt number and timeout value
- * @return On success 0, on error -1 (check errno to precise error)
- */
-#define IOCTL_IRQ__CATCH                _IOW(IRQ, 0, const IRQ_catch_t*)
+#define IOCTL_IRQ__CATCH                _IOW(IRQ, 0, const u32_t*)
 
 /**
  * @brief  Software interrupt trigger
- * @param  int                 interrupt number to trigger (0-15)
- * @return On success 0, on error -1
+ * @param  None
+ * @return Returns  0 on success.
+ *         Returns -1 on error and errno value is set.
  */
-#define IOCTL_IRQ__TRIGGER              _IOW(IRQ, 1, const int)
+#define IOCTL_IRQ__TRIGGER              _IO(IRQ, 1)
 
 /**
  * @brief  Set IRQ configuration
  * @param  IRQ_config_t *
- * @return On success 0, on error -1
+ * @return Returns  0 on success.
+ *         Returns -1 on error and errno value is set.
  */
 #define IOCTL_IRQ__CONFIGURE            _IOW(IRQ, 2, const IRQ_config_t*)
 

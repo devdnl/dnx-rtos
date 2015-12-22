@@ -88,7 +88,7 @@ int _gettime(time_t *timer)
 
         if (timer) {
                 FILE *rtc;
-                result = _vfs_fopen(CONFIG_RTC_FILE_PATH, "r", &rtc);
+                result = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
                 if (result == ESUCC) {
                         size_t rdcnt;
                         result = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
@@ -118,7 +118,7 @@ int _settime(time_t *timer)
 
         if (timer) {
                 FILE *rtc;
-                result = _vfs_fopen(CONFIG_RTC_FILE_PATH, "w", &rtc);
+                result = _vfs_fopen(__OS_RTC_FILE_PATH__, "w", &rtc);
                 if (result == ESUCC) {
                         size_t wrcnt;
                         result = _vfs_fwrite(timer, sizeof(time_t), &wrcnt, rtc);

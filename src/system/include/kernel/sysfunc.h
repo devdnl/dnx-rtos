@@ -1481,6 +1481,48 @@ static inline uint _sys_get_time_ms()
 
 //==============================================================================
 /**
+ * @brief  Function return free memory in bytes
+ *
+ * @param  None
+ *
+ * @return Free memory value
+ */
+//==============================================================================
+static inline size_t _sys_get_free_mem()
+{
+        return _mm_get_mem_free();
+}
+
+//==============================================================================
+/**
+ * @brief  Function return used memory in bytes
+ *
+ * @param  None
+ *
+ * @return Used memory value
+ */
+//==============================================================================
+static inline size_t _sys_get_used_mem()
+{
+        return _mm_get_mem_usage();
+}
+
+//==============================================================================
+/**
+ * @brief  Function return memory size (RAM) in bytes
+ *
+ * @param  None
+ *
+ * @return Memory size
+ */
+//==============================================================================
+static inline size_t _sys_get_mem_size()
+{
+        return _mm_get_mem_size();
+}
+
+//==============================================================================
+/**
  * @brief Function return tick counter
  *
  * @return a tick counter value
@@ -1813,7 +1855,7 @@ static inline void _sys_sleep(const uint seconds)
  * @param ref_time_ticks        reference time in OS ticks
  */
 //==============================================================================
-static inline void _sys_sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+static inline void _sys_sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
 {
         _sleep_until_ms(milliseconds, ref_time_ticks);
 }
@@ -1826,7 +1868,7 @@ static inline void _sys_sleep_until_ms(const uint milliseconds, int *ref_time_ti
  * @param ref_time_ticks        reference time in OS ticks
  */
 //==============================================================================
-static inline void _sys_sleep_until(const uint seconds, int *ref_time_ticks)
+static inline void _sys_sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
 {
         _sleep_until(seconds, ref_time_ticks);
 }

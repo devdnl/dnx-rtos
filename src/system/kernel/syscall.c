@@ -296,12 +296,12 @@ int _syscall_kworker_process(int argc, char *argv[])
         UNUSED_ARG2(argc, argv);
 
         static const thread_attr_t fs_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH),
+                .stack_depth = STACK_DEPTH_CUSTOM(__OS_FILE_SYSTEM_STACK_DEPTH__),
                 .priority    = PRIORITY_NORMAL
         };
 
         static const thread_attr_t net_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(CONFIG_RTOS_NETWORK_STACK_DEPTH),
+                .stack_depth = STACK_DEPTH_CUSTOM(__OS_NETWORK_STACK_DEPTH__),
                 .priority    = PRIORITY_NORMAL
         };
 
@@ -762,8 +762,8 @@ static void syscall_fwrite(syscallrq_t *rq)
         GETARG(FILE*, file);
 
         size_t wrcnt = 0;
-        SETERRNO(_vfs_fwrite(buf, *count * *size, &wrcnt, file));
-        SETRETURN(size_t, wrcnt);
+        SETERRNO(_vfs_fwrite(buf, (*count) * (*size), &wrcnt, file));
+        SETRETURN(size_t, wrcnt / (*size));
 }
 
 //==============================================================================
@@ -783,8 +783,8 @@ static void syscall_fread(syscallrq_t *rq)
         GETARG(FILE *, file);
 
         size_t rdcnt = 0;
-        SETERRNO(_vfs_fread(buf, *count * *size, &rdcnt, file));
-        SETRETURN(size_t, rdcnt);
+        SETERRNO(_vfs_fread(buf, (*count) * (*size), &rdcnt, file));
+        SETRETURN(size_t, rdcnt / (*size));
 }
 
 //==============================================================================

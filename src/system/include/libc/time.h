@@ -49,7 +49,7 @@ extern "C" {
  *      TIMEZONE_DIFF_UTC(0,0):   UTC+00:00
  *      TIMEZONE_DIFF_UTC(-12,0): UTC-12:00
  */
-#define TIMEZONE_DIFF_UTC(HH,MM)        ((HH*60 + (HH < 0 ? -MM : MM)) * 60)
+#define TIMEZONE_DIFF_UTC(HH,MM)        (((HH)*60 + ((HH) < 0 ? -(MM) : (MM))) * 60)
 
 /**
  * This macro expands to an expression representing the number of clock ticks

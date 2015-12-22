@@ -70,7 +70,7 @@
 //==============================================================================
 int fputc(int c, FILE *stream)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         if (stream) {
                 char ch = (char)c;
                 if (fwrite(&ch, sizeof(char), 1, stream) == 1) {

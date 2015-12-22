@@ -145,7 +145,7 @@ extern "C" {
 ////==============================================================================
 //static inline bool net_is_fatal_error(net_err_t error)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ERR_IS_FATAL(error);
 //#else
 //        (void) error;
@@ -187,7 +187,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_DHCP_start(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_start_DHCP_client();
 //#else
 //        return -1;
@@ -219,7 +219,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_DHCP_stop(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_stop_DHCP_client();
 //#else
 //        return -1;
@@ -255,7 +255,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_DHCP_renew(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_renew_DHCP_connection();
 //#else
 //        return -1;
@@ -300,7 +300,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_DHCP_inform(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_inform_DHCP_server();
 //#else
 //        return -1;
@@ -347,7 +347,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_ifup(const net_ip_t *ip, const net_ip_t *netmask, const net_ip_t *gateway)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_if_up(ip, netmask, gateway);
 //#else
 //        (void) ip;
@@ -394,7 +394,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_ifdown(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_if_down();
 //#else
 //        return -1;
@@ -439,7 +439,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_get_ifconfig(net_config_t *ifcfg)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return _netman_get_ifconfig(ifcfg);
 //#else
 //        (void) ifcfg;
@@ -484,7 +484,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_ip_t net_IP_set(const u8_t a, const u8_t b, const u8_t c, const u8_t d)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        net_ip_t ip;
 //        IP4_ADDR(&ip, a, b, c, d);
 //        return ip;
@@ -524,7 +524,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_ip_t net_IP_set_to_any()
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip_addr_any;
 //#else
 //        net_ip_t ip;
@@ -557,7 +557,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_ip_t net_IP_set_to_loopback()
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        net_ip_t ip;
 //        ip_addr_set_loopback(&ip);
 //        return ip;
@@ -592,7 +592,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_ip_t net_IP_set_to_broadcast()
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip_addr_broadcast;
 //#else
 //        net_ip_t ip;
@@ -638,7 +638,7 @@ extern "C" {
 ////==============================================================================
 //static inline u8_t net_IP_get_part_a(net_ip_t *ip)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip4_addr1(ip);
 //#else
 //        (void) ip;
@@ -683,7 +683,7 @@ extern "C" {
 ////==============================================================================
 //static inline u8_t net_IP_get_part_b(net_ip_t *ip)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip4_addr2(ip);
 //#else
 //        (void) ip;
@@ -728,7 +728,7 @@ extern "C" {
 ////==============================================================================
 //static inline u8_t net_IP_get_part_c(net_ip_t *ip)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip4_addr3(ip);
 //#else
 //        (void) ip;
@@ -773,7 +773,7 @@ extern "C" {
 ////==============================================================================
 //static inline u8_t net_IP_get_part_d(net_ip_t *ip)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return ip4_addr4(ip);
 //#else
 //        (void) ip;
@@ -831,7 +831,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_conn_t *net_conn_new(net_conn_type_t type)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_new(type);
 //#else
 //        (void) type;
@@ -890,7 +890,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_delete(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_delete(conn);
 //#else
 //        (void) conn;
@@ -931,7 +931,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_conn_type_t net_conn_get_type(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_type(conn);
 //#else
 //        (void) conn;
@@ -1003,7 +1003,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_get_address(net_conn_t *conn, net_ip_t *addr, u16_t *port, bool local)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_getaddr(conn, addr, port, local);
 //#else
 //        (void) conn;
@@ -1077,7 +1077,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_bind(net_conn_t *conn, net_ip_t *addr, u16_t port)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_bind(conn, addr, port);
 //#else
 //        (void) conn;
@@ -1131,7 +1131,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_connect(net_conn_t *conn, net_ip_t *addr, u16_t port)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_connect(conn, addr, port);
 //#else
 //        (void) conn;
@@ -1183,7 +1183,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_disconnect(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_disconnect(conn);
 //#else
 //        (void) conn;
@@ -1251,7 +1251,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_listen(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_listen(conn);
 //#else
 //        (void) conn;
@@ -1320,7 +1320,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_accept(net_conn_t *conn, net_conn_t ** new_conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_accept(conn, new_conn);
 //#else
 //        (void) conn;
@@ -1393,7 +1393,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_receive(net_conn_t *conn, net_buf_t **new_buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_recv(conn, new_buf);
 //#else
 //        (void) conn;
@@ -1448,7 +1448,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_sendto(net_conn_t *conn, net_buf_t *buf, net_ip_t *addr, u16_t port)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_sendto(conn, buf, addr, port);
 //#else
 //        (void) conn;
@@ -1510,7 +1510,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_send(net_conn_t *conn, net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_send(conn, buf);
 //#else
 //        (void) conn;
@@ -1609,7 +1609,7 @@ extern "C" {
 //                                              net_conn_flag_t flags,
 //                                              size_t         *bytes_written)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_write_partly(conn, data, size, flags, bytes_written);
 //#else
 //        (void) conn;
@@ -1707,7 +1707,7 @@ extern "C" {
 //                                       size_t           size,
 //                                       net_conn_flag_t  flags)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_write(conn, data, size, flags);
 //#else
 //        (void) conn;
@@ -1790,7 +1790,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_close(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_close(conn);
 //#else
 //        (void) conn;
@@ -1835,7 +1835,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_shutdown(net_conn_t *conn, bool shut_rx, bool shut_tx)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_shutdown(conn, shut_rx, shut_tx);
 //#else
 //        (void) conn;
@@ -1878,7 +1878,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_get_host_by_name(const char *name, net_ip_t *ip)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0) && (LWIP_DNS)
+//#if (__NETWORK_ENABLE__ > 0) && (LWIP_DNS)
 //        return netconn_gethostbyname(name, ip);
 //#else
 //        (void) name;
@@ -1920,7 +1920,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_conn_get_error(net_conn_t *conn)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netconn_err(conn);
 //#else
 //        (void) conn;
@@ -1962,7 +1962,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_conn_set_receive_timeout(net_conn_t *conn, int timeout)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netconn_set_recvtimeout(conn, timeout);
 //#else
 //        (void) conn;
@@ -2004,7 +2004,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_conn_set_send_timeout(net_conn_t *conn, int timeout)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netconn_set_sendtimeout(conn, timeout);
 //#else
 //        (void) conn;
@@ -2056,7 +2056,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_buf_t *net_buf_new(void)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_new();
 //#else
 //        return NULL;
@@ -2106,7 +2106,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_buf_delete(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netbuf_delete(buf);
 //#else
 //        (void) buf;
@@ -2158,7 +2158,7 @@ extern "C" {
 ////==============================================================================
 //static inline void *net_buf_alloc(net_buf_t *buf, u16_t size)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_alloc(buf, size);
 //#else
 //        (void) buf;
@@ -2210,7 +2210,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_buf_free(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netbuf_free(buf);
 //#else
 //        (void) buf;
@@ -2262,7 +2262,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_buf_ref(net_buf_t *buf, const void *data, u16_t size)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_ref(buf, data, size);
 //#else
 //        (void) buf;
@@ -2314,7 +2314,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_buf_chain(net_buf_t *head, net_buf_t *tail)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netbuf_chain(head, tail);
 //#else
 //        (void) head;
@@ -2389,7 +2389,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_buf_data(net_buf_t *buf, void **data, u16_t *len)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_data(buf, data, len);
 //#else
 //        (void) buf;
@@ -2442,7 +2442,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_buf_next(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_next(buf);
 //#else
 //        (void) buf;
@@ -2488,7 +2488,7 @@ extern "C" {
 ////==============================================================================
 //static inline void net_buf_first(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        netbuf_first(buf);
 //#else
 //        (void) buf;
@@ -2545,7 +2545,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_buf_copy_partial(net_buf_t *buf, void *data, u16_t len, u16_t offset)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_copy_partial(buf, data, len, offset);
 //#else
 //        (void) buf;
@@ -2598,7 +2598,7 @@ extern "C" {
 ////==============================================================================
 //static inline int net_buf_copy(net_buf_t *buf, void *data, u16_t len)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_copy(buf, data, len);
 //#else
 //        (void) buf;
@@ -2650,7 +2650,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_err_t net_buf_take(net_buf_t *buf, void *data, u16_t len)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_take(buf, data, len);
 //#else
 //        (void) buf;
@@ -2697,7 +2697,7 @@ extern "C" {
 ////==============================================================================
 //static inline u16_t net_buf_get_length(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_len(buf);
 //#else
 //        (void) buf;
@@ -2742,7 +2742,7 @@ extern "C" {
 ////==============================================================================
 //static inline net_ip_t net_buf_get_from_address(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return *netbuf_fromaddr(buf);
 //#else
 //        (void) buf;
@@ -2789,7 +2789,7 @@ extern "C" {
 ////==============================================================================
 //static inline u16_t net_buf_get_port(net_buf_t *buf)
 //{
-//#if (CONFIG_NETWORK_ENABLE > 0)
+//#if (__NETWORK_ENABLE__ > 0)
 //        return netbuf_fromport(buf);
 //#else
 //        (void) buf;

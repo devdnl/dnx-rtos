@@ -108,6 +108,9 @@ function create_ioctl_groups_file()
     enum=$enum"};"
 
     echo -e $enum > "$ioctl_groups_file_path"
+    
+    # prevents compilation of all related objects at every build
+    /bin/touch --reference=./Makefile "$ioctl_groups_file_path"
 }
 
 #-------------------------------------------------------------------------------
@@ -123,6 +126,9 @@ function create_ioctl_requests_file()
     done
 
     echo -ne $content > "$ioctl_requests_file_path"
+    
+    # prevents compilation of all related objects at every build
+    /bin/touch --reference=./Makefile "$ioctl_requests_file_path"
 }
 
 #-------------------------------------------------------------------------------

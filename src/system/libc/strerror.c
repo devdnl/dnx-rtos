@@ -72,11 +72,11 @@
 //==============================================================================
 const char *strerror(int errnum)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         static const char *errstr[] = {
-#if (CONFIG_ERRNO_STRING_LEN == 0)
+#if (__OS_ERRNO_STRING_LEN__ == 0)
                 /* empty */
-#elif (CONFIG_ERRNO_STRING_LEN == 1)
+#elif (__OS_ERRNO_STRING_LEN__ == 1)
                 [ESUCC       ] = NUMBER_TO_STR(ESUCC),
                 [EPERM       ] = NUMBER_TO_STR(EPERM),
                 [ENOENT      ] = NUMBER_TO_STR(ENOENT),
@@ -115,7 +115,7 @@ const char *strerror(int errnum)
                 [ECANCELED   ] = NUMBER_TO_STR(ECANCELED),
                 [ENOTSUP     ] = NUMBER_TO_STR(ENOTSUP),
                 [ENOSYS      ] = NUMBER_TO_STR(ENOSYS)
-#elif (CONFIG_ERRNO_STRING_LEN == 2)
+#elif (__OS_ERRNO_STRING_LEN__ == 2)
                 [ESUCC       ] = TO_STR(ESUCC),
                 [EPERM       ] = TO_STR(EPERM),
                 [ENOENT      ] = TO_STR(ENOENT),
@@ -154,7 +154,7 @@ const char *strerror(int errnum)
                 [ECANCELED   ] = TO_STR(ECANCELED),
                 [ENOTSUP     ] = TO_STR(ENOTSUP),
                 [ENOSYS      ] = TO_STR(ENOSYS)
-#elif (CONFIG_ERRNO_STRING_LEN == 3)
+#elif (__OS_ERRNO_STRING_LEN__ == 3)
                 [ESUCC       ] = "Success",
                 [EPERM       ] = "Operation not permitted",
                 [ENOENT      ] = "No such file or directory",
@@ -194,11 +194,11 @@ const char *strerror(int errnum)
                 [ENOTSUP     ] = "Not supported",
                 [ENOSYS      ] = "Function not implemented"
 #else
-#error "CONFIG_ERRNO_STRING_LEN should be in range 0 - 3!"
+#error "__OS_ERRNO_STRING_LEN__ should be in range 0 - 3!"
 #endif
         };
 
-        if (CONFIG_ERRNO_STRING_LEN == 0) {
+        if (__OS_ERRNO_STRING_LEN__ == 0) {
                 return "";
         } else if (errnum < _ENUMBER) {
                 return errstr[errnum];

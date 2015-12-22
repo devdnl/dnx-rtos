@@ -579,14 +579,14 @@ static void UART_configure(u8_t major, const struct UART_config *config)
 
         /* set parity */
         switch (config->parity) {
-        case UART_PARITY_OFF:
+        case UART_PARITY__OFF:
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 break;
-        case UART_PARITY_EVEN:
+        case UART_PARITY__EVEN:
                 SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_PS);
                 break;
-        case UART_PARITY_ODD:
+        case UART_PARITY__ODD:
                 SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 SET_BIT(DEV->UART->CR1, USART_CR1_PS);
                 break;
@@ -614,7 +614,7 @@ static void UART_configure(u8_t major, const struct UART_config *config)
         }
 
         /* configure stop bits */
-        if (config->stop_bits == UART_STOP_BIT_1) {
+        if (config->stop_bits == UART_STOP_BIT__1) {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
         } else {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
@@ -625,7 +625,7 @@ static void UART_configure(u8_t major, const struct UART_config *config)
         CLEAR_BIT(DEV->UART->CR2, USART_CR2_CLKEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL);
 
         /* LIN break detection length */
-        if (config->LIN_break_length == UART_LIN_BREAK_10_BITS) {
+        if (config->LIN_break_length == UART_LIN_BREAK__10_BITS) {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_LBDL);
         } else {
                 SET_BIT(DEV->UART->CR2, USART_CR2_LBDL);
@@ -715,17 +715,25 @@ static bool FIFO_read(struct Rx_FIFO *fifo, u8_t *data)
 //==============================================================================
 static void IRQ_handle(u8_t major)
 {
+        bool yield = false;
+
         const UART_regs_t *DEV = &UART[major];
 
         /* receiver interrupt handler */
-        if ((DEV->UART->CR1 & USART_CR1_RXNEIE) && (DEV->UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
+        int received = 0;
+        while ((DEV->UART->CR1 & USART_CR1_RXNEIE) && (DEV->UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
                 u8_t DR = DEV->UART->DR;
 
                 if (FIFO_write(&UART_mem[major]->Rx_FIFO, &DR)) {
-                        _sys_semaphore_signal_from_ISR(UART_mem[major]->data_read_sem, NULL);
-                        _sys_thread_yield_from_ISR();
+                        received++;
                 }
         }
+
+        while (received--) {
+                _sys_semaphore_signal_from_ISR(UART_mem[major]->data_read_sem, NULL);
+                yield = true;
+        }
+
 
         /* transmitter interrupt handler */
         if ((DEV->UART->CR1 & USART_CR1_TXEIE) && (DEV->UART->SR & USART_SR_TXE)) {
@@ -744,10 +752,17 @@ static void IRQ_handle(u8_t major)
                         CLEAR_BIT(DEV->UART->CR1, USART_CR1_TXEIE);
                         _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
                 }
+
         } else if ((DEV->UART->CR1 & USART_CR1_TCIE) && (DEV->UART->SR & USART_SR_TC)) {
 
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_TCIE);
                 _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
+                yield = true;
+        }
+
+
+        /* yield thread if data send or received */
+        if (yield) {
                 _sys_thread_yield_from_ISR();
         }
 }

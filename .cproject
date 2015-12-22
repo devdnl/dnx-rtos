@@ -38,7 +38,7 @@
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -225,10 +225,10 @@
 		</configuration>
 		<configuration configurationName="Static Code Analyze"/>
 		<configuration configurationName="Static code check"/>
-		<configuration configurationName="Configuration">
+		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
-		<configuration configurationName="Debug">
+		<configuration configurationName="Configuration">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
 	</storageModule>

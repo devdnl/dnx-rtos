@@ -48,7 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
 /** days of week */
 static const char *week_day_abbr[] = {
         "Sun", "Mon", "Tue",
@@ -144,7 +144,7 @@ static const char *month_full[] = {
 //==============================================================================
 size_t strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         size_t n = 0;
 
         if (buf && size && format && timeptr) {

@@ -39,35 +39,20 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* UART1 enable (1) or disable (0) */
-#define _UART1_ENABLE                           __UART_UART1_ENABLE__
-
-/* UART2 enable (1) or disable (0) */
-#define _UART2_ENABLE                           __UART_UART2_ENABLE__
-
-/* UART3 enable (1) or disable (0) */
-#define _UART3_ENABLE                           __UART_UART3_ENABLE__
-
-/* UART4 enable (1) or disable (0) */
-#define _UART4_ENABLE                           __UART_UART4_ENABLE__
-
-/* UART5 enable (1) or disable (0) */
-#define _UART5_ENABLE                           __UART_UART5_ENABLE__
-
 /* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     __UART_UART1_PRIORITY__
+#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
 
-/* UART1 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     __UART_UART2_PRIORITY__
+/* UART2 IRQ priority */
+#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
 
-/* UART1 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     __UART_UART3_PRIORITY__
+/* UART3 IRQ priority */
+#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
 
-/* UART1 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     __UART_UART4_PRIORITY__
+/* UART4 IRQ priority */
+#define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
 
-/* UART1 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     __UART_UART5_PRIORITY__
+/* UART5 IRQ priority */
+#define _UART5_IRQ_PRIORITY                     __UART_UART5_IRQ_PRIORITY__
 
 /* RX buffer size [B] */
 #define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__

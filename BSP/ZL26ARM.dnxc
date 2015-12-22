@@ -1286,7 +1286,7 @@
 		["../../config/stm32f1/ethmac_flags.h"]={
 			[1.000000]={
 				["key"]="__ETHMAC_IRQ_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[2.000000]={
 				["key"]="__ETHMAC_CHECKSUM_BY_HARDWARE__";
@@ -2766,67 +2766,67 @@
 			};
 			[17.000000]={
 				["key"]="__IRQ_LINE_0_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[18.000000]={
 				["key"]="__IRQ_LINE_1_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[19.000000]={
 				["key"]="__IRQ_LINE_2_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[20.000000]={
 				["key"]="__IRQ_LINE_3_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[21.000000]={
 				["key"]="__IRQ_LINE_4_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[22.000000]={
 				["key"]="__IRQ_LINE_5_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[23.000000]={
 				["key"]="__IRQ_LINE_6_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[24.000000]={
 				["key"]="__IRQ_LINE_7_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[25.000000]={
 				["key"]="__IRQ_LINE_8_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[26.000000]={
 				["key"]="__IRQ_LINE_9_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[27.000000]={
 				["key"]="__IRQ_LINE_10_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[28.000000]={
 				["key"]="__IRQ_LINE_11_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[29.000000]={
 				["key"]="__IRQ_LINE_12_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[30.000000]={
 				["key"]="__IRQ_LINE_13_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[31.000000]={
 				["key"]="__IRQ_LINE_14_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[32.000000]={
 				["key"]="__IRQ_LINE_15_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 		};
 		["../../config/stm32f1/pll_flags.h"]={
@@ -2958,15 +2958,15 @@
 			};
 			[4.000000]={
 				["key"]="__SPI_SPI1_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[5.000000]={
 				["key"]="__SPI_SPI2_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[6.000000]={
 				["key"]="__SPI_SPI3_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[7.000000]={
 				["key"]="__SPI_DEFAULT_DUMMY_BYTE__";
@@ -3128,23 +3128,23 @@
 			};
 			[6.000000]={
 				["key"]="__UART_UART1_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[7.000000]={
 				["key"]="__UART_UART2_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[8.000000]={
 				["key"]="__UART_UART3_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[9.000000]={
 				["key"]="__UART_UART4_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[10.000000]={
 				["key"]="__UART_UART5_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[11.000000]={
 				["key"]="__UART_RX_BUFFER_LEN__";

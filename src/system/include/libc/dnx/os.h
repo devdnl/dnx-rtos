@@ -576,7 +576,7 @@ static inline const char *get_author_email(void)
 //==============================================================================
 static inline const char *get_host_name(void)
 {
-        return CONFIG_HOSTNAME;
+        return __OS_HOSTNAME__;
 }
 
 //==============================================================================

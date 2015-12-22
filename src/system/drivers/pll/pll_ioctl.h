@@ -36,56 +36,24 @@
 extern "C" {
 #endif
 
-// TODO PLL module shall be more universal
-
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Gets SYSCLK frequency [Hz]
- *  @param  u32_t *
+/**
+ *  @brief  Get frequency and name of selected clock [Hz]
+ *  @param  PLL_clk_info_t *
  *  @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_PLL__GET_SYSCLK_FREQ      _IOR(PLL, 0x00, u32_t*)
-
-/** @brief  Gets HCLK frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_HCLK_FREQ        _IOR(PLL, 0x01, u32_t*)
-
-/** @brief  Gets PCLK1 frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_PCLK1_FREQ       _IOR(PLL, 0x02, u32_t*)
-
-/** @brief  Gets PCLK2 frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_PCLK2_FREQ       _IOR(PLL, 0x03, u32_t*)
-
-/** @brief  Gets ADCCLK frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_ADCCLK_FREQ      _IOR(PLL, 0x04, u32_t*)
-
-/** @brief  Gets PCLK1 frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_PCLK1_TIM_FREQ   _IOR(PLL, 0x05, u32_t*)
-
-/** @brief  Gets PCLK2 frequency [Hz]
- *  @param  u32_t *
- *  @return On success 0 is returned, otherwise -1
- */
-#define IOCTL_PLL__GET_PCLK2_TIM_FREQ   _IOR(PLL, 0x06, u32_t*)
+#define IOCTL_PLL__GET_CLK_INFO   _IOR(PLL, 0x00, PLL_clk_info_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        u8_t        iterator;           //!< [IN]  clock iterator (starts from 0, auto incremented)
+        u32_t       clock_Hz;           //!< [OUT] clock frequency in Hz
+        const char *clock_name;         //!< [OUT] clock name
+} PLL_clk_info_t;
 
 /*==============================================================================
   Exported objects

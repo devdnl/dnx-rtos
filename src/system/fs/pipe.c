@@ -98,7 +98,7 @@ int _pipe_create(pipe_t **pipe)
                 result = _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, pipe));
                 if (result == ESUCC) {
 
-                        result = _queue_create(CONFIG_PIPE_LENGTH, sizeof(u8_t), &(*pipe)->queue);
+                        result = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
                         if (result == ESUCC) {
                                 (*pipe)->self   = *pipe;
                                 (*pipe)->closed = false;

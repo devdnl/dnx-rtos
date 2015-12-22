@@ -107,7 +107,7 @@ extern "C" {
  * @param  int                          errno value
  * @return On success 0 is returned, otherwise -1
  */
-#define IOCTL_LOOP__HOST_FLUSH_DONE             _IOW(LOOP, 0x07, int)
+#define IOCTL_LOOP__HOST_FLUSH_DONE             _IOW(LOOP, 0x07, int*)
 
 /**
  * @brief  Client request. General purpose RAW request. Depends on host protocol.
@@ -125,40 +125,39 @@ extern "C" {
 ==============================================================================*/
 // client request codes
 typedef enum {
-        LOOP_CMD_IDLE,                          //!< idle command, no action
-        LOOP_CMD_TRANSMISSION_CLIENT2HOST,      //!< transmission request client to host (rw arguments are valid)
-        LOOP_CMD_TRANSMISSION_HOST2CLIENT,      //!< transmission request host to client (rw arguments are valid)
-        LOOP_CMD_IOCTL_REQUEST,                 //!< ioctl operation request (ioctl arguments are valid)
-        LOOP_CMD_DEVICE_STAT,                   //!< request to response by device's statistics
-        LOOP_CMD_FLUSH_BUFFERS                  //!< request to flush device buffers
-} loop_cmd_t;
+        LOOP_CMD__IDLE,                         //!< idle command, no action
+        LOOP_CMD__TRANSMISSION_CLIENT2HOST,     //!< transmission request client to host (rw arguments are valid)
+        LOOP_CMD__TRANSMISSION_HOST2CLIENT,     //!< transmission request host to client (rw arguments are valid)
+        LOOP_CMD__IOCTL_REQUEST,                //!< ioctl operation request (ioctl arguments are valid)
+        LOOP_CMD__DEVICE_STAT,                  //!< request to response by device's statistics
+        LOOP_CMD__FLUSH_BUFFERS                 //!< request to flush device buffers
+} LOOP_cmd_t;
 
 
 // buffer descriptor to write/read access
 typedef struct {
         u8_t    *data;                          //!< write/read Host buffer address
         size_t   size;                          //!< number of bytes to write/read
-        int      errno_val;                     //!< errno value if error occurred (if no error must be set to ESUCC)
-} loop_buffer_t;
+        int      err_no;                        //!< errno value if error occurred (if no error must be set to ESUCC)
+} LOOP_buffer_t;
 
 
 // response host->client to the ioctl request from client
 typedef struct {
-        int status;                             //!< ioctl operation status
-        int errno_val;                          //!< errno value if error occurred (if no error must be set to ESUCC)
-} loop_ioctl_response_t;
+        int err_no;                             //!< errno value if error occurred (if no error must be set to ESUCC)
+} LOOP_ioctl_response_t;
 
 
 // response host->client to the stat() request from client
 typedef struct {
         u64_t size;                             //!< device capacity/file size
-        int   errno_val;                        //!< errno value if error occurred (if no error must be set to ESUCC)
-} loop_stat_response_t;
+        int   err_no;                           //!< errno value if error occurred (if no error must be set to ESUCC)
+} LOOP_stat_response_t;
 
 
 // request structure
 typedef struct {
-        loop_cmd_t cmd;                         //!< requested action (command from Client)
+        LOOP_cmd_t cmd;                         //!< requested action (command from Client)
 
         union {
                 struct {
@@ -171,7 +170,7 @@ typedef struct {
                         void *arg;              //!< ioctl's request argument
                 } ioctl;                        //!< ioctl argument group
         } arg;                                  //!< command's arguments
-} loop_request_t;
+} LOOP_request_t;
 
 
 /*==============================================================================

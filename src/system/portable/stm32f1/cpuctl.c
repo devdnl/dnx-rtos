@@ -49,7 +49,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 static const u32_t timer_frequency = 1000000;
 #endif
 
@@ -76,7 +76,7 @@ void _cpuctl_init(void)
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
 
-        #if (CONFIG_MONITOR_CPU_LOAD > 0)
+        #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
         #endif
 }
@@ -106,7 +106,7 @@ void _cpuctl_restart_system(void)
  * @return None
  */
 //==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 void _cpuctl_init_CPU_load_counter(void)
 {
         /* enable clock */
@@ -140,7 +140,7 @@ void _cpuctl_init_CPU_load_counter(void)
  * @return Timer value for last read (time delta).
  */
 //==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 u32_t _cpuctl_get_CPU_load_counter_delta(void)
 {
         u32_t diff = TIM2->CNT;
@@ -177,7 +177,7 @@ void _cpuctl_sleep(void)
 void _cpuctl_update_system_clocks(void)
 {
         /* update CPU load timer frequency */
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
 #endif
 
@@ -185,7 +185,7 @@ void _cpuctl_update_system_clocks(void)
         _critical_section_begin();
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
-        SysTick_Config((freq.HCLK_Frequency / (u32_t)CONFIG_RTOS_TASK_SCHED_FREQ) - 1);
+        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
 

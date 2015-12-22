@@ -60,7 +60,7 @@ typedef struct drvmem {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static const char *DRV_ALREADY_INIT_FMT = VT100_FONT_COLOR_RED"Driver '%s%d-%d' is already initialized!"VT100_RESET_ATTRIBUTES"\n";
 static const char *DRV_INITIALIZING_FMT = "Initializing %s%d-%d... ";
 static const char *DRV_ERROR_FMT        = VT100_FONT_COLOR_RED"error (%d)"VT100_RESET_ATTRIBUTES"\n";
@@ -650,7 +650,7 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (*dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK) || force) {
+                        if (force || *dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK)) {
                                 *dev_lock = NULL;
                                 result    = ESUCC;
                         } else {

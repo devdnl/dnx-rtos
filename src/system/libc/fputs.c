@@ -74,7 +74,7 @@
 //==============================================================================
 static int f_puts(const char *s, FILE *file, bool puts)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         if (file) {
                 int n = EOF;
 

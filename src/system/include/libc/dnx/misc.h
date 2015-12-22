@@ -141,6 +141,7 @@ extern "C" {
  */
 //==============================================================================
 #define FIRST_CHARACTER(char__pstr) (char__pstr)[0]
+#define strfch(char__pstr) FIRST_CHARACTER(char__pstr)
 
 //==============================================================================
 /**
@@ -168,6 +169,7 @@ extern "C" {
  */
 //==============================================================================
 #define LAST_CHARACTER(char__pstr) (char__pstr)[strlen((char__pstr)) - 1]
+#define strlch(char__pstr) LAST_CHARACTER(char__pstr)
 
 //==============================================================================
 /**
@@ -219,6 +221,177 @@ extern "C" {
 //==============================================================================
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
+//==============================================================================
+/**
+ * @brief isstreq(_stra, _strb)
+ * The macro <b>isstreq()</b> compares string <i>_stra</i> and <i>_strb</i> and
+ * returns true or false depending on compare result (true if equal).
+ *
+ * @param _stra         string a
+ * @param _strb         string b
+ *
+ * @errors None
+ *
+ * @return If strings are equal then true is returned, otherwise false.
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * const char *str1 = "str1";
+ * const char *str2 = "str2";
+ *
+ * if (isstreq(str1, str2)) {
+ *      puts("Strings are equal");
+ * } else {
+ *      puts("Strings are not equal");
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define isstreq(_stra, _strb) (strcmp(_stra, _strb) == 0)
+
+//==============================================================================
+/**
+ * @brief isstreqn(_stra, _strb, _n)
+ * The macro <b>isstreqn()</b> compares string <i>_stra</i> and <i>_strb</i> and
+ * returns true or false depending on compare result (true if equal). User
+ * determines size of strings to compare.
+ *
+ * @param _stra         string a
+ * @param _strb         string b
+ * @param _n            string length
+ *
+ * @errors None
+ *
+ * @return If strings are equal then true is returned, otherwise false.
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * const char *str1 = "str1";
+ * const char *str2 = "str2";
+ *
+ * if (isstreqn(str1, str2, 3)) {
+ *      puts("Strings are equal");
+ * } else {
+ *      puts("Strings are not equal");
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#define isstreqn(_stra, _strb, _n) (strncmp(_stra, _strb, _n) == 0)
+
+//==============================================================================
+/**
+ * @brief strsize(_str)
+ * The macro <b>strsize()</b> returns total size of string (with \0 terminator).
+ * Function is helpful when user allocate new string in memory.
+ *
+ * @param _str          string
+ *
+ * @errors None
+ *
+ * @return If strings are equal then true is returned, otherwise false.
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * char *str = malloc(strsize("My string"));
+ *
+ * // ...
+ */
+//==============================================================================
+#define strsize(_str) (strlen(_str) + 1)
+
+//==============================================================================
+/**
+ * @brief and
+ * The macro <b>and</b> is an logical AND (&&) in C++11 style.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * if (1 == 1 and 2 == 2) {
+ *      // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef __cplusplus
+#define and &&
+#endif
+
+//==============================================================================
+/**
+ * @brief or
+ * The macro <b>or</b> is an logical OR (||) in C++11 style.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * if (1 == 1 or 2 == 2) {
+ *      // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef __cplusplus
+#define or ||
+#endif
+
+//==============================================================================
+/**
+ * @brief not
+ * The macro <b>not</b> is an logical NOT (!) in C++11 style.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ *
+ * #include <dnx/misc.h>
+ *
+ * if (not (1 == 1 and 2 == 2)) {
+ *      // ...
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
+#ifndef __cplusplus
+#define not !
 #endif
 
 /*==============================================================================

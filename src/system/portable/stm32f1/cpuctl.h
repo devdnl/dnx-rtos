@@ -62,7 +62,7 @@ extern void  _cpuctl_restart_system             (void);
 extern void  _cpuctl_sleep                      (void);
 extern void  _cpuctl_update_system_clocks       (void);
 
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 extern void  _cpuctl_init_CPU_load_counter      (void);
 extern u32_t _cpuctl_get_CPU_load_counter_delta  (void);
 #endif

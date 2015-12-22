@@ -2546,23 +2546,23 @@
 			};
 			[6.000000]={
 				["key"]="__UART_UART1_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[7.000000]={
 				["key"]="__UART_UART2_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[8.000000]={
 				["key"]="__UART_UART3_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[9.000000]={
 				["key"]="__UART_UART4_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[10.000000]={
 				["key"]="__UART_UART5_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[11.000000]={
 				["key"]="__UART_RX_BUFFER_LEN__";
@@ -2612,7 +2612,7 @@
 			};
 			[2.000000]={
 				["key"]="__USBD_IRQ_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[3.000000]={
 				["key"]="__USBD_ENDPOINT0_SIZE__";

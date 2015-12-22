@@ -1286,7 +1286,7 @@
 		["../../config/stm32f1/ethmac_flags.h"]={
 			[1.000000]={
 				["key"]="__ETHMAC_IRQ_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[2.000000]={
 				["key"]="__ETHMAC_CHECKSUM_BY_HARDWARE__";
@@ -2714,7 +2714,7 @@
 			};
 			[4.000000]={
 				["key"]="__I2C1_IRQ_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[5.000000]={
 				["key"]="__I2C1_NUMBER_OF_DEVICES__";
@@ -2830,7 +2830,7 @@
 			};
 			[33.000000]={
 				["key"]="__I2C2_IRQ_PRIO__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[34.000000]={
 				["key"]="__I2C2_NUMBER_OF_DEVICES__";
@@ -3062,15 +3062,15 @@
 			};
 			[4.000000]={
 				["key"]="__SPI_SPI1_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[5.000000]={
 				["key"]="__SPI_SPI2_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[6.000000]={
 				["key"]="__SPI_SPI3_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[7.000000]={
 				["key"]="__SPI_DEFAULT_DUMMY_BYTE__";
@@ -3232,23 +3232,23 @@
 			};
 			[6.000000]={
 				["key"]="__UART_UART1_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[7.000000]={
 				["key"]="__UART_UART2_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[8.000000]={
 				["key"]="__UART_UART3_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[9.000000]={
 				["key"]="__UART_UART4_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[10.000000]={
 				["key"]="__UART_UART5_PRIORITY__";
-				["value"]="CONFIG_USER_IRQ_PRIORITY";
+				["value"]="_IRQ_USER_PRIORITY_";
 			};
 			[11.000000]={
 				["key"]="__UART_RX_BUFFER_LEN__";

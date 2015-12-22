@@ -25,8 +25,7 @@
 #
 ####################################################################################################
 
-include ./config/project/Makefile
-include ./config/$(__PROJECT_CPU_ARCH__)/Makefile
+include ./config/config.h
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -42,7 +41,7 @@ TOOLCHAIN = $(__PROJECT_TOOLCHAIN__)
 AFLAGS   = -c \
            -g \
            -ggdb3 \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
            $(CPUCONFIG_AFLAGS)
 
 CFLAGS   = -c \
@@ -55,7 +54,7 @@ CFLAGS   = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -71,7 +70,7 @@ CXXFLAGS = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -154,8 +153,6 @@ GIT_HOOKS  = ./tools/apply_git_hooks.sh
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-_YES_ = 1
-_NO_  = 0
 EMPTY =
 
 # defines this makefile name
@@ -168,7 +165,7 @@ THREAD = $(shell $(ECHO) $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(__PROJECT_CPU_ARCH__)
+TARGET = $(__CPU_ARCH__)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
@@ -305,7 +302,7 @@ generate :
 	@$(ECHO) "Adding file systems to the project..."	
 	@$(ADDFS) ./$(SYS_FS_LOC)
 	
-	@$(ECHO) "Adding file systems to the project..."
+	@$(ECHO) "Adding drivers to the project..."
 	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
@@ -409,6 +406,16 @@ flash:
 .PHONY : reset
 reset:
 	@$(RESET_CPU)
+
+####################################################################################################
+# target used to create Release archive
+####################################################################################################
+.PHONY : release
+release: cleanall
+	git clean -xfd
+	tar --exclude=.git -zcvf release.tar.gz .
+	zip release.zip . -r -9 --exclude /.git*
+	$(ECHO) "Done"
 
 ####################################################################################################
 # include all dependencies

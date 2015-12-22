@@ -77,7 +77,7 @@ int _vfprintf(FILE *file, const char *format, va_list arg)
 {
         int n = 0;
 
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
 
         if (file && format) {
                 va_list carg;

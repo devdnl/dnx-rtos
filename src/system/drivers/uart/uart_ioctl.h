@@ -64,31 +64,31 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 enum UART_parity {
-        UART_PARITY_OFF,
-        UART_PARITY_ODD,
-        UART_PARITY_EVEN
+        UART_PARITY__OFF,
+        UART_PARITY__ODD,
+        UART_PARITY__EVEN
 };
 
-enum UART_stop_bits {
-        UART_STOP_BIT_1,
-        UART_STOP_BIT_2
+enum UART_stop_bit {
+        UART_STOP_BIT__1,
+        UART_STOP_BIT__2
 };
 
-enum UART_LIN_break_length {
-        UART_LIN_BREAK_10_BITS,
-        UART_LIN_BREAK_11_BITS
+enum UART_LIN_break {
+        UART_LIN_BREAK__10_BITS,
+        UART_LIN_BREAK__11_BITS
 };
 
 struct UART_config {
-        enum UART_parity                parity                  : 2;
-        enum UART_stop_bits             stop_bits               : 1;
-        enum UART_LIN_break_length      LIN_break_length        : 1;
-        bool                            tx_enable               : 1;
-        bool                            rx_enable               : 1;
-        bool                            LIN_mode_enable         : 1;
-        bool                            hardware_flow_ctrl      : 1;
-        bool                            single_wire_mode        : 1;
-        u32_t                           baud                    : 23;
+        enum UART_parity            parity                  : 2;
+        enum UART_stop_bit          stop_bits               : 1;
+        enum UART_LIN_break         LIN_break_length        : 1;
+        bool                        tx_enable               : 1;
+        bool                        rx_enable               : 1;
+        bool                        LIN_mode_enable         : 1;
+        bool                        hardware_flow_ctrl      : 1;
+        bool                        single_wire_mode        : 1;
+        u32_t                       baud                    : 23;
 };
 
 /*==============================================================================

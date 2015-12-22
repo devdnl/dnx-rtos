@@ -100,7 +100,7 @@ int _kernel_panic_init()
 //==============================================================================
 bool _kernel_panic_detect(bool show_msg)
 {
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         static const char *cause[] = {
                "SEGFAULT",
                "STACKOVF",
@@ -123,7 +123,7 @@ bool _kernel_panic_detect(bool show_msg)
                                 kernel_panic_descriptor->name = "<unknown>";
                         }
 
-                      #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+                      #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
                         _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
                         _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
                         _printk("PID  : %d (%s)\n", kernel_panic_descriptor->pid, kernel_panic_descriptor->name);

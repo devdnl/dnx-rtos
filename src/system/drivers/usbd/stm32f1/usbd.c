@@ -196,6 +196,30 @@ static const uint ep0_data_stage_transmit_timeout_ms   = 2000;
 static const uint ep0_data_stage_receive_timeout_ms    = MAX_DELAY_MS;
 static const uint ep1_7_data_stage_transmit_timeout_ms = 4500;
 
+/* GPIO peripherals */
+static const GPIO_t *GPIOx[] = {
+        #if defined(RCC_APB2ENR_IOPAEN)
+                GPIOA,
+        #endif
+        #if defined(RCC_APB2ENR_IOPBEN)
+                GPIOB,
+        #endif
+        #if defined(RCC_APB2ENR_IOPCEN)
+                GPIOC,
+        #endif
+        #if defined(RCC_APB2ENR_IOPDEN)
+                GPIOD,
+        #endif
+        #if defined(RCC_APB2ENR_IOPEEN)
+                GPIOE,
+        #endif
+        #if defined(RCC_APB2ENR_IOPFEN)
+                GPIOF,
+        #endif
+        #if defined(RCC_APB2ENR_IOPGEN)
+                GPIOG,
+        #endif
+};
 
 /*==============================================================================
   Exported objects
@@ -948,7 +972,11 @@ API_MOD_STAT(USBD, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static inline void enable_usb_visible_pullup()
 {
-        GPIO_SET_PIN(_USBD_CONFIG_PIN_PULLUP);
+        if (  (_USBD_CONFIG_PULLUP_PORT_IDX < ARRAY_SIZE(GPIOx))
+           && (_USBD_CONFIG__PULLUP_PIN_IDX < 16)) {
+                GPIO_t *GPIO = const_cast(GPIO_t*, GPIOx[_USBD_CONFIG_PULLUP_PORT_IDX]);
+                GPIO->BSRR   = (1 << (_USBD_CONFIG__PULLUP_PIN_IDX));
+        }
 }
 
 //==============================================================================
@@ -958,7 +986,11 @@ static inline void enable_usb_visible_pullup()
 //==============================================================================
 static inline void disable_usb_visible_pullup()
 {
-        GPIO_CLEAR_PIN(_USBD_CONFIG_PIN_PULLUP);
+        if (  _USBD_CONFIG_PULLUP_PORT_IDX < ARRAY_SIZE(GPIOx)
+           && _USBD_CONFIG__PULLUP_PIN_IDX < 16) {
+                GPIO_t *GPIO = const_cast(GPIO_t*, GPIOx[_USBD_CONFIG_PULLUP_PORT_IDX]);
+                GPIO->BRR    = (1 << (_USBD_CONFIG__PULLUP_PIN_IDX));
+        }
 }
 
 //==============================================================================

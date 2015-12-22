@@ -118,7 +118,7 @@
 //==============================================================================
 int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         char   chr;
         int    arg_size;
         size_t scan_len     = 1;

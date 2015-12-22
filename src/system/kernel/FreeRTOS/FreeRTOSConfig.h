@@ -81,10 +81,10 @@ extern void  vApplicationSwitchedOut(void);
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
-#define configCPU_CLOCK_HZ                      CONFIG_CPU_START_FREQ
-#define configTICK_RATE_HZ                      CONFIG_RTOS_TASK_SCHED_FREQ
-#define configMAX_PRIORITIES                    CONFIG_RTOS_TASK_MAX_PRIORITIES
-#define configMINIMAL_STACK_SIZE                CONFIG_RTOS_TASK_MIN_STACK_DEPTH
+#define configCPU_CLOCK_HZ                      _CPU_START_FREQUENCY_
+#define configTICK_RATE_HZ                      __OS_TASK_SCHED_FREQ__
+#define configMAX_PRIORITIES                    __OS_TASK_MAX_PRIORITIES__
+#define configMINIMAL_STACK_SIZE                __OS_TASK_MIN_STACK_DEPTH__
 #define configTOTAL_HEAP_SIZE                   0
 #define configMAX_TASK_NAME_LEN                 1
 #define configUSE_16_BIT_TICKS                  0
@@ -122,9 +122,9 @@ extern void  vApplicationSwitchedOut(void);
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
 
 /* Interrupt nesting behaviour configuration. */
-#define configKERNEL_INTERRUPT_PRIORITY         CONFIG_RTOS_KERNEL_IRQ_PRIORITY
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    CONFIG_RTOS_SYSCALL_IRQ_PRIORITY
-#define configMAX_API_CALL_INTERRUPT_PRIORITY   CONFIG_USER_IRQ_PRIORITY
+#define configKERNEL_INTERRUPT_PRIORITY         _CPU_IRQ_RTOS_KERNEL_PRIORITY_
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    _CPU_IRQ_RTOS_SYSCALL_PRIORITY_
+#define configMAX_API_CALL_INTERRUPT_PRIORITY   __CPU_IRQ_USER_PRIORITY__
 
 /* Define to trap errors during development. */
 //#define configASSERT(x)
@@ -157,7 +157,7 @@ static inline void  _kernelfree(void *mem)      {_kfree(_MM_KRN, &mem);}
 //#define free(mem)                               _kernelfree(mem)
 
 /* required functions by sysmoni */
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 #define traceTASK_SWITCHED_OUT()                vApplicationSwitchedOut()
 #define traceTASK_SWITCHED_IN()                 vApplicationSwitchedIn()
 #endif

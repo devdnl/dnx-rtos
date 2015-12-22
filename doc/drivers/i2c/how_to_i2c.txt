@@ -1,0 +1,223 @@
+==============
+How To Use I2C
+==============
+
+-------------------------------------
+1. Meaning of major and minor numbers
+-------------------------------------
+   Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
+   In this case major number starts from 0 and is connected to the first device
+   e.g. I2C1.
+
+   a. major number selects I2C peripheral e.g.:
+      major = 0 -> I2C0 (or I2C1 if numerated from 1)
+      
+   b. minor number selects particular device e.g.:
+      major = 0 and minor = 0 -> device 0 on I2C0,
+      major = 0 and minor = 1 -> device 1 on I2C0,
+      major = 1 and minor = 0 -> device 0 on I2C1,
+      major = 1 and minor = 2 -> device 2 on I2C1
+      
+1.1. Numeration restrictions
+   Number of peripherals determines how big major number can be. If there is
+   only one I2C peripheral then the major number is always 0.
+   Number of devices (minor number) can be theoretically up to 256 or to limits
+   of memory capacity.
+      
+------------------------
+2. Driver initialization
+------------------------
+   To initialize driver, code as follow should be used:
+   
+   driver_init("I2C", 0, 0, "/dev/I2C0-0");  // device path can be more user
+                                             // friendly e.g. "/dev/eeprom"
+                                             
+   driver_init("I2C", 0, 1, "/dev/I2C0-1");  // next I2C device on I2C0 bus
+   ...
+   
+-----------------
+3. Driver release
+-----------------
+   To release driver, code as follow should be used:
+   
+   driver_release("I2C", 0, 0);
+   driver_release("I2C", 0, 1);
+   ...
+
+-----------------------
+4. Driver configuration
+-----------------------
+   Driver configuration should be done before usage and after initialization.
+   The best place to do this is user application. To configure particular I2C
+   device the ioctl() function shall be used:
+   
+   #include <stdio.h>
+   #include <stdbool.h>
+   #include <sys/ioctl.h>
+   
+   static const I2C_config_t cfg = {
+         .address       = 0xA0,                          // EEPROM address
+         .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB 
+         .addr_10bit    = false                          // 7-bit address
+   };
+   
+   static const char *dev_path = "/dev/I2C0-0";
+   
+   FILE *dev = fopen(dev_path, "r+");
+   if (dev) {
+         if (ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg) != 0) {
+               perror(dev_path);
+         }
+         
+         fclose(dev);
+   } else {
+         perror(dev_path);
+   }
+   
+   ...
+   
+4.1. Meaning of Sub-Address Mode
+   Some I2C devices need to set internal address (called pointer) in purpose of
+   selection of register or memory address. Small devices e.g. RTC or sensors
+   uses mostly 1-byte sub-address to select paritcular register to write or
+   read. EEPROM devices uses also 1-byte sub-address but there is many devices
+   that uses 2-byte sub-address mode. Some devices do not use any sub-addressing
+   mode. Sub-address mode can be selected in configuration by using particular
+   enumeration value. Sub-address value is controlled by fseek() function.
+   
+4.1.1. I2C_SUB_ADDR_MODE__DISABLED
+   When this selection is used then I2C driver does not send any sub-address
+   bytes.
+   
+   Write: [S][ADDR+W][DATA0][DATA1][DATAn]...[P]
+   Read:  [S][ADDR+R][DATA0][DATA1][DATAn]...[P]
+   
+4.1.2. I2C_SUB_ADDR_MODE__1_BYTE
+   When this selection is used then I2C driver send 1 byte of sub-address.
+   In case of read sequence, the I2C driver first send POINTER according to 
+   fseek() value and next read data sequence.
+   
+   Write: [S][ADDR+W][POINTER][DATA1][DATAn]...[P]
+   Read:  [S][ADDR+W][POINTER][Sr][ADDR+R][DATA1][DATAn]...[P]
+   
+4.1.3. I2C_SUB_ADDR_MODE__2_BYTES
+   When this selection is used then I2C driver send 2 bytes of sub-address.
+   In case of read sequence, the I2C driver first send POINTER according to 
+   fseek() value and next read data sequence.
+   
+   Write: [S][ADDR+W][POINTER:1][POINTER:0][DATA1][DATAn]...[P]
+   Read:  [S][ADDR+W][POINTER:1][POINTER:0][Sr][ADDR+R][DATA1][DATAn]...[P]
+   
+4.1.4. I2C_SUB_ADDR_MODE__3_BYTES
+   When this selection is used then I2C driver send 3 bytes of sub-address.
+   In case of read sequence, the I2C driver first send POINTER according to 
+   fseek() value and next read data sequence.
+   
+   Write: [S][ADDR+W][POINTER:2][POINTER:1][POINTER:0][DATA1][DATAn]...[P]
+   Read:  [S][ADDR+W][POINTER:2][POINTER:1][POINTER:0][Sr][ADDR+R][DATA1][DATAn]...[P]
+
+-------------
+5. Data write
+-------------
+   Data to the I2C device can be wrote as regular file. Example assumptions:
+   - EEPROM device is AT24C32 (4KiB EEPROM)
+   - EEPROM address is 0xA0
+   - EEPROM is visible in system as "/dev/ee"
+   
+   #include <stdio.h>
+   #include <stdbool.h>
+   #include <dnx/misc.h>
+   #include <sys/ioctl.h>
+   
+   static const char *dev_path = "/dev/ee";
+   static const char *blk1     = "Data block 1 at 0x0";
+   static const char *blk2     = "Data block 2 at 0x100";
+   
+   static const I2C_config_t cfg = {
+         .address       = 0xA0,                          // EEPROM address
+         .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB 
+         .addr_10bit    = false                          // 7-bit address
+   };
+   
+   int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+   {
+         FILE *dev = fopen(dev_path, "r+");
+         
+         if (dev) {
+               // set I2C device configuration
+               ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+               
+               // write blk1 at address 0x0
+               fseek(dev, 0x0, SEEK_SET);
+               fwrite(blk1, sizeof(char), strsize(blk1), dev);
+               
+               // write blk2 at adress 0x100
+               fseek(dev, 0x100, SEEK_SET);
+               fwrite(blk2, sizeof(char), strsize(blk2), dev);
+               
+               // close I2C device
+               fclose(dev);
+               
+         } else {
+               perror(dev_path);
+         }
+         
+         return 0;
+   }
+
+------------
+6. Data read
+------------
+   Data to the I2C device can be read as regular file. Example assumptions:
+   - EEPROM device is AT24C32 (4KiB EEPROM)
+   - EEPROM address is 0xA0
+   - EEPROM is visible in system as "/dev/ee"
+   
+   #include <stdio.h>
+   #include <stdbool.h>
+   #include <dnx/misc.h>
+   #include <sys/ioctl.h>
+   
+   static const char *dev_path = "/dev/ee";
+   
+   static const I2C_config_t cfg = {
+         .address       = 0xA0,                          // EEPROM address
+         .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB 
+         .addr_10bit    = false                          // 7-bit address
+   };
+   
+   GLOBAL_VARIABLES_SECTION {
+         char blk1[100];
+         char blk2[100];
+   };
+   
+   int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+   {
+         FILE *dev = fopen(dev_path, "r+");
+         
+         if (dev) {
+               // set I2C device configuration
+               ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+               
+               // read blk1 at address 0x0
+               fseek(dev, 0x0, SEEK_SET);
+               fread(global->blk1, ARRAY_ITEM_SIZE(global->blk1), ARRAY_SIZE(global->blk1), dev);
+               
+               // write blk2 at adress 0x100
+               fseek(f, 0x100, SEEK_SET);
+               fread(global->blk2, ARRAY_ITEM_SIZE(global->blk2), ARRAY_SIZE(global->blk2), dev);
+               
+               // close I2C device
+               fclose(dev);
+               
+         } else {
+               perror(dev_path);
+         }
+         
+         return 0;
+   }
+
+-------------
+7. References
+-------------
+   - I2C driver, src/system/drivers/i2c

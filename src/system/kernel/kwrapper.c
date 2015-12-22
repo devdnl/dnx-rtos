@@ -329,7 +329,7 @@ char *_task_get_name(task_t *taskhdl)
 //==============================================================================
 int _task_get_priority(task_t *taskhdl)
 {
-        return (int)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
+        return (int)(uxTaskPriorityGet(taskhdl) - (__OS_TASK_MAX_PRIORITIES__ / 2));
 }
 
 //==============================================================================
@@ -1018,7 +1018,7 @@ void _ISR_enable(void)
  * @return None
  */
 //==============================================================================
-void _sleep_ms(const uint milliseconds)
+void _sleep_ms(const u32_t milliseconds)
 {
         vTaskDelay(MS2TICK(milliseconds));
 }
@@ -1032,7 +1032,7 @@ void _sleep_ms(const uint milliseconds)
  * @return None
  */
 //==============================================================================
-void _sleep(const uint seconds)
+void _sleep(const u32_t seconds)
 {
         vTaskDelay(MS2TICK(seconds * 1000UL));
 }
@@ -1047,7 +1047,7 @@ void _sleep(const uint seconds)
  * @return None
  */
 //==============================================================================
-void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+void _sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
 {
         vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(milliseconds));
 }
@@ -1062,7 +1062,7 @@ void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * @return None
  */
 //==============================================================================
-void _sleep_until(const uint seconds, int *ref_time_ticks)
+void _sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
 {
         vTaskDelayUntil((TickType_t *)ref_time_ticks, MS2TICK(seconds * 1000UL));
 }

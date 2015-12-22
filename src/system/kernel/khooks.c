@@ -68,7 +68,7 @@ extern u32_t _CPU_total_time;
 //==============================================================================
 void vApplicationIdleHook(void)
 {
-#if (CONFIG_RTOS_SLEEP_ON_IDLE > 0)
+#if (__OS_SLEEP_ON_IDLE__ > 0)
         _cpuctl_sleep();
 #endif
 }

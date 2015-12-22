@@ -1668,7 +1668,7 @@ static void argtab_destroy(char **argv)
 //==============================================================================
 static int find_program(const char *name, const struct _prog_data **prog)
 {
-        static const size_t kworker_stack_depth  = CONFIG_RTOS_SYSCALL_STACK_DEPTH;
+        static const size_t kworker_stack_depth  = __OS_SYSCALL_STACK_DEPTH__;
         static const size_t kworker_globals_size = 0;
         static const struct _prog_data kworker   = {.globals_size = &kworker_globals_size,
                                                     .main         = _syscall_kworker_process,
@@ -1733,7 +1733,7 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 //==============================================================================
 KERNELSPACE void _task_switched_in(void)
 {
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
         _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
         CPU_total_time_last = _CPU_total_time;
 #endif
@@ -1776,12 +1776,12 @@ KERNELSPACE void _task_switched_out(void)
                 active_process->globals  = global;
                 active_process->errnov   = _errno;
 
-                #if (CONFIG_MONITOR_CPU_LOAD > 0)
+                #if (__OS_MONITOR_CPU_LOAD__ > 0)
                 _CPU_total_time         += _cpuctl_get_CPU_load_counter_delta();
                 active_process->timecnt += (_CPU_total_time - CPU_total_time_last);
                 #endif
         } else {
-                #if (CONFIG_MONITOR_CPU_LOAD > 0)
+                #if (__OS_MONITOR_CPU_LOAD__ > 0)
                 _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
                 #endif
         }

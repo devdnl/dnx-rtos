@@ -46,7 +46,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
 /** buffer used to store converted time to string */
 static char timestr[32];
 #endif
@@ -77,7 +77,7 @@ static char timestr[32];
 //==============================================================================
 static char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         if (timer || tm) {
                 if (buf == NULL) {
                         buf = timestr;

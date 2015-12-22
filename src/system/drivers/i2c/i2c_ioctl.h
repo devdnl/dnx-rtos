@@ -38,31 +38,30 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/// type defines possible modes of sub-addressing sequence (used e.g. in EEPROM)
+typedef enum {
+        I2C_SUB_ADDR_MODE__DISABLED = 0,        //!< sub-addressing disabled
+        I2C_SUB_ADDR_MODE__1_BYTE   = 1,        //!< sub-address is 1 byte long
+        I2C_SUB_ADDR_MODE__2_BYTES  = 2,        //!< sub-address is 2 byte long
+        I2C_SUB_ADDR_MODE__3_BYTES  = 3         //!< sub-address is 3 byte long
+} I2C_sub_addr_mode_t;
+
 typedef struct {
-        u32_t frequency_Hz;     // SCL line frequency in Hz
-        u16_t address;          // device address 8 or 10 bit
-        u8_t  subaddrlen;       // 0-3: number of bytes of sub-address (EEPROM, RTC)
-        bool  addr10bit;        // true: 10 bit mode address enabled
-} i2c_config_t;
+        u16_t               address;            //!< device address 8 or 10 bit
+        I2C_sub_addr_mode_t sub_addr_mode;      //!< 0-3: number of bytes of sub-address (EEPROM, RTC)
+        bool                addr_10bit;         //!< true: 10 bit mode address enabled
+} I2C_config_t;
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
 /**
- * @brief  Changes a device address TODO I2C SET ADDRESS to remove
- * @param  int*         a new address (7 or 10-bit)
- * @return Returns  0 on success.
- *         Returns -1 on error and appropriate error number is set.
- */
-#define IOCTL_I2C__SET_ADDRESS          _IOW(I2C, 0, int*) // FIXME unnecessary
-
-/** TODO I2C configure
  * @brief  Configure device
  * @param  i2c_config_t*        device configuration
  * @return Returns  0 on success.
- *         Returns -1 on error and appropriate error number is set.
+ *         Returns -1 on error and errno value is set.
  */
-#define IOCTL_I2C__CONFIGURE            _IOW(I2C, 1, i2c_config_t*)
+#define IOCTL_I2C__CONFIGURE            _IOW(I2C, 0, const I2C_config_t*)
 
 /*==============================================================================
   Exported objects

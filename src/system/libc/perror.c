@@ -69,7 +69,7 @@
 //==============================================================================
 void perror(const char *str)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
+#if (__OS_PRINTF_ENABLE__ > 0)
         if (str) {
                 fprintf(stderr, "%s: %s\n", str, strerror(errno));
         } else {

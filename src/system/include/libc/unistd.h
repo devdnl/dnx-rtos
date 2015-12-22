@@ -111,7 +111,7 @@ static inline void sleep_ms(const uint milliseconds)
 
 //==============================================================================
 /**
- * @brief void usleep(const uint microseconds)
+ * @brief void usleep(const u32_t microseconds)
  * The <b>usleep</b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
@@ -135,9 +135,9 @@ static inline void sleep_ms(const uint milliseconds)
  * // ...
  */
 //==============================================================================
-static inline void usleep(const uint microseconds)
+static inline void usleep(const u32_t microseconds)
 {
-        uint ms = microseconds / 1000;
+        u32_t ms = microseconds / 1000;
         _builtinfunc(sleep_ms, ms ? ms : 1);
 }
 
@@ -158,7 +158,7 @@ static inline void usleep(const uint microseconds)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = prepare_sleep_until();
+ * u32_t ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
@@ -175,7 +175,7 @@ static inline int prepare_sleep_until(void)
 
 //==============================================================================
 /**
- * @brief void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+ * @brief void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
  * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
@@ -191,7 +191,7 @@ static inline int prepare_sleep_until(void)
  * #include <unistd.h>
  *
  * // ...
- * int ref_time = prepare_sleep_until();
+ * u32_t ref_time = prepare_sleep_until();
  *
  * for (;;) {
  *         // ...
@@ -201,7 +201,7 @@ static inline int prepare_sleep_until(void)
  * // ...
  */
 //==============================================================================
-static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+static inline void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
 {
         _builtinfunc(sleep_until_ms, milliseconds, ref_time_ticks);
 }
@@ -234,7 +234,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
  * // ...
  */
 //==============================================================================
-static inline void sleep_until(const uint seconds, int *ref_time_ticks)
+static inline void sleep_until(const uint seconds, u32_t *ref_time_ticks)
 {
         _builtinfunc(sleep_until, seconds, ref_time_ticks);
 }

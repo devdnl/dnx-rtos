@@ -82,7 +82,7 @@
  * program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
  * byte alignment -> define MEM_ALIGNMENT to 2.
  */
-#define MEM_ALIGNMENT                   CONFIG_HEAP_ALIGN
+#define MEM_ALIGNMENT                   _HEAP_ALIGN_
 
 /**
  * Calculate memory size for an aligned buffer - returns the next highest
@@ -92,7 +92,7 @@
 #define MEM_ALIGN_SIZE(size)            (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
 
 /** some alignment macros: we define them here for better source code layout */
-#define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
+#define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(__HEAP_BLOCK_SIZE__)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
 #define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(HEAP_SIZE - SIZEOF_STRUCT_MEM)
 

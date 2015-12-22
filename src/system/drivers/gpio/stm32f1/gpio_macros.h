@@ -63,13 +63,6 @@ extern "C" {
 #define _LOW                                    0U
 #define _HIGH                                   1U
 
-/** PIN control macros */
-#define GPIO_SET_PIN(name)                      if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BSRR |= _CONCAT(_BM_, name);}
-#define GPIO_CLEAR_PIN(name)                    if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BRR  |= _CONCAT(_BM_, name);}
-#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_CONCAT(_GPIO_, name))->IDR & _CONCAT(_BM_, name))
-#define GPIO_PIN_PORT(name)                     ((GPIO_t*)_CONCAT(_GPIO_, name))
-#define GPIO_PIN_MASK(name)                     (_CONCAT(_BM_, name))
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/

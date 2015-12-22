@@ -108,7 +108,7 @@
  * lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
  * byte alignment -> define MEM_ALIGNMENT to 2.
  */
-#define MEM_ALIGNMENT                           CONFIG_HEAP_ALIGN
+#define MEM_ALIGNMENT                           _HEAP_ALIGN_
 
 /**
  * MEMP_SEPARATE_POOLS: if defined to 1, each pool is placed in its own array.
