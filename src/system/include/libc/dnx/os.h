@@ -24,6 +24,11 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup dnx-os-h <dnx/os.h>
+*/
+/**@{*/
+
 #ifndef _OS_H_
 #define _OS_H_
 
@@ -48,6 +53,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/** @brief type */
 typedef _mm_mem_usage_t memstat_t;
 
 /*==============================================================================
@@ -67,24 +73,28 @@ typedef _mm_mem_usage_t memstat_t;
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief u32_t get_free_memory(void)
+ * @brief Function returns an amount of free memory.
+ *
  * The function <b>get_free_memory</b>() return free memory in bytes. This is
  * the total amount of memory which can be used.
  *
  * @param None
  *
- * @errors None
+ * @exception None
  *
  * @return Free memory in bytes.
  *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * printf("Free memory: %d bytes\n", get_free_memory());
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Free memory: %d bytes\n", get_free_memory());
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline u32_t get_free_memory(void)
@@ -420,7 +430,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.7.0";
+        return "1.6.1";
 }
 
 //==============================================================================
@@ -892,6 +902,8 @@ static inline bool detect_kernel_panic(bool showmsg)
         syscall(SYSCALL_KERNELPANICDETECT, &r, &showmsg);
         return r;
 }
+
+/**@}*/
 
 #ifdef __cplusplus
 }
