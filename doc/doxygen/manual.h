@@ -4,8 +4,6 @@ purpose: Main page of the Doxygen manuals
 author:  Daniel Zorychta
 ==============================================================================*/
 /**
-
-
 \mainpage dnx RTOS documentation
 
 <b>Project homepage</b><br>
@@ -28,9 +26,23 @@ kernel, file systems, communication stack, and utility applications).
 \li \subpage page-application
 \li \subpage page-file-systems
 \li \subpage page-modules
-
-
 */
+
+//------------------------------------------------------------------------------
+/**
+\page page-application Application
+
+\section sec-intro Introduction
+In this section are presented libraries that are accessible from users' programs
+(applications).
+
+
+\section sec-user-manual User Manual
+\li \subpage dnx-os-h The dnx RTOS specific functions
+\li \subpage dnx-misc-h The set of helpful macros and functions
+*/
+
+
 /*==============================================================================
   End of file
 ==============================================================================*/

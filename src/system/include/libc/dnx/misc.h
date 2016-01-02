@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Miscancellous
+@brief   Miscellaneous
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 

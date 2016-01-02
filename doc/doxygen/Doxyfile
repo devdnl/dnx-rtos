@@ -745,7 +745,6 @@ WARN_LOGFILE           =
 
 INPUT                  = " ." \
                          manual.h \
-                         application.h \
                          ../../src/system/include/libc/dnx/os.h \
                          ../../src/system/include/libc/dnx/misc.h
 
