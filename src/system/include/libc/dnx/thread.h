@@ -24,6 +24,16 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup dnx-thread-h <dnx/thread.h>
+
+The library is used to control thread functionality. There are functions that
+creates mutex, semaphore, queue, and other objects that are related with
+threads.
+
+*/
+/**@{*/
+
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
@@ -44,11 +54,31 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifdef DOXYGEN
+/**
+ * @brief Process attributes
+ *
+ * The type is used to configure process settings.
+ */
+typedef struct {
+        FILE       *f_stdin;            //!< stdin  file object pointer (major)
+        FILE       *f_stdout;           //!< stdout file object pointer (major)
+        FILE       *f_stderr;           //!< stderr file object pointer (major)
+        const char *p_stdin;            //!< stdin  file path (minor)
+        const char *p_stdout;           //!< stdout file path (minor)
+        const char *p_stderr;           //!< stderr file path (minor)
+        const char *cwd;                //!< working directory path
+        i16_t       priority;           //!< process priority
+        bool        has_parent;         //!< parent exist and is waiting for this process
+} process_attr_t;
+#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#ifndef DOXYGEN
 extern int _errno;
+#endif
 
 /*==============================================================================
   Exported functions
@@ -60,8 +90,9 @@ extern int _errno;
 
 //==============================================================================
 /**
- * @brief pid_t process_new(const char *cmd, const process_attr_t *attr)
- * The function <b>process_new</b>() create new process according to command
+ * @brief Function creates new process.
+ *
+ * The function <b>process_create</b>() create new process according to command
  * pointed by <i>cmd</i> and attributes pointed by <i>attr</i>. Attributes
  * can be NULL what means that default setting will be applied. Command field
  * is mandatory.
@@ -69,40 +100,46 @@ extern int _errno;
  * @param cmd           program name and argument list
  * @param attr          process attributes
  *
- * @errors ENOMEM, EINVAL, ENOENT
+ * @exception ENOMEM    not enough free memory to allocate process
+ * @exception EINVAL    invalid argument or structure given
+ * @exception ENOENT    command does not exists
  *
- * @return On success, return process ID (PID), otherwise 0.
+ * @return On success return process ID (PID), otherwise 0.
  *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * errno = 0;
- *
- * static const process_attr_t attr = {
- *         .f_stdin   = stdin,
- *         .f_stdout  = stdout,
- *         .f_stderr  = stderr,
- *         .p_stdin   = NULL,
- *         .p_stdout  = NULL,
- *         .p_stderr  = NULL,
- *         .no_parent = false
- * }
- *
- * pid_t pid = process_create("ls /", &attr);
- * if (pid) {
- *         process_wait(pid, MAX_DELAY_MS);
- *
- *         int exit_code = 0;
- *         process_delete(pid, &exit_code);
- * } else {
- *         perror("Program not started");
- *
- *         // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        static const process_attr_t attr = {
+                .f_stdin   = stdin,
+                .f_stdout  = stdout,
+                .f_stderr  = stderr,
+                .p_stdin   = NULL,
+                .p_stdout  = NULL,
+                .p_stderr  = NULL,
+                .no_parent = false
+        }
+
+        pid_t pid = process_create("ls /", &attr);
+        if (pid) {
+                process_wait(pid, MAX_DELAY_MS);
+
+                int exit_code = 0;
+                process_delete(pid, &exit_code);
+        } else {
+                perror("Program not started");
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
@@ -1668,6 +1705,8 @@ static inline int queue_get_space_available(queue_t *queue)
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _THREAD_H_ */
 /*==============================================================================

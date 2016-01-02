@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Miscellaneous
+@brief   Miscellaneous macros and functions
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -48,154 +48,236 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief ARRAY_SIZE(array)
- * The macro <b>ARRAY_SIZE</b>() calculate size of an array <i>array</i>.
+ * @brief Macro calculate numbers of items of selected array.
+ *
+ * The macro <b>ARRAY_SIZE</b>() calculate number of items of array <i>array</i>.
+ * The type of calculated value is size_t.
  *
  * @param array     array name
- *
- * @errors None
  *
  * @return Array size (number of elements).
  *
- * example
- * // ...
- *
- * int buf[100];
- * for (int i = 0; i < ARRAY_SIZE(buf); i++) {
- *         // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        int buf[100];
+        for (int i = 0; i < ARRAY_SIZE(buf); i++) {
+                // ...
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof(array[0]))
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 //==============================================================================
 /**
- * @brief ARRAY_ITEM_SIZE(array)
- * The macro <b>ARRAY_ITEM_SIZE</b>() calculate size of an array <i>array</i>
- * element.
+ * @brief Macro calculate size of item of selected array.
+ *
+ * The macro <b>ARRAY_ITEM_SIZE</b>() calculate size of item of selected array
+ * <i>array</i>
  *
  * @param array     array name
  *
- * @errors None
- *
  * @return Item size of array <i>array</i>.
  *
- * @example
- * // ...
- *
- * int buf[100];
- * printf("Item size: %d", ARRAY_ITEM_SIZE(buf));
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        int buf[100];
+        printf("Item size: %d", ARRAY_ITEM_SIZE(buf));
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #define ARRAY_ITEM_SIZE(array) (sizeof(array[0]))
 
 //==============================================================================
 /**
- * @brief UNUSED_ARGx(argument)
+ * @brief Macro family that disables warning of unused argument or variable.
+ *
  * The macro <b>UNUSED_ARGx</b>() disable compiler warning if argument
- * <i>argument</i> is not used.
+ * <i>args</i> is not used, where <i>x</i> is number of arguments that are
+ * disabled in range of 1 to 8.
  *
- * @param argument  argument
+ * @param args  arguments
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void some_function(int a, int b)
- * {
- *         UNUSED_ARG1(b);
- *
- *         printf("%d", a);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        void some_function(int a, int b)
+        {
+                UNUSED_ARG1(b);
+
+                printf("%d", a);
+
+                UNUSED_ARG2(a, b);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
+#ifdef DOXYGEN
+#define UNUSED_ARGx(args)
+#else
 // defined in <lib/unarg.h>
+#endif
 
 //==============================================================================
 /**
- * @brief FIRST_CHARACTER(char__pstr)
+ * @brief Macro returns first character of string.
+ *
  * The macro <b>FIRST_CHARACTER</b>() return the first character of string.
  *
  * @param char__pstr    string
  *
- * @errors None
- *
  * @return Returns the first character of string.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        const char *str = "foo bar";
+
+        if (FIRST_CHARACTER(str) == 'f') {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
  *
- * const char *str = "foo bar";
- *
- * if (FIRST_CHARACTER(str) == 'f') {
- *         // ...
- * } else {
- *         // ...
- * }
- *
- * // ...
+ * @see strfch()
  */
 //==============================================================================
 #define FIRST_CHARACTER(char__pstr) (char__pstr)[0]
+
+//==============================================================================
+/**
+ * @brief Macro returns first character of string.
+ *
+ * The macro <b>strfch</b>() return the first character of string.
+ *
+ * @param char__pstr    string
+ *
+ * @return Returns the first character of string.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        const char *str = "foo bar";
+
+        if (strfch(str) == 'f') {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see FIRST_CHARACTER()
+ */
+//==============================================================================
 #define strfch(char__pstr) FIRST_CHARACTER(char__pstr)
 
 //==============================================================================
 /**
- * @brief LAST_CHARACTER(char__pstr)
+ * @brief Macro returns last character of string.
+ *
  * The macro <b>LAST_CHARACTER</b>() return the last character of string.
  *
  * @param char__pstr    string
  *
- * @errors None
- *
  * @return Returns the last character of string.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        const char *str = "foo bar";
+
+        if (LAST_CHARACTER(str) == 'r') {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
  *
- * const char *str = "foo bar";
- *
- * if (LAST_CHARACTER(str) == 'r') {
- *         // ...
- * } else {
- *         // ...
- * }
- *
- * // ...
+ * @see strlch()
  */
 //==============================================================================
 #define LAST_CHARACTER(char__pstr) (char__pstr)[strlen((char__pstr)) - 1]
+
+//==============================================================================
+/**
+ * @brief Macro returns last character of string.
+ *
+ * The macro <b>strlch</b>() return the last character of string.
+ *
+ * @param char__pstr    string
+ *
+ * @return Returns the last character of string.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        const char *str = "foo bar";
+
+        if (strlch(str) == 'r') {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see LAST_CHARACTER()
+ */
+//==============================================================================
 #define strlch(char__pstr) LAST_CHARACTER(char__pstr)
 
 //==============================================================================
 /**
- * @brief min(a, b)
+ * @brief Macro returns minimal value of given values.
+ *
  * The macro <b>min()</b> compares variables <i>a</i> and <i>b</i> and returns
- * the smaller value. Use this macro with caution because of side effects
+ * the smaller value.
+ *
+ * @warning Use this macro with caution because of side effects
  * possibility (e.g. by using increment or decrement instructions).
  *
  * @param a             variable a
  * @param b             variable b
  *
- * @errors None
- *
  * @return The smaller value.
  *
- * @example
- * // ...
- *
- * printf("%d\n", min(5, 6)); // prints 5
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        printf("%d\n", min(5, 6)); // prints 5
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #ifndef min
@@ -204,24 +286,28 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief max(a, b)
+ * @brief Macro returns maximum value of given values.
+ *
  * The macro <b>max()</b> compares variables <i>a</i> and <i>b</i> and returns
- * the higher value. Use this macro with caution because of side effects
+ * the higher value.
+ *
+ * @warning Use this macro with caution because of side effects
  * possibility (e.g. by using increment or decrement instructions).
  *
  * @param a             variable a
  * @param b             variable b
  *
- * @errors None
- *
  * @return The higher value.
  *
- * @example
- * // ...
- *
- * printf("%d\n", max(5, 6)); // prints 6
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        printf("%d\n", max(5, 6)); // prints 6
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #ifndef max
@@ -230,115 +316,119 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief isstreq(_stra, _strb)
+ * @brief Macro compares two strings.
+ *
  * The macro <b>isstreq()</b> compares string <i>_stra</i> and <i>_strb</i> and
- * returns true or false depending on compare result (true if equal).
+ * returns \b true or \b false depending on compare result (true if equal).
  *
  * @param _stra         string a
  * @param _strb         string b
  *
- * @errors None
- *
  * @return If strings are equal then true is returned, otherwise false.
  *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * const char *str1 = "str1";
- * const char *str2 = "str2";
- *
- * if (isstreq(str1, str2)) {
- *      puts("Strings are equal");
- * } else {
- *      puts("Strings are not equal");
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        const char *str1 = "str1";
+        const char *str2 = "str2";
+
+        if (isstreq(str1, str2)) {
+             puts("Strings are equal");
+        } else {
+             puts("Strings are not equal");
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #define isstreq(_stra, _strb) (strcmp(_stra, _strb) == 0)
 
 //==============================================================================
 /**
- * @brief isstreqn(_stra, _strb, _n)
+ * @brief Macro compares two strings with limited size.
+ *
  * The macro <b>isstreqn()</b> compares string <i>_stra</i> and <i>_strb</i> and
- * returns true or false depending on compare result (true if equal). User
+ * returns \b true or \b false depending on compare result (true if equal). User
  * determines size of strings to compare.
  *
  * @param _stra         string a
  * @param _strb         string b
  * @param _n            string length
  *
- * @errors None
+ * @return If strings are equal then \b true is returned, otherwise \b false.
  *
- * @return If strings are equal then true is returned, otherwise false.
- *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * const char *str1 = "str1";
- * const char *str2 = "str2";
- *
- * if (isstreqn(str1, str2, 3)) {
- *      puts("Strings are equal");
- * } else {
- *      puts("Strings are not equal");
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        const char *str1 = "str1";
+        const char *str2 = "str2";
+
+        if (isstreqn(str1, str2, 3)) {
+             puts("Strings are equal");
+        } else {
+             puts("Strings are not equal");
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #define isstreqn(_stra, _strb, _n) (strncmp(_stra, _strb, _n) == 0)
 
 //==============================================================================
 /**
- * @brief strsize(_str)
+ * @brief Macro returns string size (with nul terminator).
+ *
  * The macro <b>strsize()</b> returns total size of string (with \0 terminator).
  * Function is helpful when user allocate new string in memory.
  *
  * @param _str          string
  *
- * @errors None
+ * @return String size.
  *
- * @return If strings are equal then true is returned, otherwise false.
- *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * char *str = malloc(strsize("My string"));
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        char *str = malloc(strsize("My string"));
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #define strsize(_str) (strlen(_str) + 1)
 
 //==============================================================================
 /**
- * @brief and
+ * @brief Macro is alias of logical \b AND operator: &&
+ *
  * The macro <b>and</b> is an logical AND (&&) in C++11 style.
  *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * if (1 == 1 and 2 == 2) {
- *      // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        if (1 == 1 and 2 == 2) {
+             // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -347,25 +437,23 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief or
+ * @brief Macro is alias of logical \b OR operator: ||
+ *
  * The macro <b>or</b> is an logical OR (||) in C++11 style.
  *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * if (1 == 1 or 2 == 2) {
- *      // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        if (1 == 1 or 2 == 2) {
+             // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -374,25 +462,23 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief not
+ * @brief Macro is alias of logical \b NOT operator: !
+ *
  * The macro <b>not</b> is an logical NOT (!) in C++11 style.
  *
- * @param None
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * #include <dnx/misc.h>
- *
- * if (not (1 == 1 and 2 == 2)) {
- *      // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        if (not (1 == 1 and 2 == 2)) {
+             // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 #ifndef __cplusplus

@@ -24,6 +24,12 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup dnx-net-h <dnx/net.h>
+\todo Network library
+*/
+/**@{*/
+
 #ifndef _DNX_NET_H_
 #define _DNX_NET_H_
 
@@ -2880,6 +2886,8 @@ extern "C" {
 //#define NETCONN_LISTEN
 //#define NETCONN_CONNECT
 //#define NETCONN_CLOSE
+
+/**@}*/
 
 #ifdef __cplusplus
 }
