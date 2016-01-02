@@ -53,8 +53,23 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** @brief type */
+#ifdef DOXYGEN
+/**
+ * @brief Memory usage details
+ *
+ * The type contains details of dynamic and static memory usage
+ */
+typedef struct {
+        i32_t static_memory_usage;      //!< The amount of memory that is used statically at build time
+        i32_t kernel_memory_usage;      //!< The amount of memory used by kernel
+        i32_t filesystems_memory_usage; //!< The amount of memory used by file systems
+        i32_t network_memory_usage;     //!< The amount of memory used by network subsystem
+        i32_t modules_memory_usage;     //!< The amount of memory used by modules (drivers)
+        i32_t programs_memory_usage;    //!< The amount of memory used by users' programs (applications)
+} memstat_t;
+#else
 typedef _mm_mem_usage_t memstat_t;
+#endif
 
 /*==============================================================================
   Exported object declarations

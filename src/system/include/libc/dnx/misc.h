@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Miscancellous
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,6 +23,11 @@
 
 
 *//*==========================================================================*/
+
+/**
+\defgroup dnx-misc-h <dnx/misc.h>
+*/
+/**@{*/
 
 #ifndef _MISC_H_
 #define _MISC_H_
@@ -52,7 +57,7 @@ extern "C" {
  *
  * @return Array size (number of elements).
  *
- * @example
+ * example
  * // ...
  *
  * int buf[100];
@@ -409,6 +414,8 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+
+/**@}*/
 
 #ifdef __cplusplus
 }

@@ -14,8 +14,8 @@ In this section are presented libraries that are accessible from users' programs
 
 
 \section sec-user-manual User Manual
-\li \subpage dnx-os-h
-\li \subpage page-os-x
+\li \subpage dnx-os-h The dnx RTOS specific functions
+\li \subpage dnx-misc-h The set of helpful macros and functions
 
 
 */
