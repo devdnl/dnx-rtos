@@ -71,6 +71,53 @@ typedef struct {
         i16_t       priority;           //!< process priority
         bool        has_parent;         //!< parent exist and is waiting for this process
 } process_attr_t;
+
+/**
+ * @brief Process ID
+ *
+ * The type represent process number.
+ */
+typedef u32_t pid_t;
+
+/**
+ * @brief Process statistics container.
+ *
+ * The type represent process statistics.
+ */
+typedef struct {
+        const char *name;               //!< process name
+        pid_t       pid;                //!< process ID
+        size_t      memory_usage;       //!< memory usage (allocated by process)
+        u16_t       memory_block_count; //!< number of used memory blocks
+        u16_t       files_count;        //!< number of opened files
+        u16_t       dir_count;          //!< number of opened directories
+        u16_t       mutexes_count;      //!< number of used mutexes
+        u16_t       semaphores_count;   //!< number of used sempahores
+        u16_t       queue_count;        //!< number of used queues
+        u16_t       socket_count;       //!< number of used sockets
+        u16_t       threads_count;      //!< number of threads
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        bool        zombie;             //!< process finished and wait for destory
+} process_stat_t;
+
+/**
+ * @brief Thread function pointer
+ */
+typedef void (*thread_func_t)(void *arg);
+
+/**
+ * @brief Thread attributes type
+ *
+ * The type represent thread attributes that configures thread settings.
+ */
+typedef struct {
+        size_t stack_depth;             //!< stack depth
+        i16_t  priority;                //!< thread priority
+} thread_attr_t;
+
 #endif
 
 /*==============================================================================
@@ -140,6 +187,8 @@ extern int _errno;
         // ...
 
    @endcode
+ *
+ * @see process_kill()
  */
 //==============================================================================
 static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
@@ -151,47 +200,54 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 
 //==============================================================================
 /**
- * @brief int process_kill(pid_t pid, int *status)
+ * @brief Function kill selected process and return status.
+ *
  * The function <b>process_kill</b>() delete running or closed process.
  * Function return process exit code pointed by <i>status</i>.
  *
  * @param pid                   process ID
  * @param status                child process exit status (it can be NULL)
  *
- * @errors EINVAL, EAGAIN
+ * @exception EINVAL            invalid value or structure
+ * @exception EAGAIN            try again
  *
  * @return Return 0 on success. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        errno = 0;
+
+        static const process_attr_t attr = {
+                .f_stdin   = stdin,
+                .f_stdout  = stdout,
+                .f_stderr  = stderr,
+                .p_stdin   = NULL,
+                .p_stdout  = NULL,
+                .p_stderr  = NULL,
+                .parent    = true
+        }
+
+        int   status = -1;
+        pid_t pid    = process_create("ls /", &attr);
+        if (pid) {
+                sleep(1); // child execute time
+                process_kill(pid, &status);
+        } else {
+                perror("Program not started");
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
  *
- * // ...
- *
- * errno = 0;
- *
- * static const process_attr_t attr = {
- *         .f_stdin   = stdin,
- *         .f_stdout  = stdout,
- *         .f_stderr  = stderr,
- *         .p_stdin   = NULL,
- *         .p_stdout  = NULL,
- *         .p_stderr  = NULL,
- *         .parent    = true
- * }
- *
- * int   status = -1;
- * pid_t pid    = process_create("ls /", &attr);
- * if (pid) {
- *         sleep(1); // child execute time
- *         process_kill(pid, &status);
- * } else {
- *         perror("Program not started");
- *
- *         // ...
- * }
- *
- * // ...
+ * @see process_create()
  */
 //==============================================================================
 static inline int process_kill(pid_t pid, int *status)
@@ -203,7 +259,8 @@ static inline int process_kill(pid_t pid, int *status)
 
 //==============================================================================
 /**
- * @brief int process_wait(pid_t pid, int *status, const uint timeout)
+ * @brief Function wait for selected process close.
+ *
  * The function <b>process_wait</b>() wait for program close. Function destroy
  * child process when finish successfully at the selected timeout. In case of
  * timeout the process is not destroyed.
@@ -212,39 +269,44 @@ static inline int process_kill(pid_t pid, int *status)
  * @param status                child process exit status (it can be NULL)
  * @param timeout               wait timeout in ms
  *
- * @errors EINVAL, ETIME, ...
+ * @exception EINVAL            invalid argument
+ * @exception ETIME             timeout
+ * @exception ...               other errors
  *
  * @return Return 0 on success. On error -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * #include <dnx/os.h>
- *
- * // ...
- *
- * errno = 0;
- *
- * static const process_attr_t attr = {
- *         .f_stdin   = stdin,
- *         .f_stdout  = stdout,
- *         .f_stderr  = stderr,
- *         .p_stdin   = NULL,
- *         .p_stdout  = NULL,
- *         .p_stderr  = NULL,
- *         .no_parent = false
- * }
- *
- * int   status = -1;
- * pid_t pid    = process_create("ls /", &attr);
- * if (pid) {
- *         process_wait(pid, &status, MAX_DELAY_MS);
- * } else {
- *         perror("Program not started");
- *
- *         // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        errno = 0;
+
+        static const process_attr_t attr = {
+                .f_stdin   = stdin,
+                .f_stdout  = stdout,
+                .f_stderr  = stderr,
+                .p_stdin   = NULL,
+                .p_stdout  = NULL,
+                .p_stderr  = NULL,
+                .no_parent = false
+        }
+
+        int   status = -1;
+        pid_t pid    = process_create("ls /", &attr);
+        if (pid) {
+                process_wait(pid, &status, MAX_DELAY_MS);
+        } else {
+                perror("Program not started");
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int process_wait(pid_t pid, int *status, const uint timeout)
@@ -265,46 +327,35 @@ static inline int process_wait(pid_t pid, int *status, const uint timeout)
 
 //==============================================================================
 /**
- * @brief int process_stat_seek(size_t seek, process_stat_t *stat)
- * The function <b>process_stat_seek</b>() return statistics of next process selected
+ * @brief Function returns statistics of selected process.
+ *
+ * The function <b>process_stat_seek</b>() return statistics of process selected
  * by <i>seek</i>.
- * <pre>
- * typedef struct {
- *         const char *name;
- *         pid_t       pid;
- *         size_t      files_count;
- *         size_t      dir_count;
- *         size_t      mutexes_count;
- *         size_t      semaphores_count;
- *         size_t      queue_count;
- *         size_t      threads_count;
- *         size_t      memory_block_count;
- *         size_t      memory_usage;
- *         size_t      cpu_load_cnt;
- *         size_t      stack_size;
- *         size_t      stack_free;
- * } process_stat_t;
- * </pre>
  *
  * @param seek      process index
  * @param stat      statistics
  *
- * @errors EINVAL, ENOENT, ESRCH
+ * @exception EINVAL            invalid argument
+ * @exception ENOENT            process does not exists
  *
- * @return Return 0 on success. On error, -1 is returned.
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * process_stat_t stat;
- * size_t         seek = 0;
- * while (process_stat_seek(seek++, &stat) == 0) {
- *         printf("Memory usage: %d\n", stat.memory_usage);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        process_stat_t stat;
+        size_t         seek = 0;
+        while (process_stat_seek(seek++, &stat) == 0) {
+                printf("Memory usage: %d\n", stat.memory_usage);
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int process_stat_seek(size_t seek, process_stat_t *stat)
@@ -316,46 +367,34 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 
 //==============================================================================
 /**
- * @brief int process_stat(pid_t pid, process_stat_t *stat)
+ * @brief Function returns statistics of selected process.
+ *
  * The function <b>process_stat</b>() return statistics of selected process
  * by <i>pid</i>.
- * <pre>
- * typedef struct {
- *         const char *name;
- *         pid_t       pid;
- *         size_t      files_count;
- *         size_t      dir_count;
- *         size_t      mutexes_count;
- *         size_t      semaphores_count;
- *         size_t      queue_count;
- *         size_t      threads_count;
- *         size_t      memory_block_count;
- *         size_t      memory_usage;
- *         size_t      cpu_load_cnt;
- *         size_t      stack_size;
- *         size_t      stack_free;
- * } process_stat_t;
- * </pre>
  *
  * @param pid       PID
  * @param stat      statistics
  *
- * @errors EINVAL, ENOENT, ESRCH
+ * @exception EINVAL            invalid argument
+ * @exception ENOENT            process does not exists
  *
  * @return Return 0 on success. On error, -1 is returned.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * process_stat_t stat;
- * pid_t          pid = getpid(); // or process_getpid()
- * process_stat(pid, &stat);
- * printf("Memory usage of this process: %d\n", stat.memory_usage);
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        process_stat_t stat;
+        pid_t          pid = getpid(); // or process_getpid()
+        process_stat(pid, &stat);
+        printf("Memory usage of this process: %d\n", stat.memory_usage);
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int process_stat(pid_t pid, process_stat_t *stat)
@@ -367,24 +406,29 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
 
 //==============================================================================
 /**
- * @brief pid_t process_getpid(void)
+ * @brief Function returns PID of current process.
+ *
  * The function <b>process_getpid</b>() return PID of current process (caller).
  *
  * @param None
  *
- * @errors EINVAL, ENOENT, ESRCH
+ * @exception EINVAL            invalid argument
+ * @exception ENOENT            process does not exists
  *
  * @return Return PID on success. On error, 0 is returned.
  *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * pid_t pid = process_getpid();
- * printf("PID of this process is: %d\n, pid);
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        pid_t pid = process_getpid();
+        printf("PID of this process is: %d\n, (uint)pid);
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline pid_t process_getpid(void)
@@ -396,32 +440,25 @@ static inline pid_t process_getpid(void)
 
 //==============================================================================
 /**
- * @brief int task_get_priority(void)
- * The function <b>task_get_priority</b>() returns priority value of task which
- * calls function.
+ * @brief Function returns priority of current process.
  *
- * @param None
- *
- * @errors None
+ * The function <b>process_get_priority</b>() returns priority value of selected
+ * process.
  *
  * @return Priority value.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
- *
- * task_t *task;
- *
- * void my_task(void *arg)
- * {
- *         if (task_get_priority() < 0) {
- *                 task_set_priority(0);
- *         }
- *
- *         while (true) {
- *                 // task do something
- *         }
- * }
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+
+        // ...
+
+        print("Process priority is: %d\n, (int)process_get_priority(getpid()));
+
+        //...
+
+   @endcode
  */
 //==============================================================================
 static inline int process_get_priority(pid_t pid)
@@ -433,56 +470,54 @@ static inline int process_get_priority(pid_t pid)
 
 //==============================================================================
 /**
- * @brief thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
- * The function <b>thread_new</b>() creates new thread using function pointed
- * by <i>func</i> with stack depth <i>stack_depth</i>. To thread can be passed
- * additional argument pointed by <i>arg</i>. If thread was created then
- * pointer to object is returned, otherwise <b>NULL</b> is returned, and
- * <b>errno</b> set appropriately. Threads are functions which are called as
- * new task and have own stack, but global variables are shared with parent
+ * @brief Function creates new thread of current process.
+ *
+ * The function <b>thread_create</b>() creates new thread using function pointed
+ * by <i>func</i> with attributes pointed by <i>attr</i> and argument pointed
+ * by <i>arg</i>. Threads are functions which are called as
+ * new task and have own stack, but global variables are shared with main
  * thread.
  *
  * @param func          thread function
- * @param stack_depth   stack depth
- * @param arg           thread argument
+ * @param attr          thread attributes (can be NULL)
+ * @param arg           thread argument (can be NULL)
  *
- * @errors EINVAL, ENOMEM,
+ * @exception EINVAL    invalid argument
+ * @exception ENOMEM    not enough free memory to create thread
  *
- * @return If thread was created then pointer to object is returned, otherwise
- * <b>NULL</b> is returned, and <b>errno</b> set appropriately.
+ * @return On success return thread ID (TID), otherwise 0,
+ * and <b>errno</b> is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
- *         if (thread) {
- *                 // some code ...
- *
- *                 while (!thread_is_finished(thread)) {
- *                         sleep_ms(1);
- *                 }
- *
- *                 thread_delete(thread);
- *         } else {
- *                 perror("Thread error");
- *         }
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        void thread(void *arg)
+        {
+                // ...
+
+                // thread function exit without any function,
+                // or just by return
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
