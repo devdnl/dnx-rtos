@@ -46,7 +46,8 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage sys-endian-h Endianness
 \li \subpage sys-ioctl-h IO control library
 \li \subpage sys-mount-h Library contains functions for file systems mount and drivers initialization
-\li \subpage sys-stat-h Library contains functions for nodes create and statistics
+\li \subpage sys-stat-h Library contains functions for nodes create and information
+\li \subpage sys-statfs-h File systems information
 
 \section sec-app-example Example application
 \todo Example application
