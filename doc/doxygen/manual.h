@@ -50,6 +50,7 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage sys-statfs-h File systems information
 \li \subpage sys-types-h System types
 \li \subpage assert-h Program assertion macro
+\li \subpage dirent-h Directory handling
 
 \section sec-app-example Example application
 \todo Example application

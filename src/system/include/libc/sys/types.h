@@ -182,6 +182,7 @@ typedef enum tfile {
         FILE_TYPE_PIPE          //!< FIFO file
 } tfile_t;
 
+#ifndef DOXYGEN // Doxygen documentation inserted in dirent.h file
 /** @brief Directory entry. */
 typedef struct dirent {
         char   *name;           //!< File name
@@ -189,6 +190,7 @@ typedef struct dirent {
         tfile_t filetype;       //!< File type
         dev_t   dev;            //!< Device address (if file type is driver)
 } dirent_t;
+#endif
 
 /** @brief File information. */
 struct stat {
