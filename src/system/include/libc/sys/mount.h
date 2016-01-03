@@ -24,6 +24,14 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup sys-mount-h <sys/mount.h>
+
+The library is used to control file systems mounting and drivers initialization.
+
+*/
+/**@{*/
+
 #ifndef _MOUNT_H_
 #define _MOUNT_H_
 
@@ -43,6 +51,14 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#if DOXYGEN
+/**
+ * @brief Device identifier
+ *
+ * The type represents device ID (address of module and particular device).
+ */
+typedef i32_t dev_t;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -57,98 +73,115 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int mount(const char *FS_name, const char *src_path, const char *mount_point)
+ * @brief Function mount selected file system to selected path.
+ *
  * The <b>mount</b>() function mounts file system name pointed by <i>FS_name</i>
  * from source file pointed by <i>src_path</i> to mount directory pointed by
  * <i>mount_point</i>.<p>
  *
- * File system name and driver must exist in system to use it. If file system
- * not require to use source file (e.g. procfs, lfs, devfs) then <i>src_path</i>
- * shall be an empty string (<i>""</i>).
+ * File system name and source stream must exist in system to use it. If file
+ * system not requires to use source file (e.g. procfs, ramfs, devfs) then
+ * <i>src_path</i> shall be an empty string (<i>""</i>).
  *
  * @param FS_name       file system name
  * @param src_path      file system source file (e.g. /dev/sda1)
  * @param mount_point   file system mount directory
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception ANY       device can return any type of error
  *
  * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        mkdir("/sdcard", 0666);
+
+        errno = 0;
+        if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
+                // file system mounted ...
+
+        } else {
+                // file system not mounted
+                perror("Mount failure");
+        }
+
+        // ...
+
+   @endcode
  *
- * mkdir("/sdcard", 0666);
- * errno = 0;
- * if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
- *         // file system mounted ...
- *
- * } else {
- *         // file system not mounted
- *         perror("Mount failure");
- * }
- *
- * // ...
+ * @see umount()
  */
 //==============================================================================
 static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int umount(const char *mount_point)
- * The <b>umount<b>() function unmount file system localized in path pointed by
+ * @brief Function unmount earlier mounted file system.
+ *
+ * The <b>umount</b>() function unmount file system localized in path pointed by
  * <i>mount_point</i>. To unmount file system, all files of unmounting file
  * system shall be closed.
  *
- * @param seconds   number of seconds to sleep
+ * @param mount_point   mount point directory
  *
- * @errors EINVAL, EBUSY
+ * @exception EINVAL    invalid argument
+ * @exception EBUSY     file system is busy
  *
  * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        mkdir("/sdcard", 0666);
+
+        errno = 0;
+        if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
+                // file system mounted ...
+
+                // operations on file system ...
+
+                if (umount("/sdcard") == 0) {
+                        // ...
+
+                } else {
+                        perror("Unmount failure");
+                }
+        } else {
+                // file system not mounted
+                perror("Mount failure");
+        }
+
+        // ...
+
+   @endcode
  *
- * mkdir("/sdcard", 0666);
- * errno = 0;
- * if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
- *         // file system mounted ...
- *         // operations on file system ...
- *
- *         if (umount("/sdcard") == 0) {
- *                 // ...
- *
- *         } else {
- *                 perror("Unmount failure");
- *         }
- * } else {
- *         // file system not mounted
- *         perror("Mount failure");
- * }
- *
- * // ...
+ * @see mount()
  */
 //==============================================================================
 static inline int umount(const char *mount_point)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_UMOUNT, &r, mount_point);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
- * The <b>driver_init<b>() function initialize driver pointed by <i>mod_name</i>
+ * @brief Function initializes driver.
+ *
+ * The <b>driver_init</b>() function initialize driver pointed by <i>mod_name</i>
  * and create file node pointed by <i>node_path</i>. If there is no need to
  * create node, then <i>node_path</i> can be <b>NULL</b>. Node can be created
- * later using <b>mknod</b>() function.<p>
+ * later by using <b>mknod</b>() function.
  *
  * Driver must exist in system to perform initialization. Driver's nodes can
  * be created only on file system which support it.
@@ -158,55 +191,69 @@ static inline int umount(const char *mount_point)
  * @param minor         minor driver number
  * @param node_path     path where driver node should be created (or NULL)
  *
- * @errors EINVAL, ENOMEM, EADDRINUSE
+ * @exception EINVAL            invalid argument
+ * @exception ENOMEM            not enough free memory to initialize driver
+ * @exception EADDRINUSE        driver is already initialized
  *
- * @return On success, driver ID is returned. On error, -1 is returned, and
+ * @return On success, driver ID is returned. On error, \b -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        driver_init("UART", 0, 0, "/dev/uart0");   // UART0 as /dev/uart0
+        driver_init("AFIO", 0, 0, NULL);           // driver without node
+
+        // ...
+
+   @endcode
  *
- * driver_init("UART", 0, 0, "/dev/uart0");   // UART0 as /dev/uart0
- * driver_init("AFIO", 0, 0, NULL);           // driver without node
- *
- * // ...
+ * @see driver_release()
  */
 //==============================================================================
 static inline dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
 {
-        dev_t r;
+        dev_t r = -1;
         syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor, node_path);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int driver_release(const char *mod_name, int major, int minor)
- * The <b>driver_release<b>() function release driver pointed by <i>mod_name</i>.
+ * @brief Function releases selected driver.
+ *
+ * The <b>driver_release</b>() function release driver pointed by <i>mod_name</i>.
  * If driver was released when node is created and pointed to driver then
- * node is node removed. From this time, device node is pointing to not
- * existing (initialized) device, resulting that user can't access to file.
+ * node is not removed. From this time, device node is pointing to not
+ * existing (initialized) device, resulting that user can't access to the file.
  *
  * @param mod_name      driver_name
  * @param major         major driver number
  * @param minor         minor driver number
  *
- * @errors EINVAL, ...
+ * @exception EINVAL    invalid argument
+ * @exception ...       other errors depends on driver
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        driver_release("UART", 0, 0);
+
+        // ...
+
+   @endcode
  *
- * driver_release("/dev/crc");
- *
- * // ...
+ * @see driver_init()
  */
 //==============================================================================
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
         return r;
 }
@@ -214,6 +261,8 @@ static inline int driver_release(const char *mod_name, int major, int minor)
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _MOUNT_H_ */
 /*==============================================================================

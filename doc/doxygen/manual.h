@@ -45,6 +45,7 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage dnx-vt100-h VT100 terminal handling
 \li \subpage sys-endian-h Endianness
 \li \subpage sys-ioctl-h IO control library
+\li \subpage sys-mount-h Library contains functions for file systems mount and drivers initialization
 
 */
 
