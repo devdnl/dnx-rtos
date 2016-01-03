@@ -73,20 +73,6 @@ typedef struct {
 } process_attr_t;
 
 /**
- * @brief Process ID
- *
- * The type represent process number.
- */
-typedef u32_t pid_t;
-
-/**
- * @brief Thread ID
- *
- * The type represent thread number.
- */
-typedef u32_t tid_t;
-
-/**
  * @brief Semaphore object
  *
  * The type represent semaphore object. Fields are private.

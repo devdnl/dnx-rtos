@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   System types.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,6 +23,14 @@
 
 
 *//*==========================================================================*/
+
+/**
+\defgroup sys-types-h <sys/types.h>
+
+The library contains system types.
+
+*/
+/**@{*/
 
 #ifndef _TYPES_H_
 #define _TYPES_H_
@@ -44,114 +52,165 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** short name types */
-typedef uint8_t         u8_t;
-typedef int8_t          i8_t;
-typedef uint16_t        u16_t;
-typedef int16_t         i16_t;
-typedef uint32_t        u32_t;
-typedef int32_t         i32_t;
-typedef uint64_t        u64_t;
-typedef int64_t         i64_t;
-typedef unsigned int    uint;
-typedef unsigned long   ulong;
+/** @brief Short version of uint8_t type. */
+typedef uint8_t u8_t;
 
-/* special types */
-typedef uint64_t        fpos_t;
-typedef int             ssize_t;
+/** @brief Short version of int8_t type. */
+typedef int8_t i8_t;
 
-/** file descriptor */
+/** @brief Short version of uint16_t type. */
+typedef uint16_t u16_t;
+
+/** @brief Short version of int16_t type. */
+typedef int16_t i16_t;
+
+/** @brief Short version of uint32_t type. */
+typedef uint32_t u32_t;
+
+/** @brief Short version of int32_t type. */
+typedef int32_t i32_t;
+
+/** @brief Short version of uint64_t type. */
+typedef uint64_t u64_t;
+
+/** @brief Short version of int64_t type. */
+typedef int64_t i64_t;
+
+/** @brief Short version of unsigned int type. */
+typedef unsigned int uint;
+
+/** @brief Short version of unsigned long type. */
+typedef unsigned long ulong;
+
+/** @brief File position type. */
+typedef uint64_t fpos_t;
+
+/** @brief Size type with negative values. */
+typedef int ssize_t;
+
+/** @brief File descriptor. */
 typedef uint fd_t;
 
-/** file mode */
+/**
+ * @brief File mode.
+ * @see S_IRUSR
+ * @see S_IWUSR
+ * @see S_IXUSR
+ * @see S_IRGRO
+ * @see S_IWGRO
+ * @see S_IXGRO
+ * @see S_IROTH
+ * @see S_IWOTH
+ * @see S_IXOTH
+ */
 typedef int mode_t;
 
-/** user ID */
+/** @brief User ID. */
 typedef int uid_t;
 
-/** group ID */
+/** @brief Group ID. */
 typedef int gid_t;
 
-/** process ID */
+/**
+ * @brief Process ID.
+ *
+ * The type represent process number.
+ */
 typedef u32_t pid_t;
 
-/** thread ID */
+/**
+ * @brief Thread ID.
+ *
+ * The type represent thread number.
+ */
 typedef u32_t tid_t;
 
-/** device ID [15b module ID + 8b major + 8b minor] */
+/**
+ * @brief Device identifier.
+ *
+ * The type represents device ID (address of module and particular device). @n
+ * Bit reservation: 15b module ID + 8b major + 8b minor. @n
+ * Negative values means that device identifier is broken.
+ */
 typedef i32_t dev_t;
 
-/** time type */
+/** @brief Time representation type. */
 struct tm {
-        int tm_sec;       //!> seconds after the minute        0-60*
-        int tm_min;       //!> minutes after the hour          0-59
-        int tm_hour;      //!> hours since midnight            0-23
-        int tm_mday;      //!> day of the month                1-31
-        int tm_mon;       //!> months since January            0-11
-        int tm_year;      //!> years since                     1900
-        int tm_wday;      //!> days since Sunday               0-6
-        int tm_yday;      //!> days since January 1            0-365
-        int tm_isdst;     //!> Daylight Saving Time flag
-        int tm_isutc;     //!> UTC time flag (dnx extension)
+        int tm_sec;             //!< Seconds after the minute        (0-60*)
+        int tm_min;             //!< Minutes after the hour          (0-59)
+        int tm_hour;            //!< Hours since midnight            (0-23)
+        int tm_mday;            //!< Day of the month                (1-31)
+        int tm_mon;             //!< Months since January            (0-11)
+        int tm_year;            //!< Years since                     (1900)
+        int tm_wday;            //!< Days since Sunday               (0-6)
+        int tm_yday;            //!< Days since January 1            (0-365)
+        int tm_isdst;           //!< Daylight Saving Time flag
+        int tm_isutc;           //!< UTC time flag (dnx RTOS extension)
 };
+#ifndef DOXYGEN
 #define __TM_STRUCT_DEFINED__
+#endif
 
-/** clock type */
+/** @brief Clock representation type. */
 typedef u32_t clock_t;
+#ifndef DOXYGEN
 #define __CLOCK_TYPE_DEFINED__
+#endif
 
-/** time type */
+/** @brief Time representation type. */
 typedef u32_t time_t;
+#ifndef DOXYGEN
 #define __TIME_TYPE_DEFINED__
+#endif
 
-/** structure describing a mount table entry */
+/** @brief Structure that describes a mount table entry. */
 struct mntent {
-        const char *mnt_fsname;         /**< device or server for filesystem */
-        const char *mnt_dir;            /**< directory mounted on            */
-        u64_t       mnt_total;          /**< device total size               */
-        u64_t       mnt_free;           /**< device free                     */
+        const char *mnt_fsname; //!< Device or server for file system
+        const char *mnt_dir;    //!< Directory mounted on
+        u64_t       mnt_total;  //!< Device total size in bytes
+        u64_t       mnt_free;   //!< Device free space in bytes
 };
 
-/** file type */
+/** @brief File type. */
 typedef enum tfile {
-        FILE_TYPE_UNKNOWN,
-        FILE_TYPE_REGULAR,
-        FILE_TYPE_DIR,
-        FILE_TYPE_DRV,
-        FILE_TYPE_LINK,
-        FILE_TYPE_PROGRAM,
-        FILE_TYPE_PIPE
+        FILE_TYPE_UNKNOWN,      //!< Unknown file type
+        FILE_TYPE_REGULAR,      //!< Regular file
+        FILE_TYPE_DIR,          //!< Directory
+        FILE_TYPE_DRV,          //!< Driver node
+        FILE_TYPE_LINK,         //!< Link to other file
+        FILE_TYPE_PROGRAM,      //!< Program binary or link to built-in program
+        FILE_TYPE_PIPE          //!< FIFO file
 } tfile_t;
 
-/** directory entry */
+/** @brief Directory entry. */
 typedef struct dirent {
-        char   *name;
-        u64_t   size;
-        tfile_t filetype;
-        dev_t   dev;
+        char   *name;           //!< File name
+        u64_t   size;           //!< File size in bytes
+        tfile_t filetype;       //!< File type
+        dev_t   dev;            //!< Device address (if file type is driver)
 } dirent_t;
 
-/** file statistics */
+/** @brief File information. */
 struct stat {
-        u64_t   st_size;                /**< total size, in bytes         */
-        u32_t   st_dev;                 /**< ID of device containing file */
-        u32_t   st_mode;                /**< protection                   */
-        u32_t   st_uid;                 /**< user ID of owner             */
-        u32_t   st_gid;                 /**< group ID of owner            */
-        u32_t   st_atime;               /**< time of last access          */
-        u32_t   st_mtime;               /**< time of last modification    */
-        tfile_t st_type;                /**< type of file                 */
+        u64_t   st_size;        //!< Total size, in bytes
+        u32_t   st_dev;         //!< ID of device containing file
+        u32_t   st_mode;        //!< Protection
+        u32_t   st_uid;         //!< User ID of owner
+        u32_t   st_gid;         //!< Group ID of owner
+        u32_t   st_atime;       //!< Time of last access
+        u32_t   st_mtime;       //!< Time of last modification
+        tfile_t st_type;        //!< Type of file
 };
 
 /** file system statistic */
 struct statfs {
-        u32_t       f_type;             /**< file system type       */
-        u32_t       f_bsize;            /**< block size             */
-        u32_t       f_blocks;           /**< total blocks           */
-        u32_t       f_bfree;            /**< free blocks            */
-        u32_t       f_files;            /**< total file nodes in FS */
-        u32_t       f_ffree;            /**< free file nodes in FS  */
-        const char *f_fsname;           /**< FS name                */
+        u32_t       f_type;     //!< File system type
+        u32_t       f_bsize;    //!< Block size
+        u32_t       f_blocks;   //!< Total blocks
+        u32_t       f_bfree;    //!< Free blocks
+        u32_t       f_files;    //!< Total file nodes in file system
+        u32_t       f_ffree;    //!< Free file nodes in file system
+        const char *f_fsname;   //!< File system name
 };
 
 /*==============================================================================
@@ -169,6 +228,8 @@ struct statfs {
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _TYPES_H_ */
 /*==============================================================================

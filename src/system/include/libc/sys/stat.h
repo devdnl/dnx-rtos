@@ -50,6 +50,26 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#ifdef DOXYGEN
+/** @brief Read permission, owner. @see mode_t */
+#define S_IRUSR
+/** @brief Write permission, owner. @see mode_t */
+#define S_IWUSR
+/** @brief Execute permission, owner. @see mode_t */
+#define S_IXUSR
+/** @brief Read permission, group. @see mode_t */
+#define S_IRGRO
+/** @brief Write permission, group. @see mode_t */
+#define S_IWGRO
+/** @brief Execute permission, group. @see mode_t */
+#define S_IXGRO
+/** @brief Read permission, others. @see mode_t */
+#define S_IROTH
+/** @brief Write permission, others. @see mode_t */
+#define S_IWOTH
+/** @brief Execute permission, others. @see mode_t */
+#define S_IXOTH
+#endif
 
 /*==============================================================================
   Exported object types

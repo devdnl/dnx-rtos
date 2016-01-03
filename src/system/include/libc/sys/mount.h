@@ -51,14 +51,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-#if DOXYGEN
-/**
- * @brief Device identifier
- *
- * The type represents device ID (address of module and particular device).
- */
-typedef i32_t dev_t;
-#endif
 
 /*==============================================================================
   Exported objects

@@ -116,6 +116,8 @@ static inline int statfs(const char *path, struct statfs *statfs)
 }
 #endif
 
+/**@}*/
+
 #endif /* _STATFS_H_ */
 /*==============================================================================
   End of file
