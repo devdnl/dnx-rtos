@@ -511,7 +511,7 @@ int _semaphore_destroy(sem_t *sem)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_wait(sem_t *sem, const uint blocktime_ms)
+int _semaphore_wait(sem_t *sem, const u32_t blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
                 bool r = xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
@@ -660,7 +660,7 @@ int _mutex_destroy(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
+int _mutex_lock(mutex_t *mutex, const u32_t blocktime_ms)
 {
         if (is_mutex_valid(mutex)) {
                 bool status;
@@ -784,7 +784,7 @@ int _queue_reset(queue_t *queue)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
+int _queue_send(queue_t *queue, const void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueueSend(queue->object, item, MS2TICK((TickType_t)waittime_ms));
@@ -832,7 +832,7 @@ int _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
+int _queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
@@ -880,7 +880,7 @@ int _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
+int _queue_receive_peek(queue_t *queue, void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueuePeek(queue->object, item, MS2TICK((TickType_t)waittime_ms));
