@@ -163,6 +163,7 @@ typedef u32_t time_t;
 #define __TIME_TYPE_DEFINED__
 #endif
 
+#ifndef DOXYGEN // Doxygen documentation added to mntent.h file
 /** @brief Structure that describes a mount table entry. */
 struct mntent {
         const char *mnt_fsname; //!< Device or server for file system
@@ -170,6 +171,7 @@ struct mntent {
         u64_t       mnt_total;  //!< Device total size in bytes
         u64_t       mnt_free;   //!< Device free space in bytes
 };
+#endif
 
 /** @brief File type. */
 typedef enum tfile {

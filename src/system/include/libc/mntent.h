@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Mount entry information.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,6 +23,14 @@
 
 
 *//*==========================================================================*/
+
+/**
+\defgroup mntent-h <mntent.h>
+
+The library provides information about file system mount entry.
+
+*/
+/**@{*/
 
 #ifndef _MNTENT_H_
 #define _MNTENT_H_
@@ -44,6 +52,15 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifdef DOXYGEN
+/** @brief Structure that describes a mount table entry. */
+struct mntent {
+        const char *mnt_fsname; //!< Device or server for file system
+        const char *mnt_dir;    //!< Directory mounted on
+        u64_t       mnt_total;  //!< Device total size in bytes
+        u64_t       mnt_free;   //!< Device free space in bytes
+};
+#endif
 
 /*==============================================================================
   Exported objects
@@ -58,35 +75,36 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int getmntentry(int seek, struct mntent *mntent)
- * Function return file system describe object.<p>
+ * @brief Function returns next mount entries.
  *
- * <b>mntent</b> structure:
- * <pre>
- * struct mntent {
- *         const char *mnt_fsname;    // device or server for file system
- *         const char *mnt_dir;       // directory mounted on
- *         u64_t       mnt_total;     // device total size
- *         u64_t       mnt_free;      // device free
- * };
- * </pre>
+ * Function returns next file system entry according to file system order
+ * <i>seek</i> (determined on mount time) and write information to mount entry
+ * container pointed by <i>mntent</i>.
  *
- * @param item          n-item to read
- * @param mntent        pointer to mntent object
+ * @param seek          n-item to read
+ * @param mntent        pointer to container
  *
- * @errors EINVAL
+ * @exception EINVAL    invalid argument
+ * @exception ENOENT    no entry
  *
- * @return Returns 0 on success. Returns 1 if all items was read. On error -1 is
- * returned and <b>errno</b> is set appropriately.
+ * @return Returns \b 0 on success. Returns \b 1 if all items was read.
+ * On error \b -1 is returned and <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
- *
- * struct mntent entry;
- * int n = 0;
- * while (getmntentry(i++, &entry) == 0) {
- *        // ...
- * }
+ * @b Example
+ * @code
+        #include <mntent.h>
+
+        // ...
+
+        int i = 0;
+
+        struct mntent entry;
+        while (getmntentry(i++, &entry) == 0) {
+               // ...
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int getmntentry(int seek, struct mntent *mntent)
@@ -99,6 +117,8 @@ static inline int getmntentry(int seek, struct mntent *mntent)
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _MNTENT_H_ */
 /*==============================================================================
