@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file provide assert macro.
+@brief   This file provides assert macro.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,6 +24,14 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup assert-h <assert.h>
+
+The library provides assert macro.
+
+*/
+/**@{*/
+
 #ifndef _ASSERT_H_
 #define _ASSERT_H_
 
@@ -42,23 +50,48 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief assert(ignore)
+ * @brief Macro creates assertion functionality.
+ *
  * Aborts the program if user-defined condition is not <b>true</b>. Macro can be
- * disabled if <b>NDEBUG</b> is defined.
+ * disabled if <b>NDEBUG</b> macro is defined.
  *
  * @param ignore        user-defined condition
  *
- * @example
- * void some_function(int *number)
- * {
- *         assert(number != NULL);
+ * @b Example @b 1
+ * @code
+        #include <assert.h>
+
+        // ...
+
+        void some_function(int *number)
+        {
+                assert(number != NULL);      // pointer to number must be not NULL
+
+                // ...
+        }
+
+        // ...
+   @endcode
  *
- *         // ...
- * }
+ * @b Example @b 2
+ * @code
+         #define NDEBUG
+         #include <assert.h>
+
+         // all assert macros are disabled
+
+         assert(false); // has no effect for program flow
+
+         // ...
+   @endcode
  */
 //==============================================================================
 #if !defined(NDEBUG)
+#   ifdef DOXYGEN
+#       define assert(ignore)
+#   else
 #       define assert(ignore) do{if ((ignore)) break; printf("Assertion failed: %s, file %s, line %d\n", #ignore, __FILE__, __LINE__); abort();}while(0)
+#   endif
 #endif
 
 /*==============================================================================
@@ -73,10 +106,11 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 
-
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _ASSERT_H_ */
 /*==============================================================================
