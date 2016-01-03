@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Standard IO library.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -23,6 +23,14 @@
 
 
 *//*==========================================================================*/
+
+/**
+\defgroup stdio-h <stdio.h>
+
+The library provides general purpose IO functions.
+
+*/
+/**@{*/
 
 #ifndef _STDIO_H_
 #define _STDIO_H_
@@ -45,50 +53,85 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** stdio buffer size */
+/**
+ * @brief Buffer size used in print and scan functions.
+ *
+ * Buffer size is configurable from system configuration.
+ */
 #define BUFSIZ                  __OS_STREAM_BUFFER_LENGTH__
 
-#define _IOFBF                  0               /* setvbuf should set fully buffered */
-#define _IOLBF                  1               /* setvbuf should set line buffered */
-#define _IONBF                  2               /* setvbuf should set unbuffered */
+/** @brief Set stream to fully buffered (compatibility only). @see setvbuf() */
+#define _IOFBF                  0
+
+/** @brief Set stream to line buffered (compatibility only).  @see setvbuf() */
+#define _IOLBF                  1
+
+/** @brief Set stream to unbuffered (compatibility only).  @see setvbuf() */
+#define _IONBF                  2
 
 #ifndef NULL
+/** @brief Zero pointer value. */
 #define NULL                    0
 #endif
 
 #ifndef EOF
+/** @brief End Of File value. */
 #define EOF                     (-1)
 #endif
 
 #ifndef SEEK_SET
+/** @brief Set file position to specified value. @see fseek() */
 #define SEEK_SET                0
 #endif
 
 #ifndef SEEK_CUR
+/** @brief Set file position to current position plus offset. @see fseek() */
 #define SEEK_CUR                1
 #endif
 
 #ifndef SEEK_END
+/** @brief Set file position at the end of file plus offset. @see fseek() */
 #define SEEK_END                2
 #endif
 
+/** @brief Maximum length of file name (compatibility only). */
 #define FILENAME_MAX            255
+
+/** @brief Maximum opened files (compatibility only). */
 #define FOPEN_MAX               255
+
+/** @brief Maximum number of temporary files (compatibility only). */
 #define TMP_MAX                 32
+
+/** @brief Maximum name length of temporary files (compatibility only). */
 #define L_tmpnam                32
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 #ifndef __FILE_TYPE_DEFINED__
-typedef struct vfs_file FILE;
+#   ifdef DOXYGEN
+        /**
+         * @brief File object
+         *
+         * The type represent file object. Fields are private.
+         */
+        typedef struct {} FILE;
+#   else
+        typedef struct vfs_file FILE;
+#   endif
 #endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+/** @brief Standard input file (one for each application) */
 extern FILE *stdin;
+
+/** @brief Standard output file (one for each application) */
 extern FILE *stdout;
+
+/** @brief Standard error file (one for each application) */
 extern FILE *stderr;
 
 /*==============================================================================
@@ -100,7 +143,8 @@ extern FILE *stderr;
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief FILE *fopen(const char *path, const char *mode)
+ * @brief Function opens file.
+ *
  * The <b>fopen</b>() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates a stream with it. The argument <i>mode</i> points
  * to a string beginning with one of the following sequences (possibly followed
@@ -131,23 +175,32 @@ extern FILE *stderr;
  * @param path          path to file
  * @param mode          file open mode
  *
- * @errors EINVAL, ENOMEM, ENOENT
+ * @exception EINVAL    invalid argument
+ * @exception ENOMEM    not enough free memory to open file
+ * @exception EACCES    access denied
+ * @exception EISDIR    file is a directory
+ * @exception ENOENT    no such file or directory
+ * @exception ...       other errors returned by file system
  *
  * @return Upon successful completion <b>fopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
  * error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (!file) {
- *        perror(NULL);
- *        // error handling
- *        // ...
- * }
- *
- * // file handling
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (!file) {
+               perror(NULL);
+               // error handling
+               // ...
+        }
+
+        // file handling
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline FILE *fopen(const char *path, const char *mode)
@@ -159,28 +212,37 @@ static inline FILE *fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
- * @brief int fclose(FILE *file)
+ * @brief Function closes selected file.
+ *
  * The <b>fclose</b>() function closes the created stream <i>file</i>.
  *
  * @param file          file to close
  *
- * @errors EINVAL, ENOENT, ESRCH
+ * @exception EINVAL    invalid argument
+ * @exception ENOENT    no such file or directory
+ * @exception EFAULT    object not exists
+ * @exception ...       other errors returned by file system
  *
- * @return Upon successful completion 0 is returned. Otherwise, <b>EOF</b> is
+ * @return Upon successful completion \b 0 is returned. Otherwise, <b>EOF</b> is
  * returned and <b>errno</b> is set to indicate the error. In either case any
  * further access (including another call to fclose()) to the stream results
  * in undefined behavior.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (!file) {
+               perror(NULL);
+               // error handling
+               // ...
+        }
+
+        // file handling
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fclose(FILE *file)
@@ -192,7 +254,8 @@ static inline int fclose(FILE *file)
 
 //==============================================================================
 /**
- * @brief FILE *freopen(const char *path, const char *mode, FILE *file)
+ * @brief Function reopen already opened file to another.
+ *
  * The <b>freopen</b>() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates the stream pointed to by stream with it. The
  * original stream (if it exists) is closed. The <i>mode</i> argument is used just as
@@ -202,23 +265,35 @@ static inline int fclose(FILE *file)
  * @param mode          file open mode
  * @param file          file to reopen
  *
- * @errors EINVAL, ENOMEM, ENOENT
+ * @exception EINVAL    invalid argument
+ * @exception ENOMEM    not enough free memory to open file
+ * @exception EACCES    access denied
+ * @exception ENOENT    no such file or directory
+ * @exception EFAULT    object not exists
+ * @exception ...       other errors returned by file system
  *
  * @return Upon successful completion <b>freopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
  * error.
  *
- * @example
- * // ...
- * FILE *file = freopen("/foo/bar", "w+", file);
- * if (!file) {
- *        perror(NULL);
- *        // error handling
- *        // ...
- * }
- *
- * // file handling
- * // ...
+ * @b Example
+ * @code
+        // ...
+        FILE *file = fopen("/foo/bar", "r");
+
+        // ...
+
+        file = freopen("/foo/bar", "w+", file);
+        if (!file) {
+               perror(NULL);
+               // error handling
+               // ...
+        }
+
+        // file handling
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline FILE *freopen(const char *path, const char *mode, FILE *file)
@@ -1834,6 +1909,8 @@ extern char *fgets(char *str, int size, FILE *stream);
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _STDIO_H_ */
 /*==============================================================================
