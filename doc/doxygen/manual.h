@@ -44,6 +44,7 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage dnx-thread-h The set of functions for thread handling
 \li \subpage dnx-vt100-h VT100 terminal handling
 \li \subpage sys-endian-h Endianness
+\li \subpage sys-ioctl-h IO control library
 
 */
 
