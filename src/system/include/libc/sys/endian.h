@@ -24,6 +24,14 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup sys-endian-h <sys/endian.h>
+
+The library is used to check CPU endianness.
+
+*/
+/**@{*/
+
 #ifndef _ENDIAN_H_
 #define _ENDIAN_H_
 
@@ -39,8 +47,35 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ * @brief Little endian switch
+ */
 #define LITTLE_ENDIAN           _BYTE_ORDER_LITTLE
+
+/**
+ * @brief Big endian switch
+ */
 #define BIG_ENDIAN              _BYTE_ORDER_BIG
+
+/**
+ * @brief Macro determines current CPU endianness
+ *
+ * Only one of defined byte orders can be used in the same time:
+ * @ref LITTLE_ENDIAN or @ref BIG_ENDIAN.
+ *
+ * @b Example
+ * @code
+         #if BYTE_ORDER == LITTLE_ENDIAN
+                 // code for little endian CPU
+
+         #elif BYTE_ORDER == BIG_ENDIAN
+                 // code for big endian CPU
+
+         #else
+                 #error "Unknown CPU endianness"
+         #endif
+   @endcode
+ */
 #define BYTE_ORDER              _CPUCTL_BYTE_ORDER
 
 /*==============================================================================
@@ -62,6 +97,8 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* _ENDIAN_H_ */
 /*==============================================================================

@@ -43,6 +43,8 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage dnx-os-h The dnx RTOS specific functions
 \li \subpage dnx-thread-h The set of functions for thread handling
 \li \subpage dnx-vt100-h VT100 terminal handling
+\li \subpage sys-endian-h Endianness
+
 */
 
 
