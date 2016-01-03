@@ -32,12 +32,12 @@ kernel, file systems, communication stack, and utility applications).
 /**
 \page page-application Application development
 
-\section sec-intro Introduction
+\section sec-app-intro Introduction
 In this section are presented libraries that are accessible from users' programs
 (applications).
 
 
-\section sec-user-manual Libraries accessible from user space
+\section sec-app-topics Libraries accessible from user space
 \li \subpage dnx-misc-h The set of helpful macros and functions
 \li \subpage dnx-net-h The set of networking functions
 \li \subpage dnx-os-h The dnx RTOS specific functions
@@ -46,9 +46,37 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage sys-endian-h Endianness
 \li \subpage sys-ioctl-h IO control library
 \li \subpage sys-mount-h Library contains functions for file systems mount and drivers initialization
+\li \subpage sys-stat-h Library contains functions for nodes create and statistics
 
+\section sec-app-example Example application
+\todo Example application
 */
 
+//------------------------------------------------------------------------------
+/**
+\page page-file-systems File system development
+
+\section sec-fs-intro Introduction
+In this section are presented libraries and examples that helps user to create
+own file system.
+
+
+\section sec-fs-topics Topics
+\li \subpage
+*/
+
+//------------------------------------------------------------------------------
+/**
+\page page-modules Modules (drivers) development
+
+\section sec-mod-intro Introduction
+In this section are presented libraries and examples that helps user to create
+modules (drivers).
+
+
+\section sec-mod-topics Topics
+\li \subpage
+*/
 
 /*==============================================================================
   End of file
