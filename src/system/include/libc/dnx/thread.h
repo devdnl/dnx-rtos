@@ -80,6 +80,44 @@ typedef struct {
 typedef u32_t pid_t;
 
 /**
+ * @brief Thread ID
+ *
+ * The type represent thread number.
+ */
+typedef u32_t tid_t;
+
+/**
+ * @brief Semaphore object
+ *
+ * The type represent semaphore object. Fields are private.
+ */
+typedef struct {} sem_t;
+
+/**
+ * @brief Mutex object
+ *
+ * The type represent mutex object. Fields are private.
+ */
+typedef struct {} mutex_t;
+
+/**
+ * @brief Mutex type
+ *
+ * The enumerator represent type of mutex object.
+ */
+enum mutex_type {
+        MUTEX_TYPE_RECURSIVE,   //!< recursive mutex
+        MUTEX_TYPE_NORMAL       //!< normal mutex
+};
+
+/**
+ * @brief Queue object
+ *
+ * The type represent queue object. Fields are private.
+ */
+typedef struct {} queue_t;
+
+/**
  * @brief Process statistics container.
  *
  * The type represent process statistics.
@@ -309,7 +347,7 @@ static inline int process_kill(pid_t pid, int *status)
    @endcode
  */
 //==============================================================================
-static inline int process_wait(pid_t pid, int *status, const uint timeout)
+static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
         int r      = -1;
         sem_t *sem = NULL;
@@ -409,8 +447,6 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
  * @brief Function returns PID of current process.
  *
  * The function <b>process_getpid</b>() return PID of current process (caller).
- *
- * @param None
  *
  * @exception EINVAL            invalid argument
  * @exception ENOENT            process does not exists
@@ -529,49 +565,55 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 
 //==============================================================================
 /**
- * @brief int thread_cancel(thread_t *thread)
+ * @brief Function cancel selected thread.
+ *
  * The function <b>thread_cancel</b>() kills running thread <i>tid</i>.
  *
- * @param thread        thread object
+ * @param tid           thread ID
  *
- * @errors EINVAL
+ * @exception EINVAL    invalid argument
  *
- * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
- *
- *         if (thread) {
- *                 // some code ...
- *
- *                 while (thread_cancel(thread) != true) {
- *                         sleep_ms(10);
- *                 }
- *
- *                 thread_delete(thread);
- *         } else {
- *                 perror("Thread error");
- *         }
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        void thread(void *arg)
+        {
+                // ...
+
+                // thread function exit without any function,
+                // or just by return
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                        sleep(1);
+
+                        if (thread_cancel(tid) == 0) {
+                                puts("Thread killed");
+                        } else {
+                                perror("Thread cancel error");
+                        }
+
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int thread_cancel(tid_t tid)
@@ -583,70 +625,57 @@ static inline int thread_cancel(tid_t tid)
 
 //==============================================================================
 /**
- * @brief int thread_join(thread_t *thread)
- * The function <b>thread_join</b>() joins selected thread pointed by
- * <i>thread</i> to parent program. Function wait until thread was closed.
+ * @brief Function join thread to main thread (wait for close).
  *
+ * The function <b>thread_join</b>() joins selected thread <i>tid</i> to parent
+ * program. Function wait until thread was closed.
  *
- * @param thread        thread object
+ * @param tid           thread ID
  *
- * @errors ETIME, EINVAL
+ * @exception EINVAL    invalid argument
+ * @exception ETIME     timeout
  *
- * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <unistd.h>
- *
- * // ...
- *
- * void thread1(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void thread2(void *arg)
- * {
- *         // ...
- *
- *         // thread function exit without any function,
- *         // or just by return
- * }
- *
- * void some_function()
- * {
- *         errno = 0;
- *         thread_t *thread1 = thread_new(thread1, STACK_DEPTH_LOW, NULL);
- *         thread_t *thread2 = thread_new(thread2, STACK_DEPTH_LOW, NULL);
- *
- *         if (thread1 && thread2) {
- *                 // some code ...
- *
- *                 thread_join(thread1);
- *                 thread_join(thread2);
- *
- *                 thread_delete(thread1);
- *                 thread_delete(thread2);
- *         } else {
- *                 perror("Thread error");
- *
- *                 if (thread1) {
- *                         thread_cancel(thread1);
- *                         thread_delete(thread1);
- *                 }
- *
- *                 if (thread2) {
- *                         thread_cancel(thread2);
- *                         thread_delete(thread2);
- *                 }
- *         }
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        void thread(void *arg)
+        {
+                // ...
+
+                // thread function exit without any function,
+                // or just by return
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                        sleep(1);
+
+                        if (thread_join(tid) == 0) {
+                                puts("Joinded with thread");
+                        } else {
+                                perror("Thread join error");
+                        }
+
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int thread_join(tid_t tid)
@@ -666,51 +695,67 @@ static inline int thread_join(tid_t tid)
 
 //==============================================================================
 /**
- * @brief sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
+ * @brief Function create new semaphore.
+ *
  * The function <b>semaphore_new</b>() creates new semaphore object. The
  * semaphore can be counting or binary. If counting then <i>cnt_max</i>
- * is bigger that 2. <i>cnt_init</i> is an initial value of semaphore.
+ * is bigger that 2. The <i>cnt_init</i> is an initial value of semaphore.
  * Semaphore can be used for task synchronization.
  *
  * @param cnt_max       max count value (1 for binary)
  * @param cnt_init      initial value (0 or 1 for binary)
  *
- * @errors None
+ * @exception EINVAL    invalid value
+ * @exception ENOMEM    not enough free memory to create object
+ * @exception ESRCH     process/thread does not exists
  *
- * @return On success, semaphore object is returned. On error, <b>NULL</b> is
- * returned.
+ * @return On success pointer to semaphore object is returned.
+ * On error, <b>NULL</b> pointer is returned, and <b>errno</b>
+ * is set appropriately.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+        #include <errno.h>
+        #include <stdlib.h>
+
+        // ...
+
+        errno = 0;
+        sem_t *sem = semaphore_new(1, 0); // binary semaphore
+        if (sem == NULL) {
+                perror("Semaphore error");
+                abort();
+        }
+
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       semaphore_signal(sem);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // ...
- *
- * void thread2(void *arg)
- * {
- *         while (true) {
- *                 // this task will wait for semaphore signal
- *                 semaphore_wait(sem, MAX_DELAY_MS);
- *
- *                 // ...
- *         }
- * }
- *
- * void thread1(void *arg)
- * {
- *         while (true) {
- *                // ...
- *
- *                // this task signal to thread2 that can execute part of code
- *                semaphore_signal(sem);
- *         }
- * }
- *
- * // ...
+ * @see semaphore_delete()
  */
 //==============================================================================
 static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
@@ -722,29 +767,37 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 
 //==============================================================================
 /**
- * @brief void semaphore_delete(sem_t *sem)
+ * @brief Function delete created semaphore.
+ *
  * The function <b>semaphore_delete</b>() removes created semaphore pointed by
  * <i>sem</i>. Be aware that if semaphore was removed when tasks use it, then
  * process starvation can occur on tasks which wait for semaphore signal.
  *
- * @param sem       semaphore object pointer
+ * @param sem           semaphore object pointer
  *
- * @errors None
+ * @exception ESRCH     process does not exist
+ * @exception ENOENT    object does not exist
+ * @exception EFAULT    invalid semaphore object
  *
- * @return
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        sem_t *sem = semaphore_new(1, 0);
+
+        // ...
+        // operations on semaphore
+        // ...
+
+        semaphore_delete(sem);
+
+        // ...
+
+   @endcode
  *
- * @example
- * #include <dnx/thread.h>
- *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // operation on semaphore
- *
- * semaphore_delete(sem);
- *
- * // ...
+ * @see semaphore_new()
  */
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
@@ -754,53 +807,68 @@ static inline void semaphore_delete(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief bool semaphore_wait(sem_t *sem, const uint timeout)
+ * @brief Function wait for semaphore.
+ *
  * The function <b>semaphore_wait</b>() waits for semaphore signal pointed by
  * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
  * <b>true</b> is returned, otherwise (timeout) <b>false</b>. When <i>timeout</i>
  * value is set to 0 then semaphore is polling without timeout.
  *
- * @param sem       semaphore object pointer
+ * @param sem           semaphore object pointer
+ * @param timeout       timeout value in milliseconds
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
+ * @exception ETIME     timeout occurred
  *
  * @return On success, <b>true</b> is returned. On timeout or if semaphore is
- * not signaled <b>false</b> is returned.
+ * not signaled or object is invalid <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+        #include <errno.h>
+        #include <stdlib.h>
+
+        // ...
+
+        errno = 0;
+        sem_t *sem = semaphore_new(1, 0); // binary semaphore
+        if (sem == NULL) {
+                perror("Semaphore error");
+                abort();
+        }
+
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       semaphore_signal(sem);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // ...
- *
- * void thread2(void *arg)
- * {
- *         while (true) {
- *                 // this task will wait for semaphore signal
- *                 semaphore_wait(sem, MAX_DELAY_MS);
- *
- *                 // ...
- *         }
- * }
- *
- * void thread1(void *arg)
- * {
- *         while (true) {
- *                // ...
- *
- *                // this task signal to thread2 that can execute part of code
- *                semaphore_signal(sem);
- *         }
- * }
- *
- * // ...
+ * @see semaphore_signal()
  */
 //==============================================================================
-static inline bool semaphore_wait(sem_t *sem, const uint timeout)
+static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 {
         _errno = _builtinfunc(semaphore_wait, sem, timeout);
         return !_errno;
@@ -808,47 +876,54 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 
 //==============================================================================
 /**
- * @brief bool semaphore_signal(sem_t *sem)
+ * @brief Function signal semaphore.
+ *
  * The function <b>semaphore_signal</b>() signals semaphore pointed by <i>sem</i>.
  *
- * @param sem       semaphore object pointer
+ * @param sem           semaphore object pointer
  *
- * @errors None
+ * @exception EBUSY     object is busy
+ * @exception EINVAL    invalid value or object
  *
  * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
  * be signaled or object is invalid then <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+
+        // ...
+
+        sem_t *sem = semaphore_new(1, 0);
+
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       semaphore_signal(sem);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * // ...
- *
- * sem_t *sem = semaphore_new(1, 0);
- *
- * // ...
- *
- * void thread2(void *arg)
- * {
- *         while (true) {
- *                 // this task will wait for semaphore signal
- *                 semaphore_wait(sem, MAX_DELAY_MS);
- *
- *                 // ...
- *         }
- * }
- *
- * void thread1(void *arg)
- * {
- *         while (true) {
- *                // ...
- *
- *                // this task signal to thread2 that can execute part of code
- *                semaphore_signal(sem);
- *         }
- * }
- *
- * // ...
+ * @see semaphore_wait()
  */
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
@@ -859,68 +934,60 @@ static inline bool semaphore_signal(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief mutex_t *mutex_new(enum mutex_type type)
+ * @brief Function creates new mutex object.
+ *
  * The function <b>mutex_new</b>() creates new mutex of type <i>type</i>.
- * Two types of mutex can be created: <b>MUTEX_RECURSIVE</b> and <b>MUTEX_NORMAL</b>.
+ * Two types of mutex can be created: @ref MUTEX_TYPE_RECURSIVE and
+ * @ref MUTEX_TYPE_NORMAL.
  *
- * @param type          mutex type (MUTEX_RECURSIVE or MUTEX_NORMAL)
+ * @param type          mutex type
  *
- * @errors None
+ * @exception EINVAL    invalid value
+ * @exception ENOMEM    not enough free memory to create object
+ * @exception ESRCH     process/thread does not exists
  *
  * @return On success, pointer to the mutex object is returned. On error,
- * <b>NULL</b> is returned.
+ * <b>NULL</b> pointer is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        int resource;
+
+        mutex_t *mtx = mutex_new(MUTEX_TYPE_NORMAL);
+
+        void thread1(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        void thread2(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * int resource;
- *
- * void thread1(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * void thread2(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
- *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         mutex_delete(mtx);
- *
- *         // ...
- * }
+ * @see mutex_delete()
  */
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)
@@ -932,66 +999,59 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 
 //==============================================================================
 /**
- * @brief void mutex_delete(mutex_t *mutex)
+ * @brief Function delete mutex object.
+ *
  * The function <b>mutex_delete</b>() delete created mutex pointed by <i>mutex</i>.
  *
- * @param mutex     mutex
+ * @param mutex         mutex
  *
- * @errors None
+ * @exception ESRCH     process does not exist
+ * @exception ENOENT    object does not exist
+ * @exception EFAULT    invalid semaphore object
  *
- * @return None
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        int resource;
+
+        mutex_t *mtx = mutex_new(MUTEX_TYPE_NORMAL);
+
+        void thread1(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        void thread2(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        mutex_delete(mtx);
+
+   @endcode
  *
- * @example
- * #include <dnx/thread.h>
- *
- * int resource;
- *
- * void thread1(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * void thread2(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
- *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         mutex_delete(mtx);
- *
- *         // ...
- * }
+ * @see mutex_new()
  */
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
@@ -1001,7 +1061,8 @@ static inline void mutex_delete(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief bool mutex_lock(mutex_t *mutex, const uint timeout)
+ * @brief Function lock mutex object for current thread.
+ *
  * The function <b>mutex_lock</b>() lock mutex pointed by <i>mutex</i>. If
  * mutex is locked by other thread then system try to lock mutex by <i>timeout</i>
  * milliseconds. If mutex is recursive then task can lock mutex recursively, and
@@ -1011,65 +1072,55 @@ static inline void mutex_delete(mutex_t *mutex)
  * @param mutex     mutex
  * @param timeout   timeout
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
+ * @exception ETIME     timeout occurred
  *
  * @return If mutex is locked then <b>true</b> is returned. If mutex is used or
  * timeout occur or object is incorrect, then <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        int resource;
+
+        mutex_t *mtx = mutex_new(MUTEX_TYPE_NORMAL);
+
+        void thread1(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        void thread2(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * int resource;
- *
- * void thread1(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * void thread2(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
- *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         mutex_delete(mtx);
- *
- *         // ...
- * }
+ * @see mutex_unlock()
+ * @see mutex_trylock()
  */
 //==============================================================================
-static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
+static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 {
         _errno = _builtinfunc(mutex_lock, mutex, timeout);
         return !_errno;
@@ -1077,71 +1128,65 @@ static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 
 //==============================================================================
 /**
- * @brief bool mutex_trylock(mutex_t *mutex)
- * The function <b>mutex_trylock</b>() lock mutex pointed by <i>mutex</i>.
+ * @brief Function try lock mutex object for current thread.
+ *
+ * The function <b>mutex_trylock</b>() locks mutex pointed by <i>mutex</i>.
  * If mutex is recursive then task can lock mutex recursively, and
  * the same times shall be unlocked. If normal mutex is used then task can lock
  * mutex only one time (not recursively). Function is equivalent to
  * mutex_lock(mtx, 0) call.
  *
- * @param mutex     mutex
+ * @param mutex         mutex
  *
- * @errors EINVAL, ETIME, ...
+ * @exception EINVAL    invalid value or object
+ * @exception ETIME     timeout occurred
  *
  * @return If mutex is locked then <b>true</b> is returned. If mutex is used
  * or object is incorrect, then <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+
+        int resource;
+
+        mutex_t *mtx = mutex_new(MUTEX_TYPE_NORMAL);
+
+        void thread1(void *arg)
+        {
+                // protected access to resource
+                while (mutex_trylock(mtx) != true) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                        break;
+                }
+        }
+
+        void thread2(void *arg)
+        {
+                // protected access to resource
+                while (mutex_trylock(mtx) != true) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                        break;
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * int resource;
- *
- * void thread1(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_trylock(mtx)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * void thread2(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_trylock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- *         tid_t t1 = thread_create(thread1, NULL, mtx);
- *         tid_t t1 = thread_create(thread2, NULL, mtx);
- *
- *         thread_join(t1);
- *         thread_join(t2);
- *
- *         mutex_delete(mtx);
- *
- *         // ...
- * }
+ * @see mutex_unlock()
+ * @see mutex_lock()
  */
 //==============================================================================
 static inline bool mutex_trylock(mutex_t *mutex)
@@ -1151,67 +1196,58 @@ static inline bool mutex_trylock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief bool mutex_unlock(mutex_t *mutex)
+ * @brief Function unlocks earlier locked object.
+ *
  * The function <b>mutex_unlock</b>() unlock mutex pointed by <i>mutex</i>.
  *
- * @param mutex     mutex
+ * @param mutex         mutex
  *
- * @errors None
+ * @exception EBUSY     object is busy
+ * @exception EINVAL    invalid value or object
  *
  * @return If mutex is unlocked then <b>true</b> is returned. If mutex is not
  * unlocked or object is incorrect then <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        int resource;
+
+        mutex_t *mtx = mutex_new(MUTEX_TYPE_NORMAL);
+
+        void thread1(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        void thread2(void *arg)
+        {
+                // protected access to resource
+                if (mutex_lock(mtx, MAX_DELAY_MS)) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        mutex_unlock(mtx);
+                }
+        }
+
+        // ...
+
+   @endcode
  *
- * int resource;
- *
- * void thread1(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * void thread2(void *arg)
- * {
- *         mutex_t *mtx = arg;
- *
- *         // protected access to resource
- *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
- *                 // write to buffer is allowed
- *                 resource = ...;
- *
- *                 // ...
- *
- *                 mutex_unlock(mtx);
- *         }
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
- *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         mutex_delete(mtx);
- *
- *         // ...
- * }
+ * @see mutex_lock()
+ * @see mutex_trylock()
  */
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
@@ -1222,7 +1258,8 @@ static inline bool mutex_unlock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief queue_t *queue_new(const uint length, const uint item_size)
+ * @brief Function creates new queue object.
+ *
  * The function <b>queue_new</b>() create new queue with length <i>length</i>
  * of item size <i>item_size</i>. Returns pointer to the created object or
  * <b>NULL</b> on error. Both, <i>length</i> and <i>item_size</i> cannot be zero.
@@ -1230,57 +1267,56 @@ static inline bool mutex_unlock(mutex_t *mutex)
  * @param length        queue length
  * @param item_size     size of item
  *
- * @errors None
+ * @exception EINVAL    invalid value
+ * @exception ENOMEM    not enough free memory to create object
+ * @exception ESRCH     process/thread does not exists
  *
  * @return On success returns pointer to the created object or <b>NULL</b> on
  * error.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_delete()
  */
 //==============================================================================
 static inline queue_t *queue_new(const size_t length, const size_t item_size)
@@ -1292,62 +1328,60 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
 
 //==============================================================================
 /**
- * @brief void queue_delete(queue_t *queue)
+ * @brief Function deletes queue object.
+ *
  * The function <b>queue_delete</b>() deletes the created queue pointed by
  * <i>queue</i>. Make sure that neither task use queue before delete.
  *
- * @param queue     queue object
+ * @param queue         queue object
  *
- * @errors None
+ * @exception ESRCH     process does not exist
+ * @exception ENOENT    object does not exist
+ * @exception EFAULT    invalid semaphore object
  *
- * @return None
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * @example
- * #include <dnx/thread.h>
- *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_new()
  */
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
@@ -1357,64 +1391,61 @@ static inline void queue_delete(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief bool queue_reset(queue_t *queue)
+ * @brief Function removes all items from queue.
+ *
  * The function <b>queue_reset</b>() reset the selected queue pointed by
  * <i>queue</i>.
  *
- * @param queue     queue object
+ * @param queue         queue object
  *
- * @errors None
+ * @exception EBUSY     object is busy
+ * @exception EINVAL    invalid value or object
  *
  * @return On success true is returned, otherwise false.
  *
- * @example
- * #include <dnx/thread.h>
- *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         queue_reset(queue);
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                queue_reset(queue);
+
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  */
 //==============================================================================
 static inline bool queue_reset(queue_t *queue)
@@ -1425,7 +1456,8 @@ static inline bool queue_reset(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief bool queue_send(queue_t *queue, const void *item, const uint timeout)
+ * @brief Function writes value to queue.
+ *
  * The function <b>queue_send</b>() send specified item pointed by <i>item</i>
  * to queue pointed by <i>queue</i>. If queue is full then system try to send
  * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
@@ -1436,59 +1468,58 @@ static inline bool queue_reset(queue_t *queue)
  * @param item      item to send
  * @param timeout   send timeout (0 for polling)
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
+ * @exception ENOSPC    no free space in queue (timeout)
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_receive()
+ * @see queue_receive_peek()
  */
 //==============================================================================
-static inline bool queue_send(queue_t *queue, const void *item, const uint timeout)
+static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
 {
         _errno = _builtinfunc(queue_send, queue, item, timeout);
         return !_errno;
@@ -1496,69 +1527,69 @@ static inline bool queue_send(queue_t *queue, const void *item, const uint timeo
 
 //==============================================================================
 /**
- * @brief bool queue_receive(queue_t *queue, void *item, const uint timeout)
+ * @brief Function receives item from queue.
+ *
  * The function <b>queue_receive</b>() receive top item from queue pointed by
  * <i>queue</i> and copy it to the item pointed by <i>item</i>. The item is
  * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
  * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
  *
- * @param queue     queue object
- * @param item      item destination
- * @param timeout   send timeout (0 for polling)
+ * @param queue         queue object
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
+ * @exception EAGAIN    try again
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_send()
+ * @see queue_receive_peek()
  */
 //==============================================================================
-static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
+static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
 {
         _errno = _builtinfunc(queue_receive, queue, item, timeout);
         return !_errno;
@@ -1566,71 +1597,68 @@ static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 
 //==============================================================================
 /**
- * @brief bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
+ * @brief Function receives item from queue without remove.
+ *
  * The function <b>queue_receive_peek</b>() is similar to <b>queue_receive</b>(),
  * expect that top item is not removed from the queue.
  *
- * @param queue     queue object
- * @param item      item destination
- * @param timeout   send timeout (0 for polling)
+ * @param queue         queue object
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
+ * @exception EAGAIN    try again
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                char c;
+                queue_receive_peek(queue, &c, MAX_DELAY_MS);
+
+                if (c == '1') {
+                        queue_receive(queue, &c, MAX_DELAY_MS);
+                        // ...
+                } else {
+                        // ...
+                }
+
+                // additional operations
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c;
- *
- *         queue_receive_peek(queue, &c, MAX_DELAY_MS);
- *
- *         if (c == '1') {
- *                 // ...
- *         } else {
- *                 // ...
- *         }
- *
- *         // ...
- *
- *         queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_send()
+ * @see queue_receive()
  */
 //==============================================================================
-static inline bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
+static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
 {
         _errno = _builtinfunc(queue_receive_peek, queue, item, timeout);
         return !_errno;
@@ -1638,59 +1666,65 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const uint tim
 
 //==============================================================================
 /**
- * @brief int queue_get_number_of_items(queue_t *queue)
+ * @brief Function returns number of items stored in queue.
+ *
  * The function <b>queue_get_number_of_items</b>() returns a number of items
  * stored in the queue pointed by <i>queue</i>.
  *
- * @param queue     queue object
+ * @param queue         queue object
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
  *
  * @return Number of items stored in the queue. On error, -1 is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(char));
+
+        // ...
+
+        void thread1(void *arg)
+        {
+                char c = '1';
+                queue_send(queue, &c, MAX_DELAY_MS);
+
+                // additional operations
+        }
+
+        void thread2(void *arg)
+        {
+                while (queue_get_number_of_items() > 0) {
+
+                        char c;
+                        queue_receive(queue, &c, MAX_DELAY_MS);
+
+                        if (c == '1') {
+                                // ...
+                        } else {
+                                // ...
+                        }
+
+                        // additional operations
+                }
+        }
+
+        // ...
+        // join threads...
+        // ...
+
+        queue_delete(queue);
+
+        //...
+
+   @endcode
  *
- * void thread1(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         char c = '1';
- *         queue_send(queue, &c, MAX_DELAY_MS);
- *
- *         // some operations
- * }
- *
- * void thread2(void *arg)
- * {
- *         queue_t *queue = arg;
- *
- *         for (i = 0; i < queue_get_number_of_items(queue); i++) {
- *                 char c;
- *                 queue_receive(queue, &c, MAX_DELAY_MS);
- *
- *                 // some operations
- *         }
- *
- *         // ...
- * }
- *
- * int main()
- * {
- *         // ...
- *
- *         queue_t *queue = queue_new(10, sizeof(char));
- *
- *         thread_new(thread1, STACK_DEPTH_LOW, queue);
- *         thread_new(thread2, STACK_DEPTH_LOW, queue);
- *
- *         thread_join(thread1);
- *         thread_join(thread2);
- *
- *         queue_delete(queue);
- *
- *         // ...
- * }
+ * @see queue_send()
+ * @see queue_receive()
+ * @see queue_reset()
  */
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
@@ -1702,32 +1736,41 @@ static inline int queue_get_number_of_items(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief int queue_get_space_available(queue_t *queue)
+ * @brief Function returns available space in queue.
+ *
  * The function <b>queue_get_space_available</b>() returns a number of free
  * items available in the queue pointed by <i>queue</i>.
  *
- * @param queue     queue object
+ * @param queue         queue object
  *
- * @errors None
+ * @exception EINVAL    invalid value or object
  *
  * @return Number of free items available in the queue. On error, -1 is returned.
  *
- * @example
- * #include <dnx/thread.h>
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        queue_t *queue = queue_new(10, sizeof(int));
+
+        // ...
+
+        if (queue_get_space_available(queue) > 0) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
  *
- * // ...
- *
- * queue_t *queue = queue_new(10, sizeof(int));
- *
- * // ...
- *
- * if (queue_get_space_available(queue) > 0) {
- *         // ...
- * } else {
- *         // ...
- * }
- *
- * // ...
+ * @see queue_get_number_of_items()
+ * @see queue_receive()
+ * @see queue_send()
+ * @see queue_reset()
  */
 //==============================================================================
 static inline int queue_get_space_available(queue_t *queue)
