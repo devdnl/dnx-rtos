@@ -60,13 +60,13 @@ extern "C" {
  */
 #define BUFSIZ                  __OS_STREAM_BUFFER_LENGTH__
 
-/** @brief Set stream to fully buffered (compatibility only). @see setvbuf() */
+/** @brief Set stream to fully buffered.@see setvbuf() */
 #define _IOFBF                  0
 
-/** @brief Set stream to line buffered (compatibility only).  @see setvbuf() */
+/** @brief Set stream to line buffered. @see setvbuf() */
 #define _IOLBF                  1
 
-/** @brief Set stream to unbuffered (compatibility only).  @see setvbuf() */
+/** @brief Set stream to unbuffered. @see setvbuf() */
 #define _IONBF                  2
 
 #ifndef NULL
@@ -94,16 +94,16 @@ extern "C" {
 #define SEEK_END                2
 #endif
 
-/** @brief Maximum length of file name (compatibility only). */
+/** @brief Maximum length of file name. */
 #define FILENAME_MAX            255
 
-/** @brief Maximum opened files (compatibility only). */
+/** @brief Maximum opened files. */
 #define FOPEN_MAX               255
 
-/** @brief Maximum number of temporary files (compatibility only). */
+/** @brief Maximum number of temporary files. */
 #define TMP_MAX                 32
 
-/** @brief Maximum name length of temporary files (compatibility only). */
+/** @brief Maximum name length of temporary files. */
 #define L_tmpnam                32
 
 /*==============================================================================
@@ -175,12 +175,11 @@ extern FILE *stderr;
  * @param path          path to file
  * @param mode          file open mode
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to open file
- * @exception EACCES    access denied
- * @exception EISDIR    file is a directory
- * @exception ENOENT    no such file or directory
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EISDIR
+ * @exception | @ref ENOENT
  *
  * @return Upon successful completion <b>fopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
@@ -218,10 +217,9 @@ static inline FILE *fopen(const char *path, const char *mode)
  *
  * @param file          file to close
  *
- * @exception EINVAL    invalid argument
- * @exception ENOENT    no such file or directory
- * @exception EFAULT    object not exists
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @return Upon successful completion \b 0 is returned. Otherwise, <b>EOF</b> is
  * returned and <b>errno</b> is set to indicate the error. In either case any
@@ -265,12 +263,11 @@ static inline int fclose(FILE *file)
  * @param mode          file open mode
  * @param file          file to reopen
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to open file
- * @exception EACCES    access denied
- * @exception ENOENT    no such file or directory
- * @exception EFAULT    object not exists
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @return Upon successful completion <b>freopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
@@ -304,7 +301,8 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 
 //==============================================================================
 /**
- * @brief size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
+ * @brief Function writes data to stream.
+ *
  * The function <b>fwrite</b>() writes <i>count</i> elements of data, each <i>size</i>
  * bytes long, to the stream pointed to by <i>file</i>, obtaining them from the
  * location given by <i>ptr</i>.
@@ -314,26 +312,36 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
  * @param count         number of elements
  * @param file          stream
  *
- * @errors EINVAL, ENOENT, ENOMEM, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @return On success, <b>fwrite</b>() return the number of items written. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        char buffer[4] = {0, 1, 2, 3};
- *        if (fwrite(buffer, 1, sizeof(buffer), file) != 4) {
- *                // error handling
- *        }
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               char buffer[4] = {0, 1, 2, 3};
+               if (fwrite(buffer, 1, sizeof(buffer), file) != 4) {
+                       // error handling
+               }
+
+               fclose(file);
+        } else {
+               perror(NULL);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
@@ -345,7 +353,8 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 
 //==============================================================================
 /**
- * @brief size_t fread(void *ptr, size_t size, size_t count, FILE *file)
+ * @brief Function reads data from stream.
+ *
  * The function <b>fread</b>() reads <i>count</i> elements of data, each <i>size</i>
  * bytes long, from the stream pointed to by <i>file</i>, storing them at the
  * location given by <i>ptr</i>.
@@ -355,26 +364,33 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
  * @param count         number of elements
  * @param file          stream
  *
- * @errors EINVAL, ENOENT, ENOMEM, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return On success, <b>fread</b>() return the number of items read. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        char buffer[4];
- *        if (fread(buffer, 1, sizeof(buffer), file) != 4) {
- *                // error handling
- *        }
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               char buffer[4];
+               if (fread(buffer, 1, sizeof(buffer), file) != 4) {
+                       // error handling
+               }
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
@@ -386,7 +402,8 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 
 //==============================================================================
 /**
- * @brief int fseek(FILE *file, i64_t offset, int mode)
+ * @brief Function sets file position indicator.
+ *
  * The <b>fseek</b>() function sets the file position indicator for the stream
  * pointed to by <i>file</i>. The new position, measured in bytes, is obtained
  * by adding offset bytes to the position specified by whence. If whence is set
@@ -400,25 +417,31 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  * @param offset        offset
  * @param mode          seek mode
  *
- * @errors EINVAL, ENOENT
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fseek</b>() return 0. Otherwise, -1 is
  * returned and <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        if (fseek(file, 100, SEEK_SET) != 0) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               if (fseek(file, 100, SEEK_SET) != 0) {
+                       // error handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fseek(FILE *file, i64_t offset, int mode)
@@ -430,7 +453,8 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 
 //==============================================================================
 /**
- * @brief int fsetpos(FILE *file, const fpos_t *pos)
+ * @brief Function sets file position indicator.
+ *
  * The <b>fsetpos</b>() function is alternate interfaces equivalent to <b>fseek</b>()
  * (with whence set to <b>SEEK_SET</b>), setting and storing the current value
  * of the file offset into the object referenced by <i>pos</i>.
@@ -438,25 +462,32 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
  * @param file          stream
  * @param pos           offset
  *
- * @errors EINVAL, ENOENT
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
  * returned and <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        if (fsetpos(file, 100) != 0) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               static const fpos_t pos = 100;
+               if (fsetpos(file, &pos) != 0) {
+                       // error handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fsetpos(FILE *file, const fpos_t *pos)
@@ -470,31 +501,38 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 
 //==============================================================================
 /**
- * @brief int rewind(FILE *file)
+ * @brief Function sets file position indicator to the beginning of file.
+ *
  * The <b>rewind</b>() function sets the file position indicator for the stream
  * pointed to by <i>file</i> to the beginning of the file. It is equivalent to:
  * <pre>(void) fseek(stream, 0L, SEEK_SET)</pre>
  *
  * @param file          stream
  *
- * @errors EINVAL, ENOENT
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return The <b>rewind</b>() function returns no value.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        rewind(file);
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               rewind(file);
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void rewind(FILE *file)
@@ -504,34 +542,40 @@ static inline void rewind(FILE *file)
 
 //==============================================================================
 /**
- * @brief i64_t ftell(FILE *file)
+ * @brief Function returns file position indicator.
+ *
  * The <b>ftell</b>() function obtains the current value of the file position
  * indicator for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
  *
- * @errors EINVAL
+ * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>ftell</b>() returns the current offset.
  * Otherwise, -1 is returned and <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        i64_t pos = ftell(file);
- *        if (pos == -1) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               i64_t pos = ftell(file);
+               if (pos == -1) {
+                       // error handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline i64_t ftell(FILE *file)
@@ -543,7 +587,8 @@ static inline i64_t ftell(FILE *file)
 
 //==============================================================================
 /**
- * @brief int fgetpos(FILE *file, fpos_t *pos)
+ * @brief Function returns file position indicator.
+ *
  * The <b>fgetpos</b>() function is alternate interface equivalent to <b>ftell</b>(),
  * storing the current value of the file offset from the object referenced by
  * <i>pos</i>.
@@ -551,28 +596,33 @@ static inline i64_t ftell(FILE *file)
  * @param file          stream
  * @param pos           position object
  *
- * @errors EINVAL
+ * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fgetpos</b>() return 0. Otherwise, -1
  * is returned and <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        fpos_t pos;
- *        if (fgetpos(file, &pos) == -1) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               fpos_t pos;
+               if (fgetpos(file, &pos) == -1) {
+                       // error handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fgetpos(FILE *file, fpos_t *pos)
@@ -587,7 +637,8 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 
 //==============================================================================
 /**
- * @brief int fflush(FILE *file)
+ * @brief Function forces write buffers to stream.
+ *
  * For output streams, <b>fflush</b>() forces a write of all buffered data for
  * the given output or update stream via the stream's underlying write function.
  * For input streams, <b>fflush</b>() discards any buffered data that has been
@@ -595,27 +646,33 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
  *
  * @param file          stream
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return Upon successful completion 0 is returned. Otherwise, <b>EOF</b> is
  * returned and <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        if (fflush(file) == EOF) {
- *                // error handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               if (fflush(file) == EOF) {
+                       // error handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fflush(FILE *file)
@@ -627,34 +684,41 @@ static inline int fflush(FILE *file)
 
 //==============================================================================
 /**
- * @brief int feof(FILE *file)
+ * @brief Function tests the end-of-file indicator.
+ *
  * The function <b>feof</b>() tests the end-of-file indicator for the stream
  * pointed to by <i>file</i>, returning nonzero if it is set. The end-of-file
  * indicator can only be cleared by the function <b>clearerr</b>().
  *
  * @param file          stream
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return Returns nonzero if <b>EOF</b> indicator is set, otherwise 0 is
  * returned.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        if (feof(file) != 0) {
- *                // end-of-file handling
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               if (feof(file) != 0) {
+                       // end-of-file handling
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int feof(FILE *file)
@@ -666,36 +730,41 @@ static inline int feof(FILE *file)
 
 //==============================================================================
 /**
- * @brief void clearerr(FILE *file)
+ * @brief Function clears end-of-file and error indicators.
+ *
  * The function <b>clearerr</b>() clears the end-of-file and error indicators
  * for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
  *
- * @errors EINVAL, ENOENT
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
- * @return None
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        if (ferror(file) {
- *                // ...
- *
- *                clearerr(file);
- *
- *                // ...
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               if (ferror(file) {
+                       // ...
+
+                       clearerr(file);
+
+                       // ...
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void clearerr(FILE *file)
@@ -705,38 +774,45 @@ static inline void clearerr(FILE *file)
 
 //==============================================================================
 /**
- * @brief int ferror(FILE *file)
+ * @brief Function tests error indicator.
+ *
  * The function <b>ferror</b>() tests the error indicator for the stream pointed
  * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
  * be reset only by the <b>clearerr</b>() function.
  *
  * @param file          stream
  *
- * @errors EINVAL, ENOENT
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return Returns nonzero value if the file stream has errors occurred,
  * 0 otherwise.
  *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (file) {
- *        // file operations...
- *
- *        if (ferror(file) {
- *                // ...
- *
- *                clearerr(file);
- *
- *                // ...
- *        }
- *
- *        // file operations...
- *
- *        fclose(file);
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (file) {
+               // file operations...
+
+               if (ferror(file) {
+                       // ...
+
+                       clearerr(file);
+
+                       // ...
+               }
+
+               // file operations...
+
+               fclose(file);
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int ferror(FILE *file)
@@ -748,7 +824,8 @@ static inline int ferror(FILE *file)
 
 //==============================================================================
 /**
- * @brief void perror(const char *s)
+ * @brief Function produces message on the stdout.
+ *
  * The routine <b>perror</b>() produces a message on the standard error output,
  * describing the last error encountered during a call to a system or
  * library function.  First (if <i>s</i> is not <b>NULL</b> and <i>*s</i> is not
@@ -757,47 +834,56 @@ static inline int ferror(FILE *file)
  *
  * @param s             string to print
  *
- * @errors EINVAL, ENOENT, ENOMEM, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
- * @return None
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "w+");
- * if (!file) {
- *        perror("/foo/bar");
- *
- *        // error handling
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "w+");
+        if (!file) {
+               perror("/foo/bar");
+
+               // error handling
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern void perror(const char *s);
 
 //==============================================================================
 /**
- * @brief void setbuf(FILE *file, char *buffer)
+ * @brief Function sets stream buffer mode.
+ *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
  * case do nothing.
+ *
+ * @note Function not supported.
  *
  * @param file      stream
  * @param buffer    buffer
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "r");
- * if (file) {
- *        char buffer[100];
- *        setbuf(file, buffer);
- *
- *        // ...
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "r");
+        if (file) {
+               char buffer[100];
+               setbuf(file, buffer);
+
+               // ...
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void setbuf(FILE *file, char *buffer)
@@ -808,28 +894,33 @@ static inline void setbuf(FILE *file, char *buffer)
 
 //==============================================================================
 /**
- * @brief int setvbuf(FILE *file, char *buffer, int mode, size_t size)
+ * @brief Function sets stream buffer mode.
+ *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
  * case do nothing.
  *
+ * @note Function not supported.
+ *
  * @param file      stream
  * @param buffer    buffer
- * @param mode      buffer mode (<b>_IONBF</b> unbuffered, <b>_IOLBF</b> line buffered, <b>_IOFBF</b> fully buffered)
+ * @param mode      buffer mode (@ref _IONBF, @ref _IOLBF, @ref _IOFBF)
+ * @param size      buffer size
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- * FILE *file = fopen("/foo/bar", "r");
- * if (file) {
- *        char buffer[100];
- *        setvbuf(file, buffer, _IOFBF, 100);
- *
- *        // ...
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("/foo/bar", "r");
+        if (file) {
+               char buffer[100];
+               setvbuf(file, buffer, _IOFBF, 100);
+
+               // ...
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
@@ -844,25 +935,29 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 
 //==============================================================================
 /**
- * @brief FILE *tmpfile(void)
+ * @brief Function creates temporary file.
+ *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
  * case do nothing.
  *
- * @param None
- *
- * @errors None
+ * @note Function not supported.
  *
  * @return The <b>tmpfile</b>() function returns a stream descriptor, or <b>NULL</b>
  * if a unique filename cannot be generated or the unique file cannot be opened.
  * In the latter case, <b>errno</b> is set to indicate the error.
  *
- * @example
- * // ...
- * FILE *file = tmpfile();
- * if (file) {
- *        // ...
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = tmpfile();
+        if (file) {
+               // ...
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline FILE *tmpfile(void)
@@ -872,24 +967,30 @@ static inline FILE *tmpfile(void)
 
 //==============================================================================
 /**
- * @brief char *tmpnam(char *str)
+ * @brief Function sets name of temporary file.
+ *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
  * case do nothing.
  *
- * @param str       temporary file name or automatic generated if <b>NULL</b>
+ * @note Function not supported.
  *
- * @errors None
+ * @param str       temporary file name or automatic generated if <b>NULL</b>
  *
  * @return The <b>tmpnam</b>() function returns a pointer to a unique temporary
  * filename, or <b>NULL</b> if a unique name cannot be generated.
  *
- * @example
- * // ...
- * char *tmpname = tmpnam(NULL);
- * if (tmpname) {
- *        // ...
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char *tmpname = tmpnam(NULL);
+        if (tmpname) {
+               // ...
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline char *tmpnam(char *str)
@@ -901,8 +1002,9 @@ static inline char *tmpnam(char *str)
 
 //==============================================================================
 /**
- * @brief int remove(const char *path)
- * <b>remove</b>() deletes a name from the filesystem. If the removed name was
+ * @brief Function remove selected file.
+ *
+ * <b>remove</b>() deletes a name from the file system. If the removed name was
  * the last link to a file and no processes have the file open, the file is
  * deleted and the space it was using is made available for reuse.<p>
  *
@@ -911,15 +1013,22 @@ static inline char *tmpnam(char *str)
  *
  * @param path      path to file
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref EINVAL
  *
  * @return On success, zero is returned. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
- * remove("/foo/bar");
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        remove("/foo/bar");
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int remove(const char *path)
@@ -931,7 +1040,8 @@ static inline int remove(const char *path)
 
 //==============================================================================
 /**
- * @brief int rename(const char *old_name, const char *new_name)
+ * @brief Function renames selected file
+ *
  * <b>rename</b>() renames a file. In contrast to standard C library this function
  * don't move files between directories if <i>new_name</i> is localized on other
  * filesystem than <i>old_name</i>, otherwise it's depending on filesystem.
@@ -939,15 +1049,23 @@ static inline int remove(const char *path)
  * @param old_name      old file name
  * @param new_name      new file name
  *
- * @errors EINVAL, ENOENT, EPERM, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref EPERM
+ * @exception | @ref EINVAL
  *
  * @return On success, zero is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- * rename("/foo/bar", "/foo/baz");
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        rename("/foo/bar", "/foo/baz");
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
@@ -959,50 +1077,86 @@ static inline int rename(const char *old_name, const char *new_name)
 
 //==============================================================================
 /**
- * @brief int vfprintf(FILE *stream, const char *format, va_list arg)
+ * @brief Function prints message according to format to selected stream.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stream</b>.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param stream        output stream
  * @param format        formatting string
  * @param arg           argument list
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vfprintf(stdout, "foois %d; bar is 0x%x\n", arg);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list arg;
+
+        // ...
+
+        vfprintf(stdout, "foois %d; bar is 0x%x\n", arg);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
 
 //==============================================================================
 /**
- * @brief int printf(const char *format, ...)
+ * @brief Function prints message according to format to @ref stdout.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stdout</b>, the standard output stream.<p>
  *
@@ -1010,33 +1164,69 @@ extern int vfprintf(FILE *stream, const char *format, va_list arg);
  * numbers which determine e.g. buffer length, number of digits, etc. When
  * next character is <i>%</i> then per cent is printed.
  *
- * <b>c</b> - Prints single character.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param format        formatting string
  * @param ...           argument sequence
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * int foo = 12;
- * int bar = 0x12;
- * printf("foo is %d; bar is 0x%x\n", foo, bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        int foo = 12;
+        int bar = 0x12;
+        printf("foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int printf(const char *format, ...)
@@ -1050,7 +1240,8 @@ static inline int printf(const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int vprintf(const char *format, va_list arg)
+ * @brief Function prints message according to format to @ref stdout.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stdout</b>, the standard output stream.
  * An arguments are passed by list <i>arg</i>.<p>
@@ -1059,33 +1250,71 @@ static inline int printf(const char *format, ...)
  * numbers which determine e.g. buffer length, number of digits, etc. When
  * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b> - Prints single character.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param format        formatting string
  * @param arg           argument sequence list
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vprintf("foo is %d; bar is 0x%x\n", arg);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list arg;
+
+        // ...
+
+        vprintf("foo is %d; bar is 0x%x\n", arg);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int vprintf(const char *format, va_list arg)
@@ -1095,42 +1324,75 @@ static inline int vprintf(const char *format, va_list arg)
 
 //==============================================================================
 /**
- * @brief int fprintf(FILE *stream, const char *format, ...)
+ * @brief Function prints message according to format to selected stream.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stream</b>.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param stream        output stream
  * @param format        formatting string
  * @param ...           argument sequence
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * int foo = 12;
- * int bar = 0x12;
- * fprintf(stdout, "foo is %d; bar is 0x%x\n", foo, bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        int foo = 12;
+        int bar = 0x12;
+        fprintf(stdout, "foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fprintf(FILE *stream, const char *format, ...)
@@ -1144,89 +1406,157 @@ static inline int fprintf(FILE *stream, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
+ * @brief Function prints message according to format to buffer.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output pointed to by <i>bfr</i> of size <i>size</i>.
  * An arguments are passed by list <i>args</i>.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param bfr           buffer which output was produced
  * @param size          buffer size
  * @param format        formatting string
  * @param args          argument list
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * va_list args;
- * // ...
- * char buffer[20];
- * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list args;
+
+        // ...
+
+        char buffer[20];
+        snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
 
 //==============================================================================
 /**
- * @brief int snprintf(char *s, size_t n, const char *format, ...)
+ * @brief Function prints message according to format to buffer.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output pointed to by <i>s</i> of size <i>n</i>.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param s             buffer where output was produced
  * @param n             buffer size
  * @param format        formatting string
  * @param ...           argument sequence
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * char buffer[20];
- * int foo = 12;
- * int bar = 0x12;
- * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char buffer[20];
+        int foo = 12;
+        int bar = 0x12;
+        snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int snprintf(char *s, size_t n, const char *format, ...)
@@ -1240,44 +1570,77 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int sprintf(char *s, const char *format, ...)
+ * @brief Function prints message according to format to buffer.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output pointed to by <i>s</i>. Buffer must be enough long
  * to store produced data.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param s             buffer which output was produced
  * @param format        formatting string
  * @param ...           argument sequence
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * int foo = 12;
- * int bar = 0x12;
- * char buffer[20];
- * sprintf(buffer, "foo is %d; bar is 0x%x\n", foo, bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        int foo = 12;
+        int bar = 0x12;
+        char buffer[20];
+        sprintf(buffer, "foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sprintf(char *s, const char *format, ...)
@@ -1291,44 +1654,79 @@ static inline int sprintf(char *s, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int vsprintf(char *s, const char *format, va_list arg)
+ * @brief Function prints message according to format to buffer.
+ *
  * The function produce output according to a <i>format</i> as described below.
  * The function write output pointed to by <i>s</i>. Buffer must be enough long
  * to store produced data. An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.<p>
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
  *
- * <b>c</b> - Prints single character.<p>
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
  *
- * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
  *
- * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
  *
- * <b>u</b> - Prints unsigned type number.<p>
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
  *
- * <b>x, X</b> - Prints value in HEX formatting.<p>
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
  *
- * <b>f</b> - Prints float value.
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
  * @param s             buffer which output was produced
  * @param format        formatting string
  * @param arg           argument sequence list
  *
- * @errors EINVAL, ENOMEM, ENOENT, ...
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Upon successful return, these functions return the number of
  * characters printed (excluding the null byte used to end output to strings).
  * If an output error is encountered, a negative value is returned.
  *
- * @example
- * // ...
- * va_list args;
- * // ...
- * char buffer[20];
- * vsprintf(buffer, "foo is %d; bar is 0x%x\n", args);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list args;
+
+        // ...
+
+        char buffer[20];
+        vsprintf(buffer, "foo is %d; bar is 0x%x\n", args);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
@@ -1338,7 +1736,8 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
 
 //==============================================================================
 /**
- * @brief int vsscanf(const char *str, const char *format, va_list args)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1367,7 +1766,8 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
  * @param format        formatting string
  * @param args          argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1378,19 +1778,26 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * char *buffer = "12, 1256";
- * va_list arg;
- * vsscanf("%i, %i", arg);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char *buffer = "12, 1256";
+        va_list arg;
+        vsscanf("%i, %i", arg);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int vsscanf(const char *s, const char *format, va_list args);
 
 //==============================================================================
 /**
- * @brief int vfscanf(FILE *stream, const char *format, va_list arg)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1419,7 +1826,8 @@ extern int vsscanf(const char *s, const char *format, va_list args);
  * @param format        formatting string
  * @param arg           argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1430,19 +1838,28 @@ extern int vsscanf(const char *s, const char *format, va_list args);
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vfscanf(stdin, "%i%i", arg);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list arg;
+
+        // ...
+
+        vfscanf(stdin, "%i%i", arg);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int vfscanf(FILE *stream, const char *format, va_list arg);
 
 //==============================================================================
 /**
- * @brief int scanf(const char *format, ...)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1469,7 +1886,8 @@ extern int vfscanf(FILE *stream, const char *format, va_list arg);
  * @param format        formatting string
  * @param ...           argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1480,11 +1898,17 @@ extern int vfscanf(FILE *stream, const char *format, va_list arg);
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * int foo, bar;
- * scanf("%i%i", &foo, &bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        int foo, bar;
+        scanf("%i%i", &foo, &bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int scanf(const char *format, ...)
@@ -1498,7 +1922,8 @@ static inline int scanf(const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int vscanf(const char *format, va_list arg)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1526,7 +1951,8 @@ static inline int scanf(const char *format, ...)
  * @param format        formatting string
  * @param arg           argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1537,12 +1963,20 @@ static inline int scanf(const char *format, ...)
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * va_list arg;
- * // ...
- * vscanf("%i%i", arg);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        va_list arg;
+
+        // ...
+
+        vscanf("%i%i", arg);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int vscanf(const char *format, va_list arg)
@@ -1552,7 +1986,8 @@ static inline int vscanf(const char *format, va_list arg)
 
 //==============================================================================
 /**
- * @brief int fscanf(FILE *stream, const char *format, ...)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1580,7 +2015,8 @@ static inline int vscanf(const char *format, va_list arg)
  * @param format        formatting string
  * @param ...           argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1591,11 +2027,17 @@ static inline int vscanf(const char *format, va_list arg)
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * int foo, bar;
- * fscanf(stdin, "%i%i", &foo, &bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        int foo, bar;
+        fscanf(stdin, "%i%i", &foo, &bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fscanf(FILE *stream, const char *format, ...)
@@ -1609,7 +2051,8 @@ static inline int fscanf(FILE *stream, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int sscanf(const char *s, const char *format, ...)
+ * @brief Function scans input according to format.
+ *
  * The function scans input according to format as described below. This format
  * may contain conversion specifications; the results from such conversions,
  * if any, are stored in the locations pointed to by the pointer arguments that
@@ -1637,7 +2080,8 @@ static inline int fscanf(FILE *stream, const char *format, ...)
  * @param format        formatting string
  * @param ...           argument sequence list
  *
- * @errors EINVAL, ENOMEM
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return The function return the number of input items successfully matched
  * and assigned, which can be fewer than provided for, or even zero in the event
@@ -1648,12 +2092,18 @@ static inline int fscanf(FILE *stream, const char *format, ...)
  * also returned if a read error occurs, in which case the error indicator for
  * the stream is set, and <b>errno</b> is set indicate the error.
  *
- * @example
- * // ...
- * char *buffer = "12, 1256";
- * int foo, bar;
- * sscanf(buffer, "%i, %i", &foo, &bar);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char *buffer = "12, 1256";
+        int foo, bar;
+        sscanf(buffer, "%i, %i", &foo, &bar);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sscanf(const char *s, const char *format, ...)
@@ -1667,43 +2117,59 @@ static inline int sscanf(const char *s, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief int fputc(int c, FILE *stream)
+ * @brief Function writes character to stream.
+ *
  * <b>fputc</b>() writes the character <i>c</i>, cast to an unsigned char, to
  * <i>stream</i>.
  *
  * @param c         character to put
  * @param stream    destination stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
  * <b>EOF</b> on error.
  *
- * @example
- * // ...
- * fputc('f', stdout);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        fputc('f', stdout);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int fputc(int c, FILE *stream);
 
 //==============================================================================
 /**
- * @brief int putc(int c, FILE *stream)
+ * @brief Function writes character to stream.
+ *
  * <b>putc</b>() is equivalent to <b>fputc</b>().
  *
  * @param c         character to put
  * @param stream    destination stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
  * <b>EOF</b> on error.
  *
- * @example
- * // ...
- * putc('f', stdout);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        putc('f', stdout);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int putc(int c, FILE *stream)
@@ -1713,20 +2179,28 @@ static inline int putc(int c, FILE *stream)
 
 //==============================================================================
 /**
- * @brief int putchar(int c)
+ * @brief Function writes character to @ref stdout stream.
+ *
  * <b>putchar</b>(c); is equivalent to <b>putc</b>(c, stdout).
  *
  * @param c         character to put
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
  * <b>EOF</b> on error.
  *
- * @example
- * // ...
- * putchar('f');
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        putchar('f');
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int putchar(int c)
@@ -1736,81 +2210,111 @@ static inline int putchar(int c)
 
 //==============================================================================
 /**
- * @brief int fputs(const char *s, FILE *stream)
+ * @brief Function writes string to stream.
+ *
  * <b>fputs</b>() writes the string <i>s</i> to <i>stream</i>, without its
  * terminating null byte ('\0').
  *
  * @param s         string to put
  * @param stream    destination stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return a nonnegative number on success, or <b>EOF</b> on error.
  *
- * @example
- * // ...
- * fputs("foo bar", stdout);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        fputs("foo bar", stdout);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int fputs(const char *s, FILE *stream);
 
 //==============================================================================
 /**
- * @brief int puts(const char *s)
+ * @brief Function writes character to @ref stdout stream.
+ *
  * <b>puts</b>() writes the string <i>s</i> to <b>stdout</b>, without its
  * terminating null byte ('\0').
  *
  * @param s         string to put
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return a nonnegative number on success, or <b>EOF</b> on error.
  *
- * @example
- * // ...
- * puts("foo bar");
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        puts("foo bar");
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int puts(const char *s);
 
 //==============================================================================
 /**
- * @brief int getc(FILE *stream)
+ * @brief Function reads character from stream.
+ *
  * <b>getc</b>() is equivalent to <b>fgetc</b>().
  *
  * @param stream        input stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
  * <b>EOF</b> on end of file or error.
  *
- * @example
- * // ...
- * char c = getc(stdin);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char c = getc(stdin);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern int getc(FILE *stream);
 
 //==============================================================================
 /**
- * @brief int getchar(void)
+ * @brief Function reads character from @ref stdin stream.
+ *
  * <b>getchar</b>() is equivalent to <b>getc</b>(stdin).
  *
- * @param None
- *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
  * <b>EOF</b> on end of file or error.
  *
- * @example
- * // ...
- * char c = getchar();
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char c = getchar();
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int getchar(void)
@@ -1820,21 +2324,29 @@ static inline int getchar(void)
 
 //==============================================================================
 /**
- * @brief int fgetc(FILE *stream)
+ * @brief Function reads character from stream.
+ *
  * <b>fgetc</b>() reads the next character from <i>stream</i> and returns it
  * as an unsigned char cast to an int, or <b>EOF</b> on end of file or error.
  *
  * @param stream        input stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
  * <b>EOF</b> on end of file or error.
  *
- * @example
- * // ...
- * char c = fgetc(stdin);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char c = fgetc(stdin);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int fgetc(FILE *stream)
@@ -1844,7 +2356,8 @@ static inline int fgetc(FILE *stream)
 
 //==============================================================================
 /**
- * @brief int ungetc(int c, FILE *stream)
+ * @brief Function back to stream a character.
+ *
  * <b>ungetc</b>() pushes <i>c</i> back to stream, cast to unsigned char, where
  * it is available for subsequent read operations. Pushed-back characters will
  * be returned in reverse order; only one pushback is guaranteed.<p>
@@ -1856,19 +2369,28 @@ static inline int fgetc(FILE *stream)
  * The routine exist in dnx RTOS only for compatible reasons. Function in no
  * supported.
  *
+ * @note Function not supported.
+ *
  * @param c             output stream
  * @param stream        input stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
  * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
  * and always <b>EOF</b> is returned.
  *
- * @example
- * // ...
- * ungetc(c, stdin);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        ungetc(c, stdin);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int ungetc(int c, FILE *stream)
@@ -1881,7 +2403,8 @@ static inline int ungetc(int c, FILE *stream)
 
 //==============================================================================
 /**
- * @brief char *fgets(char *str, int size, FILE *stream)
+ * @brief Function reads string from stream.
+ *
  * <b>fgets</b>() reads in at most one less than size characters from stream
  * and stores them into the buffer pointed to by <i>str</i>. Reading stops after
  * an <b>EOF</b>, a newline or buffer end. If a newline is read, it is stored into the
@@ -1892,16 +2415,23 @@ static inline int ungetc(int c, FILE *stream)
  * @param size          buffer size
  * @param stream        input stream
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
  *
  * @return On success return the pointer to the buffer <i>str</i>, on error
  * <b>NULL</b> is returned.
  *
- * @example
- * // ...
- * char *buffer[100];
- * fgets(buffer, 100, stdin);
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        char *buffer[100];
+        fgets(buffer, 100, stdin);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 extern char *fgets(char *str, int size, FILE *stream);
