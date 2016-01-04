@@ -79,7 +79,7 @@ extern "C" {
  * @param src_path      file system source file (e.g. /dev/sda1)
  * @param mount_point   file system mount directory
  *
- * @exception ANY       device can return any type of error
+ * @exception | ...
  *
  * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
@@ -123,8 +123,8 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
  *
  * @param mount_point   mount point directory
  *
- * @exception EINVAL    invalid argument
- * @exception EBUSY     file system is busy
+ * @exception | @ref EINVAL
+ * @exception | @ref EBUSY
  *
  * @return On success, <b>0</b> is returned. On error, <b>-1</b>
  * is returned, and <b>errno</b> is set appropriately.
@@ -183,9 +183,9 @@ static inline int umount(const char *mount_point)
  * @param minor         minor driver number
  * @param node_path     path where driver node should be created (or NULL)
  *
- * @exception EINVAL            invalid argument
- * @exception ENOMEM            not enough free memory to initialize driver
- * @exception EADDRINUSE        driver is already initialized
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EADDRINUSE
  *
  * @return On success, driver ID is returned. On error, \b -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -224,8 +224,8 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
  * @param major         major driver number
  * @param minor         minor driver number
  *
- * @exception EINVAL    invalid argument
- * @exception ...       other errors depends on driver
+ * @exception | @ref EINVAL
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -254,9 +254,9 @@ static inline int driver_release(const char *mod_name, int major, int minor)
 }
 #endif
 
-/**@}*/
-
 #endif /* _MOUNT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

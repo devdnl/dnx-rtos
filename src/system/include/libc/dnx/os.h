@@ -194,7 +194,7 @@ static inline u32_t get_memory_size(void)
  *
  * @param stat      memory information
  *
- * @exception EINVAL Invalid argument
+ * @exception | @ref EINVAL
  *
  * @return Return @b 0 on success. On error, @b positive value
  * is returned, and @b errno is set appropriately.
@@ -895,7 +895,7 @@ static inline void restart_system(void)
  *
  * @param  path         log file path
  *
- * @exception Any
+ * @exception | Any
  *
  * @return On success \b 0 is returned, otherwise \b -1.
  *
@@ -926,7 +926,7 @@ static inline int syslog_enable(const char *path)
  *
  * The function <b>int syslog_disable</b>() disable system logging functionality.
  *
- * @exception Any
+ * @exception | Any
  *
  * @return On success \b 0 is returned, otherwise \b -1 and appropriate errno value is set.
  *
@@ -989,6 +989,8 @@ static inline bool detect_kernel_panic(bool showmsg)
 #endif
 
 #endif /* _OS_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

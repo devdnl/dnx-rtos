@@ -74,14 +74,14 @@ extern "C" {
  * @param path          node name
  * @param statfs        file system information container
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ENOTDIR   path not point to the directory
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | @ref ENOTDIR
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and \b errno
  * is set appropriately.
@@ -116,9 +116,9 @@ static inline int statfs(const char *path, struct statfs *statfs)
 }
 #endif
 
-/**@}*/
-
 #endif /* _STATFS_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

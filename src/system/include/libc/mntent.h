@@ -84,8 +84,8 @@ struct mntent {
  * @param seek          n-item to read
  * @param mntent        pointer to container
  *
- * @exception EINVAL    invalid argument
- * @exception ENOENT    no entry
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
  *
  * @return Returns \b 0 on success. Returns \b 1 if all items was read.
  * On error \b -1 is returned and <b>errno</b> is set appropriately.
@@ -118,9 +118,9 @@ static inline int getmntentry(int seek, struct mntent *mntent)
 }
 #endif
 
-/**@}*/
-
 #endif /* _MNTENT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

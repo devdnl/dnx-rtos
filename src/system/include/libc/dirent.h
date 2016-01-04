@@ -94,11 +94,11 @@ extern "C" {
  *
  * @param name          directory path
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception ENOENT    parent directory does not exists
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return A pointer to the directory stream. On error, <b>NULL</b> is returned,
  * and <b>errno</b> is set appropriately.
@@ -146,11 +146,11 @@ static inline DIR *opendir(const char *name)
  *
  * @param dir           pinter to directory object
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception ENOENT    parent directory does not exists
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return Return \b 0 on success. On error, \b -1 is returned,
  * and <b>errno</b> is set appropriately.
@@ -198,11 +198,11 @@ static inline int closedir(DIR *dir)
  *
  * @param dir           directory object
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception ENOENT    parent directory does not exists
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return On success, function returns a pointer to a <b>dirent_t</b> type. If
  * the end of the directory stream is reached, field <b>name</b> of <b>dirent_t</b>
@@ -247,9 +247,9 @@ static inline struct dirent *readdir(DIR *dir)
 }
 #endif
 
-/**@}*/
-
 #endif /* _DIRENT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

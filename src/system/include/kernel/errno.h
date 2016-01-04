@@ -95,6 +95,16 @@ extern "C" {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#ifdef DOXYGEN
+/**
+ * @brief Error number variable.
+ *
+ * This variable contains error number. Value can be cleared by writing 0.
+ * Variable exists independently in each application and is set by miscellaneous
+ * system functions.
+ */
+int errno;
+#endif
 
 /*==============================================================================
   Exported functions
@@ -108,9 +118,9 @@ extern "C" {
 }
 #endif
 
-/**@}*/
-
 #endif /* _KERNEL_ERRNO_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

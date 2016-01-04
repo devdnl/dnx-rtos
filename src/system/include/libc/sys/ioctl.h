@@ -114,7 +114,7 @@ extern "C" {
  * @param request       request number (each driver has own requests)
  * @param ...           untyped pointer to memory (optional in some requests)
  *
- * @exception ANY       device can return any type of error
+ * @exception | ...
  *
  * @return On success zero is returned. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -176,9 +176,9 @@ static inline int ioctl(FILE *stream, int request, ...)
 }
 #endif
 
-/**@}*/
-
 #endif /* _IOCTL_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

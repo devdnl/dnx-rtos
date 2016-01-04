@@ -171,9 +171,9 @@ extern int _errno;
  * @param cmd           program name and argument list
  * @param attr          process attributes
  *
- * @exception ENOMEM    not enough free memory to allocate process
- * @exception EINVAL    invalid argument or structure given
- * @exception ENOENT    command does not exists
+ * @exception | @ref ENOMEM
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
  *
  * @return On success return process ID (PID), otherwise 0.
  *
@@ -232,8 +232,8 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  * @param pid                   process ID
  * @param status                child process exit status (it can be NULL)
  *
- * @exception EINVAL            invalid value or structure
- * @exception EAGAIN            try again
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
  *
  * @return Return 0 on success. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -293,9 +293,9 @@ static inline int process_kill(pid_t pid, int *status)
  * @param status                child process exit status (it can be NULL)
  * @param timeout               wait timeout in ms
  *
- * @exception EINVAL            invalid argument
- * @exception ETIME             timeout
- * @exception ...               other errors
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
+ * @exception | ...
  *
  * @return Return 0 on success. On error -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -359,8 +359,8 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
  * @param seek      process index
  * @param stat      statistics
  *
- * @exception EINVAL            invalid argument
- * @exception ENOENT            process does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
  *
  * @return Return 0 on success. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
@@ -399,8 +399,8 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
  * @param pid       PID
  * @param stat      statistics
  *
- * @exception EINVAL            invalid argument
- * @exception ENOENT            process does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
  *
  * @return Return 0 on success. On error, -1 is returned.
  *
@@ -434,8 +434,8 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
  *
  * The function <b>process_getpid</b>() return PID of current process (caller).
  *
- * @exception EINVAL            invalid argument
- * @exception ENOENT            process does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
  *
  * @return Return PID on success. On error, 0 is returned.
  *
@@ -504,8 +504,8 @@ static inline int process_get_priority(pid_t pid)
  * @param attr          thread attributes (can be NULL)
  * @param arg           thread argument (can be NULL)
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create thread
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
  *
  * @return On success return thread ID (TID), otherwise 0,
  * and <b>errno</b> is set appropriately.
@@ -557,7 +557,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
  *
  * @param tid           thread ID
  *
- * @exception EINVAL    invalid argument
+ * @exception | @ref EINVAL
  *
  * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -618,8 +618,8 @@ static inline int thread_cancel(tid_t tid)
  *
  * @param tid           thread ID
  *
- * @exception EINVAL    invalid argument
- * @exception ETIME     timeout
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
  *
  * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -691,9 +691,9 @@ static inline int thread_join(tid_t tid)
  * @param cnt_max       max count value (1 for binary)
  * @param cnt_init      initial value (0 or 1 for binary)
  *
- * @exception EINVAL    invalid value
- * @exception ENOMEM    not enough free memory to create object
- * @exception ESRCH     process/thread does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
  *
  * @return On success pointer to semaphore object is returned.
  * On error, <b>NULL</b> pointer is returned, and <b>errno</b>
@@ -761,9 +761,9 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
  *
  * @param sem           semaphore object pointer
  *
- * @exception ESRCH     process does not exist
- * @exception ENOENT    object does not exist
- * @exception EFAULT    invalid semaphore object
+ * @exception | @ref ESRCH
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @b Example
  * @code
@@ -803,8 +803,8 @@ static inline void semaphore_delete(sem_t *sem)
  * @param sem           semaphore object pointer
  * @param timeout       timeout value in milliseconds
  *
- * @exception EINVAL    invalid value or object
- * @exception ETIME     timeout occurred
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
  *
  * @return On success, <b>true</b> is returned. On timeout or if semaphore is
  * not signaled or object is invalid <b>false</b> is returned.
@@ -868,8 +868,8 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
  *
  * @param sem           semaphore object pointer
  *
- * @exception EBUSY     object is busy
- * @exception EINVAL    invalid value or object
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
  *
  * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
  * be signaled or object is invalid then <b>false</b> is returned.
@@ -928,9 +928,9 @@ static inline bool semaphore_signal(sem_t *sem)
  *
  * @param type          mutex type
  *
- * @exception EINVAL    invalid value
- * @exception ENOMEM    not enough free memory to create object
- * @exception ESRCH     process/thread does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
  *
  * @return On success, pointer to the mutex object is returned. On error,
  * <b>NULL</b> pointer is returned.
@@ -991,9 +991,9 @@ static inline mutex_t *mutex_new(enum mutex_type type)
  *
  * @param mutex         mutex
  *
- * @exception ESRCH     process does not exist
- * @exception ENOENT    object does not exist
- * @exception EFAULT    invalid semaphore object
+ * @exception | @ref ESRCH
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @b Example
  * @code
@@ -1058,8 +1058,8 @@ static inline void mutex_delete(mutex_t *mutex)
  * @param mutex     mutex
  * @param timeout   timeout
  *
- * @exception EINVAL    invalid value or object
- * @exception ETIME     timeout occurred
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
  *
  * @return If mutex is locked then <b>true</b> is returned. If mutex is used or
  * timeout occur or object is incorrect, then <b>false</b> is returned.
@@ -1124,8 +1124,8 @@ static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
  *
  * @param mutex         mutex
  *
- * @exception EINVAL    invalid value or object
- * @exception ETIME     timeout occurred
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
  *
  * @return If mutex is locked then <b>true</b> is returned. If mutex is used
  * or object is incorrect, then <b>false</b> is returned.
@@ -1188,8 +1188,8 @@ static inline bool mutex_trylock(mutex_t *mutex)
  *
  * @param mutex         mutex
  *
- * @exception EBUSY     object is busy
- * @exception EINVAL    invalid value or object
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
  *
  * @return If mutex is unlocked then <b>true</b> is returned. If mutex is not
  * unlocked or object is incorrect then <b>false</b> is returned.
@@ -1253,9 +1253,9 @@ static inline bool mutex_unlock(mutex_t *mutex)
  * @param length        queue length
  * @param item_size     size of item
  *
- * @exception EINVAL    invalid value
- * @exception ENOMEM    not enough free memory to create object
- * @exception ESRCH     process/thread does not exists
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
  *
  * @return On success returns pointer to the created object or <b>NULL</b> on
  * error.
@@ -1321,9 +1321,9 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
  *
  * @param queue         queue object
  *
- * @exception ESRCH     process does not exist
- * @exception ENOENT    object does not exist
- * @exception EFAULT    invalid semaphore object
+ * @exception | @ref ESRCH
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
  *
  * @b Example
  * @code
@@ -1384,8 +1384,8 @@ static inline void queue_delete(queue_t *queue)
  *
  * @param queue         queue object
  *
- * @exception EBUSY     object is busy
- * @exception EINVAL    invalid value or object
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
  *
  * @return On success true is returned, otherwise false.
  *
@@ -1454,8 +1454,8 @@ static inline bool queue_reset(queue_t *queue)
  * @param item      item to send
  * @param timeout   send timeout (0 for polling)
  *
- * @exception EINVAL    invalid value or object
- * @exception ENOSPC    no free space in queue (timeout)
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOSPC
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
@@ -1524,8 +1524,8 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
  * @param item          item destination
  * @param timeout       send timeout (0 for polling)
  *
- * @exception EINVAL    invalid value or object
- * @exception EAGAIN    try again
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
@@ -1592,8 +1592,8 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
  * @param item          item destination
  * @param timeout       send timeout (0 for polling)
  *
- * @exception EINVAL    invalid value or object
- * @exception EAGAIN    try again
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
  *
  * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
  *
@@ -1659,7 +1659,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
  *
  * @param queue         queue object
  *
- * @exception EINVAL    invalid value or object
+ * @exception | @ref EINVAL
  *
  * @return Number of items stored in the queue. On error, -1 is returned.
  *
@@ -1729,7 +1729,7 @@ static inline int queue_get_number_of_items(queue_t *queue)
  *
  * @param queue         queue object
  *
- * @exception EINVAL    invalid value or object
+ * @exception | @ref EINVAL
  *
  * @return Number of free items available in the queue. On error, -1 is returned.
  *
@@ -1770,9 +1770,9 @@ static inline int queue_get_space_available(queue_t *queue)
 }
 #endif
 
-/**@}*/
-
 #endif /* _THREAD_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

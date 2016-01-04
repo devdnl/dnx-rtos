@@ -99,9 +99,9 @@ extern "C" {
  * @param major         driver major number
  * @param minor         driver minor number
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough memory to create node
- * @exception ...       error depends on file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -133,13 +133,13 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
  * @param pathname      directory name
  * @param mode          directory permissions
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -175,13 +175,13 @@ static inline int mkdir(const char *pathname, mode_t mode)
  * @param pathname      FIFO name
  * @param mode          FIFO permissions
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -213,13 +213,13 @@ static inline int mkfifo(const char *pathname, mode_t mode)
  * @param pathname      file to permission change
  * @param mode          new permissions
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -251,13 +251,13 @@ static inline int chmod(const char *pathname, mode_t mode)
  * @param pathname      file to inspect
  * @param buf           file's information
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -296,13 +296,13 @@ static inline int stat(const char *pathname, struct stat *buf)
  * @param file          file object
  * @param buf           file's information
  *
- * @exception EINVAL    invalid argument
- * @exception ENOMEM    not enough free memory to create directory
- * @exception EACCES    access denied
- * @exception EEXIST    directory already exists
- * @exception ENOENT    parent directory does not exists
- * @exception ENOSPC    not enough free space on disc
- * @exception ...       other errors returned by file system
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
  * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
@@ -343,9 +343,9 @@ static inline int fstat(FILE *file, struct stat *buf)
 }
 #endif
 
-/**@}*/
-
 #endif /* _STAT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
