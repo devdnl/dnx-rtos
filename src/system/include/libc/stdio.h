@@ -451,9 +451,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
         // ...
    @endcode
  *
- * @see fsetpos()
- * @see fgetpos()
- * @see ftell()
+ * @see fsetpos(), fgetpos(), ftell()
  */
 //==============================================================================
 static inline int fseek(FILE *file, i64_t offset, int mode)
@@ -501,9 +499,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
         // ...
    @endcode
  *
- * @see fseek()
- * @see fgetpos()
- * @see ftell()
+ * @see fseek(), fgetpos(), ftell()
  */
 //==============================================================================
 static inline int fsetpos(FILE *file, const fpos_t *pos)
@@ -550,8 +546,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
         // ...
    @endcode
  *
- * @see fseek()
- * @see fsetpos()
+ * @see fseek(), fsetpos()
  */
 //==============================================================================
 static inline void rewind(FILE *file)
@@ -596,9 +591,7 @@ static inline void rewind(FILE *file)
         // ...
    @endcode
  *
- * @see fseek()
- * @see fsetpos()
- * @see fgetpos()
+ * @see fseek(), fsetpos(), fgetpos()
  */
 //==============================================================================
 static inline i64_t ftell(FILE *file)
@@ -647,9 +640,7 @@ static inline i64_t ftell(FILE *file)
         // ...
    @endcode
  *
- * @see fsetpos()
- * @see fseek()
- * @see ftell()
+ * @see fsetpos(), fseek(), ftell()
  */
 //==============================================================================
 static inline int fgetpos(FILE *file, fpos_t *pos)
@@ -795,8 +786,7 @@ static inline int feof(FILE *file)
         // ...
    @endcode
  *
- * @see feof()
- * @see ferror()
+ * @see feof(), ferror()
  */
 //==============================================================================
 static inline void clearerr(FILE *file)
@@ -1188,13 +1178,7 @@ static inline int rename(const char *old_name, const char *new_name)
         // ...
    @endcode
  *
- * @see printf()
- * @see vprintf()
- * @see fprintf()
- * @see vsprintf()
- * @see vsnprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see printf(), vprintf(), fprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
@@ -1274,13 +1258,7 @@ extern int vfprintf(FILE *stream, const char *format, va_list arg);
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see vprintf()
- * @see fprintf()
- * @see vsprintf()
- * @see vsnprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see vfprintf(), vprintf(), fprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 static inline int printf(const char *format, ...)
@@ -1370,13 +1348,7 @@ static inline int printf(const char *format, ...)
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see fprintf()
- * @see vsprintf()
- * @see vsnprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see vfprintf(), printf(), fprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 static inline int vprintf(const char *format, va_list arg)
@@ -1456,13 +1428,7 @@ static inline int vprintf(const char *format, va_list arg)
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see vprintf()
- * @see vsprintf()
- * @see vsnprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see vfprintf(), printf(), vprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 static inline int fprintf(FILE *stream, const char *format, ...)
@@ -1551,13 +1517,7 @@ static inline int fprintf(FILE *stream, const char *format, ...)
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see vprintf()
- * @see fprintf()
- * @see vsprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see vfprintf(), printf(), vprintf(), fprintf(), vsprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
@@ -1636,13 +1596,7 @@ extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see vprintf()
- * @see vsprintf()
- * @see fprintf()
- * @see vsnprintf()
- * @see sprintf()
+ * @see vfprintf(), printf(), vprintf(), vsprintf(), fprintf(), vsnprintf(), sprintf()
  */
 //==============================================================================
 static inline int snprintf(char *s, size_t n, const char *format, ...)
@@ -1728,13 +1682,7 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see vprintf()
- * @see vsprintf()
- * @see fprintf()
- * @see vsnprintf()
- * @see snprintf()
+ * @see vfprintf(), printf(), vprintf(), vsprintf(), fprintf(), vsnprintf(), snprintf()
  */
 //==============================================================================
 static inline int sprintf(char *s, const char *format, ...)
@@ -1822,13 +1770,7 @@ static inline int sprintf(char *s, const char *format, ...)
         // ...
    @endcode
  *
- * @see vfprintf()
- * @see printf()
- * @see vprintf()
- * @see fprintf()
- * @see vsnprintf()
- * @see snprintf()
- * @see sprintf()
+ * @see vfprintf(), printf(), vprintf(), fprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
@@ -1893,11 +1835,7 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
         // ...
    @endcode
  *
- * @see vfscanf()
- * @see scanf()
- * @see vscanf()
- * @see fscanf()
- * @see sscanf()
+ * @see vfscanf(), scanf(), vscanf(), fscanf(), sscanf()
  */
 //==============================================================================
 extern int vsscanf(const char *s, const char *format, va_list args);
@@ -1961,11 +1899,7 @@ extern int vsscanf(const char *s, const char *format, va_list args);
         // ...
    @endcode
  *
- * @see vsscanf()
- * @see scanf()
- * @see vscanf()
- * @see fscanf()
- * @see sscanf()
+ * @see vsscanf(), scanf(), vscanf(), fscanf(), sscanf()
  */
 //==============================================================================
 extern int vfscanf(FILE *stream, const char *format, va_list arg);
@@ -2024,11 +1958,7 @@ extern int vfscanf(FILE *stream, const char *format, va_list arg);
         // ...
    @endcode
  *
- * @see vsscanf()
- * @see vfscanf()
- * @see vscanf()
- * @see fscanf()
- * @see sscanf()
+ * @see vsscanf(), vfscanf(), vscanf(), fscanf(), sscanf()
  */
 //==============================================================================
 static inline int scanf(const char *format, ...)
@@ -2098,11 +2028,7 @@ static inline int scanf(const char *format, ...)
         // ...
    @endcode
  *
- * @see vsscanf()
- * @see vfscanf()
- * @see scanf()
- * @see fscanf()
- * @see sscanf()
+ * @see vsscanf(), vfscanf(), scanf(), fscanf(), sscanf()
  */
 //==============================================================================
 static inline int vscanf(const char *format, va_list arg)
@@ -2165,11 +2091,7 @@ static inline int vscanf(const char *format, va_list arg)
         // ...
    @endcode
  *
- * @see vsscanf()
- * @see vfscanf()
- * @see scanf()
- * @see vscanf()
- * @see sscanf()
+ * @see vsscanf(), vfscanf(), scanf(), vscanf(), sscanf()
  */
 //==============================================================================
 static inline int fscanf(FILE *stream, const char *format, ...)
@@ -2237,11 +2159,7 @@ static inline int fscanf(FILE *stream, const char *format, ...)
         // ...
    @endcode
  *
- * @see vsscanf()
- * @see vfscanf()
- * @see scanf()
- * @see vscanf()
- * @see fscanf()
+ * @see vsscanf(), vfscanf(), scanf(), vscanf(), fscanf()
  */
 //==============================================================================
 static inline int sscanf(const char *s, const char *format, ...)
@@ -2280,8 +2198,7 @@ static inline int sscanf(const char *s, const char *format, ...)
         // ...
    @endcode
  *
- * @see putc()
- * @see putchar()
+ * @see putc(), putchar()
  */
 //==============================================================================
 extern int fputc(int c, FILE *stream);
@@ -2312,8 +2229,7 @@ extern int fputc(int c, FILE *stream);
         // ...
    @endcode
  *
- * @see fputc()
- * @see putchar()
+ * @see fputc(), putchar()
  */
 //==============================================================================
 static inline int putc(int c, FILE *stream)
@@ -2346,8 +2262,7 @@ static inline int putc(int c, FILE *stream)
         // ...
    @endcode
  *
- * @see fputc()
- * @see putc()
+ * @see fputc(), putc()
  */
 //==============================================================================
 static inline int putchar(int c)
@@ -2441,8 +2356,7 @@ extern int puts(const char *s);
         // ...
    @endcode
  *
- * @see getchar()
- * @see fgetc()
+ * @see getchar(), fgetc()
  */
 //==============================================================================
 extern int getc(FILE *stream);
@@ -2470,8 +2384,7 @@ extern int getc(FILE *stream);
         // ...
    @endcode
  *
- * @see getc()
- * @see fgetc()
+ * @see getc(), fgetc()
  */
 //==============================================================================
 static inline int getchar(void)
@@ -2505,8 +2418,7 @@ static inline int getchar(void)
         // ...
    @endcode
  *
- * @see getc()
- * @see getchar()
+ * @see getc(), getchar()
  */
 //==============================================================================
 static inline int fgetc(FILE *stream)
@@ -2549,9 +2461,7 @@ static inline int fgetc(FILE *stream)
         // ...
    @endcode
  *
- * @see getc()
- * @see getchar()
- * @see fgetc()
+ * @see getc(), getchar(), fgetc()
  */
 //==============================================================================
 static inline int ungetc(int c, FILE *stream)
@@ -2594,8 +2504,7 @@ static inline int ungetc(int c, FILE *stream)
         // ...
    @endcode
  *
- * @see fputs()
- * @see puts()
+ * @see fputs(), puts()
  */
 //==============================================================================
 extern char *fgets(char *str, int size, FILE *stream);

@@ -101,8 +101,7 @@ extern "C" {
         // ...
    @endcode
  *
- * @see mount()
- * @see umount()
+ * @see mount(), umount()
  */
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)

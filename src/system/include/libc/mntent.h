@@ -105,6 +105,8 @@ struct mntent {
 
         // ...
    @endcode
+ *
+ * @see mount(), umount()
  */
 //==============================================================================
 static inline int getmntentry(int seek, struct mntent *mntent)

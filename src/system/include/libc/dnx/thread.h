@@ -380,6 +380,8 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
         // ...
 
    @endcode
+ *
+ * @see process_stat()
  */
 //==============================================================================
 static inline int process_stat_seek(size_t seek, process_stat_t *stat)
@@ -419,6 +421,8 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
         // ...
 
    @endcode
+ *
+ * @see process_stat_seek()
  */
 //==============================================================================
 static inline int process_stat(pid_t pid, process_stat_t *stat)
@@ -451,6 +455,8 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
         // ...
 
    @endcode
+ *
+ * @see getpid()
  */
 //==============================================================================
 static inline pid_t process_getpid(void)
@@ -540,6 +546,8 @@ static inline int process_get_priority(pid_t pid)
         // ...
 
    @endcode
+ *
+ * @see thread_cancel(), thread_join()
  */
 //==============================================================================
 static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
@@ -600,6 +608,8 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
         // ...
 
    @endcode
+ *
+ * @see thread_create(), thread_join()
  */
 //==============================================================================
 static inline int thread_cancel(tid_t tid)
@@ -662,6 +672,8 @@ static inline int thread_cancel(tid_t tid)
         // ...
 
    @endcode
+ *
+ * @see thread_create(), thread_cancel()
  */
 //==============================================================================
 static inline int thread_join(tid_t tid)
@@ -1102,8 +1114,7 @@ static inline void mutex_delete(mutex_t *mutex)
 
    @endcode
  *
- * @see mutex_unlock()
- * @see mutex_trylock()
+ * @see mutex_unlock(), mutex_trylock()
  */
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
@@ -1171,8 +1182,7 @@ static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 
    @endcode
  *
- * @see mutex_unlock()
- * @see mutex_lock()
+ * @see mutex_unlock(), mutex_lock()
  */
 //==============================================================================
 static inline bool mutex_trylock(mutex_t *mutex)
@@ -1232,8 +1242,7 @@ static inline bool mutex_trylock(mutex_t *mutex)
 
    @endcode
  *
- * @see mutex_lock()
- * @see mutex_trylock()
+ * @see mutex_lock(), mutex_trylock()
  */
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
@@ -1501,8 +1510,7 @@ static inline bool queue_reset(queue_t *queue)
 
    @endcode
  *
- * @see queue_receive()
- * @see queue_receive_peek()
+ * @see queue_receive(), queue_receive_peek()
  */
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
@@ -1571,8 +1579,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
 
    @endcode
  *
- * @see queue_send()
- * @see queue_receive_peek()
+ * @see queue_send(), queue_receive_peek()
  */
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
@@ -1640,8 +1647,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
 
    @endcode
  *
- * @see queue_send()
- * @see queue_receive()
+ * @see queue_send(), queue_receive()
  */
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
@@ -1708,9 +1714,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
 
    @endcode
  *
- * @see queue_send()
- * @see queue_receive()
- * @see queue_reset()
+ * @see queue_send(), queue_receive(), queue_reset()
  */
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
@@ -1753,10 +1757,7 @@ static inline int queue_get_number_of_items(queue_t *queue)
 
    @endcode
  *
- * @see queue_get_number_of_items()
- * @see queue_receive()
- * @see queue_send()
- * @see queue_reset()
+ * @see queue_get_number_of_items(), queue_receive(), queue_send(), queue_reset()
  */
 //==============================================================================
 static inline int queue_get_space_available(queue_t *queue)

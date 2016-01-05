@@ -26,6 +26,9 @@
 
 /**
 \defgroup dnx-os-h <dnx/os.h>
+
+This library contains macros and functions related directly with dnx RTOS system.
+
 */
 /**@{*/
 

@@ -26,6 +26,9 @@
 
 /**
 \defgroup dnx-misc-h <dnx/misc.h>
+
+dnx RTOS miscellaneous macros and functions.
+
 */
 /**@{*/
 

@@ -128,6 +128,8 @@ extern "C" {
 
         // ...
    @endcode
+ *
+ * @see closedir()
  */
 //==============================================================================
 static inline DIR *opendir(const char *name)
@@ -180,6 +182,8 @@ static inline DIR *opendir(const char *name)
 
         // ...
    @endcode
+ *
+ * @see opendir()
  */
 //==============================================================================
 static inline int closedir(DIR *dir)
@@ -234,6 +238,8 @@ static inline int closedir(DIR *dir)
 
         // ...
    @endcode
+ *
+ * @see opendir(), closedir()
  */
 //==============================================================================
 static inline struct dirent *readdir(DIR *dir)

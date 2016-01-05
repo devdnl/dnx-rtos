@@ -93,15 +93,7 @@ typedef uint fd_t;
 
 /**
  * @brief File mode.
- * @see S_IRUSR
- * @see S_IWUSR
- * @see S_IXUSR
- * @see S_IRGRO
- * @see S_IWGRO
- * @see S_IXGRO
- * @see S_IROTH
- * @see S_IWOTH
- * @see S_IXOTH
+ * @see S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRO, S_IWGRO, S_IXGRO, S_IROTH, S_IWOTH, S_IXOTH
  */
 typedef int mode_t;
 

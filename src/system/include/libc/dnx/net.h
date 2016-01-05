@@ -27,6 +27,9 @@
 /**
 \defgroup dnx-net-h <dnx/net.h>
 \todo Network library
+
+Network handling library.
+
 */
 /**@{*/
 
