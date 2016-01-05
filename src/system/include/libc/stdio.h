@@ -415,11 +415,11 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  * The <b>fseek</b>() function sets the file position indicator for the stream
  * pointed to by <i>file</i>. The new position, measured in bytes, is obtained
  * by adding offset bytes to the position specified by whence. If whence is set
- * to <b>SEEK_SET</b>, <b>SEEK_CUR</b>, or <b>SEEK_END</b>, the offset is
+ * to @ref SEEK_SET, @ref SEEK_CUR, or @ref SEEK_END, the offset is
  * relative to the start of the file, the current position indicator, or
  * end-of-file, respectively. A successful call to the <b>fseek</b>() function
  * clears the end-of-file indicator for the stream and undoes any effects of the
- * <b>ungetc</b>() function on the same stream.
+ * ungetc() function on the same stream.
  *
  * @param file          stream
  * @param offset        offset
