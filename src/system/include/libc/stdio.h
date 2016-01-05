@@ -182,7 +182,7 @@ extern FILE *stderr;
  * @exception | @ref ENOENT
  *
  * @return Upon successful completion <b>fopen</b>(), return a <b>FILE</b> pointer.
- * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
+ * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
  * error.
  *
  * @b Example
@@ -200,6 +200,8 @@ extern FILE *stderr;
 
         // ...
    @endcode
+ *
+ * @see fclose()
  */
 //==============================================================================
 static inline FILE *fopen(const char *path, const char *mode)
@@ -221,8 +223,8 @@ static inline FILE *fopen(const char *path, const char *mode)
  * @exception | @ref ENOENT
  * @exception | @ref EFAULT
  *
- * @return Upon successful completion \b 0 is returned. Otherwise, <b>EOF</b> is
- * returned and <b>errno</b> is set to indicate the error. In either case any
+ * @return Upon successful completion \b 0 is returned. Otherwise, @ref EOF is
+ * returned and @ref errno is set to indicate the error. In either case any
  * further access (including another call to fclose()) to the stream results
  * in undefined behavior.
  *
@@ -241,6 +243,8 @@ static inline FILE *fopen(const char *path, const char *mode)
 
         // ...
    @endcode
+ *
+ * @see fopen()
  */
 //==============================================================================
 static inline int fclose(FILE *file)
@@ -270,7 +274,7 @@ static inline int fclose(FILE *file)
  * @exception | @ref EFAULT
  *
  * @return Upon successful completion <b>freopen</b>(), return a <b>FILE</b> pointer.
- * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
+ * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
  * error.
  *
  * @b Example
@@ -342,6 +346,8 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 
         // ...
    @endcode
+ *
+ * @see fread()
  */
 //==============================================================================
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
@@ -391,6 +397,8 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 
         // ...
    @endcode
+ *
+ * @see fwrite()
  */
 //==============================================================================
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
@@ -421,7 +429,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fseek</b>() return 0. Otherwise, -1 is
- * returned and <b>errno</b> is set to indicate the error.
+ * returned and @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -442,6 +450,10 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 
         // ...
    @endcode
+ *
+ * @see fsetpos()
+ * @see fgetpos()
+ * @see ftell()
  */
 //==============================================================================
 static inline int fseek(FILE *file, i64_t offset, int mode)
@@ -455,8 +467,8 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 /**
  * @brief Function sets file position indicator.
  *
- * The <b>fsetpos</b>() function is alternate interfaces equivalent to <b>fseek</b>()
- * (with whence set to <b>SEEK_SET</b>), setting and storing the current value
+ * The <b>fsetpos</b>() function is alternate interfaces equivalent to fseek()
+ * (with whence set to @ref SEEK_SET), setting and storing the current value
  * of the file offset into the object referenced by <i>pos</i>.
  *
  * @param file          stream
@@ -466,7 +478,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
  * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
- * returned and <b>errno</b> is set to indicate the error.
+ * returned and @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -488,6 +500,10 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 
         // ...
    @endcode
+ *
+ * @see fseek()
+ * @see fgetpos()
+ * @see ftell()
  */
 //==============================================================================
 static inline int fsetpos(FILE *file, const fpos_t *pos)
@@ -533,6 +549,9 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 
         // ...
    @endcode
+ *
+ * @see fseek()
+ * @see fsetpos()
  */
 //==============================================================================
 static inline void rewind(FILE *file)
@@ -552,7 +571,7 @@ static inline void rewind(FILE *file)
  * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>ftell</b>() returns the current offset.
- * Otherwise, -1 is returned and <b>errno</b> is set to indicate the error.
+ * Otherwise, -1 is returned and @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -576,6 +595,10 @@ static inline void rewind(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see fseek()
+ * @see fsetpos()
+ * @see fgetpos()
  */
 //==============================================================================
 static inline i64_t ftell(FILE *file)
@@ -589,7 +612,7 @@ static inline i64_t ftell(FILE *file)
 /**
  * @brief Function returns file position indicator.
  *
- * The <b>fgetpos</b>() function is alternate interface equivalent to <b>ftell</b>(),
+ * The <b>fgetpos</b>() function is alternate interface equivalent to ftell(),
  * storing the current value of the file offset from the object referenced by
  * <i>pos</i>.
  *
@@ -599,7 +622,7 @@ static inline i64_t ftell(FILE *file)
  * @exception | @ref EINVAL
  *
  * @return Upon successful completion, <b>fgetpos</b>() return 0. Otherwise, -1
- * is returned and <b>errno</b> is set to indicate the error.
+ * is returned and @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -623,6 +646,10 @@ static inline i64_t ftell(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see fsetpos()
+ * @see fseek()
+ * @see ftell()
  */
 //==============================================================================
 static inline int fgetpos(FILE *file, fpos_t *pos)
@@ -649,8 +676,8 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
  * @exception | @ref ENOENT
  * @exception | @ref EINVAL
  *
- * @return Upon successful completion 0 is returned. Otherwise, <b>EOF</b> is
- * returned and <b>errno</b> is set to indicate the error.
+ * @return Upon successful completion 0 is returned. Otherwise, @ref EOF is
+ * returned and @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -688,14 +715,14 @@ static inline int fflush(FILE *file)
  *
  * The function <b>feof</b>() tests the end-of-file indicator for the stream
  * pointed to by <i>file</i>, returning nonzero if it is set. The end-of-file
- * indicator can only be cleared by the function <b>clearerr</b>().
+ * indicator can only be cleared by the function clearerr().
  *
  * @param file          stream
  *
  * @exception | @ref ENOENT
  * @exception | @ref EINVAL
  *
- * @return Returns nonzero if <b>EOF</b> indicator is set, otherwise 0 is
+ * @return Returns nonzero if @ref EOF indicator is set, otherwise 0 is
  * returned.
  *
  * @b Example
@@ -719,6 +746,8 @@ static inline int fflush(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see clearerr()
  */
 //==============================================================================
 static inline int feof(FILE *file)
@@ -765,6 +794,9 @@ static inline int feof(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see feof()
+ * @see ferror()
  */
 //==============================================================================
 static inline void clearerr(FILE *file)
@@ -778,7 +810,7 @@ static inline void clearerr(FILE *file)
  *
  * The function <b>ferror</b>() tests the error indicator for the stream pointed
  * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
- * be reset only by the <b>clearerr</b>() function.
+ * be reset only by the clearerr() function.
  *
  * @param file          stream
  *
@@ -813,6 +845,8 @@ static inline void clearerr(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see clearerr()
  */
 //==============================================================================
 static inline int ferror(FILE *file)
@@ -828,7 +862,7 @@ static inline int ferror(FILE *file)
  *
  * The routine <b>perror</b>() produces a message on the standard error output,
  * describing the last error encountered during a call to a system or
- * library function.  First (if <i>s</i> is not <b>NULL</b> and <i>*s</i> is not
+ * library function.  First (if <i>s</i> is not @ref NULL and <i>*s</i> is not
  * a null byte ('\0')) the argument string <i>s</i> is printed, followed by a
  * colon and a blank. Then the message and a new-line.
  *
@@ -884,6 +918,8 @@ extern void perror(const char *s);
         }
         // ...
    @endcode
+ *
+ * @see setvbuf()
  */
 //==============================================================================
 static inline void setbuf(FILE *file, char *buffer)
@@ -921,6 +957,8 @@ static inline void setbuf(FILE *file, char *buffer)
         }
         // ...
    @endcode
+ *
+ * @see setbuf()
  */
 //==============================================================================
 static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
@@ -942,9 +980,9 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
  *
  * @note Function not supported.
  *
- * @return The <b>tmpfile</b>() function returns a stream descriptor, or <b>NULL</b>
+ * @return The <b>tmpfile</b>() function returns a stream descriptor, or @ref NULL
  * if a unique filename cannot be generated or the unique file cannot be opened.
- * In the latter case, <b>errno</b> is set to indicate the error.
+ * In the latter case, @ref errno is set to indicate the error.
  *
  * @b Example
  * @code
@@ -974,10 +1012,10 @@ static inline FILE *tmpfile(void)
  *
  * @note Function not supported.
  *
- * @param str       temporary file name or automatic generated if <b>NULL</b>
+ * @param str       temporary file name or automatic generated if @ref NULL
  *
  * @return The <b>tmpnam</b>() function returns a pointer to a unique temporary
- * filename, or <b>NULL</b> if a unique name cannot be generated.
+ * filename, or @ref NULL if a unique name cannot be generated.
  *
  * @b Example
  * @code
@@ -1017,7 +1055,7 @@ static inline char *tmpnam(char *str)
  * @exception | @ref EINVAL
  *
  * @return On success, zero is returned. On error, -1 is returned, and
- * <b>errno</b> is set appropriately.
+ * @ref errno is set appropriately.
  *
  * @b Example
  * @code
@@ -1053,7 +1091,7 @@ static inline int remove(const char *path)
  * @exception | @ref EPERM
  * @exception | @ref EINVAL
  *
- * @return On success, zero is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, zero is returned. On error, -1 is returned, and @ref errno
  * is set appropriately.
  *
  * @b Example
@@ -1149,6 +1187,14 @@ static inline int rename(const char *old_name, const char *new_name)
 
         // ...
    @endcode
+ *
+ * @see printf()
+ * @see vprintf()
+ * @see fprintf()
+ * @see vsprintf()
+ * @see vsnprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
@@ -1227,6 +1273,14 @@ extern int vfprintf(FILE *stream, const char *format, va_list arg);
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see vprintf()
+ * @see fprintf()
+ * @see vsprintf()
+ * @see vsnprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 static inline int printf(const char *format, ...)
@@ -1315,6 +1369,14 @@ static inline int printf(const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see fprintf()
+ * @see vsprintf()
+ * @see vsnprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 static inline int vprintf(const char *format, va_list arg)
@@ -1327,7 +1389,7 @@ static inline int vprintf(const char *format, va_list arg)
  * @brief Function prints message according to format to selected stream.
  *
  * The function produce output according to a <i>format</i> as described below.
- * The function write output to <b>stream</b>.<p>
+ * The function write output to <i>stream</i>.<p>
  *
  * Supported flags:@n
  *   %%         - print % character
@@ -1393,6 +1455,14 @@ static inline int vprintf(const char *format, va_list arg)
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see vprintf()
+ * @see vsprintf()
+ * @see vsnprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 static inline int fprintf(FILE *stream, const char *format, ...)
@@ -1480,6 +1550,14 @@ static inline int fprintf(FILE *stream, const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see vprintf()
+ * @see fprintf()
+ * @see vsprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
@@ -1557,6 +1635,14 @@ extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see vprintf()
+ * @see vsprintf()
+ * @see fprintf()
+ * @see vsnprintf()
+ * @see sprintf()
  */
 //==============================================================================
 static inline int snprintf(char *s, size_t n, const char *format, ...)
@@ -1641,6 +1727,14 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see vprintf()
+ * @see vsprintf()
+ * @see fprintf()
+ * @see vsnprintf()
+ * @see snprintf()
  */
 //==============================================================================
 static inline int sprintf(char *s, const char *format, ...)
@@ -1727,6 +1821,14 @@ static inline int sprintf(char *s, const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vfprintf()
+ * @see printf()
+ * @see vprintf()
+ * @see fprintf()
+ * @see vsnprintf()
+ * @see snprintf()
+ * @see sprintf()
  */
 //==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
@@ -1773,10 +1875,10 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -1790,6 +1892,12 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
 
         // ...
    @endcode
+ *
+ * @see vfscanf()
+ * @see scanf()
+ * @see vscanf()
+ * @see fscanf()
+ * @see sscanf()
  */
 //==============================================================================
 extern int vsscanf(const char *s, const char *format, va_list args);
@@ -1833,10 +1941,10 @@ extern int vsscanf(const char *s, const char *format, va_list args);
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -1852,6 +1960,12 @@ extern int vsscanf(const char *s, const char *format, va_list args);
 
         // ...
    @endcode
+ *
+ * @see vsscanf()
+ * @see scanf()
+ * @see vscanf()
+ * @see fscanf()
+ * @see sscanf()
  */
 //==============================================================================
 extern int vfscanf(FILE *stream, const char *format, va_list arg);
@@ -1893,10 +2007,10 @@ extern int vfscanf(FILE *stream, const char *format, va_list arg);
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -1909,6 +2023,12 @@ extern int vfscanf(FILE *stream, const char *format, va_list arg);
 
         // ...
    @endcode
+ *
+ * @see vsscanf()
+ * @see vfscanf()
+ * @see vscanf()
+ * @see fscanf()
+ * @see sscanf()
  */
 //==============================================================================
 static inline int scanf(const char *format, ...)
@@ -1958,10 +2078,10 @@ static inline int scanf(const char *format, ...)
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -1977,6 +2097,12 @@ static inline int scanf(const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vsscanf()
+ * @see vfscanf()
+ * @see scanf()
+ * @see fscanf()
+ * @see sscanf()
  */
 //==============================================================================
 static inline int vscanf(const char *format, va_list arg)
@@ -2022,10 +2148,10 @@ static inline int vscanf(const char *format, va_list arg)
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -2038,6 +2164,12 @@ static inline int vscanf(const char *format, va_list arg)
 
         // ...
    @endcode
+ *
+ * @see vsscanf()
+ * @see vfscanf()
+ * @see scanf()
+ * @see vscanf()
+ * @see sscanf()
  */
 //==============================================================================
 static inline int fscanf(FILE *stream, const char *format, ...)
@@ -2087,10 +2219,10 @@ static inline int fscanf(FILE *stream, const char *format, ...)
  * and assigned, which can be fewer than provided for, or even zero in the event
  * of an early matching failure.<p>
  *
- * The value <b>EOF</b> is returned if the end of input is reached before either
- * the first successful conversion or a matching failure occurs. <b>EOF</b> is
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
  * also returned if a read error occurs, in which case the error indicator for
- * the stream is set, and <b>errno</b> is set indicate the error.
+ * the stream is set, and @ref errno is set indicate the error.
  *
  * @b Example
  * @code
@@ -2104,6 +2236,12 @@ static inline int fscanf(FILE *stream, const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see vsscanf()
+ * @see vfscanf()
+ * @see scanf()
+ * @see vscanf()
+ * @see fscanf()
  */
 //==============================================================================
 static inline int sscanf(const char *s, const char *format, ...)
@@ -2129,7 +2267,7 @@ static inline int sscanf(const char *s, const char *format, ...)
  * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
- * <b>EOF</b> on error.
+ * @ref EOF on error.
  *
  * @b Example
  * @code
@@ -2141,6 +2279,9 @@ static inline int sscanf(const char *s, const char *format, ...)
 
         // ...
    @endcode
+ *
+ * @see putc()
+ * @see putchar()
  */
 //==============================================================================
 extern int fputc(int c, FILE *stream);
@@ -2158,7 +2299,7 @@ extern int fputc(int c, FILE *stream);
  * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
- * <b>EOF</b> on error.
+ * @ref EOF on error.
  *
  * @b Example
  * @code
@@ -2170,6 +2311,9 @@ extern int fputc(int c, FILE *stream);
 
         // ...
    @endcode
+ *
+ * @see fputc()
+ * @see putchar()
  */
 //==============================================================================
 static inline int putc(int c, FILE *stream)
@@ -2189,7 +2333,7 @@ static inline int putc(int c, FILE *stream)
  * @exception | @ref EINVAL
  *
  * @return Return the character written as an unsigned char cast to an int or
- * <b>EOF</b> on error.
+ * @ref EOF on error.
  *
  * @b Example
  * @code
@@ -2201,6 +2345,9 @@ static inline int putc(int c, FILE *stream)
 
         // ...
    @endcode
+ *
+ * @see fputc()
+ * @see putc()
  */
 //==============================================================================
 static inline int putchar(int c)
@@ -2221,7 +2368,7 @@ static inline int putchar(int c)
  * @exception | @ref ENOMEM
  * @exception | @ref EINVAL
  *
- * @return Return a nonnegative number on success, or <b>EOF</b> on error.
+ * @return Return a nonnegative number on success, or @ref EOF on error.
  *
  * @b Example
  * @code
@@ -2233,6 +2380,8 @@ static inline int putchar(int c)
 
         // ...
    @endcode
+ *
+ * @see puts()
  */
 //==============================================================================
 extern int fputs(const char *s, FILE *stream);
@@ -2249,7 +2398,7 @@ extern int fputs(const char *s, FILE *stream);
  * @exception | @ref ENOMEM
  * @exception | @ref EINVAL
  *
- * @return Return a nonnegative number on success, or <b>EOF</b> on error.
+ * @return Return a nonnegative number on success, or @ref EOF on error.
  *
  * @b Example
  * @code
@@ -2261,6 +2410,8 @@ extern int fputs(const char *s, FILE *stream);
 
         // ...
    @endcode
+ *
+ * @see fputs()
  */
 //==============================================================================
 extern int puts(const char *s);
@@ -2277,7 +2428,7 @@ extern int puts(const char *s);
  * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error.
+ * @ref EOF on end of file or error.
  *
  * @b Example
  * @code
@@ -2289,6 +2440,9 @@ extern int puts(const char *s);
 
         // ...
    @endcode
+ *
+ * @see getchar()
+ * @see fgetc()
  */
 //==============================================================================
 extern int getc(FILE *stream);
@@ -2303,7 +2457,7 @@ extern int getc(FILE *stream);
  * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error.
+ * @ref EOF on end of file or error.
  *
  * @b Example
  * @code
@@ -2315,6 +2469,9 @@ extern int getc(FILE *stream);
 
         // ...
    @endcode
+ *
+ * @see getc()
+ * @see fgetc()
  */
 //==============================================================================
 static inline int getchar(void)
@@ -2327,7 +2484,7 @@ static inline int getchar(void)
  * @brief Function reads character from stream.
  *
  * <b>fgetc</b>() reads the next character from <i>stream</i> and returns it
- * as an unsigned char cast to an int, or <b>EOF</b> on end of file or error.
+ * as an unsigned char cast to an int, or @ref EOF on end of file or error.
  *
  * @param stream        input stream
  *
@@ -2335,7 +2492,7 @@ static inline int getchar(void)
  * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error.
+ * @ref EOF on end of file or error.
  *
  * @b Example
  * @code
@@ -2347,6 +2504,9 @@ static inline int getchar(void)
 
         // ...
    @endcode
+ *
+ * @see getc()
+ * @see getchar()
  */
 //==============================================================================
 static inline int fgetc(FILE *stream)
@@ -2366,9 +2526,6 @@ static inline int fgetc(FILE *stream)
  * calls to other input functions from the stdio library for the same input
  * stream.<p>
  *
- * The routine exist in dnx RTOS only for compatible reasons. Function in no
- * supported.
- *
  * @note Function not supported.
  *
  * @param c             output stream
@@ -2378,8 +2535,8 @@ static inline int fgetc(FILE *stream)
  * @exception | @ref EINVAL
  *
  * @return Return the character read as an unsigned char cast to an int or
- * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
- * and always <b>EOF</b> is returned.
+ * @ref EOF on end of file or error. Function is not supported by dnx RTOS
+ * and always @ref EOF is returned.
  *
  * @b Example
  * @code
@@ -2391,6 +2548,10 @@ static inline int fgetc(FILE *stream)
 
         // ...
    @endcode
+ *
+ * @see getc()
+ * @see getchar()
+ * @see fgetc()
  */
 //==============================================================================
 static inline int ungetc(int c, FILE *stream)
@@ -2407,7 +2568,7 @@ static inline int ungetc(int c, FILE *stream)
  *
  * <b>fgets</b>() reads in at most one less than size characters from stream
  * and stores them into the buffer pointed to by <i>str</i>. Reading stops after
- * an <b>EOF</b>, a newline or buffer end. If a newline is read, it is stored into the
+ * an @ref EOF, a newline or buffer end. If a newline is read, it is stored into the
  * buffer. A terminating null byte ('\0') is stored after the last character in
  * the buffer.
  *
@@ -2419,7 +2580,7 @@ static inline int ungetc(int c, FILE *stream)
  * @exception | @ref EINVAL
  *
  * @return On success return the pointer to the buffer <i>str</i>, on error
- * <b>NULL</b> is returned.
+ * @ref NULL is returned.
  *
  * @b Example
  * @code
@@ -2432,6 +2593,9 @@ static inline int ungetc(int c, FILE *stream)
 
         // ...
    @endcode
+ *
+ * @see fputs()
+ * @see puts()
  */
 //==============================================================================
 extern char *fgets(char *str, int size, FILE *stream);
