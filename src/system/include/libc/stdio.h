@@ -877,6 +877,8 @@ static inline int ferror(FILE *file)
 
         // ...
    @endcode
+ *
+ * @see strerror(), errno
  */
 //==============================================================================
 extern void perror(const char *s);
