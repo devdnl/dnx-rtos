@@ -56,6 +56,7 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage stdio-h Standard IO library
 \li \subpage stdlib-h Standard library
 \li \subpage string-h String manipulation library
+\li \subpage time-h Time management library
 
 \section sec-app-example Example application
 \todo Example application

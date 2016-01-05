@@ -126,6 +126,7 @@ typedef u32_t tid_t;
  */
 typedef i32_t dev_t;
 
+#ifndef DOXYGEN
 /** @brief Time representation type. */
 struct tm {
         int tm_sec;             //!< Seconds after the minute        (0-60*)
@@ -139,7 +140,6 @@ struct tm {
         int tm_isdst;           //!< Daylight Saving Time flag
         int tm_isutc;           //!< UTC time flag (dnx RTOS extension)
 };
-#ifndef DOXYGEN
 #define __TM_STRUCT_DEFINED__
 #endif
 
