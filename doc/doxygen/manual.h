@@ -54,6 +54,7 @@ In this section are presented libraries that are accessible from users' programs
 \li \subpage errno-h Error code list
 \li \subpage mntent-h Information about file system entry
 \li \subpage stdio-h Standard IO library
+\li \subpage stdlib-h Standard library
 
 \section sec-app-example Example application
 \todo Example application
