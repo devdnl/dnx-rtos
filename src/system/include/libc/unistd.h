@@ -24,6 +24,16 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup unistd-h <unistd.h>
+
+The <unistd.h> header defines miscellaneous symbolic constants and types, and
+declares miscellaneous functions. The contents of this header are shown below.
+Library contains only subset of functions and macros that exists in original
+version of library.
+
+@{*/
+
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
@@ -69,13 +79,15 @@ extern "C" {
  *
  * @return None
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sleep(2);
- * // code here will be executed after 2s sleep
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        sleep(2);
+        // code here will be executed after 2s sleep
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sleep(const uint seconds)
@@ -89,19 +101,23 @@ static inline void sleep(const uint seconds)
  * The <b>sleep_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param milliseconds      number of milliseconds to sleep
  *
  * @errors None
  *
  * @return None
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sleep_ms(10);
- * // code here will be executed after 10ms sleep
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        sleep_ms(10);
+        // code here will be executed after 10ms sleep
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sleep_ms(const uint milliseconds)
@@ -124,15 +140,17 @@ static inline void sleep_ms(const uint milliseconds)
  *
  * @return None
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * usleep(10);
- * // code here will be executed after at least 1ms
- * usleep(10000);
- * // code here will be executed after at least 10ms
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        usleep(10);
+        // code here will be executed after 1 system tick (at least 1ms)
+        usleep(10000);
+        // code here will be executed after at least 10ms
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void usleep(const u32_t microseconds)
@@ -147,25 +165,29 @@ static inline void usleep(const u32_t microseconds)
  * The <b>prepare_sleep_until</b>() function prepare tick counter to call
  * <b>sleep_until_ms</b>() and <b>sleep_until</b>() functions.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param None
  *
  * @errors None
  *
  * @return Current tick counter.
  *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
- *
- * // ...
- * u32_t ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until_ms(10, &ref_time);
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        u32_t ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                sleep_until_ms(10, &ref_time);
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int prepare_sleep_until(void)
@@ -179,6 +201,8 @@ static inline int prepare_sleep_until(void)
  * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param milliseconds      number of milliseconds to sleep
  * @param ref_time_ticks    time reference
  *
@@ -186,19 +210,21 @@ static inline int prepare_sleep_until(void)
  *
  * @return None
  *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
- *
- * // ...
- * u32_t ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until_ms(10, &ref_time);
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        u32_t ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                sleep_until_ms(10, &ref_time);
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
@@ -212,6 +238,8 @@ static inline void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_tick
  * The <b>sleep_until</b>() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param seconds               number of seconds to sleep
  * @param ref_time_ticks        time reference
  *
@@ -219,19 +247,21 @@ static inline void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_tick
  *
  * @return None
  *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
- *
- * // ...
- * int ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until(1, &ref_time);
- * }
- * // ...
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        int ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                sleep_until(1, &ref_time);
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sleep_until(const uint seconds, u32_t *ref_time_ticks)
@@ -255,13 +285,15 @@ static inline void sleep_until(const uint seconds, u32_t *ref_time_ticks)
  * the pathname of the current working directory. In the case <b>getcwd</b>() is the
  * same value as <i>buf</i>.
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * char *buf[100];
- * getcwd(buf, 100);
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        char *buf[100];
+        getcwd(buf, 100);
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
@@ -282,15 +314,17 @@ static inline char *getcwd(char *buf, size_t size)
  *
  * @return Return PID on success. On error, 0 is returned.
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- *
- * pid_t pid = getpid();
- * printf("PID of this process is: %d\n, pid);
- *
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+
+        pid_t pid = getpid();
+        printf("PID of this process is: %d\n, pid);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline pid_t getpid(void)
@@ -314,12 +348,14 @@ static inline pid_t getpid(void)
  * @return On success, zero is returned. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * chown("/foo/bar", 1000, 1000);
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        chown("/foo/bar", 1000, 1000);
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
@@ -340,12 +376,14 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
  *
  * @return None
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sync();
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        sync();
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sync(void)
@@ -358,6 +396,7 @@ static inline void sync(void)
 #endif
 
 #endif /* _UNISTD_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
