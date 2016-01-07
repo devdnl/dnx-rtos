@@ -294,7 +294,7 @@ static void ep1_handler(void *arg)
         }
 
         while (!global->configured) {
-                sleep_ms(10);
+                msleep(10);
         }
 
         u32_t tag;
@@ -349,7 +349,7 @@ static void ep1_handler(void *arg)
 
                         global->configured = false;
                         while (!global->configured) {
-                                sleep_ms(5);
+                                msleep(5);
                         }
                 } else {
 

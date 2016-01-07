@@ -90,7 +90,7 @@ int_main(top, STACK_DEPTH_CUSTOM(140), int argc, char *argv[])
 
                 if (!strchr("k,.", key)) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
-                                sleep_ms(KEY_READ_INTERVAL_SEC);
+                                msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
                         } else {
                                 timer = clock();

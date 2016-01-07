@@ -308,7 +308,7 @@ static void ep1_handler(void *arg)
         FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
 
         while (!global->configured) {
-                sleep_ms(100);
+                msleep(100);
         }
 
         if (ep1 && ep2) {

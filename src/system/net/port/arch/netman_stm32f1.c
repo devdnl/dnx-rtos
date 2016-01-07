@@ -210,7 +210,7 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
                         r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
-                        sleep_ms(10);
+                        msleep(10);
                 }
         }
 
