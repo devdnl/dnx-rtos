@@ -74,7 +74,7 @@ extern "C" {
 /**
  * @brief Function scans memory area for character.
  *
- * The <b>memchr</b>() function scans the initial <i>n</i> bytes of the memory area
+ * The memchr() function scans the initial <i>n</i> bytes of the memory area
  * pointed to by <i>s</i> for the first instance of <i>c</i>.  Both <i>c</i>
  * and the bytes of the memory area pointed to by <i>s</i> are interpreted
  * as unsigned char.
@@ -83,7 +83,7 @@ extern "C" {
  * @param c         value to search
  * @param n         memory size
  *
- * @return The <b>memchr</b>() function return a pointer to the matching byte
+ * @return The memchr() function return a pointer to the matching byte
  * or @ref NULL if the character does not occur in the given memory area.
  *
  * @b Example
@@ -104,14 +104,14 @@ extern void *memchr(const void *s, int c, size_t n);
 /**
  * @brief Function compares memory blocks.
  *
- *  The <b>memcmp</b>() function compares the first <i>n</i> bytes (each interpreted as
+ *  The memcmp() function compares the first <i>n</i> bytes (each interpreted as
  *  unsigned char) of the memory areas <i>s1</i> and <i>s2</i>.
  *
  * @param s1        memory area 1
  * @param s2        memory area 2
  * @param n         memory size
  *
- * @return The <b>memcmp</b>() function returns an integer less than, equal to, or
+ * @return The memcmp() function returns an integer less than, equal to, or
  * greater than zero if the first <i>n</i> bytes of <i>s1</i> is found, respectively,
  * to be less than, to match, or be greater than the first <i>n</i> bytes of <i>s2</i>.<p>
  *
@@ -140,7 +140,7 @@ extern int memcmp(const void *s1, const void *s2, size_t n);
 /**
  * @brief Function copies memory blocks.
  *
- * The <b>memcpy</b>() function copies <i>n</i> bytes from memory area <i>src</i> to
+ * The memcpy() function copies <i>n</i> bytes from memory area <i>src</i> to
  * memory area <i>dest</i>. The memory areas must not overlap. Use memmove()
  * if the memory areas do overlap.
  *
@@ -148,7 +148,7 @@ extern int memcmp(const void *s1, const void *s2, size_t n);
  * @param src       source memory area
  * @param n         memory size
  *
- * @return The <b>memcpy</b>() function returns a pointer to <i>dest</i>.
+ * @return The memcpy() function returns a pointer to <i>dest</i>.
  *
  * @b Example
  * @code
@@ -169,7 +169,7 @@ extern void *memcpy(void *dest, const void *src, size_t n);
 /**
  * @brief Function moves memory blocks.
  *
- * The <b>memmove</b>() function copies <i>n</i> bytes from memory area <i>src</i> to
+ * The memmove() function copies <i>n</i> bytes from memory area <i>src</i> to
  * memory area <i>dest</i>. The memory areas may overlap: copying takes place as
  * though the bytes in <i>src</i> are first copied into a temporary array that
  * does not overlap <i>src</i> or <i>dest</i>, and the bytes are then copied
@@ -179,7 +179,7 @@ extern void *memcpy(void *dest, const void *src, size_t n);
  * @param src       source memory area
  * @param n         memory size
  *
- * @return The <b>memmove</b>() function returns a pointer to <i>dest</i>.
+ * @return The memmove() function returns a pointer to <i>dest</i>.
  *
  * @b Example
  * @code
@@ -200,14 +200,14 @@ extern void *memmove(void *dest, const void *src, size_t n);
 /**
  * @brief Function fills memory block.
  *
- * The <b>memset</b>() function fills the first <i>n</i> bytes of the memory area
+ * The memset() function fills the first <i>n</i> bytes of the memory area
  * pointed to by <i>s</i> with the constant byte <i>c</i>.
  *
  * @param s         memory area
  * @param c         value to set
  * @param n         memory size
  *
- * @return The <b>memset</b>() function returns a pointer to the memory area <i>s</i>.
+ * @return The memset() function returns a pointer to the memory area <i>s</i>.
  *
  * @b Example
  * @code
@@ -226,7 +226,7 @@ extern void *memset(void *s, int c, size_t n);
 /**
  * @brief Function appends strings.
  *
- * The <b>strcat</b>() function appends the <i>src</i> string to the <i>dest</i> string,
+ * The strcat() function appends the <i>src</i> string to the <i>dest</i> string,
  * overwriting the terminating @ref NULL byte ('\0') at the end of <i>dest</i>, and
  * then adds a terminating null byte.  The strings may not overlap, and the
  * <i>dest</i> string must have enough space for the result.  If <i>dest</i> is
@@ -236,7 +236,7 @@ extern void *memset(void *s, int c, size_t n);
  * @param dest      destination string
  * @param src       source string
  *
- * @return The <b>strcat</b>() function return a pointer to the resulting string <i>dest</i>.
+ * @return The strcat() function return a pointer to the resulting string <i>dest</i>.
  *
  * @b Example
  * @code
@@ -260,21 +260,21 @@ extern char *strcat(char *dest, const char *src);
 /**
  * @brief Function appends strings with limits.
  *
- * The <b>strncat</b>() function is similar to strcat(), except that:
+ * The strncat() function is similar to strcat(), except that:
  *
  * @arg it will use at most <i>n</i> bytes from <i>src</i>; and
  * @arg <i>src</i> does not need to be null-terminated if it contains <i>n</i> or more bytes.
  *
  * As with strcat(), the resulting string in <i>dest</i> is always null-terminated.
  *
- * If <i>src</i> contains <i>n</i> or more bytes, <b>strncat</b>() writes <i>n+1</i>
+ * If <i>src</i> contains <i>n</i> or more bytes, strncat() writes <i>n+1</i>
  * bytes to <i>dest</i> (<i>n</i> from <i>src</i> plus the terminating null
  * byte). Therefore, the size of <i>dest</i> must be at least strlen(dest) + n + 1.
  *
  * @param dest      destination string
  * @param src       source string
  *
- * @return The <b>strncat</b>() function return a pointer to the resulting string <i>dest</i>.
+ * @return The strncat() function return a pointer to the resulting string <i>dest</i>.
  *
  * @b Example
  * @code
@@ -298,13 +298,13 @@ extern char *strncat(char *dest, const char *src, size_t);
 /**
  * @brief Function returns a pointer to the first occurrence of character.
  *
- * The <b>strchr</b>() function returns a pointer to the first occurrence of
+ * The strchr() function returns a pointer to the first occurrence of
  * the character <i>c</i> in the string <i>s</i>.
  *
  * @param s         string
  * @param c         character to find
  *
- * @return The <b>strchr</b>() function return a pointer to the matched
+ * @return The strchr() function return a pointer to the matched
  * character or @ref NULL if the character is not found. The terminating
  * null byte is considered part of the string, so that if <i>c</i> is specified
  * as '\0', these functions return a pointer to the terminator.
@@ -329,13 +329,13 @@ extern char *strchr(const char *s, int c);
 /**
  * @brief Function returns a pointer to the last occurrence of character.
  *
- * The <b>strrchr</b>() function returns a pointer to the last occurrence of
+ * The strrchr() function returns a pointer to the last occurrence of
  * the character <i>c</i> in the string <i>s</i>.
  *
  * @param s         string
  * @param c         character to find
  *
- * @return The <b>strrchr</b>() function return a pointer to the matched
+ * @return The strrchr() function return a pointer to the matched
  * character or @ref NULL if the character is not found. The terminating
  * null byte is considered part of the string, so that if <i>c</i> is specified
  * as '\0', these functions return a pointer to the terminator.
@@ -360,14 +360,14 @@ extern char *strrchr(const char *s, int c);
 /**
  * @brief Function compares the two strings.
  *
- * The <b>strcmp</b>() function compares the two strings <i>s1</i> and <i>s2</i>.
+ * The strcmp() function compares the two strings <i>s1</i> and <i>s2</i>.
  * It returns an integer less than, equal to, or greater than zero if <i>s1</i>
  * is found, respectively, to be less than, to match, or be greater than <i>s2</i>.
  *
  * @param s1        string 1
  * @param s2        string 2
  *
- * @return The <b>strcmp</b>() function return an integer less than, equal to, or
+ * @return The strcmp() function return an integer less than, equal to, or
  * greater than zero if <i>s1</i> is found, respectively, to be less than, to
  * match, or be greater than <i>s2</i>.
  *
@@ -393,14 +393,14 @@ extern int strcmp(const char *s1, const char *s2);
 /**
  * @brief Function compares the two strings with limits.
  *
- * The <b>strncmp</b>() function is similar to strcmp(), except it compares the only
+ * The strncmp() function is similar to strcmp(), except it compares the only
  * first (at most) <i>n</i> bytes of <i>s1</i> and <i>s2</i>.
  *
  * @param s1        string 1
  * @param s2        string 2
  * @param n         max strings size
  *
- * @return The <b>strncmp</b>() function return an integer less than, equal to, or
+ * @return The strncmp() function return an integer less than, equal to, or
  * greater than zero if <i>s1</i> is found, respectively, to be less than, to
  * match, or be greater than <i>s2</i>.
  *
@@ -426,7 +426,7 @@ extern int strncmp(const char *s1, const char *s2, size_t n);
 /**
  * @brief Function compares thw two strings
  *
- * The <b>strcoll</b>() function compares the two strings <i>s1</i> and <i>s2</i>. It
+ * The strcoll() function compares the two strings <i>s1</i> and <i>s2</i>. It
  * returns an integer less than, equal to, or greater than zero if <i>s1</i> is
  * found, respectively, to be less than, to match, or be greater than
  * <i>s2</i>. The result is dependent on the LC_COLLATE setting of the location.
@@ -434,7 +434,7 @@ extern int strncmp(const char *s1, const char *s2, size_t n);
  * @param s1        string 1
  * @param s2        string 2
  *
- * @return The <b>strcoll</b>() function returns an integer less than, equal to, or
+ * @return The strcoll() function returns an integer less than, equal to, or
  * greater than zero if <i>s1</i> is found, respectively, to be less than, to
  * match, or be greater than <i>s2</i>, when both are interpreted as
  * appropriate for the current locale.
@@ -461,7 +461,7 @@ extern int strcoll(const char *s1, const char *s2);
 /**
  * @brief Function copies the string to the buffer.
  *
- * The <b>strcpy</b>() function copies the string pointed to by <i>src</i>, including
+ * The strcpy() function copies the string pointed to by <i>src</i>, including
  * the terminating null byte ('\0'), to the buffer pointed to by <i>dest</i>.
  * The strings may not overlap, and the destination string <i>dest</i> must be
  * large enough to receive the copy.
@@ -469,7 +469,7 @@ extern int strcoll(const char *s1, const char *s2);
  * @param dest      destination
  * @param src       source
  *
- * @return The <b>strcpy</b>() function return a pointer to the destination string
+ * @return The strcpy() function return a pointer to the destination string
  * <i>dest</i>.
  *
  * @b Example
@@ -494,7 +494,7 @@ extern char *strcpy(char *dest, const char *src);
 /**
  * @brief Function copies the string to the buffer with limits.
  *
- * The <b>strncpy</b>() function is similar to strcpy(), except that at most <i>n</i>
+ * The strncpy() function is similar to strcpy(), except that at most <i>n</i>
  * bytes of <i>src</i> are copied.
  *
  * @warning If there is no null byte among the first <i>n</i> bytes of <i>src</i>,
@@ -508,7 +508,7 @@ extern char *strcpy(char *dest, const char *src);
  * @param src       source
  * @param n         max string length
  *
- * @return The <b>strncpy</b>() function return a pointer to the destination string
+ * @return The strncpy() function return a pointer to the destination string
  * <i>dest</i>.
  *
  * @b Example
@@ -533,13 +533,13 @@ extern char *strncpy(char *dest, const char *src, size_t n);
 /**
  * @brief Function calculates the length of segment.
  *
- * The <b>strspn</b>() function calculates the length (in bytes) of the initial
+ * The strspn() function calculates the length (in bytes) of the initial
  * segment of <i>s</i> which consists entirely of bytes in <i>accept</i>.
  *
  * @param s         string
  * @param accept    string of characters to accept
  *
- * @return The <b>strspn</b>() function returns the number of bytes in the initial
+ * @return The strspn() function returns the number of bytes in the initial
  * segment of <i>s</i> which consist only of bytes from <i>accept</i>.
  *
  * @b Example
@@ -560,13 +560,13 @@ extern size_t strspn(const char *s, const char *accept);
 /**
  * @brief Function calculates the length of segment.
  *
- * The <b>strcspn</b>() function calculates the length of the initial segment
+ * The strcspn() function calculates the length of the initial segment
  * of <i>s</i> which consists entirely of bytes not in <i>reject</i>.
  *
  * @param s         string
  * @param reject    string of characters to reject
  *
- * @return The <b>strcspn</b>() function returns the number of bytes in the initial
+ * @return The strcspn() function returns the number of bytes in the initial
  * segment of <i>s</i> which are not in the string <i>reject</i>.
  *
  * @b Example
@@ -587,12 +587,12 @@ extern size_t strcspn(const char *s, const char *reject);
 /**
  * @brief Function calculates the length of the string.
  *
- * The <b>strlen</b>() function calculates the length of the string <i>s</i>,
+ * The strlen() function calculates the length of the string <i>s</i>,
  * excluding the terminating null byte ('\0').
  *
  * @param s         string
  *
- * @return The <b>strlen</b>() function returns the number of bytes in the string <i>s</i>.
+ * @return The strlen() function returns the number of bytes in the string <i>s</i>.
  *
  * @b Example
  * @code
@@ -611,15 +611,15 @@ extern size_t strlen(const char *s);
 /**
  * @brief Function calculates the length of the string with limits.
  *
- * The <b>strnlen</b>() function returns the number of bytes in the string
+ * The strnlen() function returns the number of bytes in the string
  * pointed to by <i>s</i>, excluding the terminating null byte ('\0'), but at
- * most <i>maxlen</i>. In doing this, <b>strnlen</b>() looks only at the first
+ * most <i>maxlen</i>. In doing this, strnlen() looks only at the first
  * <i>maxlen</i> bytes at <i>s</i> and never beyond <i>s + maxlen</i>.
  *
  * @param s         string
  * @param maxlen    max string length
  *
- * @return The <b>strnlen</b>() function returns strlen(s), if that is less than
+ * @return The strnlen() function returns strlen(s), if that is less than
  * <i>maxlen</i>, or <i>maxlen</i> if there is no null byte ('\0') among the
  * first <i>maxlen</i> bytes pointed to by <i>s</i>.
  *
@@ -640,13 +640,13 @@ extern size_t strnlen(const char *s, size_t maxlen);
 /**
  * @brief Function locates the first occurrence bytes in the string.
  *
- * The <b>strpbrk</b>() function locates the first occurrence in the string <i>s</i>
+ * The strpbrk() function locates the first occurrence in the string <i>s</i>
  * of any of the bytes in the string <i>accept</i>.
  *
  * @param s         string
  * @param accept    characters to find
  *
- * @return The <b>strpbrk</b>() function returns a pointer to the byte in <i>s</i> that
+ * @return The strpbrk() function returns a pointer to the byte in <i>s</i> that
  * matches one of the bytes in <i>accept</i>, or @ref NULL if no such byte is found.
  *
  * @b Example
@@ -668,7 +668,7 @@ extern char *strpbrk(const char *s, const char *accept);
 /**
  * @brief Function finds the first occurrence of substring in the string.
  *
- * The <b>strstr</b>() function finds the first occurrence of the substring
+ * The strstr() function finds the first occurrence of the substring
  * <i>needle</i> in the string <i>haystack</i>.  The terminating null bytes
  * ('\0') are not compared.
  *
@@ -697,7 +697,7 @@ extern char *strstr(const char *haystack, const char *needle);
 /**
  * @brief Function finds the first occurrence of substring in the string.
  *
- * The <b>strcasestr</b>() function is like strstr(), but ignores the case of
+ * The strcasestr() function is like strstr(), but ignores the case of
  * both arguments.
  *
  * @param haystack  string
@@ -725,7 +725,7 @@ extern char *strcasestr(const char *haystack, const char *needle);
 /**
  * @brief Function compares the two strings and ignore case of the characters.
  *
- * The <b>strcasecmp</b>() function compares the two strings <i>s1</i> and <i>s2</i>,
+ * The strcasecmp() function compares the two strings <i>s1</i> and <i>s2</i>,
  * ignoring the case of the characters.  It returns an integer less
  * than, equal to, or greater than zero if <i>s1</i> is found, respectively, to
  * be less than, to match, or be greater than <i>s2</i>.
@@ -733,7 +733,7 @@ extern char *strcasestr(const char *haystack, const char *needle);
  * @param s1        string 1
  * @param s2        string 2
  *
- * @return The <b>strcasecmp</b>() function return an integer less than, equal to, or
+ * @return The strcasecmp() function return an integer less than, equal to, or
  * greater than zero if <i>s1</i> is found, respectively, to be less than, to
  * match, or be greater than <i>s2</i>.
  *
@@ -759,14 +759,14 @@ extern int strcasecmp(const char *s1, const char *s2);
 /**
  * @brief Function compares the two strings and ignore case of the characters with limits.
  *
- * The <b>strncasecmp</b>() function is similar to strcasecmp(), except it
+ * The strncasecmp() function is similar to strcasecmp(), except it
  * compares the only first <i>n</i> bytes of <i>s1</i>.
  *
  * @param s1        string 1
  * @param s2        string 2
  * @param n         max number of bytes to compare
  *
- * @return The <b>strncasecmp</b>() function return an integer less than, equal to, or
+ * @return The strncasecmp() function return an integer less than, equal to, or
  * greater than zero if <i>s1</i> or the first <i>n</i> bytes thereof is found,
  * respectively, to be less than, to match, or be greater than <i>s2</i>.
  *
@@ -795,7 +795,7 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
 /**
  * @brief Function returns a pointer to an error string.
  *
- * The <b>strerror</b>() function returns a pointer to a string that describes the
+ * The strerror() function returns a pointer to a string that describes the
  * error code passed in the argument <i>errnum</i>.
  *
  * @param errnum        error number

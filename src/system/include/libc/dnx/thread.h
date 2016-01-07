@@ -163,7 +163,7 @@ extern int _errno;
 /**
  * @brief Function creates new process.
  *
- * The function <b>process_create</b>() create new process according to command
+ * The function process_create() create new process according to command
  * pointed by <i>cmd</i> and attributes pointed by <i>attr</i>. Attributes
  * can be NULL what means that default setting will be applied. Command field
  * is mandatory.
@@ -226,7 +226,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 /**
  * @brief Function kill selected process and return status.
  *
- * The function <b>process_kill</b>() delete running or closed process.
+ * The function process_kill() delete running or closed process.
  * Function return process exit code pointed by <i>status</i>.
  *
  * @param pid                   process ID
@@ -285,7 +285,7 @@ static inline int process_kill(pid_t pid, int *status)
 /**
  * @brief Function wait for selected process close.
  *
- * The function <b>process_wait</b>() wait for program close. Function destroy
+ * The function process_wait() wait for program close. Function destroy
  * child process when finish successfully at the selected timeout. In case of
  * timeout the process is not destroyed.
  *
@@ -353,7 +353,7 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 /**
  * @brief Function returns statistics of selected process.
  *
- * The function <b>process_stat_seek</b>() return statistics of process selected
+ * The function process_stat_seek() return statistics of process selected
  * by <i>seek</i>.
  *
  * @param seek      process index
@@ -395,7 +395,7 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 /**
  * @brief Function returns statistics of selected process.
  *
- * The function <b>process_stat</b>() return statistics of selected process
+ * The function process_stat() return statistics of selected process
  * by <i>pid</i>.
  *
  * @param pid       PID
@@ -436,7 +436,7 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
 /**
  * @brief Function returns PID of current process.
  *
- * The function <b>process_getpid</b>() return PID of current process (caller).
+ * The function process_getpid() return PID of current process (caller).
  *
  * @exception | @ref EINVAL
  * @exception | @ref ENOENT
@@ -470,7 +470,7 @@ static inline pid_t process_getpid(void)
 /**
  * @brief Function returns priority of current process.
  *
- * The function <b>process_get_priority</b>() returns priority value of selected
+ * The function process_get_priority() returns priority value of selected
  * process.
  *
  * @return Priority value.
@@ -500,7 +500,7 @@ static inline int process_get_priority(pid_t pid)
 /**
  * @brief Function creates new thread of current process.
  *
- * The function <b>thread_create</b>() creates new thread using function pointed
+ * The function thread_create() creates new thread using function pointed
  * by <i>func</i> with attributes pointed by <i>attr</i> and argument pointed
  * by <i>arg</i>. Threads are functions which are called as
  * new task and have own stack, but global variables are shared with main
@@ -561,7 +561,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 /**
  * @brief Function cancel selected thread.
  *
- * The function <b>thread_cancel</b>() kills running thread <i>tid</i>.
+ * The function thread_cancel() kills running thread <i>tid</i>.
  *
  * @param tid           thread ID
  *
@@ -623,7 +623,7 @@ static inline int thread_cancel(tid_t tid)
 /**
  * @brief Function join thread to main thread (wait for close).
  *
- * The function <b>thread_join</b>() joins selected thread <i>tid</i> to parent
+ * The function thread_join() joins selected thread <i>tid</i> to parent
  * program. Function wait until thread was closed.
  *
  * @param tid           thread ID
@@ -695,7 +695,7 @@ static inline int thread_join(tid_t tid)
 /**
  * @brief Function create new semaphore.
  *
- * The function <b>semaphore_new</b>() creates new semaphore object. The
+ * The function semaphore_new() creates new semaphore object. The
  * semaphore can be counting or binary. If counting then <i>cnt_max</i>
  * is bigger that 2. The <i>cnt_init</i> is an initial value of semaphore.
  * Semaphore can be used for task synchronization.
@@ -767,7 +767,7 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 /**
  * @brief Function delete created semaphore.
  *
- * The function <b>semaphore_delete</b>() removes created semaphore pointed by
+ * The function semaphore_delete() removes created semaphore pointed by
  * <i>sem</i>. Be aware that if semaphore was removed when tasks use it, then
  * process starvation can occur on tasks which wait for semaphore signal.
  *
@@ -807,7 +807,7 @@ static inline void semaphore_delete(sem_t *sem)
 /**
  * @brief Function wait for semaphore.
  *
- * The function <b>semaphore_wait</b>() waits for semaphore signal pointed by
+ * The function semaphore_wait() waits for semaphore signal pointed by
  * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
  * <b>true</b> is returned, otherwise (timeout) <b>false</b>. When <i>timeout</i>
  * value is set to 0 then semaphore is polling without timeout.
@@ -876,7 +876,7 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 /**
  * @brief Function signal semaphore.
  *
- * The function <b>semaphore_signal</b>() signals semaphore pointed by <i>sem</i>.
+ * The function semaphore_signal() signals semaphore pointed by <i>sem</i>.
  *
  * @param sem           semaphore object pointer
  *
@@ -934,7 +934,7 @@ static inline bool semaphore_signal(sem_t *sem)
 /**
  * @brief Function creates new mutex object.
  *
- * The function <b>mutex_new</b>() creates new mutex of type <i>type</i>.
+ * The function mutex_new() creates new mutex of type <i>type</i>.
  * Two types of mutex can be created: @ref MUTEX_TYPE_RECURSIVE and
  * @ref MUTEX_TYPE_NORMAL.
  *
@@ -999,7 +999,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 /**
  * @brief Function delete mutex object.
  *
- * The function <b>mutex_delete</b>() delete created mutex pointed by <i>mutex</i>.
+ * The function mutex_delete() delete created mutex pointed by <i>mutex</i>.
  *
  * @param mutex         mutex
  *
@@ -1061,7 +1061,7 @@ static inline void mutex_delete(mutex_t *mutex)
 /**
  * @brief Function lock mutex object for current thread.
  *
- * The function <b>mutex_lock</b>() lock mutex pointed by <i>mutex</i>. If
+ * The function mutex_lock() lock mutex pointed by <i>mutex</i>. If
  * mutex is locked by other thread then system try to lock mutex by <i>timeout</i>
  * milliseconds. If mutex is recursive then task can lock mutex recursively, and
  * the same times shall be unlocked. If normal mutex is used then task can lock
@@ -1127,7 +1127,7 @@ static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 /**
  * @brief Function try lock mutex object for current thread.
  *
- * The function <b>mutex_trylock</b>() locks mutex pointed by <i>mutex</i>.
+ * The function mutex_trylock() locks mutex pointed by <i>mutex</i>.
  * If mutex is recursive then task can lock mutex recursively, and
  * the same times shall be unlocked. If normal mutex is used then task can lock
  * mutex only one time (not recursively). Function is equivalent to
@@ -1194,7 +1194,7 @@ static inline bool mutex_trylock(mutex_t *mutex)
 /**
  * @brief Function unlocks earlier locked object.
  *
- * The function <b>mutex_unlock</b>() unlock mutex pointed by <i>mutex</i>.
+ * The function mutex_unlock() unlock mutex pointed by <i>mutex</i>.
  *
  * @param mutex         mutex
  *
@@ -1255,7 +1255,7 @@ static inline bool mutex_unlock(mutex_t *mutex)
 /**
  * @brief Function creates new queue object.
  *
- * The function <b>queue_new</b>() create new queue with length <i>length</i>
+ * The function queue_new() create new queue with length <i>length</i>
  * of item size <i>item_size</i>. Returns pointer to the created object or
  * <b>NULL</b> on error. Both, <i>length</i> and <i>item_size</i> cannot be zero.
  *
@@ -1325,7 +1325,7 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
 /**
  * @brief Function deletes queue object.
  *
- * The function <b>queue_delete</b>() deletes the created queue pointed by
+ * The function queue_delete() deletes the created queue pointed by
  * <i>queue</i>. Make sure that neither task use queue before delete.
  *
  * @param queue         queue object
@@ -1388,7 +1388,7 @@ static inline void queue_delete(queue_t *queue)
 /**
  * @brief Function removes all items from queue.
  *
- * The function <b>queue_reset</b>() reset the selected queue pointed by
+ * The function queue_reset() reset the selected queue pointed by
  * <i>queue</i>.
  *
  * @param queue         queue object
@@ -1453,7 +1453,7 @@ static inline bool queue_reset(queue_t *queue)
 /**
  * @brief Function writes value to queue.
  *
- * The function <b>queue_send</b>() send specified item pointed by <i>item</i>
+ * The function queue_send() send specified item pointed by <i>item</i>
  * to queue pointed by <i>queue</i>. If queue is full then system try to send
  * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
  * sending is aborted immediately if queue is full, and <b>false</b> value is
@@ -1523,7 +1523,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
 /**
  * @brief Function receives item from queue.
  *
- * The function <b>queue_receive</b>() receive top item from queue pointed by
+ * The function queue_receive() receive top item from queue pointed by
  * <i>queue</i> and copy it to the item pointed by <i>item</i>. The item is
  * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
  * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
@@ -1592,7 +1592,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
 /**
  * @brief Function receives item from queue without remove.
  *
- * The function <b>queue_receive_peek</b>() is similar to <b>queue_receive</b>(),
+ * The function queue_receive_peek() is similar to queue_receive(),
  * expect that top item is not removed from the queue.
  *
  * @param queue         queue object
@@ -1660,7 +1660,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
 /**
  * @brief Function returns number of items stored in queue.
  *
- * The function <b>queue_get_number_of_items</b>() returns a number of items
+ * The function queue_get_number_of_items() returns a number of items
  * stored in the queue pointed by <i>queue</i>.
  *
  * @param queue         queue object
@@ -1728,7 +1728,7 @@ static inline int queue_get_number_of_items(queue_t *queue)
 /**
  * @brief Function returns available space in queue.
  *
- * The function <b>queue_get_space_available</b>() returns a number of free
+ * The function queue_get_space_available() returns a number of free
  * items available in the queue pointed by <i>queue</i>.
  *
  * @param queue         queue object

@@ -67,7 +67,7 @@ extern "C" {
 /**
  * @brief Function mount selected file system to selected path.
  *
- * The <b>mount</b>() function mounts file system name pointed by <i>FS_name</i>
+ * The mount() function mounts file system name pointed by <i>FS_name</i>
  * from source file pointed by <i>src_path</i> to mount directory pointed by
  * <i>mount_point</i>.<p>
  *
@@ -117,7 +117,7 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
 /**
  * @brief Function unmount earlier mounted file system.
  *
- * The <b>umount</b>() function unmount file system localized in path pointed by
+ * The umount() function unmount file system localized in path pointed by
  * <i>mount_point</i>. To unmount file system, all files of unmounting file
  * system shall be closed.
  *
@@ -170,10 +170,10 @@ static inline int umount(const char *mount_point)
 /**
  * @brief Function initializes driver.
  *
- * The <b>driver_init</b>() function initialize driver pointed by <i>mod_name</i>
+ * The driver_init() function initialize driver pointed by <i>mod_name</i>
  * and create file node pointed by <i>node_path</i>. If there is no need to
  * create node, then <i>node_path</i> can be <b>NULL</b>. Node can be created
- * later by using <b>mknod</b>() function.
+ * later by using mknod() function.
  *
  * Driver must exist in system to perform initialization. Driver's nodes can
  * be created only on file system which support it.
@@ -215,7 +215,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 /**
  * @brief Function releases selected driver.
  *
- * The <b>driver_release</b>() function release driver pointed by <i>mod_name</i>.
+ * The driver_release() function release driver pointed by <i>mod_name</i>.
  * If driver was released when node is created and pointed to driver then
  * node is not removed. From this time, device node is pointing to not
  * existing (initialized) device, resulting that user can't access to the file.

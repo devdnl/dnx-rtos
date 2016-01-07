@@ -53,7 +53,7 @@ extern "C" {
 /**
  * @brief Macro calculate numbers of items of selected array.
  *
- * The macro <b>ARRAY_SIZE</b>() calculate number of items of array <i>array</i>.
+ * The macro ARRAY_SIZE() calculate number of items of array <i>array</i>.
  * The type of calculated value is size_t.
  *
  * @param array     array name
@@ -71,6 +71,8 @@ extern "C" {
 
         // ...
    @endcode
+ *
+ * @see ARRAY_ITEM_SIZE()
  */
 //==============================================================================
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
@@ -79,7 +81,7 @@ extern "C" {
 /**
  * @brief Macro calculate size of item of selected array.
  *
- * The macro <b>ARRAY_ITEM_SIZE</b>() calculate size of item of selected array
+ * The macro ARRAY_ITEM_SIZE() calculate size of item of selected array
  * <i>array</i>
  *
  * @param array     array name
@@ -96,6 +98,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see ARRAY_SIZE()
  */
 //==============================================================================
 #define ARRAY_ITEM_SIZE(array) (sizeof(array[0]))
@@ -104,7 +108,7 @@ extern "C" {
 /**
  * @brief Macro family that disables warning of unused argument or variable.
  *
- * The macro <b>UNUSED_ARGx</b>() disable compiler warning if argument
+ * The macro UNUSED_ARGx() disable compiler warning if argument
  * <i>args</i> is not used, where <i>x</i> is number of arguments that are
  * disabled in range of 1 to 8.
  *
@@ -137,7 +141,7 @@ extern "C" {
 /**
  * @brief Macro returns first character of string.
  *
- * The macro <b>FIRST_CHARACTER</b>() return the first character of string.
+ * The macro FIRST_CHARACTER() return the first character of string.
  *
  * @param char__pstr    string
  *
@@ -159,7 +163,7 @@ extern "C" {
 
    @endcode
  *
- * @see strfch()
+ * @see strfch(), strlch(), LAST_CHARACTER()
  */
 //==============================================================================
 #define FIRST_CHARACTER(char__pstr) (char__pstr)[0]
@@ -168,7 +172,7 @@ extern "C" {
 /**
  * @brief Macro returns first character of string.
  *
- * The macro <b>strfch</b>() return the first character of string.
+ * The macro strfch() return the first character of string.
  *
  * @param char__pstr    string
  *
@@ -190,7 +194,7 @@ extern "C" {
 
    @endcode
  *
- * @see FIRST_CHARACTER()
+ * @see FIRST_CHARACTER(), strlch(), LAST_CHARACTER()
  */
 //==============================================================================
 #define strfch(char__pstr) FIRST_CHARACTER(char__pstr)
@@ -199,7 +203,7 @@ extern "C" {
 /**
  * @brief Macro returns last character of string.
  *
- * The macro <b>LAST_CHARACTER</b>() return the last character of string.
+ * The macro LAST_CHARACTER() return the last character of string.
  *
  * @param char__pstr    string
  *
@@ -221,7 +225,7 @@ extern "C" {
 
    @endcode
  *
- * @see strlch()
+ * @see strlch(), strfch(), FIRST_CHARACTER()
  */
 //==============================================================================
 #define LAST_CHARACTER(char__pstr) (char__pstr)[strlen((char__pstr)) - 1]
@@ -230,7 +234,7 @@ extern "C" {
 /**
  * @brief Macro returns last character of string.
  *
- * The macro <b>strlch</b>() return the last character of string.
+ * The macro strlch() return the last character of string.
  *
  * @param char__pstr    string
  *
@@ -252,7 +256,7 @@ extern "C" {
 
    @endcode
  *
- * @see LAST_CHARACTER()
+ * @see LAST_CHARACTER(), strfch(), FIRST_CHARACTER()
  */
 //==============================================================================
 #define strlch(char__pstr) LAST_CHARACTER(char__pstr)
@@ -261,7 +265,7 @@ extern "C" {
 /**
  * @brief Macro returns minimal value of given values.
  *
- * The macro <b>min()</b> compares variables <i>a</i> and <i>b</i> and returns
+ * The macro min() compares variables <i>a</i> and <i>b</i> and returns
  * the smaller value.
  *
  * @warning Use this macro with caution because of side effects
@@ -281,6 +285,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see max()
  */
 //==============================================================================
 #ifndef min
@@ -291,7 +297,7 @@ extern "C" {
 /**
  * @brief Macro returns maximum value of given values.
  *
- * The macro <b>max()</b> compares variables <i>a</i> and <i>b</i> and returns
+ * The macro max() compares variables <i>a</i> and <i>b</i> and returns
  * the higher value.
  *
  * @warning Use this macro with caution because of side effects
@@ -311,6 +317,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see min()
  */
 //==============================================================================
 #ifndef max
@@ -321,7 +329,7 @@ extern "C" {
 /**
  * @brief Macro compares two strings.
  *
- * The macro <b>isstreq()</b> compares string <i>_stra</i> and <i>_strb</i> and
+ * The macro isstreq() compares string <i>_stra</i> and <i>_strb</i> and
  * returns \b true or \b false depending on compare result (true if equal).
  *
  * @param _stra         string a
@@ -347,6 +355,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see strcmp()
  */
 //==============================================================================
 #define isstreq(_stra, _strb) (strcmp(_stra, _strb) == 0)
@@ -355,7 +365,7 @@ extern "C" {
 /**
  * @brief Macro compares two strings with limited size.
  *
- * The macro <b>isstreqn()</b> compares string <i>_stra</i> and <i>_strb</i> and
+ * The macro isstreqn() compares string <i>_stra</i> and <i>_strb</i> and
  * returns \b true or \b false depending on compare result (true if equal). User
  * determines size of strings to compare.
  *
@@ -383,6 +393,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see strncmp()
  */
 //==============================================================================
 #define isstreqn(_stra, _strb, _n) (strncmp(_stra, _strb, _n) == 0)
@@ -391,7 +403,7 @@ extern "C" {
 /**
  * @brief Macro returns string size (with nul terminator).
  *
- * The macro <b>strsize()</b> returns total size of string (with \0 terminator).
+ * The macro strsize() returns total size of string (with \0 terminator).
  * Function is helpful when user allocate new string in memory.
  *
  * @param _str          string
@@ -409,6 +421,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see strlen()
  */
 //==============================================================================
 #define strsize(_str) (strlen(_str) + 1)
@@ -417,7 +431,7 @@ extern "C" {
 /**
  * @brief Macro is alias of logical \b AND operator: &&
  *
- * The macro <b>and</b> is an logical AND (&&) in C++11 style.
+ * The macro @ref and is an logical AND (&&) in C++11 style.
  *
  * @b Example
  * @code
@@ -432,6 +446,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see or, not
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -442,7 +458,7 @@ extern "C" {
 /**
  * @brief Macro is alias of logical \b OR operator: ||
  *
- * The macro <b>or</b> is an logical OR (||) in C++11 style.
+ * The macro @ref or is an logical OR (||) in C++11 style.
  *
  * @b Example
  * @code
@@ -457,6 +473,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see and, not
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -467,7 +485,7 @@ extern "C" {
 /**
  * @brief Macro is alias of logical \b NOT operator: !
  *
- * The macro <b>not</b> is an logical NOT (!) in C++11 style.
+ * The macro @ref not is an logical NOT (!) in C++11 style.
  *
  * @b Example
  * @code
@@ -482,6 +500,8 @@ extern "C" {
         // ...
 
    @endcode
+ *
+ * @see and, or
  */
 //==============================================================================
 #ifndef __cplusplus

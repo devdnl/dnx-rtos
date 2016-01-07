@@ -145,7 +145,7 @@ extern FILE *stderr;
 /**
  * @brief Function opens file.
  *
- * The <b>fopen</b>() function opens the file whose name is the string pointed to by
+ * The fopen() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates a stream with it. The argument <i>mode</i> points
  * to a string beginning with one of the following sequences (possibly followed
  * by additional characters, as described below):<p>
@@ -181,7 +181,7 @@ extern FILE *stderr;
  * @exception | @ref EISDIR
  * @exception | @ref ENOENT
  *
- * @return Upon successful completion <b>fopen</b>(), return a <b>FILE</b> pointer.
+ * @return Upon successful completion fopen(), return a <b>FILE</b> pointer.
  * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
  * error.
  *
@@ -215,7 +215,7 @@ static inline FILE *fopen(const char *path, const char *mode)
 /**
  * @brief Function closes selected file.
  *
- * The <b>fclose</b>() function closes the created stream <i>file</i>.
+ * The fclose() function closes the created stream <i>file</i>.
  *
  * @param file          file to close
  *
@@ -258,10 +258,10 @@ static inline int fclose(FILE *file)
 /**
  * @brief Function reopen already opened file to another.
  *
- * The <b>freopen</b>() function opens the file whose name is the string pointed to by
+ * The freopen() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates the stream pointed to by stream with it. The
  * original stream (if it exists) is closed. The <i>mode</i> argument is used just as
- * in the <b>fopen</b>() function.
+ * in the fopen() function.
  *
  * @param path          path to file
  * @param mode          file open mode
@@ -273,7 +273,7 @@ static inline int fclose(FILE *file)
  * @exception | @ref ENOENT
  * @exception | @ref EFAULT
  *
- * @return Upon successful completion <b>freopen</b>(), return a <b>FILE</b> pointer.
+ * @return Upon successful completion freopen(), return a <b>FILE</b> pointer.
  * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
  * error.
  *
@@ -307,7 +307,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 /**
  * @brief Function writes data to stream.
  *
- * The function <b>fwrite</b>() writes <i>count</i> elements of data, each <i>size</i>
+ * The function fwrite() writes <i>count</i> elements of data, each <i>size</i>
  * bytes long, to the stream pointed to by <i>file</i>, obtaining them from the
  * location given by <i>ptr</i>.
  *
@@ -321,7 +321,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
  * @exception | @ref ENOENT
  * @exception | @ref EFAULT
  *
- * @return On success, <b>fwrite</b>() return the number of items written. This number
+ * @return On success, fwrite() return the number of items written. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
@@ -361,7 +361,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 /**
  * @brief Function reads data from stream.
  *
- * The function <b>fread</b>() reads <i>count</i> elements of data, each <i>size</i>
+ * The function fread() reads <i>count</i> elements of data, each <i>size</i>
  * bytes long, from the stream pointed to by <i>file</i>, storing them at the
  * location given by <i>ptr</i>.
  *
@@ -374,7 +374,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
  * @exception | @ref ENOMEM
  * @exception | @ref EINVAL
  *
- * @return On success, <b>fread</b>() return the number of items read. This number
+ * @return On success, fread() return the number of items read. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
@@ -412,12 +412,12 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 /**
  * @brief Function sets file position indicator.
  *
- * The <b>fseek</b>() function sets the file position indicator for the stream
+ * The fseek() function sets the file position indicator for the stream
  * pointed to by <i>file</i>. The new position, measured in bytes, is obtained
  * by adding offset bytes to the position specified by whence. If whence is set
  * to @ref SEEK_SET, @ref SEEK_CUR, or @ref SEEK_END, the offset is
  * relative to the start of the file, the current position indicator, or
- * end-of-file, respectively. A successful call to the <b>fseek</b>() function
+ * end-of-file, respectively. A successful call to the fseek() function
  * clears the end-of-file indicator for the stream and undoes any effects of the
  * ungetc() function on the same stream.
  *
@@ -428,7 +428,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  * @exception | @ref ENOENT
  * @exception | @ref EINVAL
  *
- * @return Upon successful completion, <b>fseek</b>() return 0. Otherwise, -1 is
+ * @return Upon successful completion, fseek() return 0. Otherwise, -1 is
  * returned and @ref errno is set to indicate the error.
  *
  * @b Example
@@ -465,7 +465,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 /**
  * @brief Function sets file position indicator.
  *
- * The <b>fsetpos</b>() function is alternate interfaces equivalent to fseek()
+ * The fsetpos() function is alternate interfaces equivalent to fseek()
  * (with whence set to @ref SEEK_SET), setting and storing the current value
  * of the file offset into the object referenced by <i>pos</i>.
  *
@@ -475,7 +475,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
  * @exception | @ref ENOENT
  * @exception | @ref EINVAL
  *
- * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
+ * @return Upon successful completion, fsetpos() return 0. Otherwise, -1 is
  * returned and @ref errno is set to indicate the error.
  *
  * @b Example
@@ -515,7 +515,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 /**
  * @brief Function sets file position indicator to the beginning of file.
  *
- * The <b>rewind</b>() function sets the file position indicator for the stream
+ * The rewind() function sets the file position indicator for the stream
  * pointed to by <i>file</i> to the beginning of the file. It is equivalent to:
  * <pre>(void) fseek(stream, 0L, SEEK_SET)</pre>
  *
@@ -524,7 +524,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
  * @exception | @ref ENOENT
  * @exception | @ref EINVAL
  *
- * @return The <b>rewind</b>() function returns no value.
+ * @return The rewind() function returns no value.
  *
  * @b Example
  * @code
@@ -558,14 +558,14 @@ static inline void rewind(FILE *file)
 /**
  * @brief Function returns file position indicator.
  *
- * The <b>ftell</b>() function obtains the current value of the file position
+ * The ftell() function obtains the current value of the file position
  * indicator for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
  *
  * @exception | @ref EINVAL
  *
- * @return Upon successful completion, <b>ftell</b>() returns the current offset.
+ * @return Upon successful completion, ftell() returns the current offset.
  * Otherwise, -1 is returned and @ref errno is set to indicate the error.
  *
  * @b Example
@@ -605,7 +605,7 @@ static inline i64_t ftell(FILE *file)
 /**
  * @brief Function returns file position indicator.
  *
- * The <b>fgetpos</b>() function is alternate interface equivalent to ftell(),
+ * The fgetpos() function is alternate interface equivalent to ftell(),
  * storing the current value of the file offset from the object referenced by
  * <i>pos</i>.
  *
@@ -614,7 +614,7 @@ static inline i64_t ftell(FILE *file)
  *
  * @exception | @ref EINVAL
  *
- * @return Upon successful completion, <b>fgetpos</b>() return 0. Otherwise, -1
+ * @return Upon successful completion, fgetpos() return 0. Otherwise, -1
  * is returned and @ref errno is set to indicate the error.
  *
  * @b Example
@@ -657,9 +657,9 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 /**
  * @brief Function forces write buffers to stream.
  *
- * For output streams, <b>fflush</b>() forces a write of all buffered data for
+ * For output streams, fflush() forces a write of all buffered data for
  * the given output or update stream via the stream's underlying write function.
- * For input streams, <b>fflush</b>() discards any buffered data that has been
+ * For input streams, fflush() discards any buffered data that has been
  * fetched from the underlying file. The open status of the stream is unaffected.
  *
  * @param file          stream
@@ -704,7 +704,7 @@ static inline int fflush(FILE *file)
 /**
  * @brief Function tests the end-of-file indicator.
  *
- * The function <b>feof</b>() tests the end-of-file indicator for the stream
+ * The function feof() tests the end-of-file indicator for the stream
  * pointed to by <i>file</i>, returning nonzero if it is set. The end-of-file
  * indicator can only be cleared by the function clearerr().
  *
@@ -752,7 +752,7 @@ static inline int feof(FILE *file)
 /**
  * @brief Function clears end-of-file and error indicators.
  *
- * The function <b>clearerr</b>() clears the end-of-file and error indicators
+ * The function clearerr() clears the end-of-file and error indicators
  * for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
@@ -798,7 +798,7 @@ static inline void clearerr(FILE *file)
 /**
  * @brief Function tests error indicator.
  *
- * The function <b>ferror</b>() tests the error indicator for the stream pointed
+ * The function ferror() tests the error indicator for the stream pointed
  * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
  * be reset only by the clearerr() function.
  *
@@ -850,7 +850,7 @@ static inline int ferror(FILE *file)
 /**
  * @brief Function produces message on the stdout.
  *
- * The routine <b>perror</b>() produces a message on the standard error output,
+ * The routine perror() produces a message on the standard error output,
  * describing the last error encountered during a call to a system or
  * library function.  First (if <i>s</i> is not @ref NULL and <i>*s</i> is not
  * a null byte ('\0')) the argument string <i>s</i> is printed, followed by a
@@ -972,7 +972,7 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
  *
  * @note Function not supported.
  *
- * @return The <b>tmpfile</b>() function returns a stream descriptor, or @ref NULL
+ * @return The tmpfile() function returns a stream descriptor, or @ref NULL
  * if a unique filename cannot be generated or the unique file cannot be opened.
  * In the latter case, @ref errno is set to indicate the error.
  *
@@ -1006,7 +1006,7 @@ static inline FILE *tmpfile(void)
  *
  * @param str       temporary file name or automatic generated if @ref NULL
  *
- * @return The <b>tmpnam</b>() function returns a pointer to a unique temporary
+ * @return The tmpnam() function returns a pointer to a unique temporary
  * filename, or @ref NULL if a unique name cannot be generated.
  *
  * @b Example
@@ -1034,7 +1034,7 @@ static inline char *tmpnam(char *str)
 /**
  * @brief Function remove selected file.
  *
- * <b>remove</b>() deletes a name from the file system. If the removed name was
+ * remove() deletes a name from the file system. If the removed name was
  * the last link to a file and no processes have the file open, the file is
  * deleted and the space it was using is made available for reuse.<p>
  *
@@ -1072,7 +1072,7 @@ static inline int remove(const char *path)
 /**
  * @brief Function renames selected file
  *
- * <b>rename</b>() renames a file. In contrast to standard C library this function
+ * rename() renames a file. In contrast to standard C library this function
  * don't move files between directories if <i>new_name</i> is localized on other
  * filesystem than <i>old_name</i>, otherwise it's depending on filesystem.
  *
@@ -2177,7 +2177,7 @@ static inline int sscanf(const char *s, const char *format, ...)
 /**
  * @brief Function writes character to stream.
  *
- * <b>fputc</b>() writes the character <i>c</i>, cast to an unsigned char, to
+ * fputc() writes the character <i>c</i>, cast to an unsigned char, to
  * <i>stream</i>.
  *
  * @param c         character to put
@@ -2209,7 +2209,7 @@ extern int fputc(int c, FILE *stream);
 /**
  * @brief Function writes character to stream.
  *
- * <b>putc</b>() is equivalent to <b>fputc</b>().
+ * putc() is equivalent to fputc().
  *
  * @param c         character to put
  * @param stream    destination stream
@@ -2276,7 +2276,7 @@ static inline int putchar(int c)
 /**
  * @brief Function writes string to stream.
  *
- * <b>fputs</b>() writes the string <i>s</i> to <i>stream</i>, without its
+ * fputs() writes the string <i>s</i> to <i>stream</i>, without its
  * terminating null byte ('\0').
  *
  * @param s         string to put
@@ -2307,7 +2307,7 @@ extern int fputs(const char *s, FILE *stream);
 /**
  * @brief Function writes character to @ref stdout stream.
  *
- * <b>puts</b>() writes the string <i>s</i> to <b>stdout</b>, without its
+ * puts() writes the string <i>s</i> to <b>stdout</b>, without its
  * terminating null byte ('\0').
  *
  * @param s         string to put
@@ -2337,7 +2337,7 @@ extern int puts(const char *s);
 /**
  * @brief Function reads character from stream.
  *
- * <b>getc</b>() is equivalent to <b>fgetc</b>().
+ * getc() is equivalent to fgetc().
  *
  * @param stream        input stream
  *
@@ -2367,7 +2367,7 @@ extern int getc(FILE *stream);
 /**
  * @brief Function reads character from @ref stdin stream.
  *
- * <b>getchar</b>() is equivalent to <b>getc</b>(stdin).
+ * getchar() is equivalent to <b>getc</b>(stdin).
  *
  * @exception | @ref ENOMEM
  * @exception | @ref EINVAL
@@ -2398,7 +2398,7 @@ static inline int getchar(void)
 /**
  * @brief Function reads character from stream.
  *
- * <b>fgetc</b>() reads the next character from <i>stream</i> and returns it
+ * fgetc() reads the next character from <i>stream</i> and returns it
  * as an unsigned char cast to an int, or @ref EOF on end of file or error.
  *
  * @param stream        input stream
@@ -2432,7 +2432,7 @@ static inline int fgetc(FILE *stream)
 /**
  * @brief Function back to stream a character.
  *
- * <b>ungetc</b>() pushes <i>c</i> back to stream, cast to unsigned char, where
+ * ungetc() pushes <i>c</i> back to stream, cast to unsigned char, where
  * it is available for subsequent read operations. Pushed-back characters will
  * be returned in reverse order; only one pushback is guaranteed.<p>
  *
@@ -2478,7 +2478,7 @@ static inline int ungetc(int c, FILE *stream)
 /**
  * @brief Function reads string from stream.
  *
- * <b>fgets</b>() reads in at most one less than size characters from stream
+ * fgets() reads in at most one less than size characters from stream
  * and stores them into the buffer pointed to by <i>str</i>. Reading stops after
  * an @ref EOF, a newline or buffer end. If a newline is read, it is stored into the
  * buffer. A terminating null byte ('\0') is stored after the last character in

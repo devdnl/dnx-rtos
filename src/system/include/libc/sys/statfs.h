@@ -68,7 +68,7 @@ extern "C" {
 /**
  * @brief Function gets file system information.
  *
- * The function <b>statfs</b>() returns information about a mounted file system.
+ * The function statfs() returns information about a mounted file system.
  * A <i>path</i> is directory of the mount point of file system.
  *
  * @param path          node name

@@ -90,7 +90,7 @@ extern "C" {
 /**
  * @brief Function creates device node (device file).
  *
- * The <b>mknod</b>() function creates a file system node (device special file) named
+ * The mknod() function creates a file system node (device special file) named
  * <i>pathname</i>. Node is connected to the driver from module <i>mod_name</i>
  * of <i>major</i> and <i>minor</i> address.
  *
@@ -127,7 +127,7 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 /**
  * @brief Function creates new directory.
  *
- * The <b>mkdir</b>() attempts to create a directory named <i>pathname</i>. The
+ * The mkdir() attempts to create a directory named <i>pathname</i>. The
  * argument <i>mode</i> specifies the permissions to use.
  *
  * @param pathname      directory name
@@ -166,7 +166,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 /**
  * @brief Function creates FIFO file.
  *
- * The <b>mkfifo</b>() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
+ * The mkfifo() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
  * specifies the FIFO's permissions. A FIFO special file is similar to pipe, but
  * is created in filesystem and is not an anonymous. Access to FIFO is the same
  * as to regular file, except that data can be read only one time. Not all
@@ -208,7 +208,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 /**
  * @brief Function changes file mode.
  *
- * The <b>chmod</b>() system call change the permissions of a file.
+ * The chmod() system call change the permissions of a file.
  *
  * @param pathname      file to permission change
  * @param mode          new permissions
@@ -246,7 +246,7 @@ static inline int chmod(const char *pathname, mode_t mode)
 /**
  * @brief Function gets file information.
  *
- * The <b>stat</b>() function return information about a file.
+ * The stat() function return information about a file.
  *
  * @param pathname      file to inspect
  * @param buf           file's information
@@ -291,7 +291,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 /**
  * @brief Function gets file information.
  *
- * The <b>fstat</b>() function return information about a file pointed by <i>file</i>.
+ * The fstat() function return information about a file pointed by <i>file</i>.
  *
  * @param file          file object
  * @param buf           file's information

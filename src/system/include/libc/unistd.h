@@ -71,7 +71,7 @@ extern "C" {
 /**
  * @brief Function switches process to inactive state for selected time in seconds.
  *
- * The <b>sleep</b>() makes the calling thread sleep until seconds <i>seconds</i>
+ * The sleep() makes the calling thread sleep until seconds <i>seconds</i>
  * have elapsed.
  *
  * @param seconds   number of seconds to sleep
@@ -98,7 +98,7 @@ static inline void sleep(const uint seconds)
 /**
  * @brief Function switches process to inactive state for selected time in milliseconds.
  *
- * The <b>msleep</b>() makes the calling thread sleep until milliseconds
+ * The msleep() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed.
  *
  * @note dnx RTOS extension function.
@@ -127,7 +127,7 @@ static inline void msleep(const uint milliseconds)
 /**
  * @brief Function switches process to inactive state for selected time in microseconds.
  *
- * The <b>usleep</b>() makes the calling thread sleep until microseconds
+ * The usleep() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
  * @note Function is not fully supported by dnx RTOS. The task falls asleep for
@@ -161,7 +161,7 @@ static inline void usleep(const u32_t microseconds)
 /**
  * @brief Function prepares time reference to sleep.
  *
- * The <b>prepare_sleep_until</b>() function prepare tick counter to call
+ * The prepare_sleep_until() function prepare tick counter to call
  * msleep_until_ms() and sleep_until() functions.
  *
  * @note dnx RTOS extension function.
@@ -196,7 +196,7 @@ static inline int prepare_sleep_until(void)
 /**
  * @brief Function switches process to inactive state for selected time in milliseconds.
  *
- * The <b>msleep_until</b>() makes the calling thread sleep until milliseconds
+ * The msleep_until() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
  * @note dnx RTOS extension function.
@@ -232,7 +232,7 @@ static inline void msleep_until(const u32_t milliseconds, u32_t *time_ref)
 /**
  * @brief Function switches process to inactive state for selected time in seconds.
  *
- * The <b>sleep_until</b>() makes the calling thread sleep until seconds
+ * The sleep_until() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
  * @note dnx RTOS extension function.
@@ -268,7 +268,7 @@ static inline void sleep_until(const uint seconds, u32_t *time_ref)
 /**
  * @brief Function copies current working directory path to buffer.
  *
- * The <b>getcwd</b>() function copies an absolute pathname of the current
+ * The getcwd() function copies an absolute pathname of the current
  * working directory to the array pointed to by <i>buf</i>, which is of length
  * <i>size</i>.
  *
@@ -276,7 +276,7 @@ static inline void sleep_until(const uint seconds, u32_t *time_ref)
  * @param size      buffer length
  *
  * @return On success, these functions return a pointer to a string containing
- * the pathname of the current working directory. In the case <b>getcwd</b>() is the
+ * the pathname of the current working directory. In the case getcwd() is the
  * same value as <i>buf</i>.
  *
  * @b Example
@@ -301,7 +301,7 @@ static inline char *getcwd(char *buf, size_t size)
 /**
  * @brief Function returns PID of current process.
  *
- * The function <b>getpid</b>() return PID of current process (caller).
+ * The function getpid() return PID of current process (caller).
  *
  * @exception | @ref EINVAL
  * @exception | @ref ENOENT
@@ -335,7 +335,7 @@ static inline pid_t getpid(void)
 /**
  * @brief Function changes the ownership of file.
  *
- * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
+ * The chown() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
  * @param pathname      path to file
  * @param owner         owner ID
@@ -369,7 +369,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 /**
  * @brief Function synchronizes files buffers with file systems.
  *
- * The <b>sync</b>() synchronizes files buffers with file systems.
+ * The sync() synchronizes files buffers with file systems.
  *
  * @b Example
  * @code

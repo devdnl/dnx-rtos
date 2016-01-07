@@ -103,9 +103,9 @@ extern "C" {
 /**
  * @brief Function sends request to selected file to do non-standard operation.
  *
- * The <b>ioctl</b>() function manipulates the file parameters. In particular, many
+ * The ioctl() function manipulates the file parameters. In particular, many
  * operating characteristics of character special files (e.g., drivers) may
- * be controlled with <b>ioctl</b>() requests.
+ * be controlled with ioctl() requests.
  *
  * The second argument is a device-dependent request code. The third
  * argument is an untyped pointer to memory.

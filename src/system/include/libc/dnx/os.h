@@ -112,7 +112,7 @@ typedef struct {
 /**
  * @brief Function returns an amount of free memory.
  *
- * The function <b>get_free_memory</b>() return free memory in bytes. This is
+ * The function get_free_memory() return free memory in bytes. This is
  * the total amount of memory which can be used.
  *
  * @return Free memory in bytes.
@@ -139,7 +139,7 @@ static inline u32_t get_free_memory(void)
 /**
  * @brief Function returns an amount of used memory.
  *
- * The function <b>get_used_memory</b>() return used RAM in bytes. This value
+ * The function get_used_memory() return used RAM in bytes. This value
  * is a sum of static and dynamic allocated memory.
  *
  * @return Used memory in bytes.
@@ -166,7 +166,7 @@ static inline u32_t get_used_memory(void)
 /**
  * @brief Function returns the size of RAM.
  *
- * The function <b>get_memory_size</b>() return total memory size in bytes.
+ * The function get_memory_size() return total memory size in bytes.
  *
  * @return Total memory size in bytes.
  *
@@ -192,7 +192,7 @@ static inline u32_t get_memory_size(void)
 /**
  * @brief Function returns memory usage details.
  *
- * The function <b>get_memory_usage_details</b>() return detailed memory usage
+ * The function get_memory_usage_details() return detailed memory usage
  * pointed by <i>stat</i>.
  *
  * @param stat      memory information
@@ -239,7 +239,7 @@ static inline int get_memory_usage_details(memstat_t *stat)
 /**
  * @brief Function returns memory usage of selected module (driver).
  *
- * The function <b>get_module_memory_usage</b>() return memory usage by specified
+ * The function get_module_memory_usage() return memory usage by specified
  * module number <i>module_number</i>.
  *
  * @param module_number     module number
@@ -274,7 +274,7 @@ static inline i32_t get_module_memory_usage(uint module_number)
 /**
  * @brief Function returns system uptime in seconds.
  *
- * The function <b>get_uptime</b>() return 32-bit run time value in seconds.
+ * The function get_uptime() return 32-bit run time value in seconds.
  *
  * @return Uptime value in seconds.
  *
@@ -300,7 +300,7 @@ static inline u32_t get_uptime(void)
 /**
  * @brief Function returns an average CPU load.
  *
- * The function <b>get_average_CPU_load</b>() fill average CPU load container
+ * The function get_average_CPU_load() fill average CPU load container
  * pointed by <i>avg_CPU_load</i>.
  *
  * @param avg_CPU_load          average CPU load container
@@ -335,7 +335,7 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 /**
  * @brief Function returns system tick counter.
  *
- * The function <b>get_tick_counter</b>() return number of system clock ticks.
+ * The function get_tick_counter() return number of system clock ticks.
  * The value is mostly incremented less than 1 millisecond. Incrementation
  * interval depends on task switch frequency.
  *
@@ -363,8 +363,8 @@ static inline u32_t get_tick_counter(void)
 /**
  * @brief Function returns up time in milliseconds.
  *
- * The function <b>get_time_ms</b>() return number of milliseconds which
- * elapsed after kernel start. Function is similar to <b>get_uptime</b>(), except
+ * The function get_time_ms() return number of milliseconds which
+ * elapsed after kernel start. Function is similar to get_uptime(), except
  * that return milliseconds instead of seconds. In this function the tick
  * counter value is calculated to milliseconds, what means that resolution of
  * this counter depends on system tick counter increase value.
@@ -395,7 +395,7 @@ static inline u32_t get_time_ms(void)
 /**
  * @brief Function returns the name of current platform.
  *
- * The function <b>get_platform_name</b>() return platform name on which dnx RTOS
+ * The function get_platform_name() return platform name on which dnx RTOS
  * is working.
  *
  * @return Platform name.
@@ -422,7 +422,7 @@ static inline const char *get_platform_name(void)
 /**
  * @brief Function returns the operating system name.
  *
- * The function <b>get_OS_name</b>() return operating system name (dnx RTOS).
+ * The function get_OS_name() return operating system name (dnx RTOS).
  *
  * @return Operating system name.
  *
@@ -448,7 +448,7 @@ static inline const char *get_OS_name(void)
 /**
  * @brief Function returns an operating system version.
  *
- * The function <b>get_OS_version</b>() return operating system version string.
+ * The function get_OS_version() return operating system version string.
  *
  * @return Operating system version string.
  *
@@ -474,7 +474,7 @@ static inline const char *get_OS_version(void)
 /**
  * @brief Function returns a codename of operating system version.
  *
- * The function <b>get_OS_codename</b>() return a codename string.
+ * The function get_OS_codename() return a codename string.
  *
  * @return Codename string.
  *
@@ -500,7 +500,7 @@ static inline const char *get_OS_codename(void)
 /**
  * @brief Function returns name of used kernel.
  *
- * The function <b>get_kernel_name</b>() return kernel name string.
+ * The function get_kernel_name() return kernel name string.
  *
  * @return Kernel name string.
  *
@@ -526,7 +526,7 @@ static inline const char *get_kernel_name(void)
 /**
  * @brief Funciton returns version of used kernel.
  *
- * The function <b>get_kernel_version</b>() return kernel version string.
+ * The function get_kernel_version() return kernel version string.
  *
  * @return Kernel version string.
  *
@@ -552,7 +552,7 @@ static inline const char *get_kernel_version(void)
 /**
  * @brief Function returns author name.
  *
- * The function <b>get_author_name</b>() return author name.
+ * The function get_author_name() return author name.
  *
  * @return Author name.
  *
@@ -578,7 +578,7 @@ static inline const char *get_author_name(void)
 /**
  * @brief Function returns author's email.
  *
- * The function <b>get_author_email</b>() return author's email address.
+ * The function get_author_email() return author's email address.
  *
  * @return Author's email address.
  *
@@ -604,7 +604,7 @@ static inline const char *get_author_email(void)
 /**
  * @brief Function returns host name string.
  *
- * The function <b>get_host_name</b>() return host name string configured in
+ * The function get_host_name() return host name string configured in
  * configuration files.
  *
  * @return Return host name.
@@ -631,7 +631,7 @@ static inline const char *get_host_name(void)
 /**
  * @brief Function returns name of current user.
  *
- * The function <b>get_user_name</b>() return name of current user. Function
+ * The function get_user_name() return name of current user. Function
  * return always "root" string, because user handling is not supported yet.
  *
  * @return Return user name.
@@ -658,7 +658,7 @@ static inline const char *get_user_name(void)
 /**
  * @brief Function returns a name of selected module.
  *
- * The function <b>get_module_name</b>() return name of selected module by using
+ * The function get_module_name() return name of selected module by using
  * <i>modno</i> index.
  *
  * @param modno     module number
@@ -687,7 +687,7 @@ static inline const char *get_module_name(size_t modno)
 /**
  * @brief Function returns an ID of selected module (by name).
  *
- * The function <b>get_module_ID</b>() return module ID selected by
+ * The function get_module_ID() return module ID selected by
  * name pointed by <i>name</i>.
  *
  * @param name     module name
@@ -715,7 +715,7 @@ static inline int get_module_ID(const char *name)
 /**
  * @brief Function returns an ID of selected module (by dev_t index).
  *
- * The function <b>get_module_ID2</b>() return module ID stored in dev_t type.
+ * The function get_module_ID2() return module ID stored in dev_t type.
  *
  * @param dev           device ID
  *
@@ -743,7 +743,7 @@ static inline int get_module_ID2(dev_t dev)
 /**
  * @brief Function returns a major number of selected module.
  *
- * The function <b>get_module_major</b>() return module major number stored in
+ * The function get_module_major() return module major number stored in
  * dev_t type.
  *
  * @param dev           device ID
@@ -772,7 +772,7 @@ static inline int get_module_major(dev_t dev)
 /**
  * @brief Function returns a minor number of selected module.
  *
- * The function <b>get_module_minor</b>() return module minor number stored in
+ * The function get_module_minor() return module minor number stored in
  * dev_t type.
  *
  * @param dev           device ID
@@ -801,7 +801,7 @@ static inline int get_module_minor(dev_t dev)
 /**
  * @brief Function returns number of modules.
  *
- * The function <b>get_number_of_modules</b>() return number of registered
+ * The function get_number_of_modules() return number of registered
  * modules in system.
  *
  * @return Return number of registered modules in system.
@@ -831,7 +831,7 @@ static inline uint get_number_of_modules(void)
 /**
  * @brief Function returns number of instances of selected module index.
  *
- * The function <b>get_number_of_module_instances</b>() return number of instances
+ * The function get_number_of_module_instances() return number of instances
  * of selected module of index <i>n</i>.
  *
  * @param n             module index
@@ -865,7 +865,7 @@ static inline ssize_t get_number_of_module_instances(size_t n)
 /**
  * @brief Function restarts the system.
  *
- * The function <b>restart_system</b>() restart system. Reset operation can
+ * The function restart_system() restart system. Reset operation can
  * be software or hardware, but this depends on CPU port implementation.
  *
  * @return This function not return.
@@ -891,7 +891,7 @@ static inline void restart_system(void)
 /**
  * @brief Function enables system log.
  *
- * The function <b>syslog_enable</b>() enable system logging function. Log
+ * The function syslog_enable() enable system logging function. Log
  * messages will be wrote to the file pointed by <i>path</i>. If file exists and
  * is correctly opened then \b 0 is returned, otherwise \b -1 and appropriate errno
  * value is set.
@@ -927,7 +927,7 @@ static inline int syslog_enable(const char *path)
 /**
  * @brief Function disables system log functionality.
  *
- * The function <b>int syslog_disable</b>() disable system logging functionality.
+ * The function syslog_disable() disables system logging functionality.
  *
  * @exception | Any
  *
@@ -957,7 +957,7 @@ static inline int syslog_disable()
 /**
  * @brief Function is used to detect occurred kernel panic.
  *
- * The function <b>detect_kernel_panic</b>() detect if in the last session
+ * The function detect_kernel_panic() detect if in the last session
  * the Kernel Panic occurred. Kernel Panic message is show if <i>showmsg</i> is
  * set to <b>true</b>.
  *
