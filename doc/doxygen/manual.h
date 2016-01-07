@@ -33,11 +33,20 @@ kernel, file systems, communication stack, and utility applications).
 \page page-application Application development
 
 \section sec-app-intro Introduction
-In this section are presented libraries that are accessible from users' programs
-(applications).
+In this section are presented documentations that helps users to obtain information
+about libraries accessible from user space (application), and examples how to
+create own application.
 
 
 \section sec-app-topics Libraries accessible from user space
+Libraries listed below are accessible from users' application and are directly
+supported by dnx RTOS. Many libraries are not standard, some libraries are
+modified for best usage for embedded applications. Other standard libraries can
+be used but there is no warranty that library will work correctly. There are
+severals libraries that are not officially supported e.g. <stdbool.h>, <stdint.h>
+but there is not reasons to not use those libraries because are used internally
+by system. In general, most of libc libraries can be used without any issues.
+There are documented libraries that are modified for system purposes.
 \li \subpage dnx-misc-h The set of helpful macros and functions
 \li \subpage dnx-net-h The set of networking functions
 \li \subpage dnx-os-h The dnx RTOS specific functions
