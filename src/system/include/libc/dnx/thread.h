@@ -50,6 +50,61 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#ifdef DOXYGEN
+/**
+ * @brief Minimal stack size
+ *
+ * This size of stack allows to start very minimalistic application. This stack
+ * size is a reference of bigger stack sizes and is configured in system
+ * configuration.
+ */
+#define STACK_DEPTH_MINIMAL
+
+/**
+ * @brief Very low stack size
+ */
+#define STACK_DEPTH_VERY_LOW
+
+/**
+ * @brief Low stack size
+ */
+#define STACK_DEPTH_LOW
+
+/**
+ * @brief Medium stack size
+ */
+#define STACK_DEPTH_MEDIUM
+
+/**
+ * @brief Large stack size
+ */
+#define STACK_DEPTH_LARGE
+
+/**
+ * @brief Very large stack size
+ */
+#define STACK_DEPTH_VERY_LARGE
+
+/**
+ * @brief Huge stack size
+ */
+#define STACK_DEPTH_HUGE
+
+/**
+ * @brief Very huge stack size
+ */
+#define STACK_DEPTH_VERY_HUGE
+
+/**
+ * @brief User defined stack size
+ *
+ * By using this macro, user can determine the size of stack. This macro gives
+ * user full control of stack size.
+ *
+ * @param depth         stack depth in levels
+ */
+#define STACK_DEPTH_CUSTOM(depth)
+#endif
 
 /*==============================================================================
   Exported object types
