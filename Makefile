@@ -148,6 +148,7 @@ ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
+DOXYGEN    = ./tools/doxygen.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -233,6 +234,8 @@ help :
 	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
 	@$(ECHO) "   flash               flash target CPU by using ./tools/flash.sh script"
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
+	@$(ECHO) "   release             create Release package"
+	@$(ECHO) "   doxygen             create Doxygen documentation"	
 
 ####################################################################################################
 # project configuration wizard
@@ -416,6 +419,13 @@ release: cleanall
 	tar --exclude=.git -zcvf release.tar.gz .
 	zip release.zip . -r -9 --exclude /.git*
 	$(ECHO) "Done"
+
+####################################################################################################
+# target used to Doxygen documentation
+####################################################################################################
+.PHONY : doxygen
+doxygen:
+	$(DOXYGEN)
 
 ####################################################################################################
 # include all dependencies
