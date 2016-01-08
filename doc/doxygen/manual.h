@@ -28,8 +28,8 @@ Project contains several folders:
 \arg \c build -- directory is created at build process and contains build results,
 \arg \c config -- project configuration files. The best way is to use the Configtool
         program to adjust system. Configtool can be started by using
-        Eclipse IDE or in terminal by using \c \b make \c \b config command,
-\arg \c doc -- project documentation. Use \c \b make \c \b doxygen command in the
+        Eclipse IDE or in terminal by using <tt><b>make config</b></tt> command,
+\arg \c doc -- project documentation. Use <tt><b>make doxygen</b></tt> command in the
         command line to generate Doxygen documentation. PDF version is also
         possible to generate by using LaTeX system,
 \arg \c extra -- contains additional files, e. g. templates,
@@ -96,17 +96,17 @@ There are documented libraries that are modified for system purposes.
 \section app-prg-limits Application Limitations
 The dnx RTOS program implementation has some limitations:
 \arg Global variables are provided by the main global structure and access to
-     those variables are provided by the \b global pointer. This pointer is
+     those variables are provided by the <tt><b>global</b></tt> pointer. This pointer is
      individually created for each program instance. To share global variables
      between the modules of the program, the user has to share the global variable
      structure in the header that is included in each module. The global variable
-     structure is created between \b GLOBAL_VARIABLES_SECTION {} macro.
+     structure is created by using <tt><b>GLOBAL_VARIABLES_SECTION {}</b></tt> macro.
 \arg The global variables cannot be preloaded at program startup. The user has
      to initialize values of defined global variables if the value other than
      zero is required.
 \arg If the user wants to create a constant then it should be inserted beyond
      the global variable section, because constants are stored in the ROM memory.
-\arg The main function of the program has to be created by using the \b int_main()
+\arg The main function of the program has to be created by using the <tt><b>int_main()</b></tt>
      macro. Those macros create special hidden variables that are used by the system.
 \arg Environment variables are not supported.
 
@@ -116,57 +116,83 @@ in the system register. The system register is localized in the
 <i>./src/programs/program_registration.c</i> file. This file is created automatically
 by the build script. No other actions are needed to add a new program to the
 system. <b>To create a new program just create a new folder in the <i>./src/programs/</i>
-folder and add program’s files and Makefile</b>. The only one note is that the program’s
-name should be the same as folder name. Program’s Makefile is automatically added
-to the main system’s Makefile.
+and add program’s files and Makefile</b>. The only one note is that the program’s
+name should be the same as folder name (<tt><b>int_main()</b></tt> macro).
+Program’s Makefile is automatically added to the main system’s Makefile.
 
 \section app-prg-example Example Application
 A simple program is presented in this section.
 \code
-// TITLE: example_program.c
-// BRIEF: This is simple program example
+    // FILE: example_program.c
+    // BRIEF: This is simple program example
 
-#include <stdio.h>
-#include <stdlib.h>
+    #include <stdio.h>
+    #include <stdlib.h>
 
-// global variables
-GLOBAL_VARIABLES_SECTION {
-    int my_variable;
-    int my_zero;
-};
-
-
-// constants
-static const int my_constant = 100;
+    // global variables
+    GLOBAL_VARIABLES_SECTION {
+        int my_variable;
+        int my_zero;
+    };
 
 
-/// @brief Example program main function
-/// @param argc        number of arguments
-/// @param argv        list of arguments
-int_main(example_program, STACK_DEPTH_LOW, int argc, char *argv[])
-{
-        // access to global variable
-        global->my_variable = my_constant;
+    // constants
+    static const int my_constant = 100;
 
-        // welcome message
-        puts("Hello! This is example program!");
 
-        printf("Program name: %s\n", argv[0]);
+    /// @brief Example program main function
+    /// @param argc        number of arguments
+    /// @param argv        list of arguments
+    int_main(example_program, STACK_DEPTH_LOW, int argc, char *argv[])
+    {
+            // access to global variable
+            global->my_variable = my_constant;
 
-        puts("Program arguments:");
-        for (int i = 1; i < argc; i++) {
-                printf("%d: %s\n", i, argv[i]);
-        }
+            // welcome message
+            puts("Hello! This is example program!");
 
-        return EXIT_SUCCESS;
-}
+            printf("Program name: %s\n", argv[0]);
+
+            puts("Program arguments:");
+            for (int i = 1; i < argc; i++) {
+                    printf("%d: %s\n", i, argv[i]);
+            }
+
+            return EXIT_SUCCESS;
+    }
 \endcode
+
+Makefile script:
+\code
+    # Makefile for GNU make
+
+    CSRC_PROGRAMS   += example_program/example_program.c
+    CXXSRC_PROGRAMS +=
+    HDRLOC_PROGRAMS +=
+\endcode
+
+File structure:
+\arg ./src/programs/<b>example_program</b>/<i>example_program.c</i>
+\arg ./src/programs/<b>example_program</b>/<i>Makefile</i>
 
 
 \section sec-app-example Users' Libraries
 Libraries are stored in the <b>./src/lib</b> folder and are automatically added to
 the system by the script at build process. Libraries are added to the system when
-contains the Makefile file. To use a library in the program just include their header.
+contains the Makefile. To use a library in the program just include their header.
+
+Example of Makefile script for library:
+\code
+    # Makefile for GNU make
+
+    CSRC_LIB   += mbus/mbus.c mbus/mbus_garbage.c mbus/mbus_signal.c
+    CXXSRC_LIB +=
+    HDRLOC_LIB += mbus
+\endcode
+
+\section Examples
+To obtain applications and libraries code examples please browse <b>./src/programs/</b>
+and <b>./src/lib/</b> folders.
 */
 
 //------------------------------------------------------------------------------
