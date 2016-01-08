@@ -100,7 +100,7 @@ typedef struct _process _process_t;
 /** KERNELSPACE: thread descriptor */
 typedef struct _thread _thread_t;
 
-/** KERNELSPACE: program attributes */
+/** KERNELSPACE: program attributes. Doxygen documentation in fs.h. */
 struct _prog_data {
         const char     *name;           //!< program name
         const size_t   *globals_size;   //!< size of program global variables

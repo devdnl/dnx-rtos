@@ -66,7 +66,7 @@ extern "C" {
 #define SEEK_END                                VFS_SEEK_END
 #endif
 
-/* file access flags */
+/* file access flags. Doxygen documentation in "fs/fs.h" */
 #ifndef O_RDONLY
 #define O_RDONLY                                00
 #endif
@@ -147,7 +147,7 @@ struct vfs_dev_stat {
         u8_t  st_minor;                 /**< device minor number  */
 };
 
-/** file write/read attributtes */
+/** file write/read attributtes. Doxygen documentation in fs/fs.h */
 struct vfs_fattr {
         bool non_blocking_rd:1;         /**< non-blocking file read access */
         bool non_blocking_wr:1;         /**< non-blocking file write access */

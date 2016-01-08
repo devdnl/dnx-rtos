@@ -91,6 +91,42 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+#ifdef DOXYGEN /* documentation only */
+//==============================================================================
+/**
+ * @brief  Allocate memory
+ *
+ * @param size             object size
+ * @param mem              pointer to memory block pointer
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int _sys_malloc(size_t size, void **mem);
+
+//==============================================================================
+/**
+ * @brief  Allocate memory and clear content
+ *
+ * @param size             object size
+ * @param mem              pointer to memory block pointer
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int _sys_zalloc(size_t size, void **mem);
+
+//==============================================================================
+/**
+ * @brief  Free allocated memory
+ *
+ * @param mem           pointer to memory block to free
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int _sys_free(void **mem);
+#endif
 
 //==============================================================================
 /**
@@ -156,6 +192,18 @@ static inline double _sys_atof(const char *str)
 {
         return _atof(str);
 }
+
+#ifdef DOXYGEN /* function documentation only */
+//==============================================================================
+/**
+ * @brief  List constructor (for FS only)
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list);
+#endif
 
 //==============================================================================
 /**
