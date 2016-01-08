@@ -24,6 +24,16 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup sysfunc-h System functions
+ *
+ * This library is used in the @ref fs-h and @ref driver-h headers. Header
+ * shall not be included directly by drivers or file systems. Those functions
+ * are accessible only from drivers and file systems.
+ *
+ * @{
+ */
+
 #ifndef _SYSFUNC_H_
 #define _SYSFUNC_H_
 
@@ -2009,6 +2019,7 @@ static inline struct tm *_sys_localtime_r(const time_t *timer, struct tm *tm)
 #endif
 
 #endif /* _SYSFUNC_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
