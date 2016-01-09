@@ -113,7 +113,7 @@ static uint get_line_index(ttybfr_t *this, uint go_back)
 static void link_line(ttybfr_t *this, char *line)
 {
         if (this->line[this->line_head]) {
-                _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
+                sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                 this->line[this->line_head] = NULL;
         }
 
@@ -124,7 +124,7 @@ static void link_line(ttybfr_t *this, char *line)
                 this->line_head = (this->line_head + 1) % _TTY_TERMINAL_ROWS;
 
                 if (this->line[this->line_head]) {
-                        _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
+                        sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                         this->line[this->line_head] = NULL;
                 }
         }
@@ -154,7 +154,7 @@ static void clear_new_line_buffer(ttybfr_t *this)
 static void clear_last_line(ttybfr_t *this)
 {
         if (this->line[this->line_head]) {
-                _sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
+                sys_free(reinterpret_cast(void**, &this->line[this->line_head]));
                 this->line[this->line_head] = NULL;
         }
 }
@@ -172,7 +172,7 @@ static void put_new_line_buffer(ttybfr_t *this)
         void link_new_line(const char *str, size_t len)
         {
                 char *line = NULL;
-                _sys_malloc(len + 1, reinterpret_cast(void**, &line));
+                sys_malloc(len + 1, reinterpret_cast(void**, &line));
                 if (line) {
                         strcpy(line, str);
                         link_line(this, line);
@@ -193,7 +193,7 @@ static void put_new_line_buffer(ttybfr_t *this)
                 } else {
                         size_t last_line_len = strlen(last_line);
                         char *line = NULL;
-                        _sys_malloc(last_line_len + new_line_len + 1, reinterpret_cast(void**, &line));
+                        sys_malloc(last_line_len + new_line_len + 1, reinterpret_cast(void**, &line));
                         if (line) {
                                 strcpy(line, last_line);
                                 strcat(line, this->new_line_bfr);
@@ -223,7 +223,7 @@ static void put_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 int ttybfr_create(ttybfr_t **bfr)
 {
-        int result = _sys_zalloc(sizeof(ttybfr_t), static_cast(void**, bfr));
+        int result = sys_zalloc(sizeof(ttybfr_t), static_cast(void**, bfr));
         if (result == ESUCC) {
                 (*bfr)->self = *bfr;
         }
@@ -244,7 +244,7 @@ int ttybfr_destroy(ttybfr_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                _sys_free(static_cast(void**, &this));
+                sys_free(static_cast(void**, &this));
                 return ESUCC;
         } else {
                 return EINVAL;
@@ -329,7 +329,7 @@ void ttybfr_clear(ttybfr_t *this)
         if (is_valid(this)) {
                 for (int i = 0; i < _TTY_TERMINAL_ROWS; i++) {
                         if (this->line[i]) {
-                                _sys_free(reinterpret_cast(void**, &this->line[i]));
+                                sys_free(reinterpret_cast(void**, &this->line[i]));
                                 this->line[i] = NULL;
                         }
 

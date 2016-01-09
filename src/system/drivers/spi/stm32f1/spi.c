@@ -236,17 +236,17 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize SPI peripheral */
         if (SPI[major] == NULL) {
-                result = _sys_zalloc(sizeof(struct SPI), static_cast(void**, &SPI[major]));
+                result = sys_zalloc(sizeof(struct SPI), static_cast(void**, &SPI[major]));
                 if (result != ESUCC) {
                         goto finish;
                 }
 
-                result = _sys_semaphore_create(1, 0, &SPI[major]->wait_irq_sem);
+                result = sys_semaphore_create(1, 0, &SPI[major]->wait_irq_sem);
                 if (result != ESUCC) {
                         goto finish;
                 }
 
-                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPI[major]->periph_protect_mtx);
+                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPI[major]->periph_protect_mtx);
                 if (result != ESUCC) {
                         goto finish;
                 }
@@ -258,14 +258,14 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* create SPI slave instance */
-        result = _sys_zalloc(sizeof(struct SPI_slave), device_handle);
+        result = sys_zalloc(sizeof(struct SPI_slave), device_handle);
         if (result == ESUCC) {
                 struct SPI_slave *hdl = *device_handle;
                 hdl->config           = SPI_DEFAULT_CFG;
                 hdl->major            = major;
                 hdl->minor            = minor;
 
-                _sys_device_unlock(&hdl->lock, true);
+                sys_device_unlock(&hdl->lock, true);
 
                 SPI[major]->slave_count++;
         }
@@ -292,17 +292,17 @@ API_MOD_RELEASE(SPI, void *device_handle)
         struct SPI_slave *hdl    = device_handle;
         int               result = EBUSY;
 
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         {
-                if (_sys_device_is_unlocked(&hdl->lock)) {
+                if (sys_device_is_unlocked(&hdl->lock)) {
 
                         SPI[hdl->major]->slave_count--;
                         release_resources(hdl->major);
-                        _sys_free(device_handle);
+                        sys_free(device_handle);
                         result = ESUCC;
                 }
         }
-        _sys_critical_section_end();
+        sys_critical_section_end();
 
         return result;
 }
@@ -323,7 +323,7 @@ API_MOD_OPEN(SPI, void *device_handle, u32_t flags)
 
         struct SPI_slave *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->lock);
+        return sys_device_lock(&hdl->lock);
 }
 
 //==============================================================================
@@ -340,7 +340,7 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
         struct SPI_slave *hdl = device_handle;
 
-        return _sys_device_unlock(&hdl->lock, force);
+        return sys_device_unlock(&hdl->lock, force);
 }
 
 //==============================================================================
@@ -373,7 +373,7 @@ API_MOD_WRITE(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
-        int status = _sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
+        int status = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
         if (status == ESUCC) {
                 if (SPI[hdl->major]->RAW == false) {
                         deselect_slave(hdl);
@@ -386,7 +386,7 @@ API_MOD_WRITE(SPI,
                         *wrcnt = count;
                 }
 
-                _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
+                sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
         }
 
         return status;
@@ -418,7 +418,7 @@ API_MOD_READ(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
-        int status = _sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
+        int status = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
         if (status == ESUCC) {
                 if (SPI[hdl->major]->RAW == false) {
                         deselect_slave(hdl);
@@ -431,7 +431,7 @@ API_MOD_READ(SPI,
                         *rdcnt = count;
                 }
 
-                _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
+                sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
         }
 
         return status;
@@ -477,7 +477,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__SELECT:
-                if (_sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
+                if (sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
                         SPI[hdl->major]->RAW = true;
                         apply_SPI_config(hdl);
                         deselect_slave(hdl);
@@ -489,12 +489,12 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_SPI__DESELECT:
-                if (_sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
+                if (sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
                         deselect_slave(hdl);
                         apply_SPI_safe_config(hdl->major);
                         SPI[hdl->major]->RAW = false;
-                        _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // DESELECT unlock
-                        _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // SELECT unlock
+                        sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // DESELECT unlock
+                        sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // SELECT unlock
                         status = ESUCC;
                 } else {
                         status = EBUSY;
@@ -505,7 +505,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         SPI_transceive_t *tr = static_cast(SPI_transceive_t*, arg);
                         if (tr->count) {
-                                if (_sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
+                                if (sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
                                         if (SPI[hdl->major]->RAW == false) {
                                                 deselect_slave(hdl);
                                                 apply_SPI_config(hdl);
@@ -514,7 +514,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
                                         status = transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
 
-                                        _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
+                                        sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
                                 }
                         } else {
                                 status = EINVAL;
@@ -528,7 +528,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         const u8_t *byte = arg;
 
-                        if (_sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
+                        if (sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
                                 deselect_slave(hdl);
                                 apply_SPI_config(hdl);
 
@@ -536,7 +536,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                         status = ESUCC;
                                 }
 
-                                _sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
+                                sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
                         }
                 } else {
                         status = EINVAL;
@@ -599,18 +599,18 @@ static void release_resources(u8_t major)
 {
         if (SPI[major] && SPI[major]->slave_count == 0) {
                 if (SPI[major]->wait_irq_sem) {
-                        _sys_semaphore_destroy(SPI[major]->wait_irq_sem);
+                        sys_semaphore_destroy(SPI[major]->wait_irq_sem);
                         SPI[major]->wait_irq_sem = NULL;
                 }
 
                 if (SPI[major]->periph_protect_mtx) {
-                        _sys_mutex_destroy(SPI[major]->periph_protect_mtx);
+                        sys_mutex_destroy(SPI[major]->periph_protect_mtx);
                         SPI[major]->periph_protect_mtx = NULL;
                 }
 
                 turn_off_SPI(major);
 
-                _sys_free(static_cast(void**, &SPI[major]));
+                sys_free(static_cast(void**, &SPI[major]));
         }
 }
 
@@ -831,7 +831,7 @@ static int transceive(struct SPI_slave *hdl, const u8_t *tx, u8_t *rx, size_t co
                 #endif
         }
 
-        return _sys_semaphore_wait(SPI[hdl->major]->wait_irq_sem, SEMAPHORE_TIMEOUT);
+        return sys_semaphore_wait(SPI[hdl->major]->wait_irq_sem, SEMAPHORE_TIMEOUT);
 }
 
 //==============================================================================
@@ -893,7 +893,7 @@ static bool handle_SPI_IRQ(u8_t major)
 
                         CLEAR_BIT(spi->CR2, SPI_CR2_RXNEIE);
                         CLEAR_BIT(spi->CR2, SPI_CR2_TXEIE);
-                        _sys_semaphore_signal_from_ISR(SPI[major]->wait_irq_sem, &woken);
+                        sys_semaphore_signal_from_ISR(SPI[major]->wait_irq_sem, &woken);
                 }
         }
 
@@ -929,7 +929,7 @@ static bool handle_DMA_IRQ(u8_t major)
         CLEAR_BIT(SPI_INFO[major].SPI->CR2, SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
 
         bool woken = false;
-        _sys_semaphore_signal_from_ISR(SPI[major]->wait_irq_sem, &woken);
+        sys_semaphore_signal_from_ISR(SPI[major]->wait_irq_sem, &woken);
         woken = woken || SPI[major]->count > 10;
 
         return woken;
@@ -945,7 +945,7 @@ static bool handle_DMA_IRQ(u8_t major)
 void SPI1_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI1)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -959,7 +959,7 @@ void SPI1_IRQHandler(void)
 void SPI2_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI2)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -973,7 +973,7 @@ void SPI2_IRQHandler(void)
 void SPI3_IRQHandler(void)
 {
         if (handle_SPI_IRQ(_SPI3)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -987,7 +987,7 @@ void SPI3_IRQHandler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI1)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1001,7 +1001,7 @@ void DMA1_Channel2_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI2)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif
@@ -1015,7 +1015,7 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA2_Channel1_IRQHandler(void)
 {
         if (handle_DMA_IRQ(_SPI3)) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 #endif

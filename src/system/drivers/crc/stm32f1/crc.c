@@ -85,7 +85,7 @@ API_MOD_INIT(CRC, void **device_handle, u8_t major, u8_t minor)
                 return EADDRINUSE;
         }
 
-        int result = _sys_zalloc(sizeof(CRCM), device_handle);
+        int result = sys_zalloc(sizeof(CRCM), device_handle);
         if (result == ESUCC) {
                 CRCM *hdl = *device_handle;
 
@@ -111,17 +111,17 @@ API_MOD_RELEASE(CRC, void *device_handle)
 
         int status;
 
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         {
-                if (_sys_device_is_unlocked(&hdl->file_lock)) {
+                if (sys_device_is_unlocked(&hdl->file_lock)) {
                         CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                        _sys_free(static_cast(void**, &hdl));
+                        sys_free(static_cast(void**, &hdl));
                         status = ESUCC;
                 } else {
                         status = EBUSY;
                 }
         }
-        _sys_critical_section_end();
+        sys_critical_section_end();
 
         return status;
 }
@@ -142,7 +142,7 @@ API_MOD_OPEN(CRC, void *device_handle, u32_t flags)
 
         CRCM *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->file_lock);
+        return sys_device_lock(&hdl->file_lock);
 }
 
 //==============================================================================
@@ -159,10 +159,10 @@ API_MOD_CLOSE(CRC, void *device_handle, bool force)
 {
         CRCM *hdl = device_handle;
 
-        int result = _sys_device_get_access(&hdl->file_lock);
+        int result = sys_device_get_access(&hdl->file_lock);
 
         if (result == ESUCC) {
-                result = _sys_device_unlock(&hdl->file_lock, force);
+                result = sys_device_unlock(&hdl->file_lock, force);
         }
 
         return result;
@@ -194,7 +194,7 @@ API_MOD_WRITE(CRC,
 
         CRCM *hdl = device_handle;
 
-        int result = _sys_device_get_access(&hdl->file_lock);
+        int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
                 reset_CRC();
 
@@ -261,7 +261,7 @@ API_MOD_READ(CRC,
 
         CRCM *hdl = device_handle;
 
-        int result = _sys_device_get_access(&hdl->file_lock);
+        int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
 
                 u8_t  crc[4] = {CRCP->DR, CRCP->DR >> 8, CRCP->DR >> 16, CRCP->DR >> 24};
@@ -298,7 +298,7 @@ API_MOD_IOCTL(CRC, void *device_handle, int request, void *arg)
 {
         CRCM *hdl = device_handle;
 
-        int result = _sys_device_get_access(&hdl->file_lock);
+        int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
                 switch (request) {
                 case IOCTL_CRC__SET_INPUT_MODE:

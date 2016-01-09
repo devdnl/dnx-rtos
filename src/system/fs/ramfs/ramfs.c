@@ -100,19 +100,19 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG1(src_path);
 
-        int result = _sys_zalloc(sizeof(struct RAMFS), fs_handle);
+        int result = sys_zalloc(sizeof(struct RAMFS), fs_handle);
         if (result == ESUCC) {
                 struct RAMFS *hdl = *fs_handle;
 
-                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->resource_mtx);
+                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->resource_mtx);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &hdl->root_dir.data));
+                result = sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &hdl->root_dir.data));
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_llist_create(_sys_llist_functor_cmp_pointers, NULL, &hdl->opended_files);
+                result = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &hdl->opended_files);
                 if (result != ESUCC)
                         goto finish;
 
@@ -123,15 +123,15 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
                 finish:
                 if (result != ESUCC) {
                         if (hdl->resource_mtx)
-                                _sys_mutex_destroy(hdl->resource_mtx);
+                                sys_mutex_destroy(hdl->resource_mtx);
 
                         if (hdl->root_dir.data)
-                                _sys_llist_destroy(hdl->root_dir.data);
+                                sys_llist_destroy(hdl->root_dir.data);
 
                         if (hdl->opended_files)
-                                _sys_llist_destroy(hdl->opended_files);
+                                sys_llist_destroy(hdl->opended_files);
 
-                        _sys_free(fs_handle);
+                        sys_free(fs_handle);
                 }
         }
 
@@ -174,7 +174,7 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 // parent node must exist
@@ -185,7 +185,7 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = _sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
@@ -194,12 +194,12 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
                                 if (result == ESUCC) {
                                         child->data = reinterpret_cast(void*, dev);
                                 } else {
-                                        _sys_free(static_cast(void**, &child_name));
+                                        sys_free(static_cast(void**, &child_name));
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -220,7 +220,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 // parent node must exist
@@ -231,7 +231,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = _sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
@@ -240,12 +240,12 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
                                 if (result == ESUCC) {
                                         child->mode = mode;
                                 } else {
-                                        _sys_free(reinterpret_cast(void**, &child_name));
+                                        sys_free(reinterpret_cast(void**, &child_name));
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -266,7 +266,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 // parent node must exist
@@ -277,7 +277,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = _sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
@@ -286,12 +286,12 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
                                 if (result == ESUCC) {
                                         child->mode = mode;
                                 } else {
-                                        _sys_free(reinterpret_cast(void**, &child_name));
+                                        sys_free(reinterpret_cast(void**, &child_name));
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -312,14 +312,14 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *parent;
                 result = get_node(path, &hdl->root_dir, 0, NULL, &parent);
                 if (result == ESUCC) {
                         if (parent->type == FILE_TYPE_DIR) {
-                                dir->f_items    = _sys_llist_size(parent->data);
+                                dir->f_items    = sys_llist_size(parent->data);
                                 dir->f_readdir  = ramfs_readdir;
                                 dir->f_closedir = ramfs_closedir;
                                 dir->f_seek     = 0;
@@ -329,7 +329,7 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -366,11 +366,11 @@ static int ramfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *parent = dir->f_dd;
-                node_t *child  = _sys_llist_at(parent->data, dir->f_seek++);
+                node_t *child  = sys_llist_at(parent->data, dir->f_seek++);
 
                 if (child) {
                         dir->dirent.filetype = child->type;
@@ -379,10 +379,10 @@ static int ramfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                         *dirent              = &dir->dirent;
 
                         if (child->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
+                                sys_mutex_unlock(hdl->resource_mtx);
 
                                 struct vfs_dev_stat dev_stat;
-                                result = _sys_driver_stat((dev_t)child->data, &dev_stat);
+                                result = sys_driver_stat((dev_t)child->data, &dev_stat);
                                 if (result == ESUCC) {
                                         dir->dirent.size = dev_stat.st_size;
                                 }
@@ -397,7 +397,7 @@ static int ramfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                         result = ENOENT;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -417,7 +417,7 @@ API_FS_REMOVE(ramfs, void *fs_handle, const char *path)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *parent;
@@ -447,7 +447,7 @@ API_FS_REMOVE(ramfs, void *fs_handle, const char *path)
 
                 /* check if file is opened */
                 if (child->type != FILE_TYPE_DIR) {
-                        _sys_llist_foreach(struct opened_file_info*, opened_file, hdl->opended_files) {
+                        sys_llist_foreach(struct opened_file_info*, opened_file, hdl->opended_files) {
                                 if (opened_file->child == child) {
                                         opened_file->remove_at_close = true;
                                         remove_file = false;
@@ -463,7 +463,7 @@ API_FS_REMOVE(ramfs, void *fs_handle, const char *path)
                 }
 
                 finish:
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -488,7 +488,7 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                 return EISDIR;
         }
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *target;
@@ -497,17 +497,17 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                         char *basename = strrchr(new_name, '/') + 1;
 
                         char *new_name;
-                        result = _sys_zalloc(strsize(basename), static_cast(void**, &new_name));
+                        result = sys_zalloc(strsize(basename), static_cast(void**, &new_name));
                         if (result == ESUCC) {
                                 if (target->name) {
-                                        _sys_free(reinterpret_cast(void**, target->name));
+                                        sys_free(reinterpret_cast(void**, target->name));
                                 }
 
                                 target->name = new_name;
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -528,7 +528,7 @@ API_FS_CHMOD(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *target;
@@ -537,7 +537,7 @@ API_FS_CHMOD(ramfs, void *fs_handle, const char *path, mode_t mode)
                         target->mode = mode;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -559,7 +559,7 @@ API_FS_CHOWN(ramfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *target;
@@ -569,7 +569,7 @@ API_FS_CHOWN(ramfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                         target->gid = group;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -590,7 +590,7 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 node_t *target;
@@ -607,10 +607,10 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                                 stat->st_type  = target->type;
 
                                 if (target->type == FILE_TYPE_DRV) {
-                                        _sys_mutex_unlock(hdl->resource_mtx);
+                                        sys_mutex_unlock(hdl->resource_mtx);
 
                                         struct vfs_dev_stat dev_stat;
-                                        result = _sys_driver_stat(cast(dev_t, target->data),
+                                        result = sys_driver_stat(cast(dev_t, target->data),
                                                                   &dev_stat);
                                         if (result == ESUCC) {
                                                 stat->st_size = dev_stat.st_size;
@@ -627,7 +627,7 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -651,7 +651,7 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 struct opened_file_info *opened_file = extra;
@@ -665,10 +665,10 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                         stat->st_type  = opened_file->child->type;
 
                         if (opened_file->child->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
+                                sys_mutex_unlock(hdl->resource_mtx);
 
                                 struct vfs_dev_stat dev_stat;
-                                result = _sys_driver_stat(cast(dev_t, opened_file->child->data),
+                                result = sys_driver_stat(cast(dev_t, opened_file->child->data),
                                                           &dev_stat);
                                 if (result == ESUCC) {
                                         stat->st_size = dev_stat.st_size;
@@ -685,7 +685,7 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                         result = ENOENT;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -705,10 +705,10 @@ API_FS_STATFS(ramfs, void *fs_handle, struct statfs *statfs)
 {
         struct RAMFS *hdl = fs_handle;
 
-        statfs->f_bfree  = cast(u32_t, _sys_get_free_mem());
-        statfs->f_blocks = cast(u32_t, _sys_get_mem_size());
+        statfs->f_bfree  = cast(u32_t, sys_get_free_mem());
+        statfs->f_blocks = cast(u32_t, sys_get_mem_size());
         statfs->f_bsize  = 1;
-        statfs->f_ffree  = cast(u32_t, _sys_get_free_mem() / sizeof(node_t));
+        statfs->f_ffree  = cast(u32_t, sys_get_free_mem() / sizeof(node_t));
         statfs->f_files  = hdl->file_count;
         statfs->f_type   = 0x01;
         statfs->f_fsname = "ramfs";
@@ -736,7 +736,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 // open file parent
@@ -758,7 +758,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         char *basename = strrchr(path, '/') + 1;
 
                         char *file_name;
-                        result = _sys_zalloc(strsize(basename), static_cast(void**, &file_name));
+                        result = sys_zalloc(strsize(basename), static_cast(void**, &file_name));
                         if (result != ESUCC) {
                                 goto finish;
                         }
@@ -767,7 +767,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
                         result = new_node(hdl, parent, file_name, FILE_TYPE_REGULAR, &item, &child);
                         if (result != ESUCC) {
-                                _sys_free(reinterpret_cast(void**, &file_name));
+                                sys_free(reinterpret_cast(void**, &file_name));
                                 goto finish;
                         }
                 } else {
@@ -788,7 +788,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         // truncate file if requested
                         if (flags & O_TRUNC) {
                                 if (child->data) {
-                                        _sys_free(reinterpret_cast(void**, &child->data));
+                                        sys_free(reinterpret_cast(void**, &child->data));
                                         child->data = NULL;
                                 }
 
@@ -802,20 +802,20 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         }
 
                 } else if (child->type == FILE_TYPE_DRV) {
-                        result = _sys_driver_open((dev_t)child->data, flags);
+                        result = sys_driver_open((dev_t)child->data, flags);
                         if (result == ESUCC) {
                                 *fpos = 0;
                         } else {
-                                _sys_llist_pop_back(hdl->opended_files);
+                                sys_llist_pop_back(hdl->opended_files);
                                 goto finish;
                         }
                 }
 
                 // load pointer to file descriptor
-                *extra = _sys_llist_back(hdl->opended_files);
+                *extra = sys_llist_back(hdl->opended_files);
 
                 finish:
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -839,25 +839,25 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 struct opened_file_info *opened_file = extra;
-                int pos = _sys_llist_find_begin(hdl->opended_files, opened_file);
+                int pos = sys_llist_find_begin(hdl->opended_files, opened_file);
 
                 if (opened_file && opened_file->child && pos >= 0) {
                         node_t *target = opened_file->child;
 
                         /* close device if file is driver type */
                         if (target->type == FILE_TYPE_DRV) {
-                                result = _sys_driver_close((dev_t)target->data, force);
+                                result = sys_driver_close((dev_t)target->data, force);
 
                         } else {
                                 /* file to remove, check if other task does not opens this file */
                                 if (opened_file->remove_at_close == true) {
                                         bool remove = true;
 
-                                        _sys_llist_foreach(struct opened_file_info*, file, hdl->opended_files) {
+                                        sys_llist_foreach(struct opened_file_info*, file, hdl->opended_files) {
                                                 if (file->child == target) {
                                                         remove = false;
                                                 }
@@ -876,13 +876,13 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
                         /* remove file from list */
                         if (result == ESUCC) {
-                                _sys_llist_erase(hdl->opended_files, pos);
+                                sys_llist_erase(hdl->opended_files, pos);
                         }
                 } else {
                         result = ENOENT;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -918,7 +918,7 @@ API_FS_WRITE(ramfs,
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 result = ENOENT;
@@ -928,17 +928,17 @@ API_FS_WRITE(ramfs,
                         node_t *target = opened_file->child;
 
                         if (target->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
-                                return _sys_driver_write((dev_t)target->data, src, count, fpos, wrcnt, fattr);
+                                sys_mutex_unlock(hdl->resource_mtx);
+                                return sys_driver_write((dev_t)target->data, src, count, fpos, wrcnt, fattr);
 
                         } else if (target->type == FILE_TYPE_PIPE) {
-                               _sys_mutex_unlock(hdl->resource_mtx);
+                               sys_mutex_unlock(hdl->resource_mtx);
 
-                               result = _sys_pipe_write(target->data, src, count, wrcnt, fattr.non_blocking_wr);
+                               result = sys_pipe_write(target->data, src, count, wrcnt, fattr.non_blocking_wr);
                                if (result == ESUCC) {
                                        if (*wrcnt > 0) {
                                                size_t size = 0;
-                                               result = _sys_pipe_get_length(target->data, &size);
+                                               result = sys_pipe_get_length(target->data, &size);
                                                target->size = size;
                                        }
                                }
@@ -956,12 +956,12 @@ API_FS_WRITE(ramfs,
 
                                if ((seek + write_size) > file_length || target->data == NULL) {
                                        char *new_data;
-                                       result = _sys_malloc(file_length + write_size,
+                                       result = sys_malloc(file_length + write_size,
                                                             reinterpret_cast(void**, &new_data));
                                        if (result == ESUCC) {
                                                if (target->data) {
                                                        memcpy(new_data, target->data, file_length);
-                                                       _sys_free(reinterpret_cast(void**, &target->data));
+                                                       sys_free(reinterpret_cast(void**, &target->data));
                                                }
 
                                                memcpy(new_data + seek, src, write_size);
@@ -982,7 +982,7 @@ API_FS_WRITE(ramfs,
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -1018,7 +1018,7 @@ API_FS_READ(ramfs,
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 result = ENOENT;
@@ -1028,17 +1028,17 @@ API_FS_READ(ramfs,
                         node_t *target = opened_file->child;
 
                         if (target->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
-                                return _sys_driver_read((dev_t)target->data, dst, count, fpos, rdcnt, fattr);
+                                sys_mutex_unlock(hdl->resource_mtx);
+                                return sys_driver_read((dev_t)target->data, dst, count, fpos, rdcnt, fattr);
 
                         } else if (target->type == FILE_TYPE_PIPE) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
+                                sys_mutex_unlock(hdl->resource_mtx);
 
-                                result = _sys_pipe_read(target->data, dst, count, rdcnt, fattr.non_blocking_rd);
+                                result = sys_pipe_read(target->data, dst, count, rdcnt, fattr.non_blocking_rd);
                                 if (result == ESUCC) {
                                         if (*rdcnt > 0) {
                                                 size_t size;
-                                                result = _sys_pipe_get_length(target->data, &size);
+                                                result = sys_pipe_get_length(target->data, &size);
                                                 target->size = size;
                                         }
                                 }
@@ -1072,7 +1072,7 @@ API_FS_READ(ramfs,
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -1097,7 +1097,7 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 result = ENOENT;
@@ -1105,19 +1105,19 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
                 struct opened_file_info *opened_file = extra;
                 if (opened_file && opened_file->child) {
                         if (opened_file->child->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
-                                return _sys_driver_ioctl((dev_t)opened_file->child->data, request, arg);
+                                sys_mutex_unlock(hdl->resource_mtx);
+                                return sys_driver_ioctl((dev_t)opened_file->child->data, request, arg);
 
                         } else if (opened_file->child->type == FILE_TYPE_PIPE) {
 
                                 switch (request) {
                                 case IOCTL_PIPE__CLOSE:
-                                        _sys_mutex_unlock(hdl->resource_mtx);
-                                        return _sys_pipe_close(opened_file->child->data) ? ESUCC : EIO;
+                                        sys_mutex_unlock(hdl->resource_mtx);
+                                        return sys_pipe_close(opened_file->child->data) ? ESUCC : EIO;
 
                                 case IOCTL_PIPE__CLEAR:
-                                        _sys_mutex_unlock(hdl->resource_mtx);
-                                        return _sys_pipe_clear(opened_file->child->data) ? ESUCC : EIO;
+                                        sys_mutex_unlock(hdl->resource_mtx);
+                                        return sys_pipe_clear(opened_file->child->data) ? ESUCC : EIO;
 
                                 default:
                                         result = EBADRQC;
@@ -1126,7 +1126,7 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
                         }
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -1149,14 +1149,14 @@ API_FS_FLUSH(ramfs, void *fs_handle, void *extra, fd_t fd)
 
         struct RAMFS *hdl = fs_handle;
 
-        int result = _sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
                 struct opened_file_info *opened_file = extra;
                 if (opened_file && opened_file->child) {
                         if (opened_file->child->type == FILE_TYPE_DRV) {
-                                _sys_mutex_unlock(hdl->resource_mtx);
-                                return _sys_driver_flush((dev_t)opened_file->child->data);
+                                sys_mutex_unlock(hdl->resource_mtx);
+                                return sys_driver_flush((dev_t)opened_file->child->data);
                         } else {
                                 result = ESUCC;
                         }
@@ -1164,7 +1164,7 @@ API_FS_FLUSH(ramfs, void *fs_handle, void *extra, fd_t fd)
                         result = ENOENT;
                 }
 
-                _sys_mutex_unlock(hdl->resource_mtx);
+                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return result;
@@ -1199,30 +1199,30 @@ API_FS_SYNC(ramfs, void *fs_handle)
 static int delete_node(struct RAMFS *hdl, node_t *base, node_t *target, u32_t position)
 {
         if (target->type == FILE_TYPE_DIR) {
-                if (_sys_llist_size(target->data) > 0) {
+                if (sys_llist_size(target->data) > 0) {
                         return ENOTEMPTY;
                 } else {
-                        _sys_llist_destroy(target->data);
+                        sys_llist_destroy(target->data);
                         target->data = NULL;
                 }
 
         } else if (target->type == FILE_TYPE_PIPE) {
 
                 if (target->data) {
-                        _sys_pipe_destroy(target->data);
+                        sys_pipe_destroy(target->data);
                         target->data = NULL;
                 }
         }
 
         if (target->name) {
-                _sys_free(reinterpret_cast(void**, &target->name));
+                sys_free(reinterpret_cast(void**, &target->name));
         }
 
         if (target->data) {
-                _sys_free(reinterpret_cast(void**, &target->data));
+                sys_free(reinterpret_cast(void**, &target->data));
         }
 
-        _sys_llist_erase(base->data, position);
+        sys_llist_erase(base->data, position);
 
         hdl->file_count--;
 
@@ -1300,12 +1300,12 @@ static int get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item
                 uint  path_length = !path_end ? strlen(path) : (size_t)path_end - (size_t)path;
 
                 /* get number of list items */
-                int list_size = _sys_llist_size(current_node->data);
+                int list_size = sys_llist_size(current_node->data);
 
                 /* find that object exist ------------------------------------*/
                 int i = 0;
                 while (list_size > 0) {
-                        node_t *next_node = _sys_llist_at(current_node->data, i++);
+                        node_t *next_node = sys_llist_at(current_node->data, i++);
 
                         if (next_node == NULL) {
                                 dir_deep = 1 - deep;
@@ -1374,14 +1374,14 @@ static int new_node(struct RAMFS *hdl,
                 return ENOTDIR;
         }
 
-        _sys_llist_foreach(node_t*, node, parent->data) {
+        sys_llist_foreach(node_t*, node, parent->data) {
                 if (strncmp(node->name, filename, 255) == 0) {
                         return EEXIST;
                 }
         }
 
         node_t *node;
-        int result = _sys_zalloc(sizeof(node_t), static_cast(void**, &node));
+        int result = sys_zalloc(sizeof(node_t), static_cast(void**, &node));
         if (result == ESUCC) {
                 node->name  = filename;
                 node->data  = NULL;
@@ -1393,16 +1393,16 @@ static int new_node(struct RAMFS *hdl,
                 node->uid   = 0;
 
                 if (type == FILE_TYPE_DIR) {
-                        result = _sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &node->data));
+                        result = sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &node->data));
 
                 } else if (type == FILE_TYPE_PIPE) {
-                        result = _sys_pipe_create(reinterpret_cast(pipe_t**, &node->data));
+                        result = sys_pipe_create(reinterpret_cast(pipe_t**, &node->data));
                 }
 
                 if (result == ESUCC) {
-                        if (_sys_llist_push_back(parent->data, node)) {
+                        if (sys_llist_push_back(parent->data, node)) {
                                 if (item) {
-                                        *item = _sys_llist_size(parent->data) - 1;
+                                        *item = sys_llist_size(parent->data) - 1;
                                 }
 
                                 *child = node;
@@ -1414,7 +1414,7 @@ static int new_node(struct RAMFS *hdl,
                 }
 
                 if (result != ESUCC) {
-                        _sys_free(reinterpret_cast(void**, &node));
+                        sys_free(reinterpret_cast(void**, &node));
                 }
         }
 
@@ -1437,7 +1437,7 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
                                        node_t          *child)
 {
         struct opened_file_info *opened_file_info;
-        int result = _sys_zalloc(sizeof(struct opened_file_info),
+        int result = sys_zalloc(sizeof(struct opened_file_info),
                                  static_cast(void**, &opened_file_info));
         if (result == ESUCC) {
                 opened_file_info->remove_at_close = false;
@@ -1445,7 +1445,7 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
                 opened_file_info->parent          = parent;
 
                 /* find if file shall be removed */
-                _sys_llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
+                sys_llist_foreach(struct opened_file_info*, opened_file, lfs->opended_files) {
                         if (opened_file->child == child && opened_file->remove_at_close) {
                                 opened_file_info->remove_at_close = true;
                                 break;
@@ -1453,8 +1453,8 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
                 }
 
                 /* add open file info to list */
-                if (!_sys_llist_push_back(lfs->opended_files, opened_file_info)) {
-                        _sys_free(reinterpret_cast(void**, &opened_file_info));
+                if (!sys_llist_push_back(lfs->opended_files, opened_file_info)) {
+                        sys_free(reinterpret_cast(void**, &opened_file_info));
                         result = ENOMEM;
                 }
         }

@@ -67,7 +67,7 @@
  * @return One of errno values
  */
 //==============================================================================
-int _sys_opendir(const char *path, DIR **dir)
+int sys_opendir(const char *path, DIR **dir)
 {
         int r = _vfs_opendir(path, dir);
         if (r == ESUCC) {
@@ -86,7 +86,7 @@ int _sys_opendir(const char *path, DIR **dir)
  * @return One of errno values
  */
 //==============================================================================
-int _sys_closedir(DIR *dir)
+int sys_closedir(DIR *dir)
 {
         return _process_release_resource(_process_get_container_by_task(_THIS_TASK, NULL),
                                          static_cast(res_header_t *, dir),
@@ -104,7 +104,7 @@ int _sys_closedir(DIR *dir)
  * @return One of errno values
  */
 //==============================================================================
-int _sys_fopen(const char *name, const char *mode, FILE **file)
+int sys_fopen(const char *name, const char *mode, FILE **file)
 {
         int r = _vfs_fopen(name, mode, file);
         if (r == ESUCC) {
@@ -123,7 +123,7 @@ int _sys_fopen(const char *name, const char *mode, FILE **file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _sys_fclose(FILE *file)
+int sys_fclose(FILE *file)
 {
         return _process_release_resource(_process_get_container_by_task(_THIS_TASK, NULL),
                                          static_cast(res_header_t *, file),
@@ -141,7 +141,7 @@ int _sys_fclose(FILE *file)
  * @return One of errno values.
  */
 //==============================================================================
-int _sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
+int sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
 {
         int r = _semaphore_create(cnt_max, cnt_init, sem);
         if (r == ESUCC) {
@@ -158,7 +158,7 @@ int _sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
  * @param[in] *sem      semaphore object
  */
 //==============================================================================
-int _sys_semaphore_destroy(sem_t *sem)
+int sys_semaphore_destroy(sem_t *sem)
 {
         return _process_release_resource(_process_get_container_by_task(_THIS_TASK, NULL),
                                          static_cast(res_header_t *, sem),
@@ -175,7 +175,7 @@ int _sys_semaphore_destroy(sem_t *sem)
  * @return One of errno values.
  */
 //==============================================================================
-int _sys_mutex_create(enum mutex_type type, mutex_t **mtx)
+int sys_mutex_create(enum mutex_type type, mutex_t **mtx)
 {
         int r = _mutex_create(type, mtx);
         if (r == ESUCC) {
@@ -194,7 +194,7 @@ int _sys_mutex_create(enum mutex_type type, mutex_t **mtx)
  * @return One of errno values.
  */
 //==============================================================================
-int _sys_mutex_destroy(mutex_t *mutex)
+int sys_mutex_destroy(mutex_t *mutex)
 {
         return _process_release_resource(_process_get_container_by_task(_THIS_TASK, NULL),
                                          static_cast(res_header_t *, mutex),
@@ -212,7 +212,7 @@ int _sys_mutex_destroy(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int _sys_queue_create(const uint length, const uint item_size, queue_t **queue)
+int sys_queue_create(const uint length, const uint item_size, queue_t **queue)
 {
         int r = _queue_create(length, item_size, queue);
         if (r == ESUCC) {
@@ -231,7 +231,7 @@ int _sys_queue_create(const uint length, const uint item_size, queue_t **queue)
  * @return One of errno values.
  */
 //==============================================================================
-int _sys_queue_destroy(queue_t *queue)
+int sys_queue_destroy(queue_t *queue)
 {
         return _process_release_resource(_process_get_container_by_task(_THIS_TASK, NULL),
                                          static_cast(res_header_t *, queue),
@@ -254,7 +254,7 @@ int _sys_queue_destroy(queue_t *queue)
  * @return On of errno value.
  */
 //==============================================================================
-int _sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread)
+int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread)
 {
         int result = EINVAL;
         if (thread) {
@@ -273,7 +273,7 @@ int _sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg,
  * @param *taskHdl       task handle
  */
 //==============================================================================
-int _sys_thread_destroy(thread_t *thread)
+int sys_thread_destroy(thread_t *thread)
 {
         int result = EINVAL;
 
@@ -301,7 +301,7 @@ int _sys_thread_destroy(thread_t *thread)
  * @return One of errno value
  */
 //==============================================================================
-int _sys_thread_self(thread_t *thread)
+int sys_thread_self(thread_t *thread)
 {
         int result = EINVAL;
 

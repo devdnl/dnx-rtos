@@ -60,9 +60,9 @@ extern "C" {
 ==============================================================================*/
 #ifndef DOXYGEN /* disabled for Doxygen documentation */
 #undef errno
-#undef _sys_calloc
-#undef _sys_malloc
-#undef _sys_free
+#undef sys_zalloc
+#undef sys_malloc
+#undef sys_free
 
 #ifdef __cplusplus
 inline void* operator new     (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
@@ -446,7 +446,7 @@ struct vfs_fattr {
 
 /**
  * @brief Structure describe built-in program data.
- * @see   _sys_get_programs_table()
+ * @see   sys_get_programs_table()
  */
  struct _prog_data {
         const char     *name;           //!< Program name
@@ -478,7 +478,7 @@ struct vfs_fattr {
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_malloc(size_t size, void **mem)
+static inline int sys_malloc(size_t size, void **mem)
 {
         return _kmalloc(_MM_FS, size, mem);
 }
@@ -493,7 +493,7 @@ static inline int _sys_malloc(size_t size, void **mem)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_zalloc(size_t size, void **mem)
+static inline int sys_zalloc(size_t size, void **mem)
 {
         return _kzalloc(_MM_FS, size, mem);
 }
@@ -507,7 +507,7 @@ static inline int _sys_zalloc(size_t size, void **mem)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_free(void **mem)
+static inline int sys_free(void **mem)
 {
         return _kfree(_MM_FS, mem);
 }
@@ -520,7 +520,7 @@ static inline int _sys_free(void **mem)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
+static inline int sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list)
 {
         return _llist_create_krn(_MM_FS, functor, obj_dtor, list);
 }
@@ -531,13 +531,15 @@ static inline int _sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_
 /**
  * @brief Function open selected driver
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param flags         flags
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_open(dev_t id, u32_t flags)
+static inline int sys_driver_open(dev_t id, u32_t flags)
 {
         return _driver_open(id, flags);
 }
@@ -546,13 +548,15 @@ static inline int _sys_driver_open(dev_t id, u32_t flags)
 /**
  * @brief Function close selected driver
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param force         force close request
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_close(dev_t id, bool force)
+static inline int sys_driver_close(dev_t id, bool force)
 {
         return _driver_close(id, force);
 }
@@ -560,6 +564,8 @@ static inline int _sys_driver_close(dev_t id, bool force)
 //==============================================================================
 /**
  * @brief Function write data to driver
+ *
+ * @note Function can be used only by file system code.
  *
  * @param id            module id
  * @param src           data source
@@ -571,7 +577,7 @@ static inline int _sys_driver_close(dev_t id, bool force)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_write(dev_t            id,
+static inline int sys_driver_write(dev_t            id,
                                     const u8_t      *src,
                                     size_t           count,
                                     fpos_t          *fpos,
@@ -585,6 +591,8 @@ static inline int _sys_driver_write(dev_t            id,
 /**
  * @brief Function read data to driver
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param dst           data destination
  * @param count         buffer size
@@ -595,7 +603,7 @@ static inline int _sys_driver_write(dev_t            id,
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_read(dev_t            id,
+static inline int sys_driver_read(dev_t            id,
                                    u8_t            *dst,
                                    size_t           count,
                                    fpos_t          *fpos,
@@ -609,6 +617,8 @@ static inline int _sys_driver_read(dev_t            id,
 /**
  * @brief IO control
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param request       io request
  * @param arg           argument
@@ -616,7 +626,7 @@ static inline int _sys_driver_read(dev_t            id,
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
+static inline int sys_driver_ioctl(dev_t id, int request, void *arg)
 {
         return _driver_ioctl(id, request, arg);
 }
@@ -625,6 +635,8 @@ static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
 /**
  * @brief Flush device buffer (forces write)
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param request       io request
  * @param arg           argument
@@ -632,7 +644,7 @@ static inline int _sys_driver_ioctl(dev_t id, int request, void *arg)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_flush(dev_t id)
+static inline int sys_driver_flush(dev_t id)
 {
         return _driver_flush(id);
 }
@@ -641,13 +653,15 @@ static inline int _sys_driver_flush(dev_t id)
 /**
  * @brief Device information
  *
+ * @note Function can be used only by file system code.
+ *
  * @param id            module id
  * @param stat          status object
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
+static inline int sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 {
         return _driver_stat(id, stat);
 }
@@ -656,12 +670,14 @@ static inline int _sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
 /**
  * @brief Create pipe object
  *
+ * @note Function can be used only by file system code.
+ *
  * @param pipe     pointer to pointer of pipe handle
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_create(pipe_t **pipe)
+static inline int sys_pipe_create(pipe_t **pipe)
 {
         return _pipe_create(pipe);
 }
@@ -670,12 +686,14 @@ static inline int _sys_pipe_create(pipe_t **pipe)
 /**
  * @brief Destroy pipe object
  *
+ * @note Function can be used only by file system code.
+ *
  * @param pipe          a pipe object
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_destroy(pipe_t *pipe)
+static inline int sys_pipe_destroy(pipe_t *pipe)
 {
         return _pipe_destroy(pipe);
 }
@@ -684,13 +702,15 @@ static inline int _sys_pipe_destroy(pipe_t *pipe)
 /**
  * @brief Return length of pipe
  *
+ * @note Function can be used only by file system code.
+ *
  * @param pipe          a pipe object
  * @param len           a pipe length
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_get_length(pipe_t *pipe, size_t *len)
+static inline int sys_pipe_get_length(pipe_t *pipe, size_t *len)
 {
         return _pipe_get_length(pipe, len);
 }
@@ -698,6 +718,8 @@ static inline int _sys_pipe_get_length(pipe_t *pipe, size_t *len)
 //==============================================================================
 /**
  * @brief Read data from pipe
+ *
+ * @note Function can be used only by file system code.
  *
  * @param pipe          a pipe object
  * @param buf           a destination buffer
@@ -708,7 +730,7 @@ static inline int _sys_pipe_get_length(pipe_t *pipe, size_t *len)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
+static inline int sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
 {
         return _pipe_read(pipe, buf, count, rdcnt, non_blocking);
 }
@@ -716,6 +738,8 @@ static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *
 //==============================================================================
 /**
  * @brief Read data from pipe
+ *
+ * @note Function can be used only by file system code.
  *
  * @param pipe          a pipe object
  * @param buf           a destination buffer
@@ -726,7 +750,7 @@ static inline int _sys_pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
+static inline int sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
 {
         return _pipe_write(pipe, buf, count, wrcnt, non_blocking);
 }
@@ -735,12 +759,14 @@ static inline int _sys_pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, s
 /**
  * @brief Close pipe
  *
+ * @note Function can be used only by file system code.
+ *
  * @param pipe          a pipe object
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_close(pipe_t *pipe)
+static inline int sys_pipe_close(pipe_t *pipe)
 {
         return _pipe_close(pipe);
 }
@@ -749,12 +775,14 @@ static inline int _sys_pipe_close(pipe_t *pipe)
 /**
  * @brief  Clear pipe
  *
+ * @note Function can be used only by file system code.
+ *
  * @param  pipe         a pipe object
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int _sys_pipe_clear(pipe_t *pipe)
+static inline int sys_pipe_clear(pipe_t *pipe)
 {
         return _pipe_clear(pipe);
 }
@@ -763,10 +791,12 @@ static inline int _sys_pipe_clear(pipe_t *pipe)
 /**
  * @brief  Function return size of programs table (number of programs)
  *
+ * @note Function can be used only by file system code.
+ *
  * @return Return number of programs
  */
 //==============================================================================
-static inline int _sys_get_programs_table_size()
+static inline int sys_get_programs_table_size()
 {
         return _get_programs_table_size();
 }
@@ -775,10 +805,12 @@ static inline int _sys_get_programs_table_size()
 /**
  * @brief  Function return pointer to beginning of programs table
  *
+ * @note Function can be used only by file system code.
+ *
  * @return Return pointer to programs table
  */
 //==============================================================================
-static inline const struct _prog_data *_sys_get_programs_table()
+static inline const struct _prog_data *sys_get_programs_table()
 {
         return _get_programs_table();
 }

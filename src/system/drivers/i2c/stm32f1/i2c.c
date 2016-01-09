@@ -199,17 +199,17 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
         /* creates basic module structures */
         if (I2C[major] == NULL) {
-                result = _sys_zalloc(sizeof(I2C_mem_t), static_cast(void**, &I2C[major]));
+                result = sys_zalloc(sizeof(I2C_mem_t), static_cast(void**, &I2C[major]));
                 if (result != ESUCC) {
                         goto finish;
                 }
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
+                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
                 if (result != ESUCC) {
                         goto finish;
                 }
 
-                result = _sys_semaphore_create(1, 0, &I2C[major]->event);
+                result = sys_semaphore_create(1, 0, &I2C[major]->event);
                 if (result != ESUCC) {
                         goto finish;
                 }
@@ -221,14 +221,14 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* creates device structure */
-        result = _sys_zalloc(sizeof(I2C_dev_t), device_handle);
+        result = sys_zalloc(sizeof(I2C_dev_t), device_handle);
         if (result == ESUCC) {
                 I2C_dev_t *hdl = *device_handle;
                 hdl->config    = I2C_DEFAULT_CFG;
                 hdl->major     = major;
                 hdl->minor     = minor;
 
-                _sys_device_unlock(&hdl->lock, true);
+                sys_device_unlock(&hdl->lock, true);
 
                 I2C[major]->dev_cnt++;
         }
@@ -255,17 +255,17 @@ API_MOD_RELEASE(I2C, void *device_handle)
         I2C_dev_t *hdl    = device_handle;
         int        result = EBUSY;
 
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         {
-                if (_sys_device_is_unlocked(&hdl->lock)) {
+                if (sys_device_is_unlocked(&hdl->lock)) {
 
                         I2C[hdl->major]->dev_cnt--;
                         release_resources(hdl->major);
-                        _sys_free(device_handle);
+                        sys_free(device_handle);
                         result = ESUCC;
                 }
         }
-        _sys_critical_section_end();
+        sys_critical_section_end();
 
         return result;
 }
@@ -286,7 +286,7 @@ API_MOD_OPEN(I2C, void *device_handle, u32_t flags)
 
         I2C_dev_t *hdl = device_handle;
 
-        return _sys_device_lock(&hdl->lock);
+        return sys_device_lock(&hdl->lock);
 }
 
 //==============================================================================
@@ -303,7 +303,7 @@ API_MOD_CLOSE(I2C, void *device_handle, bool force)
 {
         I2C_dev_t *hdl = device_handle;
 
-        return _sys_device_unlock(&hdl->lock, force);
+        return sys_device_unlock(&hdl->lock, force);
 }
 
 //==============================================================================
@@ -332,7 +332,7 @@ API_MOD_WRITE(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int status = _sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int status = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (status == ESUCC) {
 
                 if (!start(hdl)) {
@@ -355,7 +355,7 @@ API_MOD_WRITE(I2C,
                 status = ESUCC;
 
                 error:
-                _sys_mutex_unlock(I2C[hdl->major]->lock);
+                sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
         return status;
@@ -387,7 +387,7 @@ API_MOD_READ(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int status = _sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int status = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (status == ESUCC) {
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
@@ -419,7 +419,7 @@ API_MOD_READ(I2C,
                 status = ESUCC;
 
                 error:
-                _sys_mutex_unlock(I2C[hdl->major]->lock);
+                sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
         return status;
@@ -507,12 +507,12 @@ static void release_resources(u8_t major)
 {
         if (I2C[major] && I2C[major]->dev_cnt == 0) {
                 if (I2C[major]->lock) {
-                        _sys_mutex_destroy(I2C[major]->lock);
+                        sys_mutex_destroy(I2C[major]->lock);
                         I2C[major]->lock = NULL;
                 }
 
                 if (I2C[major]->event) {
-                        _sys_semaphore_destroy(I2C[major]->event);
+                        sys_semaphore_destroy(I2C[major]->event);
                         I2C[major]->event = NULL;
                 }
 
@@ -520,7 +520,7 @@ static void release_resources(u8_t major)
                         disable_I2C(major);
                 }
 
-                _sys_free(static_cast(void**, &I2C[major]));
+                sys_free(static_cast(void**, &I2C[major]));
         }
 }
 
@@ -698,7 +698,7 @@ static void error(I2C_dev_t *hdl)
         i2c->SR1 = 0;
 
         stop(hdl);
-        _sys_sleep_ms(1);
+        sys_sleep_ms(1);
 
         if (I2C[hdl->major]->error == EIO) {
                 enable_I2C(hdl->major);
@@ -724,7 +724,7 @@ static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
         }
         SET_BIT(get_I2C(hdl)->CR2, CR2);
 
-        if (_sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
+        if (sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
                 if (I2C[hdl->major]->error == 0) {
                         return true;
                 }
@@ -755,7 +755,7 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
         SET_BIT(i2c->CR2, I2C_CR2_LAST);
         SET_BIT(DMA->CCR, DMA_CCR1_EN);
 
-        if (_sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
+        if (sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
                 if (I2C[hdl->major]->error == 0) {
                         return true;
                 }
@@ -858,14 +858,14 @@ static void clear_send_address_event(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         {
                 u16_t tmp;
                 tmp = i2c->SR1;
                 tmp = i2c->SR2;
                 (void)tmp;
         }
-        _sys_critical_section_end();
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -1000,12 +1000,12 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
                 }
 
         } else if (count == 2) {
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 {
                         clear_send_address_event(hdl);
                         CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                 }
-                _sys_critical_section_end();
+                sys_critical_section_end();
 
                 if (wait_for_I2C_event(hdl, I2C_SR1_BTF)) {
                         stop(hdl);
@@ -1097,7 +1097,7 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
 static void IRQ_EV_handler(u8_t major)
 {
         if (I2C1->SR1 & I2C[major]->SR1_mask) {
-                _sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+                sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
                 CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 I2C[major]->unexp_event_cnt = 0;
         } else {
@@ -1108,12 +1108,12 @@ static void IRQ_EV_handler(u8_t major)
                  */
                 if (++I2C[major]->unexp_event_cnt >= 10) {
                         I2C[major]->error = EIO;
-                        _sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+                        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
                         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 }
         }
 
-        _sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR();
 }
 
 //==============================================================================
@@ -1142,9 +1142,9 @@ static void IRQ_ER_handler(u8_t major)
         // clear error flags
         i2c->SR1 = 0;
 
-        _sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
-        _sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR();
 }
 
 //==============================================================================
@@ -1162,9 +1162,9 @@ static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
                 I2C[major]->error = EIO;
         }
 
-        _sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
         clear_DMA_IRQ_flags(major);
-        _sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR();
 }
 #endif
 

@@ -48,17 +48,17 @@ extern "C" {
 ==============================================================================*/
 #undef errno
 
-#undef  _sys_zalloc
-#define _sys_zalloc(size_t__size, void__ppmem)                    _kzalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
+#undef  sys_zalloc
+#define sys_zalloc(size_t__size, void__ppmem)                    _kzalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
 
-#undef  _sys_malloc
-#define _sys_malloc(size_t__size, void__ppmem)                    _kmalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
+#undef  sys_malloc
+#define sys_malloc(size_t__size, void__ppmem)                    _kmalloc(_MM_MOD, size_t__size, void__ppmem, _module_get_ID(_module_name_))
 
-#undef  _sys_free
-#define _sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
+#undef  sys_free
+#define sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
 
-#undef  _sys_llist_create
-#define _sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
+#undef  sys_llist_create
+#define sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
         _llist_create_mod(_get_module_number(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);
 
 #ifdef __cplusplus
@@ -111,14 +111,14 @@ extern "C" {
  * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline int _sys_device_lock(dev_lock_t *dev_lock)
+static inline int sys_device_lock(dev_lock_t *dev_lock)
 {
         return _device_lock(dev_lock);
 }
 
 //==============================================================================
 /**
- * @brief Function unlock device locked by _sys_device_lock()
+ * @brief Function unlock device locked by sys_device_lock()
  *
  * @param *dev_lock     pointer to device lock object
  * @param  force        true: force unlock
@@ -126,7 +126,7 @@ static inline int _sys_device_lock(dev_lock_t *dev_lock)
  * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
+static inline int sys_device_unlock(dev_lock_t *dev_lock, bool force)
 {
         return _device_unlock(dev_lock, force);
 }
@@ -140,7 +140,7 @@ static inline int _sys_device_unlock(dev_lock_t *dev_lock, bool force)
  * @return One of errno value (ESUCC for success)
  */
 //==============================================================================
-static inline int _sys_device_get_access(dev_lock_t *dev_lock)
+static inline int sys_device_get_access(dev_lock_t *dev_lock)
 {
         return _device_get_access(dev_lock);
 }
@@ -154,7 +154,7 @@ static inline int _sys_device_get_access(dev_lock_t *dev_lock)
  * @return true if locked, otherwise false
  */
 //==============================================================================
-static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
+static inline bool sys_device_is_locked(dev_lock_t *dev_lock)
 {
         return _device_is_locked(dev_lock);
 }
@@ -168,7 +168,7 @@ static inline bool _sys_device_is_locked(dev_lock_t *dev_lock)
  * @return true if locked, otherwise false
  */
 //==============================================================================
-static inline bool _sys_device_is_unlocked(dev_lock_t *dev_lock)
+static inline bool sys_device_is_unlocked(dev_lock_t *dev_lock)
 {
         return !_device_is_locked(dev_lock);
 }
