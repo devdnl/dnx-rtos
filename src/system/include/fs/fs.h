@@ -75,70 +75,53 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
 #endif
 #endif /* DOXYGEN */
 
-#ifdef DOXYGEN /* macros defined in vfs.h */
-/**
- * @brief Read only flag.
- */
-#define O_RDONLY                                00
-
-/**
-* @brief Write only flag.
-*/
-#define O_WRONLY                                01
-
-/**
-* @brief Read write flag.
-*/
-#define O_RDWR                                  02
-
-/**
-* @brief File create flag.
-*/
-#define O_CREAT                                 0100
-
-/**
-* @brief File execute flag.
-*/
-#define O_EXCL                                  0200
-
-/**
-* @brief File truncate flag.
-*/
-#define O_TRUNC                                 01000
-
-/**
-* @brief File append flag.
-*/
-#define O_APPEND                                02000
-#endif /* DOXYGEN */
-
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of initialization function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * be initialized.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void **</b>]        file system memory handler
  * @param src_path      [<b>const char *</b>]   source file path
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_INIT(fsname, fs_handle, src_path)
 #else
 #define API_FS_INIT(fsname, ...)        _FS_EXTERN_C int _##fsname##_init(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of release function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * be released. If it is possible, all resources shall be released, if not then
+ * error code shall be returned.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_RELEASE(fsname, fs_handle)
 #else
 #define API_FS_RELEASE(fsname, ...)     _FS_EXTERN_C int _##fsname##_release(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file open function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * open selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void **</b>]        file extra data (user defined)
@@ -150,14 +133,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see Flags: O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_EXCL, O_TRUNC, O_APPEND
  */
-#ifdef DOXYGEN
 #define API_FS_OPEN(fsname, fs_handle, extra, fd, fpos, path, flags)
 #else
 #define API_FS_OPEN(fsname, ...)        _FS_EXTERN_C int _##fsname##_open(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file close function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * close selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -165,14 +154,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  * @param force         [<b>bool</b>]           force file close (system request)
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_CLOSE(fsname, fs_handle, extra, fd, force)
 #else
 #define API_FS_CLOSE(fsname, ...)       _FS_EXTERN_C int _##fsname##_close(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file write function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * write to selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -186,14 +181,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct vfs_fattr
  */
-#ifdef DOXYGEN
 #define API_FS_WRITE(fsname, fs_handle, extra, fd, src, count, fpos, wrcnt, fattr)
 #else
 #define API_FS_WRITE(fsname, ...)       _FS_EXTERN_C int _##fsname##_write(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file read function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * read from selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -207,14 +208,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct vfs_fattr
  */
-#ifdef DOXYGEN
 #define API_FS_READ(fsname, fs_handle, extra, fd, dst, count, fpos, rdcnt, fattr)
 #else
 #define API_FS_READ(fsname, ...)        _FS_EXTERN_C int _##fsname##_read(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file ioctl function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * do non-standard operation on selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -225,14 +232,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see ioctl()
  */
-#ifdef DOXYGEN
 #define API_FS_IOCTL(fsname, fs_handle, extra, fd, request, arg)
 #else
 #define API_FS_IOCTL(fsname, ...)       _FS_EXTERN_C int _##fsname##_ioctl(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file buffer flush function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * flush buffers of selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -241,14 +254,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see sync()
  */
-#ifdef DOXYGEN
 #define API_FS_FLUSH(fsname, fs_handle, extra)
 #else
 #define API_FS_FLUSH(fsname, ...)       _FS_EXTERN_C int _##fsname##_flush(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of directory create function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * create a new directory.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   directory path
@@ -257,14 +276,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see mode_t
  */
-#ifdef DOXYGEN
 #define API_FS_MKDIR(fsname, fs_handle, path, mode)
 #else
 #define API_FS_MKDIR(fsname, ...)       _FS_EXTERN_C int _##fsname##_mkdir(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of FIFO create function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * create a new FIFO file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   FIFO path
@@ -273,14 +298,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see mode_t
  */
-#ifdef DOXYGEN
 #define API_FS_MKFIFO(fsname, fs_handle, path, mode)
 #else
 #define API_FS_MKFIFO(fsname, ...)      _FS_EXTERN_C int _##fsname##_mkfifo(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of device node create function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * create a new device node file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   device node path
@@ -289,14 +320,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see dev_t
  */
-#ifdef DOXYGEN
 #define API_FS_MKNOD(fsname, fs_handle, path, dev)
 #else
 #define API_FS_MKNOD(fsname, ...)       _FS_EXTERN_C int _##fsname##_mknod(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of open directory function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * open selected directory.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   directory path
@@ -305,41 +342,59 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see DIR
  */
-#ifdef DOXYGEN
 #define API_FS_OPENDIR(fsname, fs_handle, path, dir)
 #else
 #define API_FS_OPENDIR(fsname, ...)     _FS_EXTERN_C int _##fsname##_opendir(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file remove function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * remove selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   file path
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_REMOVE(fsname, fs_handle, path)
 #else
 #define API_FS_REMOVE(fsname, ...)      _FS_EXTERN_C int _##fsname##_remove(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file rename function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * rename selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param old_name      [<b>const char *</b>]   old file path (name)
  * @param new_name      [<b>const char *</b>]   new file path (name)
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_RENAME(fsname, fs_handle, old_name, new_name)
 #else
 #define API_FS_RENAME(fsname, ...)      _FS_EXTERN_C int _##fsname##_rename(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file change mode function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * change permissions of selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   file path
@@ -348,14 +403,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see mode_t
  */
-#ifdef DOXYGEN
 #define API_FS_CHMOD(fsname, fs_handle, path, mode)
 #else
 #define API_FS_CHMOD(fsname, ...)       _FS_EXTERN_C int _##fsname##_chmod(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file change owner function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * change owner of selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param path          [<b>const char *</b>]   file path
@@ -365,14 +426,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see uid_t, gid_t
  */
-#ifdef DOXYGEN
 #define API_FS_CHOWN(fsname, fs_handle, path, owner, group)
 #else
 #define API_FS_CHOWN(fsname, ...)       _FS_EXTERN_C int _##fsname##_chown(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file statistics function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * get statistics of selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -382,14 +449,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct stat
  */
-#ifdef DOXYGEN
 #define API_FS_FSTAT(fsname, fs_handle, extra, fd, stat)
 #else
 #define API_FS_FSTAT(fsname, ...)       _FS_EXTERN_C int _##fsname##_fstat(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file statistics function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * get statistics selected file.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
@@ -399,14 +472,20 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct stat
  */
-#ifdef DOXYGEN
 #define API_FS_STAT(fsname, fs_handle, extra, path, stat)
 #else
 #define API_FS_STAT(fsname, ...)        _FS_EXTERN_C int _##fsname##_stat(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file system statistics function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * get statistics.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]          file system memory handler
  * @param statfs        [<b>struct statfs *</b>] file system information
@@ -414,19 +493,24 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct statfs
  */
-#ifdef DOXYGEN
 #define API_FS_STATFS(fsname, fs_handle, statfs)
 #else
 #define API_FS_STATFS(fsname, ...)      _FS_EXTERN_C int _##fsname##_statfs(__VA_ARGS__)
 #endif
 
+#ifdef DOXYGEN
 /**
  * @brief Macro creates unique name of file system synchronize function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * synchronize  with storage all buffers of opened files.
+ *
+ * @note Macro can be used only by file system code.
+ *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @return One of @ref errno value.
  */
-#ifdef DOXYGEN
 #define API_FS_SYNC(fsname, fs_handle)
 #else
 #define API_FS_SYNC(fsname, ...)        _FS_EXTERN_C int _##fsname##_sync(__VA_ARGS__)
@@ -467,7 +551,7 @@ struct vfs_fattr {
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
-#ifndef DOXYGEN /* functions described general in sysfunc.h header */
+#ifndef DOXYGEN /* functions described in sysfunc.h header */
 //==============================================================================
 /**
  * @brief  Allocate memory

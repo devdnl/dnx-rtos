@@ -88,6 +88,7 @@ struct _module_entry {
 /*
  * To lock device, system uses syscall semaphore pointer as process/thread
  * identification. Semaphore in this case is not used.
+ * Doxygen documentation in drivers/driver.h.
  */
 typedef sem_t* dev_lock_t;
 

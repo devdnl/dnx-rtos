@@ -604,6 +604,8 @@ ssize_t _module_get_number_of_instances(size_t n)
 /**
  * @brief Function lock device for this task
  *
+ * Doxygen documentation in drivers/driver.h.
+ *
  * ERRNO: EBUSY
  *
  * @param *dev_lock     pointer to device lock object
@@ -637,6 +639,8 @@ int _device_lock(dev_lock_t *dev_lock)
 /**
  * @brief Function unlock before locked device
  *
+ * Doxygen documentation in drivers/driver.h.
+ *
  * @param *dev_lock     pointer to device lock object
  * @param  force        true: force unlock
  *
@@ -667,6 +671,8 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
 /**
  * @brief Function check that current task has access to device
  *
+ * Doxygen documentation in drivers/driver.h.
+ *
  * @param *dev_lock     pointer to device lock object
  *
  * @return One of errno value (ESUCC for access granted)
@@ -694,6 +700,8 @@ int _device_get_access(dev_lock_t *dev_lock)
 //==============================================================================
 /**
  * @brief Function check that device is locked
+ *
+ * Doxygen documentation in drivers/driver.h.
  *
  * @param *dev_lock     pointer to device lock object
  *

@@ -65,24 +65,150 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-// list foreach iterator
+#ifdef DOXYGEN /* macros defined in vfs.h */
+/**
+ * @brief Read only flag.
+ */
+#define O_RDONLY                                00
+
+/**
+* @brief Write only flag.
+*/
+#define O_WRONLY                                01
+
+/**
+* @brief Read write flag.
+*/
+#define O_RDWR                                  02
+
+/**
+* @brief File create flag.
+*/
+#define O_CREAT                                 0100
+
+/**
+* @brief File execute flag.
+*/
+#define O_EXCL                                  0200
+
+/**
+* @brief File truncate flag.
+*/
+#define O_TRUNC                                 01000
+
+/**
+* @brief File append flag.
+*/
+#define O_APPEND                                02000
+#endif /* DOXYGEN */
+
+/**
+ * @brief List's @b foreach loop.
+ *
+ * Macro creates foreach loop of llist object.
+ *
+ * @param type          object type (in most cases pointer type)
+ * @param element       element name of type @b type
+ * @param list          [<b>llist_t</b>] list object
+ *
+ * @b Example
+ * @code
+        // ...
+
+        llist_t *list = NULL;
+        if (sys_llist_create(NULL, NULL, &list) == 0) {
+                // ...
+
+                int var = 1;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                var = 2;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                var = 3;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                // ...
+
+                sys_llist_foreach(int *, var, list) {
+                        print("Value: %d\n", *var);
+                }
+
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach_reverse()
+ */
 #define sys_llist_foreach(type, element, _sys_llist_t__list)\
         _llist_foreach(type, element, _sys_llist_t__list)
 
-// list reversed foreach iterator
+/**
+ * @brief List's reverse @b foreach loop.
+ *
+ * Macro creates reverse foreach loop of llist object.
+ *
+ * @param type          object type (in most cases pointer type)
+ * @param element       element name of type @b type
+ * @param list          [<b>llist_t</b>] list object
+ *
+ * @b Example
+ * @code
+        // ...
+
+        llist_t *list = NULL;
+        if (sys_llist_create(NULL, NULL, &list) == 0) {
+                // ...
+
+                int var = 1;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                var = 2;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                var = 3;
+                sys_llist_push_emplace_back(list, sizeof(int), &var);
+
+                // ...
+
+                sys_llist_foreach_reverse(int *, var, list) {
+                        print("Value: %d\n", *var);
+                }
+
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach()
+ */
 #define sys_llist_foreach_reverse(type, element, _sys_llist_t__list)\
         _llist_foreach_reverse(type, element, _sys_llist_t__list)
-
-// list iterator
-#define sys_llist_foreach_iterator _iterator
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+ * @brief Thread type.
+ *
+ * The type represent thread object.
+ */
 typedef struct {
-        tid_t   tid;
-        task_t *task;
+        tid_t   tid;    //!< Thread ID
+        task_t *task;   //!< Task handle
 } thread_t;
+
+#ifdef DOXYGEN /* Type defined in lib/llist.h */
+/**
+ * @brief Linked list type.
+ *
+ * The type represents linked list object. Fields of object are private.
+ */
+typedef struct {} llist_t;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -91,7 +217,7 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-#ifdef DOXYGEN /* documentation only */
+#ifdef DOXYGEN /* Doxygen documentation only. Functions in fs.h and driver.h */
 //==============================================================================
 /**
  * @brief  Allocate memory
@@ -120,7 +246,10 @@ static inline int sys_zalloc(size_t size, void **mem);
 /**
  * @brief  Free allocated memory
  *
- * @param mem           pointer to memory block to free
+ * Function free selected memory block (by double pointer) and sets memory block
+ * pointer to @ref NULL.
+ *
+ * @param mem           double pointer to memory block to free
  *
  * @return One of @ref errno value.
  */
@@ -130,17 +259,19 @@ static inline int sys_free(void **mem);
 
 //==============================================================================
 /**
- * @brief Function convert string to double
+ * @brief Function convert string to double.
  *
- * @param str            string
- * @param end            the pointer to the character when conversion was finished
+ * @param nptr           string
+ * @param endptr         the pointer to the character when conversion was finished
  *
- * @return converted value
+ * @return Converted value.
+ *
+ *  strtod()
  */
 //==============================================================================
-static inline double sys_strtod(const char *str, char **end)
+static inline double sys_strtod(const char *nptr, char **endptr)
 {
-        return _strtod(str, end);
+        return _strtod(nptr, endptr);
 }
 
 //==============================================================================
@@ -1045,7 +1176,11 @@ static inline void sys_sync()
  * @param ...                 format arguments
  */
 //==============================================================================
+#ifndef DOXYGEN
 #define sys_printk(...) _printk(__VA_ARGS__)
+#else
+static inline int sys_printk(const char *format, ...);
+#endif
 
 //==============================================================================
 /**

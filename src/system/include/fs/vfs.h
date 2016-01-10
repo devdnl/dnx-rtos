@@ -140,7 +140,7 @@ struct vfs_dir {
 typedef struct vfs_dir DIR;
 #define __DIR_TYPE_DEFINED__
 
-/** device info */
+/** device info. Doxygen documentation in drivers/driver.h */
 struct vfs_dev_stat {
         u64_t st_size;                  /**< total size, in bytes */
         u8_t  st_major;                 /**< device major number  */

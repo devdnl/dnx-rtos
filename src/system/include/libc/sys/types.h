@@ -126,7 +126,7 @@ typedef u32_t tid_t;
  */
 typedef i32_t dev_t;
 
-#ifndef DOXYGEN
+#ifndef DOXYGEN /* Doxygen description in time.h */
 /** @brief Time representation type. */
 struct tm {
         int tm_sec;             //!< Seconds after the minute        (0-60*)
@@ -141,19 +141,19 @@ struct tm {
         int tm_isutc;           //!< UTC time flag (dnx RTOS extension)
 };
 #define __TM_STRUCT_DEFINED__
-#endif
+#endif /* DOXYGEN */
 
+#ifndef DOXYGEN /* Doxygen description in time.h */
 /** @brief Clock representation type. */
 typedef u32_t clock_t;
-#ifndef DOXYGEN
 #define __CLOCK_TYPE_DEFINED__
-#endif
+#endif /* DOXYGEN */
 
+#ifndef DOXYGEN /* Doxygen description in time.h */
 /** @brief Time representation type. */
 typedef u32_t time_t;
-#ifndef DOXYGEN
 #define __TIME_TYPE_DEFINED__
-#endif
+#endif /* DOXYGEN */
 
 #ifndef DOXYGEN // Doxygen documentation added to mntent.h file
 /** @brief Structure that describes a mount table entry. */
