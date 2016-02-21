@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    module.h
+@file    driver.h
 
 @author  Daniel Zorychta
 
@@ -229,7 +229,7 @@ extern "C" {
  *
  * @see struct vfs_fattr
  */
-#define API_MOD_READ(modname, device_handle, dst, count, fpos, wrcnt, fattr)
+#define API_MOD_READ(modname, device_handle, dst, count, fpos, rdcnt, fattr)
 #else
 #define API_MOD_READ(modname, ...)              _MODULE_EXTERN_C int _##modname##_read(__VA_ARGS__)
 #endif

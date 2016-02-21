@@ -250,11 +250,12 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  * @param fs_handle     [<b>void *</b>]         file system memory handler
  * @param extra         [<b>void *</b>]         file extra data
  * @param fd            [<b>fd_t</b>]           file descriptor
+ *
  * @return One of @ref errno value.
  *
  * @see sync()
  */
-#define API_FS_FLUSH(fsname, fs_handle, extra)
+#define API_FS_FLUSH(fsname, fs_handle, extra, fd)
 #else
 #define API_FS_FLUSH(fsname, ...)       _FS_EXTERN_C int _##fsname##_flush(__VA_ARGS__)
 #endif
@@ -722,8 +723,6 @@ static inline int sys_driver_ioctl(dev_t id, int request, void *arg)
  * @note Function can be used only by file system code.
  *
  * @param id            module id
- * @param request       io request
- * @param arg           argument
  *
  * @return One of @ref errno value.
  */

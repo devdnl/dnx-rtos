@@ -112,7 +112,7 @@ typedef struct {
 /** card configuration structure */
 typedef struct {
         const char *filepath;
-        int         timeout;
+        u32_t       timeout;
 } card_cfg_t;
 
 /** device structure */
@@ -278,7 +278,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         sdpart_t *part = device_handle;
 
         // wait for resource be ready
-        uint timer = sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while (part->used) {
                 if (sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
                         return EBUSY;
@@ -644,7 +644,7 @@ static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 static u8_t card_wait_ready(sdpart_t *hdl)
 {
         u8_t response;
-        uint timer = sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
 
         while ((response = SPI_transive(hdl, 0xFF)) != 0xFF
               && !sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
@@ -725,7 +725,7 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
 static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
 {
         u8_t token;
-        uint timer = sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while ((token = SPI_transive(hdl, 0xFF)) == 0xFF
               && !sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
@@ -1034,7 +1034,7 @@ static int card_initialize(sdpart_t *hdl)
         SDSPI->card[hdl->major]->type.block  = false;
         SDSPI->card[hdl->major]->initialized = false;
 
-        uint timer = sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
 
         if (card_send_cmd(hdl, CMD0, 0) == 0x01) {
                 if (card_send_cmd(hdl, CMD8, 0x1AA) == 0x01) { /* check SDHC card */

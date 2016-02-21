@@ -50,7 +50,7 @@ Project contains several folders:
 \tableofcontents
 
 \section sec-app-prg-intro Introduction
-Programs can be developed similarly as in a standard PC computer. The dnx RTOS
+Programs can be developed similarly as in a standard PC. The dnx RTOS
 provides standard C API functions that can be used in the same way as in PCs.
 Besides standard libraries, special libraries are provided, e.g: network, thread,
 time, and OS. For more details see @ref sec-app-topics.

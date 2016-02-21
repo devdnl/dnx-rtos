@@ -141,7 +141,7 @@ int sys_fclose(FILE *file)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem)
+int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
 {
         int r = _semaphore_create(cnt_max, cnt_init, sem);
         if (r == ESUCC) {

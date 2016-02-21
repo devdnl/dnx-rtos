@@ -48,7 +48,7 @@
 ==============================================================================*/
 static void set_flash_latency       (u32_t latency);
 static void enable_prefetch_buffer  (void);
-static int  wait_for_flag           (u32_t flag, uint timeout);
+static int  wait_for_flag           (u32_t flag, u32_t timeout);
 static bool is_APB1_divided         (void);
 static bool is_APB2_divided         (void);
 
@@ -446,9 +446,9 @@ static void enable_prefetch_buffer(void)
  * @return ESUCC if success, ETIME on error
  */
 //==============================================================================
-static int wait_for_flag(u32_t flag, uint timeout)
+static int wait_for_flag(u32_t flag, u32_t timeout)
 {
-        uint timer = sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while (RCC_GetFlagStatus(flag) == RESET) {
                 if (sys_time_is_expired(timer, timeout)) {
                         return ETIME;

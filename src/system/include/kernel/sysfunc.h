@@ -105,18 +105,20 @@ extern "C" {
 /**
  * @brief List's @b foreach loop.
  *
- * Macro creates foreach loop of llist object.
+ * Macro creates foreach loop of linked-list object.
  *
- * @param type          object type (in most cases pointer type)
- * @param element       element name of type @b type
- * @param list          [<b>llist_t</b>] list object
+ * @note Macro can be used only by file system or driver code.
+ *
+ * @param type                  object type (in most cases pointer type)
+ * @param element               element name of type @b type
+ * @param list                  [<b>llist_t</b>] list object
  *
  * @b Example
  * @code
         // ...
 
         llist_t *list = NULL;
-        if (sys_llist_create(NULL, NULL, &list) == 0) {
+        if (sys_llist_create(NULL, NULL, &list) == ESUCC) {
                 // ...
 
                 int var = 1;
@@ -142,24 +144,28 @@ extern "C" {
  *
  * @see sys_llist_foreach_reverse()
  */
+#ifdef DOXYGEN
+#define sys_llist_foreach(type, element, list)
+#else
 #define sys_llist_foreach(type, element, _sys_llist_t__list)\
         _llist_foreach(type, element, _sys_llist_t__list)
+#endif
 
 /**
  * @brief List's reverse @b foreach loop.
  *
- * Macro creates reverse foreach loop of llist object.
+ * Macro creates reverse foreach loop of linked-list object.
  *
- * @param type          object type (in most cases pointer type)
- * @param element       element name of type @b type
- * @param list          [<b>llist_t</b>] list object
+ * @param type                  object type (in most cases pointer type)
+ * @param element               element name of type @b type
+ * @param list                  [<b>llist_t</b>] list object
  *
  * @b Example
  * @code
         // ...
 
         llist_t *list = NULL;
-        if (sys_llist_create(NULL, NULL, &list) == 0) {
+        if (sys_llist_create(NULL, NULL, &list) == ESUCC) {
                 // ...
 
                 int var = 1;
@@ -185,8 +191,12 @@ extern "C" {
  *
  * @see sys_llist_foreach()
  */
+#ifdef DOXYGEN
+#define sys_llist_foreach_reverse(type, element, list)
+#else
 #define sys_llist_foreach_reverse(type, element, _sys_llist_t__list)\
         _llist_foreach_reverse(type, element, _sys_llist_t__list)
+#endif
 
 /*==============================================================================
   Exported object types
@@ -220,7 +230,7 @@ typedef struct {} llist_t;
 #ifdef DOXYGEN /* Doxygen documentation only. Functions in fs.h and driver.h */
 //==============================================================================
 /**
- * @brief  Allocate memory
+ * @brief  Allocate memory.
  *
  * @param size             object size
  * @param mem              pointer to memory block pointer
@@ -232,7 +242,7 @@ static inline int sys_malloc(size_t size, void **mem);
 
 //==============================================================================
 /**
- * @brief  Allocate memory and clear content
+ * @brief  Allocate memory and clear content.
  *
  * @param size             object size
  * @param mem              pointer to memory block pointer
@@ -244,7 +254,7 @@ static inline int sys_zalloc(size_t size, void **mem);
 
 //==============================================================================
 /**
- * @brief  Free allocated memory
+ * @brief  Free allocated memory.
  *
  * Function free selected memory block (by double pointer) and sets memory block
  * pointer to @ref NULL.
@@ -259,14 +269,24 @@ static inline int sys_free(void **mem);
 
 //==============================================================================
 /**
- * @brief Function convert string to double.
+ * @brief Function converts string to double.
  *
- * @param nptr           string
- * @param endptr         the pointer to the character when conversion was finished
+ * The function convert the initial portion of the string pointed to by <i>nptr</i>
+ * to double representation.
  *
- * @return Converted value.
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
  *
- *  strtod()
+ * @return These functions return the converted value, if any.
+ *
+ * @b Example
+ * @code
+        // convert string to decimal value
+        const char *str = "123.56";
+        double      val = sys_strtod(str, NULL);
+   @endcode
+ *
+ * @see sys_atoi(), sys_atof()
  */
 //==============================================================================
 static inline double sys_strtod(const char *nptr, char **endptr)
@@ -276,11 +296,24 @@ static inline double sys_strtod(const char *nptr, char **endptr)
 
 //==============================================================================
 /**
- * @brief Function convert string to integer
+ * @brief Function converts string to integer.
  *
- * @param str       string
+ * The function converts the initial portion of the string pointed
+ * to by <i>str</i> to int. The behavior is the same as sys_strtoi(nptr, NULL, 10);
+ * except that sys_atoi() does not detect errors.
  *
- * @return converted value
+ * @param str           string to convert
+ *
+ * @return The converted value.
+ *
+ * @b Example
+ * @code
+        // ...
+        int val = sys_atoi("125");
+        // ...
+   @endcode
+ *
+ * @see sys_atof(), sys_strtod(), sys_strtoi(), sys_atof()
  */
 //==============================================================================
 static inline i32_t sys_atoi(const char *str)
@@ -290,7 +323,8 @@ static inline i32_t sys_atoi(const char *str)
 
 //==============================================================================
 /**
- * @brief Function convert ASCII to the number
+ * @brief Function convert ASCII to the number.
+ *
  * When function find any other character than number (depended of actual base)
  * immediately finished operation and return pointer when bad character was
  * found. If base is 0 then function recognize type of number used in string.
@@ -298,11 +332,21 @@ static inline i32_t sys_atoi(const char *str)
  * string is recognized, for binary "0b" is recognized, and for decimals values
  * none above.
  *
- * @param string       string to decode
- * @param base         decode base
- * @param value        pointer to result
+ * @param[in]  string       string to decode
+ * @param[in]  base         decode base
+ * @param[out] value        pointer to result
  *
- * @return pointer in string when operation was finished
+ * @return Pointer in string when operation was finished.
+ *
+ * @b Example
+ * @code
+        // ...
+        i32_t val = 0;
+        char *ptr = sys_strtoi("0xDEADBEEF", 0, &val);
+        // ...
+   @endcode
+ *
+ * @see sys_atoi(), sys_strtod(), sys_atof()
  */
 //==============================================================================
 static inline char *sys_strtoi(const char *string, int base, i32_t *value)
@@ -312,25 +356,57 @@ static inline char *sys_strtoi(const char *string, int base, i32_t *value)
 
 //==============================================================================
 /**
- * @brief Function convert string to float
+ * @brief Function converts string to double.
  *
- * @param str      string
+ * The function converts the initial portion of the string pointed
+ * to by <i>nptr</i> to double.  The behavior is the same as
+ * sys_strtod(nptr, NULL) except that sys_atof() does not detect errors.
  *
- * @return converted value
+ * @param nptr          string to convert
+ *
+ * @return The converted value.
+ *
+ * @b Example
+ * @code
+        // convert string to decimal value
+        const char *str = "123.56";
+        double      val = sys_atof(str);
+   @endcode
+ *
+ * @see sys_atoi(), sys_strtod(), sys_strtoi()
  */
 //==============================================================================
-static inline double sys_atof(const char *str)
+static inline double sys_atof(const char *nptr)
 {
-        return _atof(str);
+        return _atof(nptr);
 }
 
 #ifdef DOXYGEN /* function documentation only */
 //==============================================================================
 /**
- * @brief  List constructor (for FS only)
- * @param  cmp_functor          compare functor (can be @ref NULL)
- * @param  obj_dtor             object destructor (can be @ref NULL, then free() is destructor)
+ * @brief  Linked list constructor function.
+ *
+ * @param  functor      compare functor (can be @ref NULL)
+ * @param  obj_dtor     object destructor (can be @ref NULL, then free() is used as destructor)
+ * @param  list         pointer to list object
+ *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_destroy()
  */
 //==============================================================================
 static inline int sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t obj_dtor, llist_t **list);
@@ -338,9 +414,27 @@ static inline int sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t
 
 //==============================================================================
 /**
- * @brief  List destructor
- * @param  list         list object
- * @return On success 1 is returned, otherwise 0
+ * @brief  Linked list destructor function.
+ *
+ * @param  list         pointer to list object
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_create()
  */
 //==============================================================================
 static inline int sys_llist_destroy(llist_t *list)
@@ -350,9 +444,31 @@ static inline int sys_llist_destroy(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Checks if list is empty
+ * @brief  Checks if list is empty.
+ *
  * @param  list         list object
- * @return If list is empty then true is returned, otherwise false
+ *
+ * @return If list is empty then @b true is returned, otherwise @b false.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                if (sys_llist_empty()) {
+                        // ...
+                }
+
+                // ...
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_size(), sys_llist_erase(), sys_llist_clear()
  */
 //==============================================================================
 static inline bool sys_llist_empty(llist_t *list)
@@ -362,9 +478,31 @@ static inline bool sys_llist_empty(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Returns a number of elements of the list
+ * @brief  Function returns a number of elements of the list.
+ *
  * @param  list         list object
- * @return Number of elements of the list or -1 on error
+ *
+ * @return Number of elements of the list or @b -1 on error.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                if (sys_llist_size() > 10) {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_empty(), sys_llist_erase(), sys_llist_clear()
  */
 //==============================================================================
 static inline int sys_llist_size(llist_t *list)
@@ -374,11 +512,36 @@ static inline int sys_llist_size(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Pushes selected data to the front of the list. Creates a new object
+ * @brief  Pushes selected data to the front of the list. Creates a new object.
+ *
  * @param  list         list object
  * @param  size         data size
  * @param  data         data source
- * @return On success allocated memory pointer is returned, otherwise @ref NULL
+ *
+ * @return On success allocated memory pointer is returned, otherwise @ref NULL.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                int val = 100;
+                if (sys_llist_push_emplace_front(list, sizeof(int), &val) != NULL) {
+                        // success ...
+                } else {
+                        // error handling ...
+                }
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_push_front(), sys_llist_push_emplace_back()
  */
 //==============================================================================
 static inline void *sys_llist_push_emplace_front(llist_t *list, size_t size, const void *data)
@@ -388,10 +551,41 @@ static inline void *sys_llist_push_emplace_front(llist_t *list, size_t size, con
 
 //==============================================================================
 /**
- * @brief  Pushes selected object to the front of the list
+ * @brief  Pushes selected object to the front of the list.
+ *
  * @param  list         list object
  * @param  object       object to push
- * @return On success pointer to the object is returned, otherwise @ref NULL
+ *
+ * @return On success pointer to the object is returned, otherwise @ref NULL.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                int *val = malloc(sizeof(int));
+                if (!val) {
+                        // no memory ...
+                } else {
+                        *val = 100;
+                }
+
+                if (sys_llist_push_front(list, val) != NULL) {
+                        // success ...
+                } else {
+                        // error handling ...
+                }
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_push_emplace_front(), sys_llist_push_back()
  */
 //==============================================================================
 static inline void *sys_llist_push_front(llist_t *list, void *object)
@@ -401,9 +595,46 @@ static inline void *sys_llist_push_front(llist_t *list, void *object)
 
 //==============================================================================
 /**
- * @brief  Delete first element of the list. This destroys an element
+ * @brief  Deletes first element of the list. This destroys an element by using
+ *         selected destructor function.
+ *
  * @param  list         list object
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return On success @b 1 is returned, otherwise @b 0.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                int *val = malloc(sizeof(int));
+                if (!val) {
+                        // no memory ...
+                } else {
+                        *val = 100;
+                }
+
+                if (sys_llist_push_front(list, val) != NULL) {
+                        // success ...
+                        // ...
+
+                        sys_llist_pop_front(list);
+
+                        // ...
+                } else {
+                        // error handling ...
+                }
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_push_front(), sys_llist_push_emplace_front()
  */
 //==============================================================================
 static inline int sys_llist_pop_front(llist_t *list)
@@ -413,11 +644,36 @@ static inline int sys_llist_pop_front(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Push selected data to the back of the list. Creates a new object
+ * @brief  Push selected data to the back of the list. Creates a new object.
+ *
  * @param  list         list object
  * @param  size         data size
  * @param  data         data source
- * @return On success allocated memory pointer is returned, otherwise @ref NULL
+ *
+ * @return On success allocated memory pointer is returned, otherwise @ref NULL.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_t *list = NULL;
+        int      err  = sys_llist_create(NULL, NULL, &list);
+        if (err != ESUCC) {
+                // ...
+        } else {
+                // ...
+
+                int val = 100;
+                if (sys_llist_push_emplace_back(list, sizeof(int), &val) != NULL) {
+                        // success ...
+                } else {
+                        // error handling ...
+                }
+
+                sys_llist_destroy(list);
+        }
+   @endcode
+ *
+ * @see sys_llist_push_emplace_front(), sys_llist_push_front(), sys_llist_push_back()
  */
 //==============================================================================
 static inline void *sys_llist_push_emplace_back(llist_t *list, size_t size, const void *data)
@@ -427,9 +683,12 @@ static inline void *sys_llist_push_emplace_back(llist_t *list, size_t size, cons
 
 //==============================================================================
 /**
- * @brief  Push selected object to the back of the list
+ * @brief  Push selected object to the back of the list.
+ *
  * @param  list         list object
- * @return On success pointer to the object is returned, otherwise @ref NULL
+ * @param  object       object to push
+ *
+ * @return On success pointer to the object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_push_back(llist_t *list, void *object)
@@ -439,9 +698,11 @@ static inline void *sys_llist_push_back(llist_t *list, void *object)
 
 //==============================================================================
 /**
- * @brief  Delete the last element of the list. This destroys element
+ * @brief  Delete the last element of the list. This destroys element.
+ *
  * @param  list         list object
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return On success 1 is returned, otherwise 0.
  */
 //==============================================================================
 static inline int sys_llist_pop_back(llist_t *list)
@@ -451,12 +712,14 @@ static inline int sys_llist_pop_back(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Allocate and append data at selected position in the list
+ * @brief  Allocate and append data at selected position in the list.
+ *
  * @param  list         list object
  * @param  position     element position
  * @param  size         element's size
  * @param  data         element's data
- * @return On success pointer to the object is returned, otherwise @ref NULL
+ *
+ * @return On success pointer to the object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_emplace(llist_t *list, int position, size_t size, const void *data)
@@ -466,11 +729,13 @@ static inline void *sys_llist_emplace(llist_t *list, int position, size_t size, 
 
 //==============================================================================
 /**
- * @brief  Insert an element to the list
+ * @brief  Insert an element to the list.
+ *
  * @param  list         list object
  * @param  position     position to insert
  * @param  object       object to insert
- * @return On success object is returned, otherwise @ref NULL
+ *
+ * @return On success object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_insert(llist_t *list, int position, void *object)
@@ -480,10 +745,12 @@ static inline void *sys_llist_insert(llist_t *list, int position, void *object)
 
 //==============================================================================
 /**
- * @brief  Erase selected begin of the list. The element is destroyed
+ * @brief  Erase selected begin of the list. The element is destroyed.
+ *
  * @param  list         list object
  * @param  position     position to remove
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return On success 1 is returned, otherwise 0.
  */
 //==============================================================================
 static inline int sys_llist_erase(llist_t *list, int position)
@@ -493,10 +760,12 @@ static inline int sys_llist_erase(llist_t *list, int position)
 
 //==============================================================================
 /**
- * @brief  Return selected begin and remove from the list. The element is not destroyed
+ * @brief  Return selected begin and remove from the list. The element is not destroyed.
+ *
  * @param  list         list object
  * @param  position     position to take (unlink)
- * @return On success taken object is returned, otherwise @ref NULL
+ *
+ * @return On success taken object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_take(llist_t *list, int position)
@@ -506,9 +775,11 @@ static inline void *sys_llist_take(llist_t *list, int position)
 
 //==============================================================================
 /**
- * @brief  Return first begin and remove from the list. The element is not destroyed
+ * @brief  Return first begin and remove from the list. The element is not destroyed.
+ *
  * @param  list         list object
- * @return On success taken object is returned, otherwise @ref NULL
+ *
+ * @return On success taken object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_take_front(llist_t *list)
@@ -518,9 +789,11 @@ static inline void *sys_llist_take_front(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Return last begin and remove from the list. The element is not destroyed
+ * @brief  Return last begin and remove from the list. The element is not destroyed.
+ *
  * @param  list         list object
- * @return On success taken object is returned, otherwise @ref NULL
+ *
+ * @return On success taken object is returned, otherwise @ref NULL.
  */
 //==============================================================================
 static inline void *sys_llist_take_back(llist_t *list)
@@ -530,9 +803,11 @@ static inline void *sys_llist_take_back(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Clear entire list (objects are destroyed)
+ * @brief  Clear entire list (objects are destroyed).
+ *
  * @param  list         list object
- * @return On success 1 is returned, otherwise 0
+
+ * @return On success 1 is returned, otherwise 0.
  */
 //==============================================================================
 static inline int sys_llist_clear(llist_t *list)
@@ -542,11 +817,13 @@ static inline int sys_llist_clear(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Swap 2 elements
+ * @brief  Swap 2 elements.
+ *
  * @param  list         list object
  * @param  j            position of element a
  * @param  k            position of element b
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return On success 1 is returned, otherwise 0.
  */
 //==============================================================================
 static inline int sys_llist_swap(llist_t *list, int j, int k)
@@ -556,9 +833,9 @@ static inline int sys_llist_swap(llist_t *list, int j, int k)
 
 //==============================================================================
 /**
- * @brief  Sort elements of the list
+ * @brief  Quick sort elements of the list.
+ *
  * @param  list         list object
- * @return None
  */
 //==============================================================================
 static inline void sys_llist_sort(llist_t *list)
@@ -568,9 +845,9 @@ static inline void sys_llist_sort(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Leave only an unique elements, all not unique are removed (are destroyed)
+ * @brief  Leave only an unique elements, all not unique are removed (are destroyed).
+ *
  * @param  list         list object
- * @return None
  */
 //==============================================================================
 static inline void sys_llist_unique(llist_t *list)
@@ -580,9 +857,9 @@ static inline void sys_llist_unique(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Reverse entire table
+ * @brief  Reverse entire table.
+ *
  * @param  list         list object
- * @return None
  */
 //==============================================================================
 static inline void sys_llist_reverse(llist_t *list)
@@ -592,10 +869,12 @@ static inline void sys_llist_reverse(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Get element from the list at selected position
+ * @brief  Get element from the list at selected position.
+ *
  * @param  list         list object
  * @param  position     begin position
- * @return Pointer to data, or @ref NULL on error
+ *
+ * @return Pointer to data, or @ref NULL on error.
  */
 //==============================================================================
 static inline void *sys_llist_at(llist_t *list, int position)
@@ -605,10 +884,12 @@ static inline void *sys_llist_at(llist_t *list, int position)
 
 //==============================================================================
 /**
- * @brief  Check if list contains selected object
+ * @brief  Check if list contains selected object.
+ *
  * @param  list         list object
  * @param  object       object to find
- * @return Number of found objects, or -1 on error
+ *
+ * @return Number of found objects, or -1 on error.
  */
 //==============================================================================
 static inline int sys_llist_contains(llist_t *list, const void *object)
@@ -618,10 +899,12 @@ static inline int sys_llist_contains(llist_t *list, const void *object)
 
 //==============================================================================
 /**
- * @brief  Find selected object in the list from the beginning
+ * @brief  Find selected object in the list from the beginning.
+ *
  * @param  list         list object
  * @param  object       object to find
- * @return Object position, or -1 on error
+ *
+ * @return Object position, or -1 on error.
  */
 //==============================================================================
 static inline int sys_llist_find_begin(llist_t *list, const void *object)
@@ -631,10 +914,12 @@ static inline int sys_llist_find_begin(llist_t *list, const void *object)
 
 //==============================================================================
 /**
- * @brief  Find selected object in the list from the end
+ * @brief  Find selected object in the list from the end.
+ *
  * @param  list         list object
  * @param  object       object to find
- * @return Object position, or -1 on error
+ *
+ * @return Object position, or -1 on error.
  */
 //==============================================================================
 static inline int sys_llist_find_end(llist_t *list, const void *object)
@@ -644,9 +929,11 @@ static inline int sys_llist_find_end(llist_t *list, const void *object)
 
 //==============================================================================
 /**
- * @brief  Access first element
+ * @brief  Access first element.
+ *
  * @param  list         list object
- * @return Pointer to data, or @ref NULL on error
+ *
+ * @return Pointer to data, or @ref NULL on error.
  */
 //==============================================================================
 static inline void *sys_llist_front(llist_t *list)
@@ -656,9 +943,11 @@ static inline void *sys_llist_front(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Access last element
+ * @brief  Access last element.
+ *
  * @param  list         list object
- * @return Pointer to data, or @ref NULL on error
+ *
+ * @return Pointer to data, or @ref NULL on error.
  */
 //==============================================================================
 static inline void *sys_llist_back(llist_t *list)
@@ -668,9 +957,37 @@ static inline void *sys_llist_back(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Create an iterator to the list
+ * @brief  Create an iterator to the list.
+ *
  * @param  list         list object
- * @return Iterator object
+ *
+ * @return Iterator object.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_iterator_t it;
+
+        // ...
+
+        // iterate elements of the list from beginning
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+
+        // iterate elements of list for the end
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_end(&it); obj; obj = sys_llist_interator_prev(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline llist_iterator_t sys_llist_iterator(llist_t *list)
@@ -680,9 +997,37 @@ static inline llist_iterator_t sys_llist_iterator(llist_t *list)
 
 //==============================================================================
 /**
- * @brief  Return first object from list by using iterator
+ * @brief  Return first object from list by using iterator.
+ *
  * @param  iterator     iterator object
- * @return Pointer to data object
+ *
+ * @return Pointer to data object.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_iterator_t it;
+
+        // ...
+
+        // iterate elements of the list from beginning
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+
+        // iterate elements of list for the end
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_end(&it); obj; obj = sys_llist_interator_prev(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline void *sys_llist_begin(llist_iterator_t *iterator)
@@ -692,9 +1037,37 @@ static inline void *sys_llist_begin(llist_iterator_t *iterator)
 
 //==============================================================================
 /**
- * @brief  Return last object from list by using iterator
+ * @brief  Return last object from list by using iterator.
+ *
  * @param  iterator     iterator object
- * @return Pointer to data object
+ *
+ * @return Pointer to data object.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_iterator_t it;
+
+        // ...
+
+        // iterate elements of the list from beginning
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+
+        // iterate elements of list for the end
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_end(&it); obj; obj = sys_llist_interator_prev(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline void *sys_llist_end(llist_iterator_t *iterator)
@@ -704,11 +1077,28 @@ static inline void *sys_llist_end(llist_iterator_t *iterator)
 
 //==============================================================================
 /**
- * @brief  Return selected objects from list by using range iterator (forward)
+ * @brief  Return selected objects from list by using range iterator (forward).
+ *
  * @param  iterator     iterator object
  * @param  begin        begin position
  * @param  end          end position
- * @return Pointer to data object
+ *
+ * @return Pointer to data object.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // iterate list from object <5, 8>
+        llist_iterator_t it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_range(&it, 5, 8); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline void *sys_llist_range(llist_iterator_t *iterator, int begin, int end)
@@ -718,9 +1108,37 @@ static inline void *sys_llist_range(llist_iterator_t *iterator, int begin, int e
 
 //==============================================================================
 /**
- * @brief  Return next data object from list by using iterator
+ * @brief  Return next data object from list by using iterator.
+ *
  * @param  iterator     iterator object
- * @return Pointer to data object
+ *
+ * @return Pointer to data object.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_iterator_t it;
+
+        // ...
+
+        // iterate elements of the list from beginning
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+
+        // iterate elements of list for the end
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_end(&it); obj; obj = sys_llist_interator_prev(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline void *sys_llist_iterator_next(llist_iterator_t *iterator)
@@ -730,9 +1148,37 @@ static inline void *sys_llist_iterator_next(llist_iterator_t *iterator)
 
 //==============================================================================
 /**
- * @brief  Return previous data object from list by using iterator
+ * @brief  Return previous data object from list by using iterator.
+ *
  * @param  iterator     iterator object
- * @return Pointer to data object
+ *
+ * @return Pointer to data object.
+ *
+ * @b Example
+ * @code
+        // ...
+        llist_iterator_t it;
+
+        // ...
+
+        // iterate elements of the list from beginning
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                obj->...;
+        }
+
+        // ...
+
+        // iterate elements of list for the end
+        it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_end(&it); obj; obj = sys_llist_interator_prev(&it)) {
+                obj->...;
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_llist_foreach(), sys_llist_foreach_reverse()
  */
 //==============================================================================
 static inline void *sys_llist_iterator_prev(llist_iterator_t *iterator)
@@ -742,9 +1188,25 @@ static inline void *sys_llist_iterator_prev(llist_iterator_t *iterator)
 
 //==============================================================================
 /**
- * @brief  Erase selected begin of the list. The element is destroyed
+ * @brief  Erase selected begin of the list. The element is destroyed.
+ *
  * @param  iterator     position to remove
- * @return On success 1 is returned, otherwise 0
+ *
+ * @return On success 1 is returned, otherwise 0.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        llist_iterator_t it = sys_llist_iterator(list);
+        for (void *obj = sys_llist_begin(&it); obj; obj = sys_llist_interator_next(&it)) {
+                if (obj->... > 0) {
+                        sys_llist_erase_by_iterator(&it);
+                }
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_llist_erase_by_iterator(llist_iterator_t *iterator)
@@ -754,12 +1216,14 @@ static inline int sys_llist_erase_by_iterator(llist_iterator_t *iterator)
 
 //==============================================================================
 /**
- * @brief  Compare functor that compares two pointers (not contents)
+ * @brief  Compare functor that compares two pointers (not contents).
+ *
  * @param  a    pointer a
  * @param  b    pointer b
- * @return a > b:  1
- *         a = b:  0
- *         a < b: -1
+ *
+ * @retval a > b:  1
+ * @retval a = b:  0
+ * @retval a < b: -1
  */
 //==============================================================================
 static inline int sys_llist_functor_cmp_pointers(const void *a, const void *b)
@@ -769,12 +1233,14 @@ static inline int sys_llist_functor_cmp_pointers(const void *a, const void *b)
 
 //==============================================================================
 /**
- * @brief  Compare functor that compares two strings (contents)
+ * @brief  Compare functor that compares two strings (contents).
+ *
  * @param  a    string a
  * @param  b    string b
- * @return a > b:  1
- *         a = b:  0
- *         a < b: -1
+ *
+ * @retval a > b:  1
+ * @retval a = b:  0
+ * @retval a < b: -1
  */
 //==============================================================================
 static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
@@ -784,12 +1250,25 @@ static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
 
 //==============================================================================
 /**
- * @brief Function create node for driver file
+ * @brief Function creates device node (device file).
  *
- * @param path              path when driver-file shall be created
- * @param dev               device number
+ * Function creates a file system node (device special file) named
+ * <i>path</i>. Node is connected to the device <i>dev</i>.
+ *
+ * @param path          node name
+ * @param dev           device number
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        dev_t dev = _dev_t__create(_module_get_ID("UART"), 0, 0);
+        sys_mknod("/dev/uart0", dev);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_mknod(const char *path, dev_t dev)
@@ -799,65 +1278,183 @@ static inline int sys_mknod(const char *path, dev_t dev)
 
 //==============================================================================
 /**
- * @brief Create directory
+ * @brief Function creates new directory.
  *
- * @param path              path to new directory
- * @param mode              directory mode
+ * The function attempts to create a directory named <i>pathname</i>. The
+ * argument <i>mode</i> specifies the permissions to use.
+ *
+ * @param pathname      directory name
+ * @param mode          directory permissions
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        sys_mkdir("/dev", 0666);    // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
-static inline int sys_mkdir(const char *path, mode_t mode)
+static inline int sys_mkdir(const char *pathname, mode_t mode)
 {
-        return _vfs_mkdir(path, mode);
+        return _vfs_mkdir(pathname, mode);
 }
 
 //==============================================================================
 /**
- * @brief Create pipe
+ * @brief Function creates FIFO file.
  *
- * @param path              path to pipe
- * @param mode              directory mode
+ * The mfunction makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
+ * specifies the FIFO's permissions. A FIFO special file is similar to pipe, but
+ * is created in filesystem and is not an anonymous. Access to FIFO is the same
+ * as to regular file, except that data can be read only one time. Not all
+ * filesystems support this file type.
+ *
+ * @param pathname      FIFO name
+ * @param mode          FIFO permissions
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        sys_mkfifo("/dev/my_fifo", 0666);    // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
-static inline int sys_mkfifo(const char *path, mode_t mode)
+static inline int sys_mkfifo(const char *pathname, mode_t mode)
 {
-        return _vfs_mkfifo(path, mode);
+        return _vfs_mkfifo(pathname, mode);
 }
 
 //==============================================================================
 /**
- * @brief Function open directory
+ * @brief Function opens selected directory.
  *
- * @param path                 directory path
- * @param dir                  pointer to dir pointer
+ * Function opens a directory stream corresponding to the directory <i>path</i>, and
+ * returns a pointer to the directory stream. The stream is positioned at the first
+ * entry in the directory. Opened stream is passed by pointer <i>dir</i>.
+ *
+ * @param path          directory path
+ * @param dir           pointer to stream object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        DIR *dir = NULL;
+
+        if (sys_opendir("/foo/bar", &dir) == ESUCC) {
+
+                dirent_t *dirent = NULL;
+
+                while (sys_readdir(dir, &dirent) == ESUCC) {
+                        // ...
+                }
+
+                sys_closedir(dir);
+        } else {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_closedir(), sys_readdir()
  */
 //==============================================================================
 extern int sys_opendir(const char *path, DIR **dir);
 
 //==============================================================================
 /**
- * @brief Function close opened directory
+ * @brief Function closes selected directory stream.
  *
- * @param *dir                  directory object
+ * Function closes the directory stream associated with <i>dir</i>. The directory
+ * stream descriptor <i>dir</i> is not available after this call.
+ *
+ * @param dir           pinter to directory object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        DIR *dir = NULL;
+
+        if (sys_opendir("/foo/bar", &dir) == ESUCC) {
+
+                dirent_t *dirent = NULL;
+
+                while (sys_readdir(dir, &dirent) == ESUCC) {
+                        // ...
+                }
+
+                sys_closedir(dir);
+        } else {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_opendir(), sys_readdir()
  */
 //==============================================================================
 extern int sys_closedir(DIR *dir);
 
 //==============================================================================
 /**
- * @brief Function read next item of opened directory
+ * @brief Function reads entry from opened directory stream.
  *
- * @param *dir                  directory object
- * @param **dirent              pointer to direntry pointer
+ * Function returns a pointer <i>dirent</i> to object <b>dirent_t</b> type
+ * representing the next directory entry in the directory stream pointed to by
+ * <i>dir</i>.<p>
+ *
+ * @param dir           directory object
+ * @param dirent        directory entry
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        DIR *dir = NULL;
+
+        if (sys_opendir("/foo/bar", &dir) == ESUCC) {
+
+                dirent_t *dirent = NULL;
+
+                while (sys_readdir(dir, &dirent) == ESUCC) {
+                        // ...
+                }
+
+                sys_closedir(dir);
+        } else {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_opendir(), sys_closedir()
  */
 //==============================================================================
 static inline int sys_readdir(DIR *dir, dirent_t **dirent)
@@ -867,12 +1464,27 @@ static inline int sys_readdir(DIR *dir, dirent_t **dirent)
 
 //==============================================================================
 /**
- * @brief Remove file
- * Removes file or directory. Removes directory if is not a mount point.
+ * @brief Function remove selected file.
  *
- * @param *path                localization of file/directory
+ * The function deletes a name from the file system. If the removed name was
+ * the last link to a file and no processes have the file open, the file is
+ * deleted and the space it was using is made available for reuse.<p>
+ *
+ * If the name referred to a FIFO, or device, the name is removed, but
+ * processes which have the object open may continue to use it.
+ *
+ * @param path      path to file
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int err = sys_remove("/foo/bar");
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_remove(const char *path)
@@ -882,14 +1494,25 @@ static inline int sys_remove(const char *path)
 
 //==============================================================================
 /**
- * @brief Rename file name
- * The implementation of rename can move files only if external FS provide
- * functionality. Local VFS cannot do this. Cross FS move is also not possible.
+ * @brief Function renames selected file.
  *
- * @param *old_name                  old file name
- * @param *new_name                  new file name
+ * The function renames a file. In contrast to standard C library this function
+ * don't move files between directories if <i>new_name</i> is localized on other
+ * filesystem than <i>old_name</i>, otherwise it's depending on filesystem.
+ *
+ * @param old_name      old file name
+ * @param new_name      new file name
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int err = sys_rename("/foo/bar", "/foo/baz");
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_rename(const char *old_name, const char *new_name)
@@ -899,12 +1522,24 @@ static inline int sys_rename(const char *old_name, const char *new_name)
 
 //==============================================================================
 /**
- * @brief Function change file mode
+ * @brief Function changes file mode.
  *
- * @param *path         file path
- * @param mode         file mode
+ * The function change the permissions of a file specified by <i>path</i>.
+ *
+ * @param path          file to permission change
+ * @param mode          new permissions
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        sys_chmod("/foo/bar", 0666);   // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int sys_chmod(const char *path, mode_t mode)
@@ -914,13 +1549,24 @@ static inline int sys_chmod(const char *path, mode_t mode)
 
 //==============================================================================
 /**
- * @brief Function change file owner and group
+ * @brief Function changes the ownership of file.
  *
- * @param *path         file path
- * @param owner        file owner
- * @param group        file group
+ * The function changes the ownership of the file specified by <i>path</i>.
+ *
+ * @param path          path to file
+ * @param owner         owner ID
+ * @param group         group ID
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int err = sys_chown("/foo/bar", 1000, 1000);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_chown(const char *path, uid_t owner, gid_t group)
@@ -930,27 +1576,62 @@ static inline int sys_chown(const char *path, uid_t owner, gid_t group)
 
 //==============================================================================
 /**
- * @brief Function returns file/dir status
+ * @brief Function gets file information.
  *
- * @param *path            file/dir path
- * @param *stat            pointer to structure
+ * The function return information about a file specified by <i>path</i>.
+ *
+ * @param path          file to inspect
+ * @param buf           file's information
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        struct stat info;
+
+        if (sys_stat("/dev/foo", &info) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
-static inline int sys_stat(const char *path, struct stat *stat)
+static inline int sys_stat(const char *path, struct stat *buf)
 {
-        return _vfs_stat(path, stat);
+        return _vfs_stat(path, buf);
 }
 
 //==============================================================================
 /**
- * @brief Function returns file system status
+ * @brief Function gets file system information.
  *
- * @param *path            fs path
- * @param *statfs          pointer to FS status structure
+ * The function returns information about a mounted file system.
+ * A <i>path</i> is directory of the mount point of file system.
+ *
+ * @param path          node name
+ * @param statfs        file system information container
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        struct statfs info;
+        if (sys_statfs("/proc", &info) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_statfs(const char *path, struct statfs *statfs)
@@ -960,38 +1641,134 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
 
 //==============================================================================
 /**
- * @brief Function open selected file
+ * @brief Function opens file.
  *
- * @param *name             file path
- * @param *mode             file mode
- * @param **file            pointer to file pointer
+ * The function opens the file whose name is the string pointed to by
+ * <i>path</i> and associates a stream with it. The argument <i>mode</i> points
+ * to a string beginning with one of the following sequences (possibly followed
+ * by additional characters, as described below):<p>
+ *
+ * <b>r</b> - Open text file for reading. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>r+</b> - Open for reading and writing. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>w</b> - Truncate file to zero length or create text file for writing.
+ * The stream is positioned at the beginning of the file.<p>
+ *
+ * <b>w+</b> - Open for reading and writing. The file is created if it does
+ * not exist, otherwise it is truncated. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>a</b> - Open for appending (writing at end of file). The file is
+ * created if it does  not exist. The stream is positioned at the end of the
+ * file.<p>
+ *
+ * <b>a+</b> - Open for reading and appending (writing at end of file). The
+ * file is created if it does not exist. The initial file position for reading
+ * is at the beginning of the file, but output is always appended to the end of
+ * the file.<p>
+ *
+ * Pointer of opened stream is passed by <i>file</i> argument.
+ *
+ * @param path          path to file
+ * @param mode          file open mode
+ * @param file          pointer to file object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fclose()
  */
 //==============================================================================
-extern int sys_fopen(const char *name, const char *mode, FILE **file);
+extern int sys_fopen(const char *path, const char *mode, FILE **file);
 
 //==============================================================================
 /**
- * @brief Function close opened file
+ * @brief Function closes selected file.
  *
- * @param file              pinter to file
+ * The function closes the created stream <i>file</i>.
+ *
+ * @param file          file to close
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fopen()
  */
 //==============================================================================
 extern int sys_fclose(FILE *file);
 
 //==============================================================================
 /**
- * @brief Function write data to file
+ * @brief Function writes data to stream.
  *
- * @param ptr              address to data (src)
- * @param count            number of items
- * @param wrcnt            number of written elements
- * @param file             pointer to file object
+ * The function writes <i>size</i> bytes long buffer, to the stream pointed to
+ * by <i>file</i>, obtaining them from the location given by <i>ptr</i>.
+ * Number of wrote bytes is passed by <i>wrcnt</i> argument.
+ *
+ * @param ptr           data buffer
+ * @param size          buffer size
+ * @param wrcnt         number of wrote bytes
+ * @param file          stream
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               const char buf[10] = {0,1,2,3,4,5,6,7,8,9};
+
+               size_t wrcnt = 0;
+               int err = sys_fwrite(buf, sizeof(buf), &wrcnt, file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fread()
  */
 //==============================================================================
 static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
@@ -1001,14 +1778,43 @@ static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *
 
 //==============================================================================
 /**
- * @brief Function read data from file
+ * @brief Function reads data to stream.
  *
- * @param ptr              address to data (dst)
- * @param size             item size
- * @param rdcnt            number of read bytes
- * @param file             pointer to file object
+ * The function reads <i>size</i> bytes long buffer, from the stream pointed to
+ * by <i>file</i>, storing them at the location given by <i>ptr</i>.
+ * Number of read bytes is passed by <i>rdcnt</i> argument.
+ *
+ * @param ptr           data buffer
+ * @param size          buffer size
+ * @param rdcnt         number of read bytes
+ * @param file          stream
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               char buf[10];
+
+               size_t rdcnt = 0;
+               int err = sys_fread(buf, sizeof(buf), &rdcnt, file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fwrite()
  */
 //==============================================================================
 static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
@@ -1018,13 +1824,48 @@ static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
 
 //==============================================================================
 /**
- * @brief Function set seek value
+ * @brief Function sets file position indicator.
  *
- * @param *file             file object
- * @param offset           seek value
- * @param mode             seek mode
+ * The function sets the file position indicator for the stream
+ * pointed to by <i>file</i>. The new position, measured in bytes, is obtained
+ * by adding offset bytes to the position specified by whence. If whence is set
+ * to @ref SEEK_SET, @ref SEEK_CUR, or @ref SEEK_END, the offset is
+ * relative to the start of the file, the current position indicator, or
+ * end-of-file, respectively. A successful call to the sys_fseek() function
+ * clears the end-of-file indicator for the stream.
+ *
+ * @param file          stream
+ * @param offset        offset
+ * @param mode          seek mode
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               sys_fseek(file, 0, SEEK_SET);
+
+               char buf[10];
+
+               size_t rdcnt = 0;
+               int err = sys_fread(buf, sizeof(buf), &rdcnt, file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_ftell()
  */
 //==============================================================================
 static inline int sys_fseek(FILE *file, i64_t offset, int mode)
@@ -1034,12 +1875,46 @@ static inline int sys_fseek(FILE *file, i64_t offset, int mode)
 
 //==============================================================================
 /**
- * @brief Function returns seek value
+ * @brief Function returns file position indicator.
  *
- * @param file             file object
- * @param lseek            file seek
+ * The function obtains the current value of the file position
+ * indicator pointed by <i>lseek</i> for the stream pointed to by <i>file</i>.
+ *
+ * @param file          stream
+ * @param lseek         file position indicator
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               i64_t seek = 0;
+               int err = sys_ftell(file, &seek);
+
+               if (err == ESUCC && seek > 0) {
+                       sys_fseek(file, 0, SEEK_SET);
+               }
+
+               char   buf[10];
+               size_t rdcnt = 0;
+               err = sys_fread(buf, sizeof(buf), &rdcnt, file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fseek()
  */
 //==============================================================================
 static inline int sys_ftell(FILE *file, i64_t *lseek)
@@ -1049,13 +1924,62 @@ static inline int sys_ftell(FILE *file, i64_t *lseek)
 
 //==============================================================================
 /**
- * @brief Function support not standard operations on devices
+ * @brief Function sends request to selected file to do non-standard operation.
  *
- * @param *file         file
- * @param rq           request
- * @param[in,out]  ...          argument (non or one, depends on request)
+ * The function manipulates the file parameters. In particular, many
+ * operating characteristics of character special files (e.g., drivers) may
+ * be controlled with ioctl() requests.
+ *
+ * The second argument is a device-dependent request code. The third
+ * argument is an untyped pointer to memory.
+ *
+ * @param file          stream to control
+ * @param rq            request number (each driver has own requests)
+ * @param ...           untyped pointer to memory (optional in some requests)
  *
  * @return One of @ref errno value.
+ *
+ * @b Example @b 1
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+                int err = sys_ioctl(file, IOCTL_TTY__CLEAR_SCR);
+
+                // ...
+        } else {
+                // ...
+        }
+
+        sys_fclose(file);
+
+        // ...
+
+   @endcode
+
+ * @b Example @b 2
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+                int row = -1;
+                int err = sys_ioctl(file, IOCTL_TTY__GET_ROW, &row);
+
+                // ...
+        } else {
+                // ...
+        }
+
+        sys_fclose(file);
+
+        // ...
+
+   @endcode
+ *
+ * @note
+ * The names of all requests are constructed in the same way: @b IOCTL_<MODULE_NAME>__<REQUEST_NAME>.
  */
 //==============================================================================
 static inline int sys_ioctl(FILE *file, int rq, ...)
@@ -1069,26 +1993,81 @@ static inline int sys_ioctl(FILE *file, int rq, ...)
 
 //==============================================================================
 /**
- * @brief Function returns file/dir status
+ * @brief Function gets file information.
  *
- * @param *file            file object
- * @param *stat            pointer to stat structure
+ * The function return information about a file pointed by <i>file</i>.
+ *
+ * @param file          file object
+ * @param buf           file's information
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+                // ...
+
+                struct stat buf;
+                int err = sys_fstat(file, &buf);
+
+                // ...
+        } else {
+                // ...
+        }
+
+        sys_fclose(file);
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
-static inline int sys_fstat(FILE *file, struct stat *stat)
+static inline int sys_fstat(FILE *file, struct stat *buf)
 {
-        return _vfs_fstat(file, stat);
+        return _vfs_fstat(file, buf);
 }
 
 //==============================================================================
 /**
- * @brief Function flush file data
+ * @brief Function forces write buffers to stream.
  *
- * @param *file     file to flush
+ * For output streams, sys_fflush() forces a write of all buffered data for
+ * the given output or update stream via the stream's underlying write function.
+ * For input streams, sys_fflush() discards any buffered data that has been
+ * fetched from the underlying file. The open status of the stream is unaffected.
+ *
+ * @param file          stream
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               const char buf[10] = {0,1,2,3,4,5,6,7,8,9};
+
+               size_t wrcnt = 0;
+               int err = sys_fwrite(buf, sizeof(buf), &wrcnt, file);
+
+               err = sys_fflush(file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int sys_fflush(FILE *file)
@@ -1098,12 +2077,39 @@ static inline int sys_fflush(FILE *file)
 
 //==============================================================================
 /**
- * @brief Function check end of file
+ * @brief Function tests the end-of-file indicator.
  *
- * @param *file    file
- * @param *eof     EOF indicator (EOF or 0)
+ * The function tests the end-of-file indicator for the stream
+ * pointed to by <i>file</i>. The end-of-file
+ * indicator can only be cleared by the function sys_clearerr().
+ *
+ * @param file          stream
+ * @param eof           pointer to EOF indicator
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // file operations...
+
+               int eof = 0;
+               if (sys_feof(file) == ESUCC && eof) {
+                       // end-of-file handling
+               }
+
+               // file operations...
+
+               sys_fclose(file);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_clearerr()
  */
 //==============================================================================
 static inline int sys_feof(FILE *file, int *eof)
@@ -1113,11 +2119,37 @@ static inline int sys_feof(FILE *file, int *eof)
 
 //==============================================================================
 /**
- * @brief Function clear file's error
+ * @brief Function clears end-of-file and error indicators.
  *
- * @param *file     file
+ * The function clears the end-of-file and error indicators
+ * for the stream pointed to by <i>file</i>.
+ *
+ * @param file          stream
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // file operations...
+
+               int error = 0;
+               if (sys_ferror(file) == ESUCC && error) {
+                       sys_clearerr();
+               }
+
+               // file operations...
+
+               sys_fclose(file);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_feof(), sys_ferror()
  */
 //==============================================================================
 static inline int sys_clearerr(FILE *file)
@@ -1127,12 +2159,39 @@ static inline int sys_clearerr(FILE *file)
 
 //==============================================================================
 /**
- * @brief Function check that file has no errors
+ * @brief Function tests error indicator.
  *
- * @param file     file
- * @param error    error indicator (1 for error, 0 no error)
+ * The function tests the error indicator for the stream pointed
+ * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
+ * be reset only by the sys_clearerr() function.
+ *
+ * @param file          stream
+ * @param error         pointer to error indicator
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // file operations...
+
+               int error = 0;
+               if (sys_ferror(file) == ESUCC && error) {
+                       sys_clearerr();
+               }
+
+               // file operations...
+
+               sys_fclose(file);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_clearerr()
  */
 //==============================================================================
 static inline int sys_ferror(FILE *file, int *error)
@@ -1142,11 +2201,42 @@ static inline int sys_ferror(FILE *file, int *error)
 
 //==============================================================================
 /**
- * @brief Function rewind file
+ * @brief Function sets file position indicator to the beginning of file.
  *
- * @param *file     file
+ * The function sets the file position indicator for the stream
+ * pointed to by <i>file</i> to the beginning of the file. It is equivalent to:
+ * <pre>sys_fseek(stream, 0L, SEEK_SET)</pre>
+ *
+ * @param file          stream
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file = NULL;
+        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+               // ...
+
+               sys_rewind(file);
+
+               char buf[10];
+
+               size_t rdcnt = 0;
+               int err = sys_fread(buf, sizeof(buf), &rdcnt, file);
+
+               // ...
+
+               sys_fclose(file);
+        } else {
+               // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_fseek()
  */
 //==============================================================================
 static inline int sys_rewind(FILE *file)
@@ -1156,11 +2246,16 @@ static inline int sys_rewind(FILE *file)
 
 //==============================================================================
 /**
- * @brief Synchronize internal buffers of mounted file systems
+ * @brief Function synchronizes files buffers with file systems.
  *
- * @param None
- *
- * @return None
+ * @b Example
+ * @code
+        // ...
+
+        sys_sync();
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sys_sync()
@@ -1172,26 +2267,151 @@ static inline void sys_sync()
 /**
  * @brief Function send kernel message on terminal
  *
- * @param *format             formated text
- * @param ...                 format arguments
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>kernel message terminal</b>, configured
+ * by syslog_enable() function (user space).<p>
+ *
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
+ *
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
+ *
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
+ *
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
+ *
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @return None
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int foo = 12;
+        int bar = 0x12;
+        sys_printk("foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
+ *
+ * @see sys_vsnprintf(), sys_snprintf(), sys_vfprintf(), sys_fprintf()
  */
 //==============================================================================
 #ifndef DOXYGEN
 #define sys_printk(...) _printk(__VA_ARGS__)
 #else
-static inline int sys_printk(const char *format, ...);
+static inline void sys_printk(const char *format, ...);
 #endif
 
 //==============================================================================
 /**
- * @brief Function convert arguments to stream
+ * @brief Function prints message according to format to buffer.
  *
- * @param *buf           buffer for stream
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>buf</i> of size <i>size</i>.
+ * An arguments are passed by list <i>args</i>.<p>
+ *
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
+ *
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
+ *
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
+ *
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
+ *
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @param buf           buffer which output was produced
  * @param size          buffer size
- * @param *format        message format
+ * @param format        formatting string
  * @param args          argument list
  *
- * @return number of printed characters
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        va_list args;
+
+        // ...
+
+        char buffer[20];
+        sys_vsnprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
+
+        // ...
+   @endcode
+ *
+ * @see sys_printk(), sys_snprintf(), sys_vfprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_list args)
@@ -1201,14 +2421,73 @@ static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_l
 
 //==============================================================================
 /**
- * @brief Function send to buffer formated output string
+ * @brief Function prints message according to format to buffer.
  *
- * @param *bfr                output buffer
- * @param  size               buffer size
- * @param *format             formated text
- * @param  ...                format arguments
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>bfr</i> of size <i>size</i>.<p>
  *
- * @retval number of written characters
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
+ *
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
+ *
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
+ *
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
+ *
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @param bfr           buffer where output was produced
+ * @param size          buffer size
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        char buffer[20];
+        int foo = 12;
+        int bar = 0x12;
+        sys_snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
+ *
+ * @see sys_printk(), sys_vsnprintf(), sys_vfprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
@@ -1222,13 +2501,75 @@ static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string
+ * @brief Function prints message according to format to selected stream.
  *
- * @param file                file
- * @param format              formated text
- * @param args                arguments
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <i>file</i>.
+ * An arguments are passed by list <i>args</i>.<p>
  *
- * @retval number of written characters
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
+ *
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
+ *
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
+ *
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
+ *
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @param file          output stream
+ * @param format        formatting string
+ * @param args          argument list
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        va_list arg;
+        FILE   *file;
+
+        // ...
+
+        sys_vfprintf(file, "foo is %d; bar is 0x%x\n", arg);
+
+        // ...
+   @endcode
+ *
+ * @see sys_printk(), sys_vsnprintf(), sys_snprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
@@ -1238,13 +2579,73 @@ static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string
+ * @brief Function prints message according to format to selected stream.
  *
- * @param *file               file
- * @param *format             formated text
- * @param ...                 format arguments
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <i>file</i>.<p>
  *
- * @retval number of written characters
+ * Supported flags:@n
+ *   %%         - print % character
+ *                @code printf("%%"); //=> % @endcode
+ *
+ *   %c         - print selected character (the \0 character is skipped)@n
+ *                @code printf("_%c_", 'x');  //=> _x_ @endcode
+ *                @code printf("_%c_", '\0'); //=> __ @endcode
+ *
+ *   %s         - print selected string
+ *                @code printf("%s", "Foobar"); //=> Foobar @endcode
+ *
+ *   %.*s       - print selected string but only the length passed by argument
+ *                @code printf("%.*s\n", 3, "Foobar"); //=> Foo @endcode
+ *
+ *   %.ns       - print selected string but only the n length
+ *                @code printf("%.3s\n", "Foobar"); //=> Foo @endcode
+ *
+ *   %d, %i     - print decimal integer values
+ *                @code printf("%d, %i", -5, 10); //=> -5, 10 @endcode
+ *
+ *   %u         - print unsigned decimal integer values
+ *                @code printf("%u, %u", -1, 10); //=> 4294967295, 10 @endcode
+ *
+ *   %x, %X     - print hexadecimal values ('x' for lower characters, 'X' for upper characters)
+ *                @code printf("0x%x, 0x%X", 0x5A, 0xfa); //=> 0x5a, 0xFA @endcode
+ *
+ *   %0x?       - print decimal (d, i, u) or hex (x, X) values with leading zeros.
+ *                The number of characters (at least) is determined by x. The ?
+ *                means d, i, u, x, or X value representations.
+ *                @code printf("0x02X, 0x03X", 0x5, 0x1F43); //=> 0x05, 0x1F43 % @endcode
+ *
+ *   %f         - print float number. Note: make sure that input value is the float!
+ *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
+ *
+ *   %l?        - print long long values, where ? means d, i, u, x, or X.
+ *                @note Flag not supported.
+ *
+ *   %p         - print pointer
+ *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @param file          output stream
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ * If an output error is encountered, a negative value is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        FILE *file;
+
+        int foo = 12;
+        int bar = 0x12;
+        sys_fprintf(file, "foo is %d; bar is 0x%x\n", foo, bar);
+
+        // ...
+   @endcode
+ *
+ * @see sys_printk(), sys_vsnprintf(), sys_snprintf(), sys_vfprintf()
  */
 //==============================================================================
 static inline int sys_fprintf(FILE *file, const char *format, ...)
@@ -1258,13 +2659,56 @@ static inline int sys_fprintf(FILE *file, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function scan arguments defined by format (multiple argument version)
+ * @brief Function scans input according to format.
  *
- * @param *str           data buffer
- * @param *format        scan format
- * @param ...           output
+ * The function scans input according to format as described below. This format
+ * may contain conversion specifications; the results from such conversions,
+ * if any, are stored in the locations pointed to by the pointer arguments that
+ * follow format. Each pointer argument must be of a type that is appropriate
+ * for the value returned by the corresponding conversion specification.<p>
  *
- * @return number of scanned elements
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
+ *
+ * <b>c</b> - Scans single character.<p>
+ *
+ * <b>s</b> - Scans string.<p>
+ *
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Scans unsigned type number.<p>
+ *
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
+ *
+ * <b>o</b> - Scans value in Octal formatting.<p>
+ *
+ * <b>f, F, g, G</b> - Scans float value.
+ *
+ * @param str           input string (must be <i>null</i> terminated)
+ * @param format        formatting string
+ * @param ...           argument sequence list
+ *
+ * @return The function return the number of input items successfully matched
+ * and assigned, which can be fewer than provided for, or even zero in the event
+ * of an early matching failure.<p>
+ *
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
+ * also returned if a read error occurs, in which case the error indicator for
+ * the stream is set.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        char *buffer = "12, 1256";
+        int foo, bar;
+        sys_sscanf(buffer, "%i, %i", &foo, &bar);
+
+        // ...
+   @endcode
+ *
+ * @see sys_vsscanf()
  */
 //==============================================================================
 static inline int sys_sscanf(const char *str, const char *format, ...)
@@ -1278,13 +2722,57 @@ static inline int sys_sscanf(const char *str, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function scan arguments defined by format (argument list version)
+ * @brief Function scans input according to format.
  *
- * @param *str           data buffer
- * @param *format        scan format
- * @param args          output
+ * The function scans input according to format as described below. This format
+ * may contain conversion specifications; the results from such conversions,
+ * if any, are stored in the locations pointed to by the pointer arguments that
+ * follow format. Each pointer argument must be of a type that is appropriate
+ * for the value returned by the corresponding conversion specification.
+ * An arguments are passed by list <i>args</i>.<p>
  *
- * @return number of scanned elements
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
+ *
+ * <b>c</b> - Scans single character.<p>
+ *
+ * <b>s</b> - Scans string.<p>
+ *
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
+ *
+ * <b>u</b> - Scans unsigned type number.<p>
+ *
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
+ *
+ * <b>o</b> - Scans value in Octal formatting.<p>
+ *
+ * <b>f, F, g, G</b> - Scans float value.
+ *
+ * @param str           input string (must be <i>null</i> terminated)
+ * @param format        formatting string
+ * @param args          argument sequence list
+ *
+ * @return The function return the number of input items successfully matched
+ * and assigned, which can be fewer than provided for, or even zero in the event
+ * of an early matching failure.<p>
+ *
+ * The value @ref EOF is returned if the end of input is reached before either
+ * the first successful conversion or a matching failure occurs. @ref EOF is
+ * also returned if a read error occurs, in which case the error indicator for
+ * the stream is set.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        char *buffer = "12, 1256";
+        va_list arg;
+        sys_vsscanf("%i, %i", arg);
+
+        // ...
+   @endcode
+ *
+ * @see sys_sscanf()
  */
 //==============================================================================
 static inline int sys_vsscanf(const char *str, const char *format, va_list args)
@@ -1294,106 +2782,261 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
 
 //==============================================================================
 /**
- * @brief Function get time reference
+ * @brief Function gets time reference.
  *
- * @param None
+ * @return System timer value.
  *
- * @return Synchronized timer object
+ * @b Example
+ * @code
+        // ...
+
+        u32_t tref = sys_time_get_reference();
+
+        while (!sys_time_is_expired(tref, 2000)) {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_time_is_expired(), sys_time_set_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline uint sys_time_get_reference()
+static inline u32_t sys_time_get_reference()
 {
         return _kernel_get_time_ms();
 }
 
 //==============================================================================
 /**
- * @brief Check if time expired
+ * @brief Check if time expired.
  *
  * @param time_ref      time reference
  * @param time          time to check
  *
- * @return If time expired then true is returned, otherwise false.
+ * @return If time expired then @b true is returned, otherwise @b false.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        u32_t tref = sys_time_get_reference();
+
+        while (!sys_time_is_expired(tref, 2000)) {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_time_get_reference(), sys_time_set_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline bool sys_time_is_expired(uint time_ref, uint time)
+static inline bool sys_time_is_expired(u32_t time_ref, u32_t time)
 {
         return (_kernel_get_time_ms() - time_ref >= time);
 }
 
 //==============================================================================
 /**
- * @brief Set time reference as expired
+ * @brief Set time reference as expired.
  *
- * @param None
+ * @return Expired time value.
  *
- * @return Timer object with expired value.
+ * @b Example
+ * @code
+        // ...
+
+        u32_t tref = sys_time_set_expired();
+
+        while (!sys_time_is_expired(tref, 2000)) {
+                // this code will not be executed because time expired
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_time_get_reference(), sys_time_is_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline uint sys_time_set_expired()
+static inline u32_t sys_time_set_expired()
 {
-        return 0;
+        return UINT32_MAX;
 }
 
 //==============================================================================
 /**
- * @brief Calculate difference between time 1 and time 2
+ * @brief Calculate difference between <i>time1</i> and <i>time2</i>.
  *
  * @param time1        time reference 1
  * @param time2        time reference 2
  *
- * @return Returns difference between timer1 and timer2.
+ * @return Returns difference between timer1 and timer2 (in ticks).
+ *
+ * @see sys_time_get_reference(), sys_time_set_expired(), sys_time_set_expired()
  */
 //==============================================================================
-static inline int sys_time_diff(uint time1, uint time2)
+static inline int sys_time_diff(u32_t time1, u32_t time2)
 {
         return time1 - time2;
 }
 
 //==============================================================================
 /**
- * @brief Function create binary semaphore
+ * @brief Function creates binary semaphore.
  *
  * @param cnt_max          max count value (1 for binary)
  * @param cnt_init         initial value (0 or 1 for binary)
  * @param sem              created semaphore handle
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        sem_t *sem = NULL;
+        if (sys_semaphore_create(1, 0, &sem) == ESUCC) {
+
+                // ...
+
+                sys_semaphore_destroy(sem);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_semaphore_destroy()
  */
 //==============================================================================
-extern int sys_semaphore_create(const uint cnt_max, const uint cnt_init, sem_t **sem);
+extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem);
 
 //==============================================================================
 /**
- * @brief Function delete semaphore
+ * @brief Function deletes semaphore.
  *
- * @param *sem      semaphore object
+ * @param sem       semaphore object
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        sem_t *sem = NULL;
+        if (sys_semaphore_create(1, 0, &sem) == ESUCC) {
+
+                // ...
+
+                int err = sys_semaphore_destroy(sem);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_semaphore_create()
  */
 //==============================================================================
 extern int sys_semaphore_destroy(sem_t *sem);
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore
+ * @brief Function wait for semaphore.
  *
- * @param *sem              semaphore object
- * @param blocktime_ms     semaphore polling time
+ * The function waits for semaphore signal pointed by
+ * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
+ * ESUCC is returned, otherwise (timeout) ETIME. When <i>timeout</i>
+ * value is set to 0 then semaphore is polling without timeout.
+ *
+ * @param sem           semaphore object pointer
+ * @param timeout       timeout value in milliseconds
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+
+                // ...
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       sys_semaphore_signal(sem);
+                }
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_semaphore_signal()
  */
 //==============================================================================
-static inline int sys_semaphore_wait(sem_t *sem, const uint timeout)
+static inline int sys_semaphore_wait(sem_t *sem, const u32_t timeout)
 {
         return _semaphore_wait(sem, timeout);
 }
 
 //==============================================================================
 /**
- * @brief Function signal semaphore
+ * @brief Function signal semaphore.
  *
- * @param *sem      semaphore object
+ * The function signals semaphore pointed by <i>sem</i>.
+ *
+ * @param sem           semaphore object pointer
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+
+                // ...
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       sys_semaphore_signal(sem);
+                }
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_semaphore_wait()
  */
 //==============================================================================
 static inline int sys_semaphore_signal(sem_t *sem)
@@ -1403,12 +3046,36 @@ static inline int sys_semaphore_signal(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore from ISR
+ * @brief Function wait for semaphore from ISR.
  *
- * @param *sem              semaphore object
- * @param *task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
+ * @param sem              semaphore object
+ * @param task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        void ISR(void)
+        {
+                bool woken = false;
+                if (sys_semaphore_wait_from_ISR(sem, &woken) == ESUCC) {
+                        // ...
+                } else {
+                        // ...
+                }
+
+                if (woken) {
+                        sys_thread_yield_from_ISR();
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_semaphore_signal_from_ISR()
  */
 //==============================================================================
 static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
@@ -1418,12 +3085,48 @@ static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function signal semaphore from ISR
+ * @brief Function signal semaphore from ISR.
  *
- * @param *sem              semaphore object
- * @param *task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
+ * @param sem              semaphore object
+ * @param task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        void thread(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+
+                // ...
+        }
+
+        void ISR(void)
+        {
+               // ...
+
+               bool woken = false;
+               sys_semaphore_signal_from_ISR(sem, &woken);
+
+               // ...
+
+               if (woken) {
+                       sys_thread_yield_from_ISR();
+               }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_semaphore_wait_from_ISR()
  */
 //==============================================================================
 static inline bool sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
@@ -1433,49 +3136,293 @@ static inline bool sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function create new mutex
+ * @brief Function create new mutex.
  *
  * @param type     mutex type
  * @param mtx      created mutex handle
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // resource that be accessed from many threads
+        int resource;
+
+
+        // create mutex instance
+        mutex_t *mtx = NULL;
+        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        if (err != ESUCC) {
+                return err;
+        }
+
+        // ...
+
+
+        void thread1()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+        void thread2()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+
+        // ...
+
+        // destroy created mutex (if not used anymore)
+        if (sys_mutex_destroy(mtx) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_mutex_destroy()
  */
 //==============================================================================
 extern int sys_mutex_create(enum mutex_type type, mutex_t **mtx);
 
 //==============================================================================
 /**
- * @brief Function destroy mutex
+ * @brief Function destroy mutex.
  *
- * @param *mutex    mutex object
+ * @param mutex    mutex object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // resource that be accessed from many threads
+        int resource;
+
+
+        // create mutex instance
+        mutex_t *mtx = NULL;
+        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        if (err != ESUCC) {
+                return err;
+        }
+
+        // ...
+
+
+        void thread1()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+        void thread2()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+
+        // ...
+
+        // destroy created mutex (if not used anymore)
+        if (sys_mutex_destroy(mtx) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_mutex_create()
  */
 //==============================================================================
 extern int sys_mutex_destroy(mutex_t *mutex);
 
 //==============================================================================
 /**
- * @brief Function lock mutex
+ * @brief Function lock mutex.
  *
  * @param mutex             mutex object
- * @param blocktime_ms      polling time
+ * @param timeout           polling time
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // resource that be accessed from many threads
+        int resource;
+
+
+        // create mutex instance
+        mutex_t *mtx = NULL;
+        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        if (err != ESUCC) {
+                return err;
+        }
+
+        // ...
+
+
+        void thread1()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+        void thread2()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+
+        // ...
+
+        // destroy created mutex (if not used anymore)
+        if (sys_mutex_destroy(mtx) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_mutex_trylock(), sys_mutex_unlock()
  */
 //==============================================================================
-static inline int sys_mutex_lock(mutex_t *mutex, const uint timeout)
+static inline int sys_mutex_lock(mutex_t *mutex, const u32_t timeout)
 {
         return _mutex_lock(mutex, timeout);
 }
 
 //==============================================================================
 /**
- * @brief Function lock mutex
+ * @brief Function try lock mutex.
+ *
+ * The function try to lock mutex. If mutex is free then is immediately locked,
+ * if not then error is returned. Function is equivalent to:
+ * sys_mutex_lock(mtx, 0) call.
  *
  * @param mutex             mutex object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // resource that be accessed from many threads
+        int resource;
+
+
+        // create mutex instance
+        mutex_t *mtx = NULL;
+        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        if (err != ESUCC) {
+                return err;
+        }
+
+        // ...
+
+
+        void thread1()
+        {
+                // protected access to resource
+                if (sys_mutex_trylock(mtx) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+        void thread2()
+        {
+                // protected access to resource
+                if (sys_mutex_trylock(mtx) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+
+        // ...
+
+        // destroy created mutex (if not used anymore)
+        if (sys_mutex_destroy(mtx) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_mutex_lock(), sys_mutex_unlock()
  */
 //==============================================================================
 static inline int sys_mutex_trylock(mutex_t *mutex)
@@ -1485,11 +3432,71 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function unlock mutex
+ * @brief Function unlock mutex.
  *
  * @param *mutex            mutex object
  *
  * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        // resource that be accessed from many threads
+        int resource;
+
+
+        // create mutex instance
+        mutex_t *mtx = NULL;
+        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        if (err != ESUCC) {
+                return err;
+        }
+
+        // ...
+
+
+        void thread1()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+        void thread2()
+        {
+                // protected access to resource
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                        // write to buffer is allowed
+                        resource = ...;
+
+                        // ...
+
+                        sys_mutex_unlock(mtx);
+                }
+        }
+
+
+        // ...
+
+        // destroy created mutex (if not used anymore)
+        if (sys_mutex_destroy(mtx) == ESUCC) {
+                // ...
+        } else {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_mutex_trylock(), sys_mutex_lock()
  */
 //==============================================================================
 static inline int sys_mutex_unlock(mutex_t *mutex)
@@ -1499,7 +3506,7 @@ static inline int sys_mutex_unlock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function create new queue
+ * @brief Function create new queue.
  *
  * @param length           queue length
  * @param item_size        queue item size
@@ -1512,7 +3519,7 @@ extern int sys_queue_create(const uint length, const uint item_size, queue_t **q
 
 //==============================================================================
 /**
- * @brief Function delete queue
+ * @brief Function delete queue.
  *
  * @param *queue            queue object
  *
@@ -1523,7 +3530,7 @@ extern int sys_queue_destroy(queue_t *queue);
 
 //==============================================================================
 /**
- * @brief Function reset queue
+ * @brief Function reset queue.
  *
  * @param *queue            queue object
  *
@@ -1537,27 +3544,27 @@ static inline int sys_queue_reset(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief Function send queue.
  *
- * @param *queue            queue object
- * @param *item             item
+ * @param queue            queue object
+ * @param item             item
  * @param waittime_ms      wait time
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_send(queue_t *queue, const void *item, const uint waittime_ms)
+static inline int sys_queue_send(queue_t *queue, const void *item, const u32_t waittime_ms)
 {
         return _queue_send(queue, item, waittime_ms);
 }
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief Function send queue.
  *
  * @param *queue            queue object
  * @param *item             item
- * @param *task_woken       1 if higher priority task woken, otherwise 0 (can be @ref NULL)
+ * @param *task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
  *
  * @return One of @ref errno value.
  */
@@ -1569,23 +3576,23 @@ static inline int sys_queue_send_from_ISR(queue_t *queue, const void *item, bool
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief Function send queue.
  *
- * @param *queue            queue object
- * @param *item             item
+ * @param queue            queue object
+ * @param item             item
  * @param waittime_ms      wait time
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_receive(queue_t *queue, void *item, const uint waittime_ms)
+static inline int sys_queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
 {
         return _queue_receive(queue, item, waittime_ms);
 }
 
 //==============================================================================
 /**
- * @brief Function receive queue from ISR
+ * @brief Function receive queue from ISR.
  *
  * @param queue            queue object
  * @param item             item
@@ -1601,23 +3608,23 @@ static inline int sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *t
 
 //==============================================================================
 /**
- * @brief Function peek queue
+ * @brief Function receive item from the top of the queue and not delete it.
  *
- * @param *queue            queue object
- * @param *item             item
+ * @param queue            queue object
+ * @param item             item
  * @param waittime_ms      wait time
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
+static inline int sys_queue_receive_peek(queue_t *queue, void *item, const u32_t waittime_ms)
 {
         return _queue_receive_peek(queue, item, waittime_ms);
 }
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue
+ * @brief Function gets number of items in queue.
  *
  * @param queue            queue object
  * @param items            number of items in queue
@@ -1632,7 +3639,7 @@ static inline int sys_queue_get_number_of_items(queue_t *queue, size_t *items)
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue from ISR
+ * @brief Function gets number of items in queue from ISR.
  *
  * @param queue            queue object
  * @param items            number of items in queue
@@ -1647,7 +3654,7 @@ static inline int sys_queue_get_number_of_items_from_ISR(queue_t *queue, size_t 
 
 //==============================================================================
 /**
- * @brief Function gets number of free items in queue
+ * @brief Function gets number of free items in queue.
  *
  * @param queue            queue object
  * @param items            number of items in queue
@@ -1662,23 +3669,11 @@ static inline int sys_queue_get_space_available(queue_t *queue, size_t *items)
 
 //==============================================================================
 /**
- * @brief Function return OS time in milliseconds
+ * @brief  Function return free memory in bytes.
  *
- * @return a OS time in milliseconds
- */
-//==============================================================================
-static inline uint sys_get_time_ms()
-{
-        return _kernel_get_time_ms();
-}
-
-//==============================================================================
-/**
- * @brief  Function return free memory in bytes
+ * @return Free memory value.
  *
- * @param  None
- *
- * @return Free memory value
+ * @see sys_get_used_mem(), sys_get_mem_size()
  */
 //==============================================================================
 static inline size_t sys_get_free_mem()
@@ -1688,11 +3683,11 @@ static inline size_t sys_get_free_mem()
 
 //==============================================================================
 /**
- * @brief  Function return used memory in bytes
+ * @brief  Function return used memory in bytes.
  *
- * @param  None
+ * @return Used memory value.
  *
- * @return Used memory value
+ * @see sys_get_free_mem(), sys_get_mem_size()
  */
 //==============================================================================
 static inline size_t sys_get_used_mem()
@@ -1702,11 +3697,11 @@ static inline size_t sys_get_used_mem()
 
 //==============================================================================
 /**
- * @brief  Function return memory size (RAM) in bytes
+ * @brief  Function return memory size (RAM) in bytes.
  *
- * @param  None
+ * @return Memory size.
  *
- * @return Memory size
+ * @see sys_get_free_mem(), sys_get_used_mem()
  */
 //==============================================================================
 static inline size_t sys_get_mem_size()
@@ -1716,21 +3711,44 @@ static inline size_t sys_get_mem_size()
 
 //==============================================================================
 /**
- * @brief Function return tick counter
+ * @brief Function return OS time in milliseconds.
  *
- * @return a tick counter value
+ * @return OS time in milliseconds.
+ *
+ * @see sys_get_tick_counter()
  */
 //==============================================================================
-static inline uint sys_get_tick_counter()
+static inline u32_t sys_get_time_ms()
+{
+        return _kernel_get_time_ms();
+}
+
+//==============================================================================
+/**
+ * @brief Function return tick counter.
+ *
+ * The tick counter is incremented every context switch interrupt. If context switch
+ * frequency is set to 1000Hz then counter is incremented every 1ms. To get value
+ * of system time in milliseconds use sys_get_time_ms() functions.
+ *
+ * @return Tick counter value.
+ *
+ * @see sys_get_time_ms(), sys_sleep_until(), sys_sleep_until_ms()
+ */
+//==============================================================================
+static inline u32_t sys_get_tick_counter()
 {
         return _kernel_get_tick_counter();
 }
 
 //==============================================================================
 /**
- * @brief Function return a number of task
+ * @brief Function return a number of tasks.
  *
- * @return a number of tasks
+ * Task is the basic unit of CPU time. Each process has at least 1 task (called
+ * main thread), each additional thread is a new task.
+ *
+ * @return Number of tasks.
  */
 //==============================================================================
 static inline int sys_get_number_of_tasks()
@@ -1740,12 +3758,14 @@ static inline int sys_get_number_of_tasks()
 
 //==============================================================================
 /**
- * @brief  Function return collected process statistics
+ * @brief  Function return collected process statistics.
  *
  * @param  pid      PID
  * @param  stat     process statistics
  *
  * @return One of @ref errno value.
+ *
+ * @see sys_process_get_stat_seek()
  */
 //==============================================================================
 static inline int sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
@@ -1761,6 +3781,8 @@ static inline int sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
  * @param  stat     process statistics
  *
  * @return One of @ref errno value.
+ *
+ * @see sys_process_get_count(), sys_process_get_stat_pid()
  */
 //==============================================================================
 static inline int sys_process_get_stat_seek(size_t seek, process_stat_t *stat)
@@ -1770,11 +3792,9 @@ static inline int sys_process_get_stat_seek(size_t seek, process_stat_t *stat)
 
 //==============================================================================
 /**
- * @brief  Function return number of processes
+ * @brief  Function return number of processes.
  *
- * @param  None
- *
- * @return Number of processes
+ * @return Number of processes.
  */
 //==============================================================================
 static inline size_t sys_process_get_count(void)
@@ -1784,17 +3804,15 @@ static inline size_t sys_process_get_count(void)
 
 //==============================================================================
 /**
- * @brief Function create new task and if enabled add to monitor list
+ * @brief Function create new thread (task), and if enabled, add to monitor list.
  *
  * Function by default allocate memory for task data (localized in task tag)
- * which is used to cpu load calculation and standard IO and etc.
+ * which is used to CPU load calculation/ standard IO, and etc.
  *
- * @param[in ] func             task code
- * @param[in ] name             task name
- * @param[in ] stack_depth      stack deep
- * @param[in ] argv             argument pointer (can be @ref NULL)
- * @param[in ] tag              user's tag (can be @ref NULL)
- * @param task             task handle (can be @ref NULL)
+ * @param func             thread code
+ * @param attr             thread attributes
+ * @param arg              thread argument
+ * @param thread           pointer to thread handle
  *
  * @return One of @ref errno value.
  */
@@ -1803,20 +3821,25 @@ extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void
 
 //==============================================================================
 /**
- * @brief Function delete task
- * Function remove task from monitoring list, and next delete the task from OS
- * list. Function resume the parent task before delete.
+ * @brief Function delete thread.
  *
- * @param *taskHdl       task handle
+ * Function clear all allocated resources by thread and remove it from execution
+ * list.
+ *
+ * @param thread        thread handle
+ *
+ * @return One of @ref errno value.
  */
 //==============================================================================
 extern int sys_thread_destroy(thread_t *thread);
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function checks if selected thread handle is valid.
+ *
+ * @param  thread       thread to examine
+ *
+ * @return If thread object is valid the @b true is returned otherwise @b false.
  */
 //==============================================================================
 static inline bool sys_thread_is_valid(thread_t *thread)
@@ -1826,21 +3849,21 @@ static inline bool sys_thread_is_valid(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function suspend selected task
+ * @brief Function suspend selected thread.
  *
- * @param *taskhdl          task handle
+ * @param thread        thread to suspend
  */
 //==============================================================================
 static inline void sys_thread_suspend(thread_t *thread)
 {
-        if (thread) {
+        if (sys_thread_is_valid(thread)) {
                 _task_suspend(thread->task);
         }
 }
 
 //==============================================================================
 /**
- * @brief Function suspend current task
+ * @brief Function suspend current thread.
  */
 //==============================================================================
 static inline void sys_thread_suspend_now()
@@ -1850,44 +3873,45 @@ static inline void sys_thread_suspend_now()
 
 //==============================================================================
 /**
- * @brief Function resume selected task
+ * @brief Function resume selected thread.
  *
- * @param *taskhdl          task handle
+ * @param thread        thread to resume
  */
 //==============================================================================
 static inline void sys_thread_resume(thread_t *thread)
 {
-        if (thread) {
+        if (sys_thread_is_valid(thread)) {
                 _task_resume(thread->task);
         }
 }
 
 //==============================================================================
 /**
- * @brief Function resume selected task from ISR
+ * @brief Function resume selected thread from ISR.
  *
- * @param *taskhdl          task handle
+ * @param thread        thread to resume
+ * @param task_woken    true if higher priority task woke, otherwise false (can be @ref NULL)
  *
- * @retval true                 if yield required
- * @retval false                if yield not required
+ * @return One of @ref errno value.
  */
 //==============================================================================
-static inline bool sys_thread_resume_from_ISR(thread_t *thread)
+static inline int sys_thread_resume_from_ISR(thread_t *thread, bool *task_woken)
 {
-        if (thread) {
-                return _task_resume_from_ISR(thread->task);
+        if (sys_thread_is_valid(thread)) {
+                bool woken = _task_resume_from_ISR(thread->task);
+                if (task_woken) {
+                        *task_woken = woken;
+                }
+
+                return ESUCC;
         } else {
-                return false;
+                return ESRCH;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function yield task (thread)
- *
- * @param None
- *
- * @return None
+ * @brief Function yield thread.
  */
 //==============================================================================
 static inline void sys_thread_yield()
@@ -1897,7 +3921,7 @@ static inline void sys_thread_yield()
 
 //==============================================================================
 /**
- * @brief  Function return this thread object
+ * @brief  Function return thread object information.
  *
  * @param thread   thread information
  *
@@ -1908,7 +3932,7 @@ extern int sys_thread_self(thread_t *thread);
 
 //==============================================================================
 /**
- * @brief Function yield task from ISR
+ * @brief Function yield thread from ISR.
  */
 //==============================================================================
 static inline void sys_thread_yield_from_ISR()
@@ -1918,7 +3942,7 @@ static inline void sys_thread_yield_from_ISR()
 
 //==============================================================================
 /**
- * @brief Function set priority of current task
+ * @brief Function set priority of current thread.
  *
  * @param priority         priority
  */
@@ -1930,9 +3954,9 @@ static inline void sys_thread_set_priority(const int priority)
 
 //==============================================================================
 /**
- * @brief Function return priority of current task
+ * @brief Function return priority of current thread.
  *
- * @return current task priority
+ * @return Thread priority.
  */
 //==============================================================================
 static inline int sys_thread_get_priority()
@@ -1942,9 +3966,9 @@ static inline int sys_thread_get_priority()
 
 //==============================================================================
 /**
- * @brief Function return a free stack level of current task
+ * @brief Function return a free stack level of current thread.
  *
- * @return free stack level
+ * @return Free stack level.
  */
 //==============================================================================
 static inline int sys_thread_get_free_stack()
@@ -1954,7 +3978,9 @@ static inline int sys_thread_get_free_stack()
 
 //==============================================================================
 /**
- * @brief Function enter to critical section
+ * @brief Function enter to critical section.
+ *
+ * @see sys_critical_section_end()
  */
 //==============================================================================
 static inline void sys_critical_section_begin()
@@ -1964,7 +3990,9 @@ static inline void sys_critical_section_begin()
 
 //==============================================================================
 /**
- * @brief Function exit from critical section
+ * @brief Function exit from critical section.
+ *
+ * @see sys_critical_section_begin()
  */
 //==============================================================================
 static inline void sys_critical_section_end()
@@ -1974,7 +4002,9 @@ static inline void sys_critical_section_end()
 
 //==============================================================================
 /**
- * @brief Function disable interrupts
+ * @brief Function disable interrupts.
+ *
+ * @see sys_ISR_enable()
  */
 //==============================================================================
 static inline void sys_ISR_disable()
@@ -1984,7 +4014,9 @@ static inline void sys_ISR_disable()
 
 //==============================================================================
 /**
- * @brief Function enable interrupts
+ * @brief Function enable interrupts.
+ *
+ * @see sys_ISR_disable()
  */
 //==============================================================================
 static inline void sys_ISR_enable()
@@ -1994,9 +4026,9 @@ static inline void sys_ISR_enable()
 
 //==============================================================================
 /**
- * @brief  Function lock context switch
- * @param  None
- * @return None
+ * @brief  Function lock context switch.
+ *
+ * @see sys_context_switch_unlock()
  */
 //==============================================================================
 static inline void sys_context_switch_lock()
@@ -2006,9 +4038,9 @@ static inline void sys_context_switch_lock()
 
 //==============================================================================
 /**
- * @brief  Function unlock context switch
- * @param  None
- * @return None
+ * @brief  Function unlock context switch.
+ *
+ * @see sys_context_switch_lock()
  */
 //==============================================================================
 static inline void sys_context_switch_unlock()
@@ -2018,34 +4050,56 @@ static inline void sys_context_switch_unlock()
 
 //==============================================================================
 /**
- * @brief Function put to sleep task in milliseconds
+ * @brief Function put to sleep thread for milliseconds.
  *
- * @param milliseconds
+ * @note Function can sleep longer that declared because of context switch
+ *       settings. Context switch can be longer than 1ms.
+ *
+ * @param milliseconds          number of milliseconds of sleep
+ *
+ * @see sys_sleep(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
-static inline void sys_sleep_ms(const uint milliseconds)
+static inline void sys_sleep_ms(const u32_t milliseconds)
 {
         _sleep_ms(milliseconds);
 }
 
 //==============================================================================
 /**
- * @brief Function put to sleep task in seconds
+ * @brief Function put to sleep thread for seconds.
  *
- * @param seconds
+ * @param seconds               number of seconds of sleep
+ *
+ * @see sys_sleep_ms(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
-static inline void sys_sleep(const uint seconds)
+static inline void sys_sleep(const u32_t seconds)
 {
         _sleep(seconds);
 }
 
 //==============================================================================
 /**
- * @brief Function sleep task in regular periods (reference argument)
+ * @brief Function sleep thread in regular periods (reference argument).
  *
  * @param milliseconds          milliseconds
  * @param ref_time_ticks        reference time in OS ticks
+ *
+ * @b Example
+ * @code
+        // ...
+
+        u32_t tick_ref = sys_get_tick_counter();
+
+        // ...
+
+        sys_sleep_until_ms(250, &tick_ref);
+
+        // ...
+   @endcode
+ *
+ * @see sys_get_tick_counter(), sys_sleep_ms(), sys_sleep_until(), sys_sleep()
  */
 //==============================================================================
 static inline void sys_sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
@@ -2057,8 +4111,23 @@ static inline void sys_sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_
 /**
  * @brief Function sleep task in regular periods (reference argument)
  *
- * @param seconds       seconds
+ * @param seconds               seconds
  * @param ref_time_ticks        reference time in OS ticks
+ *
+ * @b Example
+ * @code
+        // ...
+
+        u32_t tick_ref = sys_get_tick_counter();
+
+        // ...
+
+        sys_sleep_until(2, &tick_ref);
+
+        // ...
+   @endcode
+ *
+ * @see sys_get_tick_counter(), sys_sleep(), sys_sleep_until_ms(), sys_sleep_ms()
  */
 //==============================================================================
 static inline void sys_sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
@@ -2068,10 +4137,11 @@ static inline void sys_sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
 
 //==============================================================================
 /**
- * @brief Function update all system clock after CPU frequency change
+ * @brief Function update all system clock after CPU frequency change.
  *
  * Function shall update all devices which base on main clock oscillator.
- * Function is called after clock/frequency change from clock management driver.
+ * Function is called after clock/frequency change from clock management driver
+ * (e.g. PLL).
  */
 //==============================================================================
 static inline void sys_update_system_clocks()
@@ -2081,7 +4151,7 @@ static inline void sys_update_system_clocks()
 
 //==============================================================================
 /**
- * @brief  Convert tm structure to time_t
+ * @brief  Convert tm structure to time_t.
  *
  * This function performs the reverse translation that localtime does.
  * The values of the members tm_wday and tm_yday of timeptr are ignored, and
@@ -2098,6 +4168,8 @@ static inline void sys_update_system_clocks()
  *
  * @return A time_t value corresponding to the calendar time passed as argument.
  *         If the calendar time cannot be represented, a value of -1 is returned.
+ *
+ * @see sys_gettime()
  */
 //==============================================================================
 static inline time_t sys_mktime(struct tm *timeptr)
@@ -2107,7 +4179,7 @@ static inline time_t sys_mktime(struct tm *timeptr)
 
 //==============================================================================
 /**
- * @brief  Get current time
+ * @brief  Get current time.
  *
  * The function returns this value, and if the argument is not a @ref NULL pointer,
  * it also sets this value to the object pointed by timer.
@@ -2125,6 +4197,8 @@ static inline time_t sys_mktime(struct tm *timeptr)
  *                      still returns a value of type time_t with the result).
  *
  * @return One of @ref errno value.
+ *
+ * @see sys_settime()
  */
 //==============================================================================
 static inline int sys_gettime(time_t *timer)
@@ -2134,7 +4208,7 @@ static inline int sys_gettime(time_t *timer)
 
 //==============================================================================
 /**
- * @brief  Set system's time
+ * @brief  Set system's time.
  *
  * stime() sets the system's idea of the time and date. The time, pointed to by
  * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
@@ -2143,6 +4217,8 @@ static inline int sys_gettime(time_t *timer)
  *                      value is stored.
  *
  * @return One of @ref errno value.
+ *
+ * @see sys_gettime()
  */
 //==============================================================================
 static inline int sys_settime(time_t *timer)
@@ -2152,7 +4228,7 @@ static inline int sys_settime(time_t *timer)
 
 //==============================================================================
 /**
- * @brief  Convert time_t to tm as UTC time
+ * @brief  Convert time_t to tm as UTC time.
  *
  * Uses the value pointed by timer to fill a tm structure with the values that
  * represent the corresponding time, expressed as a UTC time (i.e., the time
@@ -2167,6 +4243,8 @@ static inline int sys_settime(time_t *timer)
  *
  * @return A pointer to a tm structure with its members filled with the values
  *         that correspond to the UTC time representation of timer.
+ *
+ * @see sys_localtime_r()
  */
 //==============================================================================
 static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
@@ -2176,7 +4254,7 @@ static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
 
 //==============================================================================
 /**
- * @brief  Convert time_t to tm as local time
+ * @brief  Convert time_t to tm as local time.
  *
  * Uses the value pointed by timer to fill a tm structure with the values that
  * represent the corresponding time, expressed for the local timezone.
@@ -2190,6 +4268,8 @@ static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
  *
  * @return A pointer to a tm structure with its members filled with the values
  *         that correspond to the local time representation of timer.
+ *
+ * @see sys_gmtime_r()
  */
 //==============================================================================
 static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)

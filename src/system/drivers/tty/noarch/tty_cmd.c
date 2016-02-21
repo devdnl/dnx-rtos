@@ -44,7 +44,7 @@ struct ttycmd {
         void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
-        uint            timer;
+        u32_t           timer;
 };
 
 /*==============================================================================

@@ -597,7 +597,7 @@ extern char *asctime(const struct tm *timeptr);
  *                      broken down into its components.
  *
  * @param  buf          Pointer to the buffer where generated string is stored.
- *                      The size of the buffer must be at least 32 bytes long.
+ *                      <b>The size of the buffer must be at least 32 bytes long</b>.
  *
  * @return A C-string containing the date and time information in a human-readable
  *         format.
@@ -671,7 +671,7 @@ extern char *ctime(const time_t *timer);
  *                      capable of representing times as returned by function time.
  *
  * @param  buf          Pointer to the buffer where generated string is stored.
- *                      The size of the buffer must be at least 32 bytes long.
+ *                      <b>The size of the buffer must be at least 32 bytes long</b>.
  *
  * @return A C-string containing the date and time information in a human-readable format.
  *         The returned value points to an internal array whose validity or

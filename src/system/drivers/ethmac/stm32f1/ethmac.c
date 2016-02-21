@@ -127,7 +127,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 ETH_DeInit();
                 ETH_SoftwareReset();
 
-                uint timeout = sys_time_get_reference();
+                u32_t timeout = sys_time_get_reference();
                 while (  ETH_GetSoftwareResetStatus() == SET
                       && !sys_time_is_expired(timeout, INIT_TIMEOUT));
 

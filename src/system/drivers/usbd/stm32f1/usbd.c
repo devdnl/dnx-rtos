@@ -191,10 +191,10 @@ static const uint16_t transfer_type_reg[] = {
         [USB_TRANSFER__INTERRUPT  ] = (USB_EP0R_EP_TYPE_1 | USB_EP0R_EP_TYPE_0)
 };
 
-static const uint ep0_status_stage_timeout_ms          = 5;
-static const uint ep0_data_stage_transmit_timeout_ms   = 2000;
-static const uint ep0_data_stage_receive_timeout_ms    = MAX_DELAY_MS;
-static const uint ep1_7_data_stage_transmit_timeout_ms = 4500;
+static const u32_t ep0_status_stage_timeout_ms          = 5;
+static const u32_t ep0_data_stage_transmit_timeout_ms   = 2000;
+static const u32_t ep0_data_stage_receive_timeout_ms    = MAX_DELAY_MS;
+static const u32_t ep1_7_data_stage_transmit_timeout_ms = 4500;
 
 /* GPIO peripherals */
 static const GPIO_t *GPIOx[] = {

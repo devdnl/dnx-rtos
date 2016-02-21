@@ -335,7 +335,7 @@ static inline pid_t getpid(void)
 /**
  * @brief Function changes the ownership of file.
  *
- * The chown() changes the ownership of the file specified by <i>pathname</i>.<p>
+ * The chown() changes the ownership of the file specified by <i>pathname</i>.
  *
  * @param pathname      path to file
  * @param owner         owner ID

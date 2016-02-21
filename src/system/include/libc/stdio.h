@@ -1070,7 +1070,7 @@ static inline int remove(const char *path)
 
 //==============================================================================
 /**
- * @brief Function renames selected file
+ * @brief Function renames selected file.
  *
  * rename() renames a file. In contrast to standard C library this function
  * don't move files between directories if <i>new_name</i> is localized on other
@@ -1514,7 +1514,7 @@ static inline int fprintf(FILE *stream, const char *format, ...)
         // ...
 
         char buffer[20];
-        snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
+        vsnprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
 
         // ...
    @endcode
@@ -1789,7 +1789,7 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
  * if any, are stored in the locations pointed to by the pointer arguments that
  * follow format. Each pointer argument must be of a type that is appropriate
  * for the value returned by the corresponding conversion specification.
- * An arguments are passed by list <i>arg</i>.<p>
+ * An arguments are passed by list <i>args</i>.<p>
  *
  * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc.<p>

@@ -351,25 +351,25 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 # rule used to compile object files from c sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	@$(CC) $(CFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@$(AS) $(AFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # clean target
