@@ -156,6 +156,8 @@ extern "C" {
  *
  * Macro creates reverse foreach loop of linked-list object.
  *
+ * @note Macro can be used only by file system or driver code.
+ *
  * @param type                  object type (in most cases pointer type)
  * @param element               element name of type @b type
  * @param list                  [<b>llist_t</b>] list object
@@ -232,6 +234,8 @@ typedef struct {} llist_t;
 /**
  * @brief  Allocate memory.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param size             object size
  * @param mem              pointer to memory block pointer
  *
@@ -243,6 +247,8 @@ static inline int sys_malloc(size_t size, void **mem);
 //==============================================================================
 /**
  * @brief  Allocate memory and clear content.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param size             object size
  * @param mem              pointer to memory block pointer
@@ -259,6 +265,8 @@ static inline int sys_zalloc(size_t size, void **mem);
  * Function free selected memory block (by double pointer) and sets memory block
  * pointer to @ref NULL.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param mem           double pointer to memory block to free
  *
  * @return One of @ref errno value.
@@ -273,6 +281,8 @@ static inline int sys_free(void **mem);
  *
  * The function convert the initial portion of the string pointed to by <i>nptr</i>
  * to double representation.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param nptr          string to convert
  * @param endptr        points to first not converted character
@@ -301,6 +311,8 @@ static inline double sys_strtod(const char *nptr, char **endptr)
  * The function converts the initial portion of the string pointed
  * to by <i>str</i> to int. The behavior is the same as sys_strtoi(nptr, NULL, 10);
  * except that sys_atoi() does not detect errors.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param str           string to convert
  *
@@ -332,6 +344,8 @@ static inline i32_t sys_atoi(const char *str)
  * string is recognized, for binary "0b" is recognized, and for decimals values
  * none above.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param[in]  string       string to decode
  * @param[in]  base         decode base
  * @param[out] value        pointer to result
@@ -362,6 +376,8 @@ static inline char *sys_strtoi(const char *string, int base, i32_t *value)
  * to by <i>nptr</i> to double.  The behavior is the same as
  * sys_strtod(nptr, NULL) except that sys_atof() does not detect errors.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param nptr          string to convert
  *
  * @return The converted value.
@@ -385,6 +401,8 @@ static inline double sys_atof(const char *nptr)
 //==============================================================================
 /**
  * @brief  Linked list constructor function.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  functor      compare functor (can be @ref NULL)
  * @param  obj_dtor     object destructor (can be @ref NULL, then free() is used as destructor)
@@ -416,6 +434,8 @@ static inline int sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t
 /**
  * @brief  Linked list destructor function.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         pointer to list object
  *
  * @return One of @ref errno value.
@@ -445,6 +465,8 @@ static inline int sys_llist_destroy(llist_t *list)
 //==============================================================================
 /**
  * @brief  Checks if list is empty.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  *
@@ -480,6 +502,8 @@ static inline bool sys_llist_empty(llist_t *list)
 /**
  * @brief  Function returns a number of elements of the list.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  *
  * @return Number of elements of the list or @b -1 on error.
@@ -513,6 +537,8 @@ static inline int sys_llist_size(llist_t *list)
 //==============================================================================
 /**
  * @brief  Pushes selected data to the front of the list. Creates a new object.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  size         data size
@@ -552,6 +578,8 @@ static inline void *sys_llist_push_emplace_front(llist_t *list, size_t size, con
 //==============================================================================
 /**
  * @brief  Pushes selected object to the front of the list.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  object       object to push
@@ -597,6 +625,8 @@ static inline void *sys_llist_push_front(llist_t *list, void *object)
 /**
  * @brief  Deletes first element of the list. This destroys an element by using
  *         selected destructor function.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  *
@@ -646,6 +676,8 @@ static inline int sys_llist_pop_front(llist_t *list)
 /**
  * @brief  Push selected data to the back of the list. Creates a new object.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  size         data size
  * @param  data         data source
@@ -685,6 +717,8 @@ static inline void *sys_llist_push_emplace_back(llist_t *list, size_t size, cons
 /**
  * @brief  Push selected object to the back of the list.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  object       object to push
  *
@@ -700,6 +734,8 @@ static inline void *sys_llist_push_back(llist_t *list, void *object)
 /**
  * @brief  Delete the last element of the list. This destroys element.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  *
  * @return On success 1 is returned, otherwise 0.
@@ -713,6 +749,8 @@ static inline int sys_llist_pop_back(llist_t *list)
 //==============================================================================
 /**
  * @brief  Allocate and append data at selected position in the list.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  position     element position
@@ -731,6 +769,8 @@ static inline void *sys_llist_emplace(llist_t *list, int position, size_t size, 
 /**
  * @brief  Insert an element to the list.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  position     position to insert
  * @param  object       object to insert
@@ -747,6 +787,8 @@ static inline void *sys_llist_insert(llist_t *list, int position, void *object)
 /**
  * @brief  Erase selected begin of the list. The element is destroyed.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  position     position to remove
  *
@@ -761,6 +803,8 @@ static inline int sys_llist_erase(llist_t *list, int position)
 //==============================================================================
 /**
  * @brief  Return selected begin and remove from the list. The element is not destroyed.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  position     position to take (unlink)
@@ -777,6 +821,8 @@ static inline void *sys_llist_take(llist_t *list, int position)
 /**
  * @brief  Return first begin and remove from the list. The element is not destroyed.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  *
  * @return On success taken object is returned, otherwise @ref NULL.
@@ -790,6 +836,8 @@ static inline void *sys_llist_take_front(llist_t *list)
 //==============================================================================
 /**
  * @brief  Return last begin and remove from the list. The element is not destroyed.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  *
@@ -805,6 +853,8 @@ static inline void *sys_llist_take_back(llist_t *list)
 /**
  * @brief  Clear entire list (objects are destroyed).
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
 
  * @return On success 1 is returned, otherwise 0.
@@ -818,6 +868,8 @@ static inline int sys_llist_clear(llist_t *list)
 //==============================================================================
 /**
  * @brief  Swap 2 elements.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  j            position of element a
@@ -835,6 +887,8 @@ static inline int sys_llist_swap(llist_t *list, int j, int k)
 /**
  * @brief  Quick sort elements of the list.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  */
 //==============================================================================
@@ -846,6 +900,8 @@ static inline void sys_llist_sort(llist_t *list)
 //==============================================================================
 /**
  * @brief  Leave only an unique elements, all not unique are removed (are destroyed).
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  */
@@ -859,6 +915,8 @@ static inline void sys_llist_unique(llist_t *list)
 /**
  * @brief  Reverse entire table.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  */
 //==============================================================================
@@ -870,6 +928,8 @@ static inline void sys_llist_reverse(llist_t *list)
 //==============================================================================
 /**
  * @brief  Get element from the list at selected position.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  position     begin position
@@ -886,6 +946,8 @@ static inline void *sys_llist_at(llist_t *list, int position)
 /**
  * @brief  Check if list contains selected object.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  object       object to find
  *
@@ -900,6 +962,8 @@ static inline int sys_llist_contains(llist_t *list, const void *object)
 //==============================================================================
 /**
  * @brief  Find selected object in the list from the beginning.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  * @param  object       object to find
@@ -916,6 +980,8 @@ static inline int sys_llist_find_begin(llist_t *list, const void *object)
 /**
  * @brief  Find selected object in the list from the end.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  * @param  object       object to find
  *
@@ -931,6 +997,8 @@ static inline int sys_llist_find_end(llist_t *list, const void *object)
 /**
  * @brief  Access first element.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  *
  * @return Pointer to data, or @ref NULL on error.
@@ -945,6 +1013,8 @@ static inline void *sys_llist_front(llist_t *list)
 /**
  * @brief  Access last element.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  list         list object
  *
  * @return Pointer to data, or @ref NULL on error.
@@ -958,6 +1028,8 @@ static inline void *sys_llist_back(llist_t *list)
 //==============================================================================
 /**
  * @brief  Create an iterator to the list.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  list         list object
  *
@@ -999,6 +1071,8 @@ static inline llist_iterator_t sys_llist_iterator(llist_t *list)
 /**
  * @brief  Return first object from list by using iterator.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  iterator     iterator object
  *
  * @return Pointer to data object.
@@ -1038,6 +1112,8 @@ static inline void *sys_llist_begin(llist_iterator_t *iterator)
 //==============================================================================
 /**
  * @brief  Return last object from list by using iterator.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  iterator     iterator object
  *
@@ -1079,6 +1155,8 @@ static inline void *sys_llist_end(llist_iterator_t *iterator)
 /**
  * @brief  Return selected objects from list by using range iterator (forward).
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  iterator     iterator object
  * @param  begin        begin position
  * @param  end          end position
@@ -1109,6 +1187,8 @@ static inline void *sys_llist_range(llist_iterator_t *iterator, int begin, int e
 //==============================================================================
 /**
  * @brief  Return next data object from list by using iterator.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  iterator     iterator object
  *
@@ -1150,6 +1230,8 @@ static inline void *sys_llist_iterator_next(llist_iterator_t *iterator)
 /**
  * @brief  Return previous data object from list by using iterator.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  iterator     iterator object
  *
  * @return Pointer to data object.
@@ -1190,6 +1272,8 @@ static inline void *sys_llist_iterator_prev(llist_iterator_t *iterator)
 /**
  * @brief  Erase selected begin of the list. The element is destroyed.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  iterator     position to remove
  *
  * @return On success 1 is returned, otherwise 0.
@@ -1218,6 +1302,8 @@ static inline int sys_llist_erase_by_iterator(llist_iterator_t *iterator)
 /**
  * @brief  Compare functor that compares two pointers (not contents).
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  a    pointer a
  * @param  b    pointer b
  *
@@ -1234,6 +1320,8 @@ static inline int sys_llist_functor_cmp_pointers(const void *a, const void *b)
 //==============================================================================
 /**
  * @brief  Compare functor that compares two strings (contents).
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  a    string a
  * @param  b    string b
@@ -1254,6 +1342,8 @@ static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
  *
  * Function creates a file system node (device special file) named
  * <i>path</i>. Node is connected to the device <i>dev</i>.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param path          node name
  * @param dev           device number
@@ -1282,6 +1372,8 @@ static inline int sys_mknod(const char *path, dev_t dev)
  *
  * The function attempts to create a directory named <i>pathname</i>. The
  * argument <i>mode</i> specifies the permissions to use.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param pathname      directory name
  * @param mode          directory permissions
@@ -1314,6 +1406,8 @@ static inline int sys_mkdir(const char *pathname, mode_t mode)
  * as to regular file, except that data can be read only one time. Not all
  * filesystems support this file type.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param pathname      FIFO name
  * @param mode          FIFO permissions
  *
@@ -1342,6 +1436,8 @@ static inline int sys_mkfifo(const char *pathname, mode_t mode)
  * Function opens a directory stream corresponding to the directory <i>path</i>, and
  * returns a pointer to the directory stream. The stream is positioned at the first
  * entry in the directory. Opened stream is passed by pointer <i>dir</i>.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param path          directory path
  * @param dir           pointer to stream object
@@ -1382,6 +1478,8 @@ extern int sys_opendir(const char *path, DIR **dir);
  * Function closes the directory stream associated with <i>dir</i>. The directory
  * stream descriptor <i>dir</i> is not available after this call.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param dir           pinter to directory object
  *
  * @return One of @ref errno value.
@@ -1420,6 +1518,8 @@ extern int sys_closedir(DIR *dir);
  * Function returns a pointer <i>dirent</i> to object <b>dirent_t</b> type
  * representing the next directory entry in the directory stream pointed to by
  * <i>dir</i>.<p>
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param dir           directory object
  * @param dirent        directory entry
@@ -1473,6 +1573,8 @@ static inline int sys_readdir(DIR *dir, dirent_t **dirent)
  * If the name referred to a FIFO, or device, the name is removed, but
  * processes which have the object open may continue to use it.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param path      path to file
  *
  * @return One of @ref errno value.
@@ -1500,6 +1602,8 @@ static inline int sys_remove(const char *path)
  * don't move files between directories if <i>new_name</i> is localized on other
  * filesystem than <i>old_name</i>, otherwise it's depending on filesystem.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param old_name      old file name
  * @param new_name      new file name
  *
@@ -1525,6 +1629,8 @@ static inline int sys_rename(const char *old_name, const char *new_name)
  * @brief Function changes file mode.
  *
  * The function change the permissions of a file specified by <i>path</i>.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param path          file to permission change
  * @param mode          new permissions
@@ -1553,6 +1659,8 @@ static inline int sys_chmod(const char *path, mode_t mode)
  *
  * The function changes the ownership of the file specified by <i>path</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param path          path to file
  * @param owner         owner ID
  * @param group         group ID
@@ -1579,6 +1687,8 @@ static inline int sys_chown(const char *path, uid_t owner, gid_t group)
  * @brief Function gets file information.
  *
  * The function return information about a file specified by <i>path</i>.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param path          file to inspect
  * @param buf           file's information
@@ -1613,6 +1723,8 @@ static inline int sys_stat(const char *path, struct stat *buf)
  *
  * The function returns information about a mounted file system.
  * A <i>path</i> is directory of the mount point of file system.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param path          node name
  * @param statfs        file system information container
@@ -1672,6 +1784,8 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  *
  * Pointer of opened stream is passed by <i>file</i> argument.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param path          path to file
  * @param mode          file open mode
  * @param file          pointer to file object
@@ -1705,6 +1819,8 @@ extern int sys_fopen(const char *path, const char *mode, FILE **file);
  *
  * The function closes the created stream <i>file</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          file to close
  *
  * @return One of @ref errno value.
@@ -1737,6 +1853,8 @@ extern int sys_fclose(FILE *file);
  * The function writes <i>size</i> bytes long buffer, to the stream pointed to
  * by <i>file</i>, obtaining them from the location given by <i>ptr</i>.
  * Number of wrote bytes is passed by <i>wrcnt</i> argument.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param ptr           data buffer
  * @param size          buffer size
@@ -1783,6 +1901,8 @@ static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *
  * The function reads <i>size</i> bytes long buffer, from the stream pointed to
  * by <i>file</i>, storing them at the location given by <i>ptr</i>.
  * Number of read bytes is passed by <i>rdcnt</i> argument.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param ptr           data buffer
  * @param size          buffer size
@@ -1834,6 +1954,8 @@ static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
  * end-of-file, respectively. A successful call to the sys_fseek() function
  * clears the end-of-file indicator for the stream.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          stream
  * @param offset        offset
  * @param mode          seek mode
@@ -1879,6 +2001,8 @@ static inline int sys_fseek(FILE *file, i64_t offset, int mode)
  *
  * The function obtains the current value of the file position
  * indicator pointed by <i>lseek</i> for the stream pointed to by <i>file</i>.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param file          stream
  * @param lseek         file position indicator
@@ -1932,6 +2056,8 @@ static inline int sys_ftell(FILE *file, i64_t *lseek)
  *
  * The second argument is a device-dependent request code. The third
  * argument is an untyped pointer to memory.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param file          stream to control
  * @param rq            request number (each driver has own requests)
@@ -1997,6 +2123,8 @@ static inline int sys_ioctl(FILE *file, int rq, ...)
  *
  * The function return information about a file pointed by <i>file</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          file object
  * @param buf           file's information
  *
@@ -2038,6 +2166,8 @@ static inline int sys_fstat(FILE *file, struct stat *buf)
  * the given output or update stream via the stream's underlying write function.
  * For input streams, sys_fflush() discards any buffered data that has been
  * fetched from the underlying file. The open status of the stream is unaffected.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param file          stream
  *
@@ -2083,6 +2213,8 @@ static inline int sys_fflush(FILE *file)
  * pointed to by <i>file</i>. The end-of-file
  * indicator can only be cleared by the function sys_clearerr().
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          stream
  * @param eof           pointer to EOF indicator
  *
@@ -2124,6 +2256,8 @@ static inline int sys_feof(FILE *file, int *eof)
  * The function clears the end-of-file and error indicators
  * for the stream pointed to by <i>file</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          stream
  *
  * @return One of @ref errno value.
@@ -2164,6 +2298,8 @@ static inline int sys_clearerr(FILE *file)
  * The function tests the error indicator for the stream pointed
  * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
  * be reset only by the sys_clearerr() function.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param file          stream
  * @param error         pointer to error indicator
@@ -2207,6 +2343,8 @@ static inline int sys_ferror(FILE *file, int *error)
  * pointed to by <i>file</i> to the beginning of the file. It is equivalent to:
  * <pre>sys_fseek(stream, 0L, SEEK_SET)</pre>
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          stream
  *
  * @return One of @ref errno value.
@@ -2247,6 +2385,8 @@ static inline int sys_rewind(FILE *file)
 //==============================================================================
 /**
  * @brief Function synchronizes files buffers with file systems.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @b Example
  * @code
@@ -2314,6 +2454,8 @@ static inline void sys_sync()
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param format        formatting string
  * @param ...           argument sequence
@@ -2387,6 +2529,8 @@ static inline void sys_printk(const char *format, ...);
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param buf           buffer which output was produced
  * @param size          buffer size
@@ -2465,6 +2609,8 @@ static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_l
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param bfr           buffer where output was produced
  * @param size          buffer size
@@ -2547,6 +2693,8 @@ static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          output stream
  * @param format        formatting string
  * @param args          argument list
@@ -2624,6 +2772,8 @@ static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param file          output stream
  * @param format        formatting string
  * @param ...           argument sequence
@@ -2683,6 +2833,8 @@ static inline int sys_fprintf(FILE *file, const char *format, ...)
  * <b>o</b> - Scans value in Octal formatting.<p>
  *
  * <b>f, F, g, G</b> - Scans float value.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param str           input string (must be <i>null</i> terminated)
  * @param format        formatting string
@@ -2748,6 +2900,8 @@ static inline int sys_sscanf(const char *str, const char *format, ...)
  *
  * <b>f, F, g, G</b> - Scans float value.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param str           input string (must be <i>null</i> terminated)
  * @param format        formatting string
  * @param args          argument sequence list
@@ -2784,6 +2938,8 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
 /**
  * @brief Function gets time reference.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return System timer value.
  *
  * @b Example
@@ -2810,6 +2966,8 @@ static inline u32_t sys_time_get_reference()
 //==============================================================================
 /**
  * @brief Check if time expired.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param time_ref      time reference
  * @param time          time to check
@@ -2841,6 +2999,8 @@ static inline bool sys_time_is_expired(u32_t time_ref, u32_t time)
 /**
  * @brief Set time reference as expired.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Expired time value.
  *
  * @b Example
@@ -2869,6 +3029,8 @@ static inline u32_t sys_time_set_expired()
 /**
  * @brief Calculate difference between <i>time1</i> and <i>time2</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param time1        time reference 1
  * @param time2        time reference 2
  *
@@ -2885,6 +3047,8 @@ static inline int sys_time_diff(u32_t time1, u32_t time2)
 //==============================================================================
 /**
  * @brief Function creates binary semaphore.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param cnt_max          max count value (1 for binary)
  * @param cnt_init         initial value (0 or 1 for binary)
@@ -2915,6 +3079,8 @@ extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem
 //==============================================================================
 /**
  * @brief Function deletes semaphore.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param sem       semaphore object
  *
@@ -2948,6 +3114,8 @@ extern int sys_semaphore_destroy(sem_t *sem);
  * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
  * ESUCC is returned, otherwise (timeout) ETIME. When <i>timeout</i>
  * value is set to 0 then semaphore is polling without timeout.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param sem           semaphore object pointer
  * @param timeout       timeout value in milliseconds
@@ -3000,6 +3168,8 @@ static inline int sys_semaphore_wait(sem_t *sem, const u32_t timeout)
  *
  * The function signals semaphore pointed by <i>sem</i>.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param sem           semaphore object pointer
  *
  * @return One of @ref errno value.
@@ -3048,6 +3218,8 @@ static inline int sys_semaphore_signal(sem_t *sem)
 /**
  * @brief Function wait for semaphore from ISR.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param sem              semaphore object
  * @param task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
  *
@@ -3086,6 +3258,8 @@ static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 /**
  * @brief Function signal semaphore from ISR.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param sem              semaphore object
  * @param task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
@@ -3137,6 +3311,8 @@ static inline bool sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 /**
  * @brief Function create new mutex.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param type     mutex type
  * @param mtx      created mutex handle
@@ -3210,6 +3386,8 @@ extern int sys_mutex_create(enum mutex_type type, mutex_t **mtx);
 /**
  * @brief Function destroy mutex.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param mutex    mutex object
  *
  * @return One of @ref errno value.
@@ -3280,6 +3458,8 @@ extern int sys_mutex_destroy(mutex_t *mutex);
 //==============================================================================
 /**
  * @brief Function lock mutex.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param mutex             mutex object
  * @param timeout           polling time
@@ -3360,6 +3540,8 @@ static inline int sys_mutex_lock(mutex_t *mutex, const u32_t timeout)
  * if not then error is returned. Function is equivalent to:
  * sys_mutex_lock(mtx, 0) call.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param mutex             mutex object
  *
  * @return One of @ref errno value.
@@ -3433,6 +3615,8 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
 //==============================================================================
 /**
  * @brief Function unlock mutex.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param *mutex            mutex object
  *
@@ -3508,6 +3692,8 @@ static inline int sys_mutex_unlock(mutex_t *mutex)
 /**
  * @brief Function create new queue.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param length           queue length
  * @param item_size        queue item size
  * @param queue            created queue
@@ -3521,6 +3707,8 @@ extern int sys_queue_create(const uint length, const uint item_size, queue_t **q
 /**
  * @brief Function delete queue.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param *queue            queue object
  *
  * @return One of @ref errno value.
@@ -3531,6 +3719,8 @@ extern int sys_queue_destroy(queue_t *queue);
 //==============================================================================
 /**
  * @brief Function reset queue.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param *queue            queue object
  *
@@ -3545,6 +3735,8 @@ static inline int sys_queue_reset(queue_t *queue)
 //==============================================================================
 /**
  * @brief Function send queue.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param queue            queue object
  * @param item             item
@@ -3562,6 +3754,8 @@ static inline int sys_queue_send(queue_t *queue, const void *item, const u32_t w
 /**
  * @brief Function send queue.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param *queue            queue object
  * @param *item             item
  * @param *task_woken       true if higher priority task woken, otherwise false (can be @ref NULL)
@@ -3577,6 +3771,8 @@ static inline int sys_queue_send_from_ISR(queue_t *queue, const void *item, bool
 //==============================================================================
 /**
  * @brief Function send queue.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param queue            queue object
  * @param item             item
@@ -3594,6 +3790,8 @@ static inline int sys_queue_receive(queue_t *queue, void *item, const u32_t wait
 /**
  * @brief Function receive queue from ISR.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param queue            queue object
  * @param item             item
  * @param task_woken       true if higher priority task woke, otherwise false (can be @ref NULL)
@@ -3609,6 +3807,8 @@ static inline int sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *t
 //==============================================================================
 /**
  * @brief Function receive item from the top of the queue and not delete it.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param queue            queue object
  * @param item             item
@@ -3626,6 +3826,8 @@ static inline int sys_queue_receive_peek(queue_t *queue, void *item, const u32_t
 /**
  * @brief Function gets number of items in queue.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param queue            queue object
  * @param items            number of items in queue
  *
@@ -3640,6 +3842,8 @@ static inline int sys_queue_get_number_of_items(queue_t *queue, size_t *items)
 //==============================================================================
 /**
  * @brief Function gets number of items in queue from ISR.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param queue            queue object
  * @param items            number of items in queue
@@ -3656,6 +3860,8 @@ static inline int sys_queue_get_number_of_items_from_ISR(queue_t *queue, size_t 
 /**
  * @brief Function gets number of free items in queue.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param queue            queue object
  * @param items            number of items in queue
  *
@@ -3671,6 +3877,8 @@ static inline int sys_queue_get_space_available(queue_t *queue, size_t *items)
 /**
  * @brief  Function return free memory in bytes.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Free memory value.
  *
  * @see sys_get_used_mem(), sys_get_mem_size()
@@ -3684,6 +3892,8 @@ static inline size_t sys_get_free_mem()
 //==============================================================================
 /**
  * @brief  Function return used memory in bytes.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @return Used memory value.
  *
@@ -3699,6 +3909,8 @@ static inline size_t sys_get_used_mem()
 /**
  * @brief  Function return memory size (RAM) in bytes.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Memory size.
  *
  * @see sys_get_free_mem(), sys_get_used_mem()
@@ -3712,6 +3924,8 @@ static inline size_t sys_get_mem_size()
 //==============================================================================
 /**
  * @brief Function return OS time in milliseconds.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @return OS time in milliseconds.
  *
@@ -3731,6 +3945,8 @@ static inline u32_t sys_get_time_ms()
  * frequency is set to 1000Hz then counter is incremented every 1ms. To get value
  * of system time in milliseconds use sys_get_time_ms() functions.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Tick counter value.
  *
  * @see sys_get_time_ms(), sys_sleep_until(), sys_sleep_until_ms()
@@ -3748,6 +3964,8 @@ static inline u32_t sys_get_tick_counter()
  * Task is the basic unit of CPU time. Each process has at least 1 task (called
  * main thread), each additional thread is a new task.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Number of tasks.
  */
 //==============================================================================
@@ -3759,6 +3977,8 @@ static inline int sys_get_number_of_tasks()
 //==============================================================================
 /**
  * @brief  Function return collected process statistics.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  pid      PID
  * @param  stat     process statistics
@@ -3777,6 +3997,8 @@ static inline int sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
 /**
  * @brief  Function return collected process statistics
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  seek     process seek (start from 0)
  * @param  stat     process statistics
  *
@@ -3794,6 +4016,8 @@ static inline int sys_process_get_stat_seek(size_t seek, process_stat_t *stat)
 /**
  * @brief  Function return number of processes.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Number of processes.
  */
 //==============================================================================
@@ -3808,6 +4032,8 @@ static inline size_t sys_process_get_count(void)
  *
  * Function by default allocate memory for task data (localized in task tag)
  * which is used to CPU load calculation/ standard IO, and etc.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param func             thread code
  * @param attr             thread attributes
@@ -3826,6 +4052,8 @@ extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void
  * Function clear all allocated resources by thread and remove it from execution
  * list.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param thread        thread handle
  *
  * @return One of @ref errno value.
@@ -3836,6 +4064,8 @@ extern int sys_thread_destroy(thread_t *thread);
 //==============================================================================
 /**
  * @brief  Function checks if selected thread handle is valid.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  thread       thread to examine
  *
@@ -3851,6 +4081,8 @@ static inline bool sys_thread_is_valid(thread_t *thread)
 /**
  * @brief Function suspend selected thread.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param thread        thread to suspend
  */
 //==============================================================================
@@ -3864,6 +4096,8 @@ static inline void sys_thread_suspend(thread_t *thread)
 //==============================================================================
 /**
  * @brief Function suspend current thread.
+ *
+ * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
 static inline void sys_thread_suspend_now()
@@ -3874,6 +4108,8 @@ static inline void sys_thread_suspend_now()
 //==============================================================================
 /**
  * @brief Function resume selected thread.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param thread        thread to resume
  */
@@ -3888,6 +4124,8 @@ static inline void sys_thread_resume(thread_t *thread)
 //==============================================================================
 /**
  * @brief Function resume selected thread from ISR.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param thread        thread to resume
  * @param task_woken    true if higher priority task woke, otherwise false (can be @ref NULL)
@@ -3912,6 +4150,8 @@ static inline int sys_thread_resume_from_ISR(thread_t *thread, bool *task_woken)
 //==============================================================================
 /**
  * @brief Function yield thread.
+ *
+ * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
 static inline void sys_thread_yield()
@@ -3923,6 +4163,8 @@ static inline void sys_thread_yield()
 /**
  * @brief  Function return thread object information.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param thread   thread information
  *
  * @return One of @ref errno value.
@@ -3933,6 +4175,8 @@ extern int sys_thread_self(thread_t *thread);
 //==============================================================================
 /**
  * @brief Function yield thread from ISR.
+ *
+ * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
 static inline void sys_thread_yield_from_ISR()
@@ -3943,6 +4187,8 @@ static inline void sys_thread_yield_from_ISR()
 //==============================================================================
 /**
  * @brief Function set priority of current thread.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param priority         priority
  */
@@ -3956,6 +4202,8 @@ static inline void sys_thread_set_priority(const int priority)
 /**
  * @brief Function return priority of current thread.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @return Thread priority.
  */
 //==============================================================================
@@ -3967,6 +4215,8 @@ static inline int sys_thread_get_priority()
 //==============================================================================
 /**
  * @brief Function return a free stack level of current thread.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @return Free stack level.
  */
@@ -3980,6 +4230,8 @@ static inline int sys_thread_get_free_stack()
 /**
  * @brief Function enter to critical section.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @see sys_critical_section_end()
  */
 //==============================================================================
@@ -3991,6 +4243,8 @@ static inline void sys_critical_section_begin()
 //==============================================================================
 /**
  * @brief Function exit from critical section.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @see sys_critical_section_begin()
  */
@@ -4004,6 +4258,8 @@ static inline void sys_critical_section_end()
 /**
  * @brief Function disable interrupts.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @see sys_ISR_enable()
  */
 //==============================================================================
@@ -4015,6 +4271,8 @@ static inline void sys_ISR_disable()
 //==============================================================================
 /**
  * @brief Function enable interrupts.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @see sys_ISR_disable()
  */
@@ -4028,6 +4286,8 @@ static inline void sys_ISR_enable()
 /**
  * @brief  Function lock context switch.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @see sys_context_switch_unlock()
  */
 //==============================================================================
@@ -4039,6 +4299,8 @@ static inline void sys_context_switch_lock()
 //==============================================================================
 /**
  * @brief  Function unlock context switch.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @see sys_context_switch_lock()
  */
@@ -4055,6 +4317,8 @@ static inline void sys_context_switch_unlock()
  * @note Function can sleep longer that declared because of context switch
  *       settings. Context switch can be longer than 1ms.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param milliseconds          number of milliseconds of sleep
  *
  * @see sys_sleep(), sys_sleep_until(), sys_sleep_until_ms()
@@ -4069,6 +4333,8 @@ static inline void sys_sleep_ms(const u32_t milliseconds)
 /**
  * @brief Function put to sleep thread for seconds.
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param seconds               number of seconds of sleep
  *
  * @see sys_sleep_ms(), sys_sleep_until(), sys_sleep_until_ms()
@@ -4082,6 +4348,8 @@ static inline void sys_sleep(const u32_t seconds)
 //==============================================================================
 /**
  * @brief Function sleep thread in regular periods (reference argument).
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param milliseconds          milliseconds
  * @param ref_time_ticks        reference time in OS ticks
@@ -4110,6 +4378,8 @@ static inline void sys_sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_
 //==============================================================================
 /**
  * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param seconds               seconds
  * @param ref_time_ticks        reference time in OS ticks
@@ -4142,6 +4412,8 @@ static inline void sys_sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
  * Function shall update all devices which base on main clock oscillator.
  * Function is called after clock/frequency change from clock management driver
  * (e.g. PLL).
+ *
+ * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
 static inline void sys_update_system_clocks()
@@ -4162,6 +4434,8 @@ static inline void sys_update_system_clocks()
  * A call to this function automatically adjusts the values of the members of
  * timeptr if they are off-range or -in the case of tm_wday and tm_yday- if they
  * have values that do not match the date described by the other members.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param  timeptr      Pointer to a tm structure that contains a calendar time
  *                      broken down into its components (see struct tm)
@@ -4190,6 +4464,8 @@ static inline time_t sys_mktime(struct tm *timeptr)
  * other elements of the standard library to translate them to portable types
  * (such as localtime, gmtime or difftime).
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  timer        Pointer to an object of type time_t, where the time
  *                      value is stored.
  *                      Alternatively, this parameter can be a @ref NULL pointer,
@@ -4213,6 +4489,8 @@ static inline int sys_gettime(time_t *timer)
  * stime() sets the system's idea of the time and date. The time, pointed to by
  * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
  *
+ * @note Function can be used only by file system or driver code.
+ *
  * @param  timer        pointer to an object of type time_t, where the time
  *                      value is stored.
  *
@@ -4233,6 +4511,8 @@ static inline int sys_settime(time_t *timer)
  * Uses the value pointed by timer to fill a tm structure with the values that
  * represent the corresponding time, expressed as a UTC time (i.e., the time
  * at the GMT timezone).
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param timer    Pointer to an object of type time_t that contains a time value.
  *                      time_t is an alias of a fundamental arithmetic type
@@ -4258,6 +4538,8 @@ static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
  *
  * Uses the value pointed by timer to fill a tm structure with the values that
  * represent the corresponding time, expressed for the local timezone.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * @param timer    Pointer to an object of type time_t that contains a time value.
  *                      time_t is an alias of a fundamental arithmetic type
