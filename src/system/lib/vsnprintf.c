@@ -34,6 +34,7 @@
 #include "config.h"
 #include "lib/cast.h"
 #include "lib/conv.h"
+#include "lib/unarg.h"
 
 /*==============================================================================
   Local macros
