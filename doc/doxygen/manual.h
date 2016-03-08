@@ -199,13 +199,101 @@ and <b>./src/lib/</b> folders.
 /**
 \page page-file-systems File system development
 
+\tableofcontents
+
 \section sec-fs-intro Introduction
-In this section are presented libraries and examples that helps user to create
-own file system.
+The file systems are used to store regular, device-like, and FIFO files. Some
+file systems do not support special files, e.g. pipes and devices, because is
+not possible to handle this kind of files (e.g. on the FAT) in the particular
+file system. In the system there are few file systems:
 
+\arg \c ramfs – the file system is a general usage file system that store files in
+        the RAM. This file system is used by the system by default,
+\arg \c devfs – the file system is used only to handle devices, it is much faster
+        than \c ramfs, but does not provide many features,
+\arg \c procfs – the file system is a special file system that provides the
+        system information in form of the files,
+\arg \c fatfs – the file system is used to read all storages that contains FAT12,
+        FAT16, and FAT32 file systems.
 
-\section sec-fs-topics Topics
-\li \subpage fs-h File system library and system functions
+As we can see, each file system has special role in the system. In this case,
+manage of the file systems must be the same for file that can comes from different
+sources. To achieve this requirement the system has implemented core component
+called VFS. The VFS is a kind of router that translates the user’s path to the
+specified file system. The usage of files for the user is transparent; the user
+do not care about real file position.
+
+As mentioned above, each file system must be connected to the VFS. To do this,
+the file systems must have the same interfaces. Thus, any file system can be
+mounted easily by the VFS. File systems are similar to driver modules, because
+single file system can handle many source files that contains specified file
+system format (e.g. FAT, ext2, etc).
+
+\section sec-fs-lib Library
+All functions supported by operating system accessible from file systems are
+stored in the \subpage fs-h library.
+
+\section sec-fs-interface Interface
+The interface functions are created by macros, thanks this the name of file
+system functions are hidden and known only by the system.
+
+\arg API_FS_INIT()
+\arg API_FS_RELEASE()
+\arg API_FS_OPEN()
+\arg API_FS_CLOSE()
+\arg API_FS_WRITE()
+\arg API_FS_READ()
+\arg API_FS_IOCTL()
+\arg API_FS_FLUSH()
+\arg API_FS_MKDIR()
+\arg API_FS_MKFIFO()
+\arg API_FS_MKNOD()
+\arg API_FS_OPENDIR()
+\arg API_FS_REMOVE()
+\arg API_FS_RENAME()
+\arg API_FS_CHMOD()
+\arg API_FS_CHOWN()
+\arg API_FS_FSTAT()
+\arg API_FS_STAT()
+\arg API_FS_STATFS()
+\arg API_FS_SYNC()
+
+\section sec-fs-reg File System Registration
+A new file system is automatically added to the system if simple requirements
+are met:
+\arg folder with file system is created in the <tt>./src/system/fs directory</tt>,
+\arg at least one source file is created in folder and contain file system API functions,
+\arg Makefile script is added to created folder.
+
+\subsection subsec-fs-ex File System Source File
+@code
+#include "fs/fs.h"
+
+API_FS_INIT(...)
+{
+        // ..
+}
+
+API_FS_...(...)
+{
+        // ...
+}
+
+...
+@endcode
+
+\subsection subsec-fs-mk Makefile
+@code
+# Makefile for GNU make
+CSRC_CORE += fs/examplefs/examplefs.c
+CSRC_CORE += fs/examplefs/examplefs_x.c
+@endcode
+
+\section sec-fs-cfg File System Configuration
+For created file system the configuration can be added. In this case user
+should add new entries in <tt>./config/filesystems</tt> directory. Existing
+configurations are good example how to do this.
+
 */
 
 //------------------------------------------------------------------------------

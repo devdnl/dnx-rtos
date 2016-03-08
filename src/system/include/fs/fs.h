@@ -27,7 +27,7 @@
 /**
  * @defgroup fs-h "fs/fs.h"
  *
- * This library is used by each file system and contains file system-specific
+ * This library is used by each file system, contains file system-specific
  * functions and @subpage sysfunc-h. This is main and only one library that shall
  * be used by file system code.
  *
