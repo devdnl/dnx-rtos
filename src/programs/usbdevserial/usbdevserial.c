@@ -240,10 +240,10 @@ static const usb_string_descriptor_t(5) string_serial = {
 };
 
 static const usb_max_string_descriptor_t *string[] = {
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_lang),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_manufacturer),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_product),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
+        cast(usb_max_string_descriptor_t*, &string_lang),
+        cast(usb_max_string_descriptor_t*, &string_manufacturer),
+        cast(usb_max_string_descriptor_t*, &string_product),
+        cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
 static const usb_serial_state_notification_t serial_state = {
@@ -516,7 +516,7 @@ int_main(usbdevserial, STACK_DEPTH_LOW, int argc, char *argv[])
                                         printf(tostring(SET_LINE_CODING)":");
                                         size = min(setup.packet.wLength, sizeof(usb_cdc_line_coding_t));
                                         n    = fread(&global->line_coding, 1, size, ep0);
-                                        printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
+                                        printf(" (%d/%d)\n", cast(int, n), cast(int, size));
 
                                         printf("  dwDTERate  : %d\n"
                                                "  bCharFormat: %d\n"

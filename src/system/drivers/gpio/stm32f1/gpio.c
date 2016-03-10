@@ -231,7 +231,7 @@ API_MOD_WRITE(GPIO,
 
         if (count >= 2) {
                 for (size_t i = 0; i < count / 2; i++) {
-                        hdl->GPIO->ODR = static_cast(u16_t*, src)[i];
+                        hdl->GPIO->ODR = cast(u16_t*, src)[i];
                 }
 
                 *wrcnt = count & ~(1);
@@ -268,7 +268,7 @@ API_MOD_READ(GPIO,
 
         if (count >= 2) {
                 for (size_t i = 0; i < count / 2; i++) {
-                        static_cast(u16_t*, dst)[i] = hdl->GPIO->IDR;
+                        cast(u16_t*, dst)[i] = hdl->GPIO->IDR;
                 }
 
                 *rdcnt = count & ~(1);
@@ -297,7 +297,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
         if (arg) {
                 switch (request) {
                 case IOCTL_GPIO__SET_PIN: {
-                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->BSRR = (1 << pin);
                                 result = ESUCC;
@@ -306,7 +306,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
                 }
 
                 case IOCTL_GPIO__CLEAR_PIN: {
-                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->BRR = (1 << pin);
                                 result = ESUCC;
@@ -315,7 +315,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
                 }
 
                 case IOCTL_GPIO__TOGGLE_PIN: {
-                        GPIO_pin_t pin = *static_cast(GPIO_pin_t*, arg);
+                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->ODR ^= (1 << pin);
                                 result = ESUCC;

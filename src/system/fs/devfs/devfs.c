@@ -493,7 +493,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                                 if (result == ESUCC) {
 
                                         result = sys_malloc(strlen(path + 1) + 1,
-                                                             reinterpret_cast(void**, &node->path));
+                                                             cast(void**, &node->path));
                                         if (result == ESUCC) {
 
                                                 strcpy(node->path, path + 1);
@@ -541,7 +541,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
                         result = chain_get_empty_node(devfs->root_chain, &node);
                         if (result == ESUCC) {
 
-                                result = sys_malloc(strlen(path + 1) + 1, reinterpret_cast(void**, &node->path));
+                                result = sys_malloc(strlen(path + 1) + 1, cast(void**, &node->path));
                                 if (result == ESUCC) {
 
                                         strcpy(node->path, path + 1);
@@ -695,7 +695,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                                 }
                                 node->IF.generic = NULL;
 
-                                sys_free(reinterpret_cast(void**, &node->path));
+                                sys_free(cast(void**, &node->path));
                                 node->path  = NULL;
                                 node->gid   = 0;
                                 node->uid   = 0;
@@ -736,10 +736,10 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
                 if (result == ESUCC) {
 
                         char *name;
-                        result = sys_malloc(strlen(new_name) + 1, reinterpret_cast(void**, &name));
+                        result = sys_malloc(strlen(new_name) + 1, cast(void**, &name));
                         if (result == ESUCC) {
                                 strcpy(name, new_name);
-                                sys_free(reinterpret_cast(void**, &node->path));
+                                sys_free(cast(void**, &node->path));
                                 node->path = name;
                         } else {
                                 result = ENOSPC;
@@ -980,7 +980,7 @@ static int chain_get_n_node(struct devfs_chain *chain, int n, struct devnode **n
 //==============================================================================
 static int chain_create(struct devfs_chain **chain)
 {
-        return sys_zalloc(sizeof(struct devfs_chain), reinterpret_cast(void**, chain));
+        return sys_zalloc(sizeof(struct devfs_chain), cast(void**, chain));
 }
 
 //==============================================================================
@@ -1002,11 +1002,11 @@ static void chain_destroy(struct devfs_chain *chain)
                 }
 
                 if (chain->devnode[i].path) {
-                        sys_free(reinterpret_cast(void**, &chain->devnode[i].path));
+                        sys_free(cast(void**, &chain->devnode[i].path));
                 }
         }
 
-        sys_free(reinterpret_cast(void**, &chain));
+        sys_free(cast(void**, &chain));
 }
 
 //==============================================================================

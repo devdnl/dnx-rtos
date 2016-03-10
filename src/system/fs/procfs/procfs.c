@@ -320,7 +320,7 @@ API_FS_READ(procfs,
         if (file && file->content < FILE_CONTENT_COUNT) {
 
                 char *content;
-                int result = sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         size_t data_size = get_file_content(file, content, FILE_BUFFER);
                         size_t seek      = min(*fpos, SIZE_MAX);
@@ -332,7 +332,7 @@ API_FS_READ(procfs,
                                 *rdcnt = n;
                         }
 
-                        sys_free(static_cast(void**, &content));
+                        sys_free(cast(void**, &content));
                 }
         }
 
@@ -406,10 +406,10 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 stat->st_type  = FILE_TYPE_REGULAR;
 
                 char *content;
-                int result = sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         stat->st_size = get_file_content(file, content, FILE_BUFFER);
-                        sys_free(static_cast(void**, &content));
+                        sys_free(cast(void**, &content));
                 }
         }
 
@@ -712,13 +712,13 @@ static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
 
         case 2: {
                 char *content;
-                result = sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         struct file_info file = {.content = FILE_CONTENT_CPUINFO};
                         dir->dirent.name      = FILE_CPUINFO_NAME;
                         dir->dirent.filetype  = FILE_TYPE_REGULAR;
                         dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
-                        result                = sys_free(static_cast(void**, &content));
+                        result                = sys_free(cast(void**, &content));
                 }
                 break;
         }
@@ -751,7 +751,7 @@ static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
         int result = sys_process_get_stat_seek(dir->f_seek++, &stat);
         if (result == ESUCC) {
                 char *content;
-                result  = sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                result  = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
 
                         if (dir->f_dd) {
@@ -775,7 +775,7 @@ static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
                                 *dirent               = &dir->dirent;
                         }
 
-                        result = sys_free(static_cast(void**, &content));
+                        result = sys_free(cast(void**, &content));
                 }
         }
 
@@ -825,7 +825,7 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 static int add_file_to_list(struct procfs *fsctx, pid_t pid, enum file_content content, void **object)
 {
         struct file_info *file;
-        int result = sys_zalloc(sizeof(struct file_info), static_cast(void**, &file));
+        int result = sys_zalloc(sizeof(struct file_info), cast(void**, &file));
         if (result == ESUCC) {
                 file->pid     = pid;
                 file->content = content;
@@ -836,7 +836,7 @@ static int add_file_to_list(struct procfs *fsctx, pid_t pid, enum file_content c
                                 *object = file;
                                 result  = ESUCC;
                         } else {
-                                sys_free(static_cast(void**, &file));
+                                sys_free(cast(void**, &file));
                                 result = ENOMEM;
                         }
 

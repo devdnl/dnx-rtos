@@ -501,10 +501,10 @@ mbus_errno_t mbus_daemon()
                 mbus = malloc(sizeof(struct mbus_mem));
                 queue_t *request = queue_new(REQUEST_QUEUE_LENGTH, sizeof(request_t));
 
-                llist_t *signals = llist_new(reinterpret_cast(llist_cmp_functor_t, _mbus_signal_compare),
-                                             reinterpret_cast(llist_obj_dtor_t, _mbus_signal_delete));
+                llist_t *signals = llist_new(cast(llist_cmp_functor_t, _mbus_signal_compare),
+                                             cast(llist_obj_dtor_t, _mbus_signal_delete));
 
-                llist_t *garbage = llist_new(NULL, reinterpret_cast(llist_obj_dtor_t, _mbus_garbage_delete));
+                llist_t *garbage = llist_new(NULL, cast(llist_obj_dtor_t, _mbus_garbage_delete));
 
                 if (mbus && request && signals && garbage) {
                         mbus->request      = request;

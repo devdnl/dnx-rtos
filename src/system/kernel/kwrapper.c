@@ -452,7 +452,7 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
         int result = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                result = _kzalloc(_MM_KRN, sizeof(sem_t), static_cast(void**, sem));
+                result = _kzalloc(_MM_KRN, sizeof(sem_t), cast(void**, sem));
                 if (result == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -471,7 +471,7 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
                         if ((*sem)->object) {
                                 (*sem)->header.type = RES_TYPE_SEMAPHORE;
                         } else {
-                                _kfree(_MM_KRN, static_cast(void**, sem));
+                                _kfree(_MM_KRN, cast(void**, sem));
                                 result = ENOMEM;
                         }
                 }
@@ -495,7 +495,7 @@ int _semaphore_destroy(sem_t *sem)
                 vSemaphoreDelete(sem->object);
                 sem->object      = NULL;
                 sem->header.type = RES_TYPE_UNKNOWN;
-                return _kfree(_MM_KRN, reinterpret_cast(void**, &sem));
+                return _kfree(_MM_KRN, cast(void**, &sem));
         } else {
                 return EINVAL;
         }
@@ -607,7 +607,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
         int result = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                result = _kzalloc(_MM_KRN, sizeof(mutex_t), static_cast(void**, mtx));
+                result = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
                 if (result == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutex();
@@ -620,7 +620,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                         if ((*mtx)->object) {
                                 (*mtx)->header.type = RES_TYPE_MUTEX;
                         } else {
-                                _kfree(_MM_KRN, static_cast(void**, mtx));
+                                _kfree(_MM_KRN, cast(void**, mtx));
                                 result = ENOMEM;
                         }
                 }
@@ -644,7 +644,7 @@ int _mutex_destroy(mutex_t *mutex)
                 vSemaphoreDelete(mutex->object);
                 mutex->object      = NULL;
                 mutex->header.type = RES_TYPE_UNKNOWN;
-                return _kfree(_MM_KRN, reinterpret_cast(void**, &mutex));
+                return _kfree(_MM_KRN, cast(void**, &mutex));
         } else {
                 return EINVAL;
         }
@@ -717,13 +717,13 @@ int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
         int result = EINVAL;
 
         if (length && item_size && queue) {
-                result = _kzalloc(_MM_KRN, sizeof(queue_t), static_cast(void**, queue));
+                result = _kzalloc(_MM_KRN, sizeof(queue_t), cast(void**, queue));
                 if (result == ESUCC) {
                         (*queue)->object = xQueueCreate(length, item_size);
                         if ((*queue)->object) {
                                 (*queue)->header.type = RES_TYPE_QUEUE;
                         } else {
-                                _kfree(_MM_KRN, static_cast(void**, &queue));
+                                _kfree(_MM_KRN, cast(void**, &queue));
                                 result = ENOMEM;
                         }
                 }
@@ -747,7 +747,7 @@ int _queue_destroy(queue_t *queue)
                 vQueueDelete(queue->object);
                 queue->object      = NULL;
                 queue->header.type = RES_TYPE_UNKNOWN;
-                _kfree(_MM_KRN, reinterpret_cast(void**, &queue));
+                _kfree(_MM_KRN, cast(void**, &queue));
                 return ESUCC;
         } else {
                 return EINVAL;

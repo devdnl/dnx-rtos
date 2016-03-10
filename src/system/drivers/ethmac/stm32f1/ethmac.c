@@ -449,7 +449,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__WAIT_FOR_PACKET:
 
                 if (arg) {
-                        ETHMAC_packet_wait_t *pw = reinterpret_cast(ETHMAC_packet_wait_t*, arg);
+                        ETHMAC_packet_wait_t *pw = cast(ETHMAC_packet_wait_t*, arg);
                         pw->pkt_size = wait_for_packet(hdl, pw->timeout);
                         return ESUCC;
                 } else {
@@ -469,7 +469,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN:
                 if (arg) {
                         if (sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETHMAC_packet_chain_t *pkt = reinterpret_cast(ETHMAC_packet_chain_t*, arg);
+                                ETHMAC_packet_chain_t *pkt = cast(ETHMAC_packet_chain_t*, arg);
 
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
                                         sys_sleep_ms(1);
@@ -508,7 +508,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
         case IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN:
                 if (arg) {
                         if (sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETHMAC_packet_chain_t *pkt = reinterpret_cast(ETHMAC_packet_chain_t*, arg);
+                                ETHMAC_packet_chain_t *pkt = cast(ETHMAC_packet_chain_t*, arg);
 
                                 if (  pkt->payload
                                    && pkt->payload_size
@@ -665,7 +665,7 @@ static void send_packet(size_t size)
         /* Update the ETHERNET DMA global Tx descriptor with next Tx decriptor */
         /* Chained Mode */
         /* Selects the next DMA Tx descriptor list for next buffer to send */
-        DMATxDescToSet = reinterpret_cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
+        DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
 }
 
 //==============================================================================
@@ -709,7 +709,7 @@ static void give_Rx_buffer_to_DMA()
 
         /* Update the ETHERNET DMA global Rx descriptor with next Rx descriptor */
         /* Selects the next DMA Rx descriptor list for next buffer to read */
-        DMARxDescToGet = reinterpret_cast(ETH_DMADESCTypeDef*, DMARxDescToGet->Buffer2NextDescAddr);
+        DMARxDescToGet = cast(ETH_DMADESCTypeDef*, DMARxDescToGet->Buffer2NextDescAddr);
 }
 
 //==============================================================================
@@ -748,7 +748,7 @@ static void make_Rx_buffer_available()
 //==============================================================================
 static u8_t *get_buffer_address(ETH_DMADESCTypeDef *DMA_descriptor)
 {
-        return reinterpret_cast(u8_t*, DMA_descriptor->Buffer1Addr);
+        return cast(u8_t*, DMA_descriptor->Buffer1Addr);
 }
 
 //==============================================================================

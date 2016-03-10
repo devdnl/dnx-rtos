@@ -452,12 +452,12 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
                         UART_configure(hdl->major, arg);
-                        hdl->config = *static_cast(struct UART_config *, arg);
+                        hdl->config = *cast(struct UART_config *, arg);
                         result = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
-                        *static_cast(struct UART_config *, arg) = hdl->config;
+                        *cast(struct UART_config *, arg) = hdl->config;
                         result = ESUCC;
                         break;
 

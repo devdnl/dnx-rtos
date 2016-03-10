@@ -115,7 +115,7 @@ API_MOD_RELEASE(CRC, void *device_handle)
         {
                 if (sys_device_is_unlocked(&hdl->file_lock)) {
                         CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                        sys_free(static_cast(void**, &hdl));
+                        sys_free(cast(void**, &hdl));
                         status = ESUCC;
                 } else {
                         status = EBUSY;

@@ -846,7 +846,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
                                 bool reset     = usb_mem->reset;
                                 usb_mem->reset = false;
                                 sys_critical_section_end();
-                                *reinterpret_cast(bool*, arg) = reset;
+                                *cast(bool*, arg) = reset;
                                 status = ESUCC;
                         } else {
                                 status = ECANCELED;
@@ -900,7 +900,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
         case IOCTL_USBD__GET_ERROR_COUNTER:
                 if (arg) {
                         sys_critical_section_begin();
-                        *reinterpret_cast(int*, arg) = usb_mem->error_cnt;
+                        *cast(int*, arg) = usb_mem->error_cnt;
                         usb_mem->error_cnt = 0;
                         sys_critical_section_end();
                         status = ESUCC;

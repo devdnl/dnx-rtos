@@ -207,14 +207,14 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (SDSPI == NULL) {
-                result = sys_zalloc(sizeof(sdctrl_t), static_cast(void**, &SDSPI));
+                result = sys_zalloc(sizeof(sdctrl_t), cast(void**, &SDSPI));
                 if (result != ESUCC) {
                         return result;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
-                result = sys_zalloc(sizeof(struct card), static_cast(void**, &SDSPI->card[major]));
+                result = sys_zalloc(sizeof(struct card), cast(void**, &SDSPI->card[major]));
                 if (result == ESUCC) {
                         struct card *hdl = SDSPI->card[major];
 
@@ -245,7 +245,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                                 if (hdl->SPI_file)
                                         sys_fclose(hdl->SPI_file);
 
-                                sys_free(static_cast(void**, &SDSPI->card[major]));
+                                sys_free(cast(void**, &SDSPI->card[major]));
                         }
                 }
         }
@@ -309,7 +309,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
                 sys_mutex_destroy(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
-                sys_free(reinterpret_cast(void**, &SDSPI->card[part->major]));
+                sys_free(cast(void**, &SDSPI->card[part->major]));
         }
 
         // release module memory if all card are released
@@ -320,7 +320,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         }
 
         if (released) {
-                sys_free(reinterpret_cast(void**, &SDSPI));
+                sys_free(cast(void**, &SDSPI));
         }
 
         sys_critical_section_end();
@@ -401,7 +401,7 @@ API_MOD_WRITE(SDSPI,
 
         if (part->size > 0) {
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
-                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                        u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
                         status = card_write(part, src, count, lseek, wrcnt);
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
@@ -443,7 +443,7 @@ API_MOD_READ(SDSPI,
 
         if (part->size > 0) {
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
-                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                        u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
                         status = card_read(part, dst, count, lseek, rdcnt);
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
@@ -538,7 +538,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         if (SDSPI->card[part->major]->initialized) {
                 device_stat->st_major = part->major;
                 device_stat->st_minor = part->minor;
-                device_stat->st_size  = static_cast(u64_t, part->size) * sector_size;
+                device_stat->st_size  = cast(u64_t, part->size) * sector_size;
 
                 return ESUCC;
         } else {
@@ -798,13 +798,13 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD17, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD17, cast(u32_t, lseek)) == 0) {
                         if (card_receive_data_block(hdl, dst)) {
                                 n = 1;
                         }
                 }
         } else {
-                if (card_send_cmd(hdl, CMD18, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD18, cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
                                 if (!card_receive_data_block(hdl, dst)) {
@@ -838,7 +838,7 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
 static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek)
 {
         u8_t *buffer;
-        int result = sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        int result = sys_malloc(sector_size, cast(void**, &buffer));
         if (result != ESUCC)
                 return -1;
 
@@ -850,7 +850,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
                                 recv_data = -1;
                                 goto exit;
 
-                        } else if (n != static_cast(ssize_t, size) / sector_size) {
+                        } else if (n != cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -881,7 +881,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
         }
 
         exit:
-        sys_free(reinterpret_cast(void**, &buffer));
+        sys_free(cast(void**, &buffer));
 
         return recv_data;
 }
@@ -907,7 +907,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD24, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD24, cast(u32_t, lseek)) == 0) {
                         if (card_transmit_data_block(hdl, src, 0xFE)) {
                                 n = 1;
                         }
@@ -919,7 +919,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
                         card_send_cmd(hdl, ACMD23, nsectors);
                 }
 
-                if (card_send_cmd(hdl, CMD25, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD25, cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
                                 if (!card_transmit_data_block(hdl, src, 0xFC)) {
@@ -927,7 +927,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
                                 }
 
                                 src += sector_size;
-                        } while (++n < static_cast(ssize_t, nsectors));
+                        } while (++n < cast(ssize_t, nsectors));
 
                         /* stop transmission */
                         if (!card_transmit_data_block(hdl, NULL, 0xFD)) {
@@ -954,7 +954,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
 static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek)
 {
         u8_t *buffer = NULL;
-        int result = sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        int result = sys_malloc(sector_size, cast(void**, &buffer));
         if (result != ESUCC)
                 return -1;
 
@@ -966,7 +966,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
                                 transmit_data = -1;
                                 goto exit;
 
-                        } else if (n != static_cast(ssize_t, size) / sector_size) {
+                        } else if (n != cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -1007,7 +1007,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
         }
 
         exit:
-        sys_free(reinterpret_cast(void**, &buffer));
+        sys_free(cast(void**, &buffer));
 
         return transmit_data;
 }
@@ -1232,10 +1232,10 @@ static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t ls
 //==============================================================================
 static u32_t load_u32(u8_t *buff, u16_t offset)
 {
-        return static_cast(u32_t, ( (reinterpret_cast(u32_t, buff[offset + 0] <<  0))
-                                  | (reinterpret_cast(u32_t, buff[offset + 1] <<  8))
-                                  | (reinterpret_cast(u32_t, buff[offset + 2] << 16))
-                                  | (reinterpret_cast(u32_t, buff[offset + 3] << 24)) ) );
+        return cast(u32_t, ( (cast(u32_t, buff[offset + 0] <<  0))
+                                  | (cast(u32_t, buff[offset + 1] <<  8))
+                                  | (cast(u32_t, buff[offset + 2] << 16))
+                                  | (cast(u32_t, buff[offset + 3] << 24)) ) );
 }
 
 //==============================================================================
@@ -1250,8 +1250,8 @@ static u32_t load_u32(u8_t *buff, u16_t offset)
 //==============================================================================
 static u16_t load_u16(u8_t *buff, u16_t offset)
 {
-        return static_cast(u16_t, ( (reinterpret_cast(u16_t, buff[offset + 0] << 0))
-                                  | (reinterpret_cast(u16_t, buff[offset + 1] << 8)) ) );
+        return cast(u16_t, ( (cast(u16_t, buff[offset + 0] << 0))
+                                  | (cast(u16_t, buff[offset + 1] << 8)) ) );
 }
 
 //==============================================================================
@@ -1326,7 +1326,7 @@ static int MBR_detect_partitions(sdpart_t *hdl)
         int status = EIO;
 
         u8_t *MBR;
-        status = sys_malloc(sector_size, reinterpret_cast(void**, &MBR));
+        status = sys_malloc(sector_size, cast(void**, &MBR));
         if (status == ESUCC) {
                 size_t rdcnt;
                 if (card_read(hdl, MBR, sector_size, 0, &rdcnt) != sector_size) {
@@ -1349,7 +1349,7 @@ static int MBR_detect_partitions(sdpart_t *hdl)
                 status = ESUCC;
 
                 error:
-                sys_free(reinterpret_cast(void**, &MBR));
+                sys_free(cast(void**, &MBR));
         } else {
                 status = ENOMEM;
         }

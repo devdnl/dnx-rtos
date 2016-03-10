@@ -199,7 +199,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
         /* creates basic module structures */
         if (I2C[major] == NULL) {
-                result = sys_zalloc(sizeof(I2C_mem_t), static_cast(void**, &I2C[major]));
+                result = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
                 if (result != ESUCC) {
                         goto finish;
                 }
@@ -520,7 +520,7 @@ static void release_resources(u8_t major)
                         disable_I2C(major);
                 }
 
-                sys_free(static_cast(void**, &I2C[major]));
+                sys_free(cast(void**, &I2C[major]));
         }
 }
 
@@ -949,8 +949,8 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
                 if (I2C[hdl->major]->use_DMA) {
                         DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, I2C_INFO[hdl->major].DMA_rx);
 
-                        DMA->CPAR  = reinterpret_cast(u32_t, &i2c->DR);
-                        DMA->CMAR  = reinterpret_cast(u32_t, dst);
+                        DMA->CPAR  = cast(u32_t, &i2c->DR);
+                        DMA->CMAR  = cast(u32_t, dst);
                         DMA->CNDTR = count;
                         DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE;
 
@@ -1050,8 +1050,8 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
         if (count >= 3 && I2C[hdl->major]->use_DMA) {
                 DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, I2C_INFO[hdl->major].DMA_tx);
 
-                DMA->CPAR  = reinterpret_cast(u32_t, &i2c->DR);
-                DMA->CMAR  = reinterpret_cast(u32_t, src);
+                DMA->CPAR  = cast(u32_t, &i2c->DR);
+                DMA->CMAR  = cast(u32_t, src);
                 DMA->CNDTR = count;
                 DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE | DMA_CCR1_DIR;
 

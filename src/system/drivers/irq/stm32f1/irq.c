@@ -107,14 +107,14 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 
         if (major < NUMBER_OF_IRQs && minor == 0) {
                 if (IRQ == NULL) {
-                        result = sys_zalloc(sizeof(IRQ_t), static_cast(void*, &IRQ));
+                        result = sys_zalloc(sizeof(IRQ_t), cast(void*, &IRQ));
                 }
 
                 if (IRQ) {
                         result = sys_semaphore_create(1, 0, &IRQ->sem[major]);
                         if (result == ESUCC) {
                                 // device's major number is used as identifier
-                                *device_handle = static_cast(void*, static_cast(u32_t, major));
+                                *device_handle = cast(void*, cast(u32_t, major));
 
                                 IRQ_configure(major,
                                               DEFAULT_CONFIG[major].mode,
@@ -137,7 +137,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
 {
-        u8_t major = static_cast(u32_t, device_handle);
+        u8_t major = cast(u32_t, device_handle);
 
         int result;
         sys_critical_section_begin();
@@ -152,7 +152,7 @@ API_MOD_RELEASE(IRQ, void *device_handle)
                         }
 
                         if (free_module_mem) {
-                                sys_free(static_cast(void*, &IRQ));
+                                sys_free(cast(void*, &IRQ));
                         }
                 }
         }
@@ -262,7 +262,7 @@ API_MOD_READ(IRQ,
 //==============================================================================
 API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 {
-        u8_t major  = static_cast(u32_t, device_handle);
+        u8_t major  = cast(u32_t, device_handle);
         int  result = EINVAL;
 
         if (arg) {
@@ -285,7 +285,7 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
-                        result = IRQ_configure(major, static_cast(enum _IRQ_MODE, *cfg), -1);
+                        result = IRQ_configure(major, cast(enum _IRQ_MODE, *cfg), -1);
                         break;
                 }
 
@@ -326,7 +326,7 @@ API_MOD_FLUSH(IRQ, void *device_handle)
 API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         device_stat->st_size  = 0;
-        device_stat->st_major = static_cast(u32_t, device_handle);
+        device_stat->st_major = cast(u32_t, device_handle);
         device_stat->st_minor = 0;
 
         return ESUCC;

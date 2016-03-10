@@ -518,7 +518,7 @@ static void syscall_opendir(syscallrq_t *rq)
         DIR *dir = NULL;
         int  err = _vfs_opendir(path, &dir);
         if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, dir));
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, dir));
                 if (err != ESUCC) {
                         _vfs_closedir(dir);
                         dir = NULL;
@@ -542,7 +542,7 @@ static void syscall_closedir(syscallrq_t *rq)
 {
         GETARG(DIR *, dir);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, dir), RES_TYPE_DIR);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, dir), RES_TYPE_DIR);
         if (err == EFAULT) {
                 const char *msg = "*** Error: object is not a dir! ***\n";
                 size_t wrcnt;
@@ -708,7 +708,7 @@ static void syscall_fopen(syscallrq_t *rq)
         FILE *file = NULL;
         int   err  = _vfs_fopen(path, mode, &file);
         if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, file));
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, file));
                 if (err != ESUCC) {
                         _vfs_fclose(file, true);
                         file = NULL;
@@ -732,7 +732,7 @@ static void syscall_fclose(syscallrq_t *rq)
 {
         GETARG(FILE *, file);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, file), RES_TYPE_FILE);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, file), RES_TYPE_FILE);
         if (err == EFAULT) {
                 const char *msg = "*** Error: object is not a file! ***\n";
                 size_t wrcnt;
@@ -1013,7 +1013,7 @@ static void syscall_malloc(syscallrq_t *rq)
         }
 
         SETERRNO(err);
-        SETRETURN(void*, mem ? &static_cast(res_header_t*, mem)[1] : NULL);
+        SETRETURN(void*, mem ? &cast(res_header_t*, mem)[1] : NULL);
 }
 
 //==============================================================================
@@ -1039,7 +1039,7 @@ static void syscall_zalloc(syscallrq_t *rq)
         }
 
         SETERRNO(err);
-        SETRETURN(void*,  mem ? &static_cast(res_header_t*, mem)[1] : NULL);
+        SETRETURN(void*,  mem ? &cast(res_header_t*, mem)[1] : NULL);
 }
 
 //==============================================================================
@@ -1055,7 +1055,7 @@ static void syscall_free(syscallrq_t *rq)
 {
         GETARG(void *, mem);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, mem) - 1, RES_TYPE_MEMORY);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, mem) - 1, RES_TYPE_MEMORY);
         if (err != ESUCC) {
                 const char *msg = "*** Error: double free or corruption ***\n";
                 size_t wrcnt;
@@ -1358,7 +1358,7 @@ static void syscall_threaddestroy(syscallrq_t *rq)
                 bool flag = true;
                 if (_process_get_syscall_pending_flag(task, &flag) == ESUCC && flag == false) {
                         SETERRNO(_process_release_resource(GETPROCESS(),
-                                                           static_cast(res_header_t*, GETTHREAD(*tid)),
+                                                           cast(res_header_t*, GETTHREAD(*tid)),
                                                            RES_TYPE_THREAD));
                         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
                 } else {
@@ -1419,7 +1419,7 @@ static void syscall_semaphorecreate(syscallrq_t *rq)
         sem_t *sem = NULL;
         int err    = _semaphore_create(*cnt_max, *cnt_init, &sem);
         if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, sem));
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, sem));
                 if (err != ESUCC) {
                         _semaphore_destroy(sem);
                         sem = NULL;
@@ -1443,7 +1443,7 @@ static void syscall_semaphoredestroy(syscallrq_t *rq)
 {
         GETARG(sem_t *, sem);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, sem), RES_TYPE_SEMAPHORE);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, sem), RES_TYPE_SEMAPHORE);
         if (err != ESUCC) {
                 const char *msg = "*** Error: object is not a semaphore! ***\n";
                 size_t wrcnt;
@@ -1470,7 +1470,7 @@ static void syscall_mutexcreate(syscallrq_t *rq)
         mutex_t *mtx = NULL;
         int err      = _mutex_create(*type, &mtx);
         if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, mtx));
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, mtx));
                 if (err != ESUCC) {
                         _mutex_destroy(mtx);
                         mtx = NULL;
@@ -1494,7 +1494,7 @@ static void syscall_mutexdestroy(syscallrq_t *rq)
 {
         GETARG(mutex_t *, mtx);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, mtx), RES_TYPE_MUTEX);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, mtx), RES_TYPE_MUTEX);
         if (err != ESUCC) {
                 const char *msg = "*** Error: object is not a mutex! ***\n";
                 size_t wrcnt;
@@ -1522,7 +1522,7 @@ static void syscall_queuecreate(syscallrq_t *rq)
         queue_t *q = NULL;
         int err    = _queue_create(*length, *item_size, &q);
         if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), static_cast(res_header_t*, q));
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, q));
                 if (err != ESUCC) {
                         _queue_destroy(q);
                         q = NULL;
@@ -1546,7 +1546,7 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 {
         GETARG(queue_t *, q);
 
-        int err = _process_release_resource(GETPROCESS(), static_cast(res_header_t*, q), RES_TYPE_QUEUE);
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, q), RES_TYPE_QUEUE);
         if (err != ESUCC) {
                 const char *msg = "*** Error: object is not a queue! ***\n";
                 size_t wrcnt;

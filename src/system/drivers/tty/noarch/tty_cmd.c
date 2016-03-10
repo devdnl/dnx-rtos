@@ -91,7 +91,7 @@ static inline bool is_valid(ttycmd_t *this)
 //==============================================================================
 int ttycmd_create(ttycmd_t **ttycmd)
 {
-        int result = sys_zalloc(sizeof(ttycmd_t), static_cast(void**, ttycmd));
+        int result = sys_zalloc(sizeof(ttycmd_t), cast(void**, ttycmd));
         if (result == ESUCC) {
                 (*ttycmd)->self = *ttycmd;
         }
@@ -110,7 +110,7 @@ int ttycmd_destroy(ttycmd_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                sys_free(static_cast(void**, &this));
+                sys_free(cast(void**, &this));
                 return ESUCC;
         } else {
                 return EINVAL;

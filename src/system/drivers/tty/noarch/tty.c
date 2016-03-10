@@ -122,7 +122,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize module base */
         if (!tty_module) {
-                result = sys_zalloc(sizeof(struct module), static_cast(void**, &tty_module));
+                result = sys_zalloc(sizeof(struct module), cast(void**, &tty_module));
                 if (result != ESUCC)
                         return result;
 
@@ -162,7 +162,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                                 sys_queue_destroy(tty_module->queue_cmd);
 
                         if (tty_module)
-                                sys_free(static_cast(void**, &tty_module));
+                                sys_free(cast(void**, &tty_module));
                 }
         } else {
                 result = ESUCC;
@@ -259,7 +259,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                         sys_fclose(tty_module->infile);
                         sys_fclose(tty_module->outfile);
                         sys_queue_destroy(tty_module->queue_cmd);
-                        sys_free(reinterpret_cast(void**, &tty_module));
+                        sys_free(cast(void**, &tty_module));
                 }
 
                 sys_critical_section_end();
@@ -331,7 +331,7 @@ API_MOD_WRITE(TTY,
 
         int result = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
         if (result == ESUCC) {
-                ttybfr_put(tty->screen, reinterpret_cast(const char *, src), count);
+                ttybfr_put(tty->screen, cast(const char *, src), count);
                 sys_mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
 
@@ -415,21 +415,21 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = tty_module->current_tty;
+                        *cast(int*, arg) = tty_module->current_tty;
                         status = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_COL:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = _TTY_TERMINAL_COLUMNS;
+                        *cast(int*, arg) = _TTY_TERMINAL_COLUMNS;
                         status = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_ROW:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = _TTY_TERMINAL_ROWS;
+                        *cast(int*, arg) = _TTY_TERMINAL_ROWS;
                         status = ESUCC;
                 }
                 break;
@@ -445,7 +445,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__SWITCH_TTY_TO:
-                send_cmd(CMD_SWITCH_TTY, *reinterpret_cast(int*, arg));
+                send_cmd(CMD_SWITCH_TTY, *cast(int*, arg));
                 status = ESUCC;
                 break;
 
@@ -466,7 +466,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
                 if (arg) {
-                        *reinterpret_cast(int*, arg) = _TTY_NUMBER_OF_VT;
+                        *cast(int*, arg) = _TTY_NUMBER_OF_VT;
                 }
                 break;
 

@@ -236,7 +236,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* initialize SPI peripheral */
         if (SPI[major] == NULL) {
-                result = sys_zalloc(sizeof(struct SPI), static_cast(void**, &SPI[major]));
+                result = sys_zalloc(sizeof(struct SPI), cast(void**, &SPI[major]));
                 if (result != ESUCC) {
                         goto finish;
                 }
@@ -460,7 +460,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_SPI__SET_CONFIGURATION:
                 if (arg) {
-                        hdl->config = *static_cast(SPI_config_t*, arg);
+                        hdl->config = *cast(SPI_config_t*, arg);
                         status = ESUCC;
                 } else {
                         status = EINVAL;
@@ -469,7 +469,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
         case IOCTL_SPI__GET_CONFIGURATION:
                 if (arg) {
-                        *static_cast(SPI_config_t*, arg) = hdl->config;
+                        *cast(SPI_config_t*, arg) = hdl->config;
                         status = ESUCC;
                 } else {
                         status = EINVAL;
@@ -503,7 +503,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
         case IOCTL_SPI__TRANSCEIVE:
                 if (arg) {
-                        SPI_transceive_t *tr = static_cast(SPI_transceive_t*, arg);
+                        SPI_transceive_t *tr = cast(SPI_transceive_t*, arg);
                         if (tr->count) {
                                 if (sys_mutex_trylock(SPI[hdl->major]->periph_protect_mtx) == ESUCC) {
                                         if (SPI[hdl->major]->RAW == false) {
@@ -610,7 +610,7 @@ static void release_resources(u8_t major)
 
                 turn_off_SPI(major);
 
-                sys_free(static_cast(void**, &SPI[major]));
+                sys_free(cast(void**, &SPI[major]));
         }
 }
 

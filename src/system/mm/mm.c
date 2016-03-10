@@ -102,7 +102,7 @@ int _mm_init(void)
 {
         return _kzalloc(_MM_KRN,
                         _drvreg_number_of_modules * sizeof(i32_t),
-                        static_cast(void*, &module_memory_usage));
+                        cast(void*, &module_memory_usage));
 }
 
 //==============================================================================
@@ -174,7 +174,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
 
                 switch (mpur) {
                 case _MM_MOD: {
-                        size_t modid = reinterpret_cast(size_t, arg);
+                        size_t modid = cast(size_t, arg);
                         if (modid < _drvreg_number_of_modules) {
                                 usage  = &module_memory_usage[modid];
                                 result = ESUCC;
@@ -183,11 +183,11 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                 }
 
                 case _MM_PROG:
-                        if ((*reinterpret_cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
+                        if ((*cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
                                 usage  = arg;
                                 result = ESUCC;
-                                (*reinterpret_cast(res_header_t**, mem))->next = NULL;
-                                (*reinterpret_cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
+                                (*cast(res_header_t**, mem))->next = NULL;
+                                (*cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
                         } else {
                                 result = EFAULT;
                                 break;
@@ -354,7 +354,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 switch (mpur) {
                 case _MM_MOD: {
-                        size_t modid = reinterpret_cast(size_t, arg);
+                        size_t modid = cast(size_t, arg);
                         if (modid < _drvreg_number_of_modules) {
                                 usage = &module_memory_usage[modid];
                         }
@@ -399,8 +399,8 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                                 }
 
                                 if (mpur == _MM_PROG) {
-                                         reinterpret_cast(res_header_t*, blk)->next = NULL;
-                                         reinterpret_cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
+                                         cast(res_header_t*, blk)->next = NULL;
+                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
                                 }
 
                                 *mem = blk;

@@ -45,7 +45,7 @@
 #define USERSPACE
 #define KERNELSPACE
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
-#define foreach_process(_v)             for (_process_t *_v = process_list; _v; _v = reinterpret_cast(_process_t*, _v->header.next))
+#define foreach_process(_v)             for (_process_t *_v = process_list; _v; _v = cast(_process_t*, _v->header.next))
 
 #define catcherrno(_x)                  for (int _ = 0; _ < 1; _++) for (int *__ = &_x; __; __ = 0)
 #define try(_x)                         if ((*__ = (_x)) != 0) break
@@ -169,7 +169,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
         catcherrno(result) {
                 try(!cmd || cmd[0] == '\0' ? EINVAL : ESUCC);
-                try(_kzalloc(_MM_KRN, sizeof(_process_t), static_cast(void**, &proc)));
+                try(_kzalloc(_MM_KRN, sizeof(_process_t), cast(void**, &proc)));
 
                 proc->header.type = RES_TYPE_PROCESS;
 
@@ -208,7 +208,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                 if (process_list == NULL) {
                                         process_list = proc;
                                 } else {
-                                        proc->header.next = static_cast(res_header_t*, process_list);
+                                        proc->header.next = cast(res_header_t*, process_list);
                                         process_list      = proc;
                                 }
                         }
@@ -218,7 +218,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 } onfailure(result) {
                         if (proc) {
                                 process_destroy_all_resources(proc);
-                                _kfree(_MM_KRN, static_cast(void**, &proc));
+                                _kfree(_MM_KRN, cast(void**, &proc));
                         }
                 }
 
@@ -245,7 +245,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
                         _kernel_scheduler_lock();
                         {
                                 if (process_list == process) {
-                                        process_list = static_cast(_process_t*, process->header.next);
+                                        process_list = cast(_process_t*, process->header.next);
                                 } else {
                                         prev->header.next = process->header.next;
                                 }
@@ -261,7 +261,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
 
                         process->header.next = NULL;
                         process->header.type = RES_TYPE_UNKNOWN;
-                        _kfree(_MM_KRN, static_cast(void**, &process));
+                        _kfree(_MM_KRN, cast(void**, &process));
 
                         result = ESUCC;
                         break;
@@ -688,7 +688,7 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
         if (process) {
                 if (process->header.type == RES_TYPE_THREAD) {
-                        process = reinterpret_cast(_thread_t*, process)->process;
+                        process = cast(_thread_t*, process)->process;
 
                         if (master) {
                                 *master = false;
@@ -721,10 +721,10 @@ KERNELSPACE sem_t *_process_get_syscall_sem_by_task(task_t *taskhdl)
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
-                        sem = reinterpret_cast(_process_t*, res)->syscall_sem;
+                        sem = cast(_process_t*, res)->syscall_sem;
 
                 } else if (res->type == RES_TYPE_THREAD) {
-                        sem = reinterpret_cast(_thread_t*, res)->syscall_sem;
+                        sem = cast(_thread_t*, res)->syscall_sem;
                 }
         }
         _kernel_scheduler_unlock();
@@ -750,11 +750,11 @@ KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
-                        reinterpret_cast(_process_t*, res)->syscall_sem = sem;
+                        cast(_process_t*, res)->syscall_sem = sem;
                         result = ESUCC;
 
                 } else if (res->type == RES_TYPE_THREAD) {
-                        reinterpret_cast(_thread_t*, res)->syscall_sem = sem;
+                        cast(_thread_t*, res)->syscall_sem = sem;
                         result = ESUCC;
                 }
         }
@@ -782,11 +782,11 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
-                        reinterpret_cast(_process_t*, res)->syscall_pending = state;
+                        cast(_process_t*, res)->syscall_pending = state;
                         result = ESUCC;
 
                 } else if (res->type == RES_TYPE_THREAD) {
-                        reinterpret_cast(_thread_t*, res)->syscall_pending = state;
+                        cast(_thread_t*, res)->syscall_pending = state;
                         result = ESUCC;
                 }
         }
@@ -815,11 +815,11 @@ KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
                         res_header_t *res = _task_get_tag(taskhdl);
 
                         if (res->type == RES_TYPE_PROCESS) {
-                                *state = reinterpret_cast(_process_t*, res)->syscall_pending;
+                                *state = cast(_process_t*, res)->syscall_pending;
                                 result = ESUCC;
 
                         } else if (res->type == RES_TYPE_THREAD) {
-                                *state = reinterpret_cast(_thread_t*, res)->syscall_pending;
+                                *state = cast(_thread_t*, res)->syscall_pending;
                                 result = ESUCC;
                         }
                 }
@@ -856,7 +856,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 
         if (proc && proc->header.type == RES_TYPE_PROCESS && func) {
                 _thread_t *thread;
-                result = _kzalloc(_MM_KRN, sizeof(_thread_t), static_cast(void*, &thread));
+                result = _kzalloc(_MM_KRN, sizeof(_thread_t), cast(void*, &thread));
                 if (result == ESUCC) {
                         thread->header.type = RES_TYPE_THREAD;
                         thread->process     = proc;
@@ -881,7 +881,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                                                       thread,
                                                       &thread->task);
                                 if (result == ESUCC) {
-                                        result = _process_register_resource(proc, static_cast(res_header_t*, thread));
+                                        result = _process_register_resource(proc, cast(res_header_t*, thread));
                                         if (result == ESUCC) {
 
                                                 thread->tid = ++TID_cnt;
@@ -930,8 +930,8 @@ KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid
         if (proc && proc->header.type == RES_TYPE_PROCESS && tid) {
                 foreach_resource(res, proc->res_list) {
                         if (res->type == RES_TYPE_THREAD) {
-                                if (reinterpret_cast(_thread_t *, res)->tid == tid) {
-                                        thread = static_cast(_thread_t *, res);
+                                if (cast(_thread_t *, res)->tid == tid) {
+                                        thread = cast(_thread_t *, res);
                                         break;
                                 }
                         }
@@ -1069,7 +1069,7 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
                 _kernel_scheduler_lock();
 
                 foreach_resource(res, proc->res_list) {
-                        _thread_t *thread = static_cast(_thread_t*, res);
+                        _thread_t *thread = cast(_thread_t*, res);
                         if (thread->header.type == RES_TYPE_THREAD && thread->tid == tid) {
                                 *sem   = thread->exit_sem;
                                 result = ESUCC;
@@ -1198,7 +1198,7 @@ USERSPACE static void thread_code(void *thrfunc)
                 // system thread
                 thread->task = NULL;    // object release at the end of thread
                 _process_release_resource(thread->process,
-                                          static_cast(res_header_t*, thread),
+                                          cast(res_header_t*, thread),
                                           RES_TYPE_THREAD);
         }
 
@@ -1235,7 +1235,7 @@ static int process_thread_destroy(_thread_t *thread)
                         thread->syscall_sem = NULL;
                 }
 
-                result = _kfree(_MM_KRN, static_cast(void*, &thread));
+                result = _kfree(_MM_KRN, cast(void*, &thread));
         }
 
         return result;
@@ -1255,7 +1255,7 @@ static void process_destroy_all_resources(_process_t *proc)
         // suspend all threads
         foreach_resource(res, proc->res_list) {
                 if (res->type == RES_TYPE_THREAD) {
-                        _task_suspend(reinterpret_cast(_thread_t*, res)->task);
+                        _task_suspend(cast(_thread_t*, res)->task);
                 }
         }
 
@@ -1362,8 +1362,8 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 case RES_TYPE_THREAD:
                         stat->threads_count++;
                         stat->memory_usage += sizeof(_thread_t);
-                        stat->memory_usage += reinterpret_cast(_thread_t*, res)->syscall_sem ? sizeof(sem_t) : 0;
-                        stat->memory_usage += reinterpret_cast(_thread_t*, res)->stack_depth * sizeof(StackType_t);
+                        stat->memory_usage += cast(_thread_t*, res)->syscall_sem ? sizeof(sem_t) : 0;
+                        stat->memory_usage += cast(_thread_t*, res)->stack_depth * sizeof(StackType_t);
                         break;
 
                 case RES_TYPE_MEMORY:
@@ -1406,7 +1406,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 } else if (attr->p_stdin) {
                         result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
                         if (result == ESUCC) {
-                                _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdin));
+                                _process_register_resource(proc, cast(res_header_t*, proc->f_stdin));
                         } else {
                                 goto finish;
                         }
@@ -1429,7 +1429,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                         } else {
                                 result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
                                 if (result == ESUCC) {
-                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stdout));
+                                        _process_register_resource(proc, cast(res_header_t*, proc->f_stdout));
                                 } else {
                                         goto finish;
                                 }
@@ -1457,7 +1457,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                         } else {
                                 result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
                                 if (result == ESUCC) {
-                                        _process_register_resource(proc, static_cast(res_header_t*, proc->f_stderr));
+                                        _process_register_resource(proc, cast(res_header_t*, proc->f_stderr));
                                 } else {
                                         goto finish;
                                 }
@@ -1504,31 +1504,31 @@ static int resource_destroy(res_header_t *resource)
 
         switch (resource->type) {
         case RES_TYPE_FILE:
-                _vfs_fclose(static_cast(FILE*, res2free), true);
+                _vfs_fclose(cast(FILE*, res2free), true);
                 break;
 
         case RES_TYPE_DIR:
-                _vfs_closedir(static_cast(DIR*, res2free));
+                _vfs_closedir(cast(DIR*, res2free));
                 break;
 
         case RES_TYPE_MEMORY:
-                _kfree(_MM_PROG, static_cast(void*, &res2free));
+                _kfree(_MM_PROG, cast(void*, &res2free));
                 break;
 
         case RES_TYPE_MUTEX:
-                _mutex_destroy(static_cast(mutex_t*, res2free));
+                _mutex_destroy(cast(mutex_t*, res2free));
                 break;
 
         case RES_TYPE_QUEUE:
-                _queue_destroy(static_cast(queue_t*, res2free));
+                _queue_destroy(cast(queue_t*, res2free));
                 break;
 
         case RES_TYPE_SEMAPHORE:
-                _semaphore_destroy(static_cast(sem_t*, res2free));
+                _semaphore_destroy(cast(sem_t*, res2free));
                 break;
 
         case RES_TYPE_THREAD:
-                process_thread_destroy(static_cast(_thread_t*, res2free));
+                process_thread_destroy(cast(_thread_t*, res2free));
                 break;
 
         default:
@@ -1595,7 +1595,7 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
 
                                 // add argument to list
                                 char *arg;
-                                result = _kmalloc(_MM_KRN, str_len + 1, static_cast(void**, &arg));
+                                result = _kmalloc(_MM_KRN, str_len + 1, cast(void**, &arg));
                                 if (result == ESUCC) {
                                         strncpy(arg, start, str_len);
                                         arg[str_len] = '\0';
@@ -1616,7 +1616,7 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
                         *argc = no_of_args;
 
                         char **arg = NULL;
-                        result = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), static_cast(void*, &arg));
+                        result = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), cast(void*, &arg));
                         if (result == ESUCC) {
                                 for (int i = 0; i < no_of_args; i++) {
                                         arg[i] = _llist_take_front(largs);
@@ -1648,11 +1648,11 @@ static void argtab_destroy(char **argv)
         if (argv) {
                 int n = 0;
                 while (argv[n]) {
-                        _kfree(_MM_KRN, static_cast(void*, &argv[n]));
+                        _kfree(_MM_KRN, cast(void*, &argv[n]));
                         n++;
                 }
 
-                _kfree(_MM_KRN, static_cast(void*, &argv));
+                _kfree(_MM_KRN, cast(void*, &argv));
         }
 }
 
@@ -1710,7 +1710,7 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
-                result = _kzalloc(_MM_PROG, *usrprog->globals_size, static_cast(void*, &mem));
+                result = _kzalloc(_MM_PROG, *usrprog->globals_size, cast(void*, &mem));
 
                 if (result == ESUCC) {
                         proc->globals = &mem[1];

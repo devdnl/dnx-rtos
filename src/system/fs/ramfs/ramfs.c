@@ -108,7 +108,7 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
                 if (result != ESUCC)
                         goto finish;
 
-                result = sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &hdl->root_dir.data));
+                result = sys_llist_create(NULL, NULL, cast(llist_t**, &hdl->root_dir.data));
                 if (result != ESUCC)
                         goto finish;
 
@@ -185,16 +185,16 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
                                 node_t *child;
                                 result = new_node(hdl, parent, child_name, FILE_TYPE_DRV, NULL, &child);
                                 if (result == ESUCC) {
-                                        child->data = reinterpret_cast(void*, dev);
+                                        child->data = cast(void*, dev);
                                 } else {
-                                        sys_free(static_cast(void**, &child_name));
+                                        sys_free(cast(void**, &child_name));
                                 }
                         }
                 }
@@ -231,7 +231,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
@@ -240,7 +240,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
                                 if (result == ESUCC) {
                                         child->mode = mode;
                                 } else {
-                                        sys_free(reinterpret_cast(void**, &child_name));
+                                        sys_free(cast(void**, &child_name));
                                 }
                         }
                 }
@@ -277,7 +277,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), static_cast(void**, &child_name));
+                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
                         if (result == ESUCC) {
                                 strcpy(child_name, basename);
 
@@ -286,7 +286,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
                                 if (result == ESUCC) {
                                         child->mode = mode;
                                 } else {
-                                        sys_free(reinterpret_cast(void**, &child_name));
+                                        sys_free(cast(void**, &child_name));
                                 }
                         }
                 }
@@ -497,10 +497,10 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                         char *basename = strrchr(new_name, '/') + 1;
 
                         char *new_name;
-                        result = sys_zalloc(strsize(basename), static_cast(void**, &new_name));
+                        result = sys_zalloc(strsize(basename), cast(void**, &new_name));
                         if (result == ESUCC) {
                                 if (target->name) {
-                                        sys_free(reinterpret_cast(void**, target->name));
+                                        sys_free(cast(void**, target->name));
                                 }
 
                                 target->name = new_name;
@@ -758,7 +758,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         char *basename = strrchr(path, '/') + 1;
 
                         char *file_name;
-                        result = sys_zalloc(strsize(basename), static_cast(void**, &file_name));
+                        result = sys_zalloc(strsize(basename), cast(void**, &file_name));
                         if (result != ESUCC) {
                                 goto finish;
                         }
@@ -767,7 +767,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
                         result = new_node(hdl, parent, file_name, FILE_TYPE_REGULAR, &item, &child);
                         if (result != ESUCC) {
-                                sys_free(reinterpret_cast(void**, &file_name));
+                                sys_free(cast(void**, &file_name));
                                 goto finish;
                         }
                 } else {
@@ -788,7 +788,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         // truncate file if requested
                         if (flags & O_TRUNC) {
                                 if (child->data) {
-                                        sys_free(reinterpret_cast(void**, &child->data));
+                                        sys_free(cast(void**, &child->data));
                                         child->data = NULL;
                                 }
 
@@ -957,11 +957,11 @@ API_FS_WRITE(ramfs,
                                if ((seek + write_size) > file_length || target->data == NULL) {
                                        char *new_data;
                                        result = sys_malloc(file_length + write_size,
-                                                            reinterpret_cast(void**, &new_data));
+                                                            cast(void**, &new_data));
                                        if (result == ESUCC) {
                                                if (target->data) {
                                                        memcpy(new_data, target->data, file_length);
-                                                       sys_free(reinterpret_cast(void**, &target->data));
+                                                       sys_free(cast(void**, &target->data));
                                                }
 
                                                memcpy(new_data + seek, src, write_size);
@@ -975,7 +975,7 @@ API_FS_WRITE(ramfs,
                                        }
 
                                } else {
-                                       memcpy(static_cast(u8_t*, target->data) + seek, src, write_size);
+                                       memcpy(cast(u8_t*, target->data) + seek, src, write_size);
                                        *wrcnt = count;
                                        result = ESUCC;
                                }
@@ -1059,7 +1059,7 @@ API_FS_READ(ramfs,
                                 /* copy if file buffer exist */
                                 if (target->data) {
                                         if (items_to_read > 0) {
-                                                memcpy(dst, static_cast(u8_t*, target->data) + seek, items_to_read);
+                                                memcpy(dst, cast(u8_t*, target->data) + seek, items_to_read);
                                                 *rdcnt = items_to_read;
                                         } else {
                                                 *rdcnt = 0;
@@ -1215,11 +1215,11 @@ static int delete_node(struct RAMFS *hdl, node_t *base, node_t *target, u32_t po
         }
 
         if (target->name) {
-                sys_free(reinterpret_cast(void**, &target->name));
+                sys_free(cast(void**, &target->name));
         }
 
         if (target->data) {
-                sys_free(reinterpret_cast(void**, &target->data));
+                sys_free(cast(void**, &target->data));
         }
 
         sys_llist_erase(base->data, position);
@@ -1381,7 +1381,7 @@ static int new_node(struct RAMFS *hdl,
         }
 
         node_t *node;
-        int result = sys_zalloc(sizeof(node_t), static_cast(void**, &node));
+        int result = sys_zalloc(sizeof(node_t), cast(void**, &node));
         if (result == ESUCC) {
                 node->name  = filename;
                 node->data  = NULL;
@@ -1393,10 +1393,10 @@ static int new_node(struct RAMFS *hdl,
                 node->uid   = 0;
 
                 if (type == FILE_TYPE_DIR) {
-                        result = sys_llist_create(NULL, NULL, reinterpret_cast(llist_t**, &node->data));
+                        result = sys_llist_create(NULL, NULL, cast(llist_t**, &node->data));
 
                 } else if (type == FILE_TYPE_PIPE) {
-                        result = sys_pipe_create(reinterpret_cast(pipe_t**, &node->data));
+                        result = sys_pipe_create(cast(pipe_t**, &node->data));
                 }
 
                 if (result == ESUCC) {
@@ -1414,7 +1414,7 @@ static int new_node(struct RAMFS *hdl,
                 }
 
                 if (result != ESUCC) {
-                        sys_free(reinterpret_cast(void**, &node));
+                        sys_free(cast(void**, &node));
                 }
         }
 
@@ -1438,7 +1438,7 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
 {
         struct opened_file_info *opened_file_info;
         int result = sys_zalloc(sizeof(struct opened_file_info),
-                                 static_cast(void**, &opened_file_info));
+                                 cast(void**, &opened_file_info));
         if (result == ESUCC) {
                 opened_file_info->remove_at_close = false;
                 opened_file_info->child           = child;
@@ -1454,7 +1454,7 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
 
                 /* add open file info to list */
                 if (!sys_llist_push_back(lfs->opended_files, opened_file_info)) {
-                        sys_free(reinterpret_cast(void**, &opened_file_info));
+                        sys_free(cast(void**, &opened_file_info));
                         result = ENOMEM;
                 }
         }

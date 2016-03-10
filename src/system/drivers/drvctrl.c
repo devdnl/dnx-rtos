@@ -161,7 +161,7 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
 
                         // create new driver chain
                         if (result == ESUCC) {
-                                result = _kzalloc(_MM_KRN, sizeof(drvmem_t), static_cast(void *, drv));
+                                result = _kzalloc(_MM_KRN, sizeof(drvmem_t), cast(void *, drv));
                                 if (result == ESUCC) {
                                         (*drv)->devid = _dev_t__create(modno, major, minor);
                                         (*drv)->mem   = NULL;
@@ -277,7 +277,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         // allocate modules memory handles
         if (drvmem == NULL) {
                 result = _kzalloc(_MM_KRN, _drvreg_number_of_modules * sizeof(drvmem_t*),
-                                  static_cast(void *,&drvmem));
+                                  cast(void *,&drvmem));
 
                 if (result != ESUCC) {
                         return result;

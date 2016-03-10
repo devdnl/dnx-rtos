@@ -40,12 +40,8 @@
 #define const_cast(t, v) ((t)(v))
 #endif
 
-#ifndef reinterpret_cast
-#define reinterpret_cast(t, v) ((t)(v))
-#endif
-
-#ifndef static_cast
-#define static_cast(t, v) ((t)(v))
+#ifndef cast
+#define cast(t, v) ((t)(v))
 #endif
 
 /*==============================================================================
@@ -167,12 +163,12 @@ int _llist_create_krn(enum _mm_mem        mem,
         int result = EINVAL;
 
         if (list && mem != _MM_MOD && mem < _MM_COUNT) {
-                result = _kzalloc(mem, sizeof(llist_t), static_cast(void*, list));
+                result = _kzalloc(mem, sizeof(llist_t), cast(void*, list));
                 if (result == ESUCC) {
                         (*list)->malloc      = krnmalloc;
                         (*list)->free        = krnfree;
-                        (*list)->allocctx    = reinterpret_cast(void*, mem);
-                        (*list)->freectx     = reinterpret_cast(void*, mem);
+                        (*list)->allocctx    = cast(void*, mem);
+                        (*list)->freectx     = cast(void*, mem);
                         (*list)->cmp_functor = cmp_functor;
                         (*list)->obj_dtor    = obj_dtor;
                         (*list)->head        = NULL;
@@ -207,12 +203,12 @@ int _llist_create_mod(size_t              modid,
         int result = EINVAL;
 
         if (list) {
-                result = _kzalloc(_MM_MOD, sizeof(llist_t), static_cast(void*, list), modid);
+                result = _kzalloc(_MM_MOD, sizeof(llist_t), cast(void*, list), modid);
                 if (result == ESUCC) {
                         (*list)->malloc      = modmalloc;
                         (*list)->free        = modfree;
-                        (*list)->allocctx    = reinterpret_cast(void*, modid);
-                        (*list)->freectx     = reinterpret_cast(void*, modid);
+                        (*list)->allocctx    = cast(void*, modid);
+                        (*list)->freectx     = cast(void*, modid);
                         (*list)->cmp_functor = cmp_functor;
                         (*list)->obj_dtor    = obj_dtor;
                         (*list)->head        = NULL;
@@ -771,7 +767,7 @@ void *_llist_back(llist_t *this)
 int _llist_swap(llist_t *this, int j, int k)
 {
         if (is_llist_valid(this) && j >= 0 && k >= 0) {
-                if (static_cast(size_t, j) < this->count && static_cast(size_t, k) < this->count) {
+                if (cast(size_t, j) < this->count && cast(size_t, k) < this->count) {
 
                         item_t *item_a = get_item(this, j);
                         item_t *item_b = get_item(this, k);
@@ -823,8 +819,8 @@ void *_llist_begin(llist_iterator_t *iterator)
                         iterator->current = iterator->list->head;
 
                         if (iterator->current) {
-                                iterator->next = reinterpret_cast(item_t*, iterator->current)->next;
-                                return reinterpret_cast(item_t*, iterator->current)->data;
+                                iterator->next = cast(item_t*, iterator->current)->next;
+                                return cast(item_t*, iterator->current)->data;
                         }
                 }
         }
@@ -846,8 +842,8 @@ void *_llist_end(llist_iterator_t *iterator)
                         iterator->current = iterator->list->tail;
 
                         if (iterator->current) {
-                                iterator->next = reinterpret_cast(item_t*, iterator->current)->prev;
-                                return reinterpret_cast(item_t*, iterator->current)->data;
+                                iterator->next = cast(item_t*, iterator->current)->prev;
+                                return cast(item_t*, iterator->current)->data;
                         }
                 }
         }
@@ -876,7 +872,7 @@ void *_llist_range(llist_iterator_t *iterator, int begin, int end)
                         iterator->to      = get_item(iterator->list, end);
 
                         if (iterator->current) {
-                                obj = reinterpret_cast(item_t*, iterator->current)->data;
+                                obj = cast(item_t*, iterator->current)->data;
 
                                 if (iterator->current == iterator->to) {
                                         iterator->current = NULL;
@@ -904,8 +900,8 @@ void *_llist_iterator_next(llist_iterator_t *iterator)
                         iterator->current = iterator->next;
 
                         if (iterator->current) {
-                                iterator->next = reinterpret_cast(item_t*, iterator->current)->next;
-                                obj = reinterpret_cast(item_t*, iterator->current)->data;
+                                iterator->next = cast(item_t*, iterator->current)->next;
+                                obj = cast(item_t*, iterator->current)->data;
 
                                 if (iterator->current == iterator->to) {
                                         iterator->current = NULL;
@@ -933,8 +929,8 @@ void *_llist_iterator_prev(llist_iterator_t *iterator)
                         iterator->current = iterator->next;
 
                         if (iterator->current) {
-                                iterator->next = reinterpret_cast(item_t*, iterator->next)->prev;
-                                obj = reinterpret_cast(item_t*, iterator->current)->data;
+                                iterator->next = cast(item_t*, iterator->next)->prev;
+                                obj = cast(item_t*, iterator->current)->data;
 
                                 if (iterator->current == iterator->to) {
                                         iterator->current = NULL;
@@ -996,7 +992,7 @@ int _llist_functor_cmp_pointers(const void *a, const void *b)
 //==============================================================================
 int _llist_functor_cmp_strings(const void *a, const void *b)
 {
-        int d = strcmp(reinterpret_cast(char *, a), reinterpret_cast(char *, b));
+        int d = strcmp(cast(char *, a), cast(char *, b));
 
         if (d)
                 return 1;
@@ -1042,14 +1038,14 @@ static item_t *get_item(llist_t *this, int position)
 {
         enum direction {DIR_FORWARD, DIR_BACKWARD};
 
-        if (position < 0 || static_cast(size_t, position) >= this->count) {
+        if (position < 0 || cast(size_t, position) >= this->count) {
                 return NULL;
 
         } else {
                 enum direction dir;
                 item_t        *item;
 
-                if (static_cast(size_t, position) <= this->count / 2) {
+                if (cast(size_t, position) <= this->count / 2) {
                         dir      = DIR_FORWARD;
                         item     = this->head;
                 } else {
@@ -1131,10 +1127,10 @@ static int insert_item(llist_t *this, int index, const void *data)
         if (index == 0) {
                 return prepend(this, data);
 
-        } else if (static_cast(size_t, index) == this->count) {
+        } else if (cast(size_t, index) == this->count) {
                 return append(this, data);
 
-        } else if (static_cast(size_t, index) > this->count) {
+        } else if (cast(size_t, index) > this->count) {
                 return 0;
 
         } else {
@@ -1325,7 +1321,7 @@ static void usrfree(void *mem, void *freectx)
 static void *krnmalloc(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(reinterpret_cast(enum _mm_mem, allocctx), size, &mem);
+        _kmalloc(cast(enum _mm_mem, allocctx), size, &mem);
         return mem;
 }
 
@@ -1341,7 +1337,7 @@ static void *krnmalloc(size_t size, void *allocctx)
 //==============================================================================
 static void krnfree(void *mem, void *freectx)
 {
-        _kfree(reinterpret_cast(enum _mm_mem, freectx), &mem);
+        _kfree(cast(enum _mm_mem, freectx), &mem);
 }
 
 //==============================================================================
@@ -1357,7 +1353,7 @@ static void krnfree(void *mem, void *freectx)
 static void *modmalloc(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(_MM_MOD, size, &mem, reinterpret_cast(size_t, allocctx));
+        _kmalloc(_MM_MOD, size, &mem, cast(size_t, allocctx));
         return mem;
 }
 
@@ -1373,7 +1369,7 @@ static void *modmalloc(size_t size, void *allocctx)
 //==============================================================================
 static void modfree(void *mem, void *freectx)
 {
-        _kfree(_MM_MOD, &mem, reinterpret_cast(size_t, freectx));
+        _kfree(_MM_MOD, &mem, cast(size_t, freectx));
 }
 
 /*==============================================================================

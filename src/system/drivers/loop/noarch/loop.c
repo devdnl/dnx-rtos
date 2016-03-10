@@ -400,7 +400,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 if (arg && status == ESUCC) {
                         status = sys_semaphore_wait(hdl->event_req, HOST_REQUEST_TIMEOUT);
                         if (status == ESUCC) {
-                                LOOP_request_t *req = static_cast(LOOP_request_t*, arg);
+                                LOOP_request_t *req = cast(LOOP_request_t*, arg);
 
                                 req->cmd = hdl->action.cmd;
                                 switch(req->cmd) {
@@ -428,7 +428,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         case IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT:
                 status = sys_device_get_access(&hdl->host_lock);
                 if (arg && status == ESUCC) {
-                        LOOP_buffer_t *buf = static_cast(LOOP_buffer_t*, arg);
+                        LOOP_buffer_t *buf = cast(LOOP_buffer_t*, arg);
 
                         if (buf->err_no == ESUCC) {
                                 if (buf->size > hdl->action.arg.rw.size) {
@@ -458,7 +458,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         case IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT:
                 status = sys_device_get_access(&hdl->host_lock);
                 if (arg && status == ESUCC) {
-                        LOOP_buffer_t *buf = static_cast(LOOP_buffer_t*, arg);
+                        LOOP_buffer_t *buf = cast(LOOP_buffer_t*, arg);
 
                         if (buf->err_no == ESUCC) {
                                 if (  buf->size == 0
@@ -494,7 +494,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         case IOCTL_LOOP__HOST_SET_IOCTL_STATUS:
                 status = sys_device_get_access(&hdl->host_lock);
                 if (arg && status == ESUCC) {
-                        LOOP_ioctl_response_t *res  = static_cast(LOOP_ioctl_response_t*, arg);
+                        LOOP_ioctl_response_t *res  = cast(LOOP_ioctl_response_t*, arg);
 
                         hdl->action.err_no = res->err_no;
 
@@ -505,7 +505,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         case IOCTL_LOOP__HOST_SET_DEVICE_STATS:
                 status = sys_device_get_access(&hdl->host_lock);
                 if (arg && status == ESUCC) {
-                        LOOP_stat_response_t *res = static_cast(LOOP_stat_response_t*, arg);
+                        LOOP_stat_response_t *res = cast(LOOP_stat_response_t*, arg);
 
                         hdl->action.arg.stat.size = res->size;
                         hdl->action.err_no        = res->err_no;
@@ -517,7 +517,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
         case IOCTL_LOOP__HOST_FLUSH_DONE:
                 status = sys_device_get_access(&hdl->host_lock);
                 if (arg && status == ESUCC) {
-                        hdl->action.err_no = *static_cast(int*, arg);
+                        hdl->action.err_no = *cast(int*, arg);
                         status = sys_semaphore_signal(hdl->event_res);
                 }
                 break;
