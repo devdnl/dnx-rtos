@@ -767,7 +767,8 @@ INPUT                  = " ." \
                          ../../src/system/include/libc/unistd.h \
                          ../../src/system/include/kernel/sysfunc.h \
                          ../../src/system/include/fs/fs.h \
-                         ../../src/system/include/drivers/driver.h
+                         ../../src/system/include/drivers/driver.h \
+                         ../../src/system/include/lib/cast.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

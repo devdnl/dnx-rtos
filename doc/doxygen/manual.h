@@ -40,12 +40,12 @@ Project contains several folders:
 \section sec-user_manual User Manual
 \li \subpage page-application
 \li \subpage page-file-systems
-\li \subpage page-modules
+\li \subpage page-drivers
 */
 
 //------------------------------------------------------------------------------
 /**
-\page page-application Application development
+\page page-application Application Development
 
 \tableofcontents
 
@@ -197,7 +197,7 @@ and <b>./src/lib/</b> folders.
 
 //------------------------------------------------------------------------------
 /**
-\page page-file-systems File system development
+\page page-file-systems File Systems Development
 
 \tableofcontents
 
@@ -298,16 +298,257 @@ configurations are good example how to do this.
 
 //------------------------------------------------------------------------------
 /**
-\page page-modules Modules (drivers) development
+\page page-drivers Drivers Development
 
-\section sec-mod-intro Introduction
-In this section are presented libraries and examples that helps user to create
-modules (drivers).
+\tableofcontents
+
+\section sec-drv-intro Introduction
+he drivers (that are part of the modules) are based on the unified software
+architecture; in other words, each driver has the same unified interface.
+The dnx RTOS uses suitable interfaces to communicate with drivers (devices).
+The interfaces are defined as functions and all of those functions must exist
+in a particular module. Each module can operate on several devices of the same
+kind, e.g. UART (UART1, UART2), SPI (SPI1, SPI2), etc. Each peripheral interface
+has usually the same registers, interrupts, and functionality. Some parts of the
+device can be different, but usually the difference is not significant.
+In summary, one module can handle many devices of the same kind. To handle all
+devices (of the same type) by one module, the user defines major and minor
+numbers that precise which device should be initialized. The pair of those
+numbers is called the interface or simply the driver. For example, the major
+number in the UART devices means that the user selects a peripheral number:
+UART0, UART1, UART2, etc. In this case, the minor number is not used because the
+UART peripheral cannot be divided into next parts (sub-devices). This is
+different for the SPI peripherals. The major number means that the user selects
+a particular SPI device: SPI0, SPI1, etc; the minor number means that the user
+selects a specified Chip Select: CS0, CS1, etc. As we can see, those numbers can
+be easily adjusted to the user needs and the peripheral restrictions.
+
+A module is created for the specified microcontroller architecture or for any
+architecture when the code can work on any microcontroller, e.g. the TTY module.
+The modules are localized in the <b>./src/system/drivers</b> folder. Each driver
+has its own folder, Makefile, and source files. There are few files that are
+required:
+
+\arg\c *_cfg.h – the file contains module configuration flags. These flags are
+        connected to the main configuration localized in the ./config folder;
+\arg\c *_ioctl.h – the file contains IO control requests and description
+        referring to its usage;
+\arg\c *.c – the source files;
+\arg\c Makefile – the file indicates source files for compilation.
 
 
-\section sec-mod-topics Topics
-\li \subpage
+\section sec-drv-topics Interface
+The interface functions are created by macros, thanks this the name of file
+system functions are hidden and known only by the system.
+\arg API_MOD_INIT()
+\arg API_MOD_RELEASE()
+\arg API_MOD_OPEN()
+\arg API_MOD_CLOSE()
+\arg API_MOD_WRITE()
+\arg API_MOD_READ()
+\arg API_MOD_IOCTL()
+\arg API_MOD_FLUSH()
+\arg API_MOD_STAT()
+
+
+\section sec-drv-reg  Registering Module in the System
+When module folder is created and driver files are added (see @ref sec-drv-intro),
+the build process automatically add driver to the system. No user action is needed.
+For example if one create <i>abc</i> driver then it can be used in the system
+as <i>ABC</i> module.
+
+
+Example of driver source file (./src/system/drivers/abc/noarch/abc.c):
+@code
+#include "drivers/driver.h"
+#include "abc_cfg.h"
+#inclide "../abc_ioctl.h"
+
+MODULE_NAME(ABC)
+
+typedef struct {
+        ...
+} ABC_t
+
+static ABC_t *ABC;
+
+API_MOD_INIT(ABC, void **device_handle, u8_t major, u8_t minor)
+{
+        int result = sys_zalloc(sizeof(ABC_t), cast(void**, &ABC));
+
+        ...
+
+        return result;
+}
+
+API_MOD_RELEASE(ABC, void *device_handle)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_OPEN(ABC, void *device_handle, u32_t flags)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_CLOSE(ABC, void *device_handle, bool force)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_WRITE(ABC,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_READ(ABC,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_IOCTL(ABC, void *device_handle, int request, void *arg)
+{
+        ABC_t *hdl = device_handle;
+
+        int result = ...;
+
+        // ...
+
+        return result;
+}
+
+API_MOD_FLUSH(ABC, void *device_handle)
+{
+        UNUSED_ARG1(device_handle);
+
+        return ESUCC;
+}
+
+API_MOD_STAT(ABC, void *device_handle, struct vfs_dev_stat *device_stat)
+{
+        device_stat->st_size  = 0;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
+
+        return ESUCC;
+}
+
+@endcode
+
+
+Example of driver configuration file (./src/system/drivers/abc/noarch/abc_cfg.h):
+@code
+#ifndef _ABC_CFG_H_
+#define _ABC_CFG_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define _ABC_CONFIG_X1                  __ABC_CONFIG_X1__
+#define _ABC_CONFIG_X2                  __ABC_CONFIG_X2__
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _ABC_CFG_H_
+@endcode
+
+
+Example of IO control file (./src/system/drivers/abc/abc_ioctl.h):
+@code
+#ifndef _ABC_IOCTL_H_
+#define _ABC_IOCTL_H_
+
+#include "drivers/ioctl_macros.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define IOCTL_ABC__GET_X        _IOR(ABC, 0x00, int*)
+#define IOCTL_ABC__SET_X        _IOW(ABC, 0x01, int*)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _ABC_IOCTL_H_
+@endcode
+
+
+Example of driver makefile (./src/system/drivers/abc/Makefile):
+@code
+# Makefile for GNU make
+HDRLOC_NOARCH += drivers/abc
+
+ifeq ($(__ENABLE_ABC__), _YES_)
+   CSRC_NOARCH   += drivers/abc/noarch/abc.c
+   CXXSRC_NOARCH +=
+endif
+
+@endcode
+
+
+\section sec-drv-init Initializing and Releasing Module
+If our module is ready, then we can use it. The module can be initialized on
+demand in any time by invoking the driver_init() function. Mostly, the modules
+are initialized at system startup in the initd daemon. The module can be used
+only when the file node representing the driver is created.
+Module can be released by using driver_release() function.
+
+\section sec-drv-sum Summary
+The process of the implementation of module is not complicated, but there are
+several steps that must be done. The presented example is easy, more advanced
+modules can be implemented with more powerful features by using all system
+features, e.g. mutexes, sempahores, etc. To see more modules, please study the
+content of the ./src/system/drivers folder.
+
 */
+
 
 /*==============================================================================
   End of file
