@@ -193,6 +193,11 @@ this:SetToolTip("This is RTC device path. By using this file (device) the system
 --*/
 #define __OS_RTC_FILE_PATH__ "/dev/rtc"
 
+/*--
+this:AddWidget("Editline", true, "Initialization program")
+this:SetToolTip("This is the first program started after system startup.")
+--*/
+#define __OS_INIT_PROG__ "initd"
 
 /* HEAP alignment depends on selected CPU */
 #define  _HEAP_ALIGN_ _CPU_HEAP_ALIGN_

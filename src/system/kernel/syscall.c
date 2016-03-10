@@ -232,7 +232,7 @@ void _syscall_init()
 
         result |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
         result |= _process_create("kworker", NULL, NULL);
-        result |= _process_create("initd", NULL, NULL);
+        result |= _process_create(__OS_INIT_PROG__, NULL, NULL);
 
         if (result != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
