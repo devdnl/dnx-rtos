@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-wdg Watchdog Driver
+ *
+ * \section drv-wdg-desc Description
+ * Driver handles watchdog peripheral.
+ *
+ * \section drv-wdg-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _WDG_IOCTL_H_
 #define _WDG_IOCTL_H_
 
@@ -40,9 +52,9 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Reset watchdog counter. If this request won't send on time the watchdog resets the system
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
+ *  @brief Reset watchdog counter. If this request won't send on time the
+ *         watchdog resets the system.
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_WDG__RESET                _IO(WDG, 0x00)
 
@@ -67,6 +79,7 @@ extern "C" {
 #endif
 
 #endif /* _WDG_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

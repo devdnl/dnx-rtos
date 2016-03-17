@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-rtc RTC Driver
+ *
+ * \section drv-rtc-desc Description
+ * Driver handles RTC peripheral.
+ *
+ * \section drv-rtc-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _RTC_IOCTL_H_
 #define _RTC_IOCTL_H_
 
@@ -61,6 +73,7 @@ extern "C" {
 #endif
 
 #endif /* _RTC_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

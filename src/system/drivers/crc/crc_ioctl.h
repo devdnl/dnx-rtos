@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-crc CRC Driver
+ *
+ * \section drv-crc-desc Description
+ * Driver handles CRC peripheral installed in the microcontroller.
+ *
+ * \section drv-crc-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _CRC_IOCTL_H_
 #define _CRC_IOCTL_H_
 
@@ -39,26 +51,32 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return On success 0 is returned, otherwise -1 and errno code is set
+/**
+ * @brief Set CRC input mode.
+ * @param [WR] enum @ref CRC_input_mode *
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_CRC__SET_INPUT_MODE       _IOW(CRC, 0x00, enum CRC_input_mode*)
 
-/** @brief  Get CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return On success 0 is returned, otherwise -1 and errno code is set
+/**
+ * @brief  Get CRC input mode.
+ * @param [RD] enum @ref CRC_input_mode *
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_CRC__GET_INPUT_MODE       _IOR(CRC, 0x01, enum CRC_input_mode*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
+/**
+ * Selection of input data size.
+ *
+ * \note In the all input modes the result CRC value is always 32-bit.
+ */
 enum CRC_input_mode {
-        CRC_INPUT_MODE__8BIT,            /* base word is u8_t  */
-        CRC_INPUT_MODE__16BIT,           /* base word is u16_t */
-        CRC_INPUT_MODE__32BIT            /* base word is u32_t */
+        CRC_INPUT_MODE__8BIT,            //!< Base input word is u8_t
+        CRC_INPUT_MODE__16BIT,           //!< Base input word is u16_t
+        CRC_INPUT_MODE__32BIT            //!< Base input word is u32_t
 };
 
 /*==============================================================================
@@ -78,6 +96,7 @@ enum CRC_input_mode {
 #endif
 
 #endif /* _CRC_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

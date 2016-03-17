@@ -41,6 +41,23 @@ Project contains several folders:
 \li \subpage page-application
 \li \subpage page-file-systems
 \li \subpage page-drivers
+
+\section sec-drivers Drivers
+\li \subpage drv-afio
+\li \subpage drv-crc
+\li \subpage drv-ethmac
+\li \subpage drv-gpio
+\li \subpage drv-i2c
+\li \subpage drv-irq
+\li \subpage drv-loop
+\li \subpage drv-pll
+\li \subpage drv-rtc
+\li \subpage drv-sdspi
+\li \subpage drv-spi
+\li \subpage drv-tty
+\li \subpage drv-uart
+\li \subpage drv-usbd
+\li \subpage drv-wdg
 */
 
 //------------------------------------------------------------------------------

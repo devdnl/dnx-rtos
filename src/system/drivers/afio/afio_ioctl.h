@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-afio AFIO Driver
+ *
+ * \section drv-afio-desc Description
+ * Driver configures AFIO peripheral according to configuration. Driver is
+ * responsible for setting Alternative Function Input Output functionality;
+ * configures GPIO and other microcontroller-specific options (e.g. IRQ pin
+ * selection, JTAG configuration, etc).
+ *
+ * \section drv-afio-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _AFIO_IOCTL_H_
 #define _AFIO_IOCTL_H_
 
@@ -61,6 +76,7 @@ extern "C" {
 #endif
 
 #endif /* _AFIO_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-i2c I2C Driver
+ *
+ * \section drv-i2c-desc Description
+ * Driver handles I2C peripheral.
+ *
+ * \section drv-i2c-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _I2C_IOCTL_H_
 #define _I2C_IOCTL_H_
 
@@ -38,18 +50,24 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/// type defines possible modes of sub-addressing sequence (used e.g. in EEPROM)
+/**
+ * Type defines possible modes of sub-addressing sequence (used e.g. in EEPROM).
+ */
 typedef enum {
-        I2C_SUB_ADDR_MODE__DISABLED = 0,        //!< sub-addressing disabled
-        I2C_SUB_ADDR_MODE__1_BYTE   = 1,        //!< sub-address is 1 byte long
-        I2C_SUB_ADDR_MODE__2_BYTES  = 2,        //!< sub-address is 2 byte long
-        I2C_SUB_ADDR_MODE__3_BYTES  = 3         //!< sub-address is 3 byte long
+        I2C_SUB_ADDR_MODE__DISABLED = 0,        //!< Sub-addressing disabled.
+        I2C_SUB_ADDR_MODE__1_BYTE   = 1,        //!< Sub-address is 1 byte long.
+        I2C_SUB_ADDR_MODE__2_BYTES  = 2,        //!< Sub-address is 2 byte long.
+        I2C_SUB_ADDR_MODE__3_BYTES  = 3         //!< Sub-address is 3 byte long.
 } I2C_sub_addr_mode_t;
 
+/**
+ * Type represents I2C peripheral configuration.
+ *
+ */
 typedef struct {
-        u16_t               address;            //!< device address 8 or 10 bit
-        I2C_sub_addr_mode_t sub_addr_mode;      //!< 0-3: number of bytes of sub-address (EEPROM, RTC)
-        bool                addr_10bit;         //!< true: 10 bit mode address enabled
+        u16_t               address;            //!< Device address 8 or 10 bit.
+        I2C_sub_addr_mode_t sub_addr_mode;      //!< Number of bytes of sub-address (EEPROM, RTC).
+        bool                addr_10bit;         //!< @b true: 10 bit addressing enabled.
 } I2C_config_t;
 
 /*==============================================================================
@@ -57,9 +75,8 @@ typedef struct {
 ==============================================================================*/
 /**
  * @brief  Configure device
- * @param  i2c_config_t*        device configuration
- * @return Returns  0 on success.
- *         Returns -1 on error and errno value is set.
+ * @param  [WR] @ref I2C_config_t*        device configuration
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
 #define IOCTL_I2C__CONFIGURE            _IOW(I2C, 0, const I2C_config_t*)
 
@@ -80,6 +97,7 @@ typedef struct {
 #endif
 
 #endif /* _I2C_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

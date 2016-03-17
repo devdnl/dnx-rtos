@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-gpio GPIO Driver
+ *
+ * \section drv-gpio-desc Description
+ * Driver handles GPIO peripheral.
+ *
+ * \section drv-gpio-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @{
+ */
+
 #ifndef _GPIO_IOCTL_H_
 #define _GPIO_IOCTL_H_
 
@@ -45,7 +57,7 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /**
- * Type represent pin number
+ * Type represent pin number (natural number).
  */
 typedef uint GPIO_pin_t;
 
@@ -53,45 +65,45 @@ typedef uint GPIO_pin_t;
  * Type used to read pin state
  */
 typedef struct {
-        GPIO_pin_t pin;
-        int        state;
+        GPIO_pin_t pin;         //!< Pin number.
+        int        state;       //!< Pin state.
 } GPIO_pin_state_t;
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Set selected pin (pin state 1)
- *  @param  GPIO_pin_t*                 pin number
- *  @return On success 0, on error -1
+ *  @brief  Set selected pin (set pin to Hi state).
+ *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__SET_PIN             _IOW(GPIO, 0, const GPIO_pin_t*)
 
 /**
- *  @brief  Clear selected pin (pin state 0)
- *  @param  GPIO_pin_t*                 pin number
- *  @return On success 0, on error -1
+ *  @brief  Clear selected pin (set pin to Low state).
+ *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__CLEAR_PIN           _IOW(GPIO, 1, const GPIO_pin_t*)
 
 /**
- *  @brief  Toggle pin state
- *  @param  GPIO_pin_t*                 pin number
- *  @return On success 0, on error -1
+ *  @brief  Toggle pin state.
+ *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__TOGGLE_PIN          _IOW(GPIO, 2, const GPIO_pin_t*)
 
 /**
- *  @brief  Set pin state
- *  @param GPIO_pin_state*              pin number and state to set
- *  @return On success 0, on error -1
+ *  @brief  Set pin state.
+ *  @param  [WR] @ref GPIO_pin_state_t*              pin number and state to set
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__SET_PIN_STATE       _IOW(GPIO, 3, const GPIO_pin_state_t*)
 
 /**
- *  @brief  Gets pin state
- *  @param  GPIO_pin_state_t*           pin number and state
- *  @return On success 0, on error -1
+ *  @brief  Gets pin state.
+ *  @param  [RD] @ref GPIO_pin_state_t*           pin number and state
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__GET_PIN_STATE       _IOR(GPIO, 4, GPIO_pin_state_t*)
 
@@ -112,6 +124,7 @@ typedef struct {
 #endif
 
 #endif /* _GPIO_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

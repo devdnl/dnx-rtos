@@ -24,6 +24,18 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-tty TTY Driver
+ *
+ * \section drv-tty-desc Description
+ * Driver handles TTY virtual device.
+ *
+ * \section drv-tty-sup-arch Supported architectures
+ * \li Any
+ *
+ * @{
+ */
+
 #ifndef _TTY_IOCTL_H_
 #define _TTY_IOCTL_H_
 
@@ -40,73 +52,68 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Gets current TTY number
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets current TTY number.
+ *  @param  [RD] int * terminal number
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__GET_CURRENT_TTY              _IOR(TTY, 0x00, int*)
 
 /**
- *  @brief  Swtich terminal to selected one
- *  @param  int*
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Switch terminal to selected one.
+ *  @param  [WR] int * terminal number
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__SWITCH_TTY_TO                _IOW(TTY, 0x01, int*)
 
 /**
- *  @brief  Gets number of columns
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets number of columns.
+ *  @param  [RD] int * number of columns
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__GET_COL                      _IOR(TTY, 0x02, int*)
 
 /**
- *  @brief  Gets number of rows
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets number of rows.
+ *  @param  [RD] int * number of rows
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__GET_ROW                      _IOR(TTY, 0x03, int*)
 
 /**
- *  @brief  Clear screen
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Clear screen.
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__CLEAR_SCR                    _IO(TTY, 0x04)
 
 /**
- *  @brief  Enable terminal echo
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Enable terminal echo.
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__ECHO_ON                      _IO(TTY, 0x05)
 
 /**
- *  @brief  Disable terminal echo
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Disable terminal echo.
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__ECHO_OFF                     _IO(TTY, 0x06)
 
 /**
- *  @brief  Set edit line to specified user's text (string)
- *  @param  const char *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Set edit line to specified user's text (string).
+ *  @param  [WR] const char * string passed to edit line
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__SET_EDITLINE                 _IOW(TTY, 0x07, const char*)
 
-
 /**
- *  @brief  Gets number of virtual terminals
- *  @param  int *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets number of virtual terminals.
+ *  @param  [RD] int * number of virtual terminals
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(TTY, 0x08, int*)
 
 /**
- *  @brief  Refreshes last line
- *  @param  None
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Refreshes last line.
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x09)
 
@@ -131,6 +138,7 @@ extern "C" {
 #endif
 
 #endif /* _TTY_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
