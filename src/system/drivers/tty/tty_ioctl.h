@@ -33,6 +33,9 @@
  * \section drv-tty-sup-arch Supported architectures
  * \li Any
  *
+ * @todo Details
+ *
+ *
  * @{
  */
 

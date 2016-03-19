@@ -33,6 +33,9 @@
  * \section drv-usbd-sup-arch Supported architectures
  * \li STM32F10x (with USB peripheral)
  *
+ * @todo Details
+ *
+ *
  * @{
  */
 

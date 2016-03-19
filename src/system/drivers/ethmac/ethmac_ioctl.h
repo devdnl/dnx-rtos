@@ -33,6 +33,9 @@
  * \section drv-ethmac-sup-arch Supported architectures
  * \li STM32F10x (Connectivity line microcontrollers)
  *
+ * @todo Details
+ *
+ *
  * @{
  */
 

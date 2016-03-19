@@ -33,6 +33,9 @@
  * \section drv-uart-sup-arch Supported architectures
  * \li STM32F10x
  *
+ * @todo Details
+ *
+ *
  * @{
  */
 

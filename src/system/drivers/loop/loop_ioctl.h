@@ -33,6 +33,9 @@
  * \section drv-loop-sup-arch Supported architectures
  * \li Any
  *
+ * @todo Details
+ *
+ *
  * @{
  */
 
