@@ -114,7 +114,7 @@ static bool wait_for_init_done()
 {
         timer_t timer = timer_reset();
         while (!netman->ready && timer_is_not_expired(timer, init_timeout)) {
-                sleep_ms(1);
+                msleep(1);
         }
 
         return timer_is_not_expired(timer, init_timeout);
@@ -162,7 +162,7 @@ static void restore_configuration()
         if (mutex_lock(netman->access, MAX_DELAY_MS)) {
 
                 while (!_netman_is_link_connected(netman)) {
-                        sleep_ms(link_poll_time);
+                        msleep(link_poll_time);
                 }
 
                 netman->disconnected = false;
@@ -205,7 +205,7 @@ static void network_interface_thread(void *arg)
         /* open interface file */
         while (netman->if_file == NULL) {
                 netman->if_file = fopen(__NETWORK_ETHIF_FILE__, "r+");
-                sleep_ms(100);
+                msleep(100);
         }
 
         /* initialize interface */

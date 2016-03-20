@@ -34,6 +34,7 @@
 #include "config.h"
 #include "lib/cast.h"
 #include "lib/conv.h"
+#include "lib/unarg.h"
 
 /*==============================================================================
   Local macros
@@ -325,7 +326,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 spaces = false;
                         }
 
-                        if (arg_size > static_cast(int, sizeof(result) - 1)) {
+                        if (arg_size > cast(int, sizeof(result) - 1)) {
                                 arg_size = sizeof(result) - 1;
 
                         }
@@ -340,7 +341,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                         char *result_ptr = _itoa(val, result, base, unsign, expand ? arg_size : 0);
 
-                        if (static_cast(int, strlen(result_ptr)) > arg_size) {
+                        if (cast(int, strlen(result_ptr)) > arg_size) {
                                 arg_size = strlen(result_ptr);
                         }
 
@@ -352,9 +353,9 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
 
                                 if (upper) {
-                                        chr = toupper(static_cast(int, chr));
+                                        chr = toupper(cast(int, chr));
                                 } else {
-                                        chr = tolower(static_cast(int, chr));
+                                        chr = tolower(cast(int, chr));
                                 }
 
                                 if (!put_char(chr)) {

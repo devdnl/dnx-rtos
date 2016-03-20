@@ -102,27 +102,27 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG1(src_path);
 
-        int result = _sys_zalloc(sizeof(struct procfs), fs_handle);
+        int result = sys_zalloc(sizeof(struct procfs), fs_handle);
         if (result == ESUCC) {
                 struct procfs *procfs = *fs_handle;
 
-                result = _sys_llist_create(_sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
+                result = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
+                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
                 if (result != ESUCC)
                         goto finish;
 
                 finish:
                 if (result != ESUCC) {
                         if (procfs->file_list)
-                                _sys_llist_destroy(procfs->file_list);
+                                sys_llist_destroy(procfs->file_list);
 
                         if (procfs->resource_mtx)
-                                _sys_mutex_destroy(procfs->resource_mtx);
+                                sys_mutex_destroy(procfs->resource_mtx);
 
-                        _sys_free(fs_handle);
+                        sys_free(fs_handle);
                 }
         }
 
@@ -142,20 +142,20 @@ API_FS_RELEASE(procfs, void *fs_handle)
 {
         struct procfs *procfs = fs_handle;
 
-        if (_sys_mutex_lock(procfs->resource_mtx, 100) == ESUCC) {
-                if (_sys_llist_size(procfs->file_list) != 0) {
-                        _sys_mutex_unlock(procfs->resource_mtx);
+        if (sys_mutex_lock(procfs->resource_mtx, 100) == ESUCC) {
+                if (sys_llist_size(procfs->file_list) != 0) {
+                        sys_mutex_unlock(procfs->resource_mtx);
                         return EBUSY;
                 }
 
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 {
-                        _sys_mutex_unlock(procfs->resource_mtx);
-                        _sys_mutex_destroy(procfs->resource_mtx);
-                        _sys_llist_destroy(procfs->file_list);
-                        _sys_free(&fs_handle);
+                        sys_mutex_unlock(procfs->resource_mtx);
+                        sys_mutex_destroy(procfs->resource_mtx);
+                        sys_llist_destroy(procfs->file_list);
+                        sys_free(&fs_handle);
                 }
-                _sys_critical_section_end();
+                sys_critical_section_end();
 
                 return ESUCC;
 
@@ -194,10 +194,10 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                                 path += strlen(PATH_ROOT_PID);
 
                                 i32_t pid = 0;
-                                _sys_strtoi(path, 10, &pid);
+                                sys_strtoi(path, 10, &pid);
 
                                 process_stat_t stat;
-                                if (_sys_process_get_stat_pid(pid, &stat) == ESUCC) {
+                                if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
                                         return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, extra);
                                 } else {
                                         result = ENOENT;
@@ -209,8 +209,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                 } else if (strncmp(path, PATH_ROOT_BIN, strlen(PATH_ROOT_BIN)) == 0) {
                         path += strlen(PATH_ROOT_BIN);
 
-                        for (int i = 0; i < _sys_get_programs_table_size(); i++) {
-                                if (strcmp(path, _sys_get_programs_table()[i].name) == 0) {
+                        for (int i = 0; i < sys_get_programs_table_size(); i++) {
+                                if (strcmp(path, sys_get_programs_table()[i].name) == 0) {
                                         return add_file_to_list(fsctx, 0, FILE_CONTENT_BIN, extra);
                                 }
                         }
@@ -244,12 +244,12 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         struct procfs *fsctx = fs_handle;
 
-        int result = _sys_mutex_lock(fsctx->resource_mtx, 1000);
+        int result = sys_mutex_lock(fsctx->resource_mtx, 1000);
         if (result == ESUCC) {
-                int pos = _sys_llist_find_begin(fsctx->file_list, extra);
-                result  = _sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
+                int pos = sys_llist_find_begin(fsctx->file_list, extra);
+                result  = sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
 
-                _sys_mutex_unlock(fsctx->resource_mtx);
+                sys_mutex_unlock(fsctx->resource_mtx);
         }
 
         return result;
@@ -320,7 +320,7 @@ API_FS_READ(procfs,
         if (file && file->content < FILE_CONTENT_COUNT) {
 
                 char *content;
-                int result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         size_t data_size = get_file_content(file, content, FILE_BUFFER);
                         size_t seek      = min(*fpos, SIZE_MAX);
@@ -332,7 +332,7 @@ API_FS_READ(procfs,
                                 *rdcnt = n;
                         }
 
-                        _sys_free(static_cast(void**, &content));
+                        sys_free(cast(void**, &content));
                 }
         }
 
@@ -406,10 +406,10 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 stat->st_type  = FILE_TYPE_REGULAR;
 
                 char *content;
-                int result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         stat->st_size = get_file_content(file, content, FILE_BUFFER);
-                        _sys_free(static_cast(void**, &content));
+                        sys_free(cast(void**, &content));
                 }
         }
 
@@ -499,14 +499,14 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 
         } else if (strcmp(path, PATH_ROOT_PID) == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _sys_process_get_count();
+                dir->f_items    = sys_process_get_count();
                 dir->f_readdir  = procfs_readdir_pid;
                 dir->f_closedir = procfs_closedir_generic;
                 result          = ESUCC;
 
         } else if (strcmp(path, PATH_ROOT_BIN) == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _sys_get_programs_table_size();
+                dir->f_items    = sys_get_programs_table_size();
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
                 result          = ESUCC;
@@ -669,7 +669,7 @@ static int procfs_closedir_generic(void *fs_handle, DIR *dir)
         UNUSED_ARG1(fs_handle);
 
         if (dir->f_dd) {
-                return _sys_free(&dir->f_dd);
+                return sys_free(&dir->f_dd);
         } else {
                 return ESUCC;
         }
@@ -712,13 +712,13 @@ static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
 
         case 2: {
                 char *content;
-                result = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         struct file_info file = {.content = FILE_CONTENT_CPUINFO};
                         dir->dirent.name      = FILE_CPUINFO_NAME;
                         dir->dirent.filetype  = FILE_TYPE_REGULAR;
                         dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
-                        result                = _sys_free(static_cast(void**, &content));
+                        result                = sys_free(cast(void**, &content));
                 }
                 break;
         }
@@ -748,22 +748,22 @@ static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
         UNUSED_ARG1(fs_handle);
 
         process_stat_t stat;
-        int result = _sys_process_get_stat_seek(dir->f_seek++, &stat);
+        int result = sys_process_get_stat_seek(dir->f_seek++, &stat);
         if (result == ESUCC) {
                 char *content;
-                result  = _sys_zalloc(FILE_BUFFER, static_cast(void**, &content));
+                result  = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
 
                         if (dir->f_dd) {
-                                _sys_free(&dir->f_dd);
+                                sys_free(&dir->f_dd);
                         }
 
-                        result = _sys_zalloc(PID_STR_LEN, &dir->f_dd);
+                        result = sys_zalloc(PID_STR_LEN, &dir->f_dd);
                         if (result == ESUCC) {
                                 /*
                                  * Note: freed in next cycle or dir close
                                  */
-                                _sys_snprintf(dir->f_dd, PID_STR_LEN, "%u", stat.pid);
+                                sys_snprintf(dir->f_dd, PID_STR_LEN, "%u", stat.pid);
 
                                 dir->dirent.name      = dir->f_dd;
                                 dir->dirent.filetype  = FILE_TYPE_REGULAR;
@@ -775,7 +775,7 @@ static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
                                 *dirent               = &dir->dirent;
                         }
 
-                        result = _sys_free(static_cast(void**, &content));
+                        result = sys_free(cast(void**, &content));
                 }
         }
 
@@ -797,9 +797,9 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG1(fs_handle);
 
-        if (dir->f_seek < (size_t)_sys_get_programs_table_size()) {
+        if (dir->f_seek < (size_t)sys_get_programs_table_size()) {
                 dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                dir->dirent.name     = const_cast(char*, _sys_get_programs_table()[dir->f_seek].name);
+                dir->dirent.name     = const_cast(char*, sys_get_programs_table()[dir->f_seek].name);
                 dir->dirent.size     = 0;
                 *dirent              = &dir->dirent;
                 dir->f_seek++;
@@ -825,22 +825,22 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 static int add_file_to_list(struct procfs *fsctx, pid_t pid, enum file_content content, void **object)
 {
         struct file_info *file;
-        int result = _sys_zalloc(sizeof(struct file_info), static_cast(void**, &file));
+        int result = sys_zalloc(sizeof(struct file_info), cast(void**, &file));
         if (result == ESUCC) {
                 file->pid     = pid;
                 file->content = content;
 
-                result = _sys_mutex_lock(fsctx->resource_mtx, 1000);
+                result = sys_mutex_lock(fsctx->resource_mtx, 1000);
                 if (result == ESUCC) {
-                        if (_sys_llist_push_back(fsctx->file_list, file)) {
+                        if (sys_llist_push_back(fsctx->file_list, file)) {
                                 *object = file;
                                 result  = ESUCC;
                         } else {
-                                _sys_free(static_cast(void**, &file));
+                                sys_free(cast(void**, &file));
                                 result = ENOMEM;
                         }
 
-                        _sys_mutex_unlock(fsctx->resource_mtx);
+                        sys_mutex_unlock(fsctx->resource_mtx);
                 }
         }
 
@@ -869,8 +869,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                 break;
 
         case FILE_CONTENT_PID:
-                if (_sys_process_get_stat_pid(file->pid, &stat) == ESUCC) {
-                        len = _sys_snprintf(buff, size,
+                if (sys_process_get_stat_pid(file->pid, &stat) == ESUCC) {
+                        len = sys_snprintf(buff, size,
                                             "Name: %s\n"
                                             "PID: %d\n"
                                             "Memory usage: %d bytes\n"
@@ -907,31 +907,31 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                 break;
 
         case FILE_CONTENT_CPUINFO:
-                len = _sys_snprintf(buff, size,
+                len = sys_snprintf(buff, size,
                                     "CPU name  : %s\n"
                                     "CPU vendor: %s\n",
                                     _CPUCTL_PLATFORM_NAME,
                                     _CPUCTL_VENDOR_NAME);
 
                 FILE *pll;
-                int result = _sys_fopen(PLL_FILE_PATH, "r+", &pll);
+                int result = sys_fopen(PLL_FILE_PATH, "r+", &pll);
                 if (result == ESUCC) {
                         PLL_clk_info_t clkinf;
                         clkinf.iterator = 0;
 
-                        while (  _sys_ioctl(pll, IOCTL_PLL__GET_CLK_INFO, &clkinf) == ESUCC
+                        while (  sys_ioctl(pll, IOCTL_PLL__GET_CLK_INFO, &clkinf) == ESUCC
                               && clkinf.clock_name) {
 
-                                len += _sys_snprintf(buff + len,
+                                len += sys_snprintf(buff + len,
                                                      size - len,
                                                      "%16s: %d Hz\n",
                                                      clkinf.clock_name,
                                                      cast(int, clkinf.clock_Hz));
                         }
 
-                        _sys_fclose(pll);
+                        sys_fclose(pll);
                 } else {
-                        len += _sys_snprintf(buff + len, size - len,
+                        len += sys_snprintf(buff + len, size - len,
                                              "<No '"PLL_FILE_PATH"' file to show clock frequencies>\n");
                 }
                 break;

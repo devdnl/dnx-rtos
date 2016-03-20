@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-irq IRQ Driver
+ *
+ * \section drv-irq-desc Description
+ * Driver handles IRQ system.
+ *
+ * \section drv-irq-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @todo Details
+ *
+ *
+ * @{
+ */
+
 #ifndef _IRQ_IOCTL_H_
 #define _IRQ_IOCTL_H_
 
@@ -38,13 +53,16 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+ * Type represent IRQ trigger selecteion.
+ */
 typedef enum {
-        IRQ_CONFIG__IRQ_DISABLED,
-        IRQ_CONFIG__TRIGGER_ON_FALLING_EDGE,
-        IRQ_CONFIG__TRIGGER_ON_RISING_EDGE,
-        IRQ_CONFIG__TRIGGER_ON_BOTH_EDGES,
-        IRQ_CONFIG__TRIGGER_ON_LOW_LEVEL,
-        IRQ_CONFIG__TRIGGER_ON_HIGH_LEVEL,
+        IRQ_CONFIG__IRQ_DISABLED,           //!< IRQ disabled.
+        IRQ_CONFIG__TRIGGER_ON_FALLING_EDGE,//!< IRQ triggered on falling edge.
+        IRQ_CONFIG__TRIGGER_ON_RISING_EDGE, //!< IRQ triggered on rising edge.
+        IRQ_CONFIG__TRIGGER_ON_BOTH_EDGES,  //!< IRQ triggered on both edges.
+        IRQ_CONFIG__TRIGGER_ON_LOW_LEVEL,   //!< IRQ triggered on low level.
+        IRQ_CONFIG__TRIGGER_ON_HIGH_LEVEL,  //!< IRQ triggered on high level.
 } IRQ_config_t;
 
 /*==============================================================================
@@ -52,25 +70,21 @@ typedef enum {
 ==============================================================================*/
 /**
  * @brief  Wait for selected interrupt number
- * @param  u32_t*       timeout in milliseconds
- * @return Returns  0 on success.
- *         Returns -1 on error and errno value is set.
+ * @param  [WR] @ref u32_t*       timeout in milliseconds
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_IRQ__CATCH                _IOW(IRQ, 0, const u32_t*)
 
 /**
  * @brief  Software interrupt trigger
- * @param  None
- * @return Returns  0 on success.
- *         Returns -1 on error and errno value is set.
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_IRQ__TRIGGER              _IO(IRQ, 1)
 
 /**
  * @brief  Set IRQ configuration
- * @param  IRQ_config_t *
- * @return Returns  0 on success.
- *         Returns -1 on error and errno value is set.
+ * @param  [WR] @ref IRQ_config_t * IRQ trigger configuration
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_IRQ__CONFIGURE            _IOW(IRQ, 2, const IRQ_config_t*)
 
@@ -91,6 +105,7 @@ typedef enum {
 #endif
 
 #endif /* _IRQ_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

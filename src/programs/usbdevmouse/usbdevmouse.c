@@ -204,10 +204,10 @@ static const usb_string_descriptor_t(5) string_serial = {
 };
 
 static const usb_max_string_descriptor_t *string[] = {
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_lang),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_manufacturer),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_product),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
+        cast(usb_max_string_descriptor_t*, &string_lang),
+        cast(usb_max_string_descriptor_t*, &string_manufacturer),
+        cast(usb_max_string_descriptor_t*, &string_product),
+        cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
 /*==============================================================================
@@ -406,7 +406,7 @@ start:
                                         if (n == 0) {
                                                 printf(VT100_FONT_COLOR_RED" (%d/%d)"VT100_RESET_ATTRIBUTES"\n", n, size);
                                         } else {
-                                                printf(" (%d/%d)\n", static_cast(int, n), static_cast(int, size));
+                                                printf(" (%d/%d)\n", cast(int, n), cast(int, size));
                                         }
 
                                 } else {

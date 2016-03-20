@@ -95,7 +95,7 @@ int _pipe_create(pipe_t **pipe)
         int result = EINVAL;
 
         if (pipe) {
-                result = _kmalloc(_MM_KRN, sizeof(pipe_t), static_cast(void**, pipe));
+                result = _kmalloc(_MM_KRN, sizeof(pipe_t), cast(void**, pipe));
                 if (result == ESUCC) {
 
                         result = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
@@ -103,7 +103,7 @@ int _pipe_create(pipe_t **pipe)
                                 (*pipe)->self   = *pipe;
                                 (*pipe)->closed = false;
                         } else {
-                                _kfree(_MM_KRN, reinterpret_cast(void**, pipe));
+                                _kfree(_MM_KRN, cast(void**, pipe));
                         }
                 }
         }
@@ -125,7 +125,7 @@ int _pipe_destroy(pipe_t *pipe)
         if (is_valid(pipe)) {
                 _queue_destroy(pipe->queue);
                 pipe->self = NULL;
-                _kfree(_MM_KRN, static_cast(void**, &pipe));
+                _kfree(_MM_KRN, cast(void**, &pipe));
                 return ESUCC;
         } else {
                 return EINVAL;

@@ -24,6 +24,10 @@
 
 *//*==========================================================================*/
 
+/*
+Doxygen documentation is in the kernel/errno.h file
+*/
+
 #ifndef _ERRNO_H_
 #define _ERRNO_H_
 

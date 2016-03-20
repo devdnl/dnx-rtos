@@ -35,8 +35,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KiB                             static_cast(u32_t, 1024)
-#define MiB                             static_cast(u32_t, 1024*1024)
+#define KiB                             cast(u32_t, 1024)
+#define MiB                             cast(u32_t, 1024*1024)
 #define CONVERT_TO_KiB(_val)            (_val >> 10)
 #define CONVERT_TO_MiB(_val)            (_val >> 20)
 
@@ -144,8 +144,8 @@ GLOBAL_VARIABLES_SECTION {
 //               net_IP_get_part_b(&ifcfg.net_mask),
 //               net_IP_get_part_c(&ifcfg.net_mask),
 //               net_IP_get_part_d(&ifcfg.net_mask),
-//               ifcfg.rx_packets, static_cast(int, ifcfg.rx_bytes), rx_unit,
-//               ifcfg.tx_packets, static_cast(int, ifcfg.tx_bytes), tx_unit);
+//               ifcfg.rx_packets, cast(int, ifcfg.rx_bytes), rx_unit,
+//               ifcfg.tx_packets, cast(int, ifcfg.tx_bytes), tx_unit);
 //}
 //
 ////==============================================================================

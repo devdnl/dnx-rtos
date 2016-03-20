@@ -172,7 +172,7 @@ static int run_level_exit(void)
         ISR_disable();
 
         while (true) {
-                sleep_ms(MAX_DELAY_MS);
+                msleep(MAX_DELAY_MS);
         }
 
         return STD_RET_OK;

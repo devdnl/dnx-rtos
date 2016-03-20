@@ -106,11 +106,11 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG1(src_path);
 
-        int result = _sys_zalloc(sizeof(struct devfs), fs_handle);
+        int result = sys_zalloc(sizeof(struct devfs), fs_handle);
         if (result == ESUCC) {
                 struct devfs *devfs = *fs_handle;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &devfs->mutex);
+                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &devfs->mutex);
                 if (result != ESUCC)
                         goto finish;
 
@@ -125,12 +125,12 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
                 finish:
                 if (result != ESUCC) {
                         if (devfs->mutex)
-                                _sys_mutex_destroy(devfs->mutex);
+                                sys_mutex_destroy(devfs->mutex);
 
                         if (devfs->root_chain)
                                 chain_destroy(devfs->root_chain);
 
-                        _sys_free(fs_handle);
+                        sys_free(fs_handle);
                 }
         }
 
@@ -150,20 +150,20 @@ API_FS_RELEASE(devfs, void *fs_handle)
 {
         struct devfs *devfs = fs_handle;
 
-        if (_sys_mutex_lock(devfs->mutex, 100) == ESUCC) {
+        if (sys_mutex_lock(devfs->mutex, 100) == ESUCC) {
                 if (devfs->number_of_opened_files != 0) {
-                        _sys_mutex_unlock(devfs->mutex);
+                        sys_mutex_unlock(devfs->mutex);
                         return EBUSY;
                 }
 
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 {
-                        _sys_mutex_unlock(devfs->mutex);
+                        sys_mutex_unlock(devfs->mutex);
                         chain_destroy(devfs->root_chain);
-                        _sys_mutex_destroy(devfs->mutex);
-                        _sys_free(fs_handle);
+                        sys_mutex_destroy(devfs->mutex);
+                        sys_free(fs_handle);
                 }
-                _sys_critical_section_end();
+                sys_critical_section_end();
 
                 return ESUCC;
         } else {
@@ -191,7 +191,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
         struct devfs *devfs  = fs_handle;
 
-        int status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (status == ESUCC) {
 
                 struct devnode *node;
@@ -199,7 +199,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 if (status == ESUCC) {
                         int open;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = _sys_driver_open(node->IF.drv, flags);
+                                open = sys_driver_open(node->IF.drv, flags);
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = ESUCC;
                         } else {
@@ -214,7 +214,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -241,7 +241,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         int status;
         if (node->type == FILE_TYPE_DRV) {
-                status = _sys_driver_close(node->IF.drv, force);
+                status = sys_driver_close(node->IF.drv, force);
         } else if (node->type == FILE_TYPE_PIPE) {
                 status = ESUCC;
         } else {
@@ -250,11 +250,11 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         if (status == ESUCC) {
 
-                status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+                status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
                 if (status == ESUCC) {
                         devfs->number_of_opened_files--;
                         node->opended--;
-                        _sys_mutex_unlock(devfs->mutex);
+                        sys_mutex_unlock(devfs->mutex);
                 }
         }
 
@@ -293,9 +293,9 @@ API_FS_WRITE(devfs,
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_write(node->IF.drv, src, count, fpos, wrcnt, fattr);
+                return sys_driver_write(node->IF.drv, src, count, fpos, wrcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_write(node->IF.pipe, src, count, wrcnt, fattr.non_blocking_wr);
+                return sys_pipe_write(node->IF.pipe, src, count, wrcnt, fattr.non_blocking_wr);
         } else {
                 return ENXIO;
         }
@@ -333,9 +333,9 @@ API_FS_READ(devfs,
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_read(node->IF.drv, dst, count, fpos, rdcnt, fattr);
+                return sys_driver_read(node->IF.drv, dst, count, fpos, rdcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_read(node->IF.pipe, dst, count, rdcnt, fattr.non_blocking_rd);
+                return sys_pipe_read(node->IF.pipe, dst, count, rdcnt, fattr.non_blocking_rd);
         } else {
                 return ENXIO;
         }
@@ -362,11 +362,11 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_ioctl(node->IF.drv, request, arg);
+                return sys_driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
-                return _sys_pipe_close(node->IF.pipe) ? ESUCC : EINVAL;
+                return sys_pipe_close(node->IF.pipe) ? ESUCC : EINVAL;
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLEAR) {
-                return _sys_pipe_clear(node->IF.pipe) ? ESUCC : EINVAL;
+                return sys_pipe_clear(node->IF.pipe) ? ESUCC : EINVAL;
         } else {
                 return EBADRQC;
         }
@@ -391,7 +391,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_flush(node->IF.drv);
+                return sys_driver_flush(node->IF.drv);
         } else {
                 return EINVAL;
         }
@@ -425,7 +425,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 
         if (node->type == FILE_TYPE_DRV) {
                 struct vfs_dev_stat devstat;
-                result = _sys_driver_stat(node->IF.drv, &devstat);
+                result = sys_driver_stat(node->IF.drv, &devstat);
                 if (result == ESUCC) {
                         stat->st_dev  = devstat.st_major << 8 | devstat.st_minor;
                         stat->st_size = devstat.st_size;
@@ -433,7 +433,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
                 size_t pipelen;
-                result = _sys_pipe_get_length(node->IF.pipe, &pipelen);
+                result = sys_pipe_get_length(node->IF.pipe, &pipelen);
                 if (result == ESUCC) {
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
@@ -479,7 +479,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct devfs *devfs  = fs_handle;
 
-        int result = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int result = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (result == ESUCC) {
 
                 result = create_new_chain_if_necessary(devfs);
@@ -489,11 +489,11 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                         result = chain_get_empty_node(devfs->root_chain, &node);
                         if (result == ESUCC) {
 
-                                result = _sys_pipe_create(&node->IF.pipe);
+                                result = sys_pipe_create(&node->IF.pipe);
                                 if (result == ESUCC) {
 
-                                        result = _sys_malloc(strlen(path + 1) + 1,
-                                                             reinterpret_cast(void**, &node->path));
+                                        result = sys_malloc(strlen(path + 1) + 1,
+                                                             cast(void**, &node->path));
                                         if (result == ESUCC) {
 
                                                 strcpy(node->path, path + 1);
@@ -504,13 +504,13 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 
                                                 devfs->number_of_used_nodes++;
                                         } else {
-                                                _sys_pipe_destroy(node->IF.pipe);
+                                                sys_pipe_destroy(node->IF.pipe);
                                         }
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return result;
@@ -531,7 +531,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
 {
         struct devfs *devfs  = fs_handle;
 
-        int result = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int result = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (result == ESUCC) {
 
                 result = create_new_chain_if_necessary(devfs);
@@ -541,7 +541,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
                         result = chain_get_empty_node(devfs->root_chain, &node);
                         if (result == ESUCC) {
 
-                                result = _sys_malloc(strlen(path + 1) + 1, reinterpret_cast(void**, &node->path));
+                                result = sys_malloc(strlen(path + 1) + 1, cast(void**, &node->path));
                                 if (result == ESUCC) {
 
                                         strcpy(node->path, path + 1);
@@ -556,7 +556,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return result;
@@ -624,7 +624,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         struct devfs *devfs  = fs_handle;
 
-        int result = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int result = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (result == ESUCC) {
 
                 struct devnode *node;
@@ -633,7 +633,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 
                         if (node->type == FILE_TYPE_DRV) {
                                 struct vfs_dev_stat devstat;
-                                result = _sys_driver_stat(node->IF.drv, &devstat);
+                                result = sys_driver_stat(node->IF.drv, &devstat);
                                 if (result == ESUCC) {
                                         dir->dirent.size = devstat.st_size;
                                 } else {
@@ -644,7 +644,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 size_t n;
-                                result = _sys_pipe_get_length(node->IF.pipe, &n);
+                                result = sys_pipe_get_length(node->IF.pipe, &n);
                                 if (result == ESUCC) {
                                         dir->dirent.size = n;
                                 } else {
@@ -662,7 +662,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                         *dirent = &dir->dirent;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return result;
@@ -682,7 +682,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 {
         struct devfs *devfs  = fs_handle;
 
-        int status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (status == ESUCC) {
 
                 struct devnode *node;
@@ -691,11 +691,11 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 
                         if (node->opended == 0) {
                                 if (node->type == FILE_TYPE_PIPE) {
-                                        _sys_pipe_destroy(node->IF.pipe);
+                                        sys_pipe_destroy(node->IF.pipe);
                                 }
                                 node->IF.generic = NULL;
 
-                                _sys_free(reinterpret_cast(void**, &node->path));
+                                sys_free(cast(void**, &node->path));
                                 node->path  = NULL;
                                 node->gid   = 0;
                                 node->uid   = 0;
@@ -707,7 +707,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -728,7 +728,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
 {
         struct devfs *devfs  = fs_handle;
 
-        int result = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int result = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (result == ESUCC) {
 
                 struct devnode *node;
@@ -736,17 +736,17 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
                 if (result == ESUCC) {
 
                         char *name;
-                        result = _sys_malloc(strlen(new_name) + 1, reinterpret_cast(void**, &name));
+                        result = sys_malloc(strlen(new_name) + 1, cast(void**, &name));
                         if (result == ESUCC) {
                                 strcpy(name, new_name);
-                                _sys_free(reinterpret_cast(void**, &node->path));
+                                sys_free(cast(void**, &node->path));
                                 node->path = name;
                         } else {
                                 result = ENOSPC;
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return result;
@@ -767,7 +767,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct devfs *devfs  = fs_handle;
 
-        int status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (status == ESUCC) {
 
                 struct devnode *node;
@@ -776,7 +776,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
                         node->mode = mode;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -798,7 +798,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct devfs *devfs  = fs_handle;
 
-        int status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (status == ESUCC) {
 
                 struct devnode *node;
@@ -808,7 +808,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                         node->gid = group;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -829,7 +829,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
 {
         struct devfs *devfs  = fs_handle;
 
-        int status = _sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
         if (status == ESUCC) {
 
                 struct devnode *node;
@@ -838,7 +838,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
                         status = _devfs_fstat(devfs, node, 0, stat);
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -980,7 +980,7 @@ static int chain_get_n_node(struct devfs_chain *chain, int n, struct devnode **n
 //==============================================================================
 static int chain_create(struct devfs_chain **chain)
 {
-        return _sys_zalloc(sizeof(struct devfs_chain), reinterpret_cast(void**, chain));
+        return sys_zalloc(sizeof(struct devfs_chain), cast(void**, chain));
 }
 
 //==============================================================================
@@ -998,15 +998,15 @@ static void chain_destroy(struct devfs_chain *chain)
 
         for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                 if (chain->devnode[i].IF.generic) {
-                        _sys_free(&chain->devnode[i].IF.generic);
+                        sys_free(&chain->devnode[i].IF.generic);
                 }
 
                 if (chain->devnode[i].path) {
-                        _sys_free(reinterpret_cast(void**, &chain->devnode[i].path));
+                        sys_free(cast(void**, &chain->devnode[i].path));
                 }
         }
 
-        _sys_free(reinterpret_cast(void**, &chain));
+        sys_free(cast(void**, &chain));
 }
 
 //==============================================================================

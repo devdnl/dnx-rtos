@@ -132,8 +132,8 @@ char *_itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
                 i32_t quot, rem;
                 do {
                         if (usign_val) {
-                                quot = static_cast(u32_t, val) / base;
-                                rem  = static_cast(u32_t, val) % base;
+                                quot = cast(u32_t, val) / base;
+                                rem  = cast(u32_t, val) % base;
                         } else {
                                 quot = val / base;
                                 rem  = val % base;
@@ -205,7 +205,7 @@ int _dtoa(double value, char *str, int prec, int n)
         }
 
         /* if input is larger than thres_max, revert to exponential */
-        const double thres_max = reinterpret_cast(double, 0x7FFFFFFF);
+        const double thres_max = cast(double, 0x7FFFFFFF);
 
         double diff  = 0.0;
 

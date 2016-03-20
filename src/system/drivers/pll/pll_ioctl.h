@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-pll PLL Driver
+ *
+ * \section drv-pll-desc Description
+ * Driver handles PLL peripheral.
+ *
+ * \section drv-pll-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @todo Details
+ *
+ *
+ * @{
+ */
+
 #ifndef _PLL_IOCTL_H_
 #define _PLL_IOCTL_H_
 
@@ -40,19 +55,43 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Get frequency and name of selected clock [Hz]
- *  @param  PLL_clk_info_t *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Get frequency and name of selected clock [Hz].
+ *  @param  [WR,RD] @ref PLL_clk_info_t * clock information.
+ *  @return On success 0 is returned, otherwise -1.
+ *
+ *  @b Example
+ *  @code
+    #include <sys/ioctl.h>
+
+    //...
+
+    PLL_clk_info_t info;
+    info.iterator = 0;
+
+    int stat;
+
+    do {
+            stat = ioctl(IOCTL_PLL__GET_CLK_INFO, &info);
+
+            printf("%s: %d Hz\n", info.clock_name, info.clock_Hz);
+
+    while (stat == 0 && info.clock_name);
+
+    //...
+    @endcode
  */
-#define IOCTL_PLL__GET_CLK_INFO   _IOR(PLL, 0x00, PLL_clk_info_t*)
+#define IOCTL_PLL__GET_CLK_INFO   _IOWR(PLL, 0x00, PLL_clk_info_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+ * Type represent clock info object (iterator).
+ */
 typedef struct {
-        u8_t        iterator;           //!< [IN]  clock iterator (starts from 0, auto incremented)
-        u32_t       clock_Hz;           //!< [OUT] clock frequency in Hz
-        const char *clock_name;         //!< [OUT] clock name
+        u8_t        iterator;           //!< [IN]  Clock iterator (starts from 0, auto incremented).
+        u32_t       clock_Hz;           //!< [OUT] Clock frequency in Hz.
+        const char *clock_name;         //!< [OUT] Clock name (NULL if clock does not exist, end of iteration).
 } PLL_clk_info_t;
 
 /*==============================================================================
@@ -72,6 +111,7 @@ typedef struct {
 #endif
 
 #endif /* _PLL_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

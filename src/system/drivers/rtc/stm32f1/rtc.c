@@ -91,12 +91,12 @@ API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor)
 
         if (!(RCC->BDCR & RCC_BDCR_RTCEN)) {
 
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 {
                         uint attempts = RTC_WRITE_ATTEMPTS;
                         while (!(RTCP->CRL & RTC_CRL_RTOFF)) {
                                 if (--attempts == 0) {
-                                        _sys_critical_section_end();
+                                        sys_critical_section_end();
                                         return EIO;
                                 }
                         }
@@ -115,7 +115,7 @@ API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor)
 
                 SET_BIT(RCC->BDCR, RCC_BDCR_RTCEN);
 
-                _sys_critical_section_end();
+                sys_critical_section_end();
         }
 
         return ESUCC;
@@ -201,12 +201,12 @@ API_MOD_WRITE(RTC,
                 time_t t = 0;
                 memcpy(&t, src, count);
 
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 {
                         uint attempts = RTC_WRITE_ATTEMPTS;
                         while (!(RTCP->CRL & RTC_CRL_RTOFF)) {
                                 if (--attempts == 0) {
-                                        _sys_critical_section_end();
+                                        sys_critical_section_end();
                                         return EIO;
                                 }
                         }
@@ -217,7 +217,7 @@ API_MOD_WRITE(RTC,
                         CLEAR_BIT(RTCP->CRL, RTC_CRL_CNF);
                         while (!(RTCP->CRL & RTC_CRL_RTOFF) && attempts--);
                 }
-                _sys_critical_section_end();
+                sys_critical_section_end();
 
                 *wrcnt = count;
 
@@ -254,9 +254,9 @@ API_MOD_READ(RTC,
         if (*fpos == 0) {
                 count = count > sizeof(time_t) ? sizeof(time_t) : count;
 
-                _sys_critical_section_begin();
+                sys_critical_section_begin();
                 u32_t cnt = (RTCP->CNTH << 16) + RTCP->CNTL;
-                _sys_critical_section_end();
+                sys_critical_section_end();
 
                 memcpy(dst, &cnt, count);
 

@@ -56,13 +56,13 @@
 
 /**@brief   Memory allocation function (e.g. void *malloc(size_t size)) */
 #ifndef ext4_malloc
-static inline void *_ext2_malloc(size_t size) {void *mem = NULL; _sys_malloc(size, &mem); return mem;}
+static inline void *_ext2_malloc(size_t size) {void *mem = NULL; sys_malloc(size, &mem); return mem;}
 #define ext4_malloc                             _ext2_malloc
 #endif
 
 /**@brief   Memory free function (e.g. void free(void *mem)) */
 #ifndef ext4_free
-static inline void _ext2_free(void *mem) {_sys_free(&mem);}
+static inline void _ext2_free(void *mem) {sys_free(&mem);}
 #define ext4_free                               _ext2_free
 #endif
 
@@ -76,7 +76,7 @@ static inline void _ext2_free(void *mem) {_sys_free(&mem);}
 
 /**@brief   Current time in UNIX epoch (if not used set to 0) */
 #ifndef ext4_now
-#define ext4_now                                _sys_time(NULL)
+#define ext4_now                                sys_time(NULL)
 #endif
 
 /**@brief   Current UID (if not used set to 0) */

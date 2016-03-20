@@ -48,7 +48,7 @@
 ==============================================================================*/
 static void set_flash_latency       (u32_t latency);
 static void enable_prefetch_buffer  (void);
-static int  wait_for_flag           (u32_t flag, uint timeout);
+static int  wait_for_flag           (u32_t flag, u32_t timeout);
 static bool is_APB1_divided         (void);
 static bool is_APB2_divided         (void);
 
@@ -166,7 +166,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         RCC_SYSCLKConfig(_PLL_CFG__SYSCLK_SRC);
         RCC_MCOConfig(_PLL_CFG__MCO_SRC);
 
-        _sys_update_system_clocks();
+        sys_update_system_clocks();
 
         return ESUCC;
 }
@@ -185,7 +185,7 @@ API_MOD_RELEASE(PLL, void *device_handle)
         UNUSED_ARG1(device_handle);
 
         RCC_DeInit();
-        _sys_update_system_clocks();
+        sys_update_system_clocks();
 
         return ESUCC;
 }
@@ -446,11 +446,11 @@ static void enable_prefetch_buffer(void)
  * @return ESUCC if success, ETIME on error
  */
 //==============================================================================
-static int wait_for_flag(u32_t flag, uint timeout)
+static int wait_for_flag(u32_t flag, u32_t timeout)
 {
-        uint timer = _sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (_sys_time_is_expired(timer, timeout)) {
+                if (sys_time_is_expired(timer, timeout)) {
                         return ETIME;
                 }
         }

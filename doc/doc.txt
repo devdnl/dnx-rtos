@@ -1,1 +1,2 @@
-Documentation can be found at http://www.dnx-rtos.org/
+Documentation can be found at http://www.dnx-rtos.org/ or locally by using
+Doxygen (make doxygen).

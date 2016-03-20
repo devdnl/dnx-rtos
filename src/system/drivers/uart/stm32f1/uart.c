@@ -213,23 +213,23 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        int result = _sys_zalloc(sizeof(struct UART_mem), device_handle);
+        int result = sys_zalloc(sizeof(struct UART_mem), device_handle);
         if (result == ESUCC) {
                 UART_mem[major] = *device_handle;
 
-                result = _sys_semaphore_create(1, 0, &UART_mem[major]->data_write_sem);
+                result = sys_semaphore_create(1, 0, &UART_mem[major]->data_write_sem);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &UART_mem[major]->data_read_sem);
+                result = sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &UART_mem[major]->data_read_sem);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_rx_mtx);
+                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_rx_mtx);
                 if (result != ESUCC)
                         goto finish;
 
-                result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_tx_mtx);
+                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &UART_mem[major]->port_lock_tx_mtx);
                 if (result != ESUCC)
                         goto finish;
 
@@ -245,18 +245,18 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 finish:
                 if (result != ESUCC) {
                         if (UART_mem[major]->port_lock_tx_mtx)
-                                _sys_mutex_destroy(UART_mem[major]->port_lock_tx_mtx);
+                                sys_mutex_destroy(UART_mem[major]->port_lock_tx_mtx);
 
                         if (UART_mem[major]->port_lock_rx_mtx)
-                                _sys_mutex_destroy(UART_mem[major]->port_lock_rx_mtx);
+                                sys_mutex_destroy(UART_mem[major]->port_lock_rx_mtx);
 
                         if (UART_mem[major]->data_write_sem)
-                                _sys_semaphore_destroy(UART_mem[major]->data_write_sem);
+                                sys_semaphore_destroy(UART_mem[major]->data_write_sem);
 
                         if (UART_mem[major]->data_write_sem)
-                                _sys_semaphore_destroy(UART_mem[major]->data_write_sem);
+                                sys_semaphore_destroy(UART_mem[major]->data_write_sem);
 
-                        _sys_free(device_handle);
+                        sys_free(device_handle);
                         UART_mem[major] = NULL;
                 }
         }
@@ -277,30 +277,30 @@ API_MOD_RELEASE(UART, void *device_handle)
 {
         struct UART_mem *hdl = device_handle;
 
-        if (_sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT) == ESUCC) {
-                if (_sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT) == ESUCC) {
+        if (sys_mutex_lock(hdl->port_lock_rx_mtx, RELEASE_TIMEOUT) == ESUCC) {
+                if (sys_mutex_lock(hdl->port_lock_tx_mtx, RELEASE_TIMEOUT) == ESUCC) {
 
-                        _sys_critical_section_begin();
+                        sys_critical_section_begin();
                         {
-                                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
-                                _sys_mutex_unlock(hdl->port_lock_tx_mtx);
+                                sys_mutex_unlock(hdl->port_lock_rx_mtx);
+                                sys_mutex_unlock(hdl->port_lock_tx_mtx);
 
-                                _sys_mutex_destroy(hdl->port_lock_rx_mtx);
-                                _sys_mutex_destroy(hdl->port_lock_tx_mtx);
+                                sys_mutex_destroy(hdl->port_lock_rx_mtx);
+                                sys_mutex_destroy(hdl->port_lock_tx_mtx);
 
-                                _sys_semaphore_destroy(hdl->data_write_sem);
+                                sys_semaphore_destroy(hdl->data_write_sem);
 
                                 UART_turn_off(&UART[hdl->major]);
 
                                 UART_mem[hdl->major] = NULL;
-                                _sys_free(device_handle);
+                                sys_free(device_handle);
                         }
-                        _sys_critical_section_end();
+                        sys_critical_section_end();
 
                         return ESUCC;
                 }
 
-                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
+                sys_mutex_unlock(hdl->port_lock_rx_mtx);
         }
 
         return EBUSY;
@@ -366,19 +366,19 @@ API_MOD_WRITE(UART,
 
         struct UART_mem *hdl = device_handle;
 
-        int result = _sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
+        int result = sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
         if (result == ESUCC) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
                 SET_BIT(UART[hdl->major].UART->CR1, USART_CR1_TXEIE);
 
-                result = _sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
+                result = sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
                 if (result == ESUCC) {
                         *wrcnt = count - hdl->Tx_buffer.data_size;
                 }
 
-                _sys_mutex_unlock(hdl->port_lock_tx_mtx);
+                sys_mutex_unlock(hdl->port_lock_tx_mtx);
         }
 
         return result;
@@ -410,12 +410,12 @@ API_MOD_READ(UART,
 
         struct UART_mem *hdl = device_handle;
 
-        int result = _sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT);
+        int result = sys_mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT);
         if (result == ESUCC) {
                 *rdcnt = 0;
 
                 while (count--) {
-                        result = _sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
+                        result = sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
                         if (result == ESUCC) {
                                 CLEAR_BIT(UART[hdl->major].UART->CR1, USART_CR1_RXNEIE);
                                 if (FIFO_read(&hdl->Rx_FIFO, dst)) {
@@ -426,7 +426,7 @@ API_MOD_READ(UART,
                         }
                 }
 
-                _sys_mutex_unlock(hdl->port_lock_rx_mtx);
+                sys_mutex_unlock(hdl->port_lock_rx_mtx);
         }
 
         return result;
@@ -452,12 +452,12 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
                         UART_configure(hdl->major, arg);
-                        hdl->config = *static_cast(struct UART_config *, arg);
+                        hdl->config = *cast(struct UART_config *, arg);
                         result = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
-                        *static_cast(struct UART_config *, arg) = hdl->config;
+                        *cast(struct UART_config *, arg) = hdl->config;
                         result = ESUCC;
                         break;
 
@@ -730,7 +730,7 @@ static void IRQ_handle(u8_t major)
         }
 
         while (received--) {
-                _sys_semaphore_signal_from_ISR(UART_mem[major]->data_read_sem, NULL);
+                sys_semaphore_signal_from_ISR(UART_mem[major]->data_read_sem, NULL);
                 yield = true;
         }
 
@@ -750,20 +750,20 @@ static void IRQ_handle(u8_t major)
                 } else {
                         /* this shall never happen */
                         CLEAR_BIT(DEV->UART->CR1, USART_CR1_TXEIE);
-                        _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
+                        sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
                 }
 
         } else if ((DEV->UART->CR1 & USART_CR1_TCIE) && (DEV->UART->SR & USART_SR_TC)) {
 
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_TCIE);
-                _sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
+                sys_semaphore_signal_from_ISR(UART_mem[major]->data_write_sem, NULL);
                 yield = true;
         }
 
 
         /* yield thread if data send or received */
         if (yield) {
-                _sys_thread_yield_from_ISR();
+                sys_thread_yield_from_ISR();
         }
 }
 

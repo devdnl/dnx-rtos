@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-uart UART Driver
+ *
+ * \section drv-uart-desc Description
+ * Driver handles UART peripheral.
+ *
+ * \section drv-uart-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @todo Details
+ *
+ *
+ * @{
+ */
+
 #ifndef _UART_IOCTL_H_
 #define _UART_IOCTL_H_
 
@@ -40,55 +55,67 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Set UART configuration
- *  @param  struct UART_config *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Set UART configuration.
+ *  @param  [WR] struct @ref UART_config * UART peripheral configuration
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__SET_CONFIGURATION           _IOW(UART, 0x00, struct UART_config*)
 
 /**
- *  @brief  Gets UART configuration
- *  @param  struct UART_config *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets UART configuration.
+ *  @param  [RD] struct @ref UART_config * UART peripheral configuration
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__GET_CONFIGURATION           _IOR(UART, 0x01, struct UART_config*)
 
 /**
- *  @brief  Gets character from UART in non-blocking mode
- *  @param  char *
- *  @return On success 0 is returned, otherwise -1
+ *  @brief  Gets character from UART in non-blocking mode.
+ *  @param  [RD] char * read character
+ *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__GET_CHAR_UNBLOCKING         _IOR(UART, 0x02, char*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+ * Type represent parity configuration.
+ */
 enum UART_parity {
-        UART_PARITY__OFF,
-        UART_PARITY__ODD,
-        UART_PARITY__EVEN
+        UART_PARITY__OFF,                       //!< Parity disabled.
+        UART_PARITY__ODD,                       //!< Odd parity enabled.
+        UART_PARITY__EVEN                       //!< Even parity enabled.
 };
 
+/**
+ * Type represent stop bit configuration.
+ */
 enum UART_stop_bit {
-        UART_STOP_BIT__1,
-        UART_STOP_BIT__2
+        UART_STOP_BIT__1,                       //!< One stop bit.
+        UART_STOP_BIT__2                        //!< Two stop bit.
 };
 
+/**
+ * Type represent LIN break mode configuration.
+ */
 enum UART_LIN_break {
-        UART_LIN_BREAK__10_BITS,
-        UART_LIN_BREAK__11_BITS
+        UART_LIN_BREAK__10_BITS,                //!< Break condition 10 bits long.
+        UART_LIN_BREAK__11_BITS                 //!< Break condition 11 bits long.
 };
 
+/**
+ * Type represent UART configuration.
+ */
 struct UART_config {
-        enum UART_parity            parity                  : 2;
-        enum UART_stop_bit          stop_bits               : 1;
-        enum UART_LIN_break         LIN_break_length        : 1;
-        bool                        tx_enable               : 1;
-        bool                        rx_enable               : 1;
-        bool                        LIN_mode_enable         : 1;
-        bool                        hardware_flow_ctrl      : 1;
-        bool                        single_wire_mode        : 1;
-        u32_t                       baud                    : 23;
+        enum UART_parity    parity;             //!< Parity configuration.
+        enum UART_stop_bit  stop_bits;          //!< Stop bits configuration.
+        enum UART_LIN_break LIN_break_length;   //!< LIN break length.
+        bool                tx_enable;          //!< Tx channel enable.
+        bool                rx_enable;          //!< Rx channel enable.
+        bool                LIN_mode_enable;    //!< LIN mode enable.
+        bool                hardware_flow_ctrl; //!< Hardware flow control enable (RTS, CTS).
+        bool                single_wire_mode;   //!< Single wire mode enable.
+        u32_t               baud;               //!< Baudrate.
 };
 
 /*==============================================================================
@@ -108,6 +135,7 @@ struct UART_config {
 #endif
 
 #endif /* _UART_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

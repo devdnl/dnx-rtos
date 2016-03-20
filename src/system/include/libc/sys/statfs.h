@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   File systems information.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,6 +23,14 @@
 
 
 *//*==========================================================================*/
+
+/**
+\defgroup sys-statfs-h <sys/statfs.h>
+
+The library is used to get file systems information.
+
+*/
+/**@{*/
 
 #ifndef _STATFS_H_
 #define _STATFS_H_
@@ -58,42 +66,42 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int statfs(const char *path, struct statfs *statfs)
- * The function <b>statfs</b>() returns information about a mounted file system.
- * <i>path</i> is directory of the mount point of file system.
- * <i>buf</i> is a pointer to a <b>statfs</b> structure defined as follows:
- * <pre>
- * struct statfs {
- *         u32_t f_type;            // file system type
- *         u32_t f_bsize;           // block size
- *         u32_t f_blocks;          // total blocks
- *         u32_t f_bfree;           // free blocks
- *         u32_t f_files;           // total file nodes in FS
- *         u32_t f_ffree;           // free file nodes in FS
- *         const char *f_fsname;    // FS name
- * };
- * </pre>
+ * @brief Function gets file system information.
  *
- * @param pathname      node name
- * @param dev           device number
+ * The function statfs() returns information about a mounted file system.
+ * A <i>path</i> is directory of the mount point of file system.
  *
- * @errors EINVAL, ENOMEM, EIO, EACCES, ENOENT, ENOTDIR, ...
+ * @param path          node name
+ * @param statfs        file system information container
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | @ref ENOTDIR
+ * @exception | ...
+ *
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and \b errno
  * is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        struct statfs info;
+        if (statfs("/proc", &info) == 0) {
+                // ...
+        } else {
+                perror("/proc");
+                // ...
+        }
+
+        // ...
+   @endcode
  *
- * struct statfs info;
- * if (statfs("/proc", &info) == 0) {
- *         // ...
- * } else {
- *         perror("/proc");
- *         // ...
- * }
- *
- * // ...
+ * @see mount(), umount()
  */
 //==============================================================================
 static inline int statfs(const char *path, struct statfs *statfs)
@@ -108,6 +116,8 @@ static inline int statfs(const char *path, struct statfs *statfs)
 #endif
 
 #endif /* _STATFS_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

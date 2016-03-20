@@ -32,6 +32,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "lib/unarg.h"
 
 /*==============================================================================
   Local macros

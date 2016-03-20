@@ -112,7 +112,7 @@ typedef struct {
 /** card configuration structure */
 typedef struct {
         const char *filepath;
-        int         timeout;
+        u32_t       timeout;
 } card_cfg_t;
 
 /** device structure */
@@ -207,51 +207,51 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (SDSPI == NULL) {
-                result = _sys_zalloc(sizeof(sdctrl_t), static_cast(void**, &SDSPI));
+                result = sys_zalloc(sizeof(sdctrl_t), cast(void**, &SDSPI));
                 if (result != ESUCC) {
                         return result;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
-                result = _sys_zalloc(sizeof(struct card), static_cast(void**, &SDSPI->card[major]));
+                result = sys_zalloc(sizeof(struct card), cast(void**, &SDSPI->card[major]));
                 if (result == ESUCC) {
                         struct card *hdl = SDSPI->card[major];
 
-                        result = _sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
+                        result = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
                         if (result != ESUCC)
                                 goto finish;
 
-                        result = _sys_fopen(card_cfg[major].filepath, "r+", &hdl->SPI_file);
+                        result = sys_fopen(card_cfg[major].filepath, "r+", &hdl->SPI_file);
                         if (result != ESUCC)
                                 goto finish;
 
                         SPI_config_t cfg;
-                        result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        result = sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
                         if (result == ESUCC) {
 
                                 cfg.flush_byte = 0xFF;
                                 cfg.mode       = SPI_MODE__0;
                                 cfg.msb_first  = true;
 
-                                result = _sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                                result = sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
                         }
 
                         finish:
                         if (result != ESUCC) {
                                 if (hdl->protect_mtx)
-                                        _sys_mutex_destroy(hdl->protect_mtx);
+                                        sys_mutex_destroy(hdl->protect_mtx);
 
                                 if (hdl->SPI_file)
-                                        _sys_fclose(hdl->SPI_file);
+                                        sys_fclose(hdl->SPI_file);
 
-                                _sys_free(static_cast(void**, &SDSPI->card[major]));
+                                sys_free(cast(void**, &SDSPI->card[major]));
                         }
                 }
         }
 
         if (SDSPI->card[major]) {
-                result = _sys_zalloc(sizeof(sdpart_t), device_handle);
+                result = sys_zalloc(sizeof(sdpart_t), device_handle);
                 if (result == ESUCC) {
                         SDSPI->card[major]->part[minor]               = *device_handle;
                         SDSPI->card[major]->part[minor]->first_sector = 0;
@@ -278,16 +278,16 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         sdpart_t *part = device_handle;
 
         // wait for resource be ready
-        uint timer = _sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while (part->used) {
-                if (_sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
+                if (sys_time_is_expired(timer, RELEASE_TIMEOUT_MS)) {
                         return EBUSY;
                 }
 
-                _sys_sleep_ms(10);
+                sys_sleep_ms(10);
         }
 
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
 
         // release allocated memory by partition
         part->first_sector = 0;
@@ -295,7 +295,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         part->used         = false;
         part->minor        = 0;
 
-        _sys_free(device_handle);
+        sys_free(device_handle);
         SDSPI->card[part->major]->part[part->minor] = NULL;
 
         // release allocated memory of selected card if all partitions are released
@@ -305,11 +305,11 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_3] == NULL
            && SDSPI->card[part->major]->part[_SDSPI_PARTITION_4] == NULL  ) {
 
-                _sys_fclose(SDSPI->card[part->major]->SPI_file);
-                _sys_mutex_destroy(SDSPI->card[part->major]->protect_mtx);
+                sys_fclose(SDSPI->card[part->major]->SPI_file);
+                sys_mutex_destroy(SDSPI->card[part->major]->protect_mtx);
                 SDSPI->card[part->major]->initialized = false;
                 SDSPI->card[part->major]->protect_mtx = NULL;
-                _sys_free(reinterpret_cast(void**, &SDSPI->card[part->major]));
+                sys_free(cast(void**, &SDSPI->card[part->major]));
         }
 
         // release module memory if all card are released
@@ -320,10 +320,10 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         }
 
         if (released) {
-                _sys_free(reinterpret_cast(void**, &SDSPI));
+                sys_free(cast(void**, &SDSPI));
         }
 
-        _sys_critical_section_end();
+        sys_critical_section_end();
 
         return ESUCC;
 }
@@ -400,10 +400,10 @@ API_MOD_WRITE(SDSPI,
         int       status;
 
         if (part->size > 0) {
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
-                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
+                        u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
                         status = card_write(part, src, count, lseek, wrcnt);
-                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         status = EBUSY;
                 }
@@ -442,10 +442,10 @@ API_MOD_READ(SDSPI,
         int       status;
 
         if (part->size > 0) {
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
-                        u64_t lseek = *fpos + (static_cast(u64_t, part->first_sector) * sector_size);
+                if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
+                        u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
                         status = card_read(part, dst, count, lseek, rdcnt);
-                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         status = EBUSY;
                 }
@@ -477,22 +477,22 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
+                if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
                         status = card_initialize(part);
-                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         status = EBUSY;
                 }
                 break;
 
         case IOCTL_SDSPI__READ_MBR:
-                if (_sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
+                if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
                         if (SDSPI->card[part->major]->initialized) {
                                 status = MBR_detect_partitions(part);
                         } else {
                                 status = ENOMEDIUM;
                         }
-                        _sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
+                        sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
                         status = EBUSY;
                 }
@@ -538,7 +538,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         if (SDSPI->card[part->major]->initialized) {
                 device_stat->st_major = part->major;
                 device_stat->st_minor = part->minor;
-                device_stat->st_size  = static_cast(u64_t, part->size) * sector_size;
+                device_stat->st_size  = cast(u64_t, part->size) * sector_size;
 
                 return ESUCC;
         } else {
@@ -557,7 +557,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void SPI_select_card(sdpart_t *hdl)
 {
-        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
+        sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__SELECT);
 }
 
 //==============================================================================
@@ -571,7 +571,7 @@ static void SPI_select_card(sdpart_t *hdl)
 //==============================================================================
 static void SPI_deselect_card(sdpart_t *hdl)
 {
-        _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
+        sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__DESELECT);
 }
 
 //==============================================================================
@@ -591,7 +591,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
         tr.rx_buffer = &out;
         tr.tx_buffer = &out;
 
-        if (_sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &tr) == 0) {
+        if (sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSCEIVE, &tr) == 0) {
                 return out;
         } else {
                 return 0x00;
@@ -612,7 +612,7 @@ static u8_t SPI_transive(sdpart_t *hdl, u8_t out)
 static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 {
         size_t wrcnt;
-        _sys_fwrite(block, count, &wrcnt, SDSPI->card[hdl->major]->SPI_file);
+        sys_fwrite(block, count, &wrcnt, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -629,7 +629,7 @@ static void SPI_transmit_block(sdpart_t *hdl, const u8_t *block, size_t count)
 static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 {
         size_t rdcnt;
-        _sys_fread(block, count, &rdcnt, SDSPI->card[hdl->major]->SPI_file);
+        sys_fread(block, count, &rdcnt, SDSPI->card[hdl->major]->SPI_file);
 }
 
 //==============================================================================
@@ -644,10 +644,10 @@ static void SPI_receive_block(sdpart_t *hdl, u8_t *block, size_t count)
 static u8_t card_wait_ready(sdpart_t *hdl)
 {
         u8_t response;
-        uint timer = _sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
 
         while ((response = SPI_transive(hdl, 0xFF)) != 0xFF
-              && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
+              && !sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
         return response;
 }
@@ -725,9 +725,9 @@ static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
 static bool card_receive_data_block(sdpart_t *hdl, u8_t *buff)
 {
         u8_t token;
-        uint timer = _sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
         while ((token = SPI_transive(hdl, 0xFF)) == 0xFF
-              && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
+              && !sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
         if (token != 0xFE) {
                 return false;
@@ -798,13 +798,13 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD17, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD17, cast(u32_t, lseek)) == 0) {
                         if (card_receive_data_block(hdl, dst)) {
                                 n = 1;
                         }
                 }
         } else {
-                if (card_send_cmd(hdl, CMD18, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD18, cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
                                 if (!card_receive_data_block(hdl, dst)) {
@@ -838,7 +838,7 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
 static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek)
 {
         u8_t *buffer;
-        int result = _sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        int result = sys_malloc(sector_size, cast(void**, &buffer));
         if (result != ESUCC)
                 return -1;
 
@@ -850,7 +850,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
                                 recv_data = -1;
                                 goto exit;
 
-                        } else if (n != static_cast(ssize_t, size) / sector_size) {
+                        } else if (n != cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -881,7 +881,7 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, 
         }
 
         exit:
-        _sys_free(reinterpret_cast(void**, &buffer));
+        sys_free(cast(void**, &buffer));
 
         return recv_data;
 }
@@ -907,7 +907,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
         /* 1 sector to read */
         ssize_t n = -1;
         if (nsectors == 1) {
-                if (card_send_cmd(hdl, CMD24, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD24, cast(u32_t, lseek)) == 0) {
                         if (card_transmit_data_block(hdl, src, 0xFE)) {
                                 n = 1;
                         }
@@ -919,7 +919,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
                         card_send_cmd(hdl, ACMD23, nsectors);
                 }
 
-                if (card_send_cmd(hdl, CMD25, static_cast(u32_t, lseek)) == 0) {
+                if (card_send_cmd(hdl, CMD25, cast(u32_t, lseek)) == 0) {
                         n = 0;
                         do {
                                 if (!card_transmit_data_block(hdl, src, 0xFC)) {
@@ -927,7 +927,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
                                 }
 
                                 src += sector_size;
-                        } while (++n < static_cast(ssize_t, nsectors));
+                        } while (++n < cast(ssize_t, nsectors));
 
                         /* stop transmission */
                         if (!card_transmit_data_block(hdl, NULL, 0xFD)) {
@@ -954,7 +954,7 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
 static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek)
 {
         u8_t *buffer = NULL;
-        int result = _sys_malloc(sector_size, reinterpret_cast(void**, &buffer));
+        int result = sys_malloc(sector_size, cast(void**, &buffer));
         if (result != ESUCC)
                 return -1;
 
@@ -966,7 +966,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
                                 transmit_data = -1;
                                 goto exit;
 
-                        } else if (n != static_cast(ssize_t, size) / sector_size) {
+                        } else if (n != cast(ssize_t, size) / sector_size) {
                                 break;
                         }
 
@@ -1007,7 +1007,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
         }
 
         exit:
-        _sys_free(reinterpret_cast(void**, &buffer));
+        sys_free(cast(void**, &buffer));
 
         return transmit_data;
 }
@@ -1027,14 +1027,14 @@ static int card_initialize(sdpart_t *hdl)
 
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                _sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
+                sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
         }
 
         SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
         SDSPI->card[hdl->major]->type.block  = false;
         SDSPI->card[hdl->major]->initialized = false;
 
-        uint timer = _sys_time_get_reference();
+        u32_t timer = sys_time_get_reference();
 
         if (card_send_cmd(hdl, CMD0, 0) == 0x01) {
                 if (card_send_cmd(hdl, CMD8, 0x1AA) == 0x01) { /* check SDHC card */
@@ -1043,13 +1043,13 @@ static int card_initialize(sdpart_t *hdl)
                         SPI_receive_block(hdl, OCR, sizeof(OCR));
 
                         if (OCR[2] == 0x01 && OCR[3] == 0xAA) {
-                                while ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
+                                while ( !sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                                       && card_send_cmd(hdl, ACMD41, 1UL << 30) ) {
 
-                                        _sys_sleep_ms(1);
+                                        sys_sleep_ms(1);
                                 }
 
-                                if ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
+                                if ( !sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                                    && card_send_cmd(hdl, CMD58, 0) == 0 ) {
 
                                         SPI_receive_block(hdl, OCR, sizeof(OCR));
@@ -1073,14 +1073,14 @@ static int card_initialize(sdpart_t *hdl)
                         }
 
                         /* Wait for leaving idle state */
-                        while ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
+                        while ( !sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                               && card_send_cmd(hdl, cmd, 0)) {
 
-                                _sys_sleep_ms(1);
+                                sys_sleep_ms(1);
                         }
 
                         /* set R/W block length to 512 */
-                        if ( !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
+                        if ( !sys_time_is_expired(timer, card_cfg[hdl->major].timeout)
                            || card_send_cmd(hdl, CMD16, sector_size) != 0) {
 
                                 SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
@@ -1109,9 +1109,9 @@ static int card_initialize(sdpart_t *hdl)
 
                 memset(csd, 0, sizeof(csd));
 
-                uint timer = _sys_time_get_reference();
+                uint timer = sys_time_get_reference();
                 while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
-                      && !_sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
+                      && !sys_time_is_expired(timer, card_cfg[hdl->major].timeout));
 
                 if (token == 0xFE) {
                         SPI_receive_block(hdl, csd, sizeof(csd));
@@ -1232,10 +1232,10 @@ static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t ls
 //==============================================================================
 static u32_t load_u32(u8_t *buff, u16_t offset)
 {
-        return static_cast(u32_t, ( (reinterpret_cast(u32_t, buff[offset + 0] <<  0))
-                                  | (reinterpret_cast(u32_t, buff[offset + 1] <<  8))
-                                  | (reinterpret_cast(u32_t, buff[offset + 2] << 16))
-                                  | (reinterpret_cast(u32_t, buff[offset + 3] << 24)) ) );
+        return cast(u32_t, ( (cast(u32_t, buff[offset + 0] <<  0))
+                                  | (cast(u32_t, buff[offset + 1] <<  8))
+                                  | (cast(u32_t, buff[offset + 2] << 16))
+                                  | (cast(u32_t, buff[offset + 3] << 24)) ) );
 }
 
 //==============================================================================
@@ -1250,8 +1250,8 @@ static u32_t load_u32(u8_t *buff, u16_t offset)
 //==============================================================================
 static u16_t load_u16(u8_t *buff, u16_t offset)
 {
-        return static_cast(u16_t, ( (reinterpret_cast(u16_t, buff[offset + 0] << 0))
-                                  | (reinterpret_cast(u16_t, buff[offset + 1] << 8)) ) );
+        return cast(u16_t, ( (cast(u16_t, buff[offset + 0] << 0))
+                                  | (cast(u16_t, buff[offset + 1] << 8)) ) );
 }
 
 //==============================================================================
@@ -1326,7 +1326,7 @@ static int MBR_detect_partitions(sdpart_t *hdl)
         int status = EIO;
 
         u8_t *MBR;
-        status = _sys_malloc(sector_size, reinterpret_cast(void**, &MBR));
+        status = sys_malloc(sector_size, cast(void**, &MBR));
         if (status == ESUCC) {
                 size_t rdcnt;
                 if (card_read(hdl, MBR, sector_size, 0, &rdcnt) != sector_size) {
@@ -1349,7 +1349,7 @@ static int MBR_detect_partitions(sdpart_t *hdl)
                 status = ESUCC;
 
                 error:
-                _sys_free(reinterpret_cast(void**, &MBR));
+                sys_free(cast(void**, &MBR));
         } else {
                 status = ENOMEM;
         }

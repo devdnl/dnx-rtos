@@ -85,14 +85,14 @@ int _vfprintf(FILE *file, const char *format, va_list arg)
                 u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
 
                 char *str = NULL;
-                _kzalloc(_MM_KRN, size, static_cast(void*, &str));
+                _kzalloc(_MM_KRN, size, cast(void*, &str));
                 if (str) {
                         n = _vsnprintf(str, size, format, arg);
 
                         size_t wrcnt;
                         _vfs_fwrite(str, n, &wrcnt, file);
 
-                        _kfree(_MM_KRN, static_cast(void*, &str));
+                        _kfree(_MM_KRN, cast(void*, &str));
                 }
         }
 

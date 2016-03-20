@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   Directory handling
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,6 +24,14 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup dirent-h <dirent.h>
+
+The library provides directory handling functions.
+
+*/
+/**@{*/
+
 #ifndef _DIRENT_H_
 #define _DIRENT_H_
 
@@ -43,8 +51,26 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-#ifndef __DIR_TYPE_DEFINED__
-typedef struct vfs_dir DIR;
+#ifdef DOXYGEN
+        /**
+         * @brief Directory container
+         *
+         * The type represent directory object. Fields are private.
+         */
+        typedef struct {} DIR;
+
+        /* type defined in sys/types.h */
+        /** @brief Directory entry. */
+        typedef struct dirent {
+                char   *name;           //!< File name
+                u64_t   size;           //!< File size in bytes
+                tfile_t filetype;       //!< File type
+                dev_t   dev;            //!< Device address (if file type is driver)
+        } dirent_t;
+#else
+        #ifndef __DIR_TYPE_DEFINED__
+                typedef struct vfs_dir DIR;
+        #endif
 #endif
 
 /*==============================================================================
@@ -60,25 +86,50 @@ typedef struct vfs_dir DIR;
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief DIR *opendir(const char *name)
+ * @brief Function opens selected directory.
+ *
  * Function opens a directory stream corresponding to the directory <i>name</i>, and
  * returns a pointer to the directory stream. The stream is positioned at the first
  * entry in the directory.
  *
- * @param name         directory path
+ * @param name          directory path
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return A pointer to the directory stream. On error, <b>NULL</b> is returned,
  * and <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
- * DIR *dir = opendir("/foo");
- * if (dir) {
- *         // directory handling
- *         dirclose(dir);
- * }
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
+ *
+ * @see closedir()
  */
 //==============================================================================
 static inline DIR *opendir(const char *name)
@@ -90,26 +141,49 @@ static inline DIR *opendir(const char *name)
 
 //==============================================================================
 /**
- * @brief int closedir(DIR *dir)
+ * @brief Function closes selected directory stream.
+ *
  * Function closes the directory stream associated with <i>dir</i>. The directory
  * stream descriptor <i>dir</i> is not available after this call.
  *
  * @param dir           pinter to directory object
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
- * @return Return 0 on success. On error, -1 is returned, and <b>errno</b> is set appropriately.
+ * @return Return \b 0 on success. On error, \b -1 is returned,
+ * and <b>errno</b> is set appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
  *
- * DIR *dir = opendir("/foo");
- * if (dir) {
- *         // ...
- *         closedir(dir);
- * }
- *
- * // ...
+ * @see opendir()
  */
 //==============================================================================
 static inline int closedir(DIR *dir)
@@ -121,44 +195,51 @@ static inline int closedir(DIR *dir)
 
 //==============================================================================
 /**
- * @brief dirent_t readdir(DIR *dir)
- * Function returns a object <b>dirent_t</b> type representing the next directory
- * entry in the directory stream pointed to by <i>dir</i>.<p>
+ * @brief Function reads entry from opened directory stream.
  *
- * <b>dirent_t</b> structure:
- * <pre>
- * typedef struct dirent {
- *         char   *name;
- *         u64_t   size;
- *         tfile_t filetype;
- *         dev_t   dev;
- * } dirent_t;
- * </pre>
+ * Function returns a pointer to object <b>dirent_t</b> type representing the
+ * next directory entry in the directory stream pointed to by <i>dir</i>.<p>
  *
- * @param[in] dir       directory object
+ * @param dir           directory object
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
- * @return On success, readdir() returns a pointer to a <b>dirent_t</b> type. If
+ * @return On success, function returns a pointer to a <b>dirent_t</b> type. If
  * the end of the directory stream is reached, field <b>name</b> of <b>dirent_t</b>
  * type is <b>NULL</b>. If an error occurs, NULL-object and <b>errno</b> is set
  * appropriately.
  *
- * @example
- * // ...
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
  *
- * DIR *dir = opendir(path);
- * if (dir) {
- *         errno = 0;
- *         dirent_t *dirent = readdir(dir);
- *         while (dirent->name != NULL) {
- *                 // ...
- *         }
- *
- *         closedir(dir);
- * }
- *
- * // ...
+ * @see opendir(), closedir()
  */
 //==============================================================================
 static inline struct dirent *readdir(DIR *dir)
@@ -173,6 +254,8 @@ static inline struct dirent *readdir(DIR *dir)
 #endif
 
 #endif /* _DIRENT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

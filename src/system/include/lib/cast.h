@@ -24,6 +24,11 @@
 
 *//*==========================================================================*/
 
+/**
+\addtogroup dnx-misc-h
+*/
+/**@{*/
+
 #ifndef _LIB_CAST_H_
 #define _LIB_CAST_H_
 
@@ -41,56 +46,27 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief static_cast(type, var)
- * The macro <b>static_cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to remove <b>static</b> attribute.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * static void *data   = calloc(1, 10);
- * void        *buffer = static_cast(void*, data);
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define static_cast(type, var) ((type)(var))
-#endif
-
-//==============================================================================
-/**
- * @brief const_cast(type, var)
- * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
+ * @brief The macro casts variable <i>var</i> to type <i>type</i>.
  * Use this macro to remove <b>const</b> attribute.
  *
  * @param type          casting type
  * @param var           variable to cast
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void func(char *str)
- * {
- *        // ...
- * }
- *
- * const char *str = "test";
- *
- * func(const_cast(char*, str));
- *
- * // ...
+ * @b Example
+ * @code
+   // ...
+
+   void func(char *str)
+   {
+          // ...
+   }
+
+   const char *str = "test";
+
+   func(const_cast(char*, str));
+
+   // ...
+ * @endcode
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -99,50 +75,21 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief const_cast(type, var)
- * The macro <b>const_cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to reinterpret selected variable type.
+ * @brief The macro casts variable <i>var</i> to type <i>type</i>.
+ * Use this macro to cast selected variable to any type.
  *
  * @param type          casting type
  * @param var           variable to cast
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void   *data   = calloc(1, 10);
- * type_t *buffer = reinterpret_cast(type_t*, data);
- *
- * // ...
- */
-//==============================================================================
-#ifndef __cplusplus
-#define reinterpret_cast(type, var) ((type)(var))
-#endif
+ * @b Example
+ * @code
+   // ...
 
-//==============================================================================
-/**
- * @brief cast(type, var)
- * The macro <b>cast</b>() cast variable <i>var</i> to type <i>type</i>.
- * Use this macro to cast selected variable type.
- *
- * @param type          casting type
- * @param var           variable to cast
- *
- * @errors None
- *
- * @return None
- *
- * @example
- * // ...
- *
- * void   *data   = calloc(1, 10);
- * type_t *buffer = cast(type_t*, data);
- *
- * // ...
+   void   *data   = calloc(1, 10);
+   type_t *buffer = cast(type_t*, data);
+
+   // ...
+ * @endcode
  */
 //==============================================================================
 #ifndef __cplusplus
@@ -170,6 +117,7 @@ extern "C" {
 #endif
 
 #endif /* _LIB_CAST_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

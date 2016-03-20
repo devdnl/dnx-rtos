@@ -24,6 +24,48 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-ethmac Ethernet MAC Driver
+ *
+ * \section drv-ethmac-desc Description
+ * Driver handles Ethernet MAC peripheral.
+ *
+ * \section drv-ethmac-sup-arch Supported architectures
+ * \li STM32F10x (Connectivity line microcontrollers)
+ *
+ * \section drv-ethmac-ddesc Details
+ * \subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
+ * The major number determines selection of Ethernet peripheral. Minor number
+ * has no meaning and should be set to 0.
+ *
+ * \subsection drv-ethmac-ddesc-init Driver initialization
+ * To initialize driver the following code can be used:
+ *
+ * @code
+   driver_init("ETHMAC", 0, 0, "/dev/eth0");
+   @endcode
+ *
+ * \subsection drv-ethmac-ddesc-release Driver release
+ * To release driver the following code can be used:
+ * @code
+   driver_release("ETHMAC", 0, 0);
+   @endcode
+ *
+ * \subsection drv-ethmac-ddesc-cfg Driver configuration
+ * Entire driver configuration is realized by using configuration files in
+ * the <tt>./config</tt> directory or by using Configtool.
+ *
+ * \subsection drv-ethmac-ddesc-write Data write
+ * \todo Write access
+ *
+ * \subsection drv-ethmac-ddesc-read Data read
+ * \todo Read access
+ *
+ * \subsection drv-ethmac-ddesc-pkthdl Packet handling
+ * \todo Packet handling
+ * @{
+ */
+
 #ifndef _ETHMAC_IOCTL_H_
 #define _ETHMAC_IOCTL_H_
 
@@ -39,75 +81,85 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define ETHMAC_PACKET_SIZE 1520
-
 /**
- * @brief  Wait for receive of Rx packet
- * @param  ethmac_packet_wait_t*        timeout value and recieved size
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * Size of Ethernet Packet.
  */
-#define IOCTL_ETHMAC__WAIT_FOR_PACKET                   _IOR(ETHMAC, 0x00, ethmac_packet_wait_t*)
+#define ETHMAC_PACKET_SIZE                              1520
 
 /**
- * @brief  Set MAC address
- * @param  u8_t[6] (pointer to buffer)
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @brief  Wait for receive of Rx packet.
+ * @param  [WR,RD] @ref ETHMAC_packet_wait_t*        timeout value and received size
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
+#define IOCTL_ETHMAC__WAIT_FOR_PACKET                   _IOWR(ETHMAC, 0x00, ethmac_packet_wait_t*)
+
+/**
+ * @brief  Set MAC address.
+ * @param  [WR] @ref u8_t[6]: pointer to buffer of 6 elements
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__SET_MAC_ADDR                      _IOW(ETHMAC, 0x01, u8_t*)
 
 /**
- * @brief  Send packet from chain buffer
- * @param  ethmac_packet_chain_t*       chain buffer reference
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @brief  Send packet from chain buffer.
+ * @param  [WR] @ref ETHMAC_packet_chain_t*       chain buffer reference
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN            _IOW(ETHMAC, 0x02, ethmac_packet_chain_t*)
 
 /**
  * @brief  Receive packet to chain buffer
- * @param  ethmac_packet_chain_t*       chain buffer reference (each chain must have allocated memory!)
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @param  [RD] @ref ETHMAC_packet_chain_t*       chain buffer reference (each chain must have allocated memory!)
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN           _IOR(ETHMAC, 0x03, ethmac_packet_chain_t*)
 
 /**
  * @brief  Starts Ethernet interface
- * @param  None
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__ETHERNET_START                    _IO(ETHMAC, 0x04)
 
 /**
  * @brief  Stop Ethernet interface
- * @param  None
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__ETHERNET_STOP                     _IO(ETHMAC, 0x05)
 
 /**
  * @brief  Return link status
- * @param  ethmac_link_status_t*        link status
- * @return On success 0 is returned, otherwise -1 and errno code is set
+ * @param  [RD] @ref ETHMAC_link_status_t*        link status
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_ETHMAC__GET_LINK_STATUS                   _IOR(ETHMAC, 0x06, ethmac_link_status_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+ * Type represent packet chain.
+ */
 typedef struct ETHMAC_packet_chain {
-        struct ETHMAC_packet_chain *next;
-        void                       *payload;
-        u16_t                       total_size;
-        u16_t                       payload_size;
+        struct ETHMAC_packet_chain *next;               //!< Next chain of payload.
+        void                       *payload;            //!< Payload.
+        u16_t                       total_size;         //!< Total size.
+        u16_t                       payload_size;       //!< Payload size.
 } ETHMAC_packet_chain_t;
 
+/**
+ * Type represent link status.
+ */
 typedef enum {
-        ETHMAC_LINK_STATUS__CONNECTED,
-        ETHMAC_LINK_STATUS__DISCONNECTED
+        ETHMAC_LINK_STATUS__CONNECTED,          //!< Link connected
+        ETHMAC_LINK_STATUS__DISCONNECTED        //!< Link disconnected
 } ETHMAC_link_status_t;
 
+/**
+ * Type represent packet waiting with selected timeout.
+ */
 typedef struct {
-        int    timeout;    // value is set by user at request
-        size_t pkt_size;   // value is set by system at response
+        int    timeout;    //!< Timeout value in milliseconds. Value is set by user at request.
+        size_t pkt_size;   //!< Size of received packet. Value is set by system at response.
 } ETHMAC_packet_wait_t;
 
 /*==============================================================================
@@ -127,6 +179,7 @@ typedef struct {
 #endif
 
 #endif /* _ETHMAC_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

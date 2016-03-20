@@ -81,7 +81,7 @@ API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
         if (major == 0 && minor == 0) {
 
-                int result = _sys_zalloc(sizeof(WDG_t), device_handle);
+                int result = sys_zalloc(sizeof(WDG_t), device_handle);
                 if (result == ESUCC) {
                         configure_wdg();
                         start_wdg();
@@ -128,7 +128,7 @@ API_MOD_OPEN(WDG, void *device_handle, u32_t flags)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                return _sys_device_lock(&hdl->file_lock);
+                return sys_device_lock(&hdl->file_lock);
         } else {
                 return ESUCC;
         }
@@ -149,7 +149,7 @@ API_MOD_CLOSE(WDG, void *device_handle, bool force)
         WDG_t *hdl = device_handle;
 
         if (_WDG_CFG_OPEN_LOCK) {
-                return _sys_device_unlock(&hdl->file_lock, force);
+                return sys_device_unlock(&hdl->file_lock, force);
         } else {
                 return ESUCC;
         }
@@ -224,7 +224,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 
         WDG_t *hdl = device_handle;
 
-        int result = _sys_device_get_access(&hdl->file_lock);
+        int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
                 switch (request) {
                 case IOCTL_WDG__RESET:

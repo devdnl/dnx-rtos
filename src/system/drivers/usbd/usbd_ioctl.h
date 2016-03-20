@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-usbd USB Device Driver
+ *
+ * \section drv-usbd-desc Description
+ * Driver handles USB Device peripheral.
+ *
+ * \section drv-usbd-sup-arch Supported architectures
+ * \li STM32F10x (with USB peripheral)
+ *
+ * @todo Details
+ *
+ *
+ * @{
+ */
+
 #ifndef _USBD_IOCTL_H_
 #define _USBD_IOCTL_H_
 
@@ -60,8 +75,8 @@ extern "C" {
 /**
  * @brief Macro set configuration IN for selected endpoint (an item of usb_ep_config_t)
  *
- * @param transfer      transfer type
- * @param size          size of buffer
+ * @param usbd_transfer_t__transfer      transfer type
+ * @param u16_t__size                    size of buffer
  */
 //==============================================================================
 #define USBD_EP_CONFIG_IN(usbd_transfer_t__transfer, u16_t__size)\
@@ -71,8 +86,8 @@ extern "C" {
 /**
  * @brief Macro set configuration OUT for selected endpoint (an item of usb_ep_config_t)
  *
- * @param transfer      transfer type
- * @param size          size of buffer
+ * @param usbd_transfer_t__transfer      transfer type
+ * @param u16_t__size                    size of buffer
  */
 //==============================================================================
 #define USBD_EP_CONFIG_OUT(usbd_transfer_t__transfer, u16_t__size)\
@@ -82,8 +97,9 @@ extern "C" {
 /**
  * @brief Macro set configuration IN & OUT for selected endpoint (an item of usb_ep_config_t)
  *
- * @param transfer      transfer type
- * @param size          size of buffer
+ * @param usbd_transfer_t__transfer      transfer type
+ * @param u16_t__in_size                 size of IN buffer
+ * @param u16_t__out_size                size of OUT buffer
  */
 //==============================================================================
 #define USBD_EP_CONFIG_IN_OUT(usbd_transfer_t__transfer, u16_t__in_size, u16_t__out_size)\
@@ -104,27 +120,26 @@ extern "C" {
 //------------------------------------------------------------------------------
 //==============================================================================
 /**
- * @brief The request starts the USB device (the device will be visible by the host)
- * @param None
- * @return On success 0 is returned, otherwise -1
+ * @brief The request starts the USB device (the device will be visible by the host).
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__START                       _IO (USBD, 0x00)
 
 //==============================================================================
 /**
- * @brief The request stops the USB device (the device will not be visible by the host)
- * @param None
- * @return On success 0 is returned, otherwise -1
+ * @brief The request stops the USB device (the device will not be visible by the host).
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__STOP                        _IO (USBD, 0x01)
 
 //==============================================================================
 /**
- * @brief The request configures Endpoints 1 to 7. The settings of the Endpoint 0 from given configuration are ignored.
- * @param The pointer to the object of type 'const usb_ep_config_t'
- * @return On success 0 is returned, otherwise -1
+ * @brief The request configures Endpoints 1 to 7. The settings of the Endpoint 0
+ *        from given configuration are ignored.
+ * @param [WR] usbd_ep_config_t endpoint configuration
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__CONFIGURE_EP_1_7            _IOW(USBD, 0x02, const usbd_ep_config_t*)
@@ -132,65 +147,64 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request sets the address of the device (received from host in the SETUP packet).
- * @param The address determined by the 'int' type
- * @return On success 0 is returned, otherwise -1
+ * @param [WR] int address
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__SET_ADDRESS                 _IOW(USBD, 0x03, int)
 
 //==============================================================================
 /**
- * @brief The request sends the ZLP by the selected endpoint
- * @param None
- * @return On success 0 is returned, otherwise -1
+ * @brief The request sends the ZLP by the selected endpoint.
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__SEND_ZLP                    _IO (USBD, 0x04)
 
 //==============================================================================
 /**
- * @brief The request sets a STALL status in the selected endpoint
- * @param The endpoint number determined by the 'int' type. The IN/OUT endpoint
+ * @brief The request sets a STALL status in the selected endpoint.
+ * @param [WR] The endpoint number determined by the 'int' type. The IN/OUT endpoint
  *        is recognized by most significant bit as is defined by the USB standard
- * @return On success 0 is returned, otherwise -1
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__SET_EP_STALL                _IOW(USBD, 0x05, int)
 
 //==============================================================================
 /**
- * @brief The request sets a VALID (ACK) status in the selected endpoint
- * @param The endpoint number determined by the 'int' type. The IN/OUT endpoint
- *        is recognized by most significant bit as is defined by the USB standard
- * @return On success 0 is returned, otherwise -1
+ * @brief The request sets a VALID (ACK) status in the selected endpoint.
+ * @param [WR] The endpoint number determined by the 'int' type. The IN/OUT endpoint
+ *        is recognized by most significant bit as is defined by the USB standard.
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__SET_EP_VALID                _IOW(USBD, 0x06, int)
 
 //==============================================================================
 /**
- * @brief The request returns a USB reset status
- * @param The pointer to the bool that indicate that reset was occurred.
- * @return On success 0 is returned, otherwise -1
+ * @brief The request returns a USB reset status.
+ * @param [RD] The pointer to the bool that indicate that reset was occurred.
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__WAS_RESET                   _IOR(USBD, 0x07, bool*)
 
 //==============================================================================
 /**
- * @brief The request wait for the SETUP packet
- * @param The pointer to the usb_setup_container_t that contains setup packet buffer
- *        and read-timeout configuration
- * @return On success 0 is returned, otherwise -1
+ * @brief The request wait for the SETUP packet.
+ * @param [RD] The pointer to the usb_setup_container_t that contains setup packet buffer
+ *        and read-timeout configuration.
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__GET_SETUP_PACKET            _IOR(USBD, 0x08, usbd_setup_container_t*)
 
 //==============================================================================
 /**
- * @brief The request sets the error status (IN STALL, OUT STALL) in the selected endpoint
- * @param None
- * @return On success 0 is returned, otherwise -1
+ * @brief The request sets the error status (IN STALL, OUT STALL) in the
+ *        selected endpoint.
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__SET_ERROR_STATUS            _IO (USBD, 0x09)
@@ -198,8 +212,8 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request gets the error counter. The counter is cleared after read operation.
- * @param The pointer to integer of 'int' type
- * @return On success 0 is returned, otherwise -1
+ * @param [RD] The pointer to integer of 'int' type
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 #define IOCTL_USBD__GET_ERROR_COUNTER           _IOR(USBD, 0x0A, int*)
@@ -208,24 +222,24 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /**
- * Endpoint configuration (the ENDP0 configuration is ignored)
+ * Endpoint configuration (the ENDP0 configuration is ignored).
  */
 typedef struct {
         struct usbd_ep_config {
-                bool            IN_enabled      : 1;
-                bool            OUT_enabled     : 1;
-                usb_transfer_t  transfer_type   : 2;
-                u16_t           IN_buffer_size  : 10;
-                u16_t           OUT_buffer_size : 10;
+                bool            IN_enabled      : 1;    //!< IN enabled
+                bool            OUT_enabled     : 1;    //!< OUT enabled
+                usb_transfer_t  transfer_type   : 2;    //!< Transfer type
+                u16_t           IN_buffer_size  : 10;   //!< IN buffer size
+                u16_t           OUT_buffer_size : 10;   //!< OUT buffer size
         } ep[_USBD_NUMBER_OF_ENDPOINTS];
 } usbd_ep_config_t;
 
 /**
- * SETUP packet container and receive timeout
+ * SETUP packet container and receive timeout.
  */
 typedef struct {
-        usb_setup_packet_t packet;
-        int                timeout;
+        usb_setup_packet_t packet;      //!< Setup packet
+        int                timeout;     //!< Timeout in milliseconds
 } usbd_setup_container_t;
 
 /*==============================================================================
@@ -245,6 +259,7 @@ typedef struct {
 #endif
 
 #endif /* _USBD_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

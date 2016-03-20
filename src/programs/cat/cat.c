@@ -129,7 +129,7 @@ int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         /* read strings from stdin */
                         if (stdio) {
-                                char *str = static_cast(char*, global->buffer);
+                                char *str = cast(char*, global->buffer);
                                 int   len = sizeof(global->buffer);
                                 int   eof = 0;
 

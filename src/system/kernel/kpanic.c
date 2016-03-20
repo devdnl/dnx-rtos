@@ -87,7 +87,7 @@ int _kernel_panic_init()
 {
         return _kmalloc(_MM_KRN,
                         sizeof(struct kernel_panic_desc),
-                        reinterpret_cast(void**, &kernel_panic_descriptor));
+                        cast(void**, &kernel_panic_descriptor));
 }
 
 //==============================================================================

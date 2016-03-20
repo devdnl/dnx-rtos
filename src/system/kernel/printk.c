@@ -133,7 +133,7 @@ void _printk(const char *format, ...)
                 va_end(args);
 
                 char *buffer = NULL;
-                _kzalloc(_MM_KRN, size, static_cast(void**, &buffer));
+                _kzalloc(_MM_KRN, size, cast(void**, &buffer));
 
                 if (buffer) {
                         va_start(args, format);
@@ -147,7 +147,7 @@ void _printk(const char *format, ...)
                                 _vfs_fflush(printk_file);
                         }
 
-                        _kfree(_MM_KRN, static_cast(void**, &buffer));
+                        _kfree(_MM_KRN, cast(void**, &buffer));
                 }
         }
 #else

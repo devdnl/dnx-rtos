@@ -24,6 +24,16 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup unistd-h <unistd.h>
+
+The <unistd.h> header defines miscellaneous symbolic constants and types, and
+declares miscellaneous functions. The contents of this header are shown below.
+Library contains only subset of functions and macros that exists in original
+version of library.
+
+@{*/
+
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
@@ -59,23 +69,24 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief void sleep(const uint seconds)
- * The <b>sleep</b>() makes the calling thread sleep until seconds <i>seconds</i>
+ * @brief Function switches process to inactive state for selected time in seconds.
+ *
+ * The sleep() makes the calling thread sleep until seconds <i>seconds</i>
  * have elapsed.
  *
  * @param seconds   number of seconds to sleep
  *
- * @errors None
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        sleep(2);
+        // code here will be executed after 2s sleep
+        // ...
+   @endcode
  *
- * @return None
- *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sleep(2);
- * // code here will be executed after 2s sleep
- * // ...
+ * @see msleep(), usleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
 static inline void sleep(const uint seconds)
@@ -85,54 +96,59 @@ static inline void sleep(const uint seconds)
 
 //==============================================================================
 /**
- * @brief void sleep_ms(const uint milliseconds)
- * The <b>sleep_ms</b>() makes the calling thread sleep until milliseconds
+ * @brief Function switches process to inactive state for selected time in milliseconds.
+ *
+ * The msleep() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed.
+ *
+ * @note dnx RTOS extension function.
  *
  * @param milliseconds      number of milliseconds to sleep
  *
- * @errors None
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        msleep(10);
+        // code here will be executed after 10ms sleep
+        // ...
+   @endcode
  *
- * @return None
- *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sleep_ms(10);
- * // code here will be executed after 10ms sleep
- * // ...
+ * @see sleep(), usleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline void sleep_ms(const uint milliseconds)
+static inline void msleep(const uint milliseconds)
 {
         _builtinfunc(sleep_ms, milliseconds);
 }
 
 //==============================================================================
 /**
- * @brief void usleep(const u32_t microseconds)
- * The <b>usleep</b>() makes the calling thread sleep until microseconds
+ * @brief Function switches process to inactive state for selected time in microseconds.
+ *
+ * The usleep() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
- * Function is not full supported by dnx RTOS. The task falls asleep for at least
- * 1ms if the delay is lower than or equal to 1000 microseconds.
+ * @note Function is not fully supported by dnx RTOS. The task falls asleep for
+ * at least 1ms (depends on context switch frequency) if the delay is lower than
+ * or equal to 1000 microseconds.
  *
  * @param microseconds      number of microseconds to sleep
  *
- * @errors None
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        usleep(10);
+        // code here will be executed after 1 system tick (at least 1ms)
+        usleep(10000);
+        // code here will be executed after at least 10ms
+        // ...
+   @endcode
  *
- * @return None
- *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * usleep(10);
- * // code here will be executed after at least 1ms
- * usleep(10000);
- * // code here will be executed after at least 10ms
- * // ...
+ * @see sleep(), msleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
 static inline void usleep(const u32_t microseconds)
@@ -143,29 +159,32 @@ static inline void usleep(const u32_t microseconds)
 
 //==============================================================================
 /**
- * @brief int prepare_sleep_until(void)
- * The <b>prepare_sleep_until</b>() function prepare tick counter to call
- * <b>sleep_until_ms</b>() and <b>sleep_until</b>() functions.
+ * @brief Function prepares time reference to sleep.
  *
- * @param None
+ * The prepare_sleep_until() function prepare tick counter to call
+ * msleep_until_ms() and sleep_until() functions.
  *
- * @errors None
+ * @note dnx RTOS extension function.
  *
- * @return Current tick counter.
+ * @return Time reference value.
  *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        u32_t ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                msleep_until(10, &ref_time);
+        }
+        // ...
+   @endcode
  *
- * // ...
- * u32_t ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until_ms(10, &ref_time);
- * }
- * // ...
+ * @see sleep(), msleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
 static inline int prepare_sleep_until(void)
@@ -175,93 +194,100 @@ static inline int prepare_sleep_until(void)
 
 //==============================================================================
 /**
- * @brief void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
- * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
+ * @brief Function switches process to inactive state for selected time in milliseconds.
+ *
+ * The msleep_until() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param milliseconds      number of milliseconds to sleep
- * @param ref_time_ticks    time reference
+ * @param time_ref          time reference
  *
- * @errors None
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        u32_t ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                msleep_until(10, &ref_time);
+        }
+        // ...
+   @endcode
  *
- * @return None
- *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
- *
- * // ...
- * u32_t ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until_ms(10, &ref_time);
- * }
- * // ...
+ * @see sleep(), msleep(), prepare_sleep_until(), sleep_until()
  */
 //==============================================================================
-static inline void sleep_until_ms(const u32_t milliseconds, u32_t *ref_time_ticks)
+static inline void msleep_until(const u32_t milliseconds, u32_t *time_ref)
 {
-        _builtinfunc(sleep_until_ms, milliseconds, ref_time_ticks);
+        _builtinfunc(sleep_until_ms, milliseconds, time_ref);
 }
 
 //==============================================================================
 /**
- * @brief void sleep_until(const uint seconds, int *ref_time_ticks)
- * The <b>sleep_until</b>() makes the calling thread sleep until seconds
+ * @brief Function switches process to inactive state for selected time in seconds.
+ *
+ * The sleep_until() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
+ * @note dnx RTOS extension function.
+ *
  * @param seconds               number of seconds to sleep
- * @param ref_time_ticks        time reference
+ * @param time_ref              time reference
  *
- * @errors None
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+        int ref_time = prepare_sleep_until();
+
+        for (;;) {
+                // ...
+
+                sleep_until(1, &ref_time);
+        }
+        // ...
+   @endcode
  *
- * @return None
- *
- * @example
- * #include <dnx/os.h>
- * #include <unistd.h>
- *
- * // ...
- * int ref_time = prepare_sleep_until();
- *
- * for (;;) {
- *         // ...
- *
- *         sleep_until(1, &ref_time);
- * }
- * // ...
+ * @see sleep(), msleep(), prepare_sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline void sleep_until(const uint seconds, u32_t *ref_time_ticks)
+static inline void sleep_until(const uint seconds, u32_t *time_ref)
 {
-        _builtinfunc(sleep_until, seconds, ref_time_ticks);
+        _builtinfunc(sleep_until, seconds, time_ref);
 }
 
 //==============================================================================
 /**
- * @brief char *getcwd(char *buf, size_t size)
- * The <b>getcwd</b>() function copies an absolute pathname of the current
+ * @brief Function copies current working directory path to buffer.
+ *
+ * The getcwd() function copies an absolute pathname of the current
  * working directory to the array pointed to by <i>buf</i>, which is of length
  * <i>size</i>.
  *
  * @param buf       buffer to store path
  * @param size      buffer length
  *
- * @errors None
- *
  * @return On success, these functions return a pointer to a string containing
- * the pathname of the current working directory. In the case <b>getcwd</b>() is the
+ * the pathname of the current working directory. In the case getcwd() is the
  * same value as <i>buf</i>.
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * char *buf[100];
- * getcwd(buf, 100);
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        char *buf[100];
+        getcwd(buf, 100);
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
@@ -273,24 +299,29 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
- * @brief pid_t getpid(void)
- * The function <b>getpid</b>() return PID of current process (caller).
+ * @brief Function returns PID of current process.
  *
- * @param None
+ * The function getpid() return PID of current process (caller).
  *
- * @errors EINVAL, ENOENT, ESRCH
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ * @exception | @ref ESRCH
  *
  * @return Return PID on success. On error, 0 is returned.
  *
- * @example
- * #include <unistd.h>
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+
+        pid_t pid = getpid();
+        printf("PID of this process is: %d\n, pid);
+
+        // ...
+   @endcode
  *
- * // ...
- *
- * pid_t pid = getpid();
- * printf("PID of this process is: %d\n, pid);
- *
- * // ...
+ * @see process_getpid()
  */
 //==============================================================================
 static inline pid_t getpid(void)
@@ -302,24 +333,29 @@ static inline pid_t getpid(void)
 
 //==============================================================================
 /**
- * @brief int chown(const char *pathname, uid_t owner, gid_t group)
- * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
+ * @brief Function changes the ownership of file.
+ *
+ * The chown() changes the ownership of the file specified by <i>pathname</i>.
  *
  * @param pathname      path to file
  * @param owner         owner ID
  * @param group         group ID
  *
- * @errors EINVAL, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ * @exception | ...
  *
  * @return On success, zero is returned. On error, -1 is returned, and
  * <b>errno</b> is set appropriately.
  *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * chown("/foo/bar", 1000, 1000);
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        chown("/foo/bar", 1000, 1000);
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
@@ -331,21 +367,18 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 
 //==============================================================================
 /**
- * @brief void sync(void)
- * The <b>sync</b>() synchronize system files with buffers.
+ * @brief Function synchronizes files buffers with file systems.
  *
- * @param None
+ * The sync() synchronizes files buffers with file systems.
  *
- * @errors None
- *
- * @return None
- *
- * @example
- * #include <unistd.h>
- *
- * // ...
- * sync();
- * // ...
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        sync();
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline void sync(void)
@@ -358,6 +391,7 @@ static inline void sync(void)
 #endif
 
 #endif /* _UNISTD_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

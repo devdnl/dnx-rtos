@@ -195,10 +195,10 @@ static const usb_string_descriptor_t(5) string_serial = {
 };
 
 static const usb_max_string_descriptor_t *string[] = {
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_lang),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_manufacturer),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_product),
-        reinterpret_cast(usb_max_string_descriptor_t*, &string_serial)
+        cast(usb_max_string_descriptor_t*, &string_lang),
+        cast(usb_max_string_descriptor_t*, &string_manufacturer),
+        cast(usb_max_string_descriptor_t*, &string_product),
+        cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
 /* SCSI constants */
@@ -294,7 +294,7 @@ static void ep1_handler(void *arg)
         }
 
         while (!global->configured) {
-                sleep_ms(10);
+                msleep(10);
         }
 
         u32_t tag;
@@ -342,14 +342,14 @@ static void ep1_handler(void *arg)
                         printf("global->msc.CBW.dCBWSignature: 0x%x (0x%x)\n", global->msc.CBW.dCBWSignature, USB_MASS_STORAGE_BOT_CBW_SIGNATURE);
                         printf("global->msc.CBW.bCBWLUN: %d\n", global->msc.CBW.bCBWLUN);
                         printf("global->msc.CBW.bCBWCBLength: %d (max %d)\n", global->msc.CBW.bCBWCBLength, USB_MASS_STORAGE_REQUEST_CBWCB_LENGTH);
-                        printf("read: %d\n (max %d)\n", static_cast(int, n), static_cast(int, sizeof(usb_msc_bot_cbw_t)));
+                        printf("read: %d\n (max %d)\n", cast(int, n), cast(int, sizeof(usb_msc_bot_cbw_t)));
 
                         ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
                         ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
 
                         global->configured = false;
                         while (!global->configured) {
-                                sleep_ms(5);
+                                msleep(5);
                         }
                 } else {
 
@@ -694,7 +694,7 @@ int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 if (size && data) {
-                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), static_cast(int, size));
+                                        printf(" (%d/%d)\n", fwrite(data, 1, size, ep0), cast(int, size));
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);

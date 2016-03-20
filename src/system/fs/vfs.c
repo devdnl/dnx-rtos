@@ -217,10 +217,10 @@ int _vfs_mount(const char *src_path, const char *mount_point, const struct vfs_F
         }
 
         if (result != ESUCC && cwd_mount_point)
-                _kfree(_MM_KRN, static_cast(void**, &cwd_mount_point));
+                _kfree(_MM_KRN, cast(void**, &cwd_mount_point));
 
         if (cwd_src_path)
-                _kfree(_MM_KRN, static_cast(void**, &cwd_src_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_src_path));
 
         return result;
 }
@@ -249,7 +249,7 @@ int _vfs_umount(const char *path)
                         int position; FS_entry_t *mount_fs;
                         result = get_path_FS(cwd_path, PATH_MAX_LEN, &position, &mount_fs);
 
-                        _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                        _kfree(_MM_KRN, cast(void**, &cwd_path));
 
                         if (result == ESUCC) {
                                 if (mount_fs->children_cnt == 0) {
@@ -340,7 +340,7 @@ int _vfs_mknod(const char *path, dev_t dev)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -375,7 +375,7 @@ int _vfs_mkdir(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -410,7 +410,7 @@ int _vfs_mkfifo(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -432,7 +432,7 @@ int _vfs_opendir(const char *path, DIR **dir)
                 return EINVAL;
         }
 
-        int result = _kmalloc(_MM_KRN, sizeof(DIR), reinterpret_cast(void**, dir));
+        int result = _kmalloc(_MM_KRN, sizeof(DIR), cast(void**, dir));
         if (result == ESUCC) {
                 char *cwd_path;
                 result = new_CWD_path(path, ADD_SLASH, &cwd_path);
@@ -440,7 +440,7 @@ int _vfs_opendir(const char *path, DIR **dir)
 
                         const char *external_path; FS_entry_t *fs;
                         result = get_path_base_FS(cwd_path, &external_path, &fs);
-                        _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                        _kfree(_MM_KRN, cast(void**, &cwd_path));
 
                         if (result == ESUCC) {
                                 (*dir)->f_handle = fs->handle;
@@ -454,7 +454,7 @@ int _vfs_opendir(const char *path, DIR **dir)
                 if (result == ESUCC) {
                         (*dir)->header.type = RES_TYPE_DIR;
                 } else {
-                        _kfree(_MM_KRN, static_cast(void**, dir));
+                        _kfree(_MM_KRN, cast(void**, dir));
                 }
         }
 
@@ -478,7 +478,7 @@ int _vfs_closedir(DIR *dir)
                 result = dir->f_closedir(dir->f_handle, dir);
                 if (result == ESUCC) {
                         dir->header.type = RES_TYPE_UNKNOWN;
-                        _kfree(_MM_KRN, static_cast(void**, &dir));
+                        _kfree(_MM_KRN, cast(void**, &dir));
                 }
         }
 
@@ -553,7 +553,7 @@ int _vfs_remove(const char *path)
                         result = base_fs->interface->fs_remove(base_fs->handle, external_path);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -619,11 +619,11 @@ int _vfs_rename(const char *old_name, const char *new_name)
         }
 
         if (cwd_old_name) {
-                _kfree(_MM_KRN, static_cast(void**, &cwd_old_name));
+                _kfree(_MM_KRN, cast(void**, &cwd_old_name));
         }
 
         if (cwd_new_name) {
-                _kfree(_MM_KRN, static_cast(void**, &cwd_new_name));
+                _kfree(_MM_KRN, cast(void**, &cwd_new_name));
         }
 
         return result;
@@ -658,7 +658,7 @@ int _vfs_chmod(const char *path, mode_t mode)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -694,7 +694,7 @@ int _vfs_chown(const char *path, uid_t owner, gid_t group)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -729,7 +729,7 @@ int _vfs_stat(const char *path, struct stat *stat)
                         restore_priority(priority);
                 }
 
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -809,7 +809,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         FILE *file_obj = NULL;
-        result = _kzalloc(_MM_KRN, sizeof(FILE), static_cast(void**, &file_obj));
+        result = _kzalloc(_MM_KRN, sizeof(FILE), cast(void**, &file_obj));
         if (result == ESUCC && file_obj) {
                 const char *external_path; FS_entry_t *fs;
                 result = get_path_base_FS(cwd_path, &external_path, &fs);
@@ -835,14 +835,14 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
         }
 
         if (cwd_path) {
-                _kfree(_MM_KRN, static_cast(void**, &cwd_path));
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         if (file_obj) {
                 if (file_obj->header.type == RES_TYPE_FILE) {
                         *file = file_obj;
                 } else {
-                        _kfree(_MM_KRN, static_cast(void**, &file_obj));
+                        _kfree(_MM_KRN, cast(void**, &file_obj));
                 }
         }
 
@@ -871,7 +871,7 @@ int _vfs_fclose(FILE *file, bool force)
                         file->header.type = RES_TYPE_UNKNOWN;
                         file->FS_hdl      = NULL;
                         file->FS_hdl      = NULL;
-                        _kfree(_MM_KRN, static_cast(void**, &file));
+                        _kfree(_MM_KRN, cast(void**, &file));
                 }
         }
 
@@ -916,8 +916,8 @@ int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
                                         file->f_flag.eof = true;
                                 }
 
-                                if (static_cast(ssize_t, *wrcnt) >= 0) {
-                                        file->f_lseek += static_cast(u64_t, *wrcnt);
+                                if (cast(ssize_t, *wrcnt) >= 0) {
+                                        file->f_lseek += cast(u64_t, *wrcnt);
                                 }
                         } else {
                                 file->f_flag.error = true;
@@ -960,8 +960,8 @@ int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
                                         file->f_flag.eof = true;
                                 }
 
-                                if (static_cast(ssize_t, *rdcnt) >= 0) {
-                                        file->f_lseek += static_cast(u64_t, *rdcnt);
+                                if (cast(ssize_t, *rdcnt) >= 0) {
+                                        file->f_lseek += cast(u64_t, *rdcnt);
                                 }
                         } else {
                                 file->f_flag.error = true;
@@ -1235,7 +1235,7 @@ static int new_FS_entry(FS_entry_t               *parent_FS,
                         FS_entry_t               **fs_entry)
 {
         FS_entry_t *new_FS = NULL;
-        int result = _kmalloc(_MM_KRN, sizeof(FS_entry_t), reinterpret_cast(void**, &new_FS));
+        int result = _kmalloc(_MM_KRN, sizeof(FS_entry_t), cast(void**, &new_FS));
         if (result == ESUCC) {
                 result = fs_interface->fs_init(&new_FS->handle, fs_src_file);
                 if (result == ESUCC) {
@@ -1245,7 +1245,7 @@ static int new_FS_entry(FS_entry_t               *parent_FS,
                         new_FS->children_cnt  = 0;
                         *fs_entry             = new_FS;
                 } else {
-                        _kfree(_MM_KRN, static_cast(void**, &new_FS));
+                        _kfree(_MM_KRN, cast(void**, &new_FS));
                 }
         }
 
@@ -1273,10 +1273,10 @@ static int delete_FS_entry(FS_entry_t *this)
                         }
 
                         if (this->mount_point) {
-                                _kfree(_MM_KRN, static_cast(void**, &this->mount_point));
+                                _kfree(_MM_KRN, cast(void**, &this->mount_point));
                         }
 
-                        _kfree(_MM_KRN, static_cast(void**, &this));
+                        _kfree(_MM_KRN, cast(void**, &this));
                 }
         }
 
@@ -1504,7 +1504,7 @@ static int new_CWD_path(const char *path, enum path_correction corr, char **new_
                 }
         }
 
-        int result = _kzalloc(_MM_KRN, new_path_len + 1, static_cast(void**, new_path));
+        int result = _kzalloc(_MM_KRN, new_path_len + 1, cast(void**, new_path));
         if (result == ESUCC) {
                 if (cwd_len && cwd) {
                         strcpy(*new_path, cwd);

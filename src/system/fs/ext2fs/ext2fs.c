@@ -91,24 +91,24 @@ static const struct ext4_os_if osif = {
 //==============================================================================
 API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 {
-        int result = _sys_zalloc(sizeof(ext2fs_t), fs_handle);
+        int result = sys_zalloc(sizeof(ext2fs_t), fs_handle);
         if (result == ESUCC) {
                 ext2fs_t *hdl = *fs_handle;
 
                 // open file system source file
-                result = _sys_fopen(src_path, "r+", &hdl->srcfile);
+                result = sys_fopen(src_path, "r+", &hdl->srcfile);
                 if (result != ESUCC)
                         goto finish;
 
                 // read number of file blocks
                 struct stat stat;
-                result = _sys_fstat(hdl->srcfile, &stat);
+                result = sys_fstat(hdl->srcfile, &stat);
                 if (result != ESUCC)
                         goto finish;
 
                 u64_t block_count = stat.st_size / BLOCK_SIZE;
 
-                result = _sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
                 if (result != ESUCC)
                         goto finish;
 
@@ -120,12 +120,12 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
                 finish:
                 if (result != ESUCC) {
                         if (hdl->srcfile)
-                                _sys_fclose(hdl->srcfile);
+                                sys_fclose(hdl->srcfile);
 
                         if (hdl->mtx)
-                                _sys_mutex_destroy(hdl->mtx);
+                                sys_mutex_destroy(hdl->mtx);
 
-                        _sys_free(fs_handle);
+                        sys_free(fs_handle);
                 }
 
         }
@@ -149,9 +149,9 @@ API_FS_RELEASE(ext2fs, void *fs_handle)
         if (hdl->openfiles == 0) {
                 ext4_cache_write_back(hdl->fsctx, false);
                 ext4_umount(hdl->fsctx);
-                _sys_mutex_destroy(hdl->mtx);
-                _sys_fclose(hdl->srcfile);
-                _sys_free(fs_handle);
+                sys_mutex_destroy(hdl->mtx);
+                sys_fclose(hdl->srcfile);
+                sys_free(fs_handle);
                 return ESUCC;
         } else {
                 return EBUSY;
@@ -179,7 +179,7 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
         ext2fs_t *hdl = fs_handle;
 
         ext4_file *file;
-        int result = _sys_malloc(sizeof(ext4_file), static_cast(void**, &file));
+        int result = sys_malloc(sizeof(ext4_file), cast(void**, &file));
         if (result == ESUCC) {
                 result = ext4_fopen(hdl->fsctx, file, path, flags);
                 if (result == ESUCC) {
@@ -187,7 +187,7 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
                         *extra = file;
                         increase_openfiles(hdl);
                 } else {
-                        _sys_free(static_cast(void**, &file));
+                        sys_free(cast(void**, &file));
                 }
         }
 
@@ -215,7 +215,7 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         int status = ext4_fclose(hdl->fsctx, extra);
         if (status == ESUCC) {
-                _sys_free(&extra);
+                sys_free(&extra);
                 decrease_openfiles(hdl);
         }
 
@@ -463,7 +463,7 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
         ext2fs_t *hdl = fs_handle;
 
         ext4_dir *ext4dir;
-        int result = _sys_malloc(sizeof(ext4_dir), static_cast(void**, &ext4dir));
+        int result = sys_malloc(sizeof(ext4_dir), cast(void**, &ext4dir));
         if (result == ESUCC) {
                 result = ext4_dir_open(hdl->fsctx, ext4dir, path);
                 if (result == ESUCC) {
@@ -477,7 +477,7 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
                         increase_openfiles(hdl);
 
                 } else {
-                        _sys_free(static_cast(void**, ext4dir));
+                        sys_free(cast(void**, ext4dir));
                 }
         }
 
@@ -500,7 +500,7 @@ static int closedir(void *fs_handle, DIR *dir)
 
         int result = ext4_dir_close(hdl->fsctx, dir->f_dd);
         if (result == ESUCC) {
-                _sys_free(static_cast(void**, dir->f_dd));
+                sys_free(cast(void**, dir->f_dd));
                 decrease_openfiles(hdl);
         }
 
@@ -540,7 +540,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 
                 dir->dirent.dev      = 0;
                 dir->dirent.filetype = vfsft[ext4_dirent->inode_type];
-                dir->dirent.name     = static_cast(char*, ext4_dirent->name);
+                dir->dirent.name     = cast(char*, ext4_dirent->name);
                 dir->dirent.size     = ext4_dirent->size;
 
                 *dirent = &dir->dirent;
@@ -732,7 +732,7 @@ API_FS_SYNC(ext2fs, void *fs_handle)
 static void ext4_lock(void *ctx)
 {
         ext2fs_t *hdl = ctx;
-        _sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
+        sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
 }
 
 //==============================================================================
@@ -747,7 +747,7 @@ static void ext4_lock(void *ctx)
 static void ext4_unlock(void *ctx)
 {
         ext2fs_t *hdl = ctx;
-        _sys_mutex_unlock(hdl->mtx);
+        sys_mutex_unlock(hdl->mtx);
 }
 
 //==============================================================================
@@ -766,10 +766,10 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        int result = _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        int result = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
         if (result == ESUCC) {
                 size_t rdcnt;
-                result = _sys_fread(buf, BLOCK_SIZE * blk_cnt, &rdcnt, hdl->srcfile);
+                result = sys_fread(buf, BLOCK_SIZE * blk_cnt, &rdcnt, hdl->srcfile);
         }
 
         return result;
@@ -791,10 +791,10 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        int result = _sys_fseek(hdl->srcfile, blk_id * static_cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        int result = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
         if (result == ESUCC) {
                 size_t wrcnt;
-                result = _sys_fwrite(buf, BLOCK_SIZE * blk_cnt, &wrcnt, hdl->srcfile);
+                result = sys_fwrite(buf, BLOCK_SIZE * blk_cnt, &wrcnt, hdl->srcfile);
         }
 
         return result;
@@ -811,9 +811,9 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
 //==============================================================================
 static void increase_openfiles(ext2fs_t *hdl)
 {
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         hdl->openfiles++;
-        _sys_critical_section_end();
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -827,9 +827,9 @@ static void increase_openfiles(ext2fs_t *hdl)
 //==============================================================================
 static void decrease_openfiles(ext2fs_t *hdl)
 {
-        _sys_critical_section_begin();
+        sys_critical_section_begin();
         hdl->openfiles--;
-        _sys_critical_section_end();
+        sys_critical_section_end();
 }
 
 /*==============================================================================

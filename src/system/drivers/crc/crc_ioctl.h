@@ -24,6 +24,119 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-crc CRC Driver
+ *
+ * \section drv-crc-desc Description
+ * Driver handles CRC peripheral installed in the microcontroller.
+ *
+ * \section drv-crc-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * \section drv-crc-ddesc Details
+ * \subsection drv-crc-ddesc-num Meaning of major and minor numbers
+ * The major number determines selection of CRC peripheral. Minor number
+ * has no meaning and should be set to 0.
+ *
+ * \subsection drv-crc-ddesc-init Driver initialization
+ * To initialize driver the following code can be used:
+ *
+ * @code
+   driver_init("CRC", 0, 0, "/dev/CRC");
+   @endcode
+ *
+ * \subsection drv-crc-ddesc-release Driver release
+ * To release driver the following code can be used:
+ * @code
+   driver_release("CRC", 0, 0);
+   @endcode
+ *
+ * \subsection drv-crc-ddesc-cfg Driver configuration
+ * Configuration is limited to selection of CRC polynomial and initial value.
+ * Those options can be not supported by all architectures.
+ *
+ * \subsection drv-crc-ddesc-write Data write
+ * Data to the CRC device can be write as regular file.
+ *
+   @code
+   #include <stdio.h>
+   #include <stdbool.h>
+   #include <dnx/misc.h>
+   #include <sys/ioctl.h>
+
+   static const char *dev_path = "/dev/CRC";
+   static const u8_t  buf[] = {0,1,2,3,4,5,6,7,8,9};
+
+   GLOBAL_VARIABLES_SECTION {
+         u32_t CRC;
+   };
+
+   int_main(crc_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+   {
+         FILE *dev = fopen(dev_path, "r+");
+
+         if (dev) {
+               // calculate CRC
+               fseek(dev, 0x0, SEEK_SET);
+               fwrite(buf, sizeof(u8_t), sizeof(buf), dev);
+
+               // read CRC
+               fseek(dev, 0x0, SEEK_SET);
+               fread(global->CRC, sizeof(u32_t), 1, dev);
+
+               // close device
+               fclose(dev);
+
+         } else {
+               perror(dev_path);
+         }
+
+         return 0;
+   }
+   @endcode
+ *
+ * \subsection drv-crc-ddesc-read Data read
+ * Data to the CRC device can be read as regular file.
+ *
+   @code
+   #include <stdio.h>
+   #include <stdbool.h>
+   #include <dnx/misc.h>
+   #include <sys/ioctl.h>
+
+   static const char *dev_path = "/dev/CRC";
+   static const u8_t  buf[] = {0,1,2,3,4,5,6,7,8,9};
+
+   GLOBAL_VARIABLES_SECTION {
+         u32_t CRC;
+   };
+
+   int_main(crc_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+   {
+         FILE *dev = fopen(dev_path, "r+");
+
+         if (dev) {
+               // calculate CRC
+               fseek(dev, 0x0, SEEK_SET);
+               fwrite(buf, sizeof(u8_t), sizeof(buf), dev);
+
+               // read CRC
+               fseek(dev, 0x0, SEEK_SET);
+               fread(global->CRC, sizeof(u32_t), 1, dev);
+
+               // close device
+               fclose(dev);
+
+         } else {
+               perror(dev_path);
+         }
+
+         return 0;
+   }
+   @endcode
+ * @{
+ */
+
 #ifndef _CRC_IOCTL_H_
 #define _CRC_IOCTL_H_
 
@@ -39,27 +152,23 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** @brief  Set CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return On success 0 is returned, otherwise -1 and errno code is set
+/**
+ * @brief  Set CRC polynomial (if supported by CRC peripheral).
+ * @param  [WR] const u32_t * polynomial value
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_CRC__SET_INPUT_MODE       _IOW(CRC, 0x00, enum CRC_input_mode*)
+#define IOCTL_CRC__SET_POLYNOMIAL       _IOW(CRC, 0x00, const u32_t*)
 
-/** @brief  Get CRC input mode
- *  @param  enum CRC_input_mode *
- *  @return On success 0 is returned, otherwise -1 and errno code is set
- */
-#define IOCTL_CRC__GET_INPUT_MODE       _IOR(CRC, 0x01, enum CRC_input_mode*)
+ /**
+  * @brief  Set initial CRC value (if supported by CRC peripheral).
+  * @param  [WR] const u32_t * initial value
+  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+  */
+#define IOCTL_CRC__SET_INITIAL_VALUE    _IOW(CRC, 0x01, const u32_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/* NOTE: at all input modes result CRC value is ALWAYS an CRC32 */
-enum CRC_input_mode {
-        CRC_INPUT_MODE__8BIT,            /* base word is u8_t  */
-        CRC_INPUT_MODE__16BIT,           /* base word is u16_t */
-        CRC_INPUT_MODE__32BIT            /* base word is u32_t */
-};
 
 /*==============================================================================
   Exported objects
@@ -78,6 +187,7 @@ enum CRC_input_mode {
 #endif
 
 #endif /* _CRC_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

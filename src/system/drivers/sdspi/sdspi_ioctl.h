@@ -24,6 +24,21 @@
 
 *//*==========================================================================*/
 
+/**
+ * @defgroup drv-sdspi SDSPI Driver
+ *
+ * \section drv-sdspi-desc Description
+ * Driver handles SD Card by using SPI peripheral (indirect).
+ *
+ * \section drv-sdspi-sup-arch Supported architectures
+ * \li STM32F10x
+ *
+ * @todo Details
+ *
+ *
+ * @{
+ */
+
 #ifndef _SDSPI_IOCTL_H_
 #define _SDSPI_IOCTL_H_
 
@@ -40,18 +55,16 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Initialize SD card (OS storage request)
- *  @param  None
+ *  @brief  Initialize SD card (OS storage request).
  *  @return On success (card initialized) 0 is returned.
- *          On error (card not initialized) -1 is returned and errno is set.
+ *          On error (card not initialized) -1 is returned and @ref errno is set.
  */
 #define IOCTL_SDSPI__INITIALIZE_CARD    IOCTL_STORAGE__INITIALIZE
 
 /**
- *  @brief  Read card's MBR sector and detect partitions (OS storage request)
- *  @param  None
+ *  @brief  Read card's MBR sector and detect partitions (OS storage request).
  *  @return On success (MBR detected) 0 is returned.
- *          On error -1 (MBR not exist or IO error) is returned and errno is set.
+ *          On error -1 (MBR not exist or IO error) is returned and @ref errno is set.
  */
 #define IOCTL_SDSPI__READ_MBR           IOCTL_STORAGE__READ_MBR
 
@@ -76,6 +89,7 @@ extern "C" {
 #endif
 
 #endif /* _SDSPI_IOCTL_H_ */
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

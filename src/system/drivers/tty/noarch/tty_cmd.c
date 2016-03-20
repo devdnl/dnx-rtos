@@ -44,7 +44,7 @@ struct ttycmd {
         void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
-        uint            timer;
+        u32_t           timer;
 };
 
 /*==============================================================================
@@ -91,7 +91,7 @@ static inline bool is_valid(ttycmd_t *this)
 //==============================================================================
 int ttycmd_create(ttycmd_t **ttycmd)
 {
-        int result = _sys_zalloc(sizeof(ttycmd_t), static_cast(void**, ttycmd));
+        int result = sys_zalloc(sizeof(ttycmd_t), cast(void**, ttycmd));
         if (result == ESUCC) {
                 (*ttycmd)->self = *ttycmd;
         }
@@ -110,7 +110,7 @@ int ttycmd_destroy(ttycmd_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                _sys_free(static_cast(void**, &this));
+                sys_free(cast(void**, &this));
                 return ESUCC;
         } else {
                 return EINVAL;
@@ -146,7 +146,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         memset(this->token, 0, VT100_TOKEN_LEN);
                         this->token[0]  = c;
                         this->token_cnt = 1;
-                        this->timer     = _sys_time_get_reference();
+                        this->timer     = sys_time_get_reference();
                         return TTYCMD_BUSY;
 
                 } else if (this->token_cnt) {
@@ -179,7 +179,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 else if (strcmp(VT100_F12        , this->token) == 0) return TTYCMD_KEY_F12;
                                 else return TTYCMD_BUSY;
                         } else {
-                                if (  _sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                if (  sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
                                    || this->token_cnt >= VT100_TOKEN_LEN ) {
 
                                         this->token_cnt = 0;

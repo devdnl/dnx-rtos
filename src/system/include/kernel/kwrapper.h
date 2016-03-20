@@ -109,24 +109,24 @@ extern void    *_task_get_tag                      (task_t*);
 
 extern int      _semaphore_create                  (const uint, const uint, sem_t**);
 extern int      _semaphore_destroy                 (sem_t*);
-extern int      _semaphore_wait                    (sem_t*, const uint);
+extern int      _semaphore_wait                    (sem_t*, const u32_t);
 extern int      _semaphore_signal                  (sem_t*);
 extern int      _semaphore_wait_from_ISR           (sem_t*, bool*);
 extern int      _semaphore_signal_from_ISR         (sem_t*, bool*);
 
 extern int      _mutex_create                      (enum mutex_type, mutex_t**);
 extern int      _mutex_destroy                     (mutex_t*);
-extern int      _mutex_lock                        (mutex_t*, const uint);
+extern int      _mutex_lock                        (mutex_t*, const u32_t);
 extern int      _mutex_unlock                      (mutex_t*);
 
 extern int      _queue_create                      (const uint, const uint, queue_t**);
 extern int      _queue_destroy                     (queue_t*);
 extern int      _queue_reset                       (queue_t*);
-extern int      _queue_send                        (queue_t*, const void*, const uint);
+extern int      _queue_send                        (queue_t*, const void*, const u32_t);
 extern int      _queue_send_from_ISR               (queue_t*, const void*, bool*);
-extern int      _queue_receive                     (queue_t*, void*, const uint);
+extern int      _queue_receive                     (queue_t*, void*, const u32_t);
 extern int      _queue_receive_from_ISR            (queue_t*, void*, bool*);
-extern int      _queue_receive_peek                (queue_t*, void*, const uint);
+extern int      _queue_receive_peek                (queue_t*, void*, const u32_t);
 extern int      _queue_get_number_of_items         (queue_t*, size_t*);
 extern int      _queue_get_number_of_items_from_ISR(queue_t*, size_t*);
 extern int      _queue_get_space_available         (queue_t*, size_t*);

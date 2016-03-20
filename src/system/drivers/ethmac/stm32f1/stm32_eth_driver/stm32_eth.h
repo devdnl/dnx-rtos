@@ -240,7 +240,7 @@ typedef struct  {
 
 #ifdef USE_Delay
   #include "drivers/driver.h"
-  #define _eth_delay_    _sys_sleep_ms  /*!< User can provide more timing precise _eth_delay_ function */
+  #define _eth_delay_    sys_sleep_ms  /*!< User can provide more timing precise _eth_delay_ function */
 #else
   #define _eth_delay_    ETH_Delay /*!< Default _eth_delay_ function with less precise timing */
 #endif

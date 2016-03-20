@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief
+@brief   File contains statistics functions and directory, FIFO, node create functions.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,6 +24,16 @@
 
 *//*==========================================================================*/
 
+/**
+\defgroup sys-stat-h <sys/stat.h>
+
+The library is used to create device nodes, directories, and FIFO (pipe) devices.
+Library provides also function used to manipulate file modes. The set of library
+contains functions that read file statistics.
+
+*/
+/**@{*/
+
 #ifndef _STAT_H_
 #define _STAT_H_
 
@@ -40,6 +50,26 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#ifdef DOXYGEN
+/** @brief Read permission, owner. @see mode_t */
+#define S_IRUSR
+/** @brief Write permission, owner. @see mode_t */
+#define S_IWUSR
+/** @brief Execute permission, owner. @see mode_t */
+#define S_IXUSR
+/** @brief Read permission, group. @see mode_t */
+#define S_IRGRO
+/** @brief Write permission, group. @see mode_t */
+#define S_IWGRO
+/** @brief Execute permission, group. @see mode_t */
+#define S_IXGRO
+/** @brief Read permission, others. @see mode_t */
+#define S_IROTH
+/** @brief Write permission, others. @see mode_t */
+#define S_IWOTH
+/** @brief Execute permission, others. @see mode_t */
+#define S_IXOTH
+#endif
 
 /*==============================================================================
   Exported object types
@@ -58,70 +88,85 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief int mknod(const char *pathname, dev_t dev)
- * The <b>mknod</b>() function creates a filesystem node (device special file) named
- * <i>pathname</i>, with attributes specified by mode and <i>dev</i>. <i>dev</i>
- * determines the number of driver to use. This depends on system configuration.
+ * @brief Function creates device node (device file).
+ *
+ * The mknod() function creates a file system node (device special file) named
+ * <i>pathname</i>. Node is connected to the driver from module <i>mod_name</i>
+ * of <i>major</i> and <i>minor</i> address.
  *
  * @param pathname      node name
  * @param mod_name      module name
  * @param major         driver major number
  * @param minor         driver minor number
  *
- * @errors EINVAL, ENOMEM, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * // for example: 12 is crc driver
- * mknod("/dev/crc", 12);
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        mknod("/dev/uart0", "UART", 0, 0);
+
+        // ...
+   @endcode
  */
 //==============================================================================
 static inline int mknod(const char *pathname, const char *mod_name, int major, int minor)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_MKNOD, &r, pathname, mod_name, &major, &minor);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int mkdir(const char *pathname, mode_t mode)
- * The <b>mkdir</b>() attempts to create a directory named <i>pathname</i>. The
+ * @brief Function creates new directory.
+ *
+ * The mkdir() attempts to create a directory named <i>pathname</i>. The
  * argument <i>mode</i> specifies the permissions to use.
  *
  * @param pathname      directory name
  * @param mode          directory permissions
  *
- * @errors EINVAL, ENOMEM, EACCES, EEXIST, ENOENT, ENOSPC, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * mkdir("/dev", 0666);
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        mkdir("/dev", 0666);    // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_MKDIR, &r, pathname, &mode);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int mkfifo(const char *pathname, mode_t mode)
- * The <b>mkfifo</b>() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
+ * @brief Function creates FIFO file.
+ *
+ * The mkfifo() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
  * specifies the FIFO's permissions. A FIFO special file is similar to pipe, but
  * is created in filesystem and is not an anonymous. Access to FIFO is the same
  * as to regular file, except that data can be read only one time. Not all
@@ -130,142 +175,166 @@ static inline int mkdir(const char *pathname, mode_t mode)
  * @param pathname      FIFO name
  * @param mode          FIFO permissions
  *
- * @errors EINVAL, ENOMEM, EACCES, EEXIST, ENOENT, ENOSPC, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * mkfifo("/dev/my_fifo", 0666);
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        mkfifo("/dev/my_fifo", 0666);    // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_MKFIFO, &r, pathname, &mode);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int chmod(const char *pathname, mode_t mode)
- * The <b>chmod</b>() system call change the permissions of a file.
+ * @brief Function changes file mode.
+ *
+ * The chmod() system call change the permissions of a file.
  *
  * @param pathname      file to permission change
  * @param mode          new permissions
  *
- * @errors EINVAL, ENOMEM, EACCES, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * chmod("/dev/foo", 0666);
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        chmod("/foo/bar", 0666);   // wr+rd access for all users, groups and others
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_CHMOD, &r, pathname, &mode);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int stat(const char *pathname, struct stat *buf)
- * The <b>stat</b>() function return information about a file.<p>
+ * @brief Function gets file information.
  *
- * This function return a <b>stat</b> structure, which contains the following
- * fileds:
- * <pre>
- * struct stat {
- *         u64_t   st_size;     // total size, in bytes
- *         u32_t   st_dev;      // ID of device containing file
- *         u32_t   st_mode;     // protection
- *         u32_t   st_uid;      // user ID of owner
- *         u32_t   st_gid;      // group ID of owner
- *         u32_t   st_atime;    // time of last access
- *         u32_t   st_mtime;    // time of last modification
- *         tfile_t st_type;     // type of file
- * };
- * </pre>
+ * The stat() function return information about a file.
  *
  * @param pathname      file to inspect
  * @param buf           file's information
  *
- * @errors EINVAL, ENOMEM, EACCES, ENOENT, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * struct stat info;
- * errno = 0;
- * if (stat("/dev/foo", &info) == 0) {
- *         // ...
- * } else {
- *         perror("stat()");
- *         // ...
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        struct stat info;
+        errno = 0;
+        if (stat("/dev/foo", &info) == 0) {
+                // ...
+        } else {
+                perror("stat()");
+                // ...
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_STAT, &r, pathname, buf);
         return r;
 }
 
 //==============================================================================
 /**
- * @brief int fstat(FILE *file, struct stat *stat)
- * The <b>fstat</b>() function return information about a file pointed by <i>file</i>.
+ * @brief Function gets file information.
+ *
+ * The fstat() function return information about a file pointed by <i>file</i>.
  *
  * @param file          file object
  * @param buf           file's information
  *
- * @errors EINVAL, ENOMEM, EACCES, ...
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
  *
- * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
  * is set appropriately.
  *
- * @example
- * // ...
- *
- * errno = 0;
- * FILE *file = fopen("/dev/foo", "r");
- * if (file) {
- *         struct stat info;
- *         if (fstat(file, &info) == 0) {
- *                 // ...
- *         } else {
- *                 perror("stat()");
- *                 // ...
- *         }
- *
- *         fclose(file);
- * } else {
- *         perror("fopen()");
- * }
- *
- * // ...
+ * @b Example
+ * @code
+        // ...
+
+        errno = 0;
+        FILE *file = fopen("/foo/bar", "r");
+        if (file) {
+                struct stat info;
+                if (fstat(file, &info) == 0) {
+                        // ...
+                } else {
+                        perror("stat()");
+                        // ...
+                }
+
+                fclose(file);
+        } else {
+                perror("fopen()");
+        }
+
+        // ...
+
+   @endcode
  */
 //==============================================================================
 static inline int fstat(FILE *file, struct stat *buf)
 {
-        int r;
+        int r = -1;
         syscall(SYSCALL_FSTAT, &r, file, buf);
         return r;
 }
@@ -275,6 +344,8 @@ static inline int fstat(FILE *file, struct stat *buf)
 #endif
 
 #endif /* _STAT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
