@@ -49,7 +49,7 @@
  *      major = 1 and minor = n -> device n on I2C1
  *
  * \subsubsection drv-i2c-ddesc-numres Numeration restrictions
- * Number of peripherals determines how big major number can be. If there is
+ * Number of peripherals determines how big the major number can be. If there is
  * only one I2C peripheral then the major number is always 0.
  * Number of devices (minor number) can be theoretically up to 256 or to limits
  * of memory capacity.

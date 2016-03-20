@@ -43,7 +43,6 @@
 ==============================================================================*/
 typedef struct CRCM {
         dev_lock_t          file_lock;
-        enum CRC_input_mode input_mode;
 } CRCM;
 
 /*==============================================================================
@@ -87,10 +86,7 @@ API_MOD_INIT(CRC, void **device_handle, u8_t major, u8_t minor)
 
         int result = sys_zalloc(sizeof(CRCM), device_handle);
         if (result == ESUCC) {
-                CRCM *hdl = *device_handle;
-
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                hdl->input_mode = CRC_INPUT_MODE__32BIT;
         }
 
         return result;
@@ -198,38 +194,14 @@ API_MOD_WRITE(CRC,
         if (result == ESUCC) {
                 reset_CRC();
 
-                size_t n = 0;
+                size_t len = count / sizeof(u32_t);
+                u32_t *ptr = cast(u32_t*, src);
 
-                if (hdl->input_mode == CRC_INPUT_MODE__8BIT) {
-
-                        for (n = 0; n < (size_t)count; n++) {
-                                CRCP->DR = src[n];
-                        }
-
-                } else if (hdl->input_mode == CRC_INPUT_MODE__16BIT) {
-
-                        size_t len = count / sizeof(u16_t);
-                        u16_t *ptr = (u16_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRCP->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u16_t);
-
-                } else {
-
-                        size_t len = count / sizeof(u32_t);
-                        u32_t *ptr = (u32_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRCP->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u32_t);
+                for (size_t i = 0; i < len; i++) {
+                        CRCP->DR = *ptr++;
                 }
 
-                *wrcnt = n;
+                *wrcnt = len * sizeof(u32_t);
         }
 
         return result;
@@ -264,7 +236,7 @@ API_MOD_READ(CRC,
         int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
 
-                u8_t  crc[4] = {CRCP->DR, CRCP->DR >> 8, CRCP->DR >> 16, CRCP->DR >> 24};
+                u8_t crc[4] = {CRCP->DR, CRCP->DR >> 8, CRCP->DR >> 16, CRCP->DR >> 24};
 
                 size_t n   = 0;
                 size_t pos = *fpos;
@@ -296,29 +268,19 @@ API_MOD_READ(CRC,
 //==============================================================================
 API_MOD_IOCTL(CRC, void *device_handle, int request, void *arg)
 {
+        UNUSED_ARG1(arg);
+
         CRCM *hdl = device_handle;
 
         int result = sys_device_get_access(&hdl->file_lock);
         if (result == ESUCC) {
                 switch (request) {
-                case IOCTL_CRC__SET_INPUT_MODE:
-                        if (arg) {
-                                enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
-                                if (mode <= CRC_INPUT_MODE__32BIT) {
-                                        hdl->input_mode = mode;
-                                        return ESUCC;
-                                }
-                        }
-                        return EINVAL;
+                case IOCTL_CRC__SET_INITIAL_VALUE:
+                        result = ENOTSUP;
                         break;
 
-                case IOCTL_CRC__GET_INPUT_MODE:
-                        if (arg) {
-                                *(enum CRC_input_mode *)arg = hdl->input_mode;
-                                return ESUCC;
-                        } else {
-                                return EINVAL;
-                        }
+                case IOCTL_CRC__SET_POLYNOMIAL:
+                        result = ENOTSUP;
                         break;
 
                 default:

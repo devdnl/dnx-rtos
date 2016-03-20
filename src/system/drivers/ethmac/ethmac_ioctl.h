@@ -33,9 +33,36 @@
  * \section drv-ethmac-sup-arch Supported architectures
  * \li STM32F10x (Connectivity line microcontrollers)
  *
- * @todo Details
+ * \section drv-ethmac-ddesc Details
+ * \subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
+ * The major number determines selection of Ethernet peripheral. Minor number
+ * has no meaning and should be set to 0.
  *
+ * \subsection drv-ethmac-ddesc-init Driver initialization
+ * To initialize driver the following code can be used:
  *
+ * @code
+   driver_init("ETHMAC", 0, 0, "/dev/eth0");
+   @endcode
+ *
+ * \subsection drv-ethmac-ddesc-release Driver release
+ * To release driver the following code can be used:
+ * @code
+   driver_release("ETHMAC", 0, 0);
+   @endcode
+ *
+ * \subsection drv-ethmac-ddesc-cfg Driver configuration
+ * Entire driver configuration is realized by using configuration files in
+ * the <tt>./config</tt> directory or by using Configtool.
+ *
+ * \subsection drv-ethmac-ddesc-write Data write
+ * \todo Write access
+ *
+ * \subsection drv-ethmac-ddesc-read Data read
+ * \todo Read access
+ *
+ * \subsection drv-ethmac-ddesc-pkthdl Packet handling
+ * \todo Packet handling
  * @{
  */
 
