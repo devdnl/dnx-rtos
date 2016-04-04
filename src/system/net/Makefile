@@ -1,46 +1,47 @@
 # Makefile for GNU make
 ifeq ($(__ENABLE_NETWORK__), _YES_)
-   CSRC_CORE   += net/api/api_lib.c
-   CSRC_CORE   += net/api/api_msg.c
-   CSRC_CORE   += net/api/err.c
-   CSRC_CORE   += net/api/netbuf.c
-   CSRC_CORE   += net/api/netdb.c
-   CSRC_CORE   += net/api/netifapi.c
-   CSRC_CORE   += net/api/sockets.c
-   CSRC_CORE   += net/api/tcpip.c
-   CSRC_CORE   += net/core/def.c
-   CSRC_CORE   += net/core/dhcp.c
-   CSRC_CORE   += net/core/dns.c
-   CSRC_CORE   += net/core/init.c
-   CSRC_CORE   += net/core/mem.c
-   CSRC_CORE   += net/core/memp.c
-   CSRC_CORE   += net/core/netif.c
-   CSRC_CORE   += net/core/pbuf.c
-   CSRC_CORE   += net/core/raw.c
-   CSRC_CORE   += net/core/stats.c
-   CSRC_CORE   += net/core/sys.c
-   CSRC_CORE   += net/core/tcp.c
-   CSRC_CORE   += net/core/tcp_in.c
-   CSRC_CORE   += net/core/tcp_out.c
-   CSRC_CORE   += net/core/timers.c
-   CSRC_CORE   += net/core/udp.c
-   CSRC_CORE   += net/core/ipv4/autoip.c
-   CSRC_CORE   += net/core/ipv4/icmp.c
-   CSRC_CORE   += net/core/ipv4/igmp.c
-   CSRC_CORE   += net/core/ipv4/inet.c
-   CSRC_CORE   += net/core/ipv4/inet_chksum.c
-   CSRC_CORE   += net/core/ipv4/ip.c
-   CSRC_CORE   += net/core/ipv4/ip_addr.c
-   CSRC_CORE   += net/core/ipv4/ip_frag.c
-   CSRC_CORE   += net/netif/etharp.c
-   CSRC_CORE   += net/port/arch/sys_arch.c
-   CSRC_CORE   += net/port/arch/netman.c
+   CSRC_CORE   += net/socket.c
+   CSRC_CORE   += net/lwip/api/api_lib.c
+   CSRC_CORE   += net/lwip/api/api_msg.c
+   CSRC_CORE   += net/lwip/api/err.c
+   CSRC_CORE   += net/lwip/api/netbuf.c
+   CSRC_CORE   += net/lwip/api/netdb.c
+   CSRC_CORE   += net/lwip/api/netifapi.c
+   CSRC_CORE   += net/lwip/api/sockets.c
+   CSRC_CORE   += net/lwip/api/tcpip.c
+   CSRC_CORE   += net/lwip/core/def.c
+   CSRC_CORE   += net/lwip/core/dhcp.c
+   CSRC_CORE   += net/lwip/core/dns.c
+   CSRC_CORE   += net/lwip/core/init.c
+   CSRC_CORE   += net/lwip/core/mem.c
+   CSRC_CORE   += net/lwip/core/memp.c
+   CSRC_CORE   += net/lwip/core/netif.c
+   CSRC_CORE   += net/lwip/core/pbuf.c
+   CSRC_CORE   += net/lwip/core/raw.c
+   CSRC_CORE   += net/lwip/core/stats.c
+   CSRC_CORE   += net/lwip/core/sys.c
+   CSRC_CORE   += net/lwip/core/tcp.c
+   CSRC_CORE   += net/lwip/core/tcp_in.c
+   CSRC_CORE   += net/lwip/core/tcp_out.c
+   CSRC_CORE   += net/lwip/core/timers.c
+   CSRC_CORE   += net/lwip/core/udp.c
+   CSRC_CORE   += net/lwip/core/ipv4/autoip.c
+   CSRC_CORE   += net/lwip/core/ipv4/icmp.c
+   CSRC_CORE   += net/lwip/core/ipv4/igmp.c
+   CSRC_CORE   += net/lwip/core/ipv4/inet.c
+   CSRC_CORE   += net/lwip/core/ipv4/inet_chksum.c
+   CSRC_CORE   += net/lwip/core/ipv4/ip.c
+   CSRC_CORE   += net/lwip/core/ipv4/ip_addr.c
+   CSRC_CORE   += net/lwip/core/ipv4/ip_frag.c
+   CSRC_CORE   += net/lwip/netif/etharp.c
+   CSRC_CORE   += net/lwip/port/arch/sys_arch.c
+   CSRC_CORE   += net/lwip/port/arch/netman.c
 
 	ifeq ($(TARGET), stm32f1)
-   	CSRC_ARCH   += net/port/arch/netman_stm32f1.c
+   	CSRC_ARCH   += net/lwip/port/arch/netman_stm32f1.c
    endif
 endif
 
-HDRLOC_CORE += net/include/ipv4
-HDRLOC_CORE += net/include
-HDRLOC_CORE += net/port
+HDRLOC_CORE += net/lwip/include/ipv4
+HDRLOC_CORE += net/lwip/include
+HDRLOC_CORE += net/lwip/port
