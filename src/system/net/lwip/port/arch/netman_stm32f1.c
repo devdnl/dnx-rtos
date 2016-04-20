@@ -31,9 +31,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <dnx/os.h>
 #include <dnx/misc.h>
+#include "kernel/sysfunc.h"
+#include "drivers/ioctl_requests.h"
 #include "netif/etharp.h"
 #include "net/netman.h"
 
@@ -128,13 +129,13 @@ void _netman_ifmem_free(netman_t *netman)
 bool _netman_HW_init(netman_t *netman)
 {
         /* set MAC address */
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, netman->netif.hwaddr) != 0) {
+        if (sys_ioctl(netman->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, netman->netif.hwaddr) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_init: MAC set fail\n"));
                 return false;
         }
 
         /* start Ethernet interface */
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_START) != 0) {
+        if (sys_ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_START) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_init: start fail\n"));
                 return false;
         }
@@ -155,7 +156,7 @@ bool _netman_HW_init(netman_t *netman)
 //==============================================================================
 void _netman_HW_deinit(netman_t *netman)
 {
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_STOP) != 0) {
+        if (sys_ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_STOP) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_deinit: stop fail\n"));
         }
 }
@@ -182,16 +183,16 @@ void _netman_HW_deinit(netman_t *netman)
 //==============================================================================
 void _netman_handle_input(netman_t *netman, uint input_timeout)
 {
-        ethmac_packet_wait_t pw = {.timeout = input_timeout};
-        int r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+        ETHMAC_packet_wait_t pw = {.timeout = input_timeout};
+        int r = sys_ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
 
-        while (r == 0 && pw.size > 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.size));
+        while (r == 0 && pw.pkt_size > 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.pkt_size));
 
                 // NOTE: subtract packet size by 4 to discard CRC32
-                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.size - 4, PBUF_RAM);
+                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size - 4, PBUF_RAM);
                 if (p) {
-                        r = ioctl(netman->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
+                        r = sys_ioctl(netman->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
 
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: received = %d\n", p->tot_len));
 
@@ -207,7 +208,7 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
                                 pbuf_free(p);
                         }
 
-                        r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+                        r = sys_ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
                         msleep(10);
@@ -241,7 +242,7 @@ err_t _netman_handle_output(struct netif *netif, struct pbuf *p)
 {
       netman_t *netman = netif->state;
 
-      if (ioctl(netman->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == 0) {
+      if (sys_ioctl(netman->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == 0) {
               netman->tx_packets++;
               netman->tx_bytes += p->tot_len;
               return ERR_OK;
@@ -266,7 +267,7 @@ err_t _netman_handle_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 err_t _netman_netif_init(struct netif *netif)
 {
-        netif->hostname   = const_cast(char*, get_host_name());
+        netif->hostname   = const_cast(char*, __OS_HOSTNAME__);
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;
@@ -274,12 +275,12 @@ err_t _netman_netif_init(struct netif *netif)
         netif->mtu        = 1500;
         netif->hwaddr_len = ETHARP_HWADDR_LEN;
         netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
-        netif->hwaddr[0]  = __NETWORK_MAC_ADDR_0__;
-        netif->hwaddr[1]  = __NETWORK_MAC_ADDR_1__;
-        netif->hwaddr[2]  = __NETWORK_MAC_ADDR_2__;
-        netif->hwaddr[3]  = __NETWORK_MAC_ADDR_3__;
-        netif->hwaddr[4]  = __NETWORK_MAC_ADDR_4__;
-        netif->hwaddr[5]  = __NETWORK_MAC_ADDR_5__;
+        netif->hwaddr[0]  = 0x50;
+        netif->hwaddr[1]  = 0x51;
+        netif->hwaddr[2]  = 0x52;
+        netif->hwaddr[3]  = 0x53;
+        netif->hwaddr[4]  = 0x54;
+        netif->hwaddr[5]  = 0x55;
 
         return ERR_OK;
 }
@@ -301,9 +302,9 @@ err_t _netman_netif_init(struct netif *netif)
 //==============================================================================
 bool _netman_is_link_connected(netman_t *netman)
 {
-        ethmac_link_status_t linkstat;
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__GET_LINK_STATUS) == 0) {
-                return linkstat == ETHMAC_LINK_STATUS_CONNECTED;
+        ETHMAC_link_status_t linkstat;
+        if (sys_ioctl(netman->if_file, IOCTL_ETHMAC__GET_LINK_STATUS, &linkstat) == 0) {
+                return linkstat == ETHMAC_LINK_STATUS__CONNECTED;
         } else {
                 return false;
         }

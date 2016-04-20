@@ -131,7 +131,7 @@ extern "C" {
  * @param  [RD] @ref ETHMAC_link_status_t*        link status
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_ETHMAC__GET_LINK_STATUS                   _IOR(ETHMAC, 0x06, ethmac_link_status_t*)
+#define IOCTL_ETHMAC__GET_LINK_STATUS                   _IOR(ETHMAC, 0x06, ETHMAC_link_status_t*)
 
 /*==============================================================================
   Exported object types

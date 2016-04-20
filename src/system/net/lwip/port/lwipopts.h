@@ -32,6 +32,7 @@
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
+#include <stddef.h>
 #include "config.h"
 #include "mm/mm.h"
 
@@ -40,7 +41,6 @@
    ---------- Platform specific locking ----------
    -----------------------------------------------
 */
-
 /**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
@@ -80,6 +80,25 @@
 /**
  * Memory allocation functions
  */
+static inline void _netfree(void *mem)
+{
+        _kfree(_MM_NET, &mem);
+}
+
+static inline void *_netmalloc(size_t size)
+{
+        void *ptr = NULL;
+        _kmalloc(_MM_NET, size, &ptr);
+        return ptr;
+}
+
+static inline void *_netcalloc(size_t count, size_t size)
+{
+        void *ptr = NULL;
+        _kzalloc(_MM_NET, size * count, &ptr);
+        return ptr;
+}
+
 #define mem_free                                _netfree
 #define mem_malloc                              _netmalloc
 #define mem_calloc                              _netcalloc

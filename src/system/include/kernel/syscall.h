@@ -105,8 +105,11 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SYSLOGDISABLE,          // | int            |                           |                           |                           |                           |
         SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                | sem_t **exit_sem          |                           |
 #define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_SYSTEM          /* this group ends at this syscall */
+        SYSCALL_NETIFUP,                // | int            | NET_family_t *family      | const void *config        | size_t *size              |                           |
+        SYSCALL_NETIFDOWN,              // | int            | NET_family_t *family      |                           |                           |                           |
+        SYSCALL_NETIFSTATUS,            // | int            | NET_family_t *family      | void *status              | size_t *size              |                           |
+#define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* network group */
         _SYSCALL_COUNT
-#define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* not used group */
 } syscall_t;
 
 /*==============================================================================

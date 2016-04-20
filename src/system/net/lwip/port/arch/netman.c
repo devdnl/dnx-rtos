@@ -27,15 +27,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "errno.h"
 #include "net/netman.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dnx/timer.h>
-#include <dnx/misc.h>
-#include <dnx/thread.h>
-#include <unistd.h>
-#include "kernel/kwrapper.h"
+#include "kernel/sysfunc.h"
 #include "lwip/tcpip.h"
 
 /*==============================================================================
@@ -112,12 +106,12 @@ static void clear_rx_tx_counters()
 //==============================================================================
 static bool wait_for_init_done()
 {
-        timer_t timer = timer_reset();
-        while (!netman->ready && timer_is_not_expired(timer, init_timeout)) {
-                msleep(1);
+        u32_t timer = sys_get_time_ms();
+        while (not netman->ready && not sys_time_is_expired(timer, init_timeout)) {
+                sys_msleep(1);
         }
 
-        return timer_is_not_expired(timer, init_timeout);
+        return not sys_time_is_expired(timer, init_timeout);
 }
 
 //==============================================================================
@@ -159,10 +153,10 @@ static void restore_configuration()
 
         netif_set_down(&netman->netif);
 
-        if (mutex_lock(netman->access, MAX_DELAY_MS)) {
+        if (sys_mutex_lock(netman->access, MAX_DELAY_MS) == ESUCC) {
 
                 while (!_netman_is_link_connected(netman)) {
-                        msleep(link_poll_time);
+                        sys_msleep(link_poll_time);
                 }
 
                 netman->disconnected = false;
@@ -175,7 +169,7 @@ static void restore_configuration()
                         }
                 }
 
-                mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 }
 
@@ -204,8 +198,8 @@ static void network_interface_thread(void *arg)
 
         /* open interface file */
         while (netman->if_file == NULL) {
-                netman->if_file = fopen(__NETWORK_ETHIF_FILE__, "r+");
-                msleep(100);
+                sys_fopen(__NETWORK_ETHIF_FILE__, "r+", &netman->if_file);
+                sys_msleep(100);
         }
 
         /* initialize interface */
@@ -229,7 +223,8 @@ static void network_interface_thread(void *arg)
                 _netman_ifmem_free(netman);
         }
 
-        _task_exit();
+        // error occurred
+        return;
 }
 
 //==============================================================================
@@ -244,10 +239,15 @@ void _netman_init()
 {
         netman = _netcalloc(1, sizeof(netman_t));
         if (netman) {
-                netman->access    = _mutex_new(MUTEX_TYPE_RECURSIVE);
-                netman->if_thread = _task_new(network_interface_thread, "netifd", STACK_DEPTH_LOW, NULL, NULL);
+                static const thread_attr_t attr = {
+                        .priority    = PRIORITY_NORMAL,
+                        .stack_depth = STACK_DEPTH_LOW
+                };
 
-                if (netman->access && netman->if_thread) {
+                int ts = sys_thread_create(network_interface_thread, &attr, NULL, &netman->if_thread);
+                int ms = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &netman->access);
+
+                if (ms == ESUCC && ts == ESUCC) {
 
                         tcpip_init(NULL, NULL);
 
@@ -259,11 +259,11 @@ void _netman_init()
                                                     _netman_netif_init,
                                                     tcpip_input));
                 } else {
-                        if (netman->access)
-                                _mutex_delete(netman->access);
+                        if (ms)
+                                sys_mutex_destroy(netman->access);
 
-                        if (netman->if_thread)
-                                _task_delete(netman->if_thread);
+                        if (ts)
+                                sys_thread_destroy(&netman->if_thread);
 
                         _netfree(netman);
                         netman = NULL;
@@ -280,12 +280,12 @@ void _netman_init()
 //==============================================================================
 int _netman_start_DHCP_client()
 {
-        int status = -1;
+        int status = ENONET;
 
         if (  netman
            && !netif_is_up(&netman->netif)
            && wait_for_init_done()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 clear_rx_tx_counters();
                 netif_set_down(&netman->netif);
@@ -297,20 +297,20 @@ int _netman_start_DHCP_client()
                 if (dhcp_start(&netman->netif) == ERR_OK) {
                         netif_set_up(&netman->netif);
 
-                        timer_t timer = timer_reset();
-                        while (timer_is_not_expired(timer, DHCP_timeout)) {
+                        u32_t timer = sys_get_time_ms();
+                        while (not sys_time_is_expired(timer, DHCP_timeout)) {
 
                                 if (netman->netif.dhcp->state == DHCP_BOUND) {
                                         netman->configured = true;
-                                        status = 0;
+                                        status = ESUCC;
                                         break;
                                 } else {
-                                        _sleep_ms(100);
+                                        sys_msleep(100);
                                 }
                         }
                 }
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -330,7 +330,7 @@ int _netman_stop_DHCP_client()
         if (  netman
            && netif_is_up(&netman->netif)
            && is_DHCP_started()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 if (dhcp_release(&netman->netif) == ERR_OK) {
                         dhcp_stop(&netman->netif);
@@ -339,7 +339,7 @@ int _netman_stop_DHCP_client()
                         status = 0;
                 }
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -359,23 +359,23 @@ int _netman_renew_DHCP_connection()
         if (  netman
            && netif_is_up(&netman->netif)
            && is_DHCP_started()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 if (dhcp_renew(&netman->netif) == ERR_OK) {
 
-                        timer_t timeout = timer_reset();
-                        while (timer_is_not_expired(timeout, DHCP_timeout)) {
+                        u32_t timeout = sys_get_time_ms();
+                        while (not sys_time_is_expired(timeout, DHCP_timeout)) {
 
                                 if (netman->netif.dhcp->state == DHCP_BOUND) {
                                         status = 0;
                                         break;
                                 } else {
-                                        _sleep_ms(500);
+                                        sys_msleep(500);
                                 }
                         }
                 }
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -395,12 +395,12 @@ int _netman_inform_DHCP_server()
         if (  netman
            && netif_is_up(&netman->netif)
            && !is_DHCP_started()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 dhcp_inform(&netman->netif);
                 status = 0;
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -422,7 +422,7 @@ int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const 
         if (  netman && ip_address && net_mask && gateway
            && !netif_is_up(&netman->netif)
            && wait_for_init_done()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 clear_rx_tx_counters();
                 netif_set_down(&netman->netif);
@@ -436,7 +436,7 @@ int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const 
 
                 status = 0;
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -456,7 +456,7 @@ int _netman_if_down()
         if (  netman
            && netif_is_up(&netman->netif)
            && !is_DHCP_started()
-           && _mutex_lock(netman->access, access_timeout) ) {
+           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 netif_set_down(&netman->netif);
 
@@ -464,7 +464,7 @@ int _netman_if_down()
 
                 status = 0;
 
-                _mutex_unlock(netman->access);
+                sys_mutex_unlock(netman->access);
         }
 
         return status;
@@ -479,15 +479,17 @@ int _netman_if_down()
 //==============================================================================
 int _netman_get_ifconfig(_ifconfig_t *ifcfg)
 {
-        int status = -1;
+        int status = EINVAL;
 
         if (netman && ifcfg) {
-                ifcfg->hw_address[0] = __NETWORK_MAC_ADDR_0__;
-                ifcfg->hw_address[1] = __NETWORK_MAC_ADDR_1__;
-                ifcfg->hw_address[2] = __NETWORK_MAC_ADDR_2__;
-                ifcfg->hw_address[3] = __NETWORK_MAC_ADDR_3__;
-                ifcfg->hw_address[4] = __NETWORK_MAC_ADDR_4__;
-                ifcfg->hw_address[5] = __NETWORK_MAC_ADDR_5__;
+
+
+                ifcfg->hw_address[0] = 0x50;
+                ifcfg->hw_address[1] = 0x51;
+                ifcfg->hw_address[2] = 0x52;
+                ifcfg->hw_address[3] = 0x53;
+                ifcfg->hw_address[4] = 0x54;
+                ifcfg->hw_address[5] = 0x55;
                 ifcfg->IP_address    = ip_addr_any;
                 ifcfg->net_mask      = ip_addr_any;
                 ifcfg->gateway       = ip_addr_any;
@@ -518,7 +520,7 @@ int _netman_get_ifconfig(_ifconfig_t *ifcfg)
                         }
                 }
 
-                status = 0;
+                status = ESUCC;
         }
 
         return status;

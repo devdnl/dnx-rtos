@@ -1,6 +1,6 @@
 # Makefile for GNU make
 ifeq ($(__ENABLE_NETWORK__), _YES_)
-   CSRC_CORE   += net/socket.c
+   CSRC_CORE   += net/netm.c
    CSRC_CORE   += net/lwip/api/api_lib.c
    CSRC_CORE   += net/lwip/api/api_msg.c
    CSRC_CORE   += net/lwip/api/err.c

@@ -44,6 +44,8 @@ extern "C" {
 ==============================================================================*/
 #include <stdint.h>
 #include <kernel/syscall.h>
+#include <stddef.h>
+#include "net/netm.h"
 
 /*==============================================================================
   Exported macros
@@ -52,6 +54,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifdef DOXYGEN
 typedef struct socket SOCKET;
 
 typedef enum {
@@ -84,7 +87,7 @@ typedef struct {
         uint32_t    port;
         const char *addr;
 } NET_addr_t;
-
+#endif
 
 
 /*==============================================================================
@@ -98,6 +101,28 @@ typedef struct {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+static inline int ifup(NET_family_t family, const void *config, size_t size)
+{
+        int result = -1;
+        syscall(SYSCALL_NETIFUP, &result, &family, config, &size);
+        return result;
+}
+
+static inline int ifdown(NET_family_t family)
+{
+        int result = -1;
+        syscall(SYSCALL_NETIFDOWN, &result, &family);
+        return result;
+}
+
+static inline int ifstatus(NET_family_t family, const void *status, size_t size)
+{
+        int result = -1;
+        syscall(SYSCALL_NETIFSTATUS, &result, &family, status, &size);
+        return result;
+}
+
+
 //==============================================================================
 /**
  * @brief Creates an endpoint for communication and returns a socket.
@@ -121,7 +146,7 @@ static inline SOCKET *socket(NET_family_t family, NET_protocol_t protocol)
  * @param  socket       Socket
  */
 //==============================================================================
-static inline void socket_close(SOCKET *socket)
+static inline void close_socket(SOCKET *socket)
 {
 
 }

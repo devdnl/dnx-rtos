@@ -41,6 +41,7 @@
 #include "kernel/time.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
+#include "net/netm.h"
 
 /*==============================================================================
   Local macros
@@ -135,6 +136,9 @@ static void syscall_mutexcreate(syscallrq_t *rq);
 static void syscall_mutexdestroy(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
+static void syscall_netifup(syscallrq_t *rq);
+static void syscall_netifdown(syscallrq_t *rq);
+static void syscall_netifstatus(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -203,6 +207,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MUTEXDESTROY     ] = syscall_mutexdestroy,
         [SYSCALL_QUEUECREATE      ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY     ] = syscall_queuedestroy,
+        [SYSCALL_NETIFUP          ] = syscall_netifup,
+        [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
+        [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
 };
 
 /*==============================================================================
@@ -304,6 +311,8 @@ int _syscall_kworker_process(int argc, char *argv[])
                 .stack_depth = STACK_DEPTH_CUSTOM(__OS_NETWORK_STACK_DEPTH__),
                 .priority    = PRIORITY_NORMAL
         };
+
+        _net_init();
 
         for (;;) {
                 syscallrq_t *rq;
@@ -1556,6 +1565,38 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 
         SETERRNO(err);
 }
+
+
+static void syscall_netifup(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(const void *, config);
+        GETARG(size_t *, size);
+
+        SETERRNO(_net_ifup(*family, config, *size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netifdown(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+
+        SETERRNO(_net_ifdown(*family));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netifstatus(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(void *, status);
+        GETARG(size_t *, size);
+
+        SETERRNO(_net_ifstatus(*family, status, *size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+
+
 
 /*==============================================================================
   End of file

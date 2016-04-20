@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    netman.h
+File     netm.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Network manager.
+Brief    Network management.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,19 +24,26 @@
 
 *//*==========================================================================*/
 
-#ifndef _NETMAN_H_
-#define _NETMAN_H_
+/**
+@defgroup NETM_H_ NETM_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _NETM_H_
+#define _NETM_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdint.h>
+#include <stddef.h>
 #include <sys/types.h>
-#include "lwip/api.h"
-#include "lwip/netif.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
   Exported macros
@@ -45,40 +52,69 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum ifstatus {
-        NET_STATUS_NOT_CONFIGURED,
-        NET_STATUS_STATIC_IP,
-        NET_STATUS_DHCP_CONFIGURING,
-        NET_STATUS_DHCP_CONFIGURED,
-        NET_STATUS_LINK_DISCONNECTED
-} net_status_t;
+typedef struct socket SOCKET;
 
-typedef struct ifconfig {
-        net_status_t    status;
-        ip_addr_t       IP_address;
-        ip_addr_t       net_mask;
-        ip_addr_t       gateway;
-        u8_t            hw_address[6];
-        u64_t           tx_bytes;
-        u64_t           rx_bytes;
-        uint            rx_packets;
-        uint            tx_packets;
-} _ifconfig_t;
+typedef enum {
+        NET_FAMILY__INET,
+        NET_FAMILY__CAN,
+        NET_FAMILY__RFM,
+        NET_FAMILY__MICROLAN
+} NET_family_t;
+
+typedef enum {
+        NET_PROTOCOL__UDP,
+        NET_PROTOCOL__TCP,
+        NET_PROTOCOL__ISO_TP
+} NET_protocol_t;
+
+typedef enum {
+        NET_FLAGS__NO_COPY   = (1 << 0),
+        NET_FLAGS__COPY      = (1 << 1),
+        NET_FLAGS__MORE      = (1 << 2),
+        NET_FLAGS__DONTBLOCK = (1 << 3),
+} NET_flags_t;
+
+typedef enum {
+        NET_SHUT__RD   = (1 << 0),
+        NET_SHUT__WR   = (1 << 1),
+        NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)
+} NET_shut_t;
+
+typedef const char * NET_addr_t;
+
+typedef enum {
+        NET_INET_STATE__NOT_CONFIGURED,
+        NET_INET_STATE__STATIC_IP,
+        NET_INET_STATE__DHCP_CONFIGURING,
+        NET_INET_STATE__DHCP_CONFIGURED,
+        NET_INET_STATE__LINK_DISCONNECTED
+} NET_INET_state_t;
+
+typedef enum {
+        NET_INET_MODE__STATIC,
+        NET_INET_MODE__DHCP_START,
+        NET_INET_MODE__DHCP_INFORM,
+        NET_INET_MODE__DHCP_RENEW,
+} NET_INET_mode_t;
 
 typedef struct {
-        mutex_t        *access;
-        FILE           *if_file;
-        void           *if_mem;
-        thread_t        if_thread;
-        struct netif    netif;
-        uint            rx_packets;
-        uint            tx_packets;
-        uint            rx_bytes;
-        uint            tx_bytes;
-        bool            ready:1;
-        bool            disconnected:1;
-        bool            configured:1;
-} _netman_t;
+        NET_INET_mode_t mode;
+        u32_t           address;
+        u32_t           mask;
+        u32_t           gateway;
+} NET_INET_cfg_t;
+
+typedef struct {
+        NET_INET_state_t state;
+        u32_t            address;
+        u32_t            mask;
+        u32_t            gateway;
+        u8_t             hw_addr[6];
+        u64_t            tx_bytes;
+        u64_t            rx_bytes;
+        u64_t            tx_packets;
+        u64_t            rx_packets;
+} NET_INET_status_t;
 
 /*==============================================================================
   Exported objects
@@ -87,14 +123,10 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _netman_init();
-extern int  _netman_start_DHCP_client();
-extern int  _netman_stop_DHCP_client();
-extern int  _netman_inform_DHCP_server();
-extern int  _netman_renew_DHCP_connection();
-extern int  _netman_if_up(const ip_addr_t*, const ip_addr_t*, const ip_addr_t*);
-extern int  _netman_if_down();
-extern int  _netman_get_ifconfig(_ifconfig_t*);
+extern void _net_init(void);
+extern int  _net_ifup(NET_family_t, const void*, size_t);
+extern int  _net_ifdown(NET_family_t);
+extern int  _net_ifstatus(NET_family_t, void*, size_t);
 
 /*==============================================================================
   Exported inline functions
@@ -104,7 +136,9 @@ extern int  _netman_get_ifconfig(_ifconfig_t*);
 }
 #endif
 
-#endif /* _NETMAN_H_ */
+#endif /* _NETM_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

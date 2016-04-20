@@ -97,9 +97,9 @@
 # this:AddItem("Enable\t\t\t\t", "_YES_")
 # this:AddExtraWidget("Void", "VoidEnable")
 #--*/
-#define __ENABLE_NETWORK__ _NO_
+#define __ENABLE_NETWORK__ _YES_
 #/*
-__ENABLE_NETWORK__=_NO_
+__ENABLE_NETWORK__=_YES_
 #*/
 
 #/* existing stacks */

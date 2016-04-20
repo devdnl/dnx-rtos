@@ -46,6 +46,7 @@ extern "C" {
 #include <stdbool.h>
 #include <kernel/syscall.h>
 #include <kernel/khooks.h>
+#include <kernel/process.h>
 #include <mm/mm.h>
 #include <drivers/drvctrl.h>
 

@@ -186,6 +186,7 @@ extern int         _process_get_exit_sem                (pid_t, sem_t **);
 extern int         _process_get_priority                (pid_t, int*);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
+extern u32_t       _process_get_id                      (task_t *taskhdl);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
 extern sem_t      *_process_get_syscall_sem_by_task     (task_t*);
 extern int         _process_set_syscall_sem_by_task     (task_t*, sem_t*);

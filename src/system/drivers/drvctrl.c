@@ -620,8 +620,8 @@ int _device_lock(dev_lock_t *dev_lock)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (*dev_lock == NULL) {
-                                *dev_lock = _process_get_syscall_sem_by_task(_THIS_TASK);
+                        if (*dev_lock == 0) {
+                                *dev_lock = _process_get_id(_THIS_TASK);
                                 if (*dev_lock) {
                                         result = ESUCC;
                                 }
@@ -654,8 +654,8 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (force || *dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK)) {
-                                *dev_lock = NULL;
+                        if (force || *dev_lock == _process_get_id(_THIS_TASK)) {
+                                *dev_lock = 0;
                                 result    = ESUCC;
                         } else {
                                 result = EBUSY;
@@ -685,7 +685,7 @@ int _device_get_access(dev_lock_t *dev_lock)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (*dev_lock == _process_get_syscall_sem_by_task(_THIS_TASK)) {
+                        if (*dev_lock == _process_get_id(_THIS_TASK)) {
                                 result = ESUCC;
                         } else {
                                 result = EBUSY;
@@ -713,7 +713,7 @@ bool _device_is_locked(dev_lock_t *dev_lock)
         bool result = false;
 
         if (dev_lock) {
-                result = *dev_lock != NULL;
+                result = *dev_lock != 0;
         }
 
         return result;

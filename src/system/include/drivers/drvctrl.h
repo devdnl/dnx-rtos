@@ -90,7 +90,7 @@ struct _module_entry {
  * identification. Semaphore in this case is not used.
  * Doxygen documentation in drivers/driver.h.
  */
-typedef sem_t* dev_lock_t;
+typedef u32_t dev_lock_t;
 
 /*==============================================================================
   Exported objects
