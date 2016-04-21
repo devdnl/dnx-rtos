@@ -37,6 +37,7 @@ extern "C" {
 #include <sys/types.h>
 #include "lwip/api.h"
 #include "lwip/netif.h"
+#include "lwip/ip_addr.h"
 
 /*==============================================================================
   Exported macros

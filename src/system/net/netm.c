@@ -64,30 +64,51 @@ Brief    Network management.
  * @brief
  */
 //==============================================================================
-void _net_init(void)
-{
-#if (__ENABLE_NETWORK__ != 0)
-        _netman_init();
-#endif
-}
-
 int _net_ifup(NET_family_t family, const void *config, size_t size)
 {
         if (config && size) {
+                _netman_init();
+
                 switch (family) {
                 case NET_FAMILY__INET:
                         if (sizeof(NET_INET_cfg_t) == size) {
                                 const NET_INET_cfg_t *cfg = config;
 
                                 switch (cfg->mode) {
-                                case NET_INET_MODE__STATIC:
-                                        return ENOTSUP;
+                                case NET_INET_MODE__STATIC: {
+                                        ip_addr_t addr, mask, gateway;
+                                        IP4_ADDR(&addr,
+                                                 cfg->address[0],
+                                                 cfg->address[1],
+                                                 cfg->address[2],
+                                                 cfg->address[3]);
+
+                                        IP4_ADDR(&mask,
+                                                 cfg->mask[0],
+                                                 cfg->mask[1],
+                                                 cfg->mask[2],
+                                                 cfg->mask[3]);
+
+                                        IP4_ADDR(&gateway,
+                                                 cfg->gateway[0],
+                                                 cfg->gateway[1],
+                                                 cfg->gateway[2],
+                                                 cfg->gateway[3]);
+
+                                        return _netman_if_up(&addr, &mask, &gateway);
+                                }
+                                break;
 
                                 case NET_INET_MODE__DHCP_START:
                                         return _netman_start_DHCP_client();
+                                break;
 
                                 case NET_INET_MODE__DHCP_INFORM:
+                                        return _netman_inform_DHCP_server();
+                                break;
+
                                 case NET_INET_MODE__DHCP_RENEW:
+                                        return _netman_renew_DHCP_connection();
                                 default:
                                         return EINVAL;
                                 }
@@ -106,7 +127,7 @@ int _net_ifup(NET_family_t family, const void *config, size_t size)
                         return ENOTSUP;
 
                 default:
-                        return ENOTSUP;
+                        return EINVAL;
                 }
         }
 
@@ -115,7 +136,22 @@ int _net_ifup(NET_family_t family, const void *config, size_t size)
 
 int _net_ifdown(NET_family_t family)
 {
-        return 0;
+        switch (family) {
+        case NET_FAMILY__INET:
+                return _netman_if_down();
+
+        case NET_FAMILY__CAN:
+                return ENOTSUP;
+
+        case NET_FAMILY__MICROLAN:
+                return ENOTSUP;
+
+        case NET_FAMILY__RFM:
+                return ENOTSUP;
+
+        default:
+                return EINVAL;
+        }
 }
 
 int _net_ifstatus(NET_family_t family, void *status, size_t size)
@@ -133,9 +169,22 @@ int _net_ifstatus(NET_family_t family, void *status, size_t size)
                                         stat->tx_bytes   = inetstat.tx_bytes;
                                         stat->rx_packets = inetstat.rx_packets;
                                         stat->tx_packets = inetstat.tx_packets;
-                                        stat->address    = inetstat.IP_address.addr;
-                                        stat->mask       = inetstat.net_mask.addr;
-                                        stat->gateway    = inetstat.gateway.addr;
+
+                                        stat->address[0] = ip4_addr1(&inetstat.IP_address);
+                                        stat->address[1] = ip4_addr2(&inetstat.IP_address);
+                                        stat->address[2] = ip4_addr3(&inetstat.IP_address);
+                                        stat->address[3] = ip4_addr4(&inetstat.IP_address);
+
+                                        stat->mask[0]    = ip4_addr1(&inetstat.net_mask);
+                                        stat->mask[1]    = ip4_addr2(&inetstat.net_mask);
+                                        stat->mask[2]    = ip4_addr3(&inetstat.net_mask);
+                                        stat->mask[3]    = ip4_addr4(&inetstat.net_mask);
+
+                                        stat->gateway[0] = ip4_addr1(&inetstat.gateway);
+                                        stat->gateway[1] = ip4_addr2(&inetstat.gateway);
+                                        stat->gateway[2] = ip4_addr3(&inetstat.gateway);
+                                        stat->gateway[3] = ip4_addr4(&inetstat.gateway);
+
                                         stat->state      = inetstat.status;
                                         return ESUCC;
                                 }
@@ -155,7 +204,7 @@ int _net_ifstatus(NET_family_t family, void *status, size_t size)
                         return ENOTSUP;
 
                 default:
-                        return ENOTSUP;
+                        return EINVAL;
                 }
         }
 

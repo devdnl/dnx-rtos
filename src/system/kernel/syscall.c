@@ -312,8 +312,6 @@ int _syscall_kworker_process(int argc, char *argv[])
                 .priority    = PRIORITY_NORMAL
         };
 
-        _net_init();
-
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {

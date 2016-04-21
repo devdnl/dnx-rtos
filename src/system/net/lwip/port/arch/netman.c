@@ -323,27 +323,27 @@ int _netman_start_DHCP_client()
  * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
-int _netman_stop_DHCP_client()
-{
-        int status = -1;
-
-        if (  netman
-           && netif_is_up(&netman->netif)
-           && is_DHCP_started()
-           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
-
-                if (dhcp_release(&netman->netif) == ERR_OK) {
-                        dhcp_stop(&netman->netif);
-                        netif_set_down(&netman->netif);
-                        netman->configured = false;
-                        status = 0;
-                }
-
-                sys_mutex_unlock(netman->access);
-        }
-
-        return status;
-}
+//int _netman_stop_DHCP_client()
+//{
+//        int status = -1;
+//
+//        if (  netman
+//           && netif_is_up(&netman->netif)
+//           && is_DHCP_started()
+//           && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
+//
+//                if (dhcp_release(&netman->netif) == ERR_OK) {
+//                        dhcp_stop(&netman->netif);
+//                        netif_set_down(&netman->netif);
+//                        netman->configured = false;
+//                        status = 0;
+//                }
+//
+//                sys_mutex_unlock(netman->access);
+//        }
+//
+//        return status;
+//}
 
 //==============================================================================
 /**
@@ -354,7 +354,7 @@ int _netman_stop_DHCP_client()
 //==============================================================================
 int _netman_renew_DHCP_connection()
 {
-        int status = -1;
+        int status = ENONET;
 
         if (  netman
            && netif_is_up(&netman->netif)
@@ -367,7 +367,7 @@ int _netman_renew_DHCP_connection()
                         while (not sys_time_is_expired(timeout, DHCP_timeout)) {
 
                                 if (netman->netif.dhcp->state == DHCP_BOUND) {
-                                        status = 0;
+                                        status = ESUCC;
                                         break;
                                 } else {
                                         sys_msleep(500);
@@ -390,7 +390,7 @@ int _netman_renew_DHCP_connection()
 //==============================================================================
 int _netman_inform_DHCP_server()
 {
-        int status = -1;
+        int status = ENONET;
 
         if (  netman
            && netif_is_up(&netman->netif)
@@ -398,7 +398,7 @@ int _netman_inform_DHCP_server()
            && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
                 dhcp_inform(&netman->netif);
-                status = 0;
+                status = ESUCC;
 
                 sys_mutex_unlock(netman->access);
         }
@@ -417,7 +417,7 @@ int _netman_inform_DHCP_server()
 //==============================================================================
 int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway)
 {
-        int status = -1;
+        int status = EINVAL;
 
         if (  netman && ip_address && net_mask && gateway
            && !netif_is_up(&netman->netif)
@@ -434,7 +434,7 @@ int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const 
 
                 netman->configured = true;
 
-                status = 0;
+                status = ESUCC;
 
                 sys_mutex_unlock(netman->access);
         }
@@ -451,18 +451,21 @@ int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const 
 //==============================================================================
 int _netman_if_down()
 {
-        int status = -1;
+        int status = ENONET;
 
         if (  netman
            && netif_is_up(&netman->netif)
-           && !is_DHCP_started()
            && sys_mutex_lock(netman->access, access_timeout) == ESUCC ) {
 
+                if (is_DHCP_started()) {
+                        if (dhcp_release(&netman->netif) == ERR_OK) {
+                                dhcp_stop(&netman->netif);
+                        }
+                }
+
                 netif_set_down(&netman->netif);
-
                 netman->configured = false;
-
-                status = 0;
+                status = ESUCC;
 
                 sys_mutex_unlock(netman->access);
         }

@@ -99,16 +99,16 @@ typedef enum {
 
 typedef struct {
         NET_INET_mode_t mode;
-        u32_t           address;
-        u32_t           mask;
-        u32_t           gateway;
+        u8_t            address[4];
+        u8_t            mask[4];
+        u8_t            gateway[4];
 } NET_INET_cfg_t;
 
 typedef struct {
         NET_INET_state_t state;
-        u32_t            address;
-        u32_t            mask;
-        u32_t            gateway;
+        u8_t             address[4];
+        u8_t             mask[4];
+        u8_t             gateway[4];
         u8_t             hw_addr[6];
         u64_t            tx_bytes;
         u64_t            rx_bytes;
@@ -123,7 +123,6 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _net_init(void);
 extern int  _net_ifup(NET_family_t, const void*, size_t);
 extern int  _net_ifdown(NET_family_t);
 extern int  _net_ifstatus(NET_family_t, void*, size_t);

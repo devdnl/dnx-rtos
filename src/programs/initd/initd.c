@@ -301,17 +301,28 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 sleep(2);
                 puts("Starting DHCP client...\n");
 
-                static const NET_INET_cfg_t cfg = {
-                        .mode    = NET_INET_MODE__DHCP_START,
-                        .address = 0,
-                        .mask    = 0,
-                        .gateway = 0
+                static const NET_INET_cfg_t cfg1 = {
+                        .mode    = NET_INET_MODE__STATIC,
+                        .address = {192,168,0,150},
+                        .mask    = {255,255,255,0},
+                        .gateway = {192,168,0,1}
+                };
+
+                static const NET_INET_cfg_t cfg2 = {
+                        .mode    = NET_INET_MODE__DHCP_INFORM,
+                        .address = {192,168,0,150},
+                        .mask    = {255,255,255,0},
+                        .gateway = {192,168,0,1}
                 };
 
                 errno = 0;
-                if (ifup(NET_FAMILY__INET, &cfg, sizeof(cfg)) != 0) {
-                        perror(NULL);
+                if (ifup(NET_FAMILY__INET, &cfg1, sizeof(NET_INET_cfg_t)) != 0) {
+                        perror("ifup");
                 }
+
+              /*  if (ifup(NET_FAMILY__INET, &cfg2, sizeof(NET_INET_cfg_t)) != 0) {
+                        perror("DHCP inform");
+                }*/
 
                 sleep(1);
 
@@ -320,15 +331,15 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                         perror(NULL);
                 } else {
                         printf("Status: %d\n", status.state);
-                        printf("Address: 0x%8X\n", status.address);
-                        printf("Mask: 0x%8X\n", status.mask);
-                        printf("Gateway: 0x%8X\n", status.gateway);
-                        printf("MAC0: %d\n", status.hw_addr[0]);
-                        printf("MAC1: %d\n", status.hw_addr[1]);
-                        printf("MAC2: %d\n", status.hw_addr[2]);
-                        printf("MAC3: %d\n", status.hw_addr[3]);
-                        printf("MAC4: %d\n", status.hw_addr[4]);
-                        printf("MAC5: %d\n", status.hw_addr[5]);
+                        printf("Address: %d.%d.%d.%d\n", status.address[0], status.address[1], status.address[2], status.address[3]);
+                        printf("Mask: %d.%d.%d.%d\n", status.mask[0], status.mask[1], status.mask[2], status.mask[3]);
+                        printf("Gateway: %d.%d.%d.%d\n", status.gateway[0], status.gateway[1], status.gateway[2], status.gateway[3]);
+                        printf("MAC0: %02X\n", status.hw_addr[0]);
+                        printf("MAC1: %02X\n", status.hw_addr[1]);
+                        printf("MAC2: %02X\n", status.hw_addr[2]);
+                        printf("MAC3: %02X\n", status.hw_addr[3]);
+                        printf("MAC4: %02X\n", status.hw_addr[4]);
+                        printf("MAC5: %02X\n", status.hw_addr[5]);
                         printf("tx bytes: %d\n", status.tx_bytes);
                         printf("rx bytes: %d\n", status.rx_bytes);
                 }
