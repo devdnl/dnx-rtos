@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
-//#include <dnx/net.h>
+#include <dnx/net.h>
 #include <dnx/misc.h>
 
 /*==============================================================================
@@ -77,77 +77,71 @@ GLOBAL_VARIABLES_SECTION {
 //
 //        return net_IP_set(a, b, c, d);
 //}
-//
-////==============================================================================
-///**
-// * @brief  Select unit according to value size
-// * @param  val          value
-// * @return Selected unit. Value is changed according to selected unit.
-// */
-////==============================================================================
-//static const char *convert_unit(u64_t *val)
-//{
-//        if (*val >= 10*MiB) {
-//                *val = CONVERT_TO_MiB(*val);
-//                return "MiB";
-//        } else if (*val >= 10*KiB) {
-//                *val = CONVERT_TO_KiB(*val);
-//                return "KiB";
-//        } else {
-//                return "B";
-//        }
-//}
-//
-////==============================================================================
-///**
-// * @brief  Shows connection details
-// * @param  None
-// * @return None
-// */
-////==============================================================================
-//static void show_details()
-//{
-//        static const char *if_status[] = {
-//                "NOT CONFIGURED",
-//                "STATIC IP",
-//                "DHCP CONFIGURING",
-//                "DHCP CONFIGURED",
-//                "DISCONNECTED"
-//        };
-//
-//        net_config_t ifcfg;
-//        memset(&ifcfg, 0, sizeof(net_config_t));
-//        net_get_ifconfig(&ifcfg);
-//
-//        const char *tx_unit = convert_unit(&ifcfg.tx_bytes);
-//        const char *rx_unit = convert_unit(&ifcfg.rx_bytes);
-//
-//        printf("Network status: %s\n"
-//               "HWaddr %2X:%2X:%2X:%2X:%2X:%2X\n"
-//               "Addr:%d.%d.%d.%d\n"
-//               "Gateway:%d.%d.%d.%d\n"
-//               "Mask:%d.%d.%d.%d\n"
-//               "RX packets:%d (%d %s)\n"
-//               "TX packets:%d (%d %s)\n",
-//               if_status[ifcfg.status],
-//               ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
-//               ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-//               net_IP_get_part_a(&ifcfg.IP_address),
-//               net_IP_get_part_b(&ifcfg.IP_address),
-//               net_IP_get_part_c(&ifcfg.IP_address),
-//               net_IP_get_part_d(&ifcfg.IP_address),
-//               net_IP_get_part_a(&ifcfg.gateway),
-//               net_IP_get_part_b(&ifcfg.gateway),
-//               net_IP_get_part_c(&ifcfg.gateway),
-//               net_IP_get_part_d(&ifcfg.gateway),
-//               net_IP_get_part_a(&ifcfg.net_mask),
-//               net_IP_get_part_b(&ifcfg.net_mask),
-//               net_IP_get_part_c(&ifcfg.net_mask),
-//               net_IP_get_part_d(&ifcfg.net_mask),
-//               ifcfg.rx_packets, cast(int, ifcfg.rx_bytes), rx_unit,
-//               ifcfg.tx_packets, cast(int, ifcfg.tx_bytes), tx_unit);
-//}
-//
+
+//==============================================================================
+/**
+ * @brief  Select unit according to value size
+ * @param  val          value
+ * @return Selected unit. Value is changed according to selected unit.
+ */
+//==============================================================================
+static const char *convert_unit(u64_t *val)
+{
+        if (*val >= 10*MiB) {
+                *val = CONVERT_TO_MiB(*val);
+                return "MiB";
+        } else if (*val >= 10*KiB) {
+                *val = CONVERT_TO_KiB(*val);
+                return "KiB";
+        } else {
+                return "B";
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Shows connection details
+ * @param  None
+ * @return None
+ */
+//==============================================================================
+static void show_details()
+{
+        static const char *if_status[] = {
+               "NOT CONFIGURED",
+               "STATIC IP",
+               "DHCP CONFIGURING",
+               "DHCP CONFIGURED",
+               "LINK DISCONNECTED"
+        };
+
+        NET_INET_status_t ifstat;
+        if (ifstatus(NET_FAMILY__INET, &ifstat, sizeof(NET_INET_status_t)) == 0) {
+
+                const char *tx_unit = convert_unit(&ifstat.tx_bytes);
+                const char *rx_unit = convert_unit(&ifstat.rx_bytes);
+
+                printf("Network status: %s\n"
+                       "HWaddr %2X:%2X:%2X:%2X:%2X:%2X\n"
+                       "Addr:%d.%d.%d.%d\n"
+                       "Gateway:%d.%d.%d.%d\n"
+                       "Mask:%d.%d.%d.%d\n"
+                       "RX packets:%d (%d %s)\n"
+                       "TX packets:%d (%d %s)\n",
+                       if_status[ifstat.state],
+                       ifstat.hw_addr[0], ifstat.hw_addr[1], ifstat.hw_addr[2],
+                       ifstat.hw_addr[3], ifstat.hw_addr[4], ifstat.hw_addr[5],
+                       ifstat.address[0], ifstat.address[1],
+                       ifstat.address[2], ifstat.address[3],
+                       ifstat.gateway[0], ifstat.gateway[1],
+                       ifstat.gateway[2], ifstat.gateway[3],
+                       ifstat.mask[0], ifstat.mask[1],
+                       ifstat.mask[2], ifstat.mask[3],
+                       (u32_t)ifstat.rx_packets, cast(int, ifstat.rx_bytes), rx_unit,
+                       (u32_t)ifstat.tx_packets, cast(int, ifstat.tx_bytes), tx_unit);
+        }
+}
+
 ////==============================================================================
 ///**
 // * @brief  Print help message
@@ -179,10 +173,8 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-#warning ifconfig: TODO network sockets
-
         if (argc == 1) {
-//                show_details();
+                show_details();
         } else {
 //                bool up   = false;
 //                bool down = false;

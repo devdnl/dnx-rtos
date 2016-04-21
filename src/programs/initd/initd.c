@@ -301,22 +301,22 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 sleep(2);
                 puts("Starting DHCP client...\n");
 
-                static const NET_INET_cfg_t cfg1 = {
+                static const NET_INET_cfg_t cfg_static = {
                         .mode    = NET_INET_MODE__STATIC,
                         .address = {192,168,0,150},
                         .mask    = {255,255,255,0},
                         .gateway = {192,168,0,1}
                 };
 
-                static const NET_INET_cfg_t cfg2 = {
-                        .mode    = NET_INET_MODE__DHCP_INFORM,
-                        .address = {192,168,0,150},
-                        .mask    = {255,255,255,0},
-                        .gateway = {192,168,0,1}
+                static const NET_INET_cfg_t cfg_dhcp = {
+                        .mode    = NET_INET_MODE__DHCP_START,
+                        .address = {0,0,0,0},
+                        .mask    = {0,0,0,0},
+                        .gateway = {0,0,0,0}
                 };
 
                 errno = 0;
-                if (ifup(NET_FAMILY__INET, &cfg1, sizeof(NET_INET_cfg_t)) != 0) {
+                if (ifup(NET_FAMILY__INET, &cfg_dhcp, sizeof(NET_INET_cfg_t)) != 0) {
                         perror("ifup");
                 }
 
@@ -345,7 +345,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 }
 
 
-                sleep(15);
+                sleep(5);
 
                 syslog_enable("/dev/tty3");
 
