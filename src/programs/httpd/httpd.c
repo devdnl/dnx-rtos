@@ -164,6 +164,16 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
                         puts("Binded");
                         if (socket_listen(socket) == 0) {
                                 puts("Listening...");
+
+                                int err;
+                                do {
+                                        SOCKET *new_socket;
+                                        err = socket_accept(socket, &new_socket);
+                                        if (!err) {
+                                                puts("Connection accepted");
+                                                //serve(new_socket);
+                                        }
+                                } while (!err);
                         }
                 }
 

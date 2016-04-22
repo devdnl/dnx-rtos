@@ -138,6 +138,7 @@ extern int _net_socketcreate(NET_family_t, NET_protocol_t, SOCKET**);
 extern int _net_socketdestroy(SOCKET*);
 extern int _net_socketbind(SOCKET*, const void*, size_t);
 extern int _net_socketlisten(SOCKET*);
+extern int _net_socketaccept(SOCKET*, SOCKET**);
 
 /*==============================================================================
   Exported inline functions

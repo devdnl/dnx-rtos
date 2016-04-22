@@ -38,16 +38,16 @@ Brief    Network management.
 /*==============================================================================
   Local object types
 ==============================================================================*/
-struct socket {
-        res_header_t header;
-        NET_family_t family;
-        void        *socket;
-};
-
 typedef struct {
         struct netconn *netconn;
         struct netbuf  *netbuf;
 } INET_socket_t;
+
+struct socket {
+        res_header_t header;
+        NET_family_t family;
+        void        *ctx;
+};
 
 /*==============================================================================
   Local function prototypes
@@ -68,6 +68,50 @@ typedef struct {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int socket_alloc(SOCKET **socket, NET_family_t family)
+{
+        static const uint8_t net_socket_size[] = {
+                [NET_FAMILY__INET    ] = sizeof(INET_socket_t),
+                [NET_FAMILY__CAN     ] = sizeof(int),
+                [NET_FAMILY__RFM     ] = sizeof(int),
+                [NET_FAMILY__MICROLAN] = sizeof(int),
+        };
+
+        int err = _kzalloc(_MM_NET, sizeof(SOCKET), cast(void**, socket));
+        if (!err) {
+                err = _kzalloc(_MM_NET, net_socket_size[family], cast(void**, &(*socket)->ctx));
+                if (!err) {
+                        (*socket)->header.type = RES_TYPE_SOCKET;
+                        (*socket)->family      = family;
+                } else {
+                        _kfree(_MM_NET, cast(void**, socket));
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static void socket_free(SOCKET **socket)
+{
+        (*socket)->header.type = RES_TYPE_UNKNOWN;
+        _kfree(_MM_NET, &(*socket)->ctx);
+        _kfree(_MM_NET, cast(void**, socket));
+        *socket = NULL;
+}
 
 //==============================================================================
 /**
@@ -108,36 +152,17 @@ static int INET_lwIP_status_to_errno(err_t err)
 //==============================================================================
 static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
 {
-        int err = _kzalloc(_MM_NET, sizeof(SOCKET), cast(void**, socket));
+        int err = socket_alloc(socket, NET_FAMILY__INET);
         if (!err) {
+                INET_socket_t *inet = (*socket)->ctx;
 
-                INET_socket_t *inet = NULL;
-                err = _kzalloc(_MM_NET, sizeof(INET_socket_t), cast(void**, &inet));
-                if (!err) {
-
-                        enum netconn_type type = prot == NET_PROTOCOL__TCP
-                                                       ? NETCONN_TCP
-                                                       : NETCONN_UDP;
-
-                        inet->netconn = netconn_new(type);
-                        if (inet->netconn) {
-
-                                inet->netbuf = netbuf_new();
-                                if (inet->netbuf) {
-
-                                        (*socket)->header.type = RES_TYPE_SOCKET;
-                                        (*socket)->family      = NET_FAMILY__INET;
-                                        (*socket)->socket      = inet;
-                                        return ESUCC;
-                                }
-
-                                netconn_delete(inet->netconn);
-                        }
-
-                        _kfree(_MM_NET, cast(void**, &inet));
+                inet->netconn = netconn_new(prot == NET_PROTOCOL__TCP
+                                                  ? NETCONN_TCP
+                                                  : NETCONN_UDP);
+                if (!inet->netconn) {
+                        err = ENOMEM;
+                        socket_free(socket);
                 }
-
-                _kfree(_MM_NET, cast(void**, socket));
         }
 
         return err;
@@ -152,9 +177,7 @@ static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
 //==============================================================================
 static int INET_socket_destroy(SOCKET *socket)
 {
-        INET_socket_t *inet = socket->socket;
-
-        socket->header.type = RES_TYPE_UNKNOWN;
+        INET_socket_t *inet = socket->ctx;
 
         if (inet->netbuf) {
                 netbuf_delete(inet->netbuf);
@@ -164,8 +187,7 @@ static int INET_socket_destroy(SOCKET *socket)
                 netconn_delete(inet->netconn);
         }
 
-        _kfree(_MM_NET, cast(void**, &inet));
-        _kfree(_MM_NET, cast(void**, &socket));
+        socket_free(&socket);
 
         return ESUCC;
 }
@@ -179,7 +201,7 @@ static int INET_socket_destroy(SOCKET *socket)
 //==============================================================================
 static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
 {
-        INET_socket_t *inet = socket->socket;
+        INET_socket_t *inet = socket->ctx;
 
         ip_addr_t IP;
         IP4_ADDR(&IP, addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3]);
@@ -196,9 +218,33 @@ static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
 //==============================================================================
 static int INET_socket_listen(SOCKET *socket)
 {
-        INET_socket_t *inet = socket->socket;
+        INET_socket_t *inet = socket->ctx;
 
         return INET_lwIP_status_to_errno(netconn_listen(inet->netconn));
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_socket_accept(SOCKET *socket, SOCKET **new_socket)
+{
+        int err = socket_alloc(new_socket, NET_FAMILY__INET);
+        if (!err) {
+                INET_socket_t *inet     = socket->ctx;
+                INET_socket_t *new_inet = (*new_socket)->ctx;
+
+                err = INET_lwIP_status_to_errno(netconn_accept(inet->netconn,
+                                                               &new_inet->netconn));
+                if (err) {
+                        socket_free(new_socket);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -448,6 +494,33 @@ int _net_socketlisten(SOCKET *socket)
                 switch (socket->family) {
                 case NET_FAMILY__INET:
                         err = INET_socket_listen(socket);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+int _net_socketaccept(SOCKET *socket, SOCKET **new_socket)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_accept(socket, new_socket);
                         break;
 
                 case NET_FAMILY__CAN:

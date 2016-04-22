@@ -143,6 +143,7 @@ static void syscall_netsocketcreate(syscallrq_t *rq);
 static void syscall_netsocketdestroy(syscallrq_t *rq);
 static void syscall_netbind(syscallrq_t *rq);
 static void syscall_netlisten(syscallrq_t *rq);
+static void syscall_netaccept(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -218,6 +219,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETSOCKETDESTROY ] = syscall_netsocketdestroy,
         [SYSCALL_NETBIND          ] = syscall_netbind,
         [SYSCALL_NETLISTEN        ] = syscall_netlisten,
+        [SYSCALL_NETACCEPT        ] = syscall_netaccept,
 };
 
 /*==============================================================================
@@ -1653,6 +1655,26 @@ static void syscall_netlisten(syscallrq_t *rq)
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
+static void syscall_netaccept(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(SOCKET **, new_socket);
+
+        SOCKET *socknew = NULL;
+        int     err     = _net_socketaccept(socket, &socknew);
+        if (!err) {
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socknew));
+                if (err) {
+                        _net_socketdestroy(socknew);
+                        socknew = NULL;
+                }
+        }
+
+        *new_socket = socknew;
+
+        SETERRNO(err);
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
 
 /*==============================================================================
   End of file

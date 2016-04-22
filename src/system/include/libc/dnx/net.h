@@ -272,7 +272,9 @@ static inline int socket_listen(SOCKET *socket)
 //==============================================================================
 static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETACCEPT, &result, socket, new_socket);
+        return result;
 }
 
 //==============================================================================
