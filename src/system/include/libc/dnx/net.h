@@ -206,7 +206,9 @@ static inline void socket_delete(SOCKET *socket)
 //==============================================================================
 static inline int socket_bind(SOCKET *socket, const void *localAddress, size_t adr_size)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETBIND, &result, socket, localAddress, &adr_size);
+        return result;
 }
 
 //==============================================================================
@@ -252,7 +254,9 @@ static inline int socket_disconnect(SOCKET *socket)
 //==============================================================================
 static inline int socket_listen(SOCKET *socket)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETLISTEN, &result, socket);
+        return result;
 }
 
 //==============================================================================

@@ -76,7 +76,37 @@ typedef struct {
  * @return ?
  */
 //==============================================================================
-static int INET_create_socket(NET_protocol_t prot, SOCKET **socket)
+static int INET_lwIP_status_to_errno(err_t err)
+{
+        switch (err) {
+        case ERR_OK        : return ESUCC;
+        case ERR_MEM       : return ENOMEM;
+        case ERR_BUF       : return EIO;
+        case ERR_TIMEOUT   : return ETIME;
+        case ERR_RTE       : return EFAULT;
+        case ERR_INPROGRESS: return EBUSY;
+        case ERR_VAL       : return EINVAL;
+        case ERR_ARG       : return EINVAL;
+        case ERR_USE       : return EADDRINUSE;
+        case ERR_ISCONN    : return EADDRINUSE;
+        case ERR_WOULDBLOCK: return EFAULT;
+        case ERR_ABRT      : return EFAULT;
+        case ERR_RST       : return EFAULT;
+        case ERR_CLSD      : return EFAULT;
+        case ERR_CONN      : return EFAULT;
+        case ERR_IF        : return EFAULT;
+        default            : return EFAULT;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
 {
         int err = _kzalloc(_MM_NET, sizeof(SOCKET), cast(void**, socket));
         if (!err) {
@@ -120,7 +150,7 @@ static int INET_create_socket(NET_protocol_t prot, SOCKET **socket)
  * @return ?
  */
 //==============================================================================
-static int INET_destroy_socket(SOCKET *socket)
+static int INET_socket_destroy(SOCKET *socket)
 {
         INET_socket_t *inet = socket->socket;
 
@@ -138,6 +168,37 @@ static int INET_destroy_socket(SOCKET *socket)
         _kfree(_MM_NET, cast(void**, &socket));
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
+{
+        INET_socket_t *inet = socket->socket;
+
+        ip_addr_t IP;
+        IP4_ADDR(&IP, addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3]);
+
+        return INET_lwIP_status_to_errno(netconn_bind(inet->netconn, &IP, addr->port));
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_socket_listen(SOCKET *socket)
+{
+        INET_socket_t *inet = socket->socket;
+
+        return INET_lwIP_status_to_errno(netconn_listen(inet->netconn));
 }
 
 //==============================================================================
@@ -302,7 +363,7 @@ int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **soc
                         if (  protocol == NET_PROTOCOL__UDP
                            || protocol == NET_PROTOCOL__TCP) {
 
-                                err = INET_create_socket(protocol, socket);
+                                err = INET_socket_create(protocol, socket);
                         }
                         break;
 
@@ -330,7 +391,63 @@ int _net_socketdestroy(SOCKET *socket)
         if (socket && socket->header.type == RES_TYPE_SOCKET) {
                 switch (socket->family) {
                 case NET_FAMILY__INET:
-                        err = INET_destroy_socket(socket);
+                        err = INET_socket_destroy(socket);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+int _net_socketbind(SOCKET *socket, const void *addr, size_t addr_size)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        if (addr_size == sizeof(NET_INET_addr_t)) {
+                                err = INET_socket_bind(socket, addr);
+                        }
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+int _net_socketlisten(SOCKET *socket)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_listen(socket);
                         break;
 
                 case NET_FAMILY__CAN:

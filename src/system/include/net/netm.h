@@ -48,7 +48,11 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define NET_INET_IP(a, b, c, d) {a, b, c, d}
+#define NET_INET_IP(a, b, c, d)                 {a, b, c, d}
+#define NET_INET_IP_ANY(a, b, c, d)             {0, 0, 0, 0}
+#define NET_INET_IP_LOOPBACK(a, b, c, d)        {127, 0, 0, 1}
+#define NET_INET_IP_BROADCAST(a, b, c, d)       {255, 255, 255, 255}
+
 
 /*==============================================================================
   Exported object types
@@ -132,6 +136,8 @@ extern int _net_ifdown(NET_family_t);
 extern int _net_ifstatus(NET_family_t, void*, size_t);
 extern int _net_socketcreate(NET_family_t, NET_protocol_t, SOCKET**);
 extern int _net_socketdestroy(SOCKET*);
+extern int _net_socketbind(SOCKET*, const void*, size_t);
+extern int _net_socketlisten(SOCKET*);
 
 /*==============================================================================
   Exported inline functions

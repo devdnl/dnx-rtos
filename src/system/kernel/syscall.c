@@ -141,6 +141,8 @@ static void syscall_netifdown(syscallrq_t *rq);
 static void syscall_netifstatus(syscallrq_t *rq);
 static void syscall_netsocketcreate(syscallrq_t *rq);
 static void syscall_netsocketdestroy(syscallrq_t *rq);
+static void syscall_netbind(syscallrq_t *rq);
+static void syscall_netlisten(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -214,6 +216,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
         [SYSCALL_NETSOCKETCREATE  ] = syscall_netsocketcreate,
         [SYSCALL_NETSOCKETDESTROY ] = syscall_netsocketdestroy,
+        [SYSCALL_NETBIND          ] = syscall_netbind,
+        [SYSCALL_NETLISTEN        ] = syscall_netlisten,
 };
 
 /*==============================================================================
@@ -1629,6 +1633,24 @@ static void syscall_netsocketdestroy(syscallrq_t *rq)
         }
 
         SETERRNO(err);
+}
+
+static void syscall_netbind(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, addr);
+        GETARG(size_t *, addr_size);
+
+        SETERRNO(_net_socketbind(socket, addr, *addr_size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netlisten(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        SETERRNO(_net_socketlisten(socket));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 

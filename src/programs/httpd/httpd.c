@@ -153,15 +153,19 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
+        static const NET_INET_addr_t ADDR_ANY = {
+            .addr = NET_INET_IP(0,0,0,0),
+            .port = 80
+        };
+
         SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (socket) {
-                static const NET_INET_addr_t addr = {
-                    .addr = NET_INET_IP(0,0,0,0),
-                    .port = 80
-                };
-
-                socket_bind(socket, &addr, sizeof(NET_INET_addr_t));
-
+                if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
+                        puts("Binded");
+                        if (socket_listen(socket) == 0) {
+                                puts("Listening...");
+                        }
+                }
 
                 socket_delete(socket);
         }

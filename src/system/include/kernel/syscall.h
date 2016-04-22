@@ -110,6 +110,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_NETIFSTATUS,            // | int            | NET_family_t *family      | void *status              | size_t *size              |                           |
         SYSCALL_NETSOCKETCREATE,        // | SOCKET*        | NET_family_t *family      | NET_protocol_t *protocol  |                           |                           |
         SYSCALL_NETSOCKETDESTROY,       // | void           | SOCKET *socket            |                           |                           |                           |
+        SYSCALL_NETBIND,                // | int            | SOCKET *socket            | const void *addr          | size_t *addr_size         |                           |
+        SYSCALL_NETLISTEN,              // | int            | SOCKET *socket            |                           |                           |                           |
 #define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* network group */
         _SYSCALL_COUNT
 } syscall_t;
