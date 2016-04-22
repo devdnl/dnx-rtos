@@ -252,7 +252,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
                 if (timeout) {
                         sem_status = sys_semaphore_wait(*sem, timeout);
                 } else {
-                        sem_status =sys_semaphore_wait(*sem, MAX_DELAY_MS);
+                        sem_status = sys_semaphore_wait(*sem, MAX_DELAY_MS);
                 }
 
                 if (sem_status == ESUCC) {

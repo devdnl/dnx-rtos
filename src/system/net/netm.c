@@ -38,6 +38,16 @@ Brief    Network management.
 /*==============================================================================
   Local object types
 ==============================================================================*/
+struct socket {
+        res_header_t header;
+        NET_family_t family;
+        void        *socket;
+};
+
+typedef struct {
+        struct netconn *netconn;
+        struct netbuf  *netbuf;
+} INET_socket_t;
 
 /*==============================================================================
   Local function prototypes
@@ -61,17 +71,88 @@ Brief    Network management.
 
 //==============================================================================
 /**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_create_socket(NET_protocol_t prot, SOCKET **socket)
+{
+        int err = _kzalloc(_MM_NET, sizeof(SOCKET), cast(void**, socket));
+        if (!err) {
+
+                INET_socket_t *inet = NULL;
+                err = _kzalloc(_MM_NET, sizeof(INET_socket_t), cast(void**, &inet));
+                if (!err) {
+
+                        enum netconn_type type = prot == NET_PROTOCOL__TCP
+                                                       ? NETCONN_TCP
+                                                       : NETCONN_UDP;
+
+                        inet->netconn = netconn_new(type);
+                        if (inet->netconn) {
+
+                                inet->netbuf = netbuf_new();
+                                if (inet->netbuf) {
+
+                                        (*socket)->header.type = RES_TYPE_SOCKET;
+                                        (*socket)->family      = NET_FAMILY__INET;
+                                        (*socket)->socket      = inet;
+                                        return ESUCC;
+                                }
+
+                                netconn_delete(inet->netconn);
+                        }
+
+                        _kfree(_MM_NET, cast(void**, &inet));
+                }
+
+                _kfree(_MM_NET, cast(void**, socket));
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static int INET_destroy_socket(SOCKET *socket)
+{
+        INET_socket_t *inet = socket->socket;
+
+        socket->header.type = RES_TYPE_UNKNOWN;
+
+        if (inet->netbuf) {
+                netbuf_delete(inet->netbuf);
+        }
+
+        if (inet->netconn) {
+                netconn_delete(inet->netconn);
+        }
+
+        _kfree(_MM_NET, cast(void**, &inet));
+        _kfree(_MM_NET, cast(void**, &socket));
+
+        return ESUCC;
+}
+
+//==============================================================================
+/**
  * @brief
  */
 //==============================================================================
 int _net_ifup(NET_family_t family, const void *config, size_t size)
 {
         if (config && size) {
-                _netman_init();
-
                 switch (family) {
                 case NET_FAMILY__INET:
                         if (sizeof(NET_INET_cfg_t) == size) {
+                                _netman_init();
+
                                 const NET_INET_cfg_t *cfg = config;
 
                                 switch (cfg->mode) {
@@ -209,6 +290,64 @@ int _net_ifstatus(NET_family_t family, void *status, size_t size)
         }
 
         return EINVAL;
+}
+
+int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
+{
+        int err = EINVAL;
+
+        if (socket) {
+                switch (family) {
+                case NET_FAMILY__INET:
+                        if (  protocol == NET_PROTOCOL__UDP
+                           || protocol == NET_PROTOCOL__TCP) {
+
+                                err = INET_create_socket(protocol, socket);
+                        }
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+int _net_socketdestroy(SOCKET *socket)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_destroy_socket(socket);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 }
 
 /*==============================================================================

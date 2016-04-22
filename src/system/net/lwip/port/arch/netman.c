@@ -237,6 +237,9 @@ static void network_interface_thread(void *arg)
 //==============================================================================
 void _netman_init()
 {
+        if (netman)
+                return;
+
         netman = _netcalloc(1, sizeof(netman_t));
         if (netman) {
                 static const thread_attr_t attr = {

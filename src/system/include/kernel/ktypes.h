@@ -57,7 +57,8 @@ typedef enum {
         RES_TYPE_QUEUE         = 0x83D50ADB,
         RES_TYPE_FILE          = 0x7D129250,
         RES_TYPE_DIR           = 0x19586E97,
-        RES_TYPE_MEMORY        = 0x9E834645
+        RES_TYPE_MEMORY        = 0x9E834645,
+        RES_TYPE_SOCKET        = 0x63ACC316
 } res_type_t;
 
 /** KERNELSPACE: object header (must be the first in object) */

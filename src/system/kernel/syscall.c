@@ -139,6 +139,8 @@ static void syscall_queuedestroy(syscallrq_t *rq);
 static void syscall_netifup(syscallrq_t *rq);
 static void syscall_netifdown(syscallrq_t *rq);
 static void syscall_netifstatus(syscallrq_t *rq);
+static void syscall_netsocketcreate(syscallrq_t *rq);
+static void syscall_netsocketdestroy(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -210,6 +212,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETIFUP          ] = syscall_netifup,
         [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
         [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
+        [SYSCALL_NETSOCKETCREATE  ] = syscall_netsocketcreate,
+        [SYSCALL_NETSOCKETDESTROY ] = syscall_netsocketdestroy,
 };
 
 /*==============================================================================
@@ -1593,7 +1597,39 @@ static void syscall_netifstatus(syscallrq_t *rq)
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
+static void syscall_netsocketcreate(syscallrq_t *rq)
+{
+        GETARG(NET_family_t*, family);
+        GETARG(NET_protocol_t*, protocol);
 
+        SOCKET *socket = NULL;
+        int     err    = _net_socketcreate(*family, *protocol, &socket);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
+                if (err != ESUCC) {
+                        _net_socketdestroy(socket);
+                        socket = NULL;
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(SOCKET*, socket);
+}
+
+static void syscall_netsocketdestroy(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, socket), RES_TYPE_SOCKET);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: object is not a socket! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
+}
 
 
 /*==============================================================================

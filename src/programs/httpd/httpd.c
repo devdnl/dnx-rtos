@@ -31,7 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <dnx/net.h>
+#include <dnx/net.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -153,7 +153,20 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-#warning httpd: TODO network sockets
+        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        if (socket) {
+                static const NET_INET_addr_t addr = {
+                    .addr = NET_INET_IP(0,0,0,0),
+                    .port = 80
+                };
+
+                socket_bind(socket, &addr, sizeof(NET_INET_addr_t));
+
+
+                socket_delete(socket);
+        }
+
+        puts("Exit");
 
 //        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
 //        if (conn) {

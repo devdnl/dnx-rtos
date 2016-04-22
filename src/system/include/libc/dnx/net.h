@@ -101,13 +101,35 @@ typedef struct {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline int ifup(NET_family_t family, const void *config, size_t size)
+//==============================================================================
+/**
+ * @brief  Function set up selected network interface.
+ *
+ * @param  family       interface family
+ * @param  config       configuration for specified interface
+ * @param  config_size  size of configuration object
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ */
+//==============================================================================
+static inline int ifup(NET_family_t family, const void *config, size_t config_size)
 {
         int result = -1;
-        syscall(SYSCALL_NETIFUP, &result, &family, config, &size);
+        syscall(SYSCALL_NETIFUP, &result, &family, config, &config_size);
         return result;
 }
 
+//==============================================================================
+/**
+ * @brief  Function set down selected network interface.
+ *
+ * @param  family       interface family
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ */
+//==============================================================================
 static inline int ifdown(NET_family_t family)
 {
         int result = -1;
@@ -115,10 +137,22 @@ static inline int ifdown(NET_family_t family)
         return result;
 }
 
-static inline int ifstatus(NET_family_t family, const void *status, size_t size)
+//==============================================================================
+/**
+ * @brief  Function get status of selected interface.
+ *
+ * @param  family       interface family
+ * @param  status       status of selected interface
+ * @param  status_size  size of status object
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ */
+//==============================================================================
+static inline int ifstatus(NET_family_t family, const void *status, size_t status_size)
 {
         int result = -1;
-        syscall(SYSCALL_NETIFSTATUS, &result, &family, status, &size);
+        syscall(SYSCALL_NETIFSTATUS, &result, &family, status, &status_size);
         return result;
 }
 
@@ -134,9 +168,11 @@ static inline int ifstatus(NET_family_t family, const void *status, size_t size)
  *         otherwise new socket pointer.
  */
 //==============================================================================
-static inline SOCKET *socket(NET_family_t family, NET_protocol_t protocol)
+static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
 {
-        return NULL;
+        SOCKET *socket = NULL;
+        syscall(SYSCALL_NETSOCKETCREATE, &socket, &family, &protocol);
+        return socket;
 }
 
 //==============================================================================
@@ -146,9 +182,9 @@ static inline SOCKET *socket(NET_family_t family, NET_protocol_t protocol)
  * @param  socket       Socket
  */
 //==============================================================================
-static inline void close_socket(SOCKET *socket)
+static inline void socket_delete(SOCKET *socket)
 {
-
+        syscall(SYSCALL_NETSOCKETDESTROY, NULL, socket);
 }
 
 //==============================================================================
@@ -168,7 +204,7 @@ static inline void close_socket(SOCKET *socket)
  *         appropriately.
  */
 //==============================================================================
-static inline int bind(SOCKET *socket, const NET_addr_t *localAddress)
+static inline int socket_bind(SOCKET *socket, const void *localAddress, size_t adr_size)
 {
         return -1;
 }
@@ -184,7 +220,7 @@ static inline int bind(SOCKET *socket, const NET_addr_t *localAddress)
  *         appropriately.
  */
 //==============================================================================
-static inline int connect(SOCKET *socket, const NET_addr_t *address)
+static inline int socket_connect(SOCKET *socket, const void *address, size_t adr_size)
 {
         return -1;
 }
@@ -199,7 +235,7 @@ static inline int connect(SOCKET *socket, const NET_addr_t *address)
  *         appropriately.
  */
 //==============================================================================
-static inline int disconnect(SOCKET *socket)
+static inline int socket_disconnect(SOCKET *socket)
 {
         return -1;
 }
@@ -214,7 +250,7 @@ static inline int disconnect(SOCKET *socket)
  *         appropriately.
  */
 //==============================================================================
-static inline int listen(SOCKET *socket)
+static inline int socket_listen(SOCKET *socket)
 {
         return -1;
 }
@@ -230,7 +266,7 @@ static inline int listen(SOCKET *socket)
  *         otherwise new socket descriptor.
  */
 //==============================================================================
-static inline int accept(SOCKET *socket, SOCKET **new_socket)
+static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
         return -1;
 }
@@ -249,7 +285,7 @@ static inline int accept(SOCKET *socket, SOCKET **new_socket)
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
+static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
 {
         return -1;
 }
@@ -270,11 +306,12 @@ static inline int recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int recvfrom(SOCKET           *socket,
-                           char             *buf,
-                           size_t            len,
-                           NET_flags_t       flags,
-                           const NET_addr_t *from_addr)
+static inline int socket_recvfrom(SOCKET      *socket,
+                                  char        *buf,
+                                  size_t       len,
+                                  NET_flags_t  flags,
+                                  const void  *from_addr,
+                                  size_t       addr_size)
 {
         return -1;
 }
@@ -295,11 +332,12 @@ static inline int recvfrom(SOCKET           *socket,
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int sendto(SOCKET           *socket,
-                         const void       *buf,
-                         size_t            len,
-                         NET_flags_t       flags,
-                         const NET_addr_t *to_addr)
+static inline int socket_sendto(SOCKET      *socket,
+                                const void  *buf,
+                                size_t       len,
+                                NET_flags_t  flags,
+                                const void  *to_addr,
+                                size_t       addr_size)
 {
         return -1;
 }
@@ -319,7 +357,7 @@ static inline int sendto(SOCKET           *socket,
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
+static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
 {
         return -1;
 }
@@ -331,7 +369,7 @@ static inline int send(SOCKET *socket, const void *buf, size_t len, NET_flags_t 
  * @return ?
  */
 //==============================================================================
-static inline int shutdown(SOCKET *socket, NET_shut_t how)
+static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
         return -1;
 }
@@ -343,7 +381,7 @@ static inline int shutdown(SOCKET *socket, NET_shut_t how)
  * @return ?
  */
 //==============================================================================
-static inline int get_host_by_name(const char *name, NET_addr_t *addr)
+static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
         return -1;
 }
@@ -355,7 +393,7 @@ static inline int get_host_by_name(const char *name, NET_addr_t *addr)
  * @return ?
  */
 //==============================================================================
-static inline int set_receive_timeout(SOCKET *socket, uint32_t timeout)
+static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
         return -1;
 }
@@ -367,7 +405,7 @@ static inline int set_receive_timeout(SOCKET *socket, uint32_t timeout)
  * @return ?
  */
 //==============================================================================
-static inline int set_send_timeout(SOCKET *socket, uint32_t timeout)
+static inline int socket_get_address(SOCKET *socket, const void *addr, size_t addr_size)
 {
         return -1;
 }
@@ -379,7 +417,10 @@ static inline int set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @return ?
  */
 //==============================================================================
-static inline int get_address(SOCKET *socket, NET_addr_t *addr)
+static inline int get_host_by_name(NET_family_t family,
+                                   const char  *name,
+                                   const void  *addr,
+                                   size_t       addr_size)
 {
         return -1;
 }

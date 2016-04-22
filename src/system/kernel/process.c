@@ -32,6 +32,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "fs/vfs.h"
+#include "net/netm.h"
 #include "kernel/process.h"
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
@@ -399,10 +400,10 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
         int result = ESRCH;
 
         if (proc && proc->header.type == RES_TYPE_PROCESS) {
+                result = ENOENT;
+                res_header_t *obj_to_destroy = NULL;
+
                 ATOMIC {
-
-                        result = ENOENT;
-
                         res_header_t *prev     = NULL;
                         int           max_deep = 1024;
 
@@ -415,23 +416,27 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
                                                         prev->next = curr->next;
                                                 }
 
-                                                result = resource_destroy(curr);
-                                                if (result != ESUCC) {
-                                                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
-                                                }
-
-                                                break;
+                                                obj_to_destroy = curr;
                                         } else {
                                                 result = EFAULT;
-                                                break;
+                                        }
+
+                                        break;
+                                } else {
+
+                                        prev = curr;
+
+                                        if (--max_deep == 0) {
+                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                                         }
                                 }
+                        }
+                }
 
-                                prev = curr;
-
-                                if (--max_deep == 0) {
-                                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
-                                }
+                if (obj_to_destroy) {
+                        result = resource_destroy(obj_to_destroy);
+                        if (result != ESUCC) {
+                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                         }
                 }
         }
@@ -1524,6 +1529,10 @@ static int resource_destroy(res_header_t *resource)
 
         case RES_TYPE_THREAD:
                 process_thread_destroy(cast(_thread_t*, res2free));
+                break;
+
+        case RES_TYPE_SOCKET:
+                _net_socketdestroy(cast(SOCKET*, res2free));
                 break;
 
         default:

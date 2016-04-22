@@ -48,6 +48,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define NET_INET_IP(a, b, c, d) {a, b, c, d}
 
 /*==============================================================================
   Exported object types
@@ -80,7 +81,10 @@ typedef enum {
         NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)
 } NET_shut_t;
 
-typedef const char * NET_addr_t;
+typedef struct {
+        u8_t  addr[4];
+        u16_t port;
+} NET_INET_addr_t;
 
 typedef enum {
         NET_INET_STATE__NOT_CONFIGURED,
@@ -123,9 +127,11 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  _net_ifup(NET_family_t, const void*, size_t);
-extern int  _net_ifdown(NET_family_t);
-extern int  _net_ifstatus(NET_family_t, void*, size_t);
+extern int _net_ifup(NET_family_t, const void*, size_t);
+extern int _net_ifdown(NET_family_t);
+extern int _net_ifstatus(NET_family_t, void*, size_t);
+extern int _net_socketcreate(NET_family_t, NET_protocol_t, SOCKET**);
+extern int _net_socketdestroy(SOCKET*);
 
 /*==============================================================================
   Exported inline functions
