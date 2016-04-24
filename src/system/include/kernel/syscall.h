@@ -113,6 +113,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_NETBIND,                // | int            | SOCKET *socket            | const void *addr          | size_t *addr_size         |                           |
         SYSCALL_NETLISTEN,              // | int            | SOCKET *socket            |                           |                           |                           |
         SYSCALL_NETACCEPT,              // | int            | SOCKET *socket            | SOCKET **new_socket       |                           |                           |
+        SYSCALL_NETRECV,                // | int            | SOCKET *socket            | void *buf                 | uint16_t *len             | NET_flags_t *flags        |
 #define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* network group */
         _SYSCALL_COUNT
 } syscall_t;

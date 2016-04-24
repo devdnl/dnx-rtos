@@ -144,6 +144,7 @@ static void syscall_netsocketdestroy(syscallrq_t *rq);
 static void syscall_netbind(syscallrq_t *rq);
 static void syscall_netlisten(syscallrq_t *rq);
 static void syscall_netaccept(syscallrq_t *rq);
+static void syscall_netrecv(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -220,6 +221,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETBIND          ] = syscall_netbind,
         [SYSCALL_NETLISTEN        ] = syscall_netlisten,
         [SYSCALL_NETACCEPT        ] = syscall_netaccept,
+        [SYSCALL_NETRECV          ] = syscall_netrecv,
 };
 
 /*==============================================================================
@@ -1674,6 +1676,18 @@ static void syscall_netaccept(syscallrq_t *rq)
 
         SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netrecv(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(void *, buf);
+        GETARG(uint16_t *, len);
+        GETARG(NET_flags_t *, flags);
+
+        uint16_t recved = 0;
+        SETERRNO(_net_socketrecv(socket, buf, *len, *flags, &recved));
+        SETRETURN(int, GETERRNO() == ESUCC ? recved : -1);
 }
 
 /*==============================================================================

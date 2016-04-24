@@ -41,6 +41,7 @@ Brief    Network management.
 typedef struct {
         struct netconn *netconn;
         struct netbuf  *netbuf;
+        uint16_t        seek;
 } INET_socket_t;
 
 struct socket {
@@ -70,9 +71,10 @@ struct socket {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
+ * @param family
+ * @return
  */
 //==============================================================================
 static int socket_alloc(SOCKET **socket, NET_family_t family)
@@ -100,9 +102,8 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
  */
 //==============================================================================
 static void socket_free(SOCKET **socket)
@@ -115,9 +116,9 @@ static void socket_free(SOCKET **socket)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param err
+ * @return
  */
 //==============================================================================
 static int INET_lwIP_status_to_errno(err_t err)
@@ -145,9 +146,10 @@ static int INET_lwIP_status_to_errno(err_t err)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param prot
+ * @param socket
+ * @return
  */
 //==============================================================================
 static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
@@ -170,9 +172,9 @@ static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
+ * @return
  */
 //==============================================================================
 static int INET_socket_destroy(SOCKET *socket)
@@ -184,6 +186,7 @@ static int INET_socket_destroy(SOCKET *socket)
         }
 
         if (inet->netconn) {
+                netconn_close(inet->netconn);
                 netconn_delete(inet->netconn);
         }
 
@@ -194,9 +197,10 @@ static int INET_socket_destroy(SOCKET *socket)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
+ * @param addr
+ * @return
  */
 //==============================================================================
 static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
@@ -211,9 +215,9 @@ static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
+ * @return
  */
 //==============================================================================
 static int INET_socket_listen(SOCKET *socket)
@@ -225,9 +229,10 @@ static int INET_socket_listen(SOCKET *socket)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ *
+ * @param socket
+ * @param new_socket
+ * @return
  */
 //==============================================================================
 static int INET_socket_accept(SOCKET *socket, SOCKET **new_socket)
@@ -249,7 +254,51 @@ static int INET_socket_accept(SOCKET *socket, SOCKET **new_socket)
 
 //==============================================================================
 /**
- * @brief
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
+static int INET_socket_recv(SOCKET     *socket,
+                            void       *buf,
+                            uint16_t    len,
+                            NET_flags_t flags,
+                            uint16_t   *recved)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        if (flags & NET_FLAGS__REWIND) {
+                inet->seek = 0;
+        }
+
+        int err = ESUCC;
+        if (inet->netbuf == NULL) {
+                err = INET_lwIP_status_to_errno(netconn_recv(inet->netconn,
+                                                             &inet->netbuf));
+        }
+
+        u16_t sz = netbuf_copy_partial(inet->netbuf, buf, len, inet->seek);
+        inet->seek += sz;
+        *recved     = sz;
+
+        if ((flags & NET_FLAGS__RECVDONE) || inet->seek >= netbuf_len(inet->netbuf)) {
+                netbuf_delete(inet->netbuf);
+                inet->netbuf = NULL;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param config
+ * @param size
+ * @return
  */
 //==============================================================================
 int _net_ifup(NET_family_t family, const void *config, size_t size)
@@ -322,6 +371,13 @@ int _net_ifup(NET_family_t family, const void *config, size_t size)
         return EINVAL;
 }
 
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
 int _net_ifdown(NET_family_t family)
 {
         switch (family) {
@@ -342,6 +398,13 @@ int _net_ifdown(NET_family_t family)
         }
 }
 
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
 int _net_ifstatus(NET_family_t family, void *status, size_t size)
 {
         if (status && size) {
@@ -399,6 +462,15 @@ int _net_ifstatus(NET_family_t family, void *status, size_t size)
         return EINVAL;
 }
 
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param protocol
+ * @param socket
+ * @return
+ */
+//==============================================================================
 int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
 {
         int err = EINVAL;
@@ -430,6 +502,13 @@ int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **soc
         return err;
 }
 
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @return
+ */
+//==============================================================================
 int _net_socketdestroy(SOCKET *socket)
 {
         int err = EINVAL;
@@ -457,6 +536,15 @@ int _net_socketdestroy(SOCKET *socket)
         return err;
 }
 
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
 int _net_socketbind(SOCKET *socket, const void *addr, size_t addr_size)
 {
         int err = EINVAL;
@@ -486,6 +574,13 @@ int _net_socketbind(SOCKET *socket, const void *addr, size_t addr_size)
         return err;
 }
 
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @return
+ */
+//==============================================================================
 int _net_socketlisten(SOCKET *socket)
 {
         int err = EINVAL;
@@ -513,6 +608,14 @@ int _net_socketlisten(SOCKET *socket)
         return err;
 }
 
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param new_socket
+ * @return
+ */
+//==============================================================================
 int _net_socketaccept(SOCKET *socket, SOCKET **new_socket)
 {
         int err = EINVAL;
@@ -521,6 +624,43 @@ int _net_socketaccept(SOCKET *socket, SOCKET **new_socket)
                 switch (socket->family) {
                 case NET_FAMILY__INET:
                         err = INET_socket_accept(socket, new_socket);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
+int _net_socketrecv(SOCKET *socket, void *buf, uint16_t len, NET_flags_t flags, u16_t *recved)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET && buf && len && recved) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_recv(socket, buf, len, flags, recved);
                         break;
 
                 case NET_FAMILY__CAN:

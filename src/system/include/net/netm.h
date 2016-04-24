@@ -25,7 +25,7 @@ Brief    Network management.
 *//*==========================================================================*/
 
 /**
-@defgroup NETM_H_ NETM_H_
+defgroup NETM_H_ NETM_H_
 
 Detailed Doxygen description.
 */
@@ -57,6 +57,9 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/** @addtogroup dnx-net-h
+ * @{ */
+
 typedef struct socket SOCKET;
 
 typedef enum {
@@ -73,10 +76,13 @@ typedef enum {
 } NET_protocol_t;
 
 typedef enum {
+        NET_FLAGS__NONE      = 0,
         NET_FLAGS__NO_COPY   = (1 << 0),
         NET_FLAGS__COPY      = (1 << 1),
         NET_FLAGS__MORE      = (1 << 2),
         NET_FLAGS__DONTBLOCK = (1 << 3),
+        NET_FLAGS__REWIND    = (1 << 4),
+        NET_FLAGS__RECVDONE  = (1 << 5),
 } NET_flags_t;
 
 typedef enum {
@@ -124,6 +130,8 @@ typedef struct {
         u64_t            rx_packets;
 } NET_INET_status_t;
 
+/**@}*/
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -139,6 +147,7 @@ extern int _net_socketdestroy(SOCKET*);
 extern int _net_socketbind(SOCKET*, const void*, size_t);
 extern int _net_socketlisten(SOCKET*);
 extern int _net_socketaccept(SOCKET*, SOCKET**);
+extern int _net_socketrecv(SOCKET*, void*, uint16_t, NET_flags_t, u16_t*);
 
 /*==============================================================================
   Exported inline functions

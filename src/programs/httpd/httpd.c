@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dnx/net.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -49,6 +50,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        char buf[128];
 };
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
@@ -112,11 +114,20 @@ static const char index_html[] =
 /**
  * @brief  HTTP server
  * @param  conn  connection
- * @return None
+ * @return None./t
  */
 //==============================================================================
-//static void serve(net_conn_t *conn)
-//{
+static void serve(SOCKET *socket)
+{
+        int sz = socket_recv(socket, global->buf, sizeof(global->buf), NET_FLAGS__RECVDONE);
+        if (sz >= 5 && isstreqn("GET /", global->buf, 5)) {
+                printf("%.*s", sz, global->buf);
+                //socket_send(socket, )
+        }
+
+        socket_delete(socket);
+
+
 //        net_buf_t *inbuf;
 //        if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
 //
@@ -136,7 +147,7 @@ static const char index_html[] =
 //
 //        net_conn_close(conn);
 //        net_conn_delete(conn);
-//}
+}
 
 //==============================================================================
 /**
@@ -171,7 +182,7 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         err = socket_accept(socket, &new_socket);
                                         if (!err) {
                                                 puts("Connection accepted");
-                                                //serve(new_socket);
+                                                serve(new_socket);
                                         }
                                 } while (!err);
                         }

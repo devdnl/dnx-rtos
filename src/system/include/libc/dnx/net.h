@@ -54,40 +54,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-#ifdef DOXYGEN
-typedef struct socket SOCKET;
-
-typedef enum {
-        NET_FAMILY__INET,
-        NET_FAMILY__CAN,
-        NET_FAMILY__RFM,
-        NET_FAMILY__MICROLAN
-} NET_family_t;
-
-typedef enum {
-        NET_PROTOCOL__UDP,
-        NET_PROTOCOL__TCP,
-        NET_PROTOCOL__ISO_TP
-} NET_protocol_t;
-
-typedef enum {
-        NET_FLAGS__NO_COPY   = (1 << 0),
-        NET_FLAGS__COPY      = (1 << 1),
-        NET_FLAGS__MORE      = (1 << 2),
-        NET_FLAGS__DONTBLOCK = (1 << 3),
-} NET_flags_t;
-
-typedef enum {
-        NET_SHUT__RD   = (1 << 0),
-        NET_SHUT__WR   = (1 << 1),
-        NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)
-} NET_shut_t;
-
-typedef struct {
-        uint32_t    port;
-        const char *addr;
-} NET_addr_t;
-#endif
 
 
 /*==============================================================================
@@ -285,7 +251,10 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
  * @param  socket       The socket from which to receive the data.
  * @param  buf          The buffer into which the received data is put.
  * @param  len          The buffer length.
- * @param  flags        Flags parameters that can be OR'ed together.
+ * @param  flags        Flags parameters that can be OR'ed together.@n
+ *                      NET_FLAGS__REWIND  : start copy payload from the beginning.@n
+ *                      NET_FLAGS__RECVDONE: this flag remove received buffer even
+ *                                           if entire payload is not read.@n
  *
  * @return Number of bytes actually received from the socket, or -1 on error and
  *         @ref errno value is set appropriately.
@@ -293,7 +262,9 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETRECV, &result, socket, buf, &len, &flags);
+        return result;
 }
 
 //==============================================================================
