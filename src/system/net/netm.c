@@ -280,13 +280,15 @@ static int INET_socket_recv(SOCKET     *socket,
                                                              &inet->netbuf));
         }
 
-        u16_t sz = netbuf_copy_partial(inet->netbuf, buf, len, inet->seek);
-        inet->seek += sz;
-        *recved     = sz;
+        if (!err) {
+                u16_t sz = netbuf_copy_partial(inet->netbuf, buf, len, inet->seek);
+                inet->seek += sz;
+                *recved     = sz;
 
-        if ((flags & NET_FLAGS__RECVDONE) || inet->seek >= netbuf_len(inet->netbuf)) {
-                netbuf_delete(inet->netbuf);
-                inet->netbuf = NULL;
+                if ((flags & NET_FLAGS__FREEBUF) || inet->seek >= netbuf_len(inet->netbuf)) {
+                        netbuf_delete(inet->netbuf);
+                        inet->netbuf = NULL;
+                }
         }
 
         return err;

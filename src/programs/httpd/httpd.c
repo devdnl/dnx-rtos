@@ -119,7 +119,7 @@ static const char index_html[] =
 //==============================================================================
 static void serve(SOCKET *socket)
 {
-        int sz = socket_recv(socket, global->buf, sizeof(global->buf), NET_FLAGS__RECVDONE);
+        int sz = socket_recv(socket, global->buf, sizeof(global->buf), NET_FLAGS__FREEBUF);
         if (sz >= 5 && isstreqn("GET /", global->buf, 5)) {
                 printf("%.*s", sz, global->buf);
                 //socket_send(socket, )

@@ -82,7 +82,7 @@ typedef enum {
         NET_FLAGS__MORE      = (1 << 2),
         NET_FLAGS__DONTBLOCK = (1 << 3),
         NET_FLAGS__REWIND    = (1 << 4),
-        NET_FLAGS__RECVDONE  = (1 << 5),
+        NET_FLAGS__FREEBUF   = (1 << 5),
 } NET_flags_t;
 
 typedef enum {
