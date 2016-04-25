@@ -34,6 +34,7 @@ Brief    Network management.
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define MAXIMUM_SAFE_UDP_PAYLOAD        508
 
 /*==============================================================================
   Local object types
@@ -289,6 +290,87 @@ static int INET_socket_recv(SOCKET     *socket,
                         netbuf_delete(inet->netbuf);
                         inet->netbuf = NULL;
                 }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
+static int INET_socket_send(SOCKET     *socket,
+                            const void *buf,
+                            uint16_t    len,
+                            NET_flags_t flags,
+                            uint16_t   *sent)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        int err = EINVAL;
+
+        enum netconn_type type = netconn_type(inet->netconn);
+
+        if (type & NETCONN_TCP) {
+                u8_t lwip_flags = 0;
+                if (flags & NET_FLAGS__NOCOPY)
+                        lwip_flags |= NETCONN_NOCOPY;
+                else
+                        lwip_flags |= NETCONN_COPY;
+
+                err = INET_lwIP_status_to_errno(netconn_write(inet->netconn,
+                                                              buf,
+                                                              len,
+                                                              lwip_flags));
+                *sent = len;
+
+        } else if (type & NETCONN_UDP) {
+
+                if (len <= MAXIMUM_SAFE_UDP_PAYLOAD) {
+
+                        inet->netbuf = netbuf_new();
+                        if (inet->netbuf) {
+                                if (flags & NET_FLAGS__NOCOPY) {
+                                        err = INET_lwIP_status_to_errno(
+                                                        netbuf_ref(inet->netbuf,
+                                                                   buf,
+                                                                   len));
+                                } else {
+                                        char *data = netbuf_alloc(inet->netbuf, len);
+                                        if (data) {
+                                                memcpy(data, buf, len);
+                                                err = INET_lwIP_status_to_errno(
+                                                         netconn_send(inet->netconn,
+                                                                      inet->netbuf));
+                                        } else {
+                                                err = ENOMEM;
+                                        }
+                                }
+
+                                if (!err) {
+                                        err = INET_lwIP_status_to_errno(
+                                                 netconn_send(inet->netconn,
+                                                              inet->netbuf));
+                                }
+
+                                netbuf_delete(inet->netbuf);
+                                inet->netbuf = NULL;
+
+                        } else {
+                                err = ENOMEM;
+                        }
+                } else {
+                        err = EFBIG;
+                }
+
+        } else {
+                err = EFAULT;
         }
 
         return err;
@@ -663,6 +745,43 @@ int _net_socketrecv(SOCKET *socket, void *buf, uint16_t len, NET_flags_t flags, 
                 switch (socket->family) {
                 case NET_FAMILY__INET:
                         err = INET_socket_recv(socket, buf, len, flags, recved);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
+int _net_socketsend(SOCKET *socket, const void *buf, uint16_t len, NET_flags_t flags, u16_t *sent)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET && buf && len && sent) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_send(socket, buf, len, flags, sent);
                         break;
 
                 case NET_FAMILY__CAN:

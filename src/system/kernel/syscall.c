@@ -145,6 +145,7 @@ static void syscall_netbind(syscallrq_t *rq);
 static void syscall_netlisten(syscallrq_t *rq);
 static void syscall_netaccept(syscallrq_t *rq);
 static void syscall_netrecv(syscallrq_t *rq);
+static void syscall_netsend(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -222,6 +223,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETLISTEN        ] = syscall_netlisten,
         [SYSCALL_NETACCEPT        ] = syscall_netaccept,
         [SYSCALL_NETRECV          ] = syscall_netrecv,
+        [SYSCALL_NETSEND          ] = syscall_netsend,
 };
 
 /*==============================================================================
@@ -288,7 +290,9 @@ void syscall(syscall_t syscall, void *retptr, ...)
                                 if (_builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS) ==  ESUCC) {
                                         _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, true);
                                         if (_builtinfunc(semaphore_wait, syscall_sem, MAX_DELAY_MS) == ESUCC) {
-                                                _errno = syscallrq.err;
+                                                if (syscallrq.err) {
+                                                        _errno = syscallrq.err;
+                                                }
                                         }
                                         _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, false);
                                 }
@@ -1688,6 +1692,18 @@ static void syscall_netrecv(syscallrq_t *rq)
         uint16_t recved = 0;
         SETERRNO(_net_socketrecv(socket, buf, *len, *flags, &recved));
         SETRETURN(int, GETERRNO() == ESUCC ? recved : -1);
+}
+
+static void syscall_netsend(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, buf);
+        GETARG(uint16_t *, len);
+        GETARG(NET_flags_t *, flags);
+
+        uint16_t sent = 0;
+        SETERRNO(_net_socketsend(socket, buf, *len, *flags, &sent));
+        SETRETURN(int, GETERRNO() == ESUCC ? sent : -1);
 }
 
 /*==============================================================================

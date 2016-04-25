@@ -769,6 +769,7 @@ INPUT                  = " ." \
                          ../../src/system/include/fs/fs.h \
                          ../../src/system/include/drivers/driver.h \
                          ../../src/system/include/lib/cast.h \
+                         ../../src/system/include/net/netm.h \
                          ../../src/system/drivers/afio/afio_ioctl.h \
                          ../../src/system/drivers/crc/crc_ioctl.h \
                          ../../src/system/drivers/ethmac/ethmac_ioctl.h \

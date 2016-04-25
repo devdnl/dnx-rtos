@@ -77,7 +77,7 @@ typedef enum {
 
 typedef enum {
         NET_FLAGS__NONE      = 0,
-        NET_FLAGS__NO_COPY   = (1 << 0),
+        NET_FLAGS__NOCOPY    = (1 << 0),
         NET_FLAGS__COPY      = (1 << 1),
         NET_FLAGS__MORE      = (1 << 2),
         NET_FLAGS__DONTBLOCK = (1 << 3),
@@ -148,6 +148,7 @@ extern int _net_socketbind(SOCKET*, const void*, size_t);
 extern int _net_socketlisten(SOCKET*);
 extern int _net_socketaccept(SOCKET*, SOCKET**);
 extern int _net_socketrecv(SOCKET*, void*, uint16_t, NET_flags_t, u16_t*);
+extern int _net_socketsend(SOCKET*, const void*, uint16_t, NET_flags_t, u16_t*);
 
 /*==============================================================================
   Exported inline functions

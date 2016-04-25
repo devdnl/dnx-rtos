@@ -336,7 +336,9 @@ static inline int socket_sendto(SOCKET      *socket,
 //==============================================================================
 static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
+        return result;
 }
 
 //==============================================================================
@@ -382,7 +384,7 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @return ?
  */
 //==============================================================================
-static inline int socket_get_address(SOCKET *socket, const void *addr, size_t addr_size)
+static inline int socket_get_address(SOCKET *socket, void *addr, size_t addr_size)
 {
         return -1;
 }
