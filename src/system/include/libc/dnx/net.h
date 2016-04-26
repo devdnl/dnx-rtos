@@ -50,6 +50,11 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#include "lwip/def.h" // TODO must be defined in the network layer
+#define htons(x) lwip_htons(x)
+#define ntohs(x) lwip_ntohs(x)
+#define htonl(x) lwip_htonl(x)
+#define ntohl(x) lwip_ntohl(x)
 
 /*==============================================================================
   Exported object types
@@ -190,7 +195,9 @@ static inline int socket_bind(SOCKET *socket, const void *localAddress, size_t a
 //==============================================================================
 static inline int socket_connect(SOCKET *socket, const void *address, size_t adr_size)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETCONNECT, &result, socket, address, &adr_size);
+        return result;
 }
 
 //==============================================================================
@@ -360,9 +367,23 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
  * @return ?
  */
 //==============================================================================
+static inline int socket_close(SOCKET *socket)
+{
+        return socket_shutdown(socket, NET_SHUT__RDWR);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
 static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETSETRECVTIMEOUT, &result, socket, &timeout);
+        return result;
 }
 
 //==============================================================================
@@ -374,7 +395,9 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
+        return result;
 }
 
 //==============================================================================
@@ -398,10 +421,12 @@ static inline int socket_get_address(SOCKET *socket, void *addr, size_t addr_siz
 //==============================================================================
 static inline int get_host_by_name(NET_family_t family,
                                    const char  *name,
-                                   const void  *addr,
+                                   void        *addr,
                                    size_t       addr_size)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, addr, &addr_size);
+        return result;
 }
 
 #ifdef __cplusplus

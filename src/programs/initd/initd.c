@@ -345,7 +345,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 }
 
 
-                sleep(5);
+                sleep(2);
 
                 syslog_enable("/dev/tty3");
 

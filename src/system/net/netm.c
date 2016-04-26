@@ -379,6 +379,89 @@ static int INET_socket_send(SOCKET     *socket,
 //==============================================================================
 /**
  *
+ * @param name
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+int INET_gethostbyname(const char *name, void *addr, size_t addr_size)
+{
+        int err = EINVAL;
+
+        if (addr_size == sizeof(NET_INET_addr_t)) {
+
+                ip_addr_t ip_addr;
+                err = INET_lwIP_status_to_errno(netconn_gethostbyname(name, &ip_addr));
+                if (!err) {
+                        NET_INET_addr_t *IP = addr;
+
+                        IP->addr[0] = ip4_addr1(&ip_addr);
+                        IP->addr[1] = ip4_addr2(&ip_addr);
+                        IP->addr[2] = ip4_addr3(&ip_addr);
+                        IP->addr[3] = ip4_addr4(&ip_addr);
+                        IP->port    = 0;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param timeout
+ * @return
+ */
+//==============================================================================
+static int INET_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_set_sendtimeout(inet->netconn,
+                                                                 timeout));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param timeout
+ * @return
+ */
+//==============================================================================
+static int INET_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_set_recvtimeout(inet->netconn,
+                                                                 timeout));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+static int INET_socket_connect(SOCKET *socket, const NET_INET_addr_t *addr)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        ip_addr_t IP;
+        IP4_ADDR(&IP, addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3]);
+
+        return INET_lwIP_status_to_errno(netconn_connect(inet->netconn,
+                                                         &IP, addr->port));
+}
+
+//==============================================================================
+/**
+ *
  * @param family
  * @param config
  * @param size
@@ -782,6 +865,155 @@ int _net_socketsend(SOCKET *socket, const void *buf, uint16_t len, NET_flags_t f
                 switch (socket->family) {
                 case NET_FAMILY__INET:
                         err = INET_socket_send(socket, buf, len, flags, sent);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_gethostbyname(NET_family_t family, const char *name, void *addr, size_t addr_size)
+{
+        int err = EINVAL;
+
+        if (name && addr && addr_size) {
+                switch (family) {
+                case NET_FAMILY__INET:
+                        err = INET_gethostbyname(name, addr, addr_size);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_set_recv_timeout(socket, timeout);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_set_send_timeout(socket, timeout);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_socket_connect(SOCKET *socket, const void *addr, size_t addr_size)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET && addr && addr_size) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        if (addr_size == sizeof(NET_INET_addr_t)) {
+                                err = INET_socket_connect(socket, addr);
+                        }
                         break;
 
                 case NET_FAMILY__CAN:

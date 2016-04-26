@@ -146,6 +146,10 @@ static void syscall_netlisten(syscallrq_t *rq);
 static void syscall_netaccept(syscallrq_t *rq);
 static void syscall_netrecv(syscallrq_t *rq);
 static void syscall_netsend(syscallrq_t *rq);
+static void syscall_netgethostbyname(syscallrq_t *rq);
+static void syscall_netsetrecvtimeout(syscallrq_t *rq);
+static void syscall_netsetsendtimeout(syscallrq_t *rq);
+static void syscall_netconnect(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -224,6 +228,10 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETACCEPT        ] = syscall_netaccept,
         [SYSCALL_NETRECV          ] = syscall_netrecv,
         [SYSCALL_NETSEND          ] = syscall_netsend,
+        [SYSCALL_NETGETHOSTBYNAME ] = syscall_netgethostbyname,
+        [SYSCALL_NETSETRECVTIMEOUT] = syscall_netsetrecvtimeout,
+        [SYSCALL_NETSETSENDTIMEOUT] = syscall_netsetsendtimeout,
+        [SYSCALL_NETCONNECT       ] = syscall_netconnect,
 };
 
 /*==============================================================================
@@ -1704,6 +1712,45 @@ static void syscall_netsend(syscallrq_t *rq)
         uint16_t sent = 0;
         SETERRNO(_net_socketsend(socket, buf, *len, *flags, &sent));
         SETRETURN(int, GETERRNO() == ESUCC ? sent : -1);
+}
+
+static void syscall_netgethostbyname(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(const char *, name);
+        GETARG(void *, addr);
+        GETARG(size_t *, addr_size);
+
+        SETERRNO(_net_gethostbyname(*family, name, addr, *addr_size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netsetrecvtimeout(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(uint32_t *, timeout);
+
+        SETERRNO(_net_socket_set_recv_timeout(socket, *timeout));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netsetsendtimeout(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(uint32_t *, timeout);
+
+        SETERRNO(_net_socket_set_send_timeout(socket, *timeout));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netconnect(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, addr);
+        GETARG(size_t *, addr_size);
+
+        SETERRNO(_net_socket_connect(socket, addr, *addr_size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 /*==============================================================================

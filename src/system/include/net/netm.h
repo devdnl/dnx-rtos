@@ -149,6 +149,10 @@ extern int _net_socketlisten(SOCKET*);
 extern int _net_socketaccept(SOCKET*, SOCKET**);
 extern int _net_socketrecv(SOCKET*, void*, uint16_t, NET_flags_t, u16_t*);
 extern int _net_socketsend(SOCKET*, const void*, uint16_t, NET_flags_t, u16_t*);
+extern int _net_gethostbyname(NET_family_t, const char*, void*, size_t);
+extern int _net_socket_set_recv_timeout(SOCKET*, uint32_t);
+extern int _net_socket_set_send_timeout(SOCKET*, uint32_t);
+extern int _net_socket_connect(SOCKET*, const void*, size_t);
 
 /*==============================================================================
   Exported inline functions

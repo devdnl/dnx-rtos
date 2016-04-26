@@ -223,6 +223,7 @@ typedef struct {
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         int current_host_arg;
+        NET_INET_addr_t  ip;
 };
 
 /*==============================================================================
@@ -252,11 +253,28 @@ static void select_next_host(int argc)
 /**
  * @brief  Sent request to SNTP server
  * @param  conn         connection
- * @return Operation status (one of net_err_t's values)
+ * @return On success 0 is returned otherwise -1.
  */
 //==============================================================================
-//static net_err_t sntp_send_request(net_conn_t *conn)
-//{
+static int send_request(SOCKET *socket)
+{
+        int err = -1;
+        sntp_msg_t *sntp_request = calloc(1, sizeof(sntp_msg_t));
+        if (sntp_request) {
+                memset(sntp_request, 0, sizeof(sntp_msg_t));
+                sntp_request->settings.field.LI        = LI_No_warning;
+                sntp_request->settings.field.VN        = VN_IPv4_IPv6_OSI;
+                sntp_request->settings.field.Mode      = Mode_Client;
+                sntp_request->settings.field.Poll      = 0;
+                sntp_request->settings.field.Precision = 0;
+                sntp_request->settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
+                sntp_request->settings.word            = htonl(sntp_request->settings.word);
+
+                err = socket_send(socket, &sntp_request, sizeof(sntp_request), NET_FLAGS__COPY);
+        }
+
+        return err;
+
 //        net_err_t   err          = NET_ERR_OUT_OF_MEMORY;
 //        net_buf_t  *tx_UDP_buf   = net_buf_new();
 //        sntp_msg_t *sntp_request = net_buf_alloc(tx_UDP_buf, sizeof(sntp_msg_t));
@@ -276,20 +294,22 @@ static void select_next_host(int argc)
 //
 //        // delete both buffer and allocated memory
 //        net_buf_delete(tx_UDP_buf);
-//
-//        return err;
-//}
-//
-////==============================================================================
-///**
-// * @brief  Receive response from SNTP server
-// * @param  conn         connection
-// * @param  timestamp    timestamp value
-// * @return Operation status (one of net_err_t's values)
-// */
-////==============================================================================
-//static net_err_t sntp_receive_response(net_conn_t *conn, time_t *timestamp)
-//{
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Receive response from SNTP server
+ * @param  conn         connection
+ * @param  timestamp    timestamp value
+ * @return On success 0 is returned otherwise -1.
+ */
+//==============================================================================
+static int receive_response(SOCKET *socket, time_t *timestamp)
+{
+        int err = socket_recv(socket, )
+
 //        net_buf_t *rx_UDP_buf = NULL;
 //        net_err_t  err        = net_conn_receive(conn, &rx_UDP_buf);
 //
@@ -318,44 +338,47 @@ static void select_next_host(int argc)
 //                        net_buf_delete(rx_UDP_buf);
 //                }
 //        }
-//
-//        return err;
-//}
-//
-////==============================================================================
-///**
-// * @brief  Get IP address from given host names (find in DNS)
-// * @param[in]  once         only one try (program started not as daemon)
-// * @param[in]  argc         number of arguments (used to obtain host names)
-// * @param[in]  argv         program arguments
-// * @param[out] ip           found IP address
-// * @return Operation status (one of net_err_t's values)
-// */
-////==============================================================================
-//static net_err_t get_SNTP_host_IP(bool once, int argc, char *argv[], net_ip_t *ip)
-//{
-//        int appends = argc - 2;
-//
-//        net_err_t err;
-//        while ((err = net_conn_get_host_by_name(argv[global->current_host_arg], ip)) != NET_ERR_OK) {
-//
-//                fprintf(stderr, "[%d] %s: no host\n",
-//                        clock() / CLOCKS_PER_SEC,
-//                        argv[global->current_host_arg]);
-//
-//                select_next_host(argc);
-//
-//                appends--;
-//                if (once && appends == 0) {
-//                        break;
-//                } else {
-//                        sleep(1);
-//                        continue;
-//                }
-//        }
-//
-//        return err;
-//}
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Get IP address from given host names (find in DNS)
+ * @param[in]  once         only one try (program started not as daemon)
+ * @param[in]  argc         number of arguments (used to obtain host names)
+ * @param[in]  argv         program arguments
+ * @param[out] ip           found IP address
+ * @return Operation status (one of net_err_t's values)
+ */
+//==============================================================================
+static int get_SNTP_host_IP(bool once, int argc, char *argv[])
+{
+        int appends = argc - 2;
+
+        int err;
+        while ((err = get_host_by_name(NET_FAMILY__INET,
+                                       argv[global->current_host_arg],
+                                       &global->ip,
+                                       sizeof(global->ip)))) {
+
+                fprintf(stderr, "[%d] %s: no host\n",
+                        clock() / CLOCKS_PER_SEC,
+                        argv[global->current_host_arg]);
+
+                select_next_host(argc);
+
+                appends--;
+                if (once && appends == 0) {
+                        break;
+                } else {
+                        sleep(1);
+                        continue;
+                }
+        }
+
+        return err;
+}
 
 //==============================================================================
 /**
@@ -366,24 +389,55 @@ static void select_next_host(int argc)
 //==============================================================================
 int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-//        if (argc < 3) {
-//                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3]\n", argv[0]);
-//                return EXIT_FAILURE;
-//        }
-//
-//        int interval = -1;
-//        sscanf(argv[1], "%d", &interval);
-//
-//        if (interval < 0) {
-//                fprintf(stderr, "Invalid interval value\n");
-//                return EXIT_FAILURE;
-//        }
-//
-//        global->current_host_arg = 2;
-//
-//        int tref = prepare_sleep_until();
-//
-//        do {
+        if (argc < 3) {
+                fprintf(stderr, "%s <interval_sec> <host_1> [host_2] [host_3]\n", argv[0]);
+                return EXIT_FAILURE;
+        }
+
+        int interval = -1;
+        sscanf(argv[1], "%d", &interval);
+
+        if (interval < 0) {
+                fprintf(stderr, "Invalid interval value\n");
+                return EXIT_FAILURE;
+        }
+
+        global->current_host_arg = 2;
+
+        u32_t tref = prepare_sleep_until();
+
+        do {
+                int err = get_SNTP_host_IP(interval == 0, argc, argv);
+                if (err) {
+                        continue;
+                }
+
+                SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__UDP);
+                if (socket) {
+                        socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
+                        socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
+
+                        // TEST \|/
+                        if (socket_connect(socket, &global->ip, sizeof(global->ip)) == 0) {
+
+                                if (send_request(socket) == 0) {
+
+                                        time_t timestamp = 0;
+                                        if (receive_response(socket, &timestamp) == 0) {
+                                                stime(&timestamp);
+                                        } else {
+                                                select_next_host(argc);
+                                        }
+                                }
+
+                                socket_close(socket);
+                        }
+
+                        socket_delete(socket);
+
+                        sleep_until(interval, &tref);
+                }
+
 //                net_ip_t  ntp_ip;
 //                net_err_t err = get_SNTP_host_IP(interval == 0, argc, argv, &ntp_ip);
 //
@@ -422,9 +476,9 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
 //                        fprintf(stderr, "[%d] error %d\n", clock() / CLOCKS_PER_SEC, err);
 //                }
 //
-//        } while (interval);
-//
-//        return interval ? EXIT_FAILURE : EXIT_SUCCESS;
+        } while (interval);
+
+        return interval ? EXIT_FAILURE : EXIT_SUCCESS;
 
         return -1;
 }
