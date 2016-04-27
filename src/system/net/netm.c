@@ -345,9 +345,7 @@ static int INET_socket_send(SOCKET     *socket,
                                         char *data = netbuf_alloc(inet->netbuf, len);
                                         if (data) {
                                                 memcpy(data, buf, len);
-                                                err = INET_lwIP_status_to_errno(
-                                                         netconn_send(inet->netconn,
-                                                                      inet->netbuf));
+                                                err = ESUCC;
                                         } else {
                                                 err = ENOMEM;
                                         }
@@ -400,7 +398,6 @@ int INET_gethostbyname(const char *name, void *addr, size_t addr_size)
                         IP->addr[1] = ip4_addr2(&ip_addr);
                         IP->addr[2] = ip4_addr3(&ip_addr);
                         IP->addr[3] = ip4_addr4(&ip_addr);
-                        IP->port    = 0;
                 }
         }
 

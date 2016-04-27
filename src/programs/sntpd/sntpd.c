@@ -222,8 +222,9 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        int current_host_arg;
-        NET_INET_addr_t  ip;
+        int              current_host_arg;
+        NET_INET_addr_t  server;
+        sntp_msg_t       pkt;
 };
 
 /*==============================================================================
@@ -258,44 +259,16 @@ static void select_next_host(int argc)
 //==============================================================================
 static int send_request(SOCKET *socket)
 {
-        int err = -1;
-        sntp_msg_t *sntp_request = calloc(1, sizeof(sntp_msg_t));
-        if (sntp_request) {
-                memset(sntp_request, 0, sizeof(sntp_msg_t));
-                sntp_request->settings.field.LI        = LI_No_warning;
-                sntp_request->settings.field.VN        = VN_IPv4_IPv6_OSI;
-                sntp_request->settings.field.Mode      = Mode_Client;
-                sntp_request->settings.field.Poll      = 0;
-                sntp_request->settings.field.Precision = 0;
-                sntp_request->settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-                sntp_request->settings.word            = htonl(sntp_request->settings.word);
+        memset(&global->pkt, 0, sizeof(sntp_msg_t));
+        global->pkt.settings.field.LI        = LI_No_warning;
+        global->pkt.settings.field.VN        = VN_IPv4_IPv6_OSI;
+        global->pkt.settings.field.Mode      = Mode_Client;
+        global->pkt.settings.field.Poll      = 0;
+        global->pkt.settings.field.Precision = 0;
+        global->pkt.settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
+        global->pkt.settings.word            = htonl(global->pkt.settings.word);
 
-                err = socket_send(socket, &sntp_request, sizeof(sntp_request), NET_FLAGS__COPY);
-        }
-
-        return err;
-
-//        net_err_t   err          = NET_ERR_OUT_OF_MEMORY;
-//        net_buf_t  *tx_UDP_buf   = net_buf_new();
-//        sntp_msg_t *sntp_request = net_buf_alloc(tx_UDP_buf, sizeof(sntp_msg_t));
-//
-//        if (tx_UDP_buf && sntp_request) {
-//                memset(sntp_request, 0, sizeof(sntp_msg_t));
-//                sntp_request->settings.field.LI        = LI_No_warning;
-//                sntp_request->settings.field.VN        = VN_IPv4_IPv6_OSI;
-//                sntp_request->settings.field.Mode      = Mode_Client;
-//                sntp_request->settings.field.Poll      = 0;
-//                sntp_request->settings.field.Precision = 0;
-//                sntp_request->settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-//                sntp_request->settings.word            = htonl(sntp_request->settings.word);
-//
-//                err = net_conn_send(conn, tx_UDP_buf);
-//        }
-//
-//        // delete both buffer and allocated memory
-//        net_buf_delete(tx_UDP_buf);
-
-        return err;
+        return socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
 }
 
 //==============================================================================
@@ -308,36 +281,23 @@ static int send_request(SOCKET *socket)
 //==============================================================================
 static int receive_response(SOCKET *socket, time_t *timestamp)
 {
-        int err = socket_recv(socket, )
+        int err = -1;
+        int sz = socket_recv(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__NONE);
+        if (sz == sizeof(sntp_msg_t)) {
 
-//        net_buf_t *rx_UDP_buf = NULL;
-//        net_err_t  err        = net_conn_receive(conn, &rx_UDP_buf);
-//
-//        if (err == NET_ERR_OK) {
-//                sntp_msg_t *sntp_response;
-//                u16_t       sntp_response_len;
-//
-//                err = net_buf_data(rx_UDP_buf, (void**)&sntp_response, &sntp_response_len);
-//                if (err == NET_ERR_OK) {
-//
-//                        if (sntp_response_len == sizeof(sntp_msg_t)) {
-//                                sntp_response->settings.word = ntohl(sntp_response->settings.word);
-//
-//                                if (  sntp_response->settings.field.Mode == Mode_Server
-//                                   || sntp_response->settings.field.Mode == Mode_Broadcast) {
-//
-//                                        time_t ts = 0;
-//                                        memcpy(&ts, &sntp_response->receive_timestamp, sizeof(time_t));
-//                                        ts         = ntohl(ts) - DIFF_SEC_1900_1970;
-//                                        *timestamp = ts;
-//                                } else {
-//                                        err = NET_ERR_ILLEGAL_VALUE;
-//                                }
-//                        }
-//
-//                        net_buf_delete(rx_UDP_buf);
-//                }
-//        }
+                global->pkt.settings.word = ntohl(global->pkt.settings.word);
+
+                if (  global->pkt.settings.field.Mode == Mode_Server
+                   || global->pkt.settings.field.Mode == Mode_Broadcast) {
+
+                        time_t ts = 0;
+                        memcpy(&ts, &global->pkt.receive_timestamp, sizeof(time_t));
+                        ts         = ntohl(ts) - DIFF_SEC_1900_1970;
+                        *timestamp = ts;
+
+                        err = 0;
+                }
+        }
 
         return err;
 }
@@ -359,8 +319,8 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         int err;
         while ((err = get_host_by_name(NET_FAMILY__INET,
                                        argv[global->current_host_arg],
-                                       &global->ip,
-                                       sizeof(global->ip)))) {
+                                       &global->server,
+                                       sizeof(global->server)))) {
 
                 fprintf(stderr, "[%d] %s: no host\n",
                         clock() / CLOCKS_PER_SEC,
@@ -376,6 +336,8 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
                         continue;
                 }
         }
+
+        global->server.port = SNTP_PORT;
 
         return err;
 }
@@ -417,8 +379,7 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
 
-                        // TEST \|/
-                        if (socket_connect(socket, &global->ip, sizeof(global->ip)) == 0) {
+                        if (socket_connect(socket, &global->server, sizeof(global->server)) == 0) {
 
                                 if (send_request(socket) == 0) {
 
@@ -437,50 +398,9 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         sleep_until(interval, &tref);
                 }
-
-//                net_ip_t  ntp_ip;
-//                net_err_t err = get_SNTP_host_IP(interval == 0, argc, argv, &ntp_ip);
-//
-//                if (err == NET_ERR_OK) {
-//
-//                        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_UDP);
-//                        net_err_t   err  = NET_ERR_OUT_OF_MEMORY;
-//
-//                        if (conn) {
-//                                net_conn_set_send_timeout(conn, SNTP_SEND_TIMEOUT);
-//                                net_conn_set_receive_timeout(conn, SNTP_RECV_TIMEOUT);
-//
-//                                if ((err = net_conn_connect(conn, &ntp_ip, SNTP_PORT)) == NET_ERR_OK) {
-//
-//                                        if (sntp_send_request(conn) == NET_ERR_OK) {
-//
-//                                                time_t timestamp = 0;
-//                                                if (sntp_receive_response(conn, &timestamp) == NET_ERR_OK) {
-//                                                        stime(&timestamp);
-//                                                } else {
-//                                                        select_next_host(argc);
-//                                                }
-//                                        }
-//
-//                                        net_conn_close(conn);
-//                                }
-//                        }
-//
-//                        if (conn)
-//                                net_conn_delete(conn);
-//
-//                        sleep_until(interval, &tref);
-//                }
-//
-//                if (err != NET_ERR_OK) {
-//                        fprintf(stderr, "[%d] error %d\n", clock() / CLOCKS_PER_SEC, err);
-//                }
-//
         } while (interval);
 
         return interval ? EXIT_FAILURE : EXIT_SUCCESS;
-
-        return -1;
 }
 
 /*==============================================================================

@@ -56,6 +56,8 @@ extern "C" {
 #define htonl(x) lwip_htonl(x)
 #define ntohl(x) lwip_ntohl(x)
 
+//#define hton_u16(NET_family_t family, u16_t value)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
