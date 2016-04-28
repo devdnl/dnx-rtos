@@ -150,6 +150,8 @@ static void syscall_netgethostbyname(syscallrq_t *rq);
 static void syscall_netsetrecvtimeout(syscallrq_t *rq);
 static void syscall_netsetsendtimeout(syscallrq_t *rq);
 static void syscall_netconnect(syscallrq_t *rq);
+static void syscall_netdisconnect(syscallrq_t *rq);
+static void syscall_netshutdown(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -232,6 +234,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETSETRECVTIMEOUT] = syscall_netsetrecvtimeout,
         [SYSCALL_NETSETSENDTIMEOUT] = syscall_netsetsendtimeout,
         [SYSCALL_NETCONNECT       ] = syscall_netconnect,
+        [SYSCALL_NETDISCONNECT    ] = syscall_netdisconnect,
+        [SYSCALL_NETSHUTDOWN      ] = syscall_netshutdown,
 };
 
 /*==============================================================================
@@ -1750,6 +1754,23 @@ static void syscall_netconnect(syscallrq_t *rq)
         GETARG(size_t *, addr_size);
 
         SETERRNO(_net_socket_connect(socket, addr, *addr_size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netdisconnect(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        SETERRNO(_net_socket_disconnect(socket));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netshutdown(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(NET_shut_t *, how);
+
+        SETERRNO(_net_socket_shutdown(socket, *how));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

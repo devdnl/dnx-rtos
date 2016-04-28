@@ -119,6 +119,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_NETSETRECVTIMEOUT,      // | int            | SOCKET *socket            | uint32_t *timeout         |                           |                           |
         SYSCALL_NETSETSENDTIMEOUT,      // | int            | SOCKET *socket            | uint32_t *timeout         |                           |                           |
         SYSCALL_NETCONNECT,             // | int            | SOCKET *socket            | const void *addr          | size_t *addr_size         |                           |
+        SYSCALL_NETDISCONNECT,          // | int            | SOCKET *socket            |                           |                           |                           |
+        SYSCALL_NETSHUTDOWN,            // | int            | SOCKET *socket            | NET_shut_t *how           |                           |                           |
 #define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT          /* network group */
         _SYSCALL_COUNT
 } syscall_t;

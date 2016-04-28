@@ -459,6 +459,40 @@ static int INET_socket_connect(SOCKET *socket, const NET_INET_addr_t *addr)
 //==============================================================================
 /**
  *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+static int INET_socket_disconnect(SOCKET *socket)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_disconnect(inet->netconn));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+static int INET_socket_shutdown(SOCKET *socket, NET_shut_t how)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_shutdown(inet->netconn,
+                                                          how & NET_SHUT__RD,
+                                                          how & NET_SHUT__WR));
+}
+
+//==============================================================================
+/**
+ *
  * @param family
  * @param config
  * @param size
@@ -1011,6 +1045,78 @@ int _net_socket_connect(SOCKET *socket, const void *addr, size_t addr_size)
                         if (addr_size == sizeof(NET_INET_addr_t)) {
                                 err = INET_socket_connect(socket, addr);
                         }
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_socket_disconnect(SOCKET *socket)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_disconnect(socket);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
+{
+        int err = EINVAL;
+
+        if (socket && socket->header.type == RES_TYPE_SOCKET) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_shutdown(socket, how);
                         break;
 
                 case NET_FAMILY__CAN:

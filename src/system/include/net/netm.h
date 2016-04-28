@@ -153,6 +153,8 @@ extern int _net_gethostbyname(NET_family_t, const char*, void*, size_t);
 extern int _net_socket_set_recv_timeout(SOCKET*, uint32_t);
 extern int _net_socket_set_send_timeout(SOCKET*, uint32_t);
 extern int _net_socket_connect(SOCKET*, const void*, size_t);
+extern int _net_socket_disconnect(SOCKET*);
+extern int _net_socket_shutdown(SOCKET*, NET_shut_t);
 
 /*==============================================================================
   Exported inline functions

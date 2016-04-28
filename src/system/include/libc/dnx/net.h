@@ -214,7 +214,9 @@ static inline int socket_connect(SOCKET *socket, const void *address, size_t adr
 //==============================================================================
 static inline int socket_disconnect(SOCKET *socket)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETDISCONNECT, &result, socket);
+        return result;
 }
 
 //==============================================================================
@@ -278,6 +280,24 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
 
 //==============================================================================
 /**
+ * @brief  The function is used to receive messages from socket. read()
+ *         may be used only on a connected socket (see connect(), accept()).
+ *
+ * @param  socket       The socket from which to receive the data.
+ * @param  buf          The buffer into which the received data is put.
+ * @param  len          The buffer length.
+ *
+ * @return Number of bytes actually received from the socket, or -1 on error and
+ *         @ref errno value is set appropriately.
+ */
+//==============================================================================
+static inline int socket_read(SOCKET *socket, void *buf, size_t len)
+{
+        return socket_recv(socket, buf, len, NET_FLAGS__NONE);
+}
+
+//==============================================================================
+/**
  * @brief  The function is used to receive messages from another socket.
  *         recvfrom() may be used to receive data on a socket whether it is in
  *         a connected state or not but not on a TCP socket.
@@ -299,7 +319,7 @@ static inline int socket_recvfrom(SOCKET      *socket,
                                   const void  *from_addr,
                                   size_t       addr_size)
 {
-        return -1;
+        return -1; // TODO
 }
 
 //==============================================================================
@@ -325,7 +345,7 @@ static inline int socket_sendto(SOCKET      *socket,
                                 const void  *to_addr,
                                 size_t       addr_size)
 {
-        return -1;
+        return -1; // TODO
 }
 
 //==============================================================================
@@ -338,6 +358,9 @@ static inline int socket_sendto(SOCKET      *socket,
  * @param  buf          A pointer to the buffer to send.
  * @param  len          The length of the buffer to send.
  * @param  flags        Flags parameters that can be OR'ed together.
+ *                      NET_FLAGS__COPY  : create buffer for output data@n
+ *                      NET_FLAGS__NOCOPY: send buffer as is (ROM). Buffer
+ *                                         must be exists during send time!@n
  *
  * @return Number of bytes actually sent on the socket, or -1 on error and
  *         @ref errno value is set appropriately.
@@ -352,6 +375,25 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 
 //==============================================================================
 /**
+ * @brief  The function is used to transmit a message to another transport
+ *         end-point. write() may be used only when the socket is in a connected
+ *         state.
+ *
+ * @param  socket       The socket to use to send the data.
+ * @param  buf          A pointer to the buffer to send.
+ * @param  len          The length of the buffer to send.
+ *
+ * @return Number of bytes actually sent on the socket, or -1 on error and
+ *         @ref errno value is set appropriately.
+ */
+//==============================================================================
+static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
+{
+        return socket_send(socket, buf, len, NET_FLAGS__NONE);
+}
+
+//==============================================================================
+/**
  * @brief  ?
  * @param  ?
  * @return ?
@@ -359,7 +401,9 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 //==============================================================================
 static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
-        return -1;
+        int result = -1;
+        syscall(SYSCALL_NETSHUTDOWN, &result, socket, &how);
+        return result;
 }
 
 //==============================================================================
@@ -400,18 +444,6 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
         int result = -1;
         syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
         return result;
-}
-
-//==============================================================================
-/**
- * @brief  ?
- * @param  ?
- * @return ?
- */
-//==============================================================================
-static inline int socket_get_address(SOCKET *socket, void *addr, size_t addr_size)
-{
-        return -1;
 }
 
 //==============================================================================
