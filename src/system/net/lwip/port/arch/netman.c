@@ -232,13 +232,13 @@ static void network_interface_thread(void *arg)
  * @brief  Function starts network manager, TCP/IP stack, and set network interface.
  *         Function is called before kernel start.
  * @param  None
- * @return None
+ * @return One of @ref errno value.
  */
 //==============================================================================
-void _netman_init()
+int _netman_init() // FIXME
 {
         if (netman)
-                return;
+                return ESUCC;
 
         netman = _netcalloc(1, sizeof(netman_t));
         if (netman) {
@@ -261,6 +261,8 @@ void _netman_init()
                                                     netman,
                                                     _netman_netif_init,
                                                     tcpip_input));
+                        return ESUCC;
+
                 } else {
                         if (ms)
                                 sys_mutex_destroy(netman->access);
@@ -272,13 +274,15 @@ void _netman_init()
                         netman = NULL;
                 }
         }
+
+        return ENOMEM;
 }
 
 //==============================================================================
 /**
  * @brief  Function starts DHCP client
  * @param  None
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_start_DHCP_client()
@@ -326,7 +330,7 @@ int _netman_start_DHCP_client()
  * @return On success 0 is returned, otherwise -1
  */
 //==============================================================================
-//int _netman_stop_DHCP_client()
+//int _netman_stop_DHCP_client() FIXME
 //{
 //        int status = -1;
 //
@@ -352,7 +356,7 @@ int _netman_start_DHCP_client()
 /**
  * @brief  Function renew DHCP connection
  * @param  None
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_renew_DHCP_connection()
@@ -388,7 +392,7 @@ int _netman_renew_DHCP_connection()
 /**
  * @brief  Function inform DHCP about current static configuration
  * @param  None
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_inform_DHCP_server()
@@ -415,7 +419,7 @@ int _netman_inform_DHCP_server()
  * @param  ip_address        a IP address
  * @param  net_mask          a net mask value
  * @param  gateway           a gateway address
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway)
@@ -449,7 +453,7 @@ int _netman_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const 
 /**
  * @brief  Function turn down interface with static configuration
  * @param  None
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_if_down()
@@ -480,7 +484,7 @@ int _netman_if_down()
 /**
  * @brief  Function gets interface configuration
  * @param  ifcfg            a pointer to status object
- * @return On success 0 is returned, otherwise -1
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _netman_get_ifconfig(_ifconfig_t *ifcfg)
@@ -488,7 +492,6 @@ int _netman_get_ifconfig(_ifconfig_t *ifcfg)
         int status = EINVAL;
 
         if (netman && ifcfg) {
-
 
                 ifcfg->hw_address[0] = 0x50;
                 ifcfg->hw_address[1] = 0x51;

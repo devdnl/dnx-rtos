@@ -222,9 +222,9 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        int              current_host_arg;
-        NET_INET_addr_t  server;
-        sntp_msg_t       pkt;
+        int                 current_host_arg;
+        NET_INET_sockaddr_t server;
+        sntp_msg_t          pkt;
 };
 
 /*==============================================================================
@@ -319,8 +319,7 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         int err;
         while ((err = get_host_by_name(NET_FAMILY__INET,
                                        argv[global->current_host_arg],
-                                       &global->server,
-                                       sizeof(global->server)))) {
+                                       &global->server))) {
 
                 fprintf(stderr, "[%d] %s: no host\n",
                         clock() / CLOCKS_PER_SEC,
@@ -379,7 +378,7 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
 
-                        if (socket_connect(socket, &global->server, sizeof(global->server)) == 0) {
+                        if (socket_connect(socket, &global->server) == 0) {
 
                                 if (send_request(socket) == 0) {
 

@@ -48,20 +48,20 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define NET_INET_IP(a, b, c, d)                 {a, b, c, d}
-#define NET_INET_IP_ANY(a, b, c, d)             {0, 0, 0, 0}
-#define NET_INET_IP_LOOPBACK(a, b, c, d)        {127, 0, 0, 1}
-#define NET_INET_IP_BROADCAST(a, b, c, d)       {255, 255, 255, 255}
-
+#define NET_INET_IPv4(a, b, c, d)               (((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF)))
+#define NET_INET_IPv4_ANY                       NET_INET_IPv4(0,0,0,0)
+#define NET_INET_IPv4_LOOPBACK                  NET_INET_IPv4(127,0,0,1)
+#define NET_INET_IPv4_BROADCAST                 NET_INET_IPv4(255,255,255,255)
+#define NET_INET_IPv4_a(ip)                     ((ip >> 24) & 0xFF)
+#define NET_INET_IPv4_b(ip)                     ((ip >> 16) & 0xFF)
+#define NET_INET_IPv4_c(ip)                     ((ip >> 8)  & 0xFF)
+#define NET_INET_IPv4_d(ip)                     ((ip >> 0)  & 0xFF)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 /** @addtogroup dnx-net-h
  * @{ */
-
-typedef struct socket SOCKET;
-
 typedef enum {
         NET_FAMILY__INET,
         NET_FAMILY__CAN,
@@ -91,10 +91,15 @@ typedef enum {
         NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)
 } NET_shut_t;
 
+
+
+
+typedef uint32_t NET_INET_IPv4_t;
+
 typedef struct {
-        u8_t  addr[4];
-        u16_t port;
-} NET_INET_addr_t;
+        NET_INET_IPv4_t addr;
+        u16_t           port;
+} NET_INET_sockaddr_t;
 
 typedef enum {
         NET_INET_STATE__NOT_CONFIGURED,
@@ -113,22 +118,34 @@ typedef enum {
 
 typedef struct {
         NET_INET_mode_t mode;
-        u8_t            address[4];
-        u8_t            mask[4];
-        u8_t            gateway[4];
-} NET_INET_cfg_t;
+        NET_INET_IPv4_t address;
+        NET_INET_IPv4_t mask;
+        NET_INET_IPv4_t gateway;
+} NET_INET_config_t;
 
 typedef struct {
         NET_INET_state_t state;
-        u8_t             address[4];
-        u8_t             mask[4];
-        u8_t             gateway[4];
+        NET_INET_IPv4_t  address;
+        NET_INET_IPv4_t  mask;
+        NET_INET_IPv4_t  gateway;
         u8_t             hw_addr[6];
         u64_t            tx_bytes;
         u64_t            rx_bytes;
         u64_t            tx_packets;
         u64_t            rx_packets;
 } NET_INET_status_t;
+
+
+
+
+
+typedef void NET_generic_sockaddr_t;
+
+typedef void NET_generic_config_t;
+
+typedef void NET_generic_status_t;
+
+typedef struct socket SOCKET;
 
 /**@}*/
 
@@ -139,20 +156,22 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int _net_ifup(NET_family_t, const void*, size_t);
+extern int _net_ifup(NET_family_t, const NET_generic_config_t*);
 extern int _net_ifdown(NET_family_t);
-extern int _net_ifstatus(NET_family_t, void*, size_t);
-extern int _net_socketcreate(NET_family_t, NET_protocol_t, SOCKET**);
-extern int _net_socketdestroy(SOCKET*);
-extern int _net_socketbind(SOCKET*, const void*, size_t);
-extern int _net_socketlisten(SOCKET*);
-extern int _net_socketaccept(SOCKET*, SOCKET**);
-extern int _net_socketrecv(SOCKET*, void*, uint16_t, NET_flags_t, u16_t*);
-extern int _net_socketsend(SOCKET*, const void*, uint16_t, NET_flags_t, u16_t*);
-extern int _net_gethostbyname(NET_family_t, const char*, void*, size_t);
+extern int _net_ifstatus(NET_family_t, NET_generic_status_t*);
+extern int _net_gethostbyname(NET_family_t, const char*, NET_generic_sockaddr_t*);
+extern int _net_socket_create(NET_family_t, NET_protocol_t, SOCKET**);
+extern int _net_socket_destroy(SOCKET*);
+extern int _net_socket_bind(SOCKET*, const NET_generic_sockaddr_t*);
+extern int _net_socket_listen(SOCKET*);
+extern int _net_socket_accept(SOCKET*, SOCKET**);
+extern int _net_socket_recv(SOCKET*, void*, size_t, NET_flags_t, size_t*);
+extern int _net_socket_recvfrom(SOCKET*, void*, size_t, NET_flags_t, NET_generic_sockaddr_t*, size_t*);
+extern int _net_socket_send(SOCKET*, const void*, size_t, NET_flags_t, size_t*);
+extern int _net_socket_sendto(SOCKET*, const void*, size_t, NET_flags_t, const NET_generic_sockaddr_t*, size_t*);
 extern int _net_socket_set_recv_timeout(SOCKET*, uint32_t);
 extern int _net_socket_set_send_timeout(SOCKET*, uint32_t);
-extern int _net_socket_connect(SOCKET*, const void*, size_t);
+extern int _net_socket_connect(SOCKET*, const NET_generic_sockaddr_t*);
 extern int _net_socket_disconnect(SOCKET*);
 extern int _net_socket_shutdown(SOCKET*, NET_shut_t);
 

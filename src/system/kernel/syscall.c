@@ -152,6 +152,8 @@ static void syscall_netsetsendtimeout(syscallrq_t *rq);
 static void syscall_netconnect(syscallrq_t *rq);
 static void syscall_netdisconnect(syscallrq_t *rq);
 static void syscall_netshutdown(syscallrq_t *rq);
+static void syscall_netsendto(syscallrq_t *rq);
+static void syscall_netrecvfrom(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -236,6 +238,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETCONNECT       ] = syscall_netconnect,
         [SYSCALL_NETDISCONNECT    ] = syscall_netdisconnect,
         [SYSCALL_NETSHUTDOWN      ] = syscall_netshutdown,
+        [SYSCALL_NETSENDTO        ] = syscall_netsendto,
+        [SYSCALL_NETRECVFROM      ] = syscall_netrecvfrom,
 };
 
 /*==============================================================================
@@ -1596,10 +1600,9 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 static void syscall_netifup(syscallrq_t *rq)
 {
         GETARG(NET_family_t *, family);
-        GETARG(const void *, config);
-        GETARG(size_t *, size);
+        GETARG(const NET_generic_config_t *, config);
 
-        SETERRNO(_net_ifup(*family, config, *size));
+        SETERRNO(_net_ifup(*family, config));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1614,10 +1617,9 @@ static void syscall_netifdown(syscallrq_t *rq)
 static void syscall_netifstatus(syscallrq_t *rq)
 {
         GETARG(NET_family_t *, family);
-        GETARG(void *, status);
-        GETARG(size_t *, size);
+        GETARG(NET_generic_status_t *, status);
 
-        SETERRNO(_net_ifstatus(*family, status, *size));
+        SETERRNO(_net_ifstatus(*family, status));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1627,11 +1629,11 @@ static void syscall_netsocketcreate(syscallrq_t *rq)
         GETARG(NET_protocol_t*, protocol);
 
         SOCKET *socket = NULL;
-        int     err    = _net_socketcreate(*family, *protocol, &socket);
+        int     err    = _net_socket_create(*family, *protocol, &socket);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
                 if (err != ESUCC) {
-                        _net_socketdestroy(socket);
+                        _net_socket_destroy(socket);
                         socket = NULL;
                 }
         }
@@ -1658,10 +1660,9 @@ static void syscall_netsocketdestroy(syscallrq_t *rq)
 static void syscall_netbind(syscallrq_t *rq)
 {
         GETARG(SOCKET *, socket);
-        GETARG(const void *, addr);
-        GETARG(size_t *, addr_size);
+        GETARG(const NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_socketbind(socket, addr, *addr_size));
+        SETERRNO(_net_socket_bind(socket, addr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1669,7 +1670,7 @@ static void syscall_netlisten(syscallrq_t *rq)
 {
         GETARG(SOCKET *, socket);
 
-        SETERRNO(_net_socketlisten(socket));
+        SETERRNO(_net_socket_listen(socket));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1679,11 +1680,11 @@ static void syscall_netaccept(syscallrq_t *rq)
         GETARG(SOCKET **, new_socket);
 
         SOCKET *socknew = NULL;
-        int     err     = _net_socketaccept(socket, &socknew);
+        int     err     = _net_socket_accept(socket, &socknew);
         if (!err) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socknew));
                 if (err) {
-                        _net_socketdestroy(socknew);
+                        _net_socket_destroy(socknew);
                         socknew = NULL;
                 }
         }
@@ -1698,34 +1699,59 @@ static void syscall_netrecv(syscallrq_t *rq)
 {
         GETARG(SOCKET *, socket);
         GETARG(void *, buf);
-        GETARG(uint16_t *, len);
+        GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
 
-        uint16_t recved = 0;
-        SETERRNO(_net_socketrecv(socket, buf, *len, *flags, &recved));
-        SETRETURN(int, GETERRNO() == ESUCC ? recved : -1);
+        size_t recved = 0;
+        SETERRNO(_net_socket_recv(socket, buf, *len, *flags, &recved));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
+}
+
+static void syscall_netrecvfrom(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+        GETARG(NET_generic_sockaddr_t *, sockaddr);
+
+        size_t recved = 0;
+        SETERRNO(_net_socket_recvfrom(socket, buf, *len, *flags, sockaddr, &recved));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
 }
 
 static void syscall_netsend(syscallrq_t *rq)
 {
         GETARG(SOCKET *, socket);
         GETARG(const void *, buf);
-        GETARG(uint16_t *, len);
+        GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
 
-        uint16_t sent = 0;
-        SETERRNO(_net_socketsend(socket, buf, *len, *flags, &sent));
-        SETRETURN(int, GETERRNO() == ESUCC ? sent : -1);
+        size_t sent = 0;
+        SETERRNO(_net_socket_send(socket, buf, *len, *flags, &sent));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
+}
+
+static void syscall_netsendto(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+        GETARG(const NET_generic_sockaddr_t *, to_addr);
+
+        size_t sent = 0;
+        SETERRNO(_net_socket_sendto(socket, buf, *len, *flags, to_addr, &sent));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
 }
 
 static void syscall_netgethostbyname(syscallrq_t *rq)
 {
         GETARG(NET_family_t *, family);
         GETARG(const char *, name);
-        GETARG(void *, addr);
-        GETARG(size_t *, addr_size);
+        GETARG(NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_gethostbyname(*family, name, addr, *addr_size));
+        SETERRNO(_net_gethostbyname(*family, name, addr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1750,10 +1776,9 @@ static void syscall_netsetsendtimeout(syscallrq_t *rq)
 static void syscall_netconnect(syscallrq_t *rq)
 {
         GETARG(SOCKET *, socket);
-        GETARG(const void *, addr);
-        GETARG(size_t *, addr_size);
+        GETARG(const NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_socket_connect(socket, addr, *addr_size));
+        SETERRNO(_net_socket_connect(socket, addr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

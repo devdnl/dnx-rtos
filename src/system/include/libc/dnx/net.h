@@ -86,10 +86,10 @@ extern "C" {
  *         appropriately.
  */
 //==============================================================================
-static inline int ifup(NET_family_t family, const void *config, size_t config_size)
+static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
 {
         int result = -1;
-        syscall(SYSCALL_NETIFUP, &result, &family, config, &config_size);
+        syscall(SYSCALL_NETIFUP, &result, &family, config);
         return result;
 }
 
@@ -122,10 +122,10 @@ static inline int ifdown(NET_family_t family)
  *         appropriately.
  */
 //==============================================================================
-static inline int ifstatus(NET_family_t family, const void *status, size_t status_size)
+static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
 {
         int result = -1;
-        syscall(SYSCALL_NETIFSTATUS, &result, &family, status, &status_size);
+        syscall(SYSCALL_NETIFSTATUS, &result, &family, status);
         return result;
 }
 
@@ -170,17 +170,17 @@ static inline void socket_delete(SOCKET *socket)
  *        socket be bound to a well known address.
  *
  * @param socket                The socket
- * @param localAddress          The pointer to the structure containing
+ * @param sockAddr              The pointer to the structure containing
  *                              the address to assign.
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
  */
 //==============================================================================
-static inline int socket_bind(SOCKET *socket, const void *localAddress, size_t adr_size)
+static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
         int result = -1;
-        syscall(SYSCALL_NETBIND, &result, socket, localAddress, &adr_size);
+        syscall(SYSCALL_NETBIND, &result, socket, sockAddr);
         return result;
 }
 
@@ -189,16 +189,16 @@ static inline int socket_bind(SOCKET *socket, const void *localAddress, size_t a
  * @brief The function connect the socket to a specific remote IP address.
  *
  * @param socket        The socket
- * @param address       The pointer to the structure containing address
+ * @param sockAddr      The pointer to the structure containing address
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
  */
 //==============================================================================
-static inline int socket_connect(SOCKET *socket, const void *address, size_t adr_size)
+static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
         int result = -1;
-        syscall(SYSCALL_NETCONNECT, &result, socket, address, &adr_size);
+        syscall(SYSCALL_NETCONNECT, &result, socket, sockAddr);
         return result;
 }
 
@@ -302,24 +302,25 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  *         recvfrom() may be used to receive data on a socket whether it is in
  *         a connected state or not but not on a TCP socket.
  *
- * @param  socket       The socket descriptor from which to receive the data.
- * @param  buf          The buffer into which the received data is put.
- * @param  len          The buffer length.
- * @param  flags        Flags parameters that can be OR'ed together.
- * @param  from_addr    The socket from which the data is (or to be) received.
+ * @param  socket           The socket descriptor from which to receive the data.
+ * @param  buf              The buffer into which the received data is put.
+ * @param  len              The buffer length.
+ * @param  flags            Flags parameters that can be OR'ed together.
+ * @param  from_sockaddr    The socket address from which to receive the data.
  *
  * @return Number of bytes actually received from the socket, or -1 on error and
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int socket_recvfrom(SOCKET      *socket,
-                                  char        *buf,
-                                  size_t       len,
-                                  NET_flags_t  flags,
-                                  const void  *from_addr,
-                                  size_t       addr_size)
+static inline int socket_recvfrom(SOCKET                 *socket,
+                                  char                   *buf,
+                                  size_t                  len,
+                                  NET_flags_t             flags,
+                                  NET_generic_sockaddr_t *from_sockaddr)
 {
-        return -1; // TODO
+        int result = -1;
+        syscall(SYSCALL_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
+        return result;
 }
 
 //==============================================================================
@@ -332,20 +333,22 @@ static inline int socket_recvfrom(SOCKET      *socket,
  * @param  buf          A pointer to the buffer to send.
  * @param  len          The length of the buffer to send.
  * @param  flags        Flags parameters that can be OR'ed together.
- * @param  to_addr      The address to send the data to.
+ * @param  to_sockaddr  The address to send the data to.
+ * @param  to_addr_sz   The size of address.
  *
  * @return Number of bytes actually sent on the socket, or -1 on error and
  *         @ref errno value is set appropriately.
  */
 //==============================================================================
-static inline int socket_sendto(SOCKET      *socket,
-                                const void  *buf,
-                                size_t       len,
-                                NET_flags_t  flags,
-                                const void  *to_addr,
-                                size_t       addr_size)
+static inline int socket_sendto(SOCKET                       *socket,
+                                const void                   *buf,
+                                size_t                        len,
+                                NET_flags_t                   flags,
+                                const NET_generic_sockaddr_t *to_sockaddr)
 {
-        return -1; // TODO
+        int result = -1;
+        syscall(SYSCALL_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
+        return result;
 }
 
 //==============================================================================
@@ -358,9 +361,9 @@ static inline int socket_sendto(SOCKET      *socket,
  * @param  buf          A pointer to the buffer to send.
  * @param  len          The length of the buffer to send.
  * @param  flags        Flags parameters that can be OR'ed together.
- *                      NET_FLAGS__COPY  : create buffer for output data@n
- *                      NET_FLAGS__NOCOPY: send buffer as is (ROM). Buffer
- *                                         must be exists during send time!@n
+ *                      NET_FLAGS__COPY  : create buffer for output data [default].@n
+ *                      NET_FLAGS__NOCOPY: does not create extra buffer for
+ *                                         output data.@n
  *
  * @return Number of bytes actually sent on the socket, or -1 on error and
  *         @ref errno value is set appropriately.
@@ -453,13 +456,12 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @return ?
  */
 //==============================================================================
-static inline int get_host_by_name(NET_family_t family,
-                                   const char  *name,
-                                   void        *addr,
-                                   size_t       addr_size)
+static inline int get_host_by_name(NET_family_t            family,
+                                   const char             *name,
+                                   NET_generic_sockaddr_t *sock_addr)
 {
         int result = -1;
-        syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, addr, &addr_size);
+        syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, sock_addr);
         return result;
 }
 

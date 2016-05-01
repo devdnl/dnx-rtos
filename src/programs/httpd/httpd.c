@@ -144,14 +144,14 @@ int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        static const NET_INET_addr_t ADDR_ANY = {
-            .addr = NET_INET_IP(0,0,0,0),
+        static const NET_INET_sockaddr_t ADDR_ANY = {
+            .addr = NET_INET_IPv4_ANY,
             .port = 80
         };
 
         SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (socket) {
-                if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
+                if (socket_bind(socket, &ADDR_ANY) == 0) {
                         if (socket_listen(socket) == 0) {
                                 int err;
                                 do {

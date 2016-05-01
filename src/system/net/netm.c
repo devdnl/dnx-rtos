@@ -80,6 +80,8 @@ struct socket {
 //==============================================================================
 static int socket_alloc(SOCKET **socket, NET_family_t family)
 {
+        // TODO single allocation
+
         static const uint8_t net_socket_size[] = {
                 [NET_FAMILY__INET    ] = sizeof(INET_socket_t),
                 [NET_FAMILY__CAN     ] = sizeof(int),
@@ -148,6 +150,119 @@ static int INET_lwIP_status_to_errno(err_t err)
 //==============================================================================
 /**
  *
+ * @param addr
+ * @param lwip_addr
+ */
+//==============================================================================
+static void INET_addr_from_lwIP(NET_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
+{
+        *addr = NET_INET_IPv4(ip4_addr1(lwip_addr),
+                              ip4_addr2(lwip_addr),
+                              ip4_addr3(lwip_addr),
+                              ip4_addr4(lwip_addr));
+}
+
+//==============================================================================
+/**
+ *
+ * @param lwip_addr
+ * @param addr
+ */
+//==============================================================================
+static void INET_lwIP_addr(ip_addr_t *lwip_addr, const NET_INET_IPv4_t *addr)
+{
+        IP4_ADDR(lwip_addr,
+                 NET_INET_IPv4_a(*addr),
+                 NET_INET_IPv4_b(*addr),
+                 NET_INET_IPv4_c(*addr),
+                 NET_INET_IPv4_d(*addr));
+}
+
+//==============================================================================
+/**
+ *
+ * @param config
+ */
+//==============================================================================
+static int INET_ifup(const NET_INET_config_t *cfg)
+{
+        int err = EINVAL;
+
+        _netman_init();
+
+        switch (cfg->mode) {
+        case NET_INET_MODE__STATIC: {
+                ip_addr_t addr, mask, gateway;
+                INET_lwIP_addr(&addr, &cfg->address);
+                INET_lwIP_addr(&mask, &cfg->mask);
+                INET_lwIP_addr(&gateway, &cfg->gateway);
+
+                err = _netman_if_up(&addr, &mask, &gateway);
+
+                break;
+        }
+
+        case NET_INET_MODE__DHCP_START:
+                err = _netman_start_DHCP_client();
+                break;
+
+        case NET_INET_MODE__DHCP_INFORM:
+                err = _netman_inform_DHCP_server();
+                break;
+
+        case NET_INET_MODE__DHCP_RENEW:
+                err = _netman_renew_DHCP_connection();
+                break;
+
+        default:
+                err = EINVAL;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ */
+//==============================================================================
+static int INET_ifdown(void)
+{
+        return _netman_if_down();
+}
+
+//==============================================================================
+/**
+ *
+ * @param status
+ * @return
+ */
+//==============================================================================
+static int INET_status(NET_INET_status_t *status)
+{
+        _ifconfig_t inetstat;
+        int err = _netman_get_ifconfig(&inetstat);
+
+        if (!err) {
+                memcpy(status->hw_addr, inetstat.hw_address, sizeof(status->hw_addr));
+                status->rx_bytes   = inetstat.rx_bytes;
+                status->tx_bytes   = inetstat.tx_bytes;
+                status->rx_packets = inetstat.rx_packets;
+                status->tx_packets = inetstat.tx_packets;
+
+                INET_addr_from_lwIP(&status->address, &inetstat.IP_address);
+                INET_addr_from_lwIP(&status->mask, &inetstat.net_mask);
+                INET_addr_from_lwIP(&status->gateway, &inetstat.gateway);
+
+                status->state = inetstat.status;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
  * @param prot
  * @param socket
  * @return
@@ -201,15 +316,69 @@ static int INET_socket_destroy(SOCKET *socket)
  *
  * @param socket
  * @param addr
+ * @param addr_size
  * @return
  */
 //==============================================================================
-static int INET_socket_bind(SOCKET *socket, const NET_INET_addr_t *addr)
+static int INET_socket_connect(SOCKET *socket, const NET_INET_sockaddr_t *addr)
 {
         INET_socket_t *inet = socket->ctx;
 
         ip_addr_t IP;
-        IP4_ADDR(&IP, addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3]);
+        INET_lwIP_addr(&IP, &addr->addr);
+
+        return INET_lwIP_status_to_errno(netconn_connect(inet->netconn,
+                                                         &IP, addr->port));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+static int INET_socket_disconnect(SOCKET *socket)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_disconnect(inet->netconn));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @param addr_size
+ * @return
+ */
+//==============================================================================
+static int INET_socket_shutdown(SOCKET *socket, NET_shut_t how)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        return INET_lwIP_status_to_errno(netconn_shutdown(inet->netconn,
+                                                          how & NET_SHUT__RD,
+                                                          how & NET_SHUT__WR));
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param addr
+ * @return
+ */
+//==============================================================================
+static int INET_socket_bind(SOCKET *socket, const NET_INET_sockaddr_t *addr)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        ip_addr_t IP;
+        INET_lwIP_addr(&IP, &addr->addr);
 
         return INET_lwIP_status_to_errno(netconn_bind(inet->netconn, &IP, addr->port));
 }
@@ -265,9 +434,9 @@ static int INET_socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 static int INET_socket_recv(SOCKET     *socket,
                             void       *buf,
-                            uint16_t    len,
+                            size_t      len,
                             NET_flags_t flags,
-                            uint16_t   *recved)
+                            size_t     *recved)
 {
         INET_socket_t *inet = socket->ctx;
 
@@ -305,11 +474,32 @@ static int INET_socket_recv(SOCKET     *socket,
  * @return
  */
 //==============================================================================
+static int INET_socket_recvfrom(SOCKET              *socket,
+                                void                *buf,
+                                size_t               len,
+                                NET_flags_t          flags,
+                                NET_INET_sockaddr_t *sockaddr,
+                                size_t              *recved)
+{
+        // TODO
+        return ENOTSUP;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
 static int INET_socket_send(SOCKET     *socket,
                             const void *buf,
-                            uint16_t    len,
+                            size_t      len,
                             NET_flags_t flags,
-                            uint16_t   *sent)
+                            size_t     *sent)
 {
         INET_socket_t *inet = socket->ctx;
 
@@ -377,28 +567,68 @@ static int INET_socket_send(SOCKET     *socket,
 //==============================================================================
 /**
  *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @param to_addr
+ * @param to_addr_sz
+ * @param sent
+ * @return
+ */
+//==============================================================================
+static int INET_socket_sendto(SOCKET                    *socket,
+                              const void                *buf,
+                              size_t                     len,
+                              NET_flags_t                flags,
+                              const NET_INET_sockaddr_t *to_addr,
+                              size_t                    *sent)
+{
+        INET_socket_t *inet = socket->ctx;
+
+        int err = EPERM;
+
+        enum netconn_type type = netconn_type(inet->netconn);
+
+        if (type & NETCONN_UDP) {
+                ip_addr_t addr_last;
+                u16_t     port_last;
+                err = INET_lwIP_status_to_errno(netconn_peer(inet->netconn, &addr_last, &port_last));
+
+                if (!err) {
+//                        err = INET_socket_connect(socket, to_addr);
+//
+//
+//                        err = INET_socket_send(socket, buf, len, flags, sent);
+//// TODO
+//                        NET_INET_addr_t addr;
+//                        INET_addr_from_lwIP(&addr, &addr_last);
+//                        addr.port = port_last;
+//
+//                        err = INET_socket_connect(socket, &addr);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
  * @param name
  * @param addr
  * @param addr_size
  * @return
  */
 //==============================================================================
-int INET_gethostbyname(const char *name, void *addr, size_t addr_size)
+int INET_gethostbyname(const char *name, NET_INET_sockaddr_t *sock_addr)
 {
         int err = EINVAL;
 
-        if (addr_size == sizeof(NET_INET_addr_t)) {
-
-                ip_addr_t ip_addr;
-                err = INET_lwIP_status_to_errno(netconn_gethostbyname(name, &ip_addr));
-                if (!err) {
-                        NET_INET_addr_t *IP = addr;
-
-                        IP->addr[0] = ip4_addr1(&ip_addr);
-                        IP->addr[1] = ip4_addr2(&ip_addr);
-                        IP->addr[2] = ip4_addr3(&ip_addr);
-                        IP->addr[3] = ip4_addr4(&ip_addr);
-                }
+        ip_addr_t lwip_addr;
+        err = INET_lwIP_status_to_errno(netconn_gethostbyname(name, &lwip_addr));
+        if (!err) {
+                INET_addr_from_lwIP(&sock_addr->addr, &lwip_addr);
         }
 
         return err;
@@ -439,117 +669,20 @@ static int INET_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 /**
  *
- * @param socket
- * @param addr
- * @param addr_size
- * @return
- */
-//==============================================================================
-static int INET_socket_connect(SOCKET *socket, const NET_INET_addr_t *addr)
-{
-        INET_socket_t *inet = socket->ctx;
-
-        ip_addr_t IP;
-        IP4_ADDR(&IP, addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3]);
-
-        return INET_lwIP_status_to_errno(netconn_connect(inet->netconn,
-                                                         &IP, addr->port));
-}
-
-//==============================================================================
-/**
- *
- * @param socket
- * @param addr
- * @param addr_size
- * @return
- */
-//==============================================================================
-static int INET_socket_disconnect(SOCKET *socket)
-{
-        INET_socket_t *inet = socket->ctx;
-
-        return INET_lwIP_status_to_errno(netconn_disconnect(inet->netconn));
-}
-
-//==============================================================================
-/**
- *
- * @param socket
- * @param addr
- * @param addr_size
- * @return
- */
-//==============================================================================
-static int INET_socket_shutdown(SOCKET *socket, NET_shut_t how)
-{
-        INET_socket_t *inet = socket->ctx;
-
-        return INET_lwIP_status_to_errno(netconn_shutdown(inet->netconn,
-                                                          how & NET_SHUT__RD,
-                                                          how & NET_SHUT__WR));
-}
-
-//==============================================================================
-/**
- *
  * @param family
  * @param config
  * @param size
  * @return
  */
 //==============================================================================
-int _net_ifup(NET_family_t family, const void *config, size_t size)
+int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 {
-        if (config && size) {
+        int err = EINVAL;
+
+        if (config) {
                 switch (family) {
                 case NET_FAMILY__INET:
-                        if (sizeof(NET_INET_cfg_t) == size) {
-                                _netman_init();
-
-                                const NET_INET_cfg_t *cfg = config;
-
-                                switch (cfg->mode) {
-                                case NET_INET_MODE__STATIC: {
-                                        ip_addr_t addr, mask, gateway;
-                                        IP4_ADDR(&addr,
-                                                 cfg->address[0],
-                                                 cfg->address[1],
-                                                 cfg->address[2],
-                                                 cfg->address[3]);
-
-                                        IP4_ADDR(&mask,
-                                                 cfg->mask[0],
-                                                 cfg->mask[1],
-                                                 cfg->mask[2],
-                                                 cfg->mask[3]);
-
-                                        IP4_ADDR(&gateway,
-                                                 cfg->gateway[0],
-                                                 cfg->gateway[1],
-                                                 cfg->gateway[2],
-                                                 cfg->gateway[3]);
-
-                                        return _netman_if_up(&addr, &mask, &gateway);
-                                }
-                                break;
-
-                                case NET_INET_MODE__DHCP_START:
-                                        return _netman_start_DHCP_client();
-                                break;
-
-                                case NET_INET_MODE__DHCP_INFORM:
-                                        return _netman_inform_DHCP_server();
-                                break;
-
-                                case NET_INET_MODE__DHCP_RENEW:
-                                        return _netman_renew_DHCP_connection();
-                                default:
-                                        return EINVAL;
-                                }
-                        } else {
-                                return EINVAL;
-                        }
+                        err = INET_ifup(config);
                         break;
 
                 case NET_FAMILY__CAN:
@@ -562,11 +695,11 @@ int _net_ifup(NET_family_t family, const void *config, size_t size)
                         return ENOTSUP;
 
                 default:
-                        return EINVAL;
+                        err = EINVAL;
                 }
         }
 
-        return EINVAL;
+        return err;
 }
 
 //==============================================================================
@@ -580,7 +713,7 @@ int _net_ifdown(NET_family_t family)
 {
         switch (family) {
         case NET_FAMILY__INET:
-                return _netman_if_down();
+                return INET_ifdown();
 
         case NET_FAMILY__CAN:
                 return ENOTSUP;
@@ -603,45 +736,12 @@ int _net_ifdown(NET_family_t family)
  * @return ?
  */
 //==============================================================================
-int _net_ifstatus(NET_family_t family, void *status, size_t size)
+int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 {
-        if (status && size) {
+        if (status) {
                 switch (family) {
                 case NET_FAMILY__INET:
-                        if (sizeof(NET_INET_status_t) == size) {
-                                NET_INET_status_t *stat = status;
-
-                                _ifconfig_t inetstat;
-                                if (_netman_get_ifconfig(&inetstat) == ESUCC) {
-                                        memcpy(stat->hw_addr, inetstat.hw_address, sizeof(stat->hw_addr));
-                                        stat->rx_bytes   = inetstat.rx_bytes;
-                                        stat->tx_bytes   = inetstat.tx_bytes;
-                                        stat->rx_packets = inetstat.rx_packets;
-                                        stat->tx_packets = inetstat.tx_packets;
-
-                                        stat->address[0] = ip4_addr1(&inetstat.IP_address);
-                                        stat->address[1] = ip4_addr2(&inetstat.IP_address);
-                                        stat->address[2] = ip4_addr3(&inetstat.IP_address);
-                                        stat->address[3] = ip4_addr4(&inetstat.IP_address);
-
-                                        stat->mask[0]    = ip4_addr1(&inetstat.net_mask);
-                                        stat->mask[1]    = ip4_addr2(&inetstat.net_mask);
-                                        stat->mask[2]    = ip4_addr3(&inetstat.net_mask);
-                                        stat->mask[3]    = ip4_addr4(&inetstat.net_mask);
-
-                                        stat->gateway[0] = ip4_addr1(&inetstat.gateway);
-                                        stat->gateway[1] = ip4_addr2(&inetstat.gateway);
-                                        stat->gateway[2] = ip4_addr3(&inetstat.gateway);
-                                        stat->gateway[3] = ip4_addr4(&inetstat.gateway);
-
-                                        stat->state      = inetstat.status;
-                                        return ESUCC;
-                                }
-
-                                return EINVAL;
-                        }
-
-                        return EINVAL;
+                        return INET_status(status);
 
                 case NET_FAMILY__CAN:
                         return ENOTSUP;
@@ -669,7 +769,7 @@ int _net_ifstatus(NET_family_t family, void *status, size_t size)
  * @return
  */
 //==============================================================================
-int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
+int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
 {
         int err = EINVAL;
 
@@ -707,7 +807,7 @@ int _net_socketcreate(NET_family_t family, NET_protocol_t protocol, SOCKET **soc
  * @return
  */
 //==============================================================================
-int _net_socketdestroy(SOCKET *socket)
+int _net_socket_destroy(SOCKET *socket)
 {
         int err = EINVAL;
 
@@ -743,16 +843,14 @@ int _net_socketdestroy(SOCKET *socket)
  * @return
  */
 //==============================================================================
-int _net_socketbind(SOCKET *socket, const void *addr, size_t addr_size)
+int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
         int err = EINVAL;
 
         if (socket && socket->header.type == RES_TYPE_SOCKET) {
                 switch (socket->family) {
                 case NET_FAMILY__INET:
-                        if (addr_size == sizeof(NET_INET_addr_t)) {
-                                err = INET_socket_bind(socket, addr);
-                        }
+                        err = INET_socket_bind(socket, addr);
                         break;
 
                 case NET_FAMILY__CAN:
@@ -779,7 +877,7 @@ int _net_socketbind(SOCKET *socket, const void *addr, size_t addr_size)
  * @return
  */
 //==============================================================================
-int _net_socketlisten(SOCKET *socket)
+int _net_socket_listen(SOCKET *socket)
 {
         int err = EINVAL;
 
@@ -814,7 +912,7 @@ int _net_socketlisten(SOCKET *socket)
  * @return
  */
 //==============================================================================
-int _net_socketaccept(SOCKET *socket, SOCKET **new_socket)
+int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
         int err = EINVAL;
 
@@ -851,7 +949,7 @@ int _net_socketaccept(SOCKET *socket, SOCKET **new_socket)
  * @return
  */
 //==============================================================================
-int _net_socketrecv(SOCKET *socket, void *buf, uint16_t len, NET_flags_t flags, u16_t *recved)
+int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
 {
         int err = EINVAL;
 
@@ -885,10 +983,59 @@ int _net_socketrecv(SOCKET *socket, void *buf, uint16_t len, NET_flags_t flags, 
  * @param buf
  * @param len
  * @param flags
+ * @param sockaddr
+ * @param recved
  * @return
  */
 //==============================================================================
-int _net_socketsend(SOCKET *socket, const void *buf, uint16_t len, NET_flags_t flags, u16_t *sent)
+int _net_socket_recvfrom(SOCKET                 *socket,
+                         void                   *buf,
+                         size_t                  len,
+                         NET_flags_t             flags,
+                         NET_generic_sockaddr_t *sockaddr,
+                         size_t                 *recved)
+{
+        int err = EINVAL;
+
+        if (  socket
+           && socket->header.type == RES_TYPE_SOCKET
+           && buf
+           && len
+           && sockaddr
+           && recved) {
+                switch (socket->family) {
+                case NET_FAMILY__INET:
+                        err = INET_socket_recvfrom(socket, buf, len, flags, sockaddr, recved);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
+ * @return
+ */
+//==============================================================================
+int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
 {
         int err = EINVAL;
 
@@ -918,21 +1065,32 @@ int _net_socketsend(SOCKET *socket, const void *buf, uint16_t len, NET_flags_t f
 //==============================================================================
 /**
  *
- * @param
- * @param
- * @param
- * @param size_t
+ * @param socket
+ * @param buf
+ * @param len
+ * @param flags
  * @return
  */
 //==============================================================================
-int _net_gethostbyname(NET_family_t family, const char *name, void *addr, size_t addr_size)
+int _net_socket_sendto(SOCKET                       *socket,
+                       const void                   *buf,
+                       size_t                        len,
+                       NET_flags_t                   flags,
+                       const NET_generic_sockaddr_t *to_addr,
+                       size_t                       *sent)
 {
         int err = EINVAL;
 
-        if (name && addr && addr_size) {
-                switch (family) {
+        if (  socket
+           && socket->header.type == RES_TYPE_SOCKET
+           && buf
+           && len
+           && to_addr
+           && sent) {
+
+                switch (socket->family) {
                 case NET_FAMILY__INET:
-                        err = INET_gethostbyname(name, addr, addr_size);
+                        err = INET_socket_sendto(socket, buf, len, flags, to_addr, sent);
                         break;
 
                 case NET_FAMILY__CAN:
@@ -1035,16 +1193,14 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @return
  */
 //==============================================================================
-int _net_socket_connect(SOCKET *socket, const void *addr, size_t addr_size)
+int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
         int err = EINVAL;
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET && addr && addr_size) {
+        if (socket && socket->header.type == RES_TYPE_SOCKET && addr) {
                 switch (socket->family) {
                 case NET_FAMILY__INET:
-                        if (addr_size == sizeof(NET_INET_addr_t)) {
-                                err = INET_socket_connect(socket, addr);
-                        }
+                        err = INET_socket_connect(socket, addr);
                         break;
 
                 case NET_FAMILY__CAN:
@@ -1117,6 +1273,43 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
                 switch (socket->family) {
                 case NET_FAMILY__INET:
                         err = INET_socket_shutdown(socket, how);
+                        break;
+
+                case NET_FAMILY__CAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__MICROLAN:
+                        err = ENOTSUP;
+
+                case NET_FAMILY__RFM:
+                        err = ENOTSUP;
+
+                default:
+                        err = EINVAL;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param
+ * @param
+ * @param
+ * @param size_t
+ * @return
+ */
+//==============================================================================
+int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockaddr_t *addr)
+{
+        int err = EINVAL;
+
+        if (name && addr) {
+                switch (family) {
+                case NET_FAMILY__INET:
+                        err = INET_gethostbyname(name, addr);
                         break;
 
                 case NET_FAMILY__CAN:

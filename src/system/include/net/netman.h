@@ -88,14 +88,14 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _netman_init();
-extern int  _netman_start_DHCP_client();
-extern int  _netman_stop_DHCP_client();
-extern int  _netman_inform_DHCP_server();
-extern int  _netman_renew_DHCP_connection();
-extern int  _netman_if_up(const ip_addr_t*, const ip_addr_t*, const ip_addr_t*);
-extern int  _netman_if_down();
-extern int  _netman_get_ifconfig(_ifconfig_t*);
+extern int _netman_init();
+extern int _netman_start_DHCP_client();
+extern int _netman_stop_DHCP_client();
+extern int _netman_inform_DHCP_server();
+extern int _netman_renew_DHCP_connection();
+extern int _netman_if_up(const ip_addr_t*, const ip_addr_t*, const ip_addr_t*);
+extern int _netman_if_down();
+extern int _netman_get_ifconfig(_ifconfig_t*);
 
 /*==============================================================================
   Exported inline functions

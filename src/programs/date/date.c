@@ -84,7 +84,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                         puts("  --set=DD/MM/YYYY,HH:MM:SS   set date and time (UTC)");
                         puts("  --set-tz=TIMEOFFSET         set timezone offset e.g. +0400, -0100\n");
                         puts("  -u                          UTC time");
-                        puts("Formats start with % character:");
+                        puts("Formats start with % character (e.g. date \"+Time: %X\"):");
                         puts("  %nHIJMSAaBbhCYydpjmXxFDz");
                         show_date = false;
                         break;

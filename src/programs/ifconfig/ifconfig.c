@@ -116,7 +116,7 @@ static void show_details()
         };
 
         NET_INET_status_t ifstat;
-        if (ifstatus(NET_FAMILY__INET, &ifstat, sizeof(NET_INET_status_t)) == 0) {
+        if (ifstatus(NET_FAMILY__INET, &ifstat) == 0) {
 
                 const char *tx_unit = convert_unit(&ifstat.tx_bytes);
                 const char *rx_unit = convert_unit(&ifstat.rx_bytes);
@@ -131,12 +131,12 @@ static void show_details()
                        if_status[ifstat.state],
                        ifstat.hw_addr[0], ifstat.hw_addr[1], ifstat.hw_addr[2],
                        ifstat.hw_addr[3], ifstat.hw_addr[4], ifstat.hw_addr[5],
-                       ifstat.address[0], ifstat.address[1],
-                       ifstat.address[2], ifstat.address[3],
-                       ifstat.gateway[0], ifstat.gateway[1],
-                       ifstat.gateway[2], ifstat.gateway[3],
-                       ifstat.mask[0], ifstat.mask[1],
-                       ifstat.mask[2], ifstat.mask[3],
+                       NET_INET_IPv4_a(ifstat.address), NET_INET_IPv4_b(ifstat.address),
+                       NET_INET_IPv4_c(ifstat.address), NET_INET_IPv4_d(ifstat.address),
+                       NET_INET_IPv4_a(ifstat.gateway), NET_INET_IPv4_b(ifstat.gateway),
+                       NET_INET_IPv4_c(ifstat.gateway), NET_INET_IPv4_d(ifstat.gateway),
+                       NET_INET_IPv4_a(ifstat.mask), NET_INET_IPv4_b(ifstat.mask),
+                       NET_INET_IPv4_c(ifstat.mask), NET_INET_IPv4_d(ifstat.mask),
                        (u32_t)ifstat.rx_packets, cast(int, ifstat.rx_bytes), rx_unit,
                        (u32_t)ifstat.tx_packets, cast(int, ifstat.tx_bytes), tx_unit);
         }
