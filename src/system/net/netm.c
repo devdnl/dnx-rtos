@@ -420,8 +420,28 @@ static int INET_socket_recvfrom(INET_socket_t       *inet_sock,
                                 NET_INET_sockaddr_t *sockaddr,
                                 size_t              *recved)
 {
-        // TODO
-        return ENOTSUP;
+        UNUSED_ARG1(flags);
+
+        int err = EPERM;
+
+        enum netconn_type type = netconn_type(inet_sock->netconn);
+
+        if (type & NETCONN_UDP) {
+                struct netbuf *netbuf;
+                err = INET_lwIP_status_to_errno(netconn_recv(inet_sock->netconn,
+                                                             &netbuf));
+                if (!err) {
+                        *recved = netbuf_copy(netbuf, buf, len);
+
+                        ip_addr_t *fromaddr = netbuf_fromaddr(netbuf);
+                        sockaddr->port      = netbuf_fromport(netbuf);
+                        INET_addr_from_lwIP(&sockaddr->addr, fromaddr);
+
+                        netbuf_delete(netbuf);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -519,7 +539,7 @@ static int INET_socket_sendto(INET_socket_t             *inet_sock,
                               const void                *buf,
                               size_t                     len,
                               NET_flags_t                flags,
-                              const NET_INET_sockaddr_t *to_addr,
+                              const NET_INET_sockaddr_t *to_sockaddr,
                               size_t                    *sent)
 {
         int err = EPERM;
@@ -527,23 +547,27 @@ static int INET_socket_sendto(INET_socket_t             *inet_sock,
         enum netconn_type type = netconn_type(inet_sock->netconn);
 
         if (type & NETCONN_UDP) {
-                ip_addr_t addr_last;
-                u16_t     port_last;
+
+                ip_addr_t           lwip_addr;
+                NET_INET_sockaddr_t sockaddr;
+
+                // get the peer if currently connected
                 err = INET_lwIP_status_to_errno(netconn_peer(inet_sock->netconn,
-                                                             &addr_last,
-                                                             &port_last));
+                                                             &lwip_addr,
+                                                             &sockaddr.port));
 
                 if (!err) {
-//                        err = INET_socket_connect(socket, to_addr);
-//
-//
-//                        err = INET_socket_send(socket, buf, len, flags, sent);
-//// TODO
-//                        NET_INET_addr_t addr;
-//                        INET_addr_from_lwIP(&addr, &addr_last);
-//                        addr.port = port_last;
-//
-//                        err = INET_socket_connect(socket, &addr);
+                        INET_addr_from_lwIP(&sockaddr.addr, &lwip_addr);
+
+                        // connect to new address
+                        err = INET_socket_connect(inet_sock, to_sockaddr);
+
+                        if (!err) {
+                                err = INET_socket_send(inet_sock, buf, len, flags, sent);
+                        }
+
+                        // reset the remote address and port number of the conn.
+                        INET_socket_connect(inet_sock, &sockaddr);
                 }
         }
 
