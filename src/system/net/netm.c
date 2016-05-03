@@ -80,24 +80,22 @@ struct socket {
 //==============================================================================
 static int socket_alloc(SOCKET **socket, NET_family_t family)
 {
-        // TODO single allocation
-
         static const uint8_t net_socket_size[] = {
-                [NET_FAMILY__INET    ] = sizeof(INET_socket_t),
-                [NET_FAMILY__CAN     ] = sizeof(int),
-                [NET_FAMILY__RFM     ] = sizeof(int),
-                [NET_FAMILY__MICROLAN] = sizeof(int),
+                [NET_FAMILY__INET    ] = _mm_align(sizeof(INET_socket_t)),
+                [NET_FAMILY__CAN     ] = _mm_align(sizeof(int)),
+                [NET_FAMILY__RFM     ] = _mm_align(sizeof(int)),
+                [NET_FAMILY__MICROLAN] = _mm_align(sizeof(int)),
         };
 
-        int err = _kzalloc(_MM_NET, sizeof(SOCKET), cast(void**, socket));
+        int err = _kzalloc(_MM_NET,
+                           _mm_align(sizeof(SOCKET)) + net_socket_size[family],
+                           cast(void**, socket));
         if (!err) {
-                err = _kzalloc(_MM_NET, net_socket_size[family], cast(void**, &(*socket)->ctx));
-                if (!err) {
-                        (*socket)->header.type = RES_TYPE_SOCKET;
-                        (*socket)->family      = family;
-                } else {
-                        _kfree(_MM_NET, cast(void**, socket));
-                }
+                (*socket)->header.type = RES_TYPE_SOCKET;
+                (*socket)->family      = family;
+                (*socket)->ctx         = cast(void *,
+                                              cast(size_t, *socket)
+                                              + _mm_align(sizeof(SOCKET)));
         }
 
         return err;
@@ -112,7 +110,6 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 static void socket_free(SOCKET **socket)
 {
         (*socket)->header.type = RES_TYPE_UNKNOWN;
-        _kfree(_MM_NET, &(*socket)->ctx);
         _kfree(_MM_NET, cast(void**, socket));
         *socket = NULL;
 }
@@ -268,7 +265,7 @@ static int INET_status(NET_INET_status_t *status)
  * @return
  */
 //==============================================================================
-static int INET_socket_create(NET_protocol_t prot, SOCKET **socket)
+static int INET_socket_create(NET_protocol_t prot, SOCKET **socket) // TODO INET_socket instead of SOCKET
 {
         int err = socket_alloc(socket, NET_FAMILY__INET);
         if (!err) {
@@ -772,6 +769,8 @@ int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
 {
         int err = EINVAL;
+
+        // TODO here socket_alloc() must be called
 
         if (socket) {
                 switch (family) {
