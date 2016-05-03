@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <errno.h>
 #include <time.h>
 #include <dnx/net.h>
 #include <dnx/misc.h>
@@ -389,8 +390,6 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                                                 select_next_host(argc);
                                         }
                                 }
-
-                                socket_close(socket);
                         }
 
                         socket_delete(socket);
@@ -398,6 +397,10 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                         sleep_until(interval, &tref);
                 }
         } while (interval);
+
+        if (errno) {
+                perror(argv[0]);
+        }
 
         return interval ? EXIT_FAILURE : EXIT_SUCCESS;
 }

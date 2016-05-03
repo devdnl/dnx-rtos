@@ -64,15 +64,12 @@ extern "C" {
  * @{ */
 typedef enum {
         NET_FAMILY__INET,
-        NET_FAMILY__CAN,
-        NET_FAMILY__RFM,
-        NET_FAMILY__MICROLAN
+        _NET_FAMILY__COUNT
 } NET_family_t;
 
 typedef enum {
         NET_PROTOCOL__UDP,
         NET_PROTOCOL__TCP,
-        NET_PROTOCOL__ISO_TP
 } NET_protocol_t;
 
 typedef enum {

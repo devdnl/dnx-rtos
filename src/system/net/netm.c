@@ -34,7 +34,12 @@ Brief    Network management.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define MAXIMUM_SAFE_UDP_PAYLOAD        508
+#define MAXIMUM_SAFE_UDP_PAYLOAD                508
+
+
+#define PROXY_TABLE                             static const proxy_func_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_ADD_FAMILY(_family, _proxy_func)  [NET_FAMILY__##_family] = (proxy_func_t)_proxy_func
+#define call_proxy_function(family, ...)        proxy[family](__VA_ARGS__)
 
 /*==============================================================================
   Local object types
@@ -50,6 +55,8 @@ struct socket {
         NET_family_t family;
         void        *ctx;
 };
+
+typedef int (*proxy_func_t)();
 
 /*==============================================================================
   Local function prototypes
@@ -70,50 +77,6 @@ struct socket {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-//==============================================================================
-/**
- *
- * @param socket
- * @param family
- * @return
- */
-//==============================================================================
-static int socket_alloc(SOCKET **socket, NET_family_t family)
-{
-        static const uint8_t net_socket_size[] = {
-                [NET_FAMILY__INET    ] = _mm_align(sizeof(INET_socket_t)),
-                [NET_FAMILY__CAN     ] = _mm_align(sizeof(int)),
-                [NET_FAMILY__RFM     ] = _mm_align(sizeof(int)),
-                [NET_FAMILY__MICROLAN] = _mm_align(sizeof(int)),
-        };
-
-        int err = _kzalloc(_MM_NET,
-                           _mm_align(sizeof(SOCKET)) + net_socket_size[family],
-                           cast(void**, socket));
-        if (!err) {
-                (*socket)->header.type = RES_TYPE_SOCKET;
-                (*socket)->family      = family;
-                (*socket)->ctx         = cast(void *,
-                                              cast(size_t, *socket)
-                                              + _mm_align(sizeof(SOCKET)));
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- *
- * @param socket
- */
-//==============================================================================
-static void socket_free(SOCKET **socket)
-{
-        (*socket)->header.type = RES_TYPE_UNKNOWN;
-        _kfree(_MM_NET, cast(void**, socket));
-        *socket = NULL;
-}
-
 //==============================================================================
 /**
  *
@@ -235,7 +198,7 @@ static int INET_ifdown(void)
  * @return
  */
 //==============================================================================
-static int INET_status(NET_INET_status_t *status)
+static int INET_ifstatus(NET_INET_status_t *status)
 {
         _ifconfig_t inetstat;
         int err = _netman_get_ifconfig(&inetstat);
@@ -261,22 +224,23 @@ static int INET_status(NET_INET_status_t *status)
 /**
  *
  * @param prot
- * @param socket
+ * @param inet_sock
  * @return
  */
 //==============================================================================
-static int INET_socket_create(NET_protocol_t prot, SOCKET **socket) // TODO INET_socket instead of SOCKET
+static int INET_socket_create(NET_protocol_t prot, INET_socket_t *inet_sock)
 {
-        int err = socket_alloc(socket, NET_FAMILY__INET);
-        if (!err) {
-                INET_socket_t *inet = (*socket)->ctx;
+        int err = EINVAL;
 
-                inet->netconn = netconn_new(prot == NET_PROTOCOL__TCP
-                                                  ? NETCONN_TCP
-                                                  : NETCONN_UDP);
-                if (!inet->netconn) {
+        if (prot == NET_PROTOCOL__TCP || prot == NET_PROTOCOL__UDP) {
+
+                inet_sock->netconn = netconn_new(prot == NET_PROTOCOL__TCP
+                                                       ? NETCONN_TCP
+                                                       : NETCONN_UDP);
+                if (inet_sock->netconn) {
+                        err = ESUCC;
+                } else {
                         err = ENOMEM;
-                        socket_free(socket);
                 }
         }
 
@@ -286,24 +250,20 @@ static int INET_socket_create(NET_protocol_t prot, SOCKET **socket) // TODO INET
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @return
  */
 //==============================================================================
-static int INET_socket_destroy(SOCKET *socket)
+static int INET_socket_destroy(INET_socket_t *inet_sock)
 {
-        INET_socket_t *inet = socket->ctx;
-
-        if (inet->netbuf) {
-                netbuf_delete(inet->netbuf);
+        if (inet_sock->netbuf) {
+                netbuf_delete(inet_sock->netbuf);
         }
 
-        if (inet->netconn) {
-                netconn_close(inet->netconn);
-                netconn_delete(inet->netconn);
+        if (inet_sock->netconn) {
+                netconn_close(inet_sock->netconn);
+                netconn_delete(inet_sock->netconn);
         }
-
-        socket_free(&socket);
 
         return ESUCC;
 }
@@ -311,53 +271,47 @@ static int INET_socket_destroy(SOCKET *socket)
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param addr
  * @param addr_size
  * @return
  */
 //==============================================================================
-static int INET_socket_connect(SOCKET *socket, const NET_INET_sockaddr_t *addr)
+static int INET_socket_connect(INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr)
 {
-        INET_socket_t *inet = socket->ctx;
-
         ip_addr_t IP;
         INET_lwIP_addr(&IP, &addr->addr);
 
-        return INET_lwIP_status_to_errno(netconn_connect(inet->netconn,
+        return INET_lwIP_status_to_errno(netconn_connect(inet_sock->netconn,
                                                          &IP, addr->port));
 }
 
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param addr
  * @param addr_size
  * @return
  */
 //==============================================================================
-static int INET_socket_disconnect(SOCKET *socket)
+static int INET_socket_disconnect(INET_socket_t *inet_sock)
 {
-        INET_socket_t *inet = socket->ctx;
-
-        return INET_lwIP_status_to_errno(netconn_disconnect(inet->netconn));
+        return INET_lwIP_status_to_errno(netconn_disconnect(inet_sock->netconn));
 }
 
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param addr
  * @param addr_size
  * @return
  */
 //==============================================================================
-static int INET_socket_shutdown(SOCKET *socket, NET_shut_t how)
+static int INET_socket_shutdown(INET_socket_t *inet_sock, NET_shut_t how)
 {
-        INET_socket_t *inet = socket->ctx;
-
-        return INET_lwIP_status_to_errno(netconn_shutdown(inet->netconn,
+        return INET_lwIP_status_to_errno(netconn_shutdown(inet_sock->netconn,
                                                           how & NET_SHUT__RD,
                                                           how & NET_SHUT__WR));
 }
@@ -365,19 +319,18 @@ static int INET_socket_shutdown(SOCKET *socket, NET_shut_t how)
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param addr
  * @return
  */
 //==============================================================================
-static int INET_socket_bind(SOCKET *socket, const NET_INET_sockaddr_t *addr)
+static int INET_socket_bind(INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr)
 {
-        INET_socket_t *inet = socket->ctx;
-
         ip_addr_t IP;
         INET_lwIP_addr(&IP, &addr->addr);
 
-        return INET_lwIP_status_to_errno(netconn_bind(inet->netconn, &IP, addr->port));
+        return INET_lwIP_status_to_errno(netconn_bind(inet_sock->netconn,
+                                                      &IP, addr->port));
 }
 
 //==============================================================================
@@ -387,11 +340,9 @@ static int INET_socket_bind(SOCKET *socket, const NET_INET_sockaddr_t *addr)
  * @return
  */
 //==============================================================================
-static int INET_socket_listen(SOCKET *socket)
+static int INET_socket_listen(INET_socket_t *inet_sock)
 {
-        INET_socket_t *inet = socket->ctx;
-
-        return INET_lwIP_status_to_errno(netconn_listen(inet->netconn));
+        return INET_lwIP_status_to_errno(netconn_listen(inet_sock->netconn));
 }
 
 //==============================================================================
@@ -402,59 +353,48 @@ static int INET_socket_listen(SOCKET *socket)
  * @return
  */
 //==============================================================================
-static int INET_socket_accept(SOCKET *socket, SOCKET **new_socket)
+static int INET_socket_accept(INET_socket_t *inet_sock, INET_socket_t *new_inet_sock)
 {
-        int err = socket_alloc(new_socket, NET_FAMILY__INET);
-        if (!err) {
-                INET_socket_t *inet     = socket->ctx;
-                INET_socket_t *new_inet = (*new_socket)->ctx;
-
-                err = INET_lwIP_status_to_errno(netconn_accept(inet->netconn,
-                                                               &new_inet->netconn));
-                if (err) {
-                        socket_free(new_socket);
-                }
-        }
-
-        return err;
+        return INET_lwIP_status_to_errno(netconn_accept(inet_sock->netconn,
+                                                        &new_inet_sock->netconn));
 }
 
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param buf
  * @param len
  * @param flags
  * @return
  */
 //==============================================================================
-static int INET_socket_recv(SOCKET     *socket,
-                            void       *buf,
-                            size_t      len,
-                            NET_flags_t flags,
-                            size_t     *recved)
+static int INET_socket_recv(INET_socket_t *inet_sock,
+                            void          *buf,
+                            size_t         len,
+                            NET_flags_t    flags,
+                            size_t        *recved)
 {
-        INET_socket_t *inet = socket->ctx;
-
         if (flags & NET_FLAGS__REWIND) {
-                inet->seek = 0;
+                inet_sock->seek = 0;
         }
 
         int err = ESUCC;
-        if (inet->netbuf == NULL) {
-                err = INET_lwIP_status_to_errno(netconn_recv(inet->netconn,
-                                                             &inet->netbuf));
+        if (inet_sock->netbuf == NULL) {
+                err = INET_lwIP_status_to_errno(netconn_recv(inet_sock->netconn,
+                                                             &inet_sock->netbuf));
         }
 
         if (!err) {
-                u16_t sz = netbuf_copy_partial(inet->netbuf, buf, len, inet->seek);
-                inet->seek += sz;
-                *recved     = sz;
+                u16_t sz = netbuf_copy_partial(inet_sock->netbuf, buf, len, inet_sock->seek);
+                inet_sock->seek += sz;
+                *recved          = sz;
 
-                if ((flags & NET_FLAGS__FREEBUF) || inet->seek >= netbuf_len(inet->netbuf)) {
-                        netbuf_delete(inet->netbuf);
-                        inet->netbuf = NULL;
+                if (  (flags & NET_FLAGS__FREEBUF)
+                   || (inet_sock->seek >= netbuf_len(inet_sock->netbuf)) ) {
+
+                        netbuf_delete(inet_sock->netbuf);
+                        inet_sock->netbuf = NULL;
                 }
         }
 
@@ -464,14 +404,16 @@ static int INET_socket_recv(SOCKET     *socket,
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param buf
  * @param len
  * @param flags
+ * @param sockaddr
+ * @param recved
  * @return
  */
 //==============================================================================
-static int INET_socket_recvfrom(SOCKET              *socket,
+static int INET_socket_recvfrom(INET_socket_t       *inet_sock,
                                 void                *buf,
                                 size_t               len,
                                 NET_flags_t          flags,
@@ -485,24 +427,23 @@ static int INET_socket_recvfrom(SOCKET              *socket,
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param buf
  * @param len
  * @param flags
+ * @param sent
  * @return
  */
 //==============================================================================
-static int INET_socket_send(SOCKET     *socket,
-                            const void *buf,
-                            size_t      len,
-                            NET_flags_t flags,
-                            size_t     *sent)
+static int INET_socket_send(INET_socket_t *inet_sock,
+                            const void    *buf,
+                            size_t         len,
+                            NET_flags_t    flags,
+                            size_t        *sent)
 {
-        INET_socket_t *inet = socket->ctx;
-
         int err = EINVAL;
 
-        enum netconn_type type = netconn_type(inet->netconn);
+        enum netconn_type type = netconn_type(inet_sock->netconn);
 
         if (type & NETCONN_TCP) {
                 u8_t lwip_flags = 0;
@@ -511,7 +452,7 @@ static int INET_socket_send(SOCKET     *socket,
                 else
                         lwip_flags |= NETCONN_COPY;
 
-                err = INET_lwIP_status_to_errno(netconn_write(inet->netconn,
+                err = INET_lwIP_status_to_errno(netconn_write(inet_sock->netconn,
                                                               buf,
                                                               len,
                                                               lwip_flags));
@@ -521,15 +462,15 @@ static int INET_socket_send(SOCKET     *socket,
 
                 if (len <= MAXIMUM_SAFE_UDP_PAYLOAD) {
 
-                        inet->netbuf = netbuf_new();
-                        if (inet->netbuf) {
+                        inet_sock->netbuf = netbuf_new();
+                        if (inet_sock->netbuf) {
                                 if (flags & NET_FLAGS__NOCOPY) {
                                         err = INET_lwIP_status_to_errno(
-                                                        netbuf_ref(inet->netbuf,
+                                                        netbuf_ref(inet_sock->netbuf,
                                                                    buf,
                                                                    len));
                                 } else {
-                                        char *data = netbuf_alloc(inet->netbuf, len);
+                                        char *data = netbuf_alloc(inet_sock->netbuf, len);
                                         if (data) {
                                                 memcpy(data, buf, len);
                                                 err = ESUCC;
@@ -540,12 +481,12 @@ static int INET_socket_send(SOCKET     *socket,
 
                                 if (!err) {
                                         err = INET_lwIP_status_to_errno(
-                                                 netconn_send(inet->netconn,
-                                                              inet->netbuf));
+                                                 netconn_send(inet_sock->netconn,
+                                                              inet_sock->netbuf));
                                 }
 
-                                netbuf_delete(inet->netbuf);
-                                inet->netbuf = NULL;
+                                netbuf_delete(inet_sock->netbuf);
+                                inet_sock->netbuf = NULL;
 
                         } else {
                                 err = ENOMEM;
@@ -564,7 +505,7 @@ static int INET_socket_send(SOCKET     *socket,
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param buf
  * @param len
  * @param flags
@@ -574,23 +515,23 @@ static int INET_socket_send(SOCKET     *socket,
  * @return
  */
 //==============================================================================
-static int INET_socket_sendto(SOCKET                    *socket,
+static int INET_socket_sendto(INET_socket_t             *inet_sock,
                               const void                *buf,
                               size_t                     len,
                               NET_flags_t                flags,
                               const NET_INET_sockaddr_t *to_addr,
                               size_t                    *sent)
 {
-        INET_socket_t *inet = socket->ctx;
-
         int err = EPERM;
 
-        enum netconn_type type = netconn_type(inet->netconn);
+        enum netconn_type type = netconn_type(inet_sock->netconn);
 
         if (type & NETCONN_UDP) {
                 ip_addr_t addr_last;
                 u16_t     port_last;
-                err = INET_lwIP_status_to_errno(netconn_peer(inet->netconn, &addr_last, &port_last));
+                err = INET_lwIP_status_to_errno(netconn_peer(inet_sock->netconn,
+                                                             &addr_last,
+                                                             &port_last));
 
                 if (!err) {
 //                        err = INET_socket_connect(socket, to_addr);
@@ -634,33 +575,86 @@ int INET_gethostbyname(const char *name, NET_INET_sockaddr_t *sock_addr)
 //==============================================================================
 /**
  *
- * @param socket
+ * @param inet_sock
  * @param timeout
  * @return
  */
 //==============================================================================
-static int INET_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
+static int INET_socket_set_recv_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 {
-        INET_socket_t *inet = socket->ctx;
+        netconn_set_sendtimeout(inet_sock->netconn,timeout);    // function returns nothing
+        return ESUCC;
+}
 
-        return INET_lwIP_status_to_errno(netconn_set_sendtimeout(inet->netconn,
-                                                                 timeout));
+//==============================================================================
+/**
+ *
+ * @param inet_sock
+ * @param timeout
+ * @return
+ */
+//==============================================================================
+static int INET_socket_set_send_timeout(INET_socket_t *inet_sock, uint32_t timeout)
+{
+        netconn_set_recvtimeout(inet_sock->netconn,timeout);    // function returns nothing
+        return ESUCC;
 }
 
 //==============================================================================
 /**
  *
  * @param socket
- * @param timeout
+ * @param family
  * @return
  */
 //==============================================================================
-static int INET_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
+static int socket_alloc(SOCKET **socket, NET_family_t family)
 {
-        INET_socket_t *inet = socket->ctx;
+        static const uint8_t net_socket_size[_NET_FAMILY__COUNT] = {
+                [NET_FAMILY__INET] = _mm_align(sizeof(INET_socket_t)),
+        };
 
-        return INET_lwIP_status_to_errno(netconn_set_recvtimeout(inet->netconn,
-                                                                 timeout));
+        int err = _kzalloc(_MM_NET,
+                           _mm_align(sizeof(SOCKET)) + net_socket_size[family],
+                           cast(void**, socket));
+        if (!err) {
+                (*socket)->header.type = RES_TYPE_SOCKET;
+                (*socket)->family      = family;
+                (*socket)->ctx         = cast(void *,
+                                              cast(size_t, *socket)
+                                              + _mm_align(sizeof(SOCKET)));
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ */
+//==============================================================================
+static void socket_free(SOCKET **socket)
+{
+        (*socket)->header.type = RES_TYPE_UNKNOWN;
+        _kfree(_MM_NET, cast(void**, socket));
+        *socket = NULL;
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @return
+ */
+//==============================================================================
+static bool is_socket_valid(SOCKET *socket)
+{
+        return (socket != NULL)
+            && (socket->header.type == RES_TYPE_SOCKET)
+            && (socket->family < _NET_FAMILY__COUNT)
+            && (socket->ctx == cast(void *, cast(size_t, socket)
+                                          + _mm_align(sizeof(SOCKET))));
 }
 
 //==============================================================================
@@ -674,29 +668,15 @@ static int INET_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_ifup),
+        };
 
-        if (config) {
-                switch (family) {
-                case NET_FAMILY__INET:
-                        err = INET_ifup(config);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        return ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        return ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        return ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (family < _NET_FAMILY__COUNT && config) {
+                return call_proxy_function(family, config);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -708,20 +688,13 @@ int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 //==============================================================================
 int _net_ifdown(NET_family_t family)
 {
-        switch (family) {
-        case NET_FAMILY__INET:
-                return INET_ifdown();
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_ifdown),
+        };
 
-        case NET_FAMILY__CAN:
-                return ENOTSUP;
-
-        case NET_FAMILY__MICROLAN:
-                return ENOTSUP;
-
-        case NET_FAMILY__RFM:
-                return ENOTSUP;
-
-        default:
+        if (family < _NET_FAMILY__COUNT) {
+                return call_proxy_function(family);
+        } else {
                 return EINVAL;
         }
 }
@@ -735,26 +708,15 @@ int _net_ifdown(NET_family_t family)
 //==============================================================================
 int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 {
-        if (status) {
-                switch (family) {
-                case NET_FAMILY__INET:
-                        return INET_status(status);
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_ifstatus),
+        };
 
-                case NET_FAMILY__CAN:
-                        return ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        return ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        return ENOTSUP;
-
-                default:
-                        return EINVAL;
-                }
+        if (family < _NET_FAMILY__COUNT && status) {
+                return call_proxy_function(family, status);
+        } else {
+                return EINVAL;
         }
-
-        return EINVAL;
 }
 
 //==============================================================================
@@ -768,31 +730,21 @@ int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 //==============================================================================
 int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
 {
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_create),
+        };
+
         int err = EINVAL;
 
-        // TODO here socket_alloc() must be called
+        if (family < _NET_FAMILY__COUNT) {
+                err = socket_alloc(socket, family);
 
-        if (socket) {
-                switch (family) {
-                case NET_FAMILY__INET:
-                        if (  protocol == NET_PROTOCOL__UDP
-                           || protocol == NET_PROTOCOL__TCP) {
+                if (!err) {
+                        err = call_proxy_function(family, protocol, (*socket)->ctx);
 
-                                err = INET_socket_create(protocol, socket);
+                        if (err) {
+                                socket_free(socket);
                         }
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
                 }
         }
 
@@ -808,29 +760,16 @@ int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **so
 //==============================================================================
 int _net_socket_destroy(SOCKET *socket)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_destroy),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_destroy(socket);
-                        break;
 
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -844,29 +783,15 @@ int _net_socket_destroy(SOCKET *socket)
 //==============================================================================
 int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_bind),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_bind(socket, addr);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && addr) {
+                return call_proxy_function(socket->family, socket->ctx, addr);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -878,29 +803,15 @@ int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 //==============================================================================
 int _net_socket_listen(SOCKET *socket)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_listen),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_listen(socket);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -913,25 +824,24 @@ int _net_socket_listen(SOCKET *socket)
 //==============================================================================
 int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_accept),
+        };
+
         int err = EINVAL;
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_accept(socket, new_socket);
-                        break;
+        if (is_socket_valid(socket) && new_socket) {
 
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
+                err = socket_alloc(new_socket, socket->family);
 
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
+                if (!err) {
+                        err = call_proxy_function(socket->family,
+                                                  socket->ctx,
+                                                  (*new_socket)->ctx);
 
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
+                        if (err) {
+                                socket_free(new_socket);
+                        }
                 }
         }
 
@@ -950,29 +860,16 @@ int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_recv),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET && buf && len && recved) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_recv(socket, buf, len, flags, recved);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && buf && len && recved) {
+                return call_proxy_function(socket->family, socket->ctx, buf,
+                                           len, flags, recved);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -994,34 +891,16 @@ int _net_socket_recvfrom(SOCKET                 *socket,
                          NET_generic_sockaddr_t *sockaddr,
                          size_t                 *recved)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_recvfrom),
+        };
 
-        if (  socket
-           && socket->header.type == RES_TYPE_SOCKET
-           && buf
-           && len
-           && sockaddr
-           && recved) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_recvfrom(socket, buf, len, flags, sockaddr, recved);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && buf && len && sockaddr && recved) {
+                return call_proxy_function(socket->family, socket->ctx, buf,
+                                           len, flags, sockaddr, recved);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1036,29 +915,16 @@ int _net_socket_recvfrom(SOCKET                 *socket,
 //==============================================================================
 int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_send),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET && buf && len && sent) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_send(socket, buf, len, flags, sent);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && buf && len && sent) {
+                return call_proxy_function(socket->family, socket->ctx, buf,
+                                           len, flags, sent);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1078,35 +944,16 @@ int _net_socket_sendto(SOCKET                       *socket,
                        const NET_generic_sockaddr_t *to_addr,
                        size_t                       *sent)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_sendto),
+        };
 
-        if (  socket
-           && socket->header.type == RES_TYPE_SOCKET
-           && buf
-           && len
-           && to_addr
-           && sent) {
-
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_sendto(socket, buf, len, flags, to_addr, sent);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && buf && len && to_addr && sent) {
+                return call_proxy_function(socket->family, socket->ctx, buf,
+                                           len, flags, to_addr, sent);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1121,29 +968,15 @@ int _net_socket_sendto(SOCKET                       *socket,
 //==============================================================================
 int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_set_recv_timeout),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_set_recv_timeout(socket, timeout);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx, timeout);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1158,29 +991,15 @@ int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_set_send_timeout),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_set_send_timeout(socket, timeout);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx, timeout);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1194,29 +1013,15 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_connect),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET && addr) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_connect(socket, addr);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket) && addr) {
+                return call_proxy_function(socket->family, socket->ctx, addr);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1230,29 +1035,15 @@ int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 //==============================================================================
 int _net_socket_disconnect(SOCKET *socket)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_disconnect),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_disconnect(socket);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1266,29 +1057,15 @@ int _net_socket_disconnect(SOCKET *socket)
 //==============================================================================
 int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_shutdown),
+        };
 
-        if (socket && socket->header.type == RES_TYPE_SOCKET) {
-                switch (socket->family) {
-                case NET_FAMILY__INET:
-                        err = INET_socket_shutdown(socket, how);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (is_socket_valid(socket)) {
+                return call_proxy_function(socket->family, socket->ctx, how);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 //==============================================================================
@@ -1303,29 +1080,15 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 //==============================================================================
 int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockaddr_t *addr)
 {
-        int err = EINVAL;
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_gethostbyname),
+        };
 
-        if (name && addr) {
-                switch (family) {
-                case NET_FAMILY__INET:
-                        err = INET_gethostbyname(name, addr);
-                        break;
-
-                case NET_FAMILY__CAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__MICROLAN:
-                        err = ENOTSUP;
-
-                case NET_FAMILY__RFM:
-                        err = ENOTSUP;
-
-                default:
-                        err = EINVAL;
-                }
+        if (family < _NET_FAMILY__COUNT && name && addr) {
+                return call_proxy_function(family, name, addr);
+        } else {
+                return EINVAL;
         }
-
-        return err;
 }
 
 /*==============================================================================
