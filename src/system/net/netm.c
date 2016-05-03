@@ -28,8 +28,9 @@ Brief    Network management.
   Include files
 ==============================================================================*/
 #include "net/netm.h"
-
 #include "net/netman.h" // TODO
+#include "cpuctl.h"
+
 
 /*==============================================================================
   Local macros
@@ -627,6 +628,71 @@ static int INET_socket_set_send_timeout(INET_socket_t *inet_sock, uint32_t timeo
 //==============================================================================
 /**
  *
+ * @param value
+ * @return
+ */
+//==============================================================================
+static u16_t INET_hton_u16(u16_t value)
+{
+#if _CPUCTL_BYTE_ORDER == _BYTE_ORDER_LITTLE_ENDIAN
+        return ((value & 0x00FF) << 8)
+             | ((value & 0xFF00) >> 8);
+#elif _CPUCTL_BYTE_ORDER == _BYTE_ORDER_BIG_ENDIAN
+        return value;
+#else
+#error "Not supported endianness!"
+#endif
+}
+
+//==============================================================================
+/**
+ *
+ * @param value
+ * @return
+ */
+//==============================================================================
+static u32_t INET_hton_u32(u32_t value)
+{
+#if _CPUCTL_BYTE_ORDER == _BYTE_ORDER_LITTLE_ENDIAN
+        return ((value & 0x000000FFUL) << 24)
+             | ((value & 0x0000FF00UL) << 8)
+             | ((value & 0x00FF0000UL) >> 8)
+             | ((value & 0xFF000000UL) >> 24);
+#elif _CPUCTL_BYTE_ORDER == _BYTE_ORDER_BIG_ENDIAN
+        return value;
+#else
+#error "Not supported endianness!"
+#endif
+}
+
+//==============================================================================
+/**
+ *
+ * @param value
+ * @return
+ */
+//==============================================================================
+static u64_t INET_hton_u64(u64_t value)
+{
+#if _CPUCTL_BYTE_ORDER == _BYTE_ORDER_LITTLE_ENDIAN
+        return ((value & 0x00000000000000FFULL) << 56)
+             | ((value & 0x000000000000FF00ULL) << 40)
+             | ((value & 0x0000000000FF0000ULL) << 24)
+             | ((value & 0x00000000FF000000ULL) << 8)
+             | ((value & 0x000000FF00000000ULL) >> 8)
+             | ((value & 0x0000FF0000000000ULL) >> 24)
+             | ((value & 0x00FF000000000000ULL) >> 40)
+             | ((value & 0xFF00000000000000ULL) >> 56);
+#elif _CPUCTL_BYTE_ORDER == _BYTE_ORDER_BIG_ENDIAN
+        return value;
+#else
+#error "Not supported endianness!"
+#endif
+}
+
+//==============================================================================
+/**
+ *
  * @param socket
  * @param family
  * @return
@@ -1110,6 +1176,69 @@ int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockad
 
         if (family < _NET_FAMILY__COUNT && name && addr) {
                 return call_proxy_function(family, name, addr);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+u16_t _net_hton_u16(NET_family_t family, u16_t value)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_hton_u16),
+        };
+
+        if (family < _NET_FAMILY__COUNT) {
+                return call_proxy_function(family, value);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+u32_t _net_hton_u32(NET_family_t family, u32_t value)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_hton_u32),
+        };
+
+        if (family < _NET_FAMILY__COUNT) {
+                return call_proxy_function(family, value);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+u64_t _net_hton_u64(NET_family_t family, u64_t value)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_hton_u64),
+        };
+
+        if (family < _NET_FAMILY__COUNT) {
+                return call_proxy_function(family, value);
         } else {
                 return EINVAL;
         }

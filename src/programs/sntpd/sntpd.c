@@ -267,7 +267,7 @@ static int send_request(SOCKET *socket)
         global->pkt.settings.field.Poll      = 0;
         global->pkt.settings.field.Precision = 0;
         global->pkt.settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-        global->pkt.settings.word            = htonl(global->pkt.settings.word);
+        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET, global->pkt.settings.word);
 
         return socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
 }
@@ -286,14 +286,14 @@ static int receive_response(SOCKET *socket, time_t *timestamp)
         int sz = socket_recv(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__NONE);
         if (sz == sizeof(sntp_msg_t)) {
 
-                global->pkt.settings.word = ntohl(global->pkt.settings.word);
+                global->pkt.settings.word = ntoh_u32(NET_FAMILY__INET, global->pkt.settings.word);
 
                 if (  global->pkt.settings.field.Mode == Mode_Server
                    || global->pkt.settings.field.Mode == Mode_Broadcast) {
 
                         time_t ts = 0;
                         memcpy(&ts, &global->pkt.receive_timestamp, sizeof(time_t));
-                        ts         = ntohl(ts) - DIFF_SEC_1900_1970;
+                        ts         = ntoh_u32(NET_FAMILY__INET, ts) - DIFF_SEC_1900_1970;
                         *timestamp = ts;
 
                         err = 0;

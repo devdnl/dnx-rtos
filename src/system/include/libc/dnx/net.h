@@ -44,24 +44,17 @@ extern "C" {
 ==============================================================================*/
 #include <stdint.h>
 #include <kernel/syscall.h>
+#include <kernel/builtinfunc.h>
 #include <stddef.h>
-#include "net/netm.h"
+#include <net/netm.h>
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#include "lwip/def.h" // TODO must be defined in the network layer
-#define htons(x) lwip_htons(x)
-#define ntohs(x) lwip_ntohs(x)
-#define htonl(x) lwip_htonl(x)
-#define ntohl(x) lwip_ntohl(x)
-
-//#define hton_u16(NET_family_t family, u16_t value)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-
 
 /*==============================================================================
   Exported objects
@@ -463,6 +456,84 @@ static inline int get_host_by_name(NET_family_t            family,
         int result = -1;
         syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, sock_addr);
         return result;
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u16_t hton_u16(NET_family_t family, u16_t value)
+{
+        return _builtinfunc(net_hton_u16, family, value);
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u32_t hton_u32(NET_family_t family, u32_t value)
+{
+        return _builtinfunc(net_hton_u32, family, value);
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u64_t hton_u64(NET_family_t family, u64_t value)
+{
+        return _builtinfunc(net_hton_u64, family, value);
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
+{
+        return _builtinfunc(net_hton_u16, family, value);
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
+{
+        return _builtinfunc(net_hton_u32, family, value);
+}
+
+//==============================================================================
+/**
+ *
+ * @param family
+ * @param value
+ * @return
+ */
+//==============================================================================
+static inline u64_t ntoh_u64(NET_family_t family, u64_t value)
+{
+        return _builtinfunc(net_hton_u64, family, value);
 }
 
 #ifdef __cplusplus

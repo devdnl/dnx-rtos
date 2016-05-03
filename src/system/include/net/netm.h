@@ -153,24 +153,27 @@ typedef struct socket SOCKET;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int _net_ifup(NET_family_t, const NET_generic_config_t*);
-extern int _net_ifdown(NET_family_t);
-extern int _net_ifstatus(NET_family_t, NET_generic_status_t*);
-extern int _net_gethostbyname(NET_family_t, const char*, NET_generic_sockaddr_t*);
-extern int _net_socket_create(NET_family_t, NET_protocol_t, SOCKET**);
-extern int _net_socket_destroy(SOCKET*);
-extern int _net_socket_bind(SOCKET*, const NET_generic_sockaddr_t*);
-extern int _net_socket_listen(SOCKET*);
-extern int _net_socket_accept(SOCKET*, SOCKET**);
-extern int _net_socket_recv(SOCKET*, void*, size_t, NET_flags_t, size_t*);
-extern int _net_socket_recvfrom(SOCKET*, void*, size_t, NET_flags_t, NET_generic_sockaddr_t*, size_t*);
-extern int _net_socket_send(SOCKET*, const void*, size_t, NET_flags_t, size_t*);
-extern int _net_socket_sendto(SOCKET*, const void*, size_t, NET_flags_t, const NET_generic_sockaddr_t*, size_t*);
-extern int _net_socket_set_recv_timeout(SOCKET*, uint32_t);
-extern int _net_socket_set_send_timeout(SOCKET*, uint32_t);
-extern int _net_socket_connect(SOCKET*, const NET_generic_sockaddr_t*);
-extern int _net_socket_disconnect(SOCKET*);
-extern int _net_socket_shutdown(SOCKET*, NET_shut_t);
+extern int   _net_ifup(NET_family_t, const NET_generic_config_t*);
+extern int   _net_ifdown(NET_family_t);
+extern int   _net_ifstatus(NET_family_t, NET_generic_status_t*);
+extern int   _net_gethostbyname(NET_family_t, const char*, NET_generic_sockaddr_t*);
+extern int   _net_socket_create(NET_family_t, NET_protocol_t, SOCKET**);
+extern int   _net_socket_destroy(SOCKET*);
+extern int   _net_socket_bind(SOCKET*, const NET_generic_sockaddr_t*);
+extern int   _net_socket_listen(SOCKET*);
+extern int   _net_socket_accept(SOCKET*, SOCKET**);
+extern int   _net_socket_recv(SOCKET*, void*, size_t, NET_flags_t, size_t*);
+extern int   _net_socket_recvfrom(SOCKET*, void*, size_t, NET_flags_t, NET_generic_sockaddr_t*, size_t*);
+extern int   _net_socket_send(SOCKET*, const void*, size_t, NET_flags_t, size_t*);
+extern int   _net_socket_sendto(SOCKET*, const void*, size_t, NET_flags_t, const NET_generic_sockaddr_t*, size_t*);
+extern int   _net_socket_set_recv_timeout(SOCKET*, uint32_t);
+extern int   _net_socket_set_send_timeout(SOCKET*, uint32_t);
+extern int   _net_socket_connect(SOCKET*, const NET_generic_sockaddr_t*);
+extern int   _net_socket_disconnect(SOCKET*);
+extern int   _net_socket_shutdown(SOCKET*, NET_shut_t);
+extern u16_t _net_hton_u16(NET_family_t, u16_t);
+extern u32_t _net_hton_u32(NET_family_t, u32_t);
+extern u64_t _net_hton_u64(NET_family_t, u64_t);
 
 /*==============================================================================
   Exported inline functions
