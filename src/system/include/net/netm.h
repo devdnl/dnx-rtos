@@ -171,6 +171,7 @@ extern int   _net_socket_set_send_timeout(SOCKET*, uint32_t);
 extern int   _net_socket_connect(SOCKET*, const NET_generic_sockaddr_t*);
 extern int   _net_socket_disconnect(SOCKET*);
 extern int   _net_socket_shutdown(SOCKET*, NET_shut_t);
+extern int   _net_socket_getaddress(SOCKET*, NET_generic_sockaddr_t*);
 extern u16_t _net_hton_u16(NET_family_t, u16_t);
 extern u32_t _net_hton_u32(NET_family_t, u32_t);
 extern u64_t _net_hton_u64(NET_family_t, u64_t);

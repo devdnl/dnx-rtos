@@ -154,6 +154,7 @@ static void syscall_netdisconnect(syscallrq_t *rq);
 static void syscall_netshutdown(syscallrq_t *rq);
 static void syscall_netsendto(syscallrq_t *rq);
 static void syscall_netrecvfrom(syscallrq_t *rq);
+static void syscall_netgetaddress(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -240,6 +241,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETSHUTDOWN      ] = syscall_netshutdown,
         [SYSCALL_NETSENDTO        ] = syscall_netsendto,
         [SYSCALL_NETRECVFROM      ] = syscall_netrecvfrom,
+        [SYSCALL_NETGETADDRESS    ] = syscall_netgetaddress,
 };
 
 /*==============================================================================
@@ -1796,6 +1798,15 @@ static void syscall_netshutdown(syscallrq_t *rq)
         GETARG(NET_shut_t *, how);
 
         SETERRNO(_net_socket_shutdown(socket, *how));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+static void syscall_netgetaddress(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(NET_generic_sockaddr_t *, sockaddr);
+
+        SETERRNO(_net_socket_getaddress(socket, sockaddr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

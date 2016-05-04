@@ -31,21 +31,24 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <dnx/net.h>
 #include <dnx/thread.h>
-#include <sys/ioctl.h>
+#include <dnx/os.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define NUMBER_OF_CONNECTIONS           4
+#define NUMBER_OF_CONNECTIONS           3
 #define BUF_SIZE                        100
 #define PIPE_NAME_LEN                   24
 #define TELNET_CFG_BYTE                 0xFF
 #define PROGRAM_NAME                    "dsh"
 #define RECEIVE_TIMOUT                  100
 #define SEND_TIMEOUT                    3000
+#define TELNET_PORT                     23
 
 /*==============================================================================
   Local types, enums definitions
@@ -59,6 +62,21 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        const char *msg;
+        mutex_t    *mtx;
+        uint8_t     conn_cnt;
+        tid_t       thread_array[NUMBER_OF_CONNECTIONS];
+};
+
+
+static const NET_INET_sockaddr_t IP_ADDR_ANY = {
+        .addr = NET_INET_IPv4_ANY,
+        .port = TELNET_PORT
+};
+
+static const thread_attr_t thread_attr = {
+        .priority    = PRIORITY_NORMAL,
+        .stack_depth = STACK_DEPTH_LOW
 };
 
 /*==============================================================================
@@ -77,145 +95,164 @@ GLOBAL_VARIABLES_SECTION {
  * @return On success pointer to name buffer is returned, otherwise NULL.
  */
 //==============================================================================
-//static char *create_and_open_pipe(net_conn_t *conn, char c, FILE **f)
-//{
-//        char *name = calloc(1, PIPE_NAME_LEN);
-//        if (name) {
-//                snprintf(name, PIPE_NAME_LEN, "/tmp/tn%x%c", conn, c);
-//
-//                if (mkfifo(name, 0666) == 0) {
-//                        *f = fopen(name, "r+");
-//                        if (*f) {
-//                                return name;
-//                        }
-//
-//                        remove(name);
-//                }
-//
-//                free(name);
-//                name = NULL;
-//        }
-//
-//        return name;
-//}
-//
-////==============================================================================
-///**
-// * @brief  Telnet thread
-// * @param  arg   thread argument - connection
-// * @return None
-// */
-////==============================================================================
-//static void telnet_thread(void *arg)
-//{
-//        net_err_t   err           = NET_ERR_OK;
-//        net_conn_t *conn          = arg;
-//        FILE       *fin           = NULL;
-//        FILE       *fout          = NULL;
-//        char       *strout        = NULL;
-//        prog_t     *prog          = NULL;
-//        char       *pipe_in_name  = NULL;
-//        char       *pipe_out_name = NULL;
-//        net_ip_t    ip;
-//        u16_t       port;
-//
-//        // create buffer for program output data
-//        strout = malloc(BUF_SIZE);
-//        if (!strout)
-//                goto exit;
-//
-//        // create program input pipe
-//        pipe_in_name = create_and_open_pipe(conn, 'i', &fin);
-//        if (!pipe_in_name)
-//                goto exit;
-//
-//        // create program output pipe
-//        pipe_out_name = create_and_open_pipe(conn, 'o', &fout);
-//        if (!pipe_out_name)
-//                goto exit;
-//
-//        // start program
-//        prog = program_new(PROGRAM_NAME, "/", fin, fout, fout);
-//        if (!prog)
-//                goto exit;
-//
-//        // handle telnet connection
-//        while (err != NET_ERR_CONNECTION_CLOSED) {
-//                net_conn_set_receive_timeout(conn, RECEIVE_TIMOUT);
-//                net_conn_set_send_timeout(conn, SEND_TIMEOUT);
-//
-//                // receive input packet from telnet client
-//                net_buf_t *rx_buffer;
-//                err = net_conn_receive(conn, &rx_buffer);
-//                if (err == NET_ERR_OK) {
-//                        char *string; u16_t len;
-//                        if (net_buf_data(rx_buffer, (void *)&string, &len) == NET_ERR_OK) {
-//
-//                                if (string[0] != TELNET_CFG_BYTE) {
-//                                        // repleace \r\n to \n
-//                                        if (string[len - 1] == '\n' && string[len - 2] == '\r') {
-//                                                string[len - 2] = '\n';
-//                                                string[len - 1] = '\0';
-//                                        }
-//
-//                                        len = strnlen(string, len);
-//                                        fwrite(string, 1, len, fin);
-//                                }
-//                        }
-//
-//                        net_buf_delete(rx_buffer);
-//                }
-//
-//                // send data from started program
-//                int n;
-//                do {
-//                        ioctl(fout, IOCTL_VFS__NON_BLOCKING_RD_MODE);
-//                        n = fread(strout, 1, BUF_SIZE, fout);
-//                        if (n) {
-//                                err = net_conn_write(conn, strout, n, NET_CONN_FLAG_COPY);
-//                        }
-//                } while (n);
-//
-//                // check if program is finished
-//                if (program_is_closed(prog)) {
-//                        err = NET_ERR_CONNECTION_CLOSED;
-//                }
-//        }
-//
-//        exit:
-//        net_conn_get_address(conn, &ip, &port, false);
-//        net_conn_delete(conn);
-//
-//        if (strout)
-//                free(strout);
-//
-//        if (fin)
-//                fclose(fin);
-//
-//        if (fout)
-//                fclose(fout);
-//
-//        if (prog) {
-//                program_kill(prog);
-//                program_delete(prog);
-//        }
-//
-//        if (pipe_in_name) {
-//                remove(pipe_in_name);
-//                free(pipe_in_name);
-//        }
-//
-//        if (pipe_out_name) {
-//                remove(pipe_out_name);
-//                free(pipe_out_name);
-//        }
-//
-//        printf("Connection closed: %d.%d.%d.%d\n",
-//               net_IP_get_part_a(&ip),
-//               net_IP_get_part_b(&ip),
-//               net_IP_get_part_c(&ip),
-//               net_IP_get_part_d(&ip));
-//}
+static char *create_and_open_pipe(SOCKET *socket, char c, FILE **f)
+{
+        char *name = calloc(1, PIPE_NAME_LEN);
+        if (name) {
+                snprintf(name, PIPE_NAME_LEN, "/tmp/tn%x%c", cast(int, socket), c);
+
+                if (mkfifo(name, 0666) == 0) {
+                        *f = fopen(name, "r+");
+                        if (*f) {
+                                return name;
+                        }
+
+                        remove(name);
+                }
+
+                free(name);
+                name = NULL;
+        }
+
+        return name;
+}
+
+//==============================================================================
+/**
+ * @brief Function replaces CRLF line ending by LF.
+ * @param buf   buffer to modify
+ * @param len   buffer length
+ */
+//==============================================================================
+static void replace_CRLF_by_LF(char *buf, size_t len)
+{
+        if (buf[len - 1] == '\n' && buf[len - 2] == '\r') {
+                buf[len - 2] = '\n';
+                buf[len - 1] = '\0';
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Telnet thread
+ * @param  arg   thread argument - connection
+ * @return None
+ */
+//==============================================================================
+static void telnet_thread(void *arg)
+{
+        SOCKET *sock          = arg;
+        FILE   *fin           = NULL;
+        FILE   *fout          = NULL;
+        char   *buf           = NULL;
+        pid_t   proc          = 0;
+        char   *pipe_in_name  = NULL;
+        char   *pipe_out_name = NULL;
+
+        // create buffer for program output data
+        buf = malloc(BUF_SIZE);
+        if (!buf)
+                goto exit;
+
+        // create program input pipe
+        pipe_in_name = create_and_open_pipe(sock, 'i', &fin);
+        if (!pipe_in_name)
+                goto exit;
+
+        // create program output pipe
+        pipe_out_name = create_and_open_pipe(sock, 'o', &fout);
+        if (!pipe_out_name)
+                goto exit;
+
+        // start program
+        process_attr_t process_attr = {
+                .cwd = "/",
+                .f_stderr   = fout,
+                .f_stdout   = fout,
+                .f_stdin    = fin,
+                .priority   = PRIORITY_NORMAL,
+                .has_parent = true
+        };
+
+        proc = process_create(PROGRAM_NAME, &process_attr);
+        if (proc == 0)
+                goto exit;
+
+        socket_set_recv_timeout(sock, RECEIVE_TIMOUT);
+        socket_set_send_timeout(sock, SEND_TIMEOUT);
+
+        // handle telnet connection
+        while (true) {
+                // receive input packet from telnet client
+                errno = 0;
+                int len = socket_read(sock, buf, BUF_SIZE);
+
+                if ((len == -1) && (errno != ETIME)) {
+                        break;
+                }
+
+                // write incoming data to running program
+                if (len > 0 && buf[0] != TELNET_CFG_BYTE) {
+                        replace_CRLF_by_LF(buf, len);
+                        len = strnlen(buf, len);
+                        fwrite(buf, 1, len, fin);
+
+                }
+
+                // send data from running program
+                do {
+                        ioctl(fout, IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                        len = fread(buf, 1, BUF_SIZE, fout);
+                        if (len > 0) {
+                                len = socket_write(sock, buf, len);
+                        }
+                } while (len > 0);
+
+                // check if program is finished
+                if (process_wait(proc, NULL, 0) == 0) {
+                        break;
+                }
+        }
+
+exit:
+        if (buf)
+                free(buf);
+
+        if (fin)
+                fclose(fin);
+
+        if (fout)
+                fclose(fout);
+
+        if (proc) {
+                process_kill(proc, NULL);
+        }
+
+        if (pipe_in_name) {
+                remove(pipe_in_name);
+                free(pipe_in_name);
+        }
+
+        if (pipe_out_name) {
+                remove(pipe_out_name);
+                free(pipe_out_name);
+        }
+
+        NET_INET_sockaddr_t sockaddr;
+        socket_get_address(sock, &sockaddr);
+        printf("Connection closed: %d.%d.%d.%d\n",
+               NET_INET_IPv4_a(sockaddr.addr),
+               NET_INET_IPv4_b(sockaddr.addr),
+               NET_INET_IPv4_c(sockaddr.addr),
+               NET_INET_IPv4_d(sockaddr.addr));
+
+        if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
+                global->conn_cnt--;
+                mutex_unlock(global->mtx);
+        }
+
+        socket_delete(sock);
+}
 
 //==============================================================================
 /**
@@ -232,80 +269,97 @@ int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-#warning telnetd: TODO network sockets
+        errno = 0;
 
-//        errno = 0;
-//
-//        thread_t *thread[NUMBER_OF_CONNECTIONS];
-//        for (int i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
-//                thread[i] = NULL;
-//        }
-//
-//        net_conn_t *listener = net_conn_new(NET_CONN_TYPE_TCP);
-//        if (!listener) {
-//                puts("Connection failed");
-//                goto exit;
-//        }
-//
-//        if (net_conn_bind(listener, (net_ip_t *)&ip_addr_any, 23) != NET_ERR_OK) {
-//                puts("Bind failed");
-//                goto exit;
-//        }
-//
-//        if (net_conn_listen(listener) != NET_ERR_OK) {
-//                puts("Listen error");
-//                goto exit;
-//        }
-//
-//        for (;;) {
-//                net_conn_t *new_conn ;
-//                if (net_conn_accept(listener, &new_conn) != NET_ERR_OK) {
-//                        puts("Connection accept error");
-//                        continue;
-//                }
-//
-//                bool thread_created = false;
-//                for (int i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
-//                        if (thread[i] == NULL) {
-//                                errno = 0;
-//                                thread[i] = thread_new(telnet_thread, STACK_DEPTH_LOW, new_conn);
-//                                if (thread[i] == NULL) {
-//                                        perror(NULL);
-//                                        net_conn_delete(new_conn);
-//                                } else {
-//                                        net_ip_t ip;
-//                                        u16_t    port;
-//                                        net_conn_get_address(new_conn, &ip, &port, false);
-//
-//                                        printf("New connection: %d.%d.%d.%d\n",
-//                                               net_IP_get_part_a(&ip),
-//                                               net_IP_get_part_b(&ip),
-//                                               net_IP_get_part_c(&ip),
-//                                               net_IP_get_part_d(&ip));
-//
-//                                        thread_created = true;
-//                                        break;
-//                                }
-//                        } else {
-//                                if (thread_is_finished(thread[i])) {
-//                                        thread_delete(thread[i]);
-//                                        thread[i] = NULL;
-//                                        i--;
-//                                }
-//                        }
-//                }
-//
-//                if (!thread_created) {
-//                        puts("Reached maximum number of connections");
-//                        net_conn_delete(new_conn);
-//                }
-//        }
-//
-//exit:
-//        if (listener) {
-//                net_conn_delete(listener);
-//        }
+        SOCKET *listener = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        if (!listener) {
+                global->msg = "Connection failed";
+                goto exit;
+        }
 
+        global->mtx = mutex_new(MUTEX_TYPE_NORMAL);
+        if (!global->mtx) {
+                global->msg = "Mutex not created";
+                goto exit;
+        }
+
+        if (socket_bind(listener, &IP_ADDR_ANY) != 0) {
+                global->msg = "Bind failed";
+                goto exit;
+        }
+
+        if (socket_listen(listener) != 0) {
+                global->msg = "Listen error";
+                goto exit;
+        }
+
+        for (;;) {
+                puts("Waiting for connection...");
+
+                // wait for connection
+                SOCKET *client = NULL;
+                if (socket_accept(listener, &client) != 0) {
+                        puts("Connection accept error");
+                        continue;
+                }
+
+                // close finished threads
+                for (uint8_t i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
+                        if (thread_join2(global->thread_array[i], 10) == 0) {
+                                global->thread_array[i] = 0;
+                        }
+                }
+
+                // check number of connections
+                if (global->conn_cnt >= NUMBER_OF_CONNECTIONS) {
+                        puts("Reached maximum number of connections.");
+                        socket_delete(client);
+                        continue;
+                }
+
+                // find empty thread slot
+                for (uint8_t i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
+                        if (global->thread_array[i] != 0) {
+                                continue;
+                        }
+
+                        // create new thread to handle connection
+                        tid_t tid = thread_create(telnet_thread, &thread_attr, client);
+                        if (tid != 0) {
+
+                                global->thread_array[i] = tid;
+
+                                if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
+                                        global->conn_cnt++;
+                                        mutex_unlock(global->mtx);
+                                }
+
+                                NET_INET_sockaddr_t addr;
+                                socket_get_address(client, &addr);
+
+                                printf("New connection from: %d.%d.%d.%d\n",
+                                       NET_INET_IPv4_a(addr.addr),
+                                       NET_INET_IPv4_b(addr.addr),
+                                       NET_INET_IPv4_c(addr.addr),
+                                       NET_INET_IPv4_d(addr.addr));
+                        }
+
+                        break;
+                }
+        }
+
+exit:
+        if (errno) {
+                perror(global->msg);
+        }
+
+        if (listener) {
+                socket_delete(listener);
+        }
+
+        if (global->mtx) {
+                mutex_delete(global->mtx);
+        }
 
         return EXIT_FAILURE;
 }

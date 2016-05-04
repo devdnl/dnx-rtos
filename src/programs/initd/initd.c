@@ -253,6 +253,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 result = mount("ramfs", "", "/");
 
                 result = mkdir("/dev", 0777);
+                mkdir("/tmp", 0777);
 //                result = mkdir("/proc", 0777);
 
 //                result = mount("devfs", "", "/dev");

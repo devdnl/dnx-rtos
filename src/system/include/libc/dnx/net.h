@@ -327,7 +327,6 @@ static inline int socket_recvfrom(SOCKET                 *socket,
  * @param  len          The length of the buffer to send.
  * @param  flags        Flags parameters that can be OR'ed together.
  * @param  to_sockaddr  The address to send the data to.
- * @param  to_addr_sz   The size of address.
  *
  * @return Number of bytes actually sent on the socket, or -1 on error and
  *         @ref errno value is set appropriately.
@@ -439,6 +438,20 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
         int result = -1;
         syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
+{
+        int result = -1;
+        syscall(SYSCALL_NETGETADDRESS, &result, socket, addr);
         return result;
 }
 

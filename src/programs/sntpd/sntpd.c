@@ -291,10 +291,8 @@ static int receive_response(SOCKET *socket, time_t *timestamp)
                 if (  global->pkt.settings.field.Mode == Mode_Server
                    || global->pkt.settings.field.Mode == Mode_Broadcast) {
 
-                        time_t ts = 0;
-                        memcpy(&ts, &global->pkt.receive_timestamp, sizeof(time_t));
-                        ts         = ntoh_u32(NET_FAMILY__INET, ts) - DIFF_SEC_1900_1970;
-                        *timestamp = ts;
+                        *timestamp = ntoh_u32(NET_FAMILY__INET, global->pkt.receive_timestamp)
+                                   - DIFF_SEC_1900_1970;
 
                         err = 0;
                 }

@@ -396,6 +396,7 @@ static int INET_socket_recv(INET_socket_t *inet_sock,
 
                         netbuf_delete(inet_sock->netbuf);
                         inet_sock->netbuf = NULL;
+                        inet_sock->seek   = 0;
                 }
         }
 
@@ -607,7 +608,7 @@ int INET_gethostbyname(const char *name, NET_INET_sockaddr_t *sock_addr)
 //==============================================================================
 static int INET_socket_set_recv_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 {
-        netconn_set_sendtimeout(inet_sock->netconn,timeout);    // function returns nothing
+        netconn_set_recvtimeout(inet_sock->netconn,timeout);    // function returns nothing
         return ESUCC;
 }
 
@@ -621,8 +622,30 @@ static int INET_socket_set_recv_timeout(INET_socket_t *inet_sock, uint32_t timeo
 //==============================================================================
 static int INET_socket_set_send_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 {
-        netconn_set_recvtimeout(inet_sock->netconn,timeout);    // function returns nothing
+        netconn_set_sendtimeout(inet_sock->netconn,timeout);    // function returns nothing
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ *
+ * @param inet_sock
+ * @param timeout
+ * @return
+ */
+//==============================================================================
+static int INET_socket_getaddress(INET_socket_t *inet_sock, NET_INET_sockaddr_t *sockaddr)
+{
+        ip_addr_t lwip_addr;
+        int err = INET_lwIP_status_to_errno(
+                netconn_getaddr(inet_sock->netconn, &lwip_addr, &sockaddr->port, 0)
+        );
+
+        if (!err) {
+                INET_addr_from_lwIP(&sockaddr->addr, &lwip_addr);
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -1153,6 +1176,27 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 
         if (is_socket_valid(socket)) {
                 return call_proxy_function(socket->family, socket->ctx, how);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ *
+ * @param socket
+ * @param sockaddr
+ * @return
+ */
+//==============================================================================
+int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_getaddress),
+        };
+
+        if (is_socket_valid(socket) && sockaddr) {
+                return call_proxy_function(socket->family, socket->ctx, sockaddr);
         } else {
                 return EINVAL;
         }
