@@ -877,12 +877,16 @@ int _net_socket_destroy(SOCKET *socket)
                 PROXY_ADD_FAMILY(INET, INET_socket_destroy),
         };
 
+        int err = EINVAL;
 
         if (is_socket_valid(socket)) {
-                return call_proxy_function(socket->family, socket->ctx);
-        } else {
-                return EINVAL;
+                err = call_proxy_function(socket->family, socket->ctx);
+                if (!err) {
+                        socket_free(&socket);
+                }
         }
+
+        return err;
 }
 
 //==============================================================================
