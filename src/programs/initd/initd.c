@@ -355,7 +355,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty0",
                        .p_stdin    = "/dev/tty0",
                        .p_stdout   = "/dev/tty0"
@@ -367,7 +367,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty1",
                        .p_stdin    = "/dev/tty1",
                        .p_stdout   = "/dev/tty1"
@@ -379,7 +379,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty2",
                        .p_stdin    = "/dev/tty2",
                        .p_stdout   = "/dev/tty2"

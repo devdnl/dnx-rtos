@@ -80,7 +80,7 @@ struct _process {
         u16_t            CPU_load;              /* CPU load (10 = 1%)                   */
         u8_t             argc;                  /* number of arguments                  */
         i8_t             status;                /* program status (return value)        */
-        bool             has_parent:1;          /* process has parent                   */
+        bool             detached:1;            /* independent process (no parent)      */
         bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
@@ -256,7 +256,7 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
                                 *status = process->status;
                         }
 
-                        process->has_parent = false;
+                        process->detached = true;
                         process_destroy_all_resources(process);
 
                         process->header.next = NULL;
@@ -1165,10 +1165,10 @@ USERSPACE static void process_code(void *mainfn)
 
         proc->status = funcmain(proc->argc, proc->argv);
 
-        if (proc->has_parent) {
-                syscall(SYSCALL_EXIT, NULL, &proc->status);
-        } else {
+        if (proc->detached) {
                 syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
+        } else {
+                syscall(SYSCALL_EXIT, NULL, &proc->status);
         }
 
         /* should never achieve this function */
@@ -1265,12 +1265,12 @@ static void process_destroy_all_resources(_process_t *proc)
         }
 
         if (proc->exit_sem) {
-                if (proc->has_parent) {
-                        _semaphore_signal(proc->exit_sem);
-                        proc->has_parent = false;
-                } else {
+                if (proc->detached) {
                         _semaphore_destroy(proc->exit_sem);
-                        proc->exit_sem   = NULL;
+                        proc->exit_sem = NULL;
+                } else {
+                        _semaphore_signal(proc->exit_sem);
+                        proc->detached = true;
                 }
         }
 
@@ -1393,6 +1393,9 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 {
         int result = ESUCC;
 
+        // by default process is detached
+        proc->detached = true;
+
         if (attr) {
                 /*
                  * Apply stdin settings
@@ -1467,7 +1470,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 /*
                  * Create exit semaphore object if parent exists
                  */
-                if (attr->has_parent) {
+                if (attr->detached == false) {
                         result = _semaphore_create(1, 0, &proc->exit_sem);
                         if (result != ESUCC) {
                                 goto finish;
@@ -1477,7 +1480,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 /*
                  * Apply no-parent attribute
                  */
-                proc->has_parent = attr->has_parent;
+                proc->detached = attr->detached;
 
                 /*
                  * Apply Current Working Directory path

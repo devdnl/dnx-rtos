@@ -118,7 +118,7 @@ typedef struct {
         const char *p_stderr;           //!< stderr file path (minor)
         const char *cwd;                //!< working directory path
         i16_t       priority;           //!< process priority
-        bool        has_parent;         //!< parent exist and is waiting for this process
+        bool        detached;           //!< independent process (no parent)
 } process_attr_t;
 
 /** USERSPACE: process attributes */
@@ -130,7 +130,7 @@ typedef struct {
         u16_t       files_count;        //!< number of opened files
         u16_t       dir_count;          //!< number of opened directories
         u16_t       mutexes_count;      //!< number of used mutexes
-        u16_t       semaphores_count;   //!< number of used sempahores
+        u16_t       semaphores_count;   //!< number of used semaphores
         u16_t       queue_count;        //!< number of used queues
         u16_t       socket_count;       //!< number of used sockets
         u16_t       threads_count;      //!< number of threads
@@ -138,13 +138,14 @@ typedef struct {
         u16_t       stack_size;         //!< stack size
         u16_t       stack_max_usage;    //!< max stack usage
         i16_t       priority;           //!< priority
-        bool        zombie;             //!< process finished and wait for destory
+        bool        zombie;             //!< process finished and wait for destroy
 } process_stat_t;
 
 /** USERSPACE: thread attributes */
 typedef struct {
         size_t stack_depth;             //!< stack depth
         i16_t  priority;                //!< thread priority
+        bool   detached;                //!< independent thread (without join possibility)
 } thread_attr_t;
 
 /** USERSPACE: average CPU load */

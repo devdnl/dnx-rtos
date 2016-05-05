@@ -486,7 +486,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = pipe;
                 global->pidmaster_attr.f_stderr   = pipe;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -498,7 +498,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidslave_attr.f_stdout   = fout;
                 global->pidslave_attr.f_stderr   = fout;
                 global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
@@ -516,7 +516,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = pipe;
                 global->pidmaster_attr.f_stderr   = pipe;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -528,7 +528,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidslave_attr.f_stdout   = stdout;
                 global->pidslave_attr.f_stderr   = stderr;
                 global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
@@ -546,7 +546,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = fout;
                 global->pidmaster_attr.f_stderr   = fout;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -561,7 +561,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = stdout;
                 global->pidmaster_attr.f_stderr   = stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
