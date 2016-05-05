@@ -852,6 +852,9 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
                         if (target->type == FILE_TYPE_DRV) {
                                 result = sys_driver_close((dev_t)target->data, force);
 
+                        } else if (target->type == FILE_TYPE_PIPE) {
+                                result = sys_pipe_close(target->data);
+
                         } else {
                                 /* file to remove, check if other task does not opens this file */
                                 if (opened_file->remove_at_close == true) {

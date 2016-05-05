@@ -65,7 +65,6 @@ GLOBAL_VARIABLES_SECTION {
         const char *msg;
         mutex_t    *mtx;
         uint8_t     conn_cnt;
-        tid_t       thread_array[NUMBER_OF_CONNECTIONS];
 };
 
 
@@ -76,7 +75,8 @@ static const NET_INET_sockaddr_t IP_ADDR_ANY = {
 
 static const thread_attr_t thread_attr = {
         .priority    = PRIORITY_NORMAL,
-        .stack_depth = STACK_DEPTH_LOW
+        .stack_depth = STACK_DEPTH_LOW,
+        .detached    = true
 };
 
 /*==============================================================================
@@ -149,6 +149,22 @@ static void telnet_thread(void *arg)
         char   *pipe_in_name  = NULL;
         char   *pipe_out_name = NULL;
 
+        // increase number of threads
+        if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
+                global->conn_cnt++;
+                mutex_unlock(global->mtx);
+        }
+
+        // print client IP
+        NET_INET_sockaddr_t addr;
+        socket_get_address(sock, &addr);
+
+        printf("New connection from: %d.%d.%d.%d\n",
+               NET_INET_IPv4_a(addr.addr),
+               NET_INET_IPv4_b(addr.addr),
+               NET_INET_IPv4_c(addr.addr),
+               NET_INET_IPv4_d(addr.addr));
+
         // create buffer for program output data
         buf = malloc(BUF_SIZE);
         if (!buf)
@@ -167,11 +183,11 @@ static void telnet_thread(void *arg)
         // start program
         process_attr_t process_attr = {
                 .cwd = "/",
-                .f_stderr   = fout,
-                .f_stdout   = fout,
-                .f_stdin    = fin,
-                .priority   = PRIORITY_NORMAL,
-                .has_parent = true
+                .f_stderr = fout,
+                .f_stdout = fout,
+                .f_stdin  = fin,
+                .priority = PRIORITY_NORMAL,
+                .detached = false
         };
 
         proc = process_create(PROGRAM_NAME, &process_attr);
@@ -246,12 +262,12 @@ exit:
                NET_INET_IPv4_c(sockaddr.addr),
                NET_INET_IPv4_d(sockaddr.addr));
 
+        socket_delete(sock);
+
         if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
                 global->conn_cnt--;
                 mutex_unlock(global->mtx);
         }
-
-        socket_delete(sock);
 }
 
 //==============================================================================
@@ -303,13 +319,6 @@ int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
                         continue;
                 }
 
-                // close finished threads
-                for (uint8_t i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
-                        if (thread_join2(global->thread_array[i], 10) == 0) {
-                                global->thread_array[i] = 0;
-                        }
-                }
-
                 // check number of connections
                 if (global->conn_cnt >= NUMBER_OF_CONNECTIONS) {
                         puts("Reached maximum number of connections.");
@@ -317,34 +326,9 @@ int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
                         continue;
                 }
 
-                // find empty thread slot
-                for (uint8_t i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
-                        if (global->thread_array[i] != 0) {
-                                continue;
-                        }
-
-                        // create new thread to handle connection
-                        tid_t tid = thread_create(telnet_thread, &thread_attr, client);
-                        if (tid != 0) {
-
-                                global->thread_array[i] = tid;
-
-                                if (mutex_lock(global->mtx, MAX_DELAY_MS)) {
-                                        global->conn_cnt++;
-                                        mutex_unlock(global->mtx);
-                                }
-
-                                NET_INET_sockaddr_t addr;
-                                socket_get_address(client, &addr);
-
-                                printf("New connection from: %d.%d.%d.%d\n",
-                                       NET_INET_IPv4_a(addr.addr),
-                                       NET_INET_IPv4_b(addr.addr),
-                                       NET_INET_IPv4_c(addr.addr),
-                                       NET_INET_IPv4_d(addr.addr));
-                        }
-
-                        break;
+                // create new thread to handle connection
+                if (thread_create(telnet_thread, &thread_attr, client) == 0) {
+                        puts("Thread not started");
                 }
         }
 

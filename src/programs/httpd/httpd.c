@@ -120,6 +120,15 @@ static const char INDEX_HTML[] =
 //==============================================================================
 static void serve(SOCKET *socket)
 {
+        NET_INET_sockaddr_t addr;
+        socket_get_address(socket, &addr);
+
+        printf("New connection from: %d.%d.%d.%d\n",
+               NET_INET_IPv4_a(addr.addr),
+               NET_INET_IPv4_b(addr.addr),
+               NET_INET_IPv4_c(addr.addr),
+               NET_INET_IPv4_d(addr.addr));
+
         int sz = socket_recv(socket, global->buf, sizeof(global->buf), NET_FLAGS__FREEBUF);
         if (sz >= 5 && isstreqn("GET /", global->buf, 5)) {
                 socket_send(socket, HTTP_HTML_HDR, sizeof(HTTP_HTML_HDR) - 1, NET_FLAGS__NOCOPY);

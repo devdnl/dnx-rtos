@@ -243,7 +243,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
         if (node->type == FILE_TYPE_DRV) {
                 status = sys_driver_close(node->IF.drv, force);
         } else if (node->type == FILE_TYPE_PIPE) {
-                status = ESUCC;
+                status = sys_pipe_close(node->IF.pipe);
         } else {
                 status = ENOENT;
         }
