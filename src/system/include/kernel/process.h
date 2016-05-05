@@ -193,6 +193,7 @@ extern sem_t      *_process_get_syscall_sem_by_task     (task_t*);
 extern int         _process_set_syscall_sem_by_task     (task_t*, sem_t*);
 extern int         _process_set_syscall_pending_flag    (task_t*, bool);
 extern int         _process_get_syscall_pending_flag    (task_t*, bool*);
+extern int         _process_get_detached_flag           (task_t*, bool*);
 extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, bool, void*, tid_t*, task_t**);
 extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
 extern _thread_t  *_process_thread_get_container_by_task(task_t *taskhdl);

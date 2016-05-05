@@ -93,6 +93,7 @@ struct _thread {
         sem_t           *syscall_sem;           /* syscall semaphore                    */
         size_t           stack_depth;           /* stack size                           */
         tid_t            tid;                   /* thread ID                            */
+        bool             detached:1;            /* independent thread (no join)         */
         bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
@@ -803,7 +804,7 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
 
 //==============================================================================
 /**
- * @brief  Function set syscall in progress flag
+ * @brief  Function get syscall progress flag
  *
  * @param  taskhdl      task
  * @param  state        flag state
@@ -825,6 +826,38 @@ KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
 
                         } else if (res->type == RES_TYPE_THREAD) {
                                 *state = cast(_thread_t*, res)->syscall_pending;
+                                result = ESUCC;
+                        }
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get detached flag.
+ *
+ * @param  taskhdl      task
+ * @param  state        flag state
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_detached_flag(task_t *taskhdl, bool *state)
+{
+        int result = EINVAL;
+
+        if (state) {
+                ATOMIC {
+                        res_header_t *res = _task_get_tag(taskhdl);
+
+                        if (res->type == RES_TYPE_PROCESS) {
+                                *state = cast(_process_t*, res)->detached;
+                                result = ESUCC;
+
+                        } else if (res->type == RES_TYPE_THREAD) {
+                                *state = cast(_thread_t*, res)->detached;
                                 result = ESUCC;
                         }
                 }
@@ -867,9 +900,13 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         thread->arg         = arg;
 
                         if (sys == false) {
-                                result = _semaphore_create(1, 0, &thread->exit_sem);
-                                if (result != ESUCC)
-                                        goto finish;
+                                thread->detached = attr->detached;
+
+                                if (!attr->detached) {
+                                        result = _semaphore_create(1, 0, &thread->exit_sem);
+                                        if (result != ESUCC)
+                                                goto finish;
+                                }
 
                                 result = _semaphore_create(1, 0, &thread->syscall_sem);
                                 if (result != ESUCC)
@@ -1192,8 +1229,11 @@ USERSPACE static void thread_code(void *thrfunc)
         func(thread->arg);
 
         if (thread->exit_sem) {
-                // userspace thread
                 syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
+
+        } else if (thread->detached) {
+                syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
+
         } else {
                 // system thread
                 thread->task = NULL;    // object release at the end of thread

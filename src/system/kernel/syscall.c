@@ -1396,12 +1396,21 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 
         task_t *task = NULL;
         if (_process_thread_get_task(GETTHREAD(*tid), &task) == ESUCC) {
-                bool flag = true;
-                if (_process_get_syscall_pending_flag(task, &flag) == ESUCC && flag == false) {
+                bool syscall_pending = true;
+                bool detached        = false;
+
+                if (  (  (_process_get_detached_flag(task, &detached) == ESUCC)
+                      && (detached == true)  )
+                   ||
+                      (  (_process_get_syscall_pending_flag(task, &syscall_pending) == ESUCC)
+                      && (syscall_pending == false)  )  ) {
+
                         SETERRNO(_process_release_resource(GETPROCESS(),
                                                            cast(res_header_t*, GETTHREAD(*tid)),
                                                            RES_TYPE_THREAD));
+
                         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
                 } else {
                         SETRETURN(int, EAGAIN);
                 }
