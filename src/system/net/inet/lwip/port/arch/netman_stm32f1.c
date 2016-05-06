@@ -27,12 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <dnx/os.h>
-#include <dnx/misc.h>
 #include "kernel/sysfunc.h"
 #include "drivers/ioctl_requests.h"
 #include "netif/etharp.h"
@@ -211,7 +206,7 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
                         r = sys_ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
-                        msleep(10);
+                        sys_msleep(10);
                 }
         }
 

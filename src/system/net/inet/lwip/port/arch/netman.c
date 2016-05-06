@@ -493,7 +493,7 @@ int _netman_get_ifconfig(_ifconfig_t *ifcfg)
 
         if (netman && ifcfg) {
 
-                ifcfg->hw_address[0] = 0x50;
+                ifcfg->hw_address[0] = 0x50; // TODO
                 ifcfg->hw_address[1] = 0x51;
                 ifcfg->hw_address[2] = 0x52;
                 ifcfg->hw_address[3] = 0x53;

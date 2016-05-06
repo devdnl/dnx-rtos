@@ -63,7 +63,7 @@ extern "C" {
 /** @addtogroup dnx-net-h
  * @{ */
 typedef enum {
-        NET_FAMILY__INET,
+        NET_FAMILY__INET, // TODO DNX network using pipe system (step to remove mbus library).
         _NET_FAMILY__COUNT
 } NET_family_t;
 
