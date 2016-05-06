@@ -142,6 +142,7 @@ static bool read_input()
 
                 if (feof(global->input)) {
                         global->stream_closed = true;
+                        return false;
                 }
 
                 /* remove LF at the end of line */
