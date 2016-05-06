@@ -29,9 +29,8 @@ Brief    Network management.
 ==============================================================================*/
 #include "net/netm.h"
 #include "net/inet/inet.h"
-#include "net/netman.h" // TODO
 #include "cpuctl.h"
-
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Local macros

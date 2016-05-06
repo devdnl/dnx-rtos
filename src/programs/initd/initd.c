@@ -106,7 +106,6 @@ static void thread(void *arg)
  * @return program status
  */
 //==============================================================================
-#include "net/netman.h"
 int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);

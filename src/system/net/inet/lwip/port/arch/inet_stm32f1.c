@@ -28,10 +28,10 @@
   Include files
 ==============================================================================*/
 #include <string.h>
+#include "inet_types.h"
 #include "kernel/sysfunc.h"
 #include "drivers/ioctl_requests.h"
 #include "netif/etharp.h"
-#include "net/netman.h"
 
 /*==============================================================================
   Local macros
@@ -40,7 +40,6 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef _netman_t netman_t;
 
 /*==============================================================================
   Local function prototypes
@@ -206,7 +205,7 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
                         r = sys_ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
-                        sys_msleep(10);
+                        sys_sleep_ms(10);
                 }
         }
 

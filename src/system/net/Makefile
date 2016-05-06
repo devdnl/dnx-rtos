@@ -1,7 +1,7 @@
 # Makefile for GNU make
 ifeq ($(__ENABLE_NETWORK__), _YES_)
    CSRC_CORE   += net/netm.c
-   CSRC_CORE   += net/inet/inet.c
+   CSRC_CORE   += net/inet/lwip/port/arch/inet.c
    
    CSRC_CORE   += net/inet/lwip/api/api_lib.c
    CSRC_CORE   += net/inet/lwip/api/api_msg.c
@@ -37,13 +37,13 @@ ifeq ($(__ENABLE_NETWORK__), _YES_)
    CSRC_CORE   += net/inet/lwip/core/ipv4/ip_frag.c
    CSRC_CORE   += net/inet/lwip/netif/etharp.c
    CSRC_CORE   += net/inet/lwip/port/arch/sys_arch.c
-   CSRC_CORE   += net/inet/lwip/port/arch/netman.c
+
    HDRLOC_CORE += net/inet/lwip/include/ipv4
    HDRLOC_CORE += net/inet/lwip/include
    HDRLOC_CORE += net/inet/lwip/port
 
 	ifeq ($(TARGET), stm32f1)
-   	CSRC_ARCH   += net/inet/lwip/port/arch/netman_stm32f1.c
+   	CSRC_ARCH   += net/inet/lwip/port/arch/inet_stm32f1.c
    endif
 endif
 

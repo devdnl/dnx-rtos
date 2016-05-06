@@ -34,13 +34,20 @@
 
 #include <sys/types.h>
 #include "kernel/printk.h"
+#include "cpuctl.h"
 
 typedef i8_t    s8_t;
 typedef i16_t   s16_t;
 typedef i32_t   s32_t;
 typedef u32_t   mem_ptr_t;
 
-#define BYTE_ORDER                      LITTLE_ENDIAN
+#if _CPUCTL_BYTE_ORDER == _BYTE_ORDER_LITTLE_ENDIAN
+#       define BYTE_ORDER LITTLE_ENDIAN
+#elif _CPUCTL_BYTE_ORDER == _BYTE_ORDER_BIG_ENDIAN
+#       define BYTE_ORDER BIG_ENDIAN
+#else
+#       error"Unknown endianness"
+#endif
 
 #define LWIP_DEBUG
 #define LWIP_PLATFORM_DIAG(message)     _printk message
