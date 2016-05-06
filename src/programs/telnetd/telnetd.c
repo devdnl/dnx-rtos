@@ -99,7 +99,7 @@ static char *create_and_open_pipe(SOCKET *socket, char c, FILE **f)
 {
         char *name = calloc(1, PIPE_NAME_LEN);
         if (name) {
-                snprintf(name, PIPE_NAME_LEN, "/tmp/tn%x%c", cast(int, socket), c);
+                snprintf(name, PIPE_NAME_LEN, "/run/tn%x%c", cast(int, socket), c);
 
                 if (mkfifo(name, 0666) == 0) {
                         *f = fopen(name, "r+");
@@ -286,6 +286,8 @@ int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argv;
 
         errno = 0;
+
+        mkdir("/run", 0777);
 
         SOCKET *listener = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (!listener) {

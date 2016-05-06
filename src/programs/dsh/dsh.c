@@ -681,7 +681,7 @@ int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
-        global->pipe_file     = "/tmp/dsh-";
+        global->pipe_file     = "/run/dsh-";
 
         if (argc == 2) {
                 global->input = fopen(argv[1], "r");
@@ -690,6 +690,8 @@ int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
                         return EXIT_FAILURE;
                 }
         }
+
+        mkdir("/run", 0777);
 
         getcwd(global->cwd, CWD_PATH_LEN);
 
