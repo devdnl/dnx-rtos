@@ -65,7 +65,7 @@ typedef struct {
         bool            ready:1;
         bool            disconnected:1;
         bool            configured:1;
-} netman_t;
+} netman_t; // TODO rename inet_t
 
 /*==============================================================================
   Exported objects
