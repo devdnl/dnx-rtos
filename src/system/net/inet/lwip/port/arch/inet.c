@@ -52,24 +52,24 @@ static void clear_rx_tx_counters();
 static bool is_init_done();
 static bool DHCP_is_started();
 static void restore_configuration();
-static int DHCP_start_client();
-static int IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway);
+static int  DHCP_start_client();
+static int  IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway);
 
 /*==============================================================================
   External function prototypes
 ==============================================================================*/
-extern bool  _inet_port_alloc            (netman_t *netman);
-extern void  _inet_port_free             (netman_t *netman);
-extern int   _inet_port_hardware_init    (netman_t *netman);
-extern int   _inet_port_hardware_deinit  (netman_t *netman);
-extern void  _inet_port_handle_input     (netman_t *netman, u32_t timeout);
+extern bool  _inet_port_alloc            (inet_t *netman);
+extern void  _inet_port_free             (inet_t *netman);
+extern int   _inet_port_hardware_init    (inet_t *netman);
+extern int   _inet_port_hardware_deinit  (inet_t *netman);
+extern void  _inet_port_handle_input     (inet_t *netman, u32_t timeout);
 extern err_t _inet_port_netif_init       (struct netif *netif);
-extern bool  _inet_port_is_link_connected(netman_t *netman);
+extern bool  _inet_port_is_link_connected(inet_t *netman);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static netman_t   *netman;
+static inet_t     *inet;
 static const u32_t ACCESS_TIMEOUT = 10000;
 static const u32_t DHCP_TIMEOUT   = 5000;
 static const u32_t INIT_TIMEOUT   = 5000;
@@ -96,10 +96,10 @@ static const u32_t LINK_POLL_TIME = 250;
 //==============================================================================
 static void clear_rx_tx_counters()
 {
-        netman->rx_bytes   = 0;
-        netman->tx_bytes   = 0;
-        netman->rx_packets = 0;
-        netman->tx_packets = 0;
+        inet->rx_bytes   = 0;
+        inet->tx_bytes   = 0;
+        inet->rx_packets = 0;
+        inet->tx_packets = 0;
 }
 
 //==============================================================================
@@ -112,7 +112,7 @@ static void clear_rx_tx_counters()
 static bool is_init_done()
 {
         u32_t timer = sys_get_time_ms();
-        while (not netman->ready && not sys_time_is_expired(timer, INIT_TIMEOUT)) {
+        while (not inet->ready && not sys_time_is_expired(timer, INIT_TIMEOUT)) {
                 sys_sleep_ms(1);
         }
 
@@ -131,30 +131,30 @@ static void restore_configuration()
         bool was_DHCP;
         ip_addr_t ip_addr, gw, netmask;
 
-        netman->disconnected = true;
+        inet->disconnected = true;
 
         if (DHCP_is_started()) {
-                dhcp_release(&netman->netif);
-                dhcp_stop(&netman->netif);
+                dhcp_release(&inet->netif);
+                dhcp_stop(&inet->netif);
                 was_DHCP = true;
         } else {
-                ip_addr = netman->netif.ip_addr;
-                gw      = netman->netif.gw;
-                netmask = netman->netif.netmask;
+                ip_addr = inet->netif.ip_addr;
+                gw      = inet->netif.gw;
+                netmask = inet->netif.netmask;
                 was_DHCP = false;
         }
 
-        netif_set_down(&netman->netif);
+        netif_set_down(&inet->netif);
 
-        if (sys_mutex_lock(netman->access, MAX_DELAY_MS) == ESUCC) {
+        if (sys_mutex_lock(inet->access, MAX_DELAY_MS) == ESUCC) {
 
-                while (!_inet_port_is_link_connected(netman)) {
+                while (!_inet_port_is_link_connected(inet)) {
                         sys_msleep(LINK_POLL_TIME);
                 }
 
-                netman->disconnected = false;
+                inet->disconnected = false;
 
-                if (netman->configured) {
+                if (inet->configured) {
                         if (was_DHCP) {
                                 DHCP_start_client();
                         } else {
@@ -162,7 +162,7 @@ static void restore_configuration()
                         }
                 }
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 }
 
@@ -190,36 +190,36 @@ static void network_interface_thread(void *arg)
         UNUSED_ARG1(arg);
 
         /* open interface file */
-        while (netman->if_file == NULL) {
-                sys_fopen(__NETWORK_ETHIF_FILE__, "r+", &netman->if_file);
+        while (inet->if_file == NULL) {
+                sys_fopen(__NETWORK_ETHIF_FILE__, "r+", &inet->if_file);
                 sys_msleep(100);
         }
 
         /* initialize interface */
-        if (_inet_port_alloc(netman) == ESUCC) {
+        if (_inet_port_alloc(inet) == ESUCC) {
 
-                if (_inet_port_hardware_init(netman) == ESUCC) {
+                if (_inet_port_hardware_init(inet) == ESUCC) {
 
-                        netman->ready = true;
+                        inet->ready = true;
 
                         while (true) {
                                 u32_t pkt_recved   = 0;
                                 u32_t bytes_recved = 0;
 
-                                _inet_port_handle_input(netman, INPUT_TIMEOUT);
+                                _inet_port_handle_input(inet, INPUT_TIMEOUT);
 
-                                netman->rx_packets += pkt_recved;
-                                netman->rx_bytes   += bytes_recved;
+                                inet->rx_packets += pkt_recved;
+                                inet->rx_bytes   += bytes_recved;
 
-                                if (!_inet_port_is_link_connected(netman)) {
+                                if (!_inet_port_is_link_connected(inet)) {
                                         restore_configuration();
                                 }
                         }
 
-                        _inet_port_hardware_deinit(netman);
+                        _inet_port_hardware_deinit(inet);
                 }
 
-                _inet_port_free(netman);
+                _inet_port_free(inet);
         }
 
         // error occurred
@@ -297,41 +297,41 @@ static void create_lwIP_addr(ip_addr_t *lwip_addr, const NET_INET_IPv4_t *addr)
 //==============================================================================
 static int stack_init()
 {
-        if (netman)
+        if (inet)
                 return ESUCC;
 
-        netman = _netcalloc(1, sizeof(netman_t));
-        if (netman) {
+        inet = _netcalloc(1, sizeof(inet_t));
+        if (inet) {
                 static const thread_attr_t attr = {
                         .priority    = PRIORITY_NORMAL,
                         .stack_depth = STACK_DEPTH_LOW
                 };
 
-                int ts = sys_thread_create(network_interface_thread, &attr, NULL, &netman->if_thread);
-                int ms = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &netman->access);
+                int ts = sys_thread_create(network_interface_thread, &attr, NULL, &inet->if_thread);
+                int ms = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &inet->access);
 
                 if (ms == ESUCC && ts == ESUCC) {
 
                         tcpip_init(NULL, NULL);
 
-                        netif_set_default(netif_add(&netman->netif,
+                        netif_set_default(netif_add(&inet->netif,
                                                     const_cast(ip_addr_t*, &ip_addr_any),
                                                     const_cast(ip_addr_t*, &ip_addr_any),
                                                     const_cast(ip_addr_t*, &ip_addr_any),
-                                                    netman,
+                                                    inet,
                                                     _inet_port_netif_init,
                                                     tcpip_input));
                         return ESUCC;
 
                 } else {
                         if (ms)
-                                sys_mutex_destroy(netman->access);
+                                sys_mutex_destroy(inet->access);
 
                         if (ts)
-                                sys_thread_destroy(&netman->if_thread);
+                                sys_thread_destroy(&inet->if_thread);
 
-                        _netfree(netman);
-                        netman = NULL;
+                        _netfree(inet);
+                        inet = NULL;
                 }
         }
 
@@ -351,24 +351,24 @@ static int IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const i
 {
         int status = EINVAL;
 
-        if (  netman && ip_address && net_mask && gateway
-           && !netif_is_up(&netman->netif)
+        if (  inet && ip_address && net_mask && gateway
+           && !netif_is_up(&inet->netif)
            && is_init_done()
-           && sys_mutex_lock(netman->access, ACCESS_TIMEOUT) == ESUCC ) {
+           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
                 clear_rx_tx_counters();
-                netif_set_down(&netman->netif);
-                netif_set_addr(&netman->netif,
+                netif_set_down(&inet->netif);
+                netif_set_addr(&inet->netif,
                                const_cast(ip_addr_t*, ip_address),
                                const_cast(ip_addr_t*, net_mask),
                                const_cast(ip_addr_t*, gateway) );
-                netif_set_up(&netman->netif);
+                netif_set_up(&inet->netif);
 
-                netman->configured = true;
+                inet->configured = true;
 
                 status = ESUCC;
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 
         return status;
@@ -384,26 +384,26 @@ static int DHCP_start_client()
 {
         int status = ENONET;
 
-        if (  netman
-           && !netif_is_up(&netman->netif)
+        if (  inet
+           && !netif_is_up(&inet->netif)
            && is_init_done()
-           && sys_mutex_lock(netman->access, ACCESS_TIMEOUT) == ESUCC ) {
+           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
                 clear_rx_tx_counters();
-                netif_set_down(&netman->netif);
-                netif_set_addr(&netman->netif,
+                netif_set_down(&inet->netif);
+                netif_set_addr(&inet->netif,
                                const_cast(ip_addr_t*, &ip_addr_any),
                                const_cast(ip_addr_t*, &ip_addr_any),
                                const_cast(ip_addr_t*, &ip_addr_any) );
 
-                if (dhcp_start(&netman->netif) == ERR_OK) {
-                        netif_set_up(&netman->netif);
+                if (dhcp_start(&inet->netif) == ERR_OK) {
+                        netif_set_up(&inet->netif);
 
                         u32_t timer = sys_get_time_ms();
                         while (not sys_time_is_expired(timer, DHCP_TIMEOUT)) {
 
-                                if (netman->netif.dhcp->state == DHCP_BOUND) {
-                                        netman->configured = true;
+                                if (inet->netif.dhcp->state == DHCP_BOUND) {
+                                        inet->configured = true;
                                         status = ESUCC;
                                         break;
                                 } else {
@@ -412,7 +412,7 @@ static int DHCP_start_client()
                         }
                 }
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 
         return status;
@@ -428,15 +428,15 @@ int DHCP_inform_server()
 {
         int status = ENONET;
 
-        if (  netman
-           && netif_is_up(&netman->netif)
+        if (  inet
+           && netif_is_up(&inet->netif)
            && !DHCP_is_started()
-           && sys_mutex_lock(netman->access, ACCESS_TIMEOUT) == ESUCC ) {
+           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
-                dhcp_inform(&netman->netif);
+                dhcp_inform(&inet->netif);
                 status = ESUCC;
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 
         return status;
@@ -452,17 +452,17 @@ int DHCP_renew_connection()
 {
         int status = ENONET;
 
-        if (  netman
-           && netif_is_up(&netman->netif)
+        if (  inet
+           && netif_is_up(&inet->netif)
            && DHCP_is_started()
-           && sys_mutex_lock(netman->access, ACCESS_TIMEOUT) == ESUCC ) {
+           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
-                if (dhcp_renew(&netman->netif) == ERR_OK) {
+                if (dhcp_renew(&inet->netif) == ERR_OK) {
 
                         u32_t timeout = sys_get_time_ms();
                         while (not sys_time_is_expired(timeout, DHCP_TIMEOUT)) {
 
-                                if (netman->netif.dhcp->state == DHCP_BOUND) {
+                                if (inet->netif.dhcp->state == DHCP_BOUND) {
                                         status = ESUCC;
                                         break;
                                 } else {
@@ -471,7 +471,7 @@ int DHCP_renew_connection()
                         }
                 }
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 
         return status;
@@ -485,7 +485,7 @@ int DHCP_renew_connection()
 //==============================================================================
 static bool DHCP_is_started()
 {
-        return (netman->netif.flags & NETIF_FLAG_DHCP);
+        return (inet->netif.flags & NETIF_FLAG_DHCP);
 }
 
 //==============================================================================
@@ -542,21 +542,21 @@ int INET_ifdown(void)
 {
         int status = ENONET;
 
-        if (  netman
-           && netif_is_up(&netman->netif)
-           && sys_mutex_lock(netman->access, ACCESS_TIMEOUT) == ESUCC ) {
+        if (  inet
+           && netif_is_up(&inet->netif)
+           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
                 if (DHCP_is_started()) {
-                        if (dhcp_release(&netman->netif) == ERR_OK) {
-                                dhcp_stop(&netman->netif);
+                        if (dhcp_release(&inet->netif) == ERR_OK) {
+                                dhcp_stop(&inet->netif);
                         }
                 }
 
-                netif_set_down(&netman->netif);
-                netman->configured = false;
+                netif_set_down(&inet->netif);
+                inet->configured = false;
                 status = ESUCC;
 
-                sys_mutex_unlock(netman->access);
+                sys_mutex_unlock(inet->access);
         }
 
         return status;
@@ -573,27 +573,27 @@ int INET_ifstatus(NET_INET_status_t *status)
 {
         int err = EINVAL;
 
-        if (netman) {
-                memcpy(status->hw_addr, netman->netif.hwaddr, sizeof(status->hw_addr));
+        if (inet) {
+                memcpy(status->hw_addr, inet->netif.hwaddr, sizeof(status->hw_addr));
 
                 status->address    = NET_INET_IPv4_ANY;
                 status->mask       = NET_INET_IPv4_ANY;
                 status->gateway    = NET_INET_IPv4_ANY;
 
-                status->rx_packets = netman->rx_packets;
-                status->rx_bytes   = netman->rx_bytes;
-                status->tx_packets = netman->tx_packets;
-                status->tx_bytes   = netman->tx_bytes;
+                status->rx_packets = inet->rx_packets;
+                status->rx_bytes   = inet->rx_bytes;
+                status->tx_packets = inet->tx_packets;
+                status->tx_bytes   = inet->tx_bytes;
 
                 status->state      = NET_INET_STATE__NOT_CONFIGURED;
 
-                if (netman->configured) {
-                        if (netman->disconnected) {
+                if (inet->configured) {
+                        if (inet->disconnected) {
                                 status->state = NET_INET_STATE__LINK_DISCONNECTED;
 
-                        } else if (netif_is_up(&netman->netif)) {
+                        } else if (netif_is_up(&inet->netif)) {
                                 if (DHCP_is_started()) {
-                                        if (netman->netif.dhcp->state != DHCP_BOUND) {
+                                        if (inet->netif.dhcp->state != DHCP_BOUND) {
                                                 status->state = NET_INET_STATE__DHCP_CONFIGURING;
                                         } else {
                                                 status->state = NET_INET_STATE__DHCP_CONFIGURED;
@@ -602,9 +602,9 @@ int INET_ifstatus(NET_INET_status_t *status)
                                         status->state = NET_INET_STATE__STATIC_IP;
                                 }
 
-                                create_addr(&status->address, &netman->netif.ip_addr);
-                                create_addr(&status->mask, &netman->netif.netmask);
-                                create_addr(&status->gateway, &netman->netif.gw);
+                                create_addr(&status->address, &inet->netif.ip_addr);
+                                create_addr(&status->mask, &inet->netif.netmask);
+                                create_addr(&status->gateway, &inet->netif.gw);
                         }
                 }
 
@@ -676,7 +676,7 @@ int INET_socket_connect(INET_socket_t *inet_sock, const NET_INET_sockaddr_t *add
         create_lwIP_addr(&IP, &addr->addr);
 
         return lwIP_status_to_errno(netconn_connect(inet_sock->netconn,
-                                                         &IP, addr->port));
+                                                    &IP, addr->port));
 }
 
 //==============================================================================
@@ -703,8 +703,8 @@ int INET_socket_disconnect(INET_socket_t *inet_sock)
 int INET_socket_shutdown(INET_socket_t *inet_sock, NET_shut_t how)
 {
         return lwIP_status_to_errno(netconn_shutdown(inet_sock->netconn,
-                                                          how & NET_SHUT__RD,
-                                                          how & NET_SHUT__WR));
+                                                     how & NET_SHUT__RD,
+                                                     how & NET_SHUT__WR));
 }
 
 //==============================================================================
@@ -721,7 +721,7 @@ int INET_socket_bind(INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr)
         create_lwIP_addr(&IP, &addr->addr);
 
         return lwIP_status_to_errno(netconn_bind(inet_sock->netconn,
-                                                      &IP, addr->port));
+                                                 &IP, addr->port));
 }
 
 //==============================================================================
@@ -774,7 +774,7 @@ int INET_socket_recv(INET_socket_t *inet_sock,
         int err = ESUCC;
         if (inet_sock->netbuf == NULL) {
                 err = lwIP_status_to_errno(netconn_recv(inet_sock->netconn,
-                                                             &inet_sock->netbuf));
+                                                        &inet_sock->netbuf));
         }
 
         if (!err) {
@@ -822,7 +822,7 @@ int INET_socket_recvfrom(INET_socket_t       *inet_sock,
         if (type & NETCONN_UDP) {
                 struct netbuf *netbuf;
                 err = lwIP_status_to_errno(netconn_recv(inet_sock->netconn,
-                                                             &netbuf));
+                                                        &netbuf));
                 if (!err) {
                         *recved = netbuf_copy(netbuf, buf, len);
 
@@ -866,9 +866,9 @@ int INET_socket_send(INET_socket_t *inet_sock,
                         lwip_flags |= NETCONN_COPY;
 
                 err = lwIP_status_to_errno(netconn_write(inet_sock->netconn,
-                                                              buf,
-                                                              len,
-                                                              lwip_flags));
+                                                         buf,
+                                                         len,
+                                                         lwip_flags));
                 *sent = len;
 
         } else if (type & NETCONN_UDP) {
@@ -945,8 +945,8 @@ int INET_socket_sendto(INET_socket_t             *inet_sock,
 
                 // get the peer if currently connected
                 err = lwIP_status_to_errno(netconn_peer(inet_sock->netconn,
-                                                             &lwip_addr,
-                                                             &sockaddr.port));
+                                                        &lwip_addr,
+                                                        &sockaddr.port));
 
                 if (!err) {
                         create_addr(&sockaddr.addr, &lwip_addr);
