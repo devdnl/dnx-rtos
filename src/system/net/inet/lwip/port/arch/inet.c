@@ -105,8 +105,7 @@ static void clear_rx_tx_counters()
 //==============================================================================
 /**
  * @brief  Function wait for interface to be available
- * @param  None
- * @return If interface is re
+ * @return Returns true if initialization done.
  */
 //==============================================================================
 static bool is_init_done()
@@ -122,8 +121,6 @@ static bool is_init_done()
 //==============================================================================
 /**
  * @brief  Function restores last configuration after link connection
- * @param  None
- * @return None
  */
 //==============================================================================
 static void restore_configuration()
@@ -191,7 +188,7 @@ static void network_interface_thread(void *arg)
 
         /* open interface file */
         while (inet->if_file == NULL) {
-                sys_fopen(__NETWORK_ETHIF_FILE__, "r+", &inet->if_file);
+                sys_fopen(__NETWORK_TCPIP_DEVICE_PATH__, "r+", &inet->if_file);
                 sys_msleep(100);
         }
 

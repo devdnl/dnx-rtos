@@ -271,12 +271,12 @@ err_t _inet_port_netif_init(struct netif *netif)
         netif->mtu        = 1500;
         netif->hwaddr_len = ETHARP_HWADDR_LEN;
         netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
-        netif->hwaddr[0]  = 0x50; // TODO
-        netif->hwaddr[1]  = 0x51;
-        netif->hwaddr[2]  = 0x52;
-        netif->hwaddr[3]  = 0x53;
-        netif->hwaddr[4]  = 0x54;
-        netif->hwaddr[5]  = 0x55;
+        netif->hwaddr[0]  = __NETWORK_TCPIP_MAC_ADDR0__;
+        netif->hwaddr[1]  = __NETWORK_TCPIP_MAC_ADDR1__;
+        netif->hwaddr[2]  = __NETWORK_TCPIP_MAC_ADDR2__;
+        netif->hwaddr[3]  = __NETWORK_TCPIP_MAC_ADDR3__;
+        netif->hwaddr[4]  = __NETWORK_TCPIP_MAC_ADDR4__;
+        netif->hwaddr[5]  = __NETWORK_TCPIP_MAC_ADDR5__;
 
         return ERR_OK;
 }
