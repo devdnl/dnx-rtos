@@ -150,8 +150,7 @@ static void serve(SOCKET *socket)
 //==============================================================================
 int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
+        UNUSED_ARG2(argc, argv);
 
         static const NET_INET_sockaddr_t ADDR_ANY = {
             .addr = NET_INET_IPv4_ANY,

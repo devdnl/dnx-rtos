@@ -56,13 +56,13 @@
  * the <tt>./config</tt> directory or by using Configtool.
  *
  * \subsection drv-ethmac-ddesc-write Data write
- * \todo Write access
+ * \todo Write access documentation
  *
  * \subsection drv-ethmac-ddesc-read Data read
- * \todo Read access
+ * \todo Read access documentation
  *
  * \subsection drv-ethmac-ddesc-pkthdl Packet handling
- * \todo Packet handling
+ * \todo Packet handling documentation
  * @{
  */
 

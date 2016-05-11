@@ -267,9 +267,12 @@ static int send_request(SOCKET *socket)
         global->pkt.settings.field.Poll      = 0;
         global->pkt.settings.field.Precision = 0;
         global->pkt.settings.field.Stratum   = Stratum_Unspecified_or_unavailable;
-        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET, global->pkt.settings.word);
+        global->pkt.settings.word            = hton_u32(NET_FAMILY__INET,
+                                                        global->pkt.settings.word);
 
-        return socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
+        int sz = socket_send(socket, &global->pkt, sizeof(sntp_msg_t), NET_FLAGS__COPY);
+
+        return sz == sizeof(sntp_msg_t) ? 0 : -1;
 }
 
 //==============================================================================

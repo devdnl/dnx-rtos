@@ -866,7 +866,6 @@ int INET_socket_send(INET_socket_t *inet_sock,
                                                          buf,
                                                          len,
                                                          lwip_flags));
-                *sent = len;
 
         } else if (type & NETCONN_UDP) {
 
@@ -893,6 +892,7 @@ int INET_socket_send(INET_socket_t *inet_sock,
                                         err = lwIP_status_to_errno(
                                                  netconn_send(inet_sock->netconn,
                                                               inet_sock->netbuf));
+
                                 }
 
                                 netbuf_delete(inet_sock->netbuf);
@@ -907,6 +907,10 @@ int INET_socket_send(INET_socket_t *inet_sock,
 
         } else {
                 err = EFAULT;
+        }
+
+        if (!err) {
+                *sent = len;
         }
 
         return err;

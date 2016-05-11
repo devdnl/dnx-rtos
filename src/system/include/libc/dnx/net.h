@@ -29,6 +29,175 @@
 
 Network handling library.
 
+@section net_code_example Code examples
+@subsection net_code_example_if Network configuration
+@code
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <dnx/net.h>
+#include <dnx/misc.h>
+
+GLOBAL_VARIABLES_SECTION {
+};
+
+static const NET_INET_config_t DHCP_UP = {
+        .mode    = NET_INET_MODE__DHCP_START,
+        .address = NET_INET_IPv4_ANY,   // ignored
+        .mask    = NET_INET_IPv4_ANY,   // ignored
+        .gateway = NET_INET_IPv4_ANY    // ignored
+};
+
+int_main(init, STACK_DEPTH_LOW, int argc, char *argv[])
+{
+        // start DHCP client
+        if (ifup(NET_FAMILY__INET, &DHCP_UP) != 0) {
+                perror("ifup");
+                return EXIT_FAILURE;
+        }
+
+
+        // get connection status
+        NET_INET_status_t stat;
+        if (ifstatus(NET_FAMILY__INET, &stat) != 0) {
+                perror("ifstatus");
+                return EXIT_FAILURE;
+        } else {
+                // print connection status
+                printf("");
+        }
+
+
+        // shutdown network
+        ifdown(NET_FAMILY__INET);
+
+        return EXIT_SUCCESS;
+}
+@endcode
+
+@subsection net_code_example_server Simple server implementation
+@code
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <dnx/net.h>
+#include <dnx/misc.h>
+
+GLOBAL_VARIABLES_SECTION {
+        char buf[128];
+};
+
+static const char HELLO[] = "I'm server!";
+
+static const NET_INET_sockaddr_t ADDR_ANY = {
+        .addr = NET_INET_IPv4_ANY,
+        .port = 8080
+};
+
+int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
+{
+        UNUSED_ARG2(argc, argv);
+
+        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        if (socket) {
+                if (socket_bind(socket, &ADDR_ANY) == 0) {
+                        if (socket_listen(socket) == 0) {
+                                SOCKET *new_socket;
+                                while (socket_accept(socket, &new_socket) == 0) {
+                                        // receive string from client
+                                        int sz = socket_recv(new_socket,
+                                                             global->buf,
+                                                             sizeof(global->buf),
+                                                             NET_FLAGS__NONE);
+                                        if (sz < 0)
+                                                break;
+
+                                        // print received buffer
+                                        printf("%.*s\n", sz, global->buf);
+
+                                        // send response
+                                        socket_send(new_socket,
+                                                    HELLO,
+                                                    strlen(HELLO),
+                                                    NET_FLAGS__NOCOPY);
+
+                                        socket_delete(new_socket);
+                                }
+                        }
+                }
+
+                socket_delete(socket);
+        }
+
+        if (errno != 0) {
+                perror("Server");
+        }
+
+        return EXIT_SUCCESS;
+}
+@endcode
+
+@subsection net_code_example_client Simple client implementation
+@code
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <dnx/net.h>
+#include <dnx/misc.h>
+
+GLOBAL_VARIABLES_SECTION {
+        char buf[128];
+};
+
+static const char HELLO[] = "I'm client!";
+
+static const NET_INET_sockaddr_t SERVER_ADDR = {
+        .addr = NET_INET_IPv4(192.168.0.100),
+        .port = 8080
+};
+
+int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
+{
+        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        if (socket) {
+                socket_set_send_timeout(socket, 2000);
+                socket_set_recv_timeout(socket, 2000);
+
+                do {
+                        if (socket_connect(socket, &SERVER_ADDR) == 0) {
+
+                                // send string to server
+                                int sz = socket_write(socket, HELLO, strlen(HELLO));
+                                if (sz <= 0)
+                                        break;
+
+                                // read string from server
+                                sz = socket_read(socket, global->buf, sizeof(global->buf));
+                                if (sz <= 0)
+                                        break;
+
+                                // print message from server
+                                printf("%s.*s\n", sz, global->buf);
+                        }
+                } while (0);
+
+                socket_delete(socket);
+        }
+
+        if (errno != 0) {
+                perror("Client");
+        }
+
+        return EXIT_SUCCESS;
+}
+@endcode
+
 */
 /**@{*/
 
@@ -75,10 +244,11 @@ extern "C" {
  *
  * @param  family       interface family
  * @param  config       configuration for specified interface
- * @param  config_size  size of configuration object
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see ifdown(), ifstatus()
  */
 //==============================================================================
 static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
@@ -102,6 +272,8 @@ static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see ifup(), ifstatus()
  */
 //==============================================================================
 static inline int ifdown(NET_family_t family)
@@ -123,10 +295,11 @@ static inline int ifdown(NET_family_t family)
  *
  * @param  family       interface family
  * @param  status       status of selected interface
- * @param  status_size  size of status object
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see ifup(), ifdown()
  */
 //==============================================================================
 static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
@@ -152,6 +325,8 @@ static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
  *
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
  *         otherwise new socket pointer.
+ *
+ * @see socket_delete()
  */
 //==============================================================================
 static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
@@ -172,6 +347,8 @@ static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
  * @brief  The function closes socket.
  *
  * @param  socket       Socket
+ *
+ * @see socket_new()
  */
 //==============================================================================
 static inline void socket_delete(SOCKET *socket)
@@ -186,8 +363,8 @@ static inline void socket_delete(SOCKET *socket)
 //==============================================================================
 /**
  * @brief Assigns an address to the socket. When a socket is created with
- *        socket(), it exists in an address family space but has no address
- *        assigned. bind() requests that the address pointed to by addressPtr be
+ *        socket_new(), it exists in an address family space but has no address
+ *        assigned. socket_bind() requests that the address pointed to by sockAddr be
  *        assigned to the socket. Clients do not normally require that an address
  *        be assigned to a socket. However, servers usually require that the
  *        socket be bound to a well known address.
@@ -222,6 +399,8 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_disconnect()
  */
 //==============================================================================
 static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
@@ -245,6 +424,8 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_connect()
  */
 //==============================================================================
 static inline int socket_disconnect(SOCKET *socket)
@@ -268,6 +449,8 @@ static inline int socket_disconnect(SOCKET *socket)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_accept(), socket_bind()
  */
 //==============================================================================
 static inline int socket_listen(SOCKET *socket)
@@ -292,6 +475,8 @@ static inline int socket_listen(SOCKET *socket)
  *
  * @return On error -1 is returned end @ref errno value is set appropriately,
  *         otherwise 0 and new socket is set.
+ *
+ * @see socket_listen(), socket_bind()
  */
 //==============================================================================
 static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
@@ -309,19 +494,18 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 
 //==============================================================================
 /**
- * @brief  The function is used to receive messages from socket. recv()
- *         may be used only on a connected socket (see connect(), accept()).
+ * @brief  The function is used to receive messages from socket. socket_recv()
+ *         may be used only on a connected socket.
  *
  * @param  socket       The socket from which to receive the data.
  * @param  buf          The buffer into which the received data is put.
  * @param  len          The buffer length.
- * @param  flags        Flags parameters that can be OR'ed together.@n
- *                      NET_FLAGS__REWIND  : start copy payload from the beginning.@n
- *                      NET_FLAGS__RECVDONE: this flag remove received buffer even
- *                                           if entire payload is not read.@n
+ * @param  flags        Flags parameters that can be OR'ed together.
  *
  * @return Number of bytes actually received from the socket, or -1 on error and
  *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_accept(), socket_recvfrom(), socket_read()
  */
 //==============================================================================
 static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
@@ -339,8 +523,10 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
 
 //==============================================================================
 /**
- * @brief  The function is used to receive messages from socket. read()
- *         may be used only on a connected socket (see connect(), accept()).
+ * @brief  The function is used to receive messages from socket. socket_read()
+ *         may be used only on a connected socket.
+ *         The socket_read() is equivalent to socket_recv() with flags
+ *         set to @ref NET_FLAGS__NONE.
  *
  * @param  socket       The socket from which to receive the data.
  * @param  buf          The buffer into which the received data is put.
@@ -348,6 +534,8 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
  *
  * @return Number of bytes actually received from the socket, or -1 on error and
  *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_accept(), socket_recv(), socket_recvfrom()
  */
 //==============================================================================
 static inline int socket_read(SOCKET *socket, void *buf, size_t len)
@@ -364,7 +552,7 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
 //==============================================================================
 /**
  * @brief  The function is used to receive messages from another socket.
- *         recvfrom() may be used to receive data on a socket whether it is in
+ *         socket_recvfrom() may be used to receive data on a socket whether it is in
  *         a connected state or not but not on a TCP socket.
  *
  * @param  socket           The socket descriptor from which to receive the data.
@@ -375,6 +563,8 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  *
  * @return Number of bytes actually received from the socket, or -1 on error and
  *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_accept(), socket_recv(), socket_read()
  */
 //==============================================================================
 static inline int socket_recvfrom(SOCKET                 *socket,
@@ -397,7 +587,65 @@ static inline int socket_recvfrom(SOCKET                 *socket,
 //==============================================================================
 /**
  * @brief  The function is used to transmit a message to another transport
- *         end-point. sendto() may be used any time the socket is in the
+ *         end-point. socket_send() may be used only when the socket is in
+ *         a connected state.
+ *
+ * @param  socket       The socket to use to send the data.
+ * @param  buf          A pointer to the buffer to send.
+ * @param  len          The length of the buffer to send.
+ * @param  flags        Flags parameters that can be OR'ed together.
+ *
+ * @return Number of bytes actually sent on the socket, or -1 on error and
+ *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_sendto(), socket_write()
+ */
+//==============================================================================
+static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
+{
+#if __ENABLE_NETWORK__ == _YES_
+        int result = -1;
+        syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
+        return result;
+#else
+        UNUSED_ARG4(socket, buf, len, flags);
+        _errno = ENOTSUP;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  The function is used to transmit a message to another transport
+ *         end-point. socket_write() may be used only when the socket is in a connected
+ *         state. The socket_write() is equivalent to socket_send() with flags
+ *         set to @ref NET_FLAGS__NONE.
+ *
+ * @param  socket       The socket to use to send the data.
+ * @param  buf          A pointer to the buffer to send.
+ * @param  len          The length of the buffer to send.
+ *
+ * @return Number of bytes actually sent on the socket, or -1 on error and
+ *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_send(), socket_write(), socket_sendto()
+ */
+//==============================================================================
+static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
+{
+#if __ENABLE_NETWORK__ == _YES_
+        return socket_send(socket, buf, len, NET_FLAGS__NONE);
+#else
+        UNUSED_ARG3(socket, buf, len);
+        _errno = ENOTSUP;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  The function is used to transmit a message to another transport
+ *         end-point. socket_sendto() may be used any time the socket is in the
  *         unconnected state, and never for TCP sockets.
  *
  * @param  socket       The socket to use to send the data.
@@ -408,6 +656,8 @@ static inline int socket_recvfrom(SOCKET                 *socket,
  *
  * @return Number of bytes actually sent on the socket, or -1 on error and
  *         @ref errno value is set appropriately.
+ *
+ * @see socket_connect(), socket_send(), socket_write()
  */
 //==============================================================================
 static inline int socket_sendto(SOCKET                       *socket,
@@ -429,62 +679,6 @@ static inline int socket_sendto(SOCKET                       *socket,
 
 //==============================================================================
 /**
- * @brief  The function is used to transmit a message to another transport
- *         end-point. send() may be used only when the socket is in a connected
- *         state.
- *
- * @param  socket       The socket to use to send the data.
- * @param  buf          A pointer to the buffer to send.
- * @param  len          The length of the buffer to send.
- * @param  flags        Flags parameters that can be OR'ed together.
- *                      NET_FLAGS__COPY  : create buffer for output data [default].@n
- *                      NET_FLAGS__NOCOPY: does not create extra buffer for
- *                                         output data.@n
- *
- * @return Number of bytes actually sent on the socket, or -1 on error and
- *         @ref errno value is set appropriately.
- */
-//==============================================================================
-static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
-{
-#if __ENABLE_NETWORK__ == _YES_
-        int result = -1;
-        syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
-        return result;
-#else
-        UNUSED_ARG4(socket, buf, len, flags);
-        _errno = ENOTSUP;
-        return -1;
-#endif
-}
-
-//==============================================================================
-/**
- * @brief  The function is used to transmit a message to another transport
- *         end-point. write() may be used only when the socket is in a connected
- *         state.
- *
- * @param  socket       The socket to use to send the data.
- * @param  buf          A pointer to the buffer to send.
- * @param  len          The length of the buffer to send.
- *
- * @return Number of bytes actually sent on the socket, or -1 on error and
- *         @ref errno value is set appropriately.
- */
-//==============================================================================
-static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
-{
-#if __ENABLE_NETWORK__ == _YES_
-        return socket_send(socket, buf, len, NET_FLAGS__NONE);
-#else
-        UNUSED_ARG3(socket, buf, len);
-        _errno = ENOTSUP;
-        return -1;
-#endif
-}
-
-//==============================================================================
-/**
  * @brief  The function shutdown selected communication direction.
  *
  * @param  socket       The socket to shutdown.
@@ -492,6 +686,8 @@ static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_close()
  */
 //==============================================================================
 static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
@@ -509,12 +705,14 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 
 //==============================================================================
 /**
- * @brief  The function close socket.
+ * @brief  The function close socket in both directions.
  *
  * @param  socket       The socket to close.
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_shutdown()
  */
 //==============================================================================
 static inline int socket_close(SOCKET *socket)
@@ -531,6 +729,8 @@ static inline int socket_close(SOCKET *socket)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_set_send_timeout()
  */
 //==============================================================================
 static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
@@ -555,6 +755,8 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_set_recv_timeout()
  */
 //==============================================================================
 static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
@@ -579,6 +781,8 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
+ *
+ * @see socket_connect(), socket_bind()
  */
 //==============================================================================
 static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
@@ -629,6 +833,8 @@ static inline int get_host_by_name(NET_family_t            family,
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see hton_u32(), hton_u64()
  */
 //==============================================================================
 static inline u16_t hton_u16(NET_family_t family, u16_t value)
@@ -649,6 +855,8 @@ static inline u16_t hton_u16(NET_family_t family, u16_t value)
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see hton_u16(), hton_u64()
  */
 //==============================================================================
 static inline u32_t hton_u32(NET_family_t family, u32_t value)
@@ -669,6 +877,8 @@ static inline u32_t hton_u32(NET_family_t family, u32_t value)
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see hton_u16(), hton_u32()
  */
 //==============================================================================
 static inline u64_t hton_u64(NET_family_t family, u64_t value)
@@ -689,6 +899,8 @@ static inline u64_t hton_u64(NET_family_t family, u64_t value)
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see ntoh_u32(), ntoh_u64()
  */
 //==============================================================================
 static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
@@ -709,6 +921,8 @@ static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see ntoh_u16(), ntoh_u64()
  */
 //==============================================================================
 static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
@@ -729,6 +943,8 @@ static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
  * @param  value        Value to convert.
  *
  * @return Converted value.
+ *
+ * @see ntoh_u16(), ntoh_u32()
  */
 //==============================================================================
 static inline u64_t ntoh_u64(NET_family_t family, u64_t value)
