@@ -74,10 +74,10 @@ typedef int (*proxy_func_t)();
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param family
- * @return
+ * @brief Function allocate socket.
+ * @param socket        socket pointer
+ * @param family        network family
+ * @return One of @ref errno value.
  */
 //==============================================================================
 static int socket_alloc(SOCKET **socket, NET_family_t family)
@@ -102,8 +102,8 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 
 //==============================================================================
 /**
- *
- * @param socket
+ * @brief Function free allocated socket object.
+ * @param socket        socket to free
  */
 //==============================================================================
 static void socket_free(SOCKET **socket)
@@ -115,9 +115,9 @@ static void socket_free(SOCKET **socket)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @return
+ * @brief Function check if socket object is valid
+ * @param socket        socket to validate
+ * @return One of @ref errno value.
  */
 //==============================================================================
 static bool is_socket_valid(SOCKET *socket)
@@ -131,11 +131,10 @@ static bool is_socket_valid(SOCKET *socket)
 
 //==============================================================================
 /**
- *
- * @param family
- * @param config
- * @param size
- * @return
+ * @brief Function setup network interface.
+ * @param family        network family
+ * @param config        configuration object (generic)
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
@@ -153,9 +152,9 @@ int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief Function shutdown network interface.
+ * @param family        network family
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_ifdown(NET_family_t family)
@@ -173,9 +172,10 @@ int _net_ifdown(NET_family_t family)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function return status of network interface.
+ * @param  family       network family
+ * @param  status       network status
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
@@ -193,11 +193,11 @@ int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 
 //==============================================================================
 /**
- *
- * @param family
- * @param protocol
- * @param socket
- * @return
+ * @brief Function create socket for specified network interface.
+ * @param family        network family
+ * @param protocol      network protocol
+ * @param socket        created socket
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
@@ -225,9 +225,9 @@ int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **so
 
 //==============================================================================
 /**
- *
- * @param socket
- * @return
+ * @brief Function destroy socket of specified network.
+ * @param socket        socket to destroy
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_destroy(SOCKET *socket)
@@ -250,11 +250,10 @@ int _net_socket_destroy(SOCKET *socket)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param addr
- * @param addr_size
- * @return
+ * @brief Function bind socket with address.
+ * @param socket        socket to bind
+ * @param addr          addres to bind
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
@@ -272,9 +271,9 @@ int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @return
+ * @brief Function listen connection on socket.
+ * @param socket        socket to listen
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_listen(SOCKET *socket)
@@ -292,10 +291,10 @@ int _net_socket_listen(SOCKET *socket)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param new_socket
- * @return
+ * @brief Function accept incoming connection.
+ * @param socket        socket accepting connection
+ * @param new_socket    socket of new connection
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
@@ -326,12 +325,13 @@ int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param buf
- * @param len
- * @param flags
- * @return
+ * @brief Function receive bytes from selected socket.
+ * @param socket        socket to receive
+ * @param buf           destination buffer
+ * @param len           bytes to receive
+ * @param flags         control flags
+ * @param recved        number of received bytes
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
@@ -350,14 +350,14 @@ int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, s
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param buf
- * @param len
- * @param flags
- * @param sockaddr
- * @param recved
- * @return
+ * @brief Function receive bytes from selected socket and obtain sender address.
+ * @param socket        socket to receive
+ * @param buf           destination buffer
+ * @param len           bytes to receive
+ * @param flags         control flags
+ * @param sockaddr      obtained address of received bytes
+ * @param recved        number of received bytes
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_recvfrom(SOCKET                 *socket,
@@ -381,12 +381,13 @@ int _net_socket_recvfrom(SOCKET                 *socket,
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param buf
- * @param len
- * @param flags
- * @return
+ * @brief Function send bytes to selected socket.
+ * @param socket        socket that send bytes
+ * @param buf           source buffer
+ * @param len           number of bytes to send
+ * @param flags         control flags
+ * @param sent          number of sent bytes
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
@@ -405,12 +406,14 @@ int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t fl
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param buf
- * @param len
- * @param flags
- * @return
+ * @brief Function send bytes by socket to selected address.
+ * @param socket        socket that send bytes
+ * @param buf           source buffer
+ * @param len           number of bytes to send
+ * @param flags         control flags
+ * @param to_addr       destination address
+ * @param sent          number of sent bytes
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_sendto(SOCKET                       *socket,
@@ -434,12 +437,10 @@ int _net_socket_sendto(SOCKET                       *socket,
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function set socket receive timeout.
+ * @param socket        socket
+ * @param timeout       timeout value
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
@@ -457,12 +458,10 @@ int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function set socket send timeout.
+ * @param socket        socket
+ * @param timeout       timeout value
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
@@ -480,11 +479,10 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function connect socket to selected address.
+ * @param socket        socket used for connection
+ * @param addr          address where socket is connecting
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
@@ -502,11 +500,9 @@ int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function disconnect socket.
+ * @param socket        socket to disconnect
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_disconnect(SOCKET *socket)
@@ -524,11 +520,10 @@ int _net_socket_disconnect(SOCKET *socket)
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function shutdown selected connection direction.
+ * @param socket        socket to shutdown
+ * @param how           direction to shutdown
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
@@ -546,10 +541,10 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 
 //==============================================================================
 /**
- *
- * @param socket
- * @param sockaddr
- * @return
+ * @brief Function return address to which socket is connected.
+ * @param socket        socket
+ * @param sockaddr      address of connection
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
@@ -567,12 +562,11 @@ int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
 
 //==============================================================================
 /**
- *
- * @param
- * @param
- * @param
- * @param size_t
- * @return
+ * @brief Function return address of host by name.
+ * @param family        network family
+ * @param name          host name
+ * @param addr          obtained address
+ * @return One of @ref errno value.
  */
 //==============================================================================
 int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockaddr_t *addr)
@@ -590,10 +584,10 @@ int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockad
 
 //==============================================================================
 /**
- *
- * @param family
- * @param value
- * @return
+ * @brief Function convert host byte order to network.
+ * @param family        network family
+ * @param value         value to convert
+ * @return Converted value.
  */
 //==============================================================================
 u16_t _net_hton_u16(NET_family_t family, u16_t value)
@@ -605,16 +599,16 @@ u16_t _net_hton_u16(NET_family_t family, u16_t value)
         if (family < _NET_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
-                return EINVAL;
+                return value;
         }
 }
 
 //==============================================================================
 /**
- *
- * @param family
- * @param value
- * @return
+ * @brief Function convert host byte order to network.
+ * @param family        network family
+ * @param value         value to convert
+ * @return Converted value.
  */
 //==============================================================================
 u32_t _net_hton_u32(NET_family_t family, u32_t value)
@@ -626,16 +620,16 @@ u32_t _net_hton_u32(NET_family_t family, u32_t value)
         if (family < _NET_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
-                return EINVAL;
+                return value;
         }
 }
 
 //==============================================================================
 /**
- *
- * @param family
- * @param value
- * @return
+ * @brief Function convert host byte order to network.
+ * @param family        network family
+ * @param value         value to convert
+ * @return Converted value.
  */
 //==============================================================================
 u64_t _net_hton_u64(NET_family_t family, u64_t value)
@@ -647,7 +641,7 @@ u64_t _net_hton_u64(NET_family_t family, u64_t value)
         if (family < _NET_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
-                return EINVAL;
+                return value;
         }
 }
 
